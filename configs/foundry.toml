@@ -1,0 +1,13 @@
+[default]
+contracts = 'contracts'       # The source directory
+libs = ['modules']            # A list of library directories
+solc_version = '0.8.7'        # Override for the solc version (setting this ignores `auto_detect_solc`)
+offline = true                # Disable downloading of missing solc versions
+optimizer = true              # Enable or disable the solc optimizer
+optimizer_runs = 200          # The number of optimizer runs
+verbosity = 3                 # The verbosity of tests
+fuzz_runs = 1000              # Number of fuzz runs
+block_timestamp = 1622400000  # Timestamp for tests (non-zero)
+
+[deep]
+fuzz_runs = 50000

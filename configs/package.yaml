@@ -1,0 +1,8 @@
+name: pool-v2-integration
+version: 1.0.0
+source: contracts
+packages:
+  - path: contracts/SampleContract.sol
+    contractName: SammpleContract
+    customChecksum: 0x0000000000000000000000000000000000000000000000000000000000000000
+customDescription: Sample Artifacts and ABIs
