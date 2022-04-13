@@ -1,0 +1,41 @@
+name: Forge Tests
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Checkout poolv2 private submodule
+        env: 
+          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
+        shell: bash
+        run: |
+          mkdir $HOME/.ssh
+          echo "$SSH_KEY_POOL_V2" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          git submodule update --init --recursive modules/poolV2
+
+      - name: Checkout withdrawal-manager submodule
+        env:
+          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
+        shell: bash
+        run: |
+          echo "$SSH_KEY_WITHDRAWAL_MANAGER" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          git submodule update --init --recursive modules/withdrawal-manager
+
+      - name: Checkout public submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
+
+      - name: Run Forge tests
+        run: ./scripts/test.sh -p deep

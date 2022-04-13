@@ -1,6 +1,7 @@
 [default]
 contracts = 'contracts'       # The source directory
 libs = ['modules']            # A list of library directories
+test = 'tests' 
 solc_version = '0.8.7'        # Override for the solc version (setting this ignores `auto_detect_solc`)
 offline = true                # Disable downloading of missing solc versions
 optimizer = true              # Enable or disable the solc optimizer
