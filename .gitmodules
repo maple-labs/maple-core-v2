@@ -18,3 +18,7 @@
 	path = modules/pool-cover
 	url = git@github.com:maple-labs/pool-cover.git
 	ignore = dirty
+[submodule "modules/loan"]
+	path = modules/loan
+	url = https://github.com/maple-labs/loan
+	ignore = dirty
