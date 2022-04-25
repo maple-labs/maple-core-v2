@@ -1,4 +1,4 @@
-name: Forge Tests
+name: Forge Tests (PR)
 
 on: [pull_request]
 
@@ -31,6 +31,15 @@ jobs:
           echo "$SSH_KEY_WITHDRAWAL_MANAGER" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
           git submodule update --init --recursive modules/withdrawal-manager
+
+      - name: Checkout pool-cover submodule
+        env:
+          SSH_KEY_POOL_COVER: ${{secrets.SSH_KEY_POOL_COVER}}
+        shell: bash
+        run: |
+          echo "$SSH_KEY_POOL_COVER" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          git submodule update --init --recursive modules/pool-cover
 
       - name: Checkout public submodules
         run: |

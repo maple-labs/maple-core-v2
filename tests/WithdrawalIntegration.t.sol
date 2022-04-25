@@ -3,18 +3,20 @@ pragma solidity 0.8.7;
 
 import { TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
 
-import { MockERC20 } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { MockERC20 }             from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { MockInvestmentVehicle } from "../modules/poolV2/tests/mocks/MockInvestmentVehicle.sol";
 
-import { GenericInvestmentVehicle } from "../modules/poolV2/contracts/GenericInvestmentVehicle.sol";
-import { PoolV2 }                   from "../modules/poolV2/contracts/PoolV2.sol";
+import { GenericInvestmentManager } from "../modules/poolV2/contracts/GenericInvestmentManager.sol";
+import { PoolV2 as Pool }           from "../modules/poolV2/contracts/PoolV2.sol";
+import { WithdrawalManager }        from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 
-import { WithdrawalManager } from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+contract WithdrawalIntegrationTest is TestUtils {
 
-contract IntegrationTests is TestUtils {
+    MockERC20                asset;
 
-    MockERC20         asset;
-    PoolV2            pool;
-    WithdrawalManager withdrawalManager;
+    GenericInvestmentManager investmentManager;
+    Pool                     pool;
+    WithdrawalManager        withdrawalManager;
 
     uint256 constant COOLDOWN  = 2 weeks;
     uint256 constant DURATION  = 48 hours;
@@ -29,9 +31,11 @@ contract IntegrationTests is TestUtils {
 
     function setUp() public {
         asset             = new MockERC20("MockAsset", "MA", 18);
-        pool              = new PoolV2("Pool", "Pool", address(this), address(asset), 1e30);
+        investmentManager = new GenericInvestmentManager();
+        pool              = new Pool("Pool", "Pool", address(this), address(asset), 1e30);
         withdrawalManager = new WithdrawalManager(address(asset), address(pool), START, DURATION, FREQUENCY, COOLDOWN / FREQUENCY);
 
+        pool.setInvestmentManager(address(investmentManager));
         pool.setWithdrawalManager(address(withdrawalManager));
 
         vm.warp(START);
@@ -71,7 +75,14 @@ contract IntegrationTests is TestUtils {
         uint256 interestRate = 0.12e18; // 12% a year for easy calculations
         uint256 interval     = 90 days;
 
-        GenericInvestmentVehicle investment = new GenericInvestmentVehicle(principal, interestRate, interval, address(pool), address(asset));
+        MockInvestmentVehicle investment = new MockInvestmentVehicle({
+            principal_:         principal,
+            interestRate_:      interestRate,
+            paymentInterval_:   interval,
+            pool_:              address(pool),
+            asset_:             address(asset), 
+            investmentManager_: address(investmentManager)
+        });
 
         // Fund a investment on address(this)
         pool.fund(principal, address(investment));
