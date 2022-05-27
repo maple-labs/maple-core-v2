@@ -22,3 +22,7 @@
 	path = modules/loan
 	url = https://github.com/maple-labs/loan
 	ignore = dirty
+[submodule "modules/liquidations"]
+	path = modules/liquidations
+	url = git@github.com:maple-labs/liquidations.git
+	ignore = dirty
