@@ -8,7 +8,7 @@ build:
 	@scripts/build.sh -p default
 
 test:
-	@scripts/test.sh -p default
+	@scripts/test.sh
 
 clean:
 	@forge clean
