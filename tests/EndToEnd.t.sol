@@ -19,10 +19,11 @@ import { IPoolCover, PoolCover }                             from "../modules/po
 import { IPoolCoverManager }                                 from "../modules/pool-cover/contracts/PoolCoverManager.sol";
 import { MockAuctioneer }                                    from "../modules/pool-cover/tests/mocks/MockAuctioneer.sol";
 import { MockConverter }                                     from "../modules/pool-cover/tests/mocks/MockConverter.sol";
+import { EscrowFactoryBootstrapper }                         from "../modules/pool-cover/tests/testBase/EscrowFactoryBootstrapper.sol";
 
 import { WithdrawalManager } from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 
-contract EndToEndIntegrationTest is TestUtils {
+contract EndToEndIntegrationTest is TestUtils, EscrowFactoryBootstrapper {
 
     /*****************/
     /*** End Users ***/
@@ -105,53 +106,18 @@ contract EndToEndIntegrationTest is TestUtils {
     /*** Pool Cover ***/
     /******************/
 
-    uint256 constant LOCKUP_DURATION = 2 weeks;
-    uint256 constant REDEEM_WINDOW   = 2 days;
+    PoolCover usdcPoolCover;
+    PoolCover wbtcPoolCover;
+    PoolCover wethPoolCover;
+    PoolCover xmplPoolCover;
+
+    uint256 lockupDuration = 2 weeks;
+    uint256 redeemWindow   = 2 days;
 
     uint256 constant INITIALUSDC_COVER = 1_500_000e6;
     uint256 constant INITIAL_WBTC_COVER = 4e8;
     uint256 constant INITIAL_WETH_COVER = 60e18;
     uint256 constant INITIAL_XMPL_COVER = 2_500e18;
-
-    PoolCover usdcPoolCover = new PoolCover({
-        name_:           "Pool Cover - USD Coin",
-        symbol_:         "MPL-CP-USDC",
-        owner_:          address(poolCoverManager),
-        asset_:          address(usdc),
-        lockupDuration_: LOCKUP_DURATION,
-        redeemWindow_:   REDEEM_WINDOW,
-        precision_:      1e30
-    });
-
-    PoolCover wbtcPoolCover = new PoolCover({
-        name_:           "Pool Cover - Wrapped BTC",
-        symbol_:         "MPL-CP-WBTC",
-        owner_:          address(poolCoverManager),
-        asset_:          address(wbtc),
-        lockupDuration_: LOCKUP_DURATION,
-        redeemWindow_:   REDEEM_WINDOW,
-        precision_:      1e30
-    });
-
-    PoolCover wethPoolCover = new PoolCover({
-        name_:           "Pool Cover - Wrapped Ether",
-        symbol_:         "MPL-CP-WETH",
-        owner_:          address(poolCoverManager),
-        asset_:          address(weth),
-        lockupDuration_: LOCKUP_DURATION,
-        redeemWindow_:   REDEEM_WINDOW,
-        precision_:      1e30
-    });
-
-    PoolCover xmplPoolCover = new PoolCover({
-        name_:           "Pool Cover - xMPL",
-        symbol_:         "MPL-CP-xMPL",
-        owner_:          address(poolCoverManager),
-        asset_:          address(xmpl),
-        lockupDuration_: LOCKUP_DURATION,
-        redeemWindow_:   REDEEM_WINDOW,
-        precision_:      1e30
-    });
 
     /*******************************/
     /*** Fixed-Price Auctioneers ***/
@@ -178,6 +144,7 @@ contract EndToEndIntegrationTest is TestUtils {
     MockConverter xmplLiquidator = new MockConverter(address(xmpl), address(usdc), address(xmplLiquidatorAuctioneer));
 
     function setUp() public {
+        _createPoolCovers();
         _updatePCMSettings();
         _setManagers();
         _depositLiquidity(OTHER_LPs, INITIAL_LIQUIDITY);
@@ -474,6 +441,60 @@ contract EndToEndIntegrationTest is TestUtils {
     function _withdrawLiquidity(address account_) internal returns (uint256 assets_) {
         vm.prank(account_);
         ( assets_, , ) = withdrawalManager.redeemPosition(0);
+    }
+
+    function _createPoolCovers() internal {
+        ( address escrowFactory, address escrowInitializer ) = _setupEscrowFactory();
+
+        uint256 precision = 1e30;
+
+        usdcPoolCover = new PoolCover({
+            name_:              "Pool Cover - USD Coin",
+            symbol_:            "MPL-CP-USDC",
+            owner_:             address(poolCoverManager),
+            asset_:             address(usdc),
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
+        });
+
+        wbtcPoolCover = new PoolCover({
+            name_:              "Pool Cover - Wrapped BTC",
+            symbol_:            "MPL-CP-WBTC",
+            owner_:             address(poolCoverManager),
+            asset_:             address(wbtc),
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
+        });
+
+        wethPoolCover = new PoolCover({
+            name_:              "Pool Cover - Wrapped Ether",
+            symbol_:            "MPL-CP-WETH",
+            owner_:             address(poolCoverManager),
+            asset_:             address(weth),
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
+        });
+
+        xmplPoolCover = new PoolCover({
+            name_:              "Pool Cover - xMPL",
+            symbol_:            "MPL-CP-xMPL",
+            owner_:             address(poolCoverManager),
+            asset_:             address(xmpl),
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
+        });
     }
 
 }

@@ -22,6 +22,7 @@ import { IPoolCoverManager }                                 from "../modules/po
 import { MockAuctioneer }                                    from "../modules/pool-cover/tests/mocks/MockAuctioneer.sol";
 import { MockConverter }                                     from "../modules/pool-cover/tests/mocks/MockConverter.sol";
 import { MockOracle }                                        from "../modules/pool-cover/tests/mocks/MockOracle.sol";
+import { EscrowFactoryBootstrapper }                         from "../modules/pool-cover/tests/testBase/EscrowFactoryBootstrapper.sol";
 
 import { WithdrawalManager } from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 
@@ -29,7 +30,7 @@ import { Harness } from "./harness/Harness.sol";
 
 import { MockEOA } from "./mocks/MockEOA.sol";
 
-contract EndToEndLiquidationTest is Harness {
+contract EndToEndLiquidationTest is Harness, EscrowFactoryBootstrapper {
 
     /*****************/
     /*** End Users ***/
@@ -539,46 +540,57 @@ contract EndToEndLiquidationTest is Harness {
         initialCoverAmounts[2] = 60e18;
         initialCoverAmounts[3] = 2_500e18;
 
+        ( address escrowFactory, address escrowInitializer ) = _setupEscrowFactory();
+
         poolCovers = new address[](numberOfCovers);
+        uint256 precision = 1e30;
 
         poolCovers[0] = address(new PoolCover({
-            name_:           "Pool Cover - USD Coin",
-            symbol_:         "MPL-CP-USDC",
-            owner_:          poolCoverManager,
-            asset_:          coverAssets[0],
-            lockupDuration_: lockupDuration,
-            redeemWindow_:   redeemWindow,
-            precision_:      1e30
+            name_:              "Pool Cover - USD Coin",
+            symbol_:            "MPL-CP-USDC",
+            owner_:             poolCoverManager,
+            asset_:             coverAssets[0],
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
         }));
 
         poolCovers[1] = address(new PoolCover({
-            name_:           "Pool Cover - Wrapped BTC",
-            symbol_:         "MPL-CP-WBTC",
-            owner_:          poolCoverManager,
-            asset_:          coverAssets[1],
-            lockupDuration_: lockupDuration,
-            redeemWindow_:   redeemWindow,
-            precision_:      1e30
+            name_:              "Pool Cover - Wrapped BTC",
+            symbol_:            "MPL-CP-WBTC",
+            owner_:             poolCoverManager,
+            asset_:             coverAssets[1],
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
         }));
 
         poolCovers[2] = address(new PoolCover({
-            name_:           "Pool Cover - Wrapped Ether",
-            symbol_:         "MPL-CP-WETH",
-            owner_:          poolCoverManager,
-            asset_:          coverAssets[2],
-            lockupDuration_: lockupDuration,
-            redeemWindow_:   redeemWindow,
-            precision_:      1e30
+            name_:              "Pool Cover - Wrapped Ether",
+            symbol_:            "MPL-CP-WETH",
+            owner_:             poolCoverManager,
+            asset_:             coverAssets[2],
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
         }));
 
         poolCovers[3] = address(new PoolCover({
-            name_:           "Pool Cover - xMPL",
-            symbol_:         "MPL-CP-xMPL",
-            owner_:          poolCoverManager,
-            asset_:          coverAssets[3],
-            lockupDuration_: lockupDuration,
-            redeemWindow_:   redeemWindow,
-            precision_:      1e30
+            name_:              "Pool Cover - xMPL",
+            symbol_:            "MPL-CP-xMPL",
+            owner_:             poolCoverManager,
+            asset_:             coverAssets[3],
+            precision_:         precision,
+            escrowFactory_:     escrowFactory,
+            escrowInitializer_: escrowInitializer,
+            lockupDuration_:    lockupDuration,
+            redeemWindow_:      redeemWindow
         }));
 
         converterAuctioneers = new address[](numberOfCovers);
