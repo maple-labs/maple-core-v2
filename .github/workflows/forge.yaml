@@ -15,12 +15,26 @@ jobs:
         with:
           version: nightly
 
+      - name: Checkout globals-v2 private submodule
+        env:
+          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
+          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+        shell: bash
+        run: |
+          mkdir $HOME/.ssh
+          echo "$SSH_KEY_GLOBALS_V2" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          git submodule update --init modules/globals-v2
+          echo "$SSH_KEY_NTP" > $HOME/.ssh/id_rsa
+          cd modules/globals-v2
+          git submodule update --init --recursive
+          cd ../..
+
       - name: Checkout loan private submodule
         env:
           SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
         shell: bash
         run: |
-          mkdir $HOME/.ssh
           echo "$SSH_KEY_LOAN" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
           git submodule update --init --recursive modules/loan
@@ -32,7 +46,7 @@ jobs:
         run: |
           echo "$SSH_KEY_POOL_V2" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
-          git submodule update --init --recursive modules/poolv2
+          git submodule update --init --recursive modules/pool-v2
 
       - name: Checkout withdrawal-manager submodule
         env:

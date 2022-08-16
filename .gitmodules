@@ -1,15 +1,20 @@
 [submodule "modules/loan"]
 	path = modules/loan
 	url = git@github.com:maple-labs/loan.git
-[submodule "modules/poolv2"]
-	path = modules/poolv2
-	url = git@github.com:maple-labs/poolv2.git
+	ignore = dirty
 [submodule "modules/withdrawal-manager"]
 	path = modules/withdrawal-manager
 	url = git@github.com:maple-labs/withdrawal-manager.git
+	ignore = dirty
+[submodule "modules/globals-v2"]
+	path = modules/globals-v2
+	url = git@github.com:maple-labs/globals-v2.git
+[submodule "modules/test-utilities"]
+	path = modules/test-utilities
+	url = git@github.com:maple-labs/contract-test-utils.git
+[submodule "modules/pool-v2"]
+	path = modules/pool-v2
+	url = git@github.com:maple-labs/poolV2.git
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
-[submodule "modules/contract-test-utils"]
-	path = modules/contract-test-utils
-	url = git@github.com:maple-labs/contract-test-utils.git

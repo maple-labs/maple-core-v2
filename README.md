@@ -1,6 +1,7 @@
-# Pool V2 Integration Testing
+# Maple V2
 
-![Foundry CI](https://github.com/maple-labs/pool-v2-integration/actions/workflows/forge.yaml/badge.svg) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+![Foundry CI](https://github.com/maple-labs/maple-v2-core/actions/workflows/forge.yaml/badge.svg)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## Setup
 
@@ -9,7 +10,7 @@
 ## About Maple
 Maple is a decentralized corporate credit market. Maple provides capital to institutional borrowers through globally accessible fixed-income yield opportunities.
 
-For all technical documentation related to the Maple protocol, please refer to the GitHub [wiki](https://github.com/maple-labs/maple-core/wiki).
+For all technical documentation related to the Maple protocol, please refer to the GitHub [wiki](https://github.com/maple-labs/maple-v2-core/wiki).
 
 ---
 
