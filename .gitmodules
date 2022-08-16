@@ -9,12 +9,15 @@
 [submodule "modules/globals-v2"]
 	path = modules/globals-v2
 	url = git@github.com:maple-labs/globals-v2.git
-[submodule "modules/test-utilities"]
-	path = modules/test-utilities
-	url = git@github.com:maple-labs/contract-test-utils.git
+	ignore = dirty
 [submodule "modules/pool-v2"]
 	path = modules/pool-v2
 	url = git@github.com:maple-labs/poolV2.git
+	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
+	ignore = dirty
+[submodule "modules/contract-test-utils"]
+	path = modules/contract-test-utils
+	url = git@github.com:maple-labs/contract-test-utils.git

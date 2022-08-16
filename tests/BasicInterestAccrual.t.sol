@@ -2,25 +2,25 @@
 pragma solidity 0.8.7;
 
 import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
-import { Address           } from "../modules/test-utilities/contracts/test.sol";
+import { Address           } from "../modules/contract-test-utils/contracts/test.sol";
 
 import { TestBaseWithAssertions } from "../contracts/TestBaseWithAssertions.sol";
 
 contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
     address borrower;
-    address depositor;
+    address lp;
 
     function setUp() public override {
         super.setUp();
 
-        borrower  = address(new Address());
-        depositor = address(new Address());
+        borrower = address(new Address());
+        lp       = address(new Address());
     }
 
     function test_basicInterestAccrual() external {
         depositLiquidity({
-            depositor: depositor,
+            lp:        lp,
             liquidity: 1_500_000e6
         });
 
@@ -63,8 +63,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
             domainEnd:         start + 365 days / 12
         });
         assertAssetBalances(
-            [borrower,  address(pool), poolDelegate, mapleTreasury],
-            [999_250e6, 500_000e6,     500e6,        250e6        ]
+            [borrower,  address(pool), poolDelegate, treasury],
+            [999_250e6, 500_000e6,     500e6,        250e6   ]
         );
 
         /************************/
@@ -92,8 +92,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
             domainEnd:         start + 2 * 365 days / 12
         });
         assertAssetBalances(
-            [address(pool), poolDelegate, mapleTreasury],
-            [505_625e6,     900e6,        1300e6       ]
+            [address(pool), poolDelegate, treasury],
+            [505_625e6,     900e6,        1300e6  ]
         );
 
         /************************/
@@ -114,8 +114,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertTotalAssets(1_511_250e6);
         assertAssetBalances(
-            [address(pool), poolDelegate, mapleTreasury],
-            [511_250e6,     1300e6,       2350e6       ]
+            [address(pool), poolDelegate, treasury],
+            [511_250e6,     1300e6,       2350e6  ]
         );
         assertLoanManagerState({
             principalOut:      1_000_000e6,
@@ -145,8 +145,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertTotalAssets(1_516_875e6);
         assertAssetBalances(
-            [address(pool), poolDelegate, mapleTreasury],
-            [1_516_875e6,   1700e6,       3400e6       ]
+            [address(pool), poolDelegate, treasury],
+            [1_516_875e6,   1700e6,       3400e6  ]
         );
         assertLoanManagerState({
             principalOut:      0,
