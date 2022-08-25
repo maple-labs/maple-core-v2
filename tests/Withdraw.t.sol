@@ -186,48 +186,6 @@ contract WithdrawTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 0);
     }
 
-    function test_withdraw_singleUser_fullLiquidity_sameAmount() external {
-        depositLiquidity({
-            lp:        lp,
-            liquidity: 1_000e6
-        });
-
-        vm.startPrank(lp);
-
-        pool.requestWithdraw(1_000e6);  // Transfers 1000 shares to the WM.
-
-        // Transfer cash into pool to increase totalAssets
-        fundsAsset.mint(address(pool), 250e6);
-
-        vm.warp(start + 2 weeks);
-
-        assertEq(fundsAsset.balanceOf(lp),            0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_250e6);
-
-        assertEq(pool.totalSupply(), 1_000e6);
-        assertEq(pool.balanceOf(lp), 0);
-        assertEq(pool.balanceOf(wm), 1_000e6);
-
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
-
-        uint256 shares = pool.withdraw(1_000e6, lp, lp);
-
-        assertEq(shares, 800e6);
-
-        assertEq(fundsAsset.balanceOf(lp),            1_000e6);
-        assertEq(fundsAsset.balanceOf(address(pool)), 250e6);
-
-        assertEq(pool.totalSupply(), 200e6);  // 1000 withdrawal redeemed 80% of shares
-        assertEq(pool.balanceOf(lp), 200e6);  // Partial withdrawal sends remainder to user.
-        assertEq(pool.balanceOf(wm), 0);
-
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-    }
-
     function test_withdraw_singleUser_fullLiquidity_raiseAmount() external {
         depositLiquidity({
             lp:        lp,

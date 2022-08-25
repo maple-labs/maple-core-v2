@@ -186,48 +186,6 @@ contract RedeemTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 0);
     }
 
-    function test_redeem_singleUser_fullLiquidity_partialRedeem() external {
-        depositLiquidity({
-            lp:        lp,
-            liquidity: 1_000e6
-        });
-
-        // Transfer cash into pool to increase totalAssets
-        fundsAsset.mint(address(pool), 250e6);
-
-        vm.startPrank(lp);
-
-        pool.requestRedeem(1_000e6);
-
-        vm.warp(start + 2 weeks);
-
-        assertEq(fundsAsset.balanceOf(lp),            0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_250e6);
-
-        assertEq(pool.totalSupply(), 1_000e6);
-        assertEq(pool.balanceOf(lp), 0);
-        assertEq(pool.balanceOf(wm), 1_000e6);
-
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
-
-        uint256 assets = pool.redeem(800e6, lp, lp);
-
-        assertEq(assets, 1_000e6);
-
-        assertEq(fundsAsset.balanceOf(lp),            1_000e6);
-        assertEq(fundsAsset.balanceOf(address(pool)), 250e6);
-
-        assertEq(pool.totalSupply(), 200e6);
-        assertEq(pool.balanceOf(lp), 200e6);  // Partial withdraw sends remainder to user.
-        assertEq(pool.balanceOf(wm), 0);
-
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-    }
-
     function test_redeem_singleUser_fullLiquidity_fullRedeem() external {
         depositLiquidity({
             lp:        lp,
