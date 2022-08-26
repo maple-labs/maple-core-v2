@@ -25,9 +25,33 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 paymentDueDate,
         uint256 paymentsRemaining
     ) internal {
+        assertEq(Loan(loan).principal(),          principal,         "principal");
         assertEq(Loan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
         assertEq(Loan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
         assertEq(Loan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+    }
+
+    function assertLoanState(
+        address loan,
+        uint256 principal,
+        uint256 incomingPrincipal,
+        uint256 incomingInterest,
+        uint256 incomingFees,
+        uint256 refinanceInterest,
+        uint256 paymentDueDate,
+        uint256 paymentsRemaining
+    ) internal {
+        Loan loanContract = Loan(loan);
+
+        ( uint256 principalPayment, uint256 interest, uint256 fees ) = loanContract.getNextPaymentBreakdown();
+        assertEq(interest, incomingInterest,          "interest");
+        assertEq(fees,     incomingFees,              "fees");
+        assertEq(principalPayment, incomingPrincipal, "incoming principal");
+
+        assertEq(loanContract.principal(),          principal,         "principal");
+        assertEq(loanContract.refinanceInterest(),  refinanceInterest, "refinanceInterest");
+        assertEq(loanContract.nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
+        assertEq(loanContract.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
     function assertLoanInfoWasDeleted(address loan) internal {
@@ -98,6 +122,10 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     function assertPoolManager(uint256 totalAssets, uint256 unrealizedLosses) internal {
         assertEq(poolManager.totalAssets(),      totalAssets,      "totalAssets");
         assertEq(poolManager.unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
+    }
+
+    function assertTotalAssets(uint256 totalAssets) internal {
+        assertEq(PoolManager(poolManager).totalAssets(), totalAssets);
     }
 
     function assertWithdrawalManager() internal {

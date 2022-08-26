@@ -202,11 +202,12 @@ contract TestBase is TestUtils {
     /**
      *  @param amounts Array of principal and collateral
      *           [0]: principal
-     *           [1]: collateral
+     *           [1]: ending principal
+     *           [2]: collateral
      */
     function fundAndDrawdownLoan(
         address borrower,
-        uint256[2] memory amounts,
+        uint256[3] memory amounts,
         uint256 interestRate,
         uint256 paymentInterval,
         uint256 numberOfPayments
@@ -222,7 +223,7 @@ contract TestBase is TestUtils {
                 feeManager_:     address(feeManager),
                 assets_:         [address(collateralAsset), address(fundsAsset)],
                 termDetails_:    [uint256(5 days), paymentInterval, numberOfPayments],
-                amounts_:        [amounts[1], amounts[0], amounts[0]],
+                amounts_:        [amounts[2], amounts[0], amounts[1]],
                 rates_:          [interestRate, 0, 0, 0],
                 fees_:           [nextDelegateOriginationFee, nextDelegateServiceFee]
             }),
@@ -233,7 +234,7 @@ contract TestBase is TestUtils {
         poolManager.fund(amounts[0], address(loan), address(loanManager));
 
         vm.startPrank(borrower);
-        collateralAsset.mint(address(loan), amounts[1]);
+        collateralAsset.mint(address(loan), amounts[2]);
         loan.drawdownFunds(loan.drawableFunds(), borrower);
         vm.stopPrank();
     }

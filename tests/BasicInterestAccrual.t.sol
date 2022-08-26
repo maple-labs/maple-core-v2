@@ -40,7 +40,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         Loan loan = fundAndDrawdownLoan({
             borrower:         borrower,
-            amounts:          [uint256(1_000_000e6), 0],
+            amounts:          [uint256(1_000_000e6), uint256(1_000_000e6), 0],
             interestRate:     0.075e18,
             paymentInterval:  ONE_MONTH,
             numberOfPayments: 3
