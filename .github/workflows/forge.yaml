@@ -42,11 +42,16 @@ jobs:
       - name: Checkout poolv2 private submodule
         env:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
+          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
         shell: bash
         run: |
           echo "$SSH_KEY_POOL_V2" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
-          git submodule update --init --recursive modules/pool-v2
+          git submodule update --init modules/pool-v2
+          echo "$SSH_KEY_LIQUIDATIONS" > $HOME/.ssh/id_rsa
+          cd modules/pool-v2
+          git submodule update --init --recursive
+          cd ../..
 
       - name: Checkout withdrawal-manager submodule
         env:
