@@ -31,8 +31,10 @@ import { WithdrawalManagerInitializer } from "../modules/withdrawal-manager/cont
 contract TestBase is TestUtils {
 
     uint256 constant MAX_TOKEN_AMOUNT = 1e29;
-    uint256 constant ONE_MONTH        = ONE_YEAR / 12;
-    uint256 constant ONE_YEAR         = 365 days;
+
+    uint256 constant ONE_DAY   = 1 days;
+    uint256 constant ONE_MONTH = ONE_YEAR / 12;
+    uint256 constant ONE_YEAR  = 365 days;
 
     address governor;
     address poolDelegate;
@@ -223,18 +225,18 @@ contract TestBase is TestUtils {
                 feeManager_:     address(feeManager),
                 assets_:         [address(collateralAsset), address(fundsAsset)],
                 termDetails_:    [uint256(5 days), paymentInterval, numberOfPayments],
-                amounts_:        [amounts[2], amounts[0], amounts[1]],
-                rates_:          [interestRate, 0, 0, 0],
+                amounts_:        [amounts[0], amounts[1], amounts[2]],
+                rates_:          [interestRate, 0, 0, 0],  // TODO: Add late interest rate / premium
                 fees_:           [nextDelegateOriginationFee, nextDelegateServiceFee]
             }),
             salt_: "SALT"
         }));
 
         vm.prank(poolDelegate);
-        poolManager.fund(amounts[0], address(loan), address(loanManager));
+        poolManager.fund(amounts[1], address(loan), address(loanManager));
 
         vm.startPrank(borrower);
-        collateralAsset.mint(address(loan), amounts[2]);
+        collateralAsset.mint(address(loan), amounts[0]);
         loan.drawdownFunds(loan.drawableFunds(), borrower);
         vm.stopPrank();
     }
@@ -272,13 +274,18 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
-    function liquidateCollateral(address loan) internal {
-        // Perform Liquidation -- LoanManager acts as Auctioneer
+    function liquidateCollateral(Loan loan) internal {
         MockLiquidationStrategy mockLiquidationStrategy = new MockLiquidationStrategy(address(loanManager));
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        mockLiquidationStrategy.flashBorrowLiquidation(liquidator, collateralAsset.balanceOf(liquidator), address(collateralAsset), address(fundsAsset), loan);
+        mockLiquidationStrategy.flashBorrowLiquidation(
+            liquidator,
+            collateralAsset.balanceOf(address(liquidator)),
+            address(collateralAsset),
+            address(fundsAsset),
+            address(loan)
+        );
     }
 
     function updateWithdrawal(address lp, uint256 sharesToTransfer) internal {
@@ -288,4 +295,5 @@ contract TestBase is TestUtils {
     function withdraw(address lp, uint256 sharesToTransfer) internal {
         // TODO
     }
+
 }

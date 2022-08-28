@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { console } from "../modules/contract-test-utils/contracts/log.sol";
-import { Address } from "../modules/contract-test-utils/contracts/test.sol";
+import { TestBaseWithAssertions } from "../contracts/TestBaseWithAssertions.sol";
 
-import { MockERC20 } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
 
 import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 import { Refinancer        } from "../modules/loan/contracts/Refinancer.sol";
-
-import { PoolManager } from "../modules/pool-v2/contracts/PoolManager.sol";
-
-import { TestBaseWithAssertions } from "../contracts/TestBaseWithAssertions.sol";
 
 contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
     address borrower;
     address lp;
 
-    Refinancer refinancer;
     Loan       loan;
+    Refinancer refinancer;
 
     function setUp() public override {
         super.setUp();
@@ -42,17 +37,18 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = Loan(fundAndDrawdownLoan({
+        loan = fundAndDrawdownLoan({
             borrower:         borrower,
-            amounts:          [uint256(1_000_000e6), 1_000_000e6, 0],
+            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11,57 days
             numberOfPayments: 3
-        }));
+        });
 
     }
 
     function test_refinance_onLoanPaymentDueDate_changePaymentInterval() external {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -79,7 +75,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -90,7 +86,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -109,7 +105,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /****************************/
         /*** Refinance Assertions ***/
@@ -117,20 +113,20 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        vm.startPrank(address(borrower));
+        vm.startPrank(borrower);
         loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        MockERC20(fundsAsset).mint(address(borrower), 10_000e6);
-        MockERC20(fundsAsset).approve(address(loan), 10_000e6);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan), 10_000e6);
         loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
         vm.stopPrank();
 
-        vm.prank(address(poolDelegate));
-        PoolManager(poolManager).acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,                           // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -141,7 +137,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.09e6 * 1e30,
@@ -160,7 +156,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -173,7 +169,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,        // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -184,7 +180,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -203,11 +199,12 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
     }
 
     function test_refinance_onLoanPaymentDueDate_increasePrincipal() external {
-         /**************************/
+
+        /**************************/
         /*** Initial Assertions ***/
         /**************************/
 
@@ -233,7 +230,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -244,7 +241,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -263,7 +260,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /****************************/
         /*** Refinance Assertions ***/
@@ -273,20 +270,20 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  1_000_000e6);
         calls[1] = abi.encodeWithSignature("setEndingPrincipal(uint256)", 2_000_000e6);
 
-        vm.startPrank(address(borrower));
+        vm.startPrank(borrower);
         loan.proposeNewTerms(address(refinancer), block.timestamp + 1, calls);
-        MockERC20(fundsAsset).mint(address(borrower), 20_000e6); // Amount for origination fees
-        MockERC20(fundsAsset).approve(address(loan),  20_000e6);
+        fundsAsset.mint(address(borrower), 20_000e6); // Amount for origination fees
+        fundsAsset.approve(address(loan), 20_000e6);
         loan.returnFunds(20_000e6);
         vm.stopPrank();
 
-        vm.prank(address(poolDelegate));
-        PoolManager(poolManager).acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, calls, 1_000_000e6);
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, calls, 1_000_000e6);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,                           // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -297,7 +294,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.18e6 * 1e30,
@@ -316,7 +313,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -329,7 +326,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,        // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -340,7 +337,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -359,10 +356,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 270_000e6);  // Interest + refinance interest
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 270_000e6);  // Interest + refinance interest
     }
 
     function test_refinance_onLoanPaymentDueDate_changeInterestRate() external {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -389,7 +387,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -400,7 +398,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -419,27 +417,28 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /****************************/
         /*** Refinance Assertions ***/
         /****************************/
 
         bytes[] memory data = encodeWithSignatureAndUint("setInterestRate(uint256)", 6.3072e18);  // 2x
-        vm.startPrank(address(borrower));
+
+        vm.startPrank(borrower);
         loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        MockERC20(fundsAsset).mint(address(borrower), 10_000e6);
-        MockERC20(fundsAsset).approve(address(loan), 10_000e6);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan), 10_000e6);
         loan.returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(address(poolDelegate));
-        PoolManager(poolManager).acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,              // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -450,7 +449,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.18e6 * 1e30,
@@ -469,7 +468,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -482,7 +481,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,        // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -493,7 +492,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -512,10 +511,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
     }
 
     function test_refinance_onLoanPaymentDueDate_changeToAmortized() external {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -542,7 +542,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -553,7 +553,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -572,27 +572,28 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /****************************/
         /*** Refinance Assertions ***/
         /****************************/
 
         bytes[] memory data = encodeWithSignatureAndUint("setEndingPrincipal(uint256)", 0);
-        vm.startPrank(address(borrower));
+
+        vm.startPrank(borrower);
         loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        MockERC20(fundsAsset).mint(address(borrower), 10_000e6);
-        MockERC20(fundsAsset).approve(address(loan), 10_000e6);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan), 10_000e6);
         loan.returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(address(poolDelegate));
-        PoolManager(poolManager).acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 302_114_803625,
             incomingInterest:  200_000e6,              // 100_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -603,7 +604,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.09e6 * 1e30,
@@ -622,7 +623,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -635,7 +636,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         697_885_196375,
             incomingPrincipal: 332_326_283988,
             incomingInterest:  69_788_519637,
@@ -646,7 +647,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 62_809_667673,
             refinanceInterest:   0,
             issuanceRate:        0.062809667673e6 * 1e30,
@@ -665,10 +666,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 302_114_803625);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 302_114_803625);
     }
 
     function test_refinance_onLateLoan_changePaymentInterval() external {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -695,7 +697,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  151_840e6,        // Late interest: 6 days: 86400 * 6 * 0.1e6 = 51_840e6
@@ -706,7 +708,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -725,27 +727,28 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /****************************/
         /*** Refinance Assertions ***/
         /****************************/
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-        vm.startPrank(address(borrower));
+
+        vm.startPrank(borrower);
         loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        MockERC20(fundsAsset).mint(address(borrower), 10_000e6);
-        MockERC20(fundsAsset).approve(address(loan), 10_000e6);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan), 10_000e6);
         loan.returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(address(poolDelegate));
-        PoolManager(poolManager).acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 181_656e6); // Principal + interest owed at refinance time (201_840e6 * 0.9 to discount service fees)
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  401_840e6,                           // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6) + refinanced period incoming (200_000e6)
@@ -756,7 +759,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   181_656e6,
             issuanceRate:        0.09e6 * 1e30,
@@ -775,7 +778,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -788,7 +791,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 181_656e6 + 180_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -799,7 +802,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -818,7 +821,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(MockERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 181_656e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 181_656e6);
     }
 
     function encodeWithSignatureAndUint(string memory signature_, uint256 arg_) internal pure returns (bytes[] memory calls) {

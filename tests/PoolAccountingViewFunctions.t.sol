@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan  } from "../modules/loan/contracts/MapleLoan.sol";
-
 import { TestBase } from "../contracts/TestBase.sol";
+
+import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
+
+import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
 contract BalanceOfAssetsTests is TestBase {
 

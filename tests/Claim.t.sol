@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { console } from "../modules/contract-test-utils/contracts/log.sol";
-import { Address } from "../modules/contract-test-utils/contracts/test.sol";
-
-import { IERC20 as ERC20    } from "../modules/erc20/contracts/interfaces/IERC20.sol";
-import { MapleLoan as Loan  } from "../modules/loan/contracts/MapleLoan.sol";
-
 import { TestBaseWithAssertions } from "../contracts/TestBaseWithAssertions.sol";
+
+import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
+
+import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
 contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
@@ -36,17 +34,18 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = Loan(fundAndDrawdownLoan({
+        loan = fundAndDrawdownLoan({
             borrower:         borrower,
-            amounts:          [uint256(1_000_000e6), 1_000_000e6, 0],
+            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
 
     }
 
     function test_claim_onTimePayment_interestOnly() public {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -73,7 +72,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -84,7 +83,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -103,7 +102,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -114,7 +113,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest : 100_000e6,
@@ -125,7 +124,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -144,10 +143,11 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 590_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 590_000e6);
     }
 
     function test_claim_earlyPayment_interestOnly() public {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -174,7 +174,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6 + 45_000e6); // 0.09e6 per second * 500_000 seconds
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -185,7 +185,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -204,7 +204,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -215,7 +215,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest : 100_000e6,
@@ -226,7 +226,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.06e6 * 1e30,
@@ -245,10 +245,11 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 590_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 590_000e6);
     }
 
     function test_claim_latePayment_interestOnly() public {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -275,7 +276,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  117_280e6,        // 0.1 * 1_000_000 = 100_000 + late(86400 seconds * 2 * 0.1) = 17_280
@@ -286,7 +287,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -305,7 +306,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -320,7 +321,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6 + 90_000e6 + 15_552e6 + 9_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest : 100_000e6,
@@ -331,7 +332,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -350,7 +351,7 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
     }
 
 }
@@ -382,17 +383,18 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = Loan(fundAndDrawdownLoan({
+        loan = fundAndDrawdownLoan({
             borrower:         borrower,
-            amounts:          [uint256(2_000_000e6), 0, 0],
+            amounts:          [uint256(0), uint256(2_000_000e6), uint256(0)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 2
-        }));
+        });
 
     }
 
     function test_claim_onTimePayment_amortized() public {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -411,7 +413,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,   // Principal is adjusted to make equal loan payments across the term.
             incomingInterest:  200_000e6,        // 0.1 * 2_000_000 = 200_000
@@ -430,7 +432,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,
             incomingInterest:  200_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -444,7 +446,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment1Interest  = 200_000e6;
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -463,7 +465,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -474,7 +476,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_047_619_047620,
             incomingPrincipal: 1_047_619_047620,
             incomingInterest : 104_761_904762,
@@ -491,7 +493,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 94_285_714285,
             refinanceInterest:   0,
             issuanceRate:        0.094285714285e6 * 1e30,
@@ -510,10 +512,11 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
     }
 
     function test_claim_earlyPayment_amortized() public {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -532,7 +535,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,   // Principal is adjusted to make equal loan payments across the term.
             incomingInterest:  200_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -551,7 +554,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 108_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,
             incomingInterest:  200_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -565,7 +568,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment1Interest  = 200_000e6;
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -584,7 +587,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -595,7 +598,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_047_619_047620,
             incomingPrincipal: 1_047_619_047620,
             incomingInterest : 104_761_904762,
@@ -612,7 +615,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 94_285_714285,
             refinanceInterest:   0,
             issuanceRate:        0.067346938775e6 * 1e30,
@@ -631,10 +634,11 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
     }
 
     function test_claim_latePayment_amortized() public {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -653,7 +657,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,   // Principal is adjusted to make equal loan payments across the term.
             incomingInterest:  200_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -672,7 +676,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,
             incomingInterest:  200_000e6 + 51_840e6, // 0.1 * 1_000_000 + late(86400 seconds * 3 * 0.2) = 51_840
@@ -686,7 +690,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment1Interest  = 200_000e6;
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -705,7 +709,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -717,7 +721,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6 + 180_000e6 + 46_656e6 + 18_857_142857);
 
         assertLoanState({
-            loan:              address(loan),
+            loan:              loan,
             principal:         1_047_619_047620,
             incomingPrincipal: 1_047_619_047620,
             incomingInterest : 104_761_904762,
@@ -734,7 +738,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
         assertLoanInfo({
-            loan:                address(loan),
+            loan:                loan,
             incomingNetInterest: 94_285_714285,
             refinanceInterest:   0,
             issuanceRate:        0.094285714285e6 * 1e30,
@@ -753,7 +757,7 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6 + 46_656e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6 + 46_656e6);
     }
 
 }
@@ -788,26 +792,27 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan1 = Loan(fundAndDrawdownLoan({
+        loan1 = fundAndDrawdownLoan({
             borrower:         borrower1,
-            amounts:          [uint256(1_000_000e6), 1_000_000e6, 0],
+            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
 
         vm.warp(start + 300_000);
 
-        loan2 = Loan(fundAndDrawdownLoan({
+        loan2 = fundAndDrawdownLoan({
             borrower:         borrower2,
-            amounts:          [uint256(2_000_000e6), 2_000_000e6, 0],
+            amounts:          [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
     }
 
     function test_claim_onTimePayment_interestOnly_onTimePayment_interestOnly() external {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -834,7 +839,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6); // Principal + 1_000_000s of loan1  at 0.09e6 IR + 700_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -845,7 +850,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -864,7 +869,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*************************************/
         /*** Post Loan1 Payment Assertions ***/
@@ -875,7 +880,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6); // Principal + 1_000_000s of loan1 at 0.09 + 700_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -886,7 +891,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -905,7 +910,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
 
         /************************************/
         /*** Pre Loan2 Payment Assertions ***/
@@ -916,7 +921,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6); // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -927,7 +932,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -946,7 +951,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
 
         /*************************************/
         /*** Post Loan2 Payment Assertions ***/
@@ -957,7 +962,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6); // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -968,7 +973,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -987,7 +992,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
 
         /********************************************/
         /*** Post Loan1 second Payment Assertions ***/
@@ -999,7 +1004,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6); // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6);  // Two payments of 90k plus one 180k payment
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6);  // Two payments of 90k plus one 180k payment
     }
 
     function test_claim_earlyPayment_interestOnly_onTimePayment_interestOnly() external {
@@ -1029,7 +1034,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 45_000e6 + 36_000e6); // 500_000s of loan1 at 0.09 + 200_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -1040,7 +1045,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -1059,7 +1064,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*************************************/
         /*** Post Loan1 Payment Assertions ***/
@@ -1070,7 +1075,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 36_000e6); // Principal + 1_000_000s of loan1 at 0.09 + 700_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
@@ -1081,7 +1086,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.06e6 * 1e30,
@@ -1100,7 +1105,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
 
         /************************************/
         /*** Pre Loan2 Payment Assertions ***/
@@ -1111,7 +1116,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 48_000e6 + 180_000e6); // Principal + loan1 payment interest + 800_000s of loan1 at 0.6e6 + 1_000_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1122,7 +1127,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1141,7 +1146,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
 
         /*************************************/
         /*** Post Loan2 Payment Assertions ***/
@@ -1152,7 +1157,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 48_000e6 + 180_000e6); // Principal + loan1 payment interest + 800_000s of loan1 at 0.6e6 + 1_000_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1163,7 +1168,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1182,7 +1187,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
 
         /********************************************/
         /*** Post Loan1 second Payment Assertions ***/
@@ -1195,7 +1200,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         // Asserting this because all tests should be in sync after second loan1 payment
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6); // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6);
     }
 
     function test_claim_latePayment_interestOnly_onTimePayment_interestOnly() external {
@@ -1225,7 +1230,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6); // Principal + 1_000_000s of loan1 at 0.09e6 IR + 700_000s of loan2 at 0.18e6 IR. The issuance stops at DomainEnd, so no accrual after second 1_000_000
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  117_280e6,        // 0.1 * 1_000_000 = 100_000 + late(86400 seconds * 2 * 0.1) = 17_280
@@ -1236,7 +1241,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -1255,7 +1260,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*************************************/
         /*** Post Loan1 Payment Assertions ***/
@@ -1270,7 +1275,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 9_000e6 + 15_552e6 + 144_000e6); // Principal + 1_000_000s of loan1 at 0.09 + 800_000s of loan2 at 0.18e6 IR + late fees
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,
@@ -1281,7 +1286,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -1300,7 +1305,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
 
         /************************************/
         /*** Pre Loan2 Payment Assertions ***/
@@ -1311,7 +1316,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6 + 15_552e6); // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR + loan1 late interest
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1322,7 +1327,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1341,7 +1346,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
 
         /*************************************/
         /*** Post Loan2 Payment Assertions ***/
@@ -1352,7 +1357,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6 + 15_552e6); // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1363,7 +1368,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1382,7 +1387,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 15_552e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 15_552e6);
 
         /********************************************/
         /*** Post Loan1 second Payment Assertions ***/
@@ -1394,7 +1399,7 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6 + 15_552e6); // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR + late fees
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6 + 15_552e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6 + 15_552e6);
     }
 
 }
@@ -1434,13 +1439,13 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
     function test_claim_domainStart_gt_domainEnd() external {
         // Loan1 is funded at start
-        loan1 = Loan(fundAndDrawdownLoan({
+        loan1 = fundAndDrawdownLoan({
             borrower:         borrower1,
-            amounts:          [uint256(1_000_000e6), 1_000_000e6, 0],
+            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
 
         /**************************/
         /*** Initial Assertions ***/
@@ -1459,7 +1464,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 2_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 2_500_000e6);
 
         /*********************************/
         /*** Pre loan2 fund Assertions ***/
@@ -1481,7 +1486,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  220_960e6,         // Includes late interest.
@@ -1492,7 +1497,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -1500,19 +1505,19 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentDueDate:      start + 1_000_000
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 2_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 2_500_000e6);
 
         /**********************************/
         /*** Post loan2 fund Assertions ***/
         /**********************************/
 
-        loan2 = Loan(fundAndDrawdownLoan({
+        loan2 = fundAndDrawdownLoan({
             borrower:         borrower2,
-            amounts:          [uint256(2_000_000e6), 2_000_000e6, 0],
+            amounts:          [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             interestRate:     3.1536e18,
             paymentInterval:  1_000_000,
             numberOfPayments: 3
-        }));
+        });
 
         assertTotalAssets(3_500_000e6 + 90_000e6);
 
@@ -1528,7 +1533,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1539,7 +1544,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1547,7 +1552,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentDueDate:      start + 3_200_000
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*****************************/
         /*** Pre loan2 1st Payment ***/
@@ -1570,7 +1575,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         // Loan1 Assertions.
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6 + 224_640e6,         // Includes late interest.
@@ -1581,7 +1586,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0,             // IR has been updated for loan 1.
@@ -1591,7 +1596,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         // Loan2 Assertions.
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1602,7 +1607,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1610,7 +1615,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentDueDate:      start + 3_200_000
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /******************************/
         /*** Post loan2 1st Payment ***/
@@ -1632,7 +1637,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1643,7 +1648,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1651,7 +1656,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentDueDate:      start + 4_200_000
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 180_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6);
 
         /******************************/
         /*** Make loan1 1st Payment ***/
@@ -1668,7 +1673,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6 + 202_176e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  220_960e6,         // Includes late interest.
@@ -1679,7 +1684,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,         // Includes late interest.
             refinanceInterest:   0,
             issuanceRate:        0,
@@ -1698,7 +1703,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 202_176e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 202_176e6);
 
         /******************************/
         /*** Make loan1 2nd Payment ***/
@@ -1718,7 +1723,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6 + 90_000e6);
 
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 1_000_000e6,
             incomingInterest:  125_920e6,         // Includes late interest.
@@ -1729,7 +1734,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0,
@@ -1748,7 +1753,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6);
 
         /*******************************/
         /*** Make loan1 last Payment ***/
@@ -1769,7 +1774,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         // Loan has be removed from storage.
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
@@ -1788,7 +1793,7 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6 + 90_000e6 + 23_328e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6 + 90_000e6 + 23_328e6);
     }
 }
 
@@ -1825,43 +1830,44 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan1 = Loan(fundAndDrawdownLoan({
+        loan1 = fundAndDrawdownLoan({
             borrower:         borrower1,
-            amounts:          [uint256(1_000_000e6), 1_000_000e6, 0],
+            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
 
         vm.warp(start + 400_000);
 
-        loan2 = Loan(fundAndDrawdownLoan({
+        loan2 = fundAndDrawdownLoan({
             borrower:         borrower2,
-            amounts:          [uint256(2_000_000e6), 2_000_000e6, 0],
+            amounts:          [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
 
         vm.warp(start + 600_000);
 
-        loan3 = Loan(fundAndDrawdownLoan({
+        loan3 = fundAndDrawdownLoan({
             borrower:         borrower3,
-            amounts:          [uint256(3_000_000e6), 3_000_000e6, 0],
+            amounts:          [uint256(0), uint256(3_000_000e6), uint256(3_000_000e6)],
             interestRate:     3.1536e18,  // 0.1e6 tokens per second
             paymentInterval:  1_000_000,  // 11.57 days
             numberOfPayments: 3
-        }));
+        });
     }
 
     function test_claim_lateLoan3_loan1NotPaid_loan2NotPaid() external {
+
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
 
         // loan1
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,
@@ -1872,7 +1878,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -1882,7 +1888,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
 
         // loan2
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -1893,7 +1899,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -1903,7 +1909,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
 
         // loan3
         assertLoanState({
-            loan:              address(loan3),
+            loan:              loan3,
             principal:         3_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,
@@ -1914,7 +1920,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan3),
+            loan:                loan3,
             incomingNetInterest: 270_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.27e6 * 1e30,
@@ -1938,7 +1944,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /******************************/
         /*** Loan3 pre late Payment ***/
@@ -1948,7 +1954,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
 
         // loan3
         assertLoanState({
-            loan:              address(loan3),
+            loan:              loan3,
             principal:         3_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  351_840e6,         // 2 days of late interest (86400 * 2 * 0.3)
@@ -1975,7 +1981,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         /*******************************/
         /*** Loan3 post late Payment ***/
@@ -1985,7 +1991,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
 
         // loan1
         assertLoanState({
-            loan:              address(loan1),
+            loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  177_760e6,         // 700_000s (9 days rounded up) of interest: (86400 * 9 * 0.1) = 77_760
@@ -1996,7 +2002,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan1),
+            loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0,
@@ -2006,7 +2012,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
 
         // loan2
         assertLoanState({
-            loan:              address(loan2),
+            loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  269_120e6,         // 300_000s (4 days rounded up) of interest: (86400 * 4 * 0.2) = 69_120
@@ -2017,7 +2023,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan2),
+            loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0,
@@ -2026,7 +2032,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanState({
-            loan:              address(loan3),
+            loan:              loan3,
             principal:         3_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,         // 2 days of late interest (86400 * 2 * 0.3)
@@ -2037,7 +2043,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertLoanInfo({
-            loan:                address(loan3),
+            loan:                loan3,
             incomingNetInterest: 270_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.27e6 * 1e30,
@@ -2064,7 +2070,7 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(ERC20(fundsAsset).balanceOf(address(pool)), 500_000e6 + 270_000e6 + 46_656e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 270_000e6 + 46_656e6);
     }
 
 }

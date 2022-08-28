@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { MockERC20 as Asset } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
-import { Address           } from "../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
-
 import { TestBaseWithAssertions } from "../contracts/TestBaseWithAssertions.sol";
+
+import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
+
+import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
 contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
@@ -40,7 +40,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         Loan loan = fundAndDrawdownLoan({
             borrower:         borrower,
-            amounts:          [uint256(1_000_000e6), uint256(1_000_000e6), 0],
+            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             interestRate:     0.075e18,
             paymentInterval:  ONE_MONTH,
             numberOfPayments: 3
@@ -69,8 +69,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         });
 
         assertAssetBalances(
-            [borrower,  address(pool), poolDelegate, treasury],
-            [999_250e6, 500_000e6,     500e6,        250e6   ]
+            [address(borrower),  address(pool),      address(poolDelegate), address(treasury)],
+            [uint256(999_250e6), uint256(500_000e6), uint256(500e6),        uint256(250e6)   ]
         );
 
         /************************/
@@ -90,8 +90,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // +------------+--------+--------+
 
         assertAssetBalances(
-            [address(pool), poolDelegate, treasury],
-            [505_625e6,     900e6,        1300e6  ]
+            [address(pool),      address(poolDelegate), address(treasury)],
+            [uint256(505_625e6), uint256(900e6),        uint256(1300e6)  ]
         );
 
         assertPoolManager({ totalAssets: 1_505_625e6, unrealizedLosses: 0 });
@@ -124,8 +124,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // +------------+--------+--------+
 
         assertAssetBalances(
-            [address(pool), poolDelegate, treasury],
-            [511_250e6,     1300e6,       2350e6  ]
+            [address(pool),      address(poolDelegate), address(treasury)],
+            [uint256(511_250e6), uint256(1300e6),       uint256(2350e6)  ]
         );
 
         assertPoolManager({ totalAssets: 1_511_250e6, unrealizedLosses: 0 });
@@ -146,7 +146,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /************************/
 
         vm.warp(start + 3 * ONE_MONTH);
-        Asset(fundsAsset).mint(borrower, 1_000e6);  // Borrower makes some some money.
+        fundsAsset.mint(borrower, 1_000e6);  // Borrower makes some some money.
         makePayment(loan);
 
         // +--------------+--------+--------+
@@ -160,8 +160,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // +--------------+--------+--------+
 
         assertAssetBalances(
-            [address(pool), poolDelegate, treasury],
-            [1_516_875e6,   1700e6,       3400e6  ]
+            [address(pool),        address(poolDelegate), address(treasury)],
+            [uint256(1_516_875e6), uint256(1700e6),       uint256(3400e6)  ]
         );
 
         assertPoolManager({ totalAssets: 1_516_875e6, unrealizedLosses: 0 });

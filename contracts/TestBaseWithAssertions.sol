@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { console } from "../modules/contract-test-utils/contracts/log.sol";
-
-import { MockERC20 as Asset  } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
 import { MapleLoan as Loan   } from "../modules/loan/contracts/MapleLoan.sol";
-import { LoanManager         } from "../modules/pool-v2/contracts/LoanManager.sol";
-import { PoolManager         } from "../modules/pool-v2/contracts/PoolManager.sol";
 import { ILoanManagerStructs } from "../modules/pool-v2/tests/interfaces/ILoanManagerStructs.sol";
 
-import { TestBase          } from "./TestBase.sol";
 import { BalanceAssertions } from "./BalanceAssertions.sol";
+import { TestBase          } from "./TestBase.sol";
 
 contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
@@ -19,20 +14,20 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     /*********************************/
 
     function assertLoanState(
-        address loan,
+        Loan    loan,
         uint256 principal,
         uint256 refinanceInterest,
         uint256 paymentDueDate,
         uint256 paymentsRemaining
     ) internal {
-        assertEq(Loan(loan).principal(),          principal,         "principal");
-        assertEq(Loan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(Loan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(Loan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+        assertEq(loan.principal(),          principal,         "principal");
+        assertEq(loan.refinanceInterest(),  refinanceInterest, "refinanceInterest");
+        assertEq(loan.nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
+        assertEq(loan.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
     function assertLoanState(
-        address loan,
+        Loan    loan,
         uint256 principal,
         uint256 incomingPrincipal,
         uint256 incomingInterest,
@@ -41,27 +36,26 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 paymentDueDate,
         uint256 paymentsRemaining
     ) internal {
-        Loan loanContract = Loan(loan);
+        ( uint256 principalPayment, uint256 interest, uint256 fees ) = loan.getNextPaymentBreakdown();
 
-        ( uint256 principalPayment, uint256 interest, uint256 fees ) = loanContract.getNextPaymentBreakdown();
-        assertEq(interest, incomingInterest,          "interest");
-        assertEq(fees,     incomingFees,              "fees");
+        assertEq(interest, incomingInterest, "interest");
+        assertEq(fees,     incomingFees,     "fees");
         assertEq(principalPayment, incomingPrincipal, "incoming principal");
 
-        assertEq(loanContract.principal(),          principal,         "principal");
-        assertEq(loanContract.refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(loanContract.nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(loanContract.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+        assertEq(loan.principal(),          principal,         "principal");
+        assertEq(loan.refinanceInterest(),  refinanceInterest, "refinanceInterest");
+        assertEq(loan.nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
+        assertEq(loan.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
-    function assertLoanInfoWasDeleted(address loan) internal {
-        uint256 loanId = LoanManager(loanManager).loanIdOf(loan);
+    function assertLoanInfoWasDeleted(Loan loan) internal {
+        uint256 loanId = loanManager.loanIdOf(address(loan));
         assertEq(loanId, 0);
     }
 
     // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertLoanInfo(
-        address loan,
+        Loan    loan,
         uint256 incomingNetInterest,
         uint256 refinanceInterest,
         uint256 issuanceRate,
@@ -70,7 +64,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     )
         internal
     {
-        ILoanManagerStructs.LoanInfo memory loanInfo = ILoanManagerStructs(address(loanManager)).loans(loanManager.loanIdOf(loan));
+        ILoanManagerStructs.LoanInfo memory loanInfo = ILoanManagerStructs(address(loanManager)).loans(loanManager.loanIdOf(address(loan)));
 
         assertEq(loanInfo.incomingNetInterest, incomingNetInterest, "loanInfo.incomingNetInterest");
         assertEq(loanInfo.refinanceInterest,   refinanceInterest,   "loanInfo.refinanceInterest");
@@ -100,7 +94,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLiquidationInfo(
-        address loan,
+        Loan   loan,
         uint256 principal,
         uint256 interest,
         uint256 lateInterest,
@@ -108,7 +102,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         bool    liquidatorExists,
         bool    triggeredByGovernor
     ) internal {
-        ILoanManagerStructs.LiquidationInfo memory liquidationInfo = ILoanManagerStructs(address(loanManager)).liquidationInfo(loan);
+        ILoanManagerStructs.LiquidationInfo memory liquidationInfo = ILoanManagerStructs(address(loanManager)).liquidationInfo(address(loan));
 
         assertEq(liquidationInfo.principal,    principal,    "liquidationInfo.principal");
         assertEq(liquidationInfo.interest,     interest,     "liquidationInfo.interest");
@@ -125,7 +119,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertTotalAssets(uint256 totalAssets) internal {
-        assertEq(PoolManager(poolManager).totalAssets(), totalAssets);
+        assertEq(poolManager.totalAssets(), totalAssets);
     }
 
     function assertWithdrawalManager() internal {

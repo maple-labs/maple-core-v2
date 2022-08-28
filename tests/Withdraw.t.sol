@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan  } from "../modules/loan/contracts/MapleLoan.sol";
-
 import { TestBase } from "../contracts/TestBase.sol";
+
+import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
+
+import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
 contract RequestWithdrawTests is TestBase {
 
@@ -17,8 +18,7 @@ contract RequestWithdrawTests is TestBase {
 
         borrower = address(new Address());
         lp       = address(new Address());
-
-        wm = address(withdrawalManager);
+        wm       = address(withdrawalManager);
     }
 
     function test_requestWithdraw() external {
@@ -29,7 +29,7 @@ contract RequestWithdrawTests is TestBase {
 
         vm.startPrank(lp);
 
-        assertEq(fundsAsset.balanceOf(lp),            0);
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
         assertEq(fundsAsset.balanceOf(address(pool)), 1_000e6);
 
         assertEq(pool.totalSupply(), 1_000e6);
@@ -44,7 +44,7 @@ contract RequestWithdrawTests is TestBase {
 
         assertEq(shares, 1_000e6);
 
-        assertEq(fundsAsset.balanceOf(lp),            0);
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
         assertEq(fundsAsset.balanceOf(address(pool)), 1_000e6);
 
         assertEq(pool.totalSupply(), 1_000e6);
@@ -101,8 +101,7 @@ contract WithdrawTests is TestBase {
 
         borrower = address(new Address());
         lp       = address(new Address());
-
-        wm = address(withdrawalManager);
+        wm       = address(withdrawalManager);
     }
 
     function test_withdraw_singleUser_fullLiquidity_oneToOne() external {
@@ -117,7 +116,7 @@ contract WithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertEq(fundsAsset.balanceOf(lp),            0);
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
         assertEq(fundsAsset.balanceOf(address(pool)), 1_000e6);
 
         assertEq(pool.totalSupply(), 1_000e6);
@@ -132,7 +131,7 @@ contract WithdrawTests is TestBase {
 
         assertEq(shares, 1_000e6);
 
-        assertEq(fundsAsset.balanceOf(lp),            1_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),   1_000e6);
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
 
         assertEq(pool.totalSupply(), 0);
@@ -159,7 +158,7 @@ contract WithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertEq(fundsAsset.balanceOf(lp),            0);
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
         assertEq(fundsAsset.balanceOf(address(pool)), depositAmount);
 
         assertEq(pool.totalSupply(), depositAmount);
@@ -174,7 +173,7 @@ contract WithdrawTests is TestBase {
 
         assertEq(shares, withdrawAmount);
 
-        assertEq(fundsAsset.balanceOf(lp),            withdrawAmount);
+        assertEq(fundsAsset.balanceOf(address(lp)),   withdrawAmount);
         assertEq(fundsAsset.balanceOf(address(pool)), depositAmount - withdrawAmount);
 
         assertEq(pool.totalSupply(), depositAmount - withdrawAmount);
@@ -201,7 +200,7 @@ contract WithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertEq(fundsAsset.balanceOf(lp),            0);
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
         assertEq(fundsAsset.balanceOf(address(pool)), 1_250e6);
 
         assertEq(pool.totalSupply(), 1_000e6);
@@ -216,7 +215,7 @@ contract WithdrawTests is TestBase {
 
         assertEq(shares, 1_000e6);
 
-        assertEq(fundsAsset.balanceOf(lp),            1_250e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),   1_250e6);
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
 
         assertEq(pool.totalSupply(), 0);  // 1000 withdrawal redeemed 80% of shares
