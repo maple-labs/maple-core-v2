@@ -77,7 +77,7 @@ contract TestBase is TestUtils {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createPool();
+        _createPool(1 weeks, 2 days);
         _openPool();
 
         start = block.timestamp;
@@ -150,7 +150,7 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
-    function _createPool() internal {
+    function _createPool(uint256 withdrawalCycle, uint256 windowDuration) internal {
         vm.prank(poolDelegate);
         ( address poolManager_, address loanManager_, address withdrawalManager_ ) = deployer.deployPool({
             factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
@@ -158,7 +158,7 @@ contract TestBase is TestUtils {
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
-            configParams_: [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_: [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0]
         });
 
         poolManager       = PoolManager(poolManager_);
@@ -286,6 +286,16 @@ contract TestBase is TestUtils {
             address(fundsAsset),
             address(loan)
         );
+    }
+
+    function requestRedeem(address lp, uint256 amount) internal {
+        vm.prank(lp);
+        pool.requestRedeem(amount);
+    }
+
+    function redeem(address lp, uint256 amount) internal returns (uint256 assets_) {
+        vm.prank(lp);
+        assets_ = pool.redeem(amount, lp, lp);
     }
 
     function updateWithdrawal(address lp, uint256 sharesToTransfer) internal {

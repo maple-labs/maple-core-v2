@@ -122,8 +122,19 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(poolManager.totalAssets(), totalAssets);
     }
 
-    function assertWithdrawalManager() internal {
-        // TODO
+    function assertWithdrawalManagerState(
+        address lp,
+        uint256 lockedShares,
+        uint256 previousExitCycleId,
+        uint256 previousCycleTotalShares,
+        uint256 currentExitCycleId,
+        uint256 currentCycleTotalShares
+    ) internal {
+        assertEq(withdrawalManager.lockedShares(lp), lockedShares);
+        assertEq(withdrawalManager.exitCycleId(lp),  currentExitCycleId);
+
+        assertEq(withdrawalManager.totalCycleShares(previousExitCycleId), previousCycleTotalShares);
+        assertEq(withdrawalManager.totalCycleShares(currentExitCycleId),  currentCycleTotalShares);
     }
 
 }

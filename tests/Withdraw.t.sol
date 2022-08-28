@@ -90,7 +90,7 @@ contract RequestWithdrawTests is TestBase {
 
 }
 
-contract WithdrawTests is TestBase {
+contract SingleUserWithdrawTests is TestBase {
 
     address borrower;
     address lp;
