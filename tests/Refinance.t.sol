@@ -29,7 +29,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         setupFees({
-            delegateOriginationFee:     0,
+            delegateOriginationFee:     500e6,
             delegateServiceFee:         300e6,
             delegateManagementFeeRate:  0.02e6,
             platformOriginationFeeRate: 0.001e6,
@@ -65,6 +65,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -158,6 +162,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
+        // During refinance, origination fees are paid again
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        190_258751]);
+
         /*******************************/
         /*** Post Payment Assertions ***/
         /*******************************/
@@ -200,6 +208,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
+
+        // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
+        // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (20_00e6 flat + 16_000e6)
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [6_600e6,      54_000e6]);
     }
 
     function test_refinance_onLoanPaymentDueDate_increasePrincipal() external {
@@ -220,6 +233,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -315,6 +332,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
+        // During refinance, origination fees are paid again
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        190_258751]);
+
         /*******************************/
         /*** Post Payment Assertions ***/
         /*******************************/
@@ -357,6 +378,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 270_000e6);  // Interest + refinance interest
+
+        // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
+        // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (20_00e6 flat + 16_000e6)
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [6_600e6,      54_000e6]);
     }
 
     function test_refinance_onLoanPaymentDueDate_changeInterestRate() external {
@@ -377,6 +403,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -470,6 +500,9 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
+
         /*******************************/
         /*** Post Payment Assertions ***/
         /*******************************/
@@ -512,6 +545,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
+
+        // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
+        // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (10_00e6 flat + 16_000e6)
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [6_600e6,      44_000e6]);
     }
 
     function test_refinance_onLoanPaymentDueDate_changeToAmortized() external {
@@ -532,6 +570,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -625,6 +667,9 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
+
         /*******************************/
         /*** Post Payment Assertions ***/
         /*******************************/
@@ -667,6 +712,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 302_114_803625);
+
+        // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 2_000e6)
+        // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + (10_00e6 flat + 8_000e6)
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_600e6,      36_000e6]);
     }
 
     function test_refinance_onLateLoan_changePaymentInterval() external {
@@ -687,6 +737,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -780,6 +834,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
+        // During refinance, origination fees are paid again
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        190_258751]);
+
         /*******************************/
         /*** Post Payment Assertions ***/
         /*******************************/
@@ -822,6 +880,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 181_656e6);
+
+        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 4_000e6)  + late interest from 1st period (51_840e6 * 0.02 = 1036_800000)
+        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 16_000e6) + late interest from 1st period (51_840e6 * 0.08 = 4147_200000)
+        assertAssetBalancesIncrease([poolDelegate,        treasury],
+                                    [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]);
     }
 
     function encodeWithSignatureAndUint(string memory signature_, uint256 arg_) internal pure returns (bytes[] memory calls) {

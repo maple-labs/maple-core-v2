@@ -63,6 +63,10 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);  // 1m * 0.01% * (~11.57/365) * 3 = 95.129375
+
         /******************************/
         /*** Pre Payment Assertions ***/
         /******************************/
@@ -144,6 +148,11 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 590_000e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
     }
 
     function test_claim_earlyPayment_interestOnly() public {
@@ -164,6 +173,10 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /******************************/
         /*** Pre Payment Assertions ***/
@@ -246,6 +259,11 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 590_000e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
     }
 
     function test_claim_latePayment_interestOnly() public {
@@ -266,6 +284,10 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /******************************/
         /*** Pre Payment Assertions ***/
@@ -352,6 +374,11 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee + late interest (17_280e6 * 0.02 = 345_600000)
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee + late interest (17_280e6 * 0.08 = 1382_400000)
+        assertAssetBalancesIncrease([poolDelegate,      treasury],
+                                    [2_300e6 + 345.6e6, 18_000e6 + 1382.4e6]);
     }
 
 }
@@ -422,6 +449,10 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 2
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        126_839167]);
 
         /******************************/
         /*** Pre Payment Assertions ***/
@@ -513,6 +544,11 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee
+        // Treasury fee:      20_000e6 flat from service fee + 16_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_300e6,      36_000e6]);
     }
 
     function test_claim_earlyPayment_amortized() public {
@@ -544,6 +580,10 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 2
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        126_839167]);
 
         /******************************/
         /*** Pre Payment Assertions ***/
@@ -635,6 +675,11 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee
+        // Treasury fee:      20_000e6 flat from service fee + 16_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_300e6,      36_000e6]);
     }
 
     function test_claim_latePayment_amortized() public {
@@ -666,6 +711,10 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 2
         });
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        126_839167]);
 
         /******************************/
         /*** Pre Payment Assertions ***/
@@ -758,6 +807,11 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6 + 46_656e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee  + late interest (51_840e6 * 0.02 = 1036_800000)
+        // Treasury fee:      20_000e6 flat from service fee + 16_000e6 from management fee + late interest (51_840e6 * 0.08 = 4147_200000)
+        assertAssetBalancesIncrease([poolDelegate,        treasury],
+                                    [4_300e6 + 1_036.8e6, 36_000e6 + 4_147.2e6]);
     }
 
 }
@@ -829,6 +883,10 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000, // Payment due date of loan1
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee for each loan
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [1_000e6,      285_388126]);
 
         /************************************/
         /*** Pre Loan1 Payment Assertions ***/
@@ -912,6 +970,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
+
         /************************************/
         /*** Pre Loan2 Payment Assertions ***/
         /************************************/
@@ -994,6 +1057,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 16_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_300e6,      36_000e6]);
+
         /********************************************/
         /*** Post Loan1 second Payment Assertions ***/
         /********************************************/
@@ -1005,6 +1073,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6); // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6);  // Two payments of 90k plus one 180k payment
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
     }
 
     function test_claim_earlyPayment_interestOnly_onTimePayment_interestOnly() external {
@@ -1024,6 +1097,10 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000, // Payment due date of loan1
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee for each loan
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [1_000e6,      285_388126]);
 
         /******************************************/
         /*** Pre Loan1 early Payment Assertions ***/
@@ -1148,6 +1225,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
+
         /*************************************/
         /*** Post Loan2 Payment Assertions ***/
         /*************************************/
@@ -1189,6 +1271,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 16_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_300e6,      36_000e6]);
+
         /********************************************/
         /*** Post Loan1 second Payment Assertions ***/
         /********************************************/
@@ -1201,6 +1288,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6); // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
     }
 
     function test_claim_latePayment_interestOnly_onTimePayment_interestOnly() external {
@@ -1220,6 +1312,10 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
             domainEnd:             start + 1_000_000, // Payment due date of loan1
             unrealizedLosses:      0
         });
+
+        // PoolDelegate and treasury get their own originationFee for each loan
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [1_000e6,      285_388126]);
 
         /*****************************************/
         /*** Pre Loan1 Late Payment Assertions ***/
@@ -1307,6 +1403,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee + late interest (17_280e6 * 0.02 = 345_600000)
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee + late interest (17_280e6 * 0.08 = 1382_400000)
+        assertAssetBalancesIncrease([poolDelegate,      treasury],
+                                    [2_300e6 + 345.6e6, 18_000e6 + 1382.4e6]);
+
         /************************************/
         /*** Pre Loan2 Payment Assertions ***/
         /************************************/
@@ -1389,6 +1490,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 15_552e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 16_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_300e6,      36_000e6]);
+
         /********************************************/
         /*** Post Loan1 second Payment Assertions ***/
         /********************************************/
@@ -1400,6 +1506,11 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6 + 15_552e6); // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR + late fees
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 180_000e6 + 15_552e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [2_300e6,      18_000e6]);
     }
 
 }
@@ -1465,6 +1576,10 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 2_500_000e6);
+
+        // PoolDelegate and treasury get their own originationFee for each loan
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        95_129375]);
 
         /*********************************/
         /*** Pre loan2 fund Assertions ***/
@@ -1553,6 +1668,10 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
+
+        // PoolDelegate and treasury get their own originationFee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [500e6,        190_258751]);
 
         /*****************************/
         /*** Pre loan2 1st Payment ***/
@@ -1658,6 +1777,11 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 4_000e6 from management fee
+        // Treasury fee:      10_000e6 flat from service fee + 16_000e6 from management fee
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [4_300e6,      36_000e6]);
+
         /******************************/
         /*** Make loan1 1st Payment ***/
         /******************************/
@@ -1704,6 +1828,11 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 202_176e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee + late interest (224_640e6 * 0.02 = 4492_800000)
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee + late interest (224_640e6 * 0.08 = 17971_200000)
+        assertAssetBalancesIncrease([poolDelegate,        treasury],
+                                    [2_300e6 + 4_492.8e6, 18_000e6 + 17_971.2e6]);
 
         /******************************/
         /*** Make loan1 2nd Payment ***/
@@ -1755,6 +1884,11 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6);
 
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee + late interest (120_960e6 * 0.02 = 2419_200000)
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee + late interest (120_960e6 * 0.08 = 9676_800000)
+        assertAssetBalancesIncrease([poolDelegate,        treasury],
+                                    [2_300e6 + 2_419.2e6, 18_000e6 + 9_676.8e6]);
+
         /*******************************/
         /*** Make loan1 last Payment ***/
         /*******************************/
@@ -1794,6 +1928,11 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6 + 90_000e6 + 23_328e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 2_000e6 from management fee + late interest (25_920e6 * 0.02 = 518_400000)
+        // Treasury fee:      10_000e6 flat from service fee + 8_000e6 from management fee + late interest (25_920e6 * 0.08 = 2073_600000)
+        assertAssetBalancesIncrease([poolDelegate,      treasury],
+                                    [2_300e6 + 518.4e6, 18_000e6 + 2_073.6e6]);
     }
 }
 
@@ -1946,6 +2085,10 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
+        // PoolDelegate and treasury get their own originationFee for each loan
+        assertAssetBalancesIncrease([poolDelegate, treasury],
+                                    [1_500e6,      570_776253]);
+
         /******************************/
         /*** Loan3 pre late Payment ***/
         /******************************/
@@ -2071,6 +2214,11 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 270_000e6 + 46_656e6);
+
+        // Pool Delegate fee: 300e6    flat from service fee + 6_000e6 from management fee  + late interest (51_840e6 * 0.02 = 345_600000)
+        // Treasury fee:      30_000e6 flat from service fee + 24_000e6 from management fee + late interest (51_840e6 * 0.08 = 1382_400000)
+        assertAssetBalancesIncrease([poolDelegate,        treasury],
+                                    [6_300e6 + 1_036.8e6, 54_000e6 + 4_147.2e6]);
     }
 
 }

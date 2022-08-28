@@ -60,6 +60,9 @@ contract TestBase is TestUtils {
 
     uint256 start;
 
+    // Helper Mapping to assert differenes in balace
+    mapping(address => uint256) partialAssetBalances;
+
     Asset        collateralAsset;
     Asset        fundsAsset;
     Globals      globals;
