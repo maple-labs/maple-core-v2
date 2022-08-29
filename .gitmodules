@@ -13,7 +13,6 @@
 [submodule "modules/debt-locker-v4"]
 	path = modules/debt-locker-v4
 	url = git@github.com:maple-labs/debt-locker.git
-	branch = sc-6663-pool-migration-sim-create-debt-locker-v4
 	ignore = dirty
 [submodule "modules/globals-v2"]
 	path = modules/globals-v2
@@ -26,7 +25,6 @@
 [submodule "modules/migration-helpers"]
 	path = modules/migration-helpers
 	url = git@github.com:maple-labs/migration-helpers
-	branch = sc-8293-tob-move-liquidity-migration-contracts-into
 [submodule "modules/contract-test-utils"]
 	path = modules/contract-test-utils
 	url = git@github.com:maple-labs/contract-test-utils.git
