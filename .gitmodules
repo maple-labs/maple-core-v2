@@ -1,3 +1,7 @@
+[submodule "modules/contract-test-utils"]
+	path = modules/contract-test-utils
+	url = git@github.com:maple-labs/contract-test-utils.git
+	ignore = dirty
 [submodule "modules/loan"]
 	path = modules/loan
 	url = git@github.com:maple-labs/loan.git
@@ -5,6 +9,11 @@
 [submodule "modules/withdrawal-manager"]
 	path = modules/withdrawal-manager
 	url = git@github.com:maple-labs/withdrawal-manager.git
+	ignore = dirty
+[submodule "modules/debt-locker-v4"]
+	path = modules/debt-locker-v4
+	url = git@github.com:maple-labs/debt-locker.git
+	branch = sc-6663-pool-migration-sim-create-debt-locker-v4
 	ignore = dirty
 [submodule "modules/globals-v2"]
 	path = modules/globals-v2
@@ -14,9 +23,17 @@
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
 	ignore = dirty
+[submodule "modules/migration-helpers"]
+	path = modules/migration-helpers
+	url = git@github.com:maple-labs/migration-helpers
+	branch = sc-8293-tob-move-liquidity-migration-contracts-into
 [submodule "modules/contract-test-utils"]
 	path = modules/contract-test-utils
 	url = git@github.com:maple-labs/contract-test-utils.git
 [submodule "modules/pool-v2"]
 	path = modules/pool-v2
 	url = git@github.com:maple-labs/pool-v2.git
+[submodule "modules/loan-v301"]
+	path = modules/loan-v301
+	url = git@github.com:maple-labs/loan
+	branch = v3.01

@@ -49,7 +49,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLoanInfoWasDeleted(Loan loan) internal {
-        uint256 loanId = loanManager.loanIdOf(address(loan));
+        uint256 loanId = loanManager.paymentIdOf(address(loan));
         assertEq(loanId, 0);
     }
 
@@ -64,7 +64,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     )
         internal
     {
-        ILoanManagerStructs.LoanInfo memory loanInfo = ILoanManagerStructs(address(loanManager)).loans(loanManager.loanIdOf(address(loan)));
+        ILoanManagerStructs.PaymentInfo memory loanInfo = ILoanManagerStructs(address(loanManager)).payments(loanManager.paymentIdOf(address(loan)));
 
         assertEq(loanInfo.incomingNetInterest, incomingNetInterest, "loanInfo.incomingNetInterest");
         assertEq(loanInfo.refinanceInterest,   refinanceInterest,   "loanInfo.refinanceInterest");
