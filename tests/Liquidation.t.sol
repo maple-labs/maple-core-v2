@@ -201,7 +201,7 @@ contract LiquidationTests is TestBaseWithAssertions {
         // Since we round up days when it comes to late interest, this payment is 6 days late.
         vm.warp(start + 2 * ONE_MONTH + 5 days + 1);
         vm.prank(poolDelegate);
-        poolManager.triggerCollateralLiquidation(address(loan));
+        poolManager.triggerDefault(address(loan));
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
@@ -565,7 +565,6 @@ contract TriggerDefaultWarningTests is TestBaseWithAssertions {
     }
 
     function test_liquidation_warn_cancel() external {
-
         setUpTDWTest();
 
         /******************************************************************/
@@ -717,7 +716,6 @@ contract TriggerDefaultWarningTests is TestBaseWithAssertions {
     }
 
     function test_liquidation_warn_liquidate() external {
-
         setUpTDWTest();
 
         /**************************************************************/
@@ -743,7 +741,7 @@ contract TriggerDefaultWarningTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerCollateralLiquidation(address(loan));
+        poolManager.triggerDefault(address(loan));
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
@@ -869,11 +867,9 @@ contract TriggerDefaultWarningTests is TestBaseWithAssertions {
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury), address(liquidator)],
             [uint256(999_250e6), uint256(755_415e6), uint256(0),         uint256(900e6),        uint256(1510e6),   uint256(0)         ]
         );
-
     }
 
     function test_liquidation_warn_repay() external {
-
         setUpTDWTest();
 
         /******************************************************/
@@ -977,7 +973,7 @@ contract TriggerDefaultWarningTests is TestBaseWithAssertions {
             assetsUnderManagement: 0,
             issuanceRate:          0,
             domainStart:           block.timestamp,
-            domainEnd:             0,
+            domainEnd:             block.timestamp,
             unrealizedLosses:      0
         });
 

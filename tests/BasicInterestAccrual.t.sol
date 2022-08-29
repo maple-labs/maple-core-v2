@@ -173,7 +173,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
             assetsUnderManagement: 0,
             issuanceRate:          0,
             domainStart:           block.timestamp,
-            domainEnd:             0,
+            domainEnd:             block.timestamp,
             unrealizedLosses:      0
         });
     }
