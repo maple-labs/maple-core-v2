@@ -36,10 +36,9 @@ contract ClaimTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
+            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            rates:            [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
         });
 
     }
@@ -412,10 +411,9 @@ contract ClaimTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
+            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(2)],
             amounts:          [uint256(0), uint256(2_000_000e6), uint256(0)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 2
+            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
         });
 
     }
@@ -848,20 +846,18 @@ contract ClaimTestsTwoLoans is TestBaseWithAssertions {
 
         loan1 = fundAndDrawdownLoan({
             borrower:         borrower1,
+            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
         });
 
         vm.warp(start + 300_000);
 
         loan2 = fundAndDrawdownLoan({
             borrower:         borrower2,
+            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:          [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
         });
     }
 
@@ -1552,10 +1548,9 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         // Loan1 is funded at start
         loan1 = fundAndDrawdownLoan({
             borrower:         borrower1,
+            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
         });
 
         /**************************/
@@ -1628,10 +1623,9 @@ contract ClaimTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         loan2 = fundAndDrawdownLoan({
             borrower:         borrower2,
+            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:          [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            interestRate:     3.1536e18,
-            paymentInterval:  1_000_000,
-            numberOfPayments: 3
+            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
         });
 
         assertTotalAssets(3_500_000e6 + 90_000e6);
@@ -1970,31 +1964,28 @@ contract ClaimTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         loan1 = fundAndDrawdownLoan({
-            borrower:         borrower1,
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            borrower:    borrower1,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]  // 0.1e6 tokens per second
         });
 
         vm.warp(start + 400_000);
 
         loan2 = fundAndDrawdownLoan({
-            borrower:         borrower2,
-            amounts:          [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            borrower:    borrower2,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]  // 0.1e6 tokens per second
         });
 
         vm.warp(start + 600_000);
 
         loan3 = fundAndDrawdownLoan({
-            borrower:         borrower3,
-            amounts:          [uint256(0), uint256(3_000_000e6), uint256(3_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11.57 days
-            numberOfPayments: 3
+            borrower:    borrower3,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(3_000_000e6), uint256(3_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]  // 0.1e6 tokens per second
         });
     }
 

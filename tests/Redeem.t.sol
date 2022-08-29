@@ -231,8 +231,6 @@ contract RedeemTests is TestBase {
 
 contract MultiUserRedeemTests is TestBase {
 
-    uint256 constant ROUND_MONTH = 365 days / 12;
-
     address borrower;
     address lp1;
     address lp2;
@@ -244,7 +242,7 @@ contract MultiUserRedeemTests is TestBase {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createPool(ROUND_MONTH / 2, 2 days);  // Set interval to give round numbers
+        _createPool(ONE_MONTH / 2, 2 days);  // Set interval to give round numbers
         _openPool();
 
         start = block.timestamp;
@@ -266,18 +264,17 @@ contract MultiUserRedeemTests is TestBase {
         depositLiquidity(lp3, 5_000_000e6);
 
         fundAndDrawdownLoan({
-            borrower:         borrower,
-            amounts:          [uint256(5_000_000e6), uint256(5_000_000e6), 0],  // Pool will be at 50% liquidity
-            interestRate:     0.12e18,
-            paymentInterval:  ROUND_MONTH,
-            numberOfPayments: 3
+            borrower:    borrower,
+            termDetails: [5_000, ONE_MONTH, 3],
+            amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],  // Pool will be at 50% liquidity
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
         });
 
         requestRedeem(lp1, 1_000_000e6);
         requestRedeem(lp2, 4_000_000e6);
         requestRedeem(lp3, 5_000_000e6);
 
-        vm.warp(start + ROUND_MONTH);
+        vm.warp(start + ONE_MONTH);
 
         assertEq(pool.totalAssets(), 10_050_000e6 - 1);  // Exchange rate is 1.005 with rounding error
 
@@ -354,11 +351,10 @@ contract MultiUserRedeemTests is TestBase {
         depositLiquidity(lp10, 1_000_000e6);
 
         fundAndDrawdownLoan({
-            borrower:         borrower,
-            amounts:          [uint256(5_000_000e6), uint256(5_000_000e6), 0],
-            interestRate:     0.12e18,
-            paymentInterval:  ROUND_MONTH,
-            numberOfPayments: 3
+            borrower:    borrower,
+            termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
+            amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), uint256(0)],
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
         });
 
         requestRedeem(lp1,  1_000_000e6);
@@ -372,7 +368,7 @@ contract MultiUserRedeemTests is TestBase {
         requestRedeem(lp9,  1_000_000e6);
         requestRedeem(lp10, 1_000_000e6);
 
-        vm.warp(start + ROUND_MONTH);
+        vm.warp(start + ONE_MONTH);
 
         redeem(lp1,  1_000_000e6);
         redeem(lp2,  1_000_000e6);
@@ -420,18 +416,17 @@ contract MultiUserRedeemTests is TestBase {
         depositLiquidity(lp3, 5_000_000e6);
 
         fundAndDrawdownLoan({
-            borrower:         borrower,
-            amounts:          [uint256(5_000_000e6), uint256(5_000_000e6), 0],
-            interestRate:     0.12e18,
-            paymentInterval:  ROUND_MONTH * 2,
-            numberOfPayments: 3
+            borrower:    borrower,
+            termDetails: [uint256(5_000), uint256(ONE_MONTH * 2), uint256(3)],
+            amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
         });
 
         requestRedeem(lp1, 1_000_000e6);
         requestRedeem(lp2, 4_000_000e6);
         requestRedeem(lp3, 5_000_000e6);
 
-        vm.warp(start + ROUND_MONTH);
+        vm.warp(start + ONE_MONTH);
 
         assertEq(pool.totalAssets(), 10_050_000e6 - 1);  // Exchange rate is 1.005 with rounding error
 
@@ -463,7 +458,7 @@ contract MultiUserRedeemTests is TestBase {
         assertEq(pool.totalAssets(), 10_050_000e6 - (withdrawnAssets1 + 1));
         assertEq(pool.totalAssets(), 9_550_000e6);
 
-        vm.warp(start + ROUND_MONTH * 101 / 100);  // Warp another 1% through the interval
+        vm.warp(start + ONE_MONTH * 101 / 100);  // Warp another 1% through the interval
 
         assertEq(pool.totalAssets(), 10_050_000e6 - 1 - withdrawnAssets1 + 500e6); // previous TA  - 1 - 499_999_999999 + interest accrued in 1% of interval
         assertEq(pool.totalAssets(), 9_550_500e6);
@@ -486,7 +481,7 @@ contract MultiUserRedeemTests is TestBase {
         assertEq(pool.totalAssets(), 10_050_000e6 - 1 - withdrawnAssets1 - withdrawnAssets2 + 500e6);
         assertEq(pool.totalAssets(), 7_550_500e6 + 1);
 
-        vm.warp(start + ROUND_MONTH * 102 / 100);  // Warp another 1% through the interval
+        vm.warp(start + ONE_MONTH * 102 / 100);  // Warp another 1% through the interval
 
         assertEq(pool.totalAssets(), 7_550_500e6 + 1 + 500e6); // 500e6 more accrued from interval
 

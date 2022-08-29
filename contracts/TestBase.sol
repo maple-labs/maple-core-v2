@@ -205,17 +205,26 @@ contract TestBase is TestUtils {
     }
 
     /**
-     *  @param amounts Array of principal and collateral
-     *           [0]: principal
-     *           [1]: ending principal
-     *           [2]: collateral
+     *  @param borrower    The address of the borrower.
+     *  @param termDetails Array of loan parameters:
+     *                       [0]: gracePeriod
+     *                       [1]: paymentInterval
+     *                       [2]: numberOfPayments
+     *  @param amounts     Requested amounts:
+     *                       [0]: collateralRequired
+     *                       [1]: principalRequested
+     *                       [2]: endingPrincipal
+     *  @param rates       Rates parameters:
+     *                       [0]: interestRate
+     *                       [1]: closingFeeRate
+     *                       [2]: lateFeeRate
+     *                       [3]: lateInterestPremium
      */
     function fundAndDrawdownLoan(
         address borrower,
+        uint256[3] memory termDetails,
         uint256[3] memory amounts,
-        uint256 interestRate,
-        uint256 paymentInterval,
-        uint256 numberOfPayments
+        uint256[4] memory rates
     )
         internal returns (Loan loan)
     {
@@ -224,13 +233,13 @@ contract TestBase is TestUtils {
 
         loan = Loan(LoanFactory(loanFactory).createInstance({
             arguments_: new LoanInitializer().encodeArguments({
-                borrower_:       borrower,
-                feeManager_:     address(feeManager),
-                assets_:         [address(collateralAsset), address(fundsAsset)],
-                termDetails_:    [uint256(5 days), paymentInterval, numberOfPayments],
-                amounts_:        [amounts[0], amounts[1], amounts[2]],
-                rates_:          [interestRate, 0, 0, 0],  // TODO: Add late interest rate / premium
-                fees_:           [nextDelegateOriginationFee, nextDelegateServiceFee]
+                borrower_:    borrower,
+                feeManager_:  address(feeManager),
+                assets_:      [address(collateralAsset), address(fundsAsset)],
+                termDetails_: termDetails,
+                amounts_:     amounts,
+                rates_:       rates,
+                fees_:        [nextDelegateOriginationFee, nextDelegateServiceFee]
             }),
             salt_: "SALT"
         }));

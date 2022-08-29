@@ -39,10 +39,9 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
+            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            interestRate:     3.1536e18,  // 0.1e6 tokens per second
-            paymentInterval:  1_000_000,  // 11,57 days
-            numberOfPayments: 3
+            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
         });
 
     }

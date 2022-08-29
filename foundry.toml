@@ -1,6 +1,6 @@
 [profile.default]
 contracts = 'contracts'       # The source directory
-test = 'tests'          # The test directory
+test = 'tests'                # The test directory
 libs = ['modules']            # A list of library directories
 solc_version = '0.8.7'        # Override for the solc version (setting this ignores `auto_detect_solc`)
 optimizer = false             # Enable or disable the solc optimizer
@@ -10,7 +10,7 @@ fuzz_runs = 100               # Number of fuzz runs
 block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 
 [profile.simulations]
-test = 'simulations' # The test directory
+test = 'simulations'          # The test directory
 block_number = 15320000       # Block number for tests
 fork_block_number = 15320000
 rpc_storage_caching = { chains = ["mainnet"], endpoints = "all" }
