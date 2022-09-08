@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
+import { Address, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MockERC20 as Asset } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { MockERC20 as Asset } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
-import { MapleGlobals as Globals } from "../modules/globals-v2/contracts/MapleGlobals.sol";
-import { NonTransparentProxy     } from "../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { MapleGlobals as Globals } from "../../modules/globals-v2/contracts/MapleGlobals.sol";
+import { NonTransparentProxy     } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { MapleLoan as Loan                       } from "../modules/loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory         } from "../modules/loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as FeeManager       } from "../modules/loan/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as LoanInitializer } from "../modules/loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoan as Loan                       } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory as LoanFactory         } from "../../modules/loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager as FeeManager       } from "../../modules/loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan/contracts/MapleLoanInitializer.sol";
 
-import { LoanManager             } from "../modules/pool-v2/contracts/LoanManager.sol";
-import { Pool                    } from "../modules/pool-v2/contracts/Pool.sol";
-import { PoolDelegateCover       } from "../modules/pool-v2/contracts/PoolDelegateCover.sol";
-import { PoolDeployer            } from "../modules/pool-v2/contracts/PoolDeployer.sol";
-import { PoolManager             } from "../modules/pool-v2/contracts/PoolManager.sol";
-import { LoanManagerFactory      } from "../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
-import { LoanManagerInitializer  } from "../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
-import { PoolManagerFactory      } from "../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
-import { PoolManagerInitializer  } from "../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
-import { MockLiquidationStrategy } from "../modules/pool-v2/tests/mocks/Mocks.sol";
+import { LoanManager             } from "../../modules/pool-v2/contracts/LoanManager.sol";
+import { Pool                    } from "../../modules/pool-v2/contracts/Pool.sol";
+import { PoolDelegateCover       } from "../../modules/pool-v2/contracts/PoolDelegateCover.sol";
+import { PoolDeployer            } from "../../modules/pool-v2/contracts/PoolDeployer.sol";
+import { PoolManager             } from "../../modules/pool-v2/contracts/PoolManager.sol";
+import { LoanManagerFactory      } from "../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
+import { LoanManagerInitializer  } from "../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
+import { PoolManagerFactory      } from "../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
+import { PoolManagerInitializer  } from "../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
+import { MockLiquidationStrategy } from "../../modules/pool-v2/tests/mocks/Mocks.sol";
 
-import { WithdrawalManager            } from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-import { WithdrawalManagerFactory     } from "../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
-import { WithdrawalManagerInitializer } from "../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
+import { WithdrawalManager            } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import { WithdrawalManagerFactory     } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
+import { WithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
 contract TestBase is TestUtils {
 
@@ -186,6 +186,45 @@ contract TestBase is TestUtils {
     /*** Setup Functions ***/
     /***********************/
 
+    /**
+     *  @param borrower    The address of the borrower.
+     *  @param termDetails Array of loan parameters:
+     *                       [0]: gracePeriod
+     *                       [1]: paymentInterval
+     *                       [2]: numberOfPayments
+     *  @param amounts     Requested amounts:
+     *                       [0]: collateralRequired
+     *                       [1]: principalRequested
+     *                       [2]: endingPrincipal
+     *  @param rates       Rates parameters:
+     *                       [0]: interestRate
+     *                       [1]: closingFeeRate
+     *                       [2]: lateFeeRate
+     *                       [3]: lateInterestPremium
+     */
+    function createLoan(
+        address borrower,
+        uint256[3] memory termDetails,
+        uint256[3] memory amounts,
+        uint256[4] memory rates
+    ) internal returns (Loan loan) {
+        vm.prank(governor);
+        globals.setValidBorrower(borrower, true);
+
+        loan = Loan(LoanFactory(loanFactory).createInstance({
+            arguments_: new LoanInitializer().encodeArguments({
+                borrower_:    borrower,
+                feeManager_:  address(feeManager),
+                assets_:      [address(collateralAsset), address(fundsAsset)],
+                termDetails_: termDetails,
+                amounts_:     amounts,
+                rates_:       rates,
+                fees_:        [nextDelegateOriginationFee, nextDelegateServiceFee]
+            }),
+            salt_: "SALT"
+        }));
+    }
+
     function depositCover(uint256 cover) internal {
         vm.startPrank(poolDelegate);
         fundsAsset.approve(address(poolManager), cover);
@@ -204,22 +243,6 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
-    /**
-     *  @param borrower    The address of the borrower.
-     *  @param termDetails Array of loan parameters:
-     *                       [0]: gracePeriod
-     *                       [1]: paymentInterval
-     *                       [2]: numberOfPayments
-     *  @param amounts     Requested amounts:
-     *                       [0]: collateralRequired
-     *                       [1]: principalRequested
-     *                       [2]: endingPrincipal
-     *  @param rates       Rates parameters:
-     *                       [0]: interestRate
-     *                       [1]: closingFeeRate
-     *                       [2]: lateFeeRate
-     *                       [3]: lateInterestPremium
-     */
     function fundAndDrawdownLoan(
         address borrower,
         uint256[3] memory termDetails,
@@ -231,18 +254,7 @@ contract TestBase is TestUtils {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        loan = Loan(LoanFactory(loanFactory).createInstance({
-            arguments_: new LoanInitializer().encodeArguments({
-                borrower_:    borrower,
-                feeManager_:  address(feeManager),
-                assets_:      [address(collateralAsset), address(fundsAsset)],
-                termDetails_: termDetails,
-                amounts_:     amounts,
-                rates_:       rates,
-                fees_:        [nextDelegateOriginationFee, nextDelegateServiceFee]
-            }),
-            salt_: "SALT"
-        }));
+        loan = createLoan(borrower, termDetails, amounts, rates);
 
         vm.prank(poolDelegate);
         poolManager.fund(amounts[1], address(loan), address(loanManager));

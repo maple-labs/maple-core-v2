@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { MapleLoan as Loan   } from "../modules/loan/contracts/MapleLoan.sol";
-import { ILoanManagerStructs } from "../modules/pool-v2/tests/interfaces/ILoanManagerStructs.sol";
+import { MapleLoan as Loan   } from "../../modules/loan/contracts/MapleLoan.sol";
+import { ILoanManagerStructs } from "../../modules/pool-v2/tests/interfaces/ILoanManagerStructs.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase          } from "./TestBase.sol";

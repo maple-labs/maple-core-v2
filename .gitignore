@@ -4,3 +4,6 @@ out/
 
 # MacOS
 .DS_Store
+
+# Ignore CSV files
+*.csv
