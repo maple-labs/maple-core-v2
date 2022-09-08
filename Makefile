@@ -10,8 +10,11 @@ build:
 test:
 	@scripts/test.sh
 
-sim:
-	@scripts/test.sh -p simulations
+local-sim:
+	@scripts/test.sh -p local_simulations
+
+mainnet-sim:
+	@scripts/mainnet-simulation.sh -p mainnet_simulations
 
 clean:
 	@forge clean

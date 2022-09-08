@@ -14,7 +14,7 @@ echo Using profile: $FOUNDRY_PROFILE
 
 if [ -z "$test" ];
 then
-    forge test --ffi --match-path "tests/*";
+    forge test --ffi;
 else
     forge test --ffi --match "$test";
 fi

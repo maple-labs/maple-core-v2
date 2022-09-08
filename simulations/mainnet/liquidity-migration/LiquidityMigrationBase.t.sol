@@ -1,37 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { console }   from "../../modules/contract-test-utils/contracts/log.sol";
-import { Address, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { console }            from "../../../modules/contract-test-utils/contracts/log.sol";
+import { Address, TestUtils } from "../../../modules/contract-test-utils/contracts/test.sol";
 
-import { WithdrawalManager }            from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-import { WithdrawalManagerFactory }     from "../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
-import { WithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
+import { WithdrawalManager }            from "../../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import { WithdrawalManagerFactory }     from "../../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
+import { WithdrawalManagerInitializer } from "../../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
-import { LoanManagerInitializer }                 from "../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
-import { PoolManagerFactory, MapleProxyFactory }  from "../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
-import { PoolManagerInitializer }                 from "../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
-import { LoanManager }                            from "../../modules/pool-v2/contracts/LoanManager.sol";
-import { Pool }                                   from "../../modules/pool-v2/contracts/Pool.sol";
-import { PoolDeployer }                           from "../../modules/pool-v2/contracts/PoolDeployer.sol";
-import { PoolManager }                            from "../../modules/pool-v2/contracts/PoolManager.sol";
-import { LoanManagerFactory }                     from "../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
-import { TransitionLoanManager }                  from "../../modules/pool-v2/contracts/TransitionLoanManager.sol";
+import { LoanManagerInitializer }                 from "../../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
+import { PoolManagerFactory, MapleProxyFactory }  from "../../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
+import { PoolManagerInitializer }                 from "../../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
+import { LoanManager }                            from "../../../modules/pool-v2/contracts/LoanManager.sol";
+import { Pool }                                   from "../../../modules/pool-v2/contracts/Pool.sol";
+import { PoolDeployer }                           from "../../../modules/pool-v2/contracts/PoolDeployer.sol";
+import { PoolManager }                            from "../../../modules/pool-v2/contracts/PoolManager.sol";
+import { LoanManagerFactory }                     from "../../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
+import { TransitionLoanManager }                  from "../../../modules/pool-v2/contracts/TransitionLoanManager.sol";
 
-import { MapleGlobals }        from "../../modules/globals-v2/contracts/MapleGlobals.sol";
-import { NonTransparentProxy } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { MapleGlobals }        from "../../../modules/globals-v2/contracts/MapleGlobals.sol";
+import { NonTransparentProxy } from "../../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { DebtLocker as DebtLockerV4 } from "../../modules/debt-locker-v4/contracts/DebtLocker.sol";
-import { DebtLockerV4Migrator }       from "../../modules/debt-locker-v4/contracts/DebtLockerV4Migrator.sol";
+import { DebtLocker as DebtLockerV4 } from "../../../modules/debt-locker-v4/contracts/DebtLocker.sol";
+import { DebtLockerV4Migrator }       from "../../../modules/debt-locker-v4/contracts/DebtLockerV4Migrator.sol";
 
-import { MapleLoan as LoanV4 } from "../../modules/loan/contracts/MapleLoan.sol";
-import { MapleLoanV4Migrator } from "../../modules/loan/contracts/MapleLoanV4Migrator.sol";
-import { MapleLoanFeeManager } from "../../modules/loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoan as LoanV4 } from "../../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoanV4Migrator } from "../../../modules/loan/contracts/MapleLoanV4Migrator.sol";
+import { MapleLoanFeeManager } from "../../../modules/loan/contracts/MapleLoanFeeManager.sol";
 
-import { MapleLoan as LoanV301 } from "../../modules/loan-v301/contracts/MapleLoan.sol";
+import { MapleLoan as LoanV301 } from "../../../modules/loan-v301/contracts/MapleLoan.sol";
 
-import { DeactivationOracle } from "../../modules/migration-helpers/contracts/DeactivationOracle.sol";
-import { MigrationHelper    } from "../../modules/migration-helpers/contracts/MigrationHelper.sol";
+import { DeactivationOracle } from "../../../modules/migration-helpers/contracts/DeactivationOracle.sol";
+import { MigrationHelper    } from "../../../modules/migration-helpers/contracts/MigrationHelper.sol";
 
 import { AddressRegistry } from "../AddressRegistry.sol";
 

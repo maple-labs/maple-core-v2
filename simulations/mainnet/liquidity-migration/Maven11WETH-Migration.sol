@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../../modules/contract-test-utils/contracts/test.sol";
 
-import { Pool } from "../../modules/pool-v2/contracts/Pool.sol";
+import { Pool } from "../../../modules/pool-v2/contracts/Pool.sol";
 
-import { MapleLoanFeeManager } from "../../modules/loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanFeeManager } from "../../../modules/loan/contracts/MapleLoanFeeManager.sol";
 
-import { AccountingChecker } from "../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
+import { AccountingChecker } from "../../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
 
 import {
     IERC20Like,

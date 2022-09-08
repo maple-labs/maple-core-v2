@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address } from "../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { LoanScenario   }              from "../contracts/LoanScenario.sol";
-import { ILoanLike, IPoolManagerLike } from "../contracts/interfaces/Interfaces.sol";
-import { SimulationBase }              from "../contracts/utilities/SimulationBase.sol";
+import { LoanScenario   }              from "../../contracts/LoanScenario.sol";
+import { ILoanLike, IPoolManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import { SimulationBase }              from "../../contracts/utilities/SimulationBase.sol";
 
 contract BasicSimulation is SimulationBase {
 

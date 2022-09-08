@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
 
-import { TestBase } from "../contracts/TestBase.sol";
+import { TestBase } from "../contracts/utilities/TestBase.sol";
 
 // TODO: instead of putting this into its own file, maybe consider putting all tests that manipulate basic LP token functionality (transfer, deposit, redeem, etc) into the same file.
 contract TransferTests is TestBase {

@@ -39,7 +39,7 @@ contract PoolSimulation is TestUtils, CSVWriter {
 
         while (true) {
             // Calculate when the next snapshot will be taken.
-            uint256 nextTimestamp_ = block.timestamp + 1 days;
+            uint256 nextTimestamp_ = block.timestamp + 1 days;  // TODO: Make parameter
 
             // Round down the timestamp to the end of the simulation if it exceeds it.
             if (nextTimestamp_ > simulationEnd) nextTimestamp_ = simulationEnd;
