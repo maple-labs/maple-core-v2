@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../contracts/TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAssertions.sol";
 
 import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
 
