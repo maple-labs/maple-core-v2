@@ -82,7 +82,7 @@ contract MaxDepositTests is TestBase {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createPool(1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
 
         lp1 = address(new Address());
         lp2 = address(new Address());
@@ -154,7 +154,7 @@ contract MaxMintTests is TestBase {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createPool(1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
 
         lp1 = address(new Address());
         lp2 = address(new Address());

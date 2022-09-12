@@ -226,7 +226,7 @@ contract MultiUserRedeemTests is TestBase {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createPool(ONE_MONTH / 2, 2 days);  // Set interval to give round numbers
+        _createAndConfigurePool(ONE_MONTH / 2, 2 days);  // Set interval to give round numbers
         _openPool();
 
         start = block.timestamp;

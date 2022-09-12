@@ -80,7 +80,7 @@ contract TestBase is TestUtils {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createPool(1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
         _openPool();
 
         start = block.timestamp;
@@ -145,6 +145,7 @@ contract TestBase is TestUtils {
 
         vm.startPrank(governor);
         globals.setMapleTreasury(treasury);
+        globals.setSecurityAdmin(governor);
         globals.setValidPoolAsset(address(fundsAsset), true);
         globals.setValidPoolDelegate(poolDelegate, true);
         globals.setValidPoolDeployer(address(deployer), true);
@@ -170,11 +171,18 @@ contract TestBase is TestUtils {
         pool              = Pool(poolManager.pool());
         poolCover         = PoolDelegateCover(poolManager.poolDelegateCover());
         feeManager        = new FeeManager(address(globals));
+    }
 
+    function _configurePool() internal {
         vm.startPrank(governor);
         globals.activatePoolManager(address(poolManager));
         globals.setMaxCoverLiquidationPercent(address(poolManager), globals.HUNDRED_PERCENT());
         vm.stopPrank();
+    }
+
+    function _createAndConfigurePool(uint256 withdrawalCycle, uint256 windowDuration) internal {
+        _createPool(withdrawalCycle, windowDuration);
+        _configurePool();
     }
 
     function _openPool() internal {
