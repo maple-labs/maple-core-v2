@@ -7,6 +7,9 @@ update:
 build:
 	@scripts/build.sh -p default
 
+slither-files:
+	@scripts/generate-slither-files.sh
+
 test:
 	@scripts/test.sh
 
