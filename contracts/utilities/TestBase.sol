@@ -139,7 +139,10 @@ contract TestBase is TestUtils {
     }
 
     function _createGlobals() internal {
-        globals = Globals(address(new NonTransparentProxy(governor, address(new Globals(1 weeks, 2 days)))));
+        uint128 delay    = 1 weeks;
+        uint128 duration = 2 days;
+
+        globals = Globals(address(new NonTransparentProxy(governor, address(new Globals(delay, duration)))));
 
         deployer = new PoolDeployer(address(globals));
 
@@ -151,6 +154,7 @@ contract TestBase is TestUtils {
         globals.setValidPoolDeployer(address(deployer), true);
         globals.setManualOverridePrice(address(fundsAsset),      1e8);     // 1     USD / 1 USDC
         globals.setManualOverridePrice(address(collateralAsset), 1500e8);  // 1_500 USD / 1 WETH
+        globals.setDefaultTimelockParameters(delay, duration);
         vm.stopPrank();
     }
 
