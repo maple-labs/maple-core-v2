@@ -38,6 +38,279 @@ contract EnterBase is TestBase {
 
 }
 
+contract DepositTest is EnterBase {
+
+    function setUp() public override {
+        super.setUp();
+
+        lp = address(new Address());
+
+        vm.prank(governor);
+        globals.activatePoolManager(address(poolManager));
+
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+    }
+
+    function test_deposit_singleUser_oneToOne() public {
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), 1_000_000e6);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), 1_000_000e6);
+
+        // Pre deposit assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                1_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 1_000_000e6);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.prank(lp);
+        uint256 shares = pool.deposit(1_000_000e6, lp);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      1_000_000e6);
+        assertEq(pool.totalSupply(),                               1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),              1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 1_000_000e6);
+    }
+
+    function testFuzz_deposit_singleUser(uint256 depositAmount) public {
+        // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
+        depositAmount = constrictToRange(depositAmount, 1, type(uint256).max - 1);
+
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), depositAmount);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), depositAmount);
+
+        // Pre deposit assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                depositAmount);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), depositAmount);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.prank(lp);
+        uint256 shares = pool.deposit(depositAmount, lp);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      depositAmount);
+        assertEq(pool.totalSupply(),                               depositAmount);
+        assertEq(fundsAsset.balanceOf(address(pool)),              depositAmount);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), depositAmount);
+    }
+
+    function test_deposit_twoUsers_oneToOne() public {
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), 1_000_000e6);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), 1_000_000e6);
+
+        // Pre deposit assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                1_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 1_000_000e6);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.prank(lp);
+        uint256 shares = pool.deposit(1_000_000e6, lp);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      1_000_000e6);
+        assertEq(pool.totalSupply(),                               1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),              1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 1_000_000e6);
+
+        address lp2 = address(new Address());
+
+        fundsAsset.mint(address(lp2), 3_000_000e6);
+
+        // Approve
+        vm.prank(lp2);
+        fundsAsset.approve(address(pool), 3_000_000e6);
+
+        // Pre deposit 2 assertions
+        assertEq(pool.balanceOf(address(lp2)), 0);
+        assertEq(fundsAsset.balanceOf(address(lp2)),                3_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp2), address(pool)), 3_000_000e6);
+
+        vm.prank(lp2);
+        uint256 shares2 = pool.deposit(3_000_000e6, lp2);
+
+        assertEq(pool.balanceOf(address(lp2)),                      shares2);
+        assertEq(pool.balanceOf(address(lp2)),                      3_000_000e6);
+        assertEq(pool.totalSupply(),                                4_000_000e6);
+        assertEq(pool.totalSupply(),                                shares + shares2);
+        assertEq(fundsAsset.balanceOf(address(pool)),               4_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp2)),                0);
+        assertEq(fundsAsset.allowance(address(lp2), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 4_000_000e6);
+    }
+
+    function testFuzz_deposit_variableExchangeRate(uint256 depositAmount, uint256 warpTime) public {
+        address initialDepositor = address(new Address());
+
+        // Initial user does a deposit
+        fundsAsset.mint(address(initialDepositor), 1_000_000e6);
+
+        // Approve
+        vm.prank(initialDepositor);
+        fundsAsset.approve(address(pool), 1_000_000e6);
+
+        vm.prank(initialDepositor);
+        pool.deposit(1_000_000e6, initialDepositor);
+
+        // Fund loan
+        fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+        });
+
+        // Constrict time to be within the first loan payment and amount to be within token amounts
+        warpTime      = constrictToRange(warpTime,      0, 1_000_000);
+        depositAmount = constrictToRange(depositAmount, 1, 1e32);
+
+        vm.warp(start + warpTime);
+
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), depositAmount);
+
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), depositAmount);
+
+        uint256 previewedShares = pool.previewDeposit(depositAmount);
+
+        if (previewedShares == 0) {
+            vm.prank(lp);
+            vm.expectRevert("P:M:ZERO_SHARES");
+            pool.deposit(depositAmount, lp);
+        } else {
+
+            uint256 expectedShares = depositAmount * pool.totalSupply() / poolManager.totalAssets();
+
+            vm.prank(lp);
+            uint256 shares = pool.deposit(depositAmount, lp);
+
+            assertEq(shares,                                           expectedShares);
+            assertEq(pool.totalSupply(),                               shares + 1_000_000e6);
+            assertEq(pool.balanceOf(address(lp)),                      shares);
+            assertEq(fundsAsset.balanceOf(address(pool)),              depositAmount);
+            assertEq(fundsAsset.balanceOf(address(lp)),                0);
+            assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+        }
+    }
+
+}
+
+contract DepositWithPermitTests is EnterBase {
+
+    uint256 deadline = 5_000_000_000;
+    uint256 lpPK     = 1;
+    uint256 nonce;
+
+    function setUp() public override {
+        super.setUp();
+
+        lp = vm.addr(lpPK);
+
+        vm.prank(governor);
+        globals.activatePoolManager(address(poolManager));
+
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+    }
+
+    function test_depositWithPermit_singleUser() public {
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), 1_000_000e6);
+
+        // Pre deposit assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                1_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.startPrank(lp);
+        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), 1_000_000e6, nonce, deadline, lpPK);
+
+        uint256 shares = pool.depositWithPermit(1_000_000e6, lp, deadline, v, r, s);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      1_000_000e6);
+        assertEq(pool.totalSupply(),                               1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),              1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 1_000_000e6);
+    }
+
+    function testFuzz_depositWithPermit_singleUser(uint256 depositAmount) public {
+        // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
+        depositAmount = constrictToRange(depositAmount, 1, type(uint256).max - 1);
+
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), depositAmount);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), depositAmount);
+
+        // Pre deposit assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                depositAmount);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), depositAmount);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.startPrank(lp);
+        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), depositAmount, nonce, deadline, lpPK);
+
+        uint256 shares = pool.depositWithPermit(depositAmount, lp, deadline, v, r, s);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      depositAmount);
+        assertEq(pool.totalSupply(),                               depositAmount);
+        assertEq(fundsAsset.balanceOf(address(pool)),              depositAmount);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), depositAmount);
+    }
+
+}
+
 contract DepositFailureTests is EnterBase {
 
     function setUp() public virtual override {
@@ -374,6 +647,284 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         ( v, r, s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
         pool.depositWithPermit(liquidity, lp, deadline, v, r, s);
+    }
+
+}
+
+contract MintTest is EnterBase {
+
+    function setUp() public override {
+        super.setUp();
+
+        lp = address(new Address());
+
+        vm.prank(governor);
+        globals.activatePoolManager(address(poolManager));
+
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+    }
+
+    function test_mint_singleUser_oneToOne() public {
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), 1_000_000e6);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), 1_000_000e6);
+
+        // Pre mint assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                1_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 1_000_000e6);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.prank(lp);
+        uint256 shares = pool.mint(1_000_000e6, lp);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      1_000_000e6);
+        assertEq(pool.totalSupply(),                               1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),              1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 1_000_000e6);
+    }
+
+    function testFuzz_mint_singleUser(uint256 mintAmount) public {
+        // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
+        mintAmount = constrictToRange(mintAmount, 1, type(uint256).max - 1);
+
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), mintAmount);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), mintAmount);
+
+        // Pre mint assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                mintAmount);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), mintAmount);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.prank(lp);
+        uint256 shares = pool.mint(mintAmount, lp);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      mintAmount);
+        assertEq(pool.totalSupply(),                               mintAmount);
+        assertEq(fundsAsset.balanceOf(address(pool)),              mintAmount);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), mintAmount);
+    }
+
+    function test_mint_twoUsers_OneToOne() public {
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), 1_000_000e6);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), 1_000_000e6);
+
+        // Pre mint assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                1_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 1_000_000e6);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.prank(lp);
+        uint256 shares = pool.mint(1_000_000e6, lp);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      1_000_000e6);
+        assertEq(pool.totalSupply(),                               1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),              1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 1_000_000e6);
+
+        address lp2 = address(new Address());
+
+        fundsAsset.mint(address(lp2), 3_000_000e6);
+
+        // Approve
+        vm.prank(lp2);
+        fundsAsset.approve(address(pool), 3_000_000e6);
+
+        // Pre mint 2 assertions
+        assertEq(pool.balanceOf(address(lp2)), 0);
+        assertEq(fundsAsset.balanceOf(address(lp2)),                3_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp2), address(pool)), 3_000_000e6);
+
+        vm.prank(lp2);
+        uint256 shares2 = pool.mint(3_000_000e6, lp2);
+
+        assertEq(pool.balanceOf(address(lp2)),                      shares2);
+        assertEq(pool.balanceOf(address(lp2)),                      3_000_000e6);
+        assertEq(pool.totalSupply(),                                4_000_000e6);
+        assertEq(pool.totalSupply(),                                shares + shares2);
+        assertEq(fundsAsset.balanceOf(address(pool)),               4_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp2)),                0);
+        assertEq(fundsAsset.allowance(address(lp2), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 4_000_000e6);
+    }
+
+    function testFuzz_mint_variableExchangeRate(uint256 assetAmount, uint256 warpTime) public {
+
+        address initialDepositor = address(new Address());
+
+        // Initial user does a deposit
+        fundsAsset.mint(address(initialDepositor), 1_000_000e6);
+
+        // Approve
+        vm.prank(initialDepositor);
+        fundsAsset.approve(address(pool), 1_000_000e6);
+
+        vm.prank(initialDepositor);
+        pool.mint(1_000_000e6, initialDepositor);
+
+        // Fund loan
+        fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+        });
+
+        // Constrict time to be within the first loan payment and amount to be within token amounts
+        warpTime    = constrictToRange(warpTime, 2, 1_000_000);
+        assetAmount = constrictToRange(assetAmount, 1e6, 1e32);
+
+        vm.warp(start + warpTime);
+
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), assetAmount);
+
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), assetAmount);
+
+        uint256 calculatedShares = pool.convertToShares(assetAmount);
+
+        if (calculatedShares == 0) {
+            vm.prank(lp);
+            vm.expectRevert("P:M:ZERO_SHARES");
+            pool.mint(assetAmount, lp);
+
+        } else {
+
+            uint256 expectedShares = assetAmount * pool.totalSupply() / poolManager.totalAssets();
+
+            vm.prank(lp);
+            uint256 assets = pool.mint(calculatedShares, lp);
+
+            assertEq(pool.balanceOf(address(lp)), expectedShares);
+
+            assertWithinDiff(assets,                                           assetAmount,                    1);
+            assertWithinDiff(pool.totalSupply(),                               calculatedShares + 1_000_000e6, 1);
+            assertWithinDiff(pool.balanceOf(address(lp)),                      calculatedShares,               0);
+            assertWithinDiff(fundsAsset.balanceOf(address(pool)),              assetAmount,                    1);  // Assets from initial depositor are on the loan
+            assertWithinDiff(fundsAsset.balanceOf(address(lp)),                0,                              1);
+            assertWithinDiff(fundsAsset.allowance(address(lp), address(pool)), 0,                              1);
+        }
+    }
+
+}
+
+contract MintWithPermitTests is EnterBase {
+
+    uint256 deadline = 5_000_000_000;
+    uint256 lpPK     = 1;
+    uint256 nonce;
+
+    function setUp() public override {
+        super.setUp();
+
+        lp = vm.addr(lpPK);
+
+        vm.prank(governor);
+        globals.activatePoolManager(address(poolManager));
+
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+    }
+
+    function test_mintWithPermit_singleUser() public {
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), 1_000_000e6);
+
+        // Pre mint assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                1_000_000e6);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.startPrank(lp);
+        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), 1_000_000e6, nonce, deadline, lpPK);
+
+        uint256 shares = pool.mintWithPermit(1_000_000e6, lp, 1_000_000e6, deadline, v, r, s);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      1_000_000e6);
+        assertEq(pool.totalSupply(),                               1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),              1_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), 1_000_000e6);
+    }
+
+    function testFuzz_mintWithPermit_singleUser(uint256 mintAmount) public {
+        vm.assume(mintAmount > 0);
+        vm.assume(mintAmount <= type(uint256).max - 1); // With max uint256, the assertion of allowance after deposit fails because in the token is treated as infinite allowance.
+
+
+        // Mint asset to LP
+        fundsAsset.mint(address(lp), mintAmount);
+
+        // Approve
+        vm.prank(lp);
+        fundsAsset.approve(address(pool), mintAmount);
+
+        // Pre mint assertions
+        assertEq(pool.balanceOf(address(lp)),                      0);
+        assertEq(pool.totalSupply(),                               0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              0);
+        assertEq(fundsAsset.balanceOf(address(lp)),                mintAmount);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), mintAmount);
+
+        assertEq(poolManager.totalAssets(), 0);
+
+        vm.startPrank(lp);
+        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), mintAmount, nonce, deadline, lpPK);
+
+        uint256 shares = pool.mintWithPermit(mintAmount, lp, mintAmount, deadline, v, r, s);
+
+        assertEq(pool.balanceOf(address(lp)),                      shares);
+        assertEq(pool.balanceOf(address(lp)),                      mintAmount);
+        assertEq(pool.totalSupply(),                               mintAmount);
+        assertEq(fundsAsset.balanceOf(address(pool)),              mintAmount);
+        assertEq(fundsAsset.balanceOf(address(lp)),                0);
+        assertEq(fundsAsset.allowance(address(lp), address(pool)), 0);
+
+        assertEq(poolManager.totalAssets(), mintAmount);
     }
 
 }
