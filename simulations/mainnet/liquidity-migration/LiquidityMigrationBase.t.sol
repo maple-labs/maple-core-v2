@@ -143,7 +143,7 @@ contract LiquidityMigrationBase is TestUtils, AddressRegistry {
     }
 
     function _createGlobals() internal {
-        globals      = MapleGlobals(address(new NonTransparentProxy(GOVERNOR, address(new MapleGlobals(0, 0)))));
+        globals      = MapleGlobals(address(new NonTransparentProxy(GOVERNOR, address(new MapleGlobals()))));
         poolDeployer = new PoolDeployer(address(globals));
 
         vm.startPrank(GOVERNOR);

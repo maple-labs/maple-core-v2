@@ -34,26 +34,22 @@ import { TestBase } from "./TestBase.sol";
 
 contract SimulationBase is TestBase {
 
+    uint256 initialCover;
+    uint256 initialLiquidity;
+
     LoanScenario[] scenarios;
-    PoolSimulation simulation;
 
     function setUp() public virtual override {
         super.setUp();
     }
 
-    function setUpSimulation(
-        uint256 initialCover_,
-        uint256 initialLiquidity_,
-        string memory filepath_
-    )
-        public
-    {
+    function runSimulation(string memory filepath_) public {
         IPoolLike        pool_        = IPoolLike(address(pool));
         IPoolManagerLike poolManager_ = IPoolManagerLike(address(poolManager));
         ILoanManagerLike loanManager_ = ILoanManagerLike(address(loanManager));
 
         // Create the simulation.
-        simulation = new PoolSimulation();
+        PoolSimulation simulation = new PoolSimulation();
 
         // TODO: Add the required `initialCover` pool cover.
 
@@ -63,7 +59,7 @@ contract SimulationBase is TestBase {
             description_: "Deposit assets into the pool",
             poolManager_: poolManager_,
             lp_:          address(new Address()),  // TODO: Replace Address with randomly generated EOA.
-            amount_:      initialLiquidity_
+            amount_:      initialLiquidity
         }));
 
         // Generate all the actions based on the loan scenarios.
@@ -82,6 +78,8 @@ contract SimulationBase is TestBase {
             string memory name_ = scenarios[i_].name();
             simulation.record(new LoanLogger(loan_, string(abi.encodePacked("output/", filepath_, "/", name_, ".csv"))));
         }
+
+        simulation.run();
     }
 
 }

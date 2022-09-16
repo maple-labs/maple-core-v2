@@ -12,6 +12,9 @@ contract BasicSimulation is SimulationBase {
     function setUp() public override {
         super.setUp();
 
+        initialCover     = 0;
+        initialLiquidity = 1_500_000e6;
+
         scenarios.push(new LoanScenario({
             loan_: address(createLoan({
                 borrower:    address(new Address()),
@@ -20,15 +23,13 @@ contract BasicSimulation is SimulationBase {
                 rates:       [uint256(0.01e18), uint256(0), uint256(0), uint256(0)]
             })),
             poolManager_: address(poolManager),
-            fundingTime_: start,  // End: 0 + 30 * 3 = 90
+            fundingTime_: start,
             name_:        "loan-1"
         }));
-
-        setUpSimulation({ initialCover_: 0, initialLiquidity_: 1_500_000e6, filepath_: "basic-simulation" });
     }
 
     function test_basicSimulation() external {
-        simulation.run();
+        runSimulation("basic");
     }
 
 }

@@ -291,28 +291,6 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
-    function deployLoan(
-        address borrower,
-        uint256[3] memory termDetails,
-        uint256[3] memory amounts,
-        uint256[4] memory rates
-    )
-        internal returns (Loan loan)
-    {
-        loan = Loan(LoanFactory(loanFactory).createInstance({
-            arguments_: new LoanInitializer().encodeArguments({
-                borrower_:    borrower,
-                feeManager_:  address(feeManager),
-                assets_:      [address(collateralAsset), address(fundsAsset)],
-                termDetails_: termDetails,
-                amounts_:     amounts,
-                rates_:       rates,
-                fees_:        [nextDelegateOriginationFee, nextDelegateServiceFee]
-            }),
-            salt_: "SALT"
-        }));
-    }
-
     function makePayment(Loan loan) internal {
         ( uint256 principal, uint256 interest, uint256 fees ) = loan.getNextPaymentBreakdown();
 

@@ -33,7 +33,7 @@ contract FundFailureTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = deployLoan({
+        loan = createLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
@@ -113,7 +113,7 @@ contract FundFailureTests is TestBaseWithAssertions {
     }
 
     function test_fund_failIfAmountGreaterThanLockedLiquidity() external {
-        loan = deployLoan({
+        loan = createLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
