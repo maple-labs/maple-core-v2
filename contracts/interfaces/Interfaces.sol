@@ -104,15 +104,15 @@ interface ILoanLike {
     function closeLoan(uint256 amount_) external returns (uint256 principal_, uint256 interest_, uint256 fees_);
     function drawdownFunds(uint256 amount_, address destination_) external returns (uint256 collateralPosted_);
     function fundLoan(address lender_) external returns (uint256 fundsLent_);
+    function impairLoan() external;
     function makePayment(uint256 amount_) external returns (uint256 principal_, uint256 interest_, uint256 fees_);
     function postCollateral(uint256 amount_) external returns (uint256 collateralPosted_);
     function proposeNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_) external returns (bytes32 refinanceCommitment_);
     function rejectNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_) external returns (bytes32 refinanceCommitment_);
     function removeCollateral(uint256 amount_, address destination_) external;
-    function removeDefaultWarning() external;
+    function removeLoanImpairment() external;
     function returnFunds(uint256 amount_) external returns (uint256 fundsReturned_);
     function repossess(address destination_) external returns (uint256 collateralRepossessed_, uint256 fundsRepossessed_);
-    function triggerDefaultWarning() external;
 
     function getClosingPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
     function getNextPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
@@ -144,11 +144,11 @@ interface ILoanManagerLike {
     function claim(uint256 principal_, uint256 interest_, uint256 previousPaymentDueDate_, uint256 nextPaymentDueDate_) external;
     function finishCollateralLiquidation(address loan_) external returns (uint256 remainingLosses_, uint256 platformFees_);
     function fund(address loanAddress_) external;
-    function removeDefaultWarning(address loan_, bool isCalledByGovernor_) external;
+    function impairLoan(address loan_, bool isGovernor_) external;
+    function removeLoanImpairment(address loan_, bool isCalledByGovernor_) external;
     function setAllowedSlippage(address collateralAsset_, uint256 allowedSlippage_) external;
     function setMinRatio(address collateralAsset_, uint256 minRatio_) external;
-    function triggerDefaultWarning(address loan_, bool isGovernor_) external;
-    function triggerDefault(address loan_) external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
+    function triggerDefault(address loan_, address liquidatorFactory_) external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
 
     function PRECISION() external returns (uint256 precision_);
     function HUNDRED_PERCENT() external returns (uint256 hundredPercent_);
@@ -233,9 +233,9 @@ interface IPoolManagerLike {
     function fund(uint256 principal_, address loan_, address loanManager_) external;
 
     function finishCollateralLiquidation(address loan_) external;
-    function removeDefaultWarning(address loan_) external;
-    function triggerDefault(address loan_) external;
-    function triggerDefaultWarning(address loan_) external;
+    function impairLoan(address loan_) external;
+    function removeLoanImpairment(address loan_) external;
+    function triggerDefault(address loan_, address liquidatorFactory_) external;
 
     function processRedeem(uint256 shares_, address owner_) external returns (uint256 redeemableShares_, uint256 resultingAssets_);
     function removeShares(uint256 shares_, address owner_) external returns (uint256 sharesReturned_);

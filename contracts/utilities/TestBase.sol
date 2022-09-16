@@ -8,6 +8,10 @@ import { MockERC20 as Asset } from "../../modules/erc20/contracts/test/mocks/Moc
 import { MapleGlobals as Globals } from "../../modules/globals-v2/contracts/MapleGlobals.sol";
 import { NonTransparentProxy     } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
+import { Liquidator            } from "../../modules/liquidations/contracts/Liquidator.sol";
+import { LiquidatorFactory     } from "../../modules/liquidations/contracts/LiquidatorFactory.sol";
+import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
+
 import { MapleLoan as Loan                       } from "../../modules/loan/contracts/MapleLoan.sol";
 import { MapleLoanFactory as LoanFactory         } from "../../modules/loan/contracts/MapleLoanFactory.sol";
 import { MapleLoanFeeManager as FeeManager       } from "../../modules/loan/contracts/MapleLoanFeeManager.sol";
@@ -40,16 +44,19 @@ contract TestBase is TestUtils {
     address poolDelegate;
     address treasury;
 
+    address liquidatorFactory;
     address loanFactory;
     address loanManagerFactory;
     address poolManagerFactory;
     address withdrawalManagerFactory;
 
+    address liquidatorImplementation;
     address loanImplementation;
     address loanManagerImplementation;
     address poolManagerImplementation;
     address withdrawalManagerImplementation;
 
+    address liquidatorInitializer;
     address loanInitializer;
     address loanManagerInitializer;
     address poolManagerInitializer;
@@ -102,16 +109,19 @@ contract TestBase is TestUtils {
     }
 
     function _createFactories() internal {
+        liquidatorFactory        = address(new LiquidatorFactory(address(globals)));
         loanFactory              = address(new LoanFactory(address(globals)));
         loanManagerFactory       = address(new LoanManagerFactory(address(globals)));
         poolManagerFactory       = address(new PoolManagerFactory(address(globals)));
         withdrawalManagerFactory = address(new WithdrawalManagerFactory(address(globals)));
 
+        liquidatorImplementation        = address(new Liquidator());
         loanImplementation              = address(new Loan());
         loanManagerImplementation       = address(new LoanManager());
         poolManagerImplementation       = address(new PoolManager());
         withdrawalManagerImplementation = address(new WithdrawalManager());
 
+        liquidatorInitializer        = address(new LiquidatorInitializer());
         loanInitializer              = address(new LoanInitializer());
         loanManagerInitializer       = address(new LoanManagerInitializer());
         poolManagerInitializer       = address(new PoolManagerInitializer());
@@ -119,9 +129,13 @@ contract TestBase is TestUtils {
 
         vm.startPrank(governor);
 
+        globals.setValidFactory("LIQUIDATOR",         liquidatorFactory,        true);
         globals.setValidFactory("LOAN_MANAGER",       loanManagerFactory,       true);
         globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,       true);
         globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory, true);
+
+        LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
+        LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
 
         LoanFactory(loanFactory).registerImplementation(1, loanImplementation, loanInitializer);
         LoanFactory(loanFactory).setDefaultVersion(1);
@@ -142,7 +156,7 @@ contract TestBase is TestUtils {
         uint128 delay    = 1 weeks;
         uint128 duration = 2 days;
 
-        globals = Globals(address(new NonTransparentProxy(governor, address(new Globals(delay, duration)))));
+        globals = Globals(address(new NonTransparentProxy(governor, address(new Globals()))));
 
         deployer = new PoolDeployer(address(globals));
 

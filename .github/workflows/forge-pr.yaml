@@ -43,6 +43,9 @@ jobs:
           git submodule update --init --recursive
           cd ../..
 
+          echo "$SSH_KEY_LIQUIDATIONS" > $HOME/.ssh/id_rsa
+          git submodule update --init modules/liquidations
+
           echo "$SSH_KEY_LOAN" > $HOME/.ssh/id_rsa
           git submodule update --init --recursive modules/loan
           git submodule update --init --recursive modules/loan-v301
@@ -52,10 +55,6 @@ jobs:
 
           echo "$SSH_KEY_POOL_V2" > $HOME/.ssh/id_rsa
           git submodule update --init modules/pool-v2
-          echo "$SSH_KEY_LIQUIDATIONS" > $HOME/.ssh/id_rsa
-          cd modules/pool-v2
-          git submodule update --init --recursive
-          cd ../..
 
           echo "$SSH_KEY_WITHDRAWAL_MANAGER" > $HOME/.ssh/id_rsa
           git submodule update --init --recursive modules/withdrawal-manager

@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { Action } from "./Action.sol";
 
-contract TriggerDefaultWarningAction is Action {
+contract ImpairLoanAction is Action {
 
     constructor(uint256 timestamp_, string memory description_) Action(timestamp_, description_) { }
 

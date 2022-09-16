@@ -6,7 +6,7 @@ import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAsser
 import { Address, console  } from "../modules/contract-test-utils/contracts/test.sol";
 import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
-contract LoanDefaultTests is TestBaseWithAssertions {
+contract LoanLiquidationTests is TestBaseWithAssertions {
 
     address borrower = address(new Address());
     address lp       = address(new Address());
@@ -37,11 +37,11 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
     }
 
-    /*********************/
+    /*******************/
     /*** Full Cover ***/
-    /*********************/
+    /******************/
 
-    function test_loanDefault_fullCover_withCollateral_noTDW() external {
+    function test_loanDefault_fullCover_withCollateral_noImpairment() external {
         depositCover({ cover: 10_000_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -97,7 +97,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -120,10 +120,8 @@ contract LoanDefaultTests is TestBaseWithAssertions {
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
         uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
-
-        uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
-
-        uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
+        uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
+        uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
         assertEq(netLateInterest, 603_216000);
         assertEq(platformFees,    342_903827);
@@ -146,12 +144,12 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             issuanceRate:          0,
             domainStart:           start + 1_000_000 + 5 days + 1,
             domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 900e6 + netLateInterest
+            unrealizedLosses:      1_000_000e6 + 900e6
         });
 
         assertPoolManager({
             totalAssets:      1_000_000e6 + 900e6 + 500_000e6,
-            unrealizedLosses: 1_000_000e6 + 900e6 + netLateInterest
+            unrealizedLosses: 1_000_000e6 + 900e6
         });
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
@@ -212,7 +210,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
     }
 
-    function test_loanDefault_fullCover_withCollateral_withTDW() external {
+    function test_loanDefault_fullCover_withCollateral_withImpairment() external {
         depositCover({ cover: 10_000_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -234,7 +232,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
         assertEq(platformFees, 173_570776);
@@ -263,7 +261,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case TDW reverted
+            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
         });
 
         assertLoanManager({
@@ -285,7 +283,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -389,7 +387,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
     }
 
-    function test_loanDefault_fullCover_noCollateral_noTDW() external {
+    function test_loanDefault_fullCover_noCollateral_noImpairment() external {
         depositCover({ cover: 10_000_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -445,7 +443,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -512,7 +510,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
     }
 
-    function test_loanDefault_fullCover_noCollateral_withTDW() external {
+    function test_loanDefault_fullCover_noCollateral_withImpairment() external {
         depositCover({ cover: 10_000_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -534,7 +532,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
         assertEq(platformFees, 173_570776);
@@ -563,7 +561,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case TDW reverted
+            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
         });
 
         assertLoanManager({
@@ -585,7 +583,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -644,7 +642,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
     /*** Partial Cover ***/
     /*********************/
 
-    function test_loanDefault_partialCover_withCollateral_noTDW() external {
+    function test_loanDefault_partialCover_withCollateral_noImpairment() external {
         depositCover({ cover: 100_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -700,7 +698,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -723,10 +721,8 @@ contract LoanDefaultTests is TestBaseWithAssertions {
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
         uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
-
-        uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
-
-        uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
+        uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
+        uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
         assertEq(netLateInterest, 603_216000);
         assertEq(platformFees,    342_903827);
@@ -749,12 +745,12 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             issuanceRate:          0,
             domainStart:           start + 1_000_000 + 5 days + 1,
             domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 900e6 + netLateInterest
+            unrealizedLosses:      1_000_000e6 + 900e6
         });
 
         assertPoolManager({
             totalAssets:      1_000_000e6 + 900e6 + 500_000e6,
-            unrealizedLosses: 1_000_000e6 + 900e6 + netLateInterest
+            unrealizedLosses: 1_000_000e6 + 900e6
         });
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
@@ -815,7 +811,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
     }
 
-    function test_loanDefault_partialCover_withCollateral_withTDW() external {
+    function test_loanDefault_partialCover_withCollateral_withImpairment() external {
         depositCover({ cover: 100_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -837,7 +833,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
         assertEq(platformFees, 173_570776);
@@ -866,7 +862,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case TDW reverted
+            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
         });
 
         assertLoanManager({
@@ -888,7 +884,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -992,7 +988,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
     }
 
-    function test_loanDefault_partialCover_noCollateral_noTDW() external {
+    function test_loanDefault_partialCover_noCollateral_noImpairment() external {
         depositCover({ cover: 100_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -1048,7 +1044,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1115,7 +1111,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
     }
 
-    function test_loanDefault_partialCover_noCollateral_withTDW() external {
+    function test_loanDefault_partialCover_noCollateral_withImpairment() external {
         depositCover({ cover: 100_000e6 });
 
         loan = fundAndDrawdownLoan({
@@ -1137,7 +1133,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
         assertEq(platformFees, 173_570776);
@@ -1166,7 +1162,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case TDW reverted
+            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
         });
 
         assertLoanManager({
@@ -1188,7 +1184,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1247,7 +1243,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
     /*** No Cover ***/
     /****************/
 
-    function test_loanDefault_noCover_withCollateral_noTDW() external {
+    function test_loanDefault_noCover_withCollateral_noImpairment() external {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
@@ -1302,7 +1298,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1351,12 +1347,12 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             issuanceRate:          0,
             domainStart:           start + 1_000_000 + 5 days + 1,
             domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 900e6 + netLateInterest
+            unrealizedLosses:      1_000_000e6 + 900e6
         });
 
         assertPoolManager({
             totalAssets:      1_000_000e6 + 900e6 + 500_000e6,
-            unrealizedLosses: 1_000_000e6 + 900e6 + netLateInterest
+            unrealizedLosses: 1_000_000e6 + 900e6
         });
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
@@ -1417,7 +1413,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         );
     }
 
-    function test_loanDefault_noCover_withCollateral_withTDW() external {
+    function test_loanDefault_noCover_withCollateral_withImpairment() external {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
@@ -1438,7 +1434,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
         assertEq(platformFees, 173_570776);
@@ -1467,7 +1463,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case TDW reverted
+            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
         });
 
         assertLoanManager({
@@ -1489,7 +1485,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1594,7 +1590,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         );
     }
 
-    function test_loanDefault_noCover_noCollateral_noTDW() external {
+    function test_loanDefault_noCover_noCollateral_noImpairment() external {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
@@ -1649,7 +1645,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1703,7 +1699,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         );
     }
 
-    function test_loanDefault_noCover_noCollateral_withTDW() external {
+    function test_loanDefault_noCover_noCollateral_withImpairment() external {
 
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
@@ -1724,7 +1720,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
         assertEq(platformFees, 173_570776);
@@ -1753,7 +1749,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case TDW reverted
+            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
         });
 
         assertLoanManager({
@@ -1775,7 +1771,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
         vm.warp(start + 600_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1830,7 +1826,7 @@ contract LoanDefaultTests is TestBaseWithAssertions {
 
 }
 
-contract DefaultWarningTests is TestBaseWithAssertions {
+contract LoanImpairmentTests is TestBaseWithAssertions {
 
     address borrower = address(new Address());
     address lp       = address(new Address());
@@ -1868,7 +1864,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
         });
     }
 
-    function setUpTDWTest() internal {
+    function setUpLoanImpairmentTest() internal {
         // Pool liquidity:  1,500,000 - 1,000,000  = 500,000
         // Gross interest:  1,000,000 * 7.50% / 12 =   6,250
         // Service fees:                 275 + 550 =     825
@@ -1885,7 +1881,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start,
@@ -1924,7 +1920,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start,
@@ -1963,7 +1959,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH,
@@ -2001,13 +1997,13 @@ contract DefaultWarningTests is TestBaseWithAssertions {
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
 
-        /*******************************************************************/
-        /*** Trigger default warning at 1/5 of the next payment interval ***/
-        /*******************************************************************/
+        /*******************************************************/
+        /*** Impair loan at 1/5 of the next payment interval ***/
+        /*******************************************************/
 
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5);
         vm.prank(poolDelegate);
-        poolManager.triggerDefaultWarning(address(loan));
+        poolManager.impairLoan(address(loan));
 
         assertLoanState({
             loan:              loan,
@@ -2019,7 +2015,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH,
@@ -2058,12 +2054,12 @@ contract DefaultWarningTests is TestBaseWithAssertions {
         );
     }
 
-    function test_triggerDefaultWarning_thenCancel() external {
-        setUpTDWTest();
+    function test_impairLoan_thenCancel() external {
+        setUpLoanImpairmentTest();
 
-        /******************************************************************/
-        /*** Remove the default warning a day after the default warning ***/
-        /******************************************************************/
+        /**********************************************/
+        /*** Remove the loan impairment a day later ***/
+        /**********************************************/
 
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY);
 
@@ -2084,7 +2080,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.removeDefaultWarning(address(loan));
+        poolManager.removeLoanImpairment(address(loan));
 
         assertLoanState({
             loan:              loan,
@@ -2096,7 +2092,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH,
@@ -2135,12 +2131,12 @@ contract DefaultWarningTests is TestBaseWithAssertions {
         );
 
         /***********************************************************************/
-        /*** Make another payment after the default warning has been removed ***/
+        /*** Make another payment after the loan impairment has been removed ***/
         /***********************************************************************/
 
         vm.warp(start + 2 * ONE_MONTH);
 
-        uint256 accountedInterest = 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH;  // Accounted at time of default warning removal.
+        uint256 accountedInterest = 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH;  // Accounted at time of loan impairment removal.
 
         assertLoanManager({
             accruedInterest:       5_625e6 - accountedInterest - 1,
@@ -2170,7 +2166,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 2 * ONE_MONTH,
@@ -2209,11 +2205,11 @@ contract DefaultWarningTests is TestBaseWithAssertions {
         );
     }
 
-    function test_triggerDefaultWarning_thenRepay() external {
-        setUpTDWTest();
+    function test_impairLoan_thenRepay() external {
+        setUpLoanImpairmentTest();
 
         /******************************************************/
-        /*** Make a payment a day after the default warning ***/
+        /*** Make a payment a day after the loan impairment ***/
         /******************************************************/
 
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY);
@@ -2229,7 +2225,7 @@ contract DefaultWarningTests is TestBaseWithAssertions {
 
         assertLoanInfo({
             loan:                loan,
-            incomingNetInterest: 5_625e6,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH + ONE_MONTH / 5,
