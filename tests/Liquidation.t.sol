@@ -3,6 +3,8 @@ pragma solidity 0.8.7;
 
 import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAssertions.sol";
 
+import { ILiquidator } from "../modules/liquidations/contracts/interfaces/ILiquidator.sol";
+
 import { Address, console  } from "../modules/contract-test-utils/contracts/test.sol";
 import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
@@ -154,8 +156,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        assertEq(fundsAsset.balanceOf(liquidator),      0);
-        assertEq(collateralAsset.balanceOf(liquidator), 100e18);
+        assertEq(fundsAsset.balanceOf(liquidator),              0);
+        assertEq(collateralAsset.balanceOf(liquidator),         100e18);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 100e18);
 
         /*******************************************/
         /*** 3rd party liquidates the collateral ***/
@@ -163,8 +166,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         liquidateCollateral(loan);
 
-        assertEq(fundsAsset.balanceOf(liquidator),      150_000e6);
-        assertEq(collateralAsset.balanceOf(liquidator), 0);
+        assertEq(fundsAsset.balanceOf(liquidator),              150_000e6);
+        assertEq(collateralAsset.balanceOf(liquidator),         0);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 0);
 
         /*************************************/
         /*** Finish collateral liquidation ***/
@@ -332,8 +336,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        assertEq(fundsAsset.balanceOf(liquidator),      0);
-        assertEq(collateralAsset.balanceOf(liquidator), 100e18);
+        assertEq(fundsAsset.balanceOf(liquidator),              0);
+        assertEq(collateralAsset.balanceOf(liquidator),         100e18);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 100e18);
 
         /*******************************************/
         /*** 3rd party liquidates the collateral ***/
@@ -341,8 +346,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         liquidateCollateral(loan);
 
-        assertEq(fundsAsset.balanceOf(liquidator),      150_000e6);
-        assertEq(collateralAsset.balanceOf(liquidator), 0);
+        assertEq(fundsAsset.balanceOf(liquidator),              150_000e6);
+        assertEq(collateralAsset.balanceOf(liquidator),         0);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 0);
 
         /*************************************/
         /*** Finish collateral liquidation ***/
@@ -755,8 +761,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        assertEq(fundsAsset.balanceOf(liquidator),      0);
-        assertEq(collateralAsset.balanceOf(liquidator), 100e18);
+        assertEq(fundsAsset.balanceOf(liquidator),              0);
+        assertEq(collateralAsset.balanceOf(liquidator),         100e18);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 100e18);
 
         /*******************************************/
         /*** 3rd party liquidates the collateral ***/
@@ -764,8 +771,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         liquidateCollateral(loan);
 
-        assertEq(fundsAsset.balanceOf(liquidator),      150_000e6);
-        assertEq(collateralAsset.balanceOf(liquidator), 0);
+        assertEq(fundsAsset.balanceOf(liquidator),              150_000e6);
+        assertEq(collateralAsset.balanceOf(liquidator),         0);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 0);
 
         /*************************************/
         /*** Finish collateral liquidation ***/
@@ -933,8 +941,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        assertEq(fundsAsset.balanceOf(liquidator),      0);
-        assertEq(collateralAsset.balanceOf(liquidator), 100e18);
+        assertEq(fundsAsset.balanceOf(liquidator),              0);
+        assertEq(collateralAsset.balanceOf(liquidator),         100e18);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 100e18);
 
         /*******************************************/
         /*** 3rd party liquidates the collateral ***/
@@ -942,8 +951,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         liquidateCollateral(loan);
 
-        assertEq(fundsAsset.balanceOf(liquidator),      150_000e6);
-        assertEq(collateralAsset.balanceOf(liquidator), 0);
+        assertEq(fundsAsset.balanceOf(liquidator),              150_000e6);
+        assertEq(collateralAsset.balanceOf(liquidator),         0);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 0);
 
         /*************************************/
         /*** Finish collateral liquidation ***/
@@ -1357,8 +1367,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        assertEq(fundsAsset.balanceOf(liquidator),      0);
-        assertEq(collateralAsset.balanceOf(liquidator), 100e18);
+        assertEq(fundsAsset.balanceOf(liquidator),              0);
+        assertEq(collateralAsset.balanceOf(liquidator),         100e18);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 100e18);
 
         /*******************************************/
         /*** 3rd party liquidates the collateral ***/
@@ -1366,8 +1377,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         liquidateCollateral(loan);
 
-        assertEq(fundsAsset.balanceOf(liquidator),      150_000e6);
-        assertEq(collateralAsset.balanceOf(liquidator), 0);
+        assertEq(fundsAsset.balanceOf(liquidator),              150_000e6);
+        assertEq(collateralAsset.balanceOf(liquidator),         0);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 0);
 
         /*************************************/
         /*** Finish collateral liquidation ***/
@@ -1534,8 +1546,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 
-        assertEq(fundsAsset.balanceOf(liquidator),      0);
-        assertEq(collateralAsset.balanceOf(liquidator), 100e18);
+        assertEq(fundsAsset.balanceOf(liquidator),              0);
+        assertEq(collateralAsset.balanceOf(liquidator),         100e18);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 100e18);
 
         /*******************************************/
         /*** 3rd party liquidates the collateral ***/
@@ -1543,8 +1556,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         liquidateCollateral(loan);
 
-        assertEq(fundsAsset.balanceOf(liquidator),      150_000e6);
-        assertEq(collateralAsset.balanceOf(liquidator), 0);
+        assertEq(fundsAsset.balanceOf(liquidator),              150_000e6);
+        assertEq(collateralAsset.balanceOf(liquidator),         0);
+        assertEq(ILiquidator(liquidator).collateralRemaining(), 0);
 
         /*************************************/
         /*** Finish collateral liquidation ***/
