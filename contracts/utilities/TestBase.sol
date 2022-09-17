@@ -269,6 +269,11 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
+    function encodeWithSignatureAndUint(string memory signature_, uint256 arg_) internal pure returns (bytes[] memory calls) {
+        calls    = new bytes[](1);
+        calls[0] = abi.encodeWithSignature(signature_, arg_);
+    }
+
     function fundAndDrawdownLoan(
         address borrower,
         uint256[3] memory termDetails,

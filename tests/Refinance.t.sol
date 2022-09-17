@@ -885,9 +885,217 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
                                     [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]);
     }
 
-    function encodeWithSignatureAndUint(string memory signature_, uint256 arg_) internal pure returns (bytes[] memory calls) {
-        calls    = new bytes[](1);
-        calls[0] = abi.encodeWithSignature(signature_, arg_);
+}
+
+contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
+
+    address borrower;
+    address lp;
+
+    Loan       loan;
+    Refinancer refinancer;
+
+    function setUp() public override {
+        super.setUp();
+
+        borrower   = address(new Address());
+        lp         = address(new Address());
+        refinancer = new Refinancer();
+
+        depositLiquidity({
+            lp:        lp,
+            liquidity: 2_500_000e6
+        });
+
+        setupFees({
+            delegateOriginationFee:     500e6,
+            delegateServiceFee:         300e6,
+            delegateManagementFeeRate:  0.02e6,
+            platformOriginationFeeRate: 0.001e6,
+            platformServiceFeeRate:     0.31536e6,
+            platformManagementFeeRate:  0.08e6
+        });
+
+        loan = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
+        });
+    }
+
+    function test_acceptNewTerms_failIfProtocolIsPaused() external {
+        vm.prank(globals.securityAdmin());
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failIfNotPoolDelegate() external {
+        vm.expectRevert("PM:ANT:NOT_PD");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failIfNotValidLoanManager() external {
+        address fakeLoan = address(new Address());
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:ANT:INVALID_LOAN_MANAGER");
+        poolManager.acceptNewTerms(fakeLoan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failIfInvalidBorrower() external {
+        vm.prank(governor);
+        globals.setValidBorrower(borrower, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:ANT:INVALID_BORROWER");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failIfTotalSupplyIsZero() external {
+        uint256 fullBalance = pool.balanceOf(lp);
+
+        // Close loan so lp can burn full supply. Impossible scenario because refinance would fail on loan.
+        ( uint256 principal, uint256 interest, uint256 fees ) = loan.getClosingPaymentBreakdown();
+
+        fundsAsset.mint(address(loan), principal + interest + fees);
+        loan.closeLoan(0);
+
+        // Burn the supply
+        vm.startPrank(lp);
+        pool.requestRedeem(fullBalance);
+
+        vm.warp(start + 2 weeks);
+
+        pool.redeem(fullBalance, address(lp), address(lp));
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        vm.expectRevert(ZERO_DIVISION);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failIfInsufficientCover() external {
+        vm.prank(governor);
+        globals.setMinCoverAmount(address(poolManager), 1e6);
+
+        fundsAsset.mint(address(poolManager.poolDelegateCover()), 1e6 - 1);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:ANT:INSUFFICIENT_COVER");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failWithFailedTransfer() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:ANT:TRANSFER_FAIL");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6 + 1);
+    }
+
+    function test_acceptNewTerms_failIfLockedLiquidity() external {
+        // Lock the liquidity
+        vm.prank(lp);
+        pool.requestRedeem(500_000e6 + 1);
+
+        vm.warp(start + 2 weeks);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:ANT:LOCKED_LIQUIDITY");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6);
+    }
+
+    function test_acceptNewTerms_failifNotPoolManager() external {
+        vm.expectRevert("LM:ANT:NOT_ADMIN");
+        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0));
+    }
+
+    function test_acceptNewTerms_failIfNotLender() external {
+        vm.expectRevert("ML:ANT:NOT_LENDER");
+        loan.acceptNewTerms(address(refinancer), block.timestamp + 1, new bytes[](0));
+    }
+
+    function test_acceptNewTerms_failIfRefinanceMismatch() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:ANT:COMMITMENT_MISMATCH");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+    }
+
+    function test_acceptNewTerms_failWithInvalidRefinancer() external {
+        address fakeRefinancer = address(2);
+
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        // Make commitment
+        vm.prank(borrower);
+        loan.proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:ANT:INVALID_REFINANCER");
+        poolManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
+    }
+
+    function test_acceptNewTerms_failIfDeadlineExpired() external {
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        uint256 deadline = block.timestamp + 1;
+
+        // Make commitment
+        vm.prank(borrower);
+        loan.proposeNewTerms(address(refinancer), deadline, data);
+
+        vm.warp(deadline + 1);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:ANT:EXPIRED_COMMITMENT");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), deadline, data, 0);
+    }
+
+    function test_acceptNewTerms_failIfRefinanceCallFails() external {
+        address fakeRefinancer = address(new Address());
+
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        // Make commitment
+        vm.prank(borrower);
+        loan.proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:ANT:FAILED");
+        poolManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
+    }
+
+    function test_acceptNewTerms_failWithInsufficientCollateral() external {
+        bytes[] memory data = encodeWithSignatureAndUint("setCollateralRequired(uint256)", 1);
+
+        // Make commitment
+        vm.prank(borrower);
+        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+
+        // Mint fees to cover origination fees
+        fundsAsset.mint(address(loan), 1_000e6);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert(ARITHMETIC_ERROR); // NOTE: Although there's a requirement, the collateralMaintained check reverts with an underflow before reaching the error message.
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+    }
+
+    function test_acceptNewTerms_failWithUnexpectedFunds() external {
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        // Make commitment
+        vm.prank(borrower);
+        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+
+        // Mint fees to cover origination fees
+        fundsAsset.mint(address(loan), 1_000e6);
+        loan.returnFunds(0);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:ANT:UNEXPECTED_FUNDS");
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 1);
     }
 
 }
