@@ -238,8 +238,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
-        assertEq(platformFees, 173_570776);
+        uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
+        assertEq(platformFees, 257.284627e6);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -384,7 +384,6 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 10_000_000e6 - coverUsedForPool - platformFees);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           268_700151);
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 540e6);
 
         assertPoolManager({
@@ -540,8 +539,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
-        assertEq(platformFees, 173_570776);
+        uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
+        assertEq(platformFees, 257.284627e6);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -635,7 +634,6 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 10_000_000e6 - coverUsedForPool - platformFees);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           268_700151);
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 540e6);
 
         assertPoolManager({
@@ -843,8 +841,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
-        assertEq(platformFees, 173_570776);
+        uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
+        assertEq(platformFees, 257.284627e6);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -985,15 +983,12 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        uint256 coverUsedForPool = 40_000e6 - platformFees;
-        assertEq(coverUsedForPool, 39_826_429224);
-
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
-        assertEq(fundsAsset.balanceOf(treasury),           268_700151);
-        assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 150_000e6 + coverUsedForPool);
+        assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
+        assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 150_000e6 + 40_000e6 - platformFees);
 
         assertPoolManager({
-            totalAssets:      500_000e6 + 150_000e6 + coverUsedForPool,
+            totalAssets:      500_000e6 + 150_000e6 + 40_000e6 - platformFees,
             unrealizedLosses: 0
         });
     }
@@ -1145,8 +1140,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
-        assertEq(platformFees, 173_570776);
+        uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
+        assertEq(platformFees, 257.284627e6);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1236,15 +1231,12 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        uint256 coverUsedForPool = 40_000e6 - platformFees;
-        assertEq(coverUsedForPool, 39_826_429224);
-
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
-        assertEq(fundsAsset.balanceOf(treasury),           268_700151);
-        assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + coverUsedForPool);
+        assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
+        assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 40_000e6 - platformFees);
 
         assertPoolManager({
-            totalAssets:      500_000e6 + coverUsedForPool,
+            totalAssets:      500_000e6 + 40_000e6 - platformFees,
             unrealizedLosses: 0
         });
     }
@@ -1448,8 +1440,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
-        assertEq(platformFees, 173_570776);
+        uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
+        assertEq(platformFees, 257.284627e6);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1736,8 +1728,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 platformFees = (platformServiceFee + 80e6) * 600_000 / 1_000_000;
-        assertEq(platformFees, 173_570776);
+        uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
+        assertEq(platformFees, 257.284627e6);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -2041,7 +2033,7 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             principal:           1_000_000e6,
             interest:            uint256(5_625e6 - 1) / 5,  // -1 due to issuance rate rounding error.
             lateInterest:        0,
-            platformFees:        1050e6 / 5,
+            platformFees:        550e6 + 500e6 / 5,
             liquidatorExists:    false,
             triggeredByGovernor: false
         });
