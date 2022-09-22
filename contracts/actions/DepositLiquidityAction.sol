@@ -11,9 +11,9 @@ contract DepositLiquidityAction is Action {
 
     uint256 amount;
 
-    IERC20Like       asset;
-    IPoolLike        pool;
-    IPoolManagerLike poolManager;
+    IERC20Like       public asset;
+    IPoolLike        public pool;
+    IPoolManagerLike public poolManager;
 
     constructor(
         uint256 timestamp_,

@@ -7,8 +7,8 @@ import { Action } from "./Action.sol";
 
 contract MakePaymentAction is Action {
 
-    IERC20Like asset;
-    ILoanLike  loan;
+    IERC20Like public asset;
+    ILoanLike  public loan;
 
     constructor(uint256 timestamp_, string memory description_, ILoanLike loan_) Action(timestamp_, description_) {
         loan  = loan_;

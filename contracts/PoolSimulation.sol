@@ -2,28 +2,15 @@
 pragma solidity 0.8.7;
 
 import { CSVWriter } from "../modules/contract-test-utils/contracts/csv.sol";
-import { TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
 
 import { IAction } from "./interfaces/IAction.sol";
 import { ILogger } from "./interfaces/ILogger.sol";
 
-contract PoolSimulation is TestUtils, CSVWriter {
+import { ActionHandler } from "./ActionHandler.sol";
 
-    uint256 actionIndex;    // Index of the next action that will be performed.
-    uint256 simulationEnd;  // Time when the simulation ends (inclusive).
+contract PoolSimulation is ActionHandler, CSVWriter {
 
-    IAction[] actions;  // Actions that will be performed during the simulation (will be sorted ascending by timestamp).
     ILogger[] loggers;  // List of loggers used to output the state of the simulation during each snapshot and after each action.
-
-    function add(IAction action_) external {
-        actions.push(action_);
-    }
-
-    function add(IAction[] memory actions_) external {
-        for (uint256 i = 0; i < actions_.length; ++i) {
-            actions.push(actions_[i]);
-        }
-    }
 
     function record(ILogger logger_) external {
         loggers.push(logger_);
@@ -42,7 +29,7 @@ contract PoolSimulation is TestUtils, CSVWriter {
             uint256 nextTimestamp_ = block.timestamp + 1 days;  // TODO: Make parameter
 
             // Round down the timestamp to the end of the simulation if it exceeds it.
-            if (nextTimestamp_ > simulationEnd) nextTimestamp_ = simulationEnd;
+            if (nextTimestamp_ > endTimestamp) nextTimestamp_ = endTimestamp;
 
             // Perform all actions up to and including the time of the snapshot.
             _act(nextTimestamp_);
@@ -51,7 +38,7 @@ contract PoolSimulation is TestUtils, CSVWriter {
             _snapshot(nextTimestamp_);
 
             // If we are at the end, terminate the simulation.
-            if (block.timestamp == simulationEnd) break;
+            if (block.timestamp == endTimestamp) break;
         }
 
         // Store all logs permanently.
@@ -61,22 +48,6 @@ contract PoolSimulation is TestUtils, CSVWriter {
     /*************************/
     /*** Utility Functions ***/
     /*************************/
-
-    function _sort() internal {
-        if (actions.length == 0) revert("No actions added");
-
-        // NOTE: Sorting algorithm should be stable to avoid issues with duplicate timestamps.
-        for (uint256 i = 0; i < actions.length - 1; ++i) {
-            for (uint256 j = 0; j < actions.length - 1 - i; ++j) {
-                if (actions[j].timestamp() > actions[j + 1].timestamp()) {
-                    ( actions[j], actions[j + 1] ) = ( actions[j + 1], actions[j] );
-                }
-            }
-        }
-
-        // Set the end of the simulation to the time of the latest action, plus an extra 10 days.
-        simulationEnd = actions[actions.length - 1].timestamp() + 10 days;
-    }
 
     function _act(uint256 nextTimestamp_) internal {
         // Perform all actions that occur up to and including the given timestamp.

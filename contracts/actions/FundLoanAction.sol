@@ -7,8 +7,8 @@ import { Action } from "./Action.sol";
 
 contract FundLoanAction is Action {
 
-    ILoanLike        loan;
-    IPoolManagerLike poolManager;
+    ILoanLike        public loan;
+    IPoolManagerLike public poolManager;
 
     constructor(uint256 timestamp_, string memory description_, IPoolManagerLike poolManager_, ILoanLike loan_) Action(timestamp_, description_) {
         poolManager = poolManager_;

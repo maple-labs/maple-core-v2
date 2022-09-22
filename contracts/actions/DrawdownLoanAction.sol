@@ -7,7 +7,7 @@ import { Action } from "./Action.sol";
 
 contract DrawdownLoanAction is Action {
 
-    ILoanLike loan;
+    ILoanLike public loan;
 
     constructor(uint256 timestamp_, string memory description_, ILoanLike loan_) Action(timestamp_, description_) {
         loan = loan_;

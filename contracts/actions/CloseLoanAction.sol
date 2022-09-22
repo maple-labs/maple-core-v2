@@ -13,8 +13,8 @@ import { Action } from "./Action.sol";
 
 contract CloseLoanAction is Action {
 
-    IERC20Like asset;
-    ILoanLike  loan;
+    IERC20Like public asset;
+    ILoanLike  public loan;
 
     constructor(uint256 timestamp_, string memory description_, ILoanLike loan_) Action(timestamp_, description_) {
         asset = IERC20Like(loan_.fundsAsset());

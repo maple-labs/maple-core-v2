@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
+import { IAction } from "./IAction.sol";
+
 interface IERC20Like {
 
     function approve(address spender_, uint256 amount_) external returns (bool success_);
@@ -74,6 +76,12 @@ interface IGlobalsLike {
     function setPlatformManagementFeeRate(address poolManager_, uint256 platformManagementFeeRate_) external;
     function setPlatformOriginationFeeRate(address poolManager_, uint256 platformOriginationFeeRate_) external;
     function setPlatformServiceFeeRate(address poolManager_, uint256 platformServiceFeeRate_) external;
+
+}
+
+interface ILoanActionLike is IAction {
+
+    function loan() external view returns (ILoanLike loan_);
 
 }
 

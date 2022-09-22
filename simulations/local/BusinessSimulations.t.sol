@@ -66,7 +66,7 @@ contract BusinessSimulations is SimulationBase {
     }
 
     /******************************************************************************************************************************/
-    /*** No Impairment + Uncollateralized                                                                                        ***/
+    /*** No Impairment + Uncollateralized                                                                                       ***/
     /******************************************************************************************************************************/
 
     function test_loanShed_liquidation_fullCover_uncollateralized_noImpairment() external {
@@ -110,7 +110,7 @@ contract BusinessSimulations is SimulationBase {
     }
 
     /******************************************************************************************************************************/
-    /*** No Impairment + Collateralized                                                                                        ***/
+    /*** No Impairment + Collateralized                                                                                         ***/
     /******************************************************************************************************************************/
 
     function test_loanShed_liquidation_fullCover_partiallyCollateralized_noImpairment() external {
@@ -154,7 +154,7 @@ contract BusinessSimulations is SimulationBase {
     }
 
     /******************************************************************************************************************************/
-    /*** Early Impairment - Uncollateralized                                                                                     ***/
+    /*** Early Impairment - Uncollateralized                                                                                    ***/
     /******************************************************************************************************************************/
 
     function test_loanShed_liquidation_fullCover_uncollateralized_earlyImpairment() external {
@@ -201,7 +201,7 @@ contract BusinessSimulations is SimulationBase {
     }
 
     /******************************************************************************************************************************/
-    /*** Early Impairment - Collateralized                                                                                       ***/
+    /*** Early Impairment - Collateralized                                                                                      ***/
     /******************************************************************************************************************************/
 
     function test_loanShed_liquidation_fullCover_partiallyCollateralized_earlyImpairment() external {
@@ -248,7 +248,7 @@ contract BusinessSimulations is SimulationBase {
     }
 
     /******************************************************************************************************************************/
-    /*** Late Impairment - Uncollateralized                                                                                      ***/
+    /*** Late Impairment - Uncollateralized                                                                                     ***/
     /******************************************************************************************************************************/
 
     // TODO: Import loan submodule with change to allow late impairments
@@ -296,7 +296,7 @@ contract BusinessSimulations is SimulationBase {
     }
 
     /******************************************************************************************************************************/
-    /*** Late Impairment - Collateralized                                                                                        ***/
+    /*** Late Impairment - Collateralized                                                                                       ***/
     /******************************************************************************************************************************/
 
     // TODO: Import loan submodule with change to allow late impairments
