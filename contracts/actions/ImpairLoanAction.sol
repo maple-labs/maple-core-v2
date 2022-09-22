@@ -5,9 +5,8 @@ import { ILoanLike, IPoolLike, IPoolManagerLike } from "../interfaces/Interfaces
 
 import { Action } from "./Action.sol";
 
-contract TriggerDefaultAction is Action {
+contract ImpairLoanAction is Action {
 
-    address liquidatorFactory;
     address loan;
 
     IPoolManagerLike poolManager;
@@ -16,19 +15,17 @@ contract TriggerDefaultAction is Action {
         uint256 timestamp_,
         string memory description_,
         IPoolManagerLike poolManager_,
-        address loan_,
-        address liquidatorFactory_
+        address loan_
     )
         Action(timestamp_, description_)
     {
-        poolManager       = poolManager_;
-        loan              = loan_;
-        liquidatorFactory = liquidatorFactory_;
+        poolManager = poolManager_;
+        loan        = loan_;
     }
 
     function act() external override {
         vm.startPrank(poolManager.poolDelegate());
-        poolManager.triggerDefault(loan, liquidatorFactory);
+        poolManager.impairLoan(loan);
         vm.stopPrank();
     }
 

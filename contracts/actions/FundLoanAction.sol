@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { ILoanLike, IPoolLike, IPoolManagerLike } from "../interfaces/Interfaces.sol";
+import { ILoanLike, IPoolManagerLike } from "../interfaces/Interfaces.sol";
 
 import { Action } from "./Action.sol";
 

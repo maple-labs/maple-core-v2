@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { CloseLoanAction    } from "../../contracts/actions/CloseLoanAction.sol";
-import { DrawdownLoanAction } from "../../contracts/actions/DrawdownLoanAction.sol";
-import { FundLoanAction     } from "../../contracts/actions/FundLoanAction.sol";
-import { MakePaymentAction  } from "../../contracts/actions/MakePaymentAction.sol";
+import { CloseLoanAction                   } from "../../contracts/actions/CloseLoanAction.sol";
+import { DrawdownLoanAction                } from "../../contracts/actions/DrawdownLoanAction.sol";
+import { FinishCollateralLiquidationAction } from "../../contracts/actions/FinishCollateralLiquidationAction.sol";
+import { FundLoanAction                    } from "../../contracts/actions/FundLoanAction.sol";
+import { ImpairLoanAction                  } from "../../contracts/actions/ImpairLoanAction.sol";
+import { LiquidationAction                 } from "../../contracts/actions/LiquidationAction.sol";
+import { MakePaymentAction                 } from "../../contracts/actions/MakePaymentAction.sol";
+import { TriggerDefaultAction              } from "../../contracts/actions/TriggerDefaultAction.sol";
 
 import { IAction          } from "../interfaces/IAction.sol";
 import { IActionGenerator } from "../interfaces/IActionGenerator.sol";
+import { ILoanLike        } from "../interfaces/Interfaces.sol";
 
 import { LoanScenario } from "../LoanScenario.sol";
 
@@ -20,25 +25,57 @@ contract LoanActionGenerator is TestUtils, IActionGenerator {
     function generateActions(LoanScenario scenario_) external override returns (IAction[] memory actions_) {
         delete actions;
 
+        ILoanLike loan_ = scenario_.loan();
+
         // Create the funding action.
         actions.push(new FundLoanAction({
             timestamp_:   scenario_.fundingTime(),
             description_: string(abi.encodePacked("Fund '", scenario_.name(), "'")),
             poolManager_: scenario_.poolManager(),
-            loan_:        scenario_.loan()
+            loan_:        loan_
         }));
 
         // Create the drawdown action.
         actions.push(new DrawdownLoanAction({
             timestamp_:   scenario_.fundingTime(),
             description_: string(abi.encodePacked("Draw down '", scenario_.name(), "'")),
-            loan_:        scenario_.loan()
+            loan_:        loan_
         }));
 
-        for (uint256 payment = 1; payment <= scenario_.loan().paymentsRemaining(); ++payment) {
+        for (uint256 payment = 1; payment <= loan_.paymentsRemaining(); ++payment) {
+            if (scenario_.impairmentOffsets(payment) != 0) {
+                actions.push(new ImpairLoanAction({
+                    timestamp_:   uint256(int256(scenario_.fundingTime()) + int256(payment * scenario_.loan().paymentInterval()) + scenario_.impairmentOffsets(payment)),
+                    description_: string(abi.encodePacked("Impair loan", scenario_.name(), "'")),
+                    poolManager_: scenario_.poolManager(),
+                    loan_:        address(loan_)
+                }));
+            }
 
             // If the payment is missing, stop generating actions.
             if (scenario_.missingPayments(payment)) {
+                actions.push(new TriggerDefaultAction({
+                    timestamp_:         uint256(int256(scenario_.fundingTime()) + int256(payment * loan_.paymentInterval()) + int256(scenario_.liquidationTriggerOffset())),
+                    description_:       string(abi.encodePacked("Trigger default '", scenario_.name(), "'")),
+                    poolManager_:       scenario_.poolManager(),
+                    loan_:              address(loan_),
+                    liquidatorFactory_: scenario_.liquidatorFactory()
+                }));
+
+                actions.push(new LiquidationAction({
+                    timestamp_:        uint256(int256(scenario_.fundingTime()) + int256(payment * loan_.paymentInterval()) + int256(scenario_.liquidationTriggerOffset())),
+                    description_:      string(abi.encodePacked("Liquidation '", scenario_.name(), "'")),
+                    loan_:             address(loan_),
+                    loanManager_:      address(scenario_.loanManager()),
+                    liquidationPrice_: scenario_.liquidationPrice()
+                }));
+
+                actions.push(new FinishCollateralLiquidationAction({
+                    timestamp_:         uint256(int256(scenario_.fundingTime()) + int256(payment * loan_.paymentInterval()) + int256(scenario_.finishCollateralLiquidationOffset())),
+                    description_:       string(abi.encodePacked("Finish collateral liquidation '", scenario_.name(), "'")),
+                    poolManager_:       scenario_.poolManager(),
+                    loan_:              address(loan_)
+                }));
                 break;
             }
 
@@ -47,16 +84,16 @@ contract LoanActionGenerator is TestUtils, IActionGenerator {
                 actions.push(new CloseLoanAction({
                     timestamp_:   uint256(int256(scenario_.fundingTime()) + int256(payment * scenario_.loan().paymentInterval()) + scenario_.paymentOffsets(payment)),
                     description_: string(abi.encodePacked("Close loan '", scenario_.name(), "'")),
-                    loan_:        scenario_.loan()
+                    loan_:        loan_
                 }));
                 break;
             }
 
             // Otherwise, make a regular payment with any specified offsets.
             actions.push(new MakePaymentAction({
-                timestamp_:   uint256(int256(scenario_.fundingTime()) + int256(payment * scenario_.loan().paymentInterval()) + scenario_.paymentOffsets(payment)),
+                timestamp_:   uint256(int256(scenario_.fundingTime()) + int256(payment * loan_.paymentInterval()) + scenario_.paymentOffsets(payment)),
                 description_: _generatePaymentDescription(scenario_.name(), payment, scenario_.paymentOffsets(payment)),
-                loan_:        scenario_.loan()
+                loan_:        loan_
             }));
         }
 

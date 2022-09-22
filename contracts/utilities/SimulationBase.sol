@@ -20,6 +20,7 @@ import {
 } from "../interfaces/Interfaces.sol";
 
 import { BalanceLogger           } from "../loggers/BalanceLogger.sol";
+import { BusinessSimLogger       } from "../loggers/BusinessSimLogger.sol";
 import { GlobalsLogger           } from "../loggers/GlobalsLogger.sol";
 import { LoanLogger              } from "../loggers/LoanLogger.sol";
 import { LoanManagerLogger       } from "../loggers/LoanManagerLogger.sol";
@@ -37,19 +38,21 @@ contract SimulationBase is TestBase {
     uint256 initialCover;
     uint256 initialLiquidity;
 
+    PoolSimulation simulation;
+
     LoanScenario[] scenarios;
 
     function setUp() public virtual override {
         super.setUp();
     }
 
-    function runSimulation(string memory filepath_) public {
+    function setUpSimulation(string memory filepath_) public {
         IPoolLike        pool_        = IPoolLike(address(pool));
         IPoolManagerLike poolManager_ = IPoolManagerLike(address(poolManager));
         ILoanManagerLike loanManager_ = ILoanManagerLike(address(loanManager));
 
         // Create the simulation.
-        PoolSimulation simulation = new PoolSimulation();
+        simulation = new PoolSimulation();
 
         // TODO: Add the required `initialCover` pool cover.
 
@@ -67,6 +70,12 @@ contract SimulationBase is TestBase {
         for (uint i_; i_ < scenarios.length; i_++) {
             simulation.add(generator_.generateActions(scenarios[i_]));
         }
+    }
+
+    function setUpAllLoggers(string memory filepath_) public {
+        IPoolLike        pool_        = IPoolLike(address(pool));
+        IPoolManagerLike poolManager_ = IPoolManagerLike(address(poolManager));
+        ILoanManagerLike loanManager_ = ILoanManagerLike(address(loanManager));
 
         // Add all loggers here in order to record contract states during the simulation.
         simulation.record(new PoolLogger(pool_,               string(abi.encodePacked("output/", filepath_, "/pool.csv"))));
@@ -78,8 +87,17 @@ contract SimulationBase is TestBase {
             string memory name_ = scenarios[i_].name();
             simulation.record(new LoanLogger(loan_, string(abi.encodePacked("output/", filepath_, "/", name_, ".csv"))));
         }
+    }
 
-        simulation.run();
+    function setUpBusinessLogger(string memory filepath_) public {
+        // Add all loggers here in order to record contract states during the simulation.
+        simulation.record(new BusinessSimLogger({
+            loanManager_:  address(loanManager),
+            poolDelegate_: address(poolDelegate),
+            poolManager_:  address(poolManager),
+            treasury_:     address(treasury),
+            filepath_:     string(abi.encodePacked("output/", filepath_, "/business-sim.csv"))
+        }));
     }
 
 }

@@ -24,9 +24,10 @@ contract MultiLoanSimulation is SimulationBase {
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
                 rates:       [uint256(0.12e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
-            poolManager_: address(poolManager),
-            fundingTime_: start,
-            name_:        "loan-1"
+            poolManager_:       address(poolManager),
+            liquidatorFactory_: address(liquidatorFactory),
+            fundingTime_:       start,
+            name_:              "loan-1"
         }));
 
         // Add 2nd loan.
@@ -37,9 +38,10 @@ contract MultiLoanSimulation is SimulationBase {
                 amounts:     [uint256(0), uint256(20_000_000e6), uint256(20_000_000e6)],
                 rates:       [uint256(0.10e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
-            poolManager_: address(poolManager),
-            fundingTime_: start + 5.12 days,
-            name_:        "loan-2"
+            poolManager_:       address(poolManager),
+            liquidatorFactory_: address(liquidatorFactory),
+            fundingTime_:       start + 5.12 days,
+            name_:              "loan-2"
         }));
 
         // Add 3rd loan.
@@ -50,9 +52,10 @@ contract MultiLoanSimulation is SimulationBase {
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
                 rates:       [uint256(0.16e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
-            poolManager_: address(poolManager),
-            fundingTime_: start + 8.88 days,
-            name_:        "loan-3"
+            poolManager_:       address(poolManager),
+            liquidatorFactory_: address(liquidatorFactory),
+            fundingTime_:       start + 8.88 days,
+            name_:              "loan-3"
         }));
 
         // Add 4th loan.
@@ -63,9 +66,10 @@ contract MultiLoanSimulation is SimulationBase {
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
                 rates:       [uint256(0.08e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
-            poolManager_: address(poolManager),
-            fundingTime_: start + 12.4 days,
-            name_:        "loan-4"
+            poolManager_:       address(poolManager),
+            liquidatorFactory_: address(liquidatorFactory),
+            fundingTime_:       start + 12.4 days,
+            name_:              "loan-4"
         }));
     }
 
@@ -86,7 +90,8 @@ contract MultiLoanSimulation is SimulationBase {
         scenarios[3].setPaymentOffset(2, -1.12 days);
         scenarios[3].setPaymentOffset(3, -3.88 days);
 
-        runSimulation("early-payments");
+        setUpSimulation("early-payments");
+        simulation.run();
     }
 
     function test_multiLoanSimulation_variousPayments() external {
@@ -103,7 +108,8 @@ contract MultiLoanSimulation is SimulationBase {
         scenarios[3].setPaymentOffset(2, -1.12 days);
         scenarios[3].setPaymentOffset(3,  3.88 days);
 
-        runSimulation("various-payments");
+        setUpSimulation("various-payments");
+        simulation.run();
     }
 
 }

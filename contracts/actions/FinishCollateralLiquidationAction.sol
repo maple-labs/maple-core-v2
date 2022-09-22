@@ -1,14 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
+import { ILoanLike, IPoolLike, IPoolManagerLike } from "../interfaces/Interfaces.sol";
+
 import { Action } from "./Action.sol";
 
 contract FinishCollateralLiquidationAction is Action {
 
-    constructor(uint256 timestamp_, string memory description_) Action(timestamp_, description_) { }
+    address loan;
+
+    IPoolManagerLike poolManager;
+
+    constructor(
+        uint256 timestamp_,
+        string memory description_,
+        IPoolManagerLike poolManager_,
+        address loan_
+    )
+        Action(timestamp_, description_)
+    {
+        poolManager = poolManager_;
+        loan        = loan_;
+    }
 
     function act() external override {
-        // TODO
+        vm.startPrank(poolManager.poolDelegate());
+        poolManager.finishCollateralLiquidation(loan);
+        vm.stopPrank();
     }
 
 }

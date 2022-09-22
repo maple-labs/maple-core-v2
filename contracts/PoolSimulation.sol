@@ -118,6 +118,10 @@ contract PoolSimulation is TestUtils, CSVWriter {
     }
 
     function _flush() internal {
+        if (loggers.length > 0) {
+            makeDir(loggers[0].filepath());
+        }
+
         for (uint i = 0; i < loggers.length; ++i) {
             writeFile(loggers[i].filepath());
         }

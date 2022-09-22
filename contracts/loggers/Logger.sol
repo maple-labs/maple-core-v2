@@ -24,4 +24,11 @@ abstract contract Logger is ILogger, TestUtils {
         ));
     }
 
+    function convertUintToSixDecimalString(uint256 value, uint256 precision) internal pure returns (string memory numberString) {
+        uint256 intAmount   = value / precision;
+        uint256 centsAmount = value * 1e6 / precision % 1e6;
+
+        return string(abi.encodePacked(convertUintToString(intAmount), ".", convertUintToString(centsAmount)));
+    }
+
 }

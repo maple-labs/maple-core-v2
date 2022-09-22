@@ -22,14 +22,16 @@ contract BasicSimulation is SimulationBase {
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
                 rates:       [uint256(0.01e18), uint256(0), uint256(0), uint256(0)]
             })),
-            poolManager_: address(poolManager),
-            fundingTime_: start,
-            name_:        "loan-1"
+            poolManager_:       address(poolManager),
+            liquidatorFactory_: address(liquidatorFactory),
+            fundingTime_:       start,
+            name_:              "loan-1"
         }));
     }
 
     function test_basicSimulation() external {
-        runSimulation("basic");
+        setUpSimulation("basic");
+        simulation.run();
     }
 
 }
