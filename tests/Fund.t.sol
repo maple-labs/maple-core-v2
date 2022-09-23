@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
 import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAssertions.sol";
@@ -6,18 +7,21 @@ import { Address, console } from "../modules/contract-test-utils/contracts/test.
 
 import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
 
-contract FundFailureTests is TestBaseWithAssertions {
+contract FundTests is TestBaseWithAssertions {
 
     address borrower;
+    address borrower2;
     address lp;
 
     Loan loan;
+    Loan loan2;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower  = address(new Address());
+        borrower2 = address(new Address());
+        lp        = address(new Address());
 
         depositLiquidity(lp, 1_500_000e6);
 
@@ -27,10 +31,10 @@ contract FundFailureTests is TestBaseWithAssertions {
         setupFees({
             delegateOriginationFee:     500e6,
             delegateServiceFee:         300e6,
-            delegateManagementFeeRate:  0.02e6,
-            platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.31536e6,  // 10k after 1m seconds
-            platformManagementFeeRate:  0.08e6
+            delegateManagementFeeRate:  0.02e6,     // 150,000 * 0.02 = 3,000
+            platformOriginationFeeRate: 0.001e6,    // 1,500,000 * 0.001   * 3,000,000 seconds / 365 days = 136.986301
+            platformServiceFeeRate:     0.31536e6,  // 1,500,000 * 0.31536 * 1,000,000 seconds / 365 days = 15,000
+            platformManagementFeeRate:  0.08e6      // 150,000 * 0.08 = 12,000
         });
 
         loan = createLoan({
@@ -38,6 +42,13 @@ contract FundFailureTests is TestBaseWithAssertions {
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+        });
+
+        loan2 = createLoan({
+            borrower:    borrower2,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(750_000e6), uint256(750_000e6)],
+            rates:       [uint256(6.3072e18), uint256(0), uint256(0), uint256(0)]
         });
     }
 
@@ -167,6 +178,393 @@ contract FundFailureTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert(ARITHMETIC_ERROR);
         poolManager.fund(uint256(1_500_000e6 - 1), address(loan), address(loanManager));
+    }
+
+    function test_fund_unaccountedFunds() external {
+        // Add unaccounted funds.
+        fundsAsset.mint(address(loan), 13_500e6);
+
+        assertEq(poolManager.loanManagers(address(loan)), address(0));
+
+        assertEq(loanManager.accountedInterest(),          0);
+        assertEq(loanManager.domainEnd(),                  0);
+        assertEq(loanManager.domainStart(),                0);
+        assertEq(loanManager.issuanceRate(),               0);
+        assertEq(loanManager.paymentCounter(),             0);
+        assertEq(loanManager.paymentIdOf(address(loan)),   0);
+        assertEq(loanManager.paymentWithEarliestDueDate(), 0);
+        assertEq(loanManager.principalOut(),               0);
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(1);
+
+            assertEq(delegateManagementFeeRate, 0);
+            assertEq(incomingNetInterest,       0);
+            assertEq(issuanceRate,              0);
+            assertEq(paymentDueDate,            0);
+            assertEq(platformManagementFeeRate, 0);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 0);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(1);
+
+            assertEq(previous,             0);
+            assertEq(next,                 0);
+            assertEq(sortedPaymentDueDate, 0);
+        }
+
+        assertEq(feeManager.platformServiceFee(address(loan)), 0);
+
+        assertEq(loan.drawableFunds(),      0);
+        assertEq(loan.lender(),             address(0));
+        assertEq(loan.nextPaymentDueDate(), 0);
+        assertEq(loan.principal(),          0);
+
+        assertEq(fundsAsset.balanceOf(address(loan)),         13_500e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),         1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(poolDelegate)), 0);
+        assertEq(fundsAsset.balanceOf(address(treasury)),     0);
+
+        assertEq(fundsAsset.allowance(address(loan), address(feeManager)), 0);
+
+        // Fund the loan.
+        vm.prank(poolDelegate);
+        poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
+
+        assertEq(poolManager.loanManagers(address(loan)), address(loanManager));
+
+        assertEq(loanManager.accountedInterest(),          0);
+        assertEq(loanManager.domainEnd(),                  start + 1_000_000);
+        assertEq(loanManager.domainStart(),                start);
+        assertEq(loanManager.issuanceRate(),               (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+        assertEq(loanManager.paymentCounter(),             1);
+        assertEq(loanManager.paymentIdOf(address(loan)),   1);
+        assertEq(loanManager.paymentWithEarliestDueDate(), 1);
+        assertEq(loanManager.principalOut(),               1_500_000e6);
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(1);
+
+            assertEq(delegateManagementFeeRate, 0.02e6);
+            assertEq(incomingNetInterest,       150_000e6 - 3_000e6 - 12_000e6);
+            assertEq(issuanceRate,              (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+            assertEq(paymentDueDate,            start + 1_000_000);
+            assertEq(platformManagementFeeRate, 0.08e6);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 start);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(1);
+
+            assertEq(previous,             0);
+            assertEq(next,                 0);
+            assertEq(sortedPaymentDueDate, start + 1_000_000);
+        }
+
+        assertEq(feeManager.platformServiceFee(address(loan)), 15_000e6);
+
+        assertEq(loan.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(loan.lender(),             address(loanManager));
+        assertEq(loan.nextPaymentDueDate(), start + 1_000_000);
+        assertEq(loan.principal(),          1_500_000e6);
+
+        assertEq(fundsAsset.balanceOf(address(loan)),         1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),         13_500e6);  // Unaccounted amount is skimmed to the pool.
+        assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6);
+        assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6);
+
+        assertEq(fundsAsset.allowance(address(loan), address(feeManager)), type(uint256).max);
+    }
+
+    function test_fund_oneLoan() external {
+        assertEq(poolManager.loanManagers(address(loan)), address(0));
+
+        assertEq(loanManager.accountedInterest(),          0);
+        assertEq(loanManager.domainEnd(),                  0);
+        assertEq(loanManager.domainStart(),                0);
+        assertEq(loanManager.issuanceRate(),               0);
+        assertEq(loanManager.paymentCounter(),             0);
+        assertEq(loanManager.paymentIdOf(address(loan)),   0);
+        assertEq(loanManager.paymentWithEarliestDueDate(), 0);
+        assertEq(loanManager.principalOut(),               0);
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(1);
+
+            assertEq(delegateManagementFeeRate, 0);
+            assertEq(incomingNetInterest,       0);
+            assertEq(issuanceRate,              0);
+            assertEq(paymentDueDate,            0);
+            assertEq(platformManagementFeeRate, 0);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 0);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(1);
+
+            assertEq(previous,             0);
+            assertEq(next,                 0);
+            assertEq(sortedPaymentDueDate, 0);
+        }
+
+        assertEq(feeManager.platformServiceFee(address(loan)), 0);
+
+        assertEq(loan.drawableFunds(),      0);
+        assertEq(loan.lender(),             address(0));
+        assertEq(loan.nextPaymentDueDate(), 0);
+        assertEq(loan.principal(),          0);
+
+        assertEq(fundsAsset.balanceOf(address(loan)),         0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(poolDelegate)), 0);
+        assertEq(fundsAsset.balanceOf(address(treasury)),     0);
+
+        assertEq(fundsAsset.allowance(address(loan), address(feeManager)), 0);
+
+        // Fund the loan.
+        vm.prank(poolDelegate);
+        poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
+
+        assertEq(poolManager.loanManagers(address(loan)), address(loanManager));
+
+        assertEq(loanManager.accountedInterest(),          0);
+        assertEq(loanManager.domainEnd(),                  start + 1_000_000);
+        assertEq(loanManager.domainStart(),                start);
+        assertEq(loanManager.issuanceRate(),               (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+        assertEq(loanManager.paymentCounter(),             1);
+        assertEq(loanManager.paymentIdOf(address(loan)),   1);
+        assertEq(loanManager.paymentWithEarliestDueDate(), 1);
+        assertEq(loanManager.principalOut(),               1_500_000e6);
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(1);
+
+            assertEq(delegateManagementFeeRate, 0.02e6);
+            assertEq(incomingNetInterest,       150_000e6 - 3_000e6 - 12_000e6);
+            assertEq(issuanceRate,              (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+            assertEq(paymentDueDate,            start + 1_000_000);
+            assertEq(platformManagementFeeRate, 0.08e6);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 start);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(1);
+
+            assertEq(previous,             0);
+            assertEq(next,                 0);
+            assertEq(sortedPaymentDueDate, start + 1_000_000);
+        }
+
+        assertEq(feeManager.platformServiceFee(address(loan)), 15_000e6);
+
+        assertEq(loan.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(loan.lender(),             address(loanManager));
+        assertEq(loan.nextPaymentDueDate(), start + 1_000_000);
+        assertEq(loan.principal(),          1_500_000e6);
+
+        assertEq(fundsAsset.balanceOf(address(loan)),         1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),         0);
+        assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6);
+        assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6);
+
+        assertEq(fundsAsset.allowance(address(loan), address(feeManager)), type(uint256).max);
+    }
+
+    function test_fund_twoLoans() external {
+        // Fund the first loan.
+        vm.prank(poolDelegate);
+        poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
+
+        assertEq(poolManager.loanManagers(address(loan)), address(loanManager));
+
+        assertEq(loanManager.paymentIdOf(address(loan)), 1);
+
+        assertEq(loanManager.accountedInterest(),          0);
+        assertEq(loanManager.domainEnd(),                  start + 1_000_000);
+        assertEq(loanManager.domainStart(),                start);
+        assertEq(loanManager.issuanceRate(),               (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+        assertEq(loanManager.paymentCounter(),             1);
+        assertEq(loanManager.paymentWithEarliestDueDate(), 1);
+        assertEq(loanManager.principalOut(),               1_500_000e6);
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(1);
+
+            assertEq(delegateManagementFeeRate, 0.02e6);
+            assertEq(incomingNetInterest,       150_000e6 - 3_000e6 - 12_000e6);
+            assertEq(issuanceRate,              (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+            assertEq(paymentDueDate,            start + 1_000_000);
+            assertEq(platformManagementFeeRate, 0.08e6);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 start);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(1);
+
+            assertEq(previous,             0);
+            assertEq(next,                 0);
+            assertEq(sortedPaymentDueDate, start + 1_000_000);
+        }
+
+        assertEq(feeManager.platformServiceFee(address(loan)), 15_000e6);
+
+        assertEq(loan.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(loan.lender(),             address(loanManager));
+        assertEq(loan.nextPaymentDueDate(), start + 1_000_000);
+        assertEq(loan.principal(),          1_500_000e6);
+
+        assertEq(fundsAsset.balanceOf(address(loan)),         1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),         0);
+        assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6);
+        assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6);
+
+        assertEq(fundsAsset.allowance(address(loan), address(feeManager)), type(uint256).max);
+
+        // Mint the extra funds needed to fund the second loan.
+        fundsAsset.mint(address(pool), 750_000e6);
+
+        // Fund the second loan after some time passes.
+        vm.warp(start + 1_000);
+        vm.prank(poolDelegate);
+        poolManager.fund(uint256(750_000e6), address(loan2), address(loanManager));
+
+        assertEq(poolManager.loanManagers(address(loan)),  address(loanManager));
+        assertEq(poolManager.loanManagers(address(loan2)), address(loanManager));
+
+        assertEq(loanManager.paymentIdOf(address(loan)),  1);
+        assertEq(loanManager.paymentIdOf(address(loan2)), 2);
+
+        assertEq(loanManager.accountedInterest(),          135e6);
+        assertEq(loanManager.domainEnd(),                  start + 1_000_000);
+        assertEq(loanManager.domainStart(),                start + 1_000);
+        assertEq(loanManager.issuanceRate(),               2 * (150_000e6 - 3000e6 - 12_000e6) * 1e30 / 1_000_000);
+        assertEq(loanManager.paymentCounter(),             2);
+        assertEq(loanManager.paymentWithEarliestDueDate(), 1);
+        assertEq(loanManager.principalOut(),               2_250_000e6);
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(1);
+
+            assertEq(delegateManagementFeeRate, 0.02e6);
+            assertEq(incomingNetInterest,       150_000e6 - 3_000e6 - 12_000e6);
+            assertEq(issuanceRate,              (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+            assertEq(paymentDueDate,            start + 1_000_000);
+            assertEq(platformManagementFeeRate, 0.08e6);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 start);
+        }
+
+        {
+            (
+                uint256 platformManagementFeeRate,
+                uint256 delegateManagementFeeRate,
+                uint256 startDate,
+                uint256 paymentDueDate,
+                uint256 incomingNetInterest,
+                uint256 refinanceInterest,
+                uint256 issuanceRate
+            ) = loanManager.payments(2);
+
+            assertEq(delegateManagementFeeRate, 0.02e6);
+            assertEq(incomingNetInterest,       150_000e6 - 3_000e6 - 12_000e6);
+            assertEq(issuanceRate,              (150_000e6 - 3_000e6 - 12_000e6) * 1e30 / 1_000_000);
+            assertEq(paymentDueDate,            start + 1_000 + 1_000_000);
+            assertEq(platformManagementFeeRate, 0.08e6);
+            assertEq(refinanceInterest,         0);
+            assertEq(startDate,                 start + 1_000);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(1);
+
+            assertEq(previous,             0);
+            assertEq(next,                 2);
+            assertEq(sortedPaymentDueDate, start + 1_000_000);
+        }
+
+        {
+            ( uint256 previous, uint256 next, uint256 sortedPaymentDueDate ) = loanManager.sortedPayments(2);
+
+            assertEq(previous,             1);
+            assertEq(next,                 0);
+            assertEq(sortedPaymentDueDate, start + 1_000 + 1_000_000);
+        }
+
+        assertEq(feeManager.platformServiceFee(address(loan)),  15_000e6);
+        assertEq(feeManager.platformServiceFee(address(loan2)), 7_500e6);
+
+        assertEq(loan.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(loan.lender(),             address(loanManager));
+        assertEq(loan.nextPaymentDueDate(), start + 1_000_000);
+        assertEq(loan.principal(),          1_500_000e6);
+
+        assertEq(loan2.drawableFunds(),      750_000e6 - 500e6 - 71.347031e6);
+        assertEq(loan2.lender(),             address(loanManager));
+        assertEq(loan2.nextPaymentDueDate(), start + 1_000 + 1_000_000);
+        assertEq(loan2.principal(),          750_000e6);
+
+        assertEq(fundsAsset.balanceOf(address(loan)),         1_500_000e6 - 500e6 - 142.694063e6);
+        assertEq(fundsAsset.balanceOf(address(loan2)),        750_000e6   - 500e6 - 71.347031e6);
+        assertEq(fundsAsset.balanceOf(address(pool)),         0);
+        assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6 + 500e6);
+        assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6 + 71.347031e6);
+
+        assertEq(fundsAsset.allowance(address(loan),  address(feeManager)), type(uint256).max);
+        assertEq(fundsAsset.allowance(address(loan2), address(feeManager)), type(uint256).max);
     }
 
 }
