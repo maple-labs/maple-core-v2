@@ -13,6 +13,9 @@ slither-files:
 test:
 	@scripts/test.sh
 
+invariant:
+	@scripts/invariant.sh
+
 local-sim:
 	@scripts/test.sh -p local_simulations
 

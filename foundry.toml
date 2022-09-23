@@ -12,6 +12,12 @@ gas_limit = "18446744073709551615"  # Gas limit for tests
 [fuzz]
 runs = 1
 
+[invariant]
+runs = 100             # The number of calls to make in the invariant tests
+depth = 10             # The number of times to run the invariant tests
+call_override = false  # Override calls
+# fail_on_revert = true  # Fail the test if the contract reverts
+
 [profile.mainnet_simulations]
 test = 'simulations/mainnet'  # The test directory
 block_number = 15320000       # Block number for tests
