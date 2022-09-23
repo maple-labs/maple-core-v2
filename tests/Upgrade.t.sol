@@ -534,3 +534,27 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
 }
+
+contract UnscheduleCallTests is TestBase {
+
+    bytes upgradeCallData = new bytes(0);
+
+    function test_unscheduleCall_governor() external {
+        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+
+        // PD schedules the upgrade call
+        vm.prank(poolDelegate);
+        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+
+        vm.warp(start + 1 weeks);
+
+        assertTrue(globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs));
+
+        // Governor unschedule the upgrade call
+        vm.prank(governor);
+        globals.unscheduleCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs);
+
+        assertTrue(!globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs));
+    }
+    
+}
