@@ -974,7 +974,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         vm.stopPrank();
 
         vm.prank(poolDelegate);
-        vm.expectRevert(ZERO_DIVISION);
+        vm.expectRevert("PM:ANT:ZERO_SUPPLY");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
@@ -1078,7 +1078,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         fundsAsset.mint(address(loan), 1_000e6);
 
         vm.prank(poolDelegate);
-        vm.expectRevert(ARITHMETIC_ERROR); // NOTE: Although there's a requirement, the collateralMaintained check reverts with an underflow before reaching the error message.
+        vm.expectRevert("MLFM:POF:PD_TRANSFER");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
     }
 
