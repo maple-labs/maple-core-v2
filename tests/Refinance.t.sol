@@ -885,6 +885,26 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
                                     [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]);
     }
 
+    function test_refinance_skimFundAsset() external {
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        vm.startPrank(borrower);
+        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan), 10_000e6);
+        loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
+        vm.stopPrank();
+
+        fundsAsset.mint(address(loan), 1_000e6);  // Fund asset to skim
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
+
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_501_000e6);
+    }
+
 }
 
 contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
