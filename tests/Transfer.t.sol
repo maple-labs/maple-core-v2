@@ -22,17 +22,26 @@ contract TransferTests is TestBase {
         start = block.timestamp;
     }
 
+    function test_transfer_protocolPaused() external {
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+
+        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        address recipient = address(new Address());
+
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        pool.transfer(recipient, lpShares);
+    }
+
     function test_transfer_privatePoolInvalidLender() external {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
         vm.prank(poolDelegate);
         poolManager.setAllowedLender(lp, true);
-
         // LP gets pool tokens.
-        uint256 lpShares = depositLiquidity({
-            lp:        lp,
-            liquidity: 1_000e6
-        });
-
+        uint256 lpShares = depositLiquidity(lp, 1_000e6);
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = address(new Address());
         vm.expectRevert("P:T:RECIPIENT_NOT_ALLOWED");
@@ -52,10 +61,7 @@ contract TransferTests is TestBase {
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares = depositLiquidity({
-            lp:        lp,
-            liquidity: 1_000e6
-        });
+        uint256 lpShares = depositLiquidity(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = address(new Address());
@@ -70,17 +76,48 @@ contract TransferTests is TestBase {
         pool.transfer(recipient, lpShares);
     }
 
+    function test_transfer_publicPool() external {
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+
+        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        address recipient = address(new Address());
+
+        assertEq(pool.balanceOf(lp),        lpShares);
+        assertEq(pool.balanceOf(recipient), 0);
+
+        vm.prank(lp);
+        pool.transfer(recipient, lpShares);
+
+        assertEq(pool.balanceOf(lp),        0);
+        assertEq(pool.balanceOf(recipient), lpShares);
+    }
+
+    function test_transferFrom_protocolPaused() external {
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+
+        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        address recipient = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(recipient, lpShares);
+
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(recipient);
+        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        pool.transferFrom(lp, recipient, lpShares);
+    }
+
     function test_transferFrom_privatePoolInvalidLender() external {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
         vm.prank(poolDelegate);
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares = depositLiquidity({
-            lp:        lp,
-            liquidity: 1_000e6
-        });
-
+        uint256 lpShares   = depositLiquidity(lp, 1_000e6);
         address recipient  = address(new Address());
         address transferer = address(new Address());
 
@@ -106,11 +143,7 @@ contract TransferTests is TestBase {
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares = depositLiquidity({
-            lp:        lp,
-            liquidity: 1_000e6
-        });
-
+        uint256 lpShares   = depositLiquidity(lp, 1_000e6);
         address recipient  = address(new Address());
         address transferer = address(new Address());
 
@@ -128,6 +161,53 @@ contract TransferTests is TestBase {
 
         vm.prank(transferer);
         pool.transferFrom(lp, recipient, lpShares);
+    }
+
+    function test_transferFrom_publicPool_noApproval() external {
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+
+        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        address recipient = address(new Address());
+
+        vm.prank(recipient);
+        vm.expectRevert(ARITHMETIC_ERROR); // ERC20: subtraction underflow in _decreaseAllowance
+        pool.transferFrom(lp, recipient, lpShares);
+    }
+
+    function test_transferFrom_publicPool_insufficientApproval() external {
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+
+        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        address recipient = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(recipient, lpShares - 1);
+
+        vm.prank(recipient);
+        vm.expectRevert(ARITHMETIC_ERROR); // ERC20: subtraction underflow in _decreaseAllowance
+        pool.transferFrom(lp, recipient, lpShares);
+    }
+
+    function test_transferFrom_publicPool() external {
+        vm.prank(poolDelegate);
+        poolManager.setOpenToPublic();
+
+        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        address recipient = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(recipient, lpShares);
+
+        assertEq(pool.balanceOf(lp),        lpShares);
+        assertEq(pool.balanceOf(recipient), 0);
+
+        vm.prank(recipient);
+        pool.transferFrom(lp, recipient, lpShares);
+
+        assertEq(pool.balanceOf(lp),        0);
+        assertEq(pool.balanceOf(recipient), lpShares);
     }
 
     // TODO: what if transferer and/or is made an invalid lender? Should this be possible? If yes, should they be able to transfer?
