@@ -20,7 +20,7 @@ contract RemoveSharesTests is TestBase {
         depositLiquidity(lp, 1_000e6);
 
         vm.prank(lp);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         // Transfer funds into the pool so exchange rate is different than 1
         fundsAsset.mint(address(pool), 1_000e6);
@@ -31,21 +31,21 @@ contract RemoveSharesTests is TestBase {
         vm.warp(start + 2 weeks + 1);
 
         // Pre state assertions
-        assertEq(pool.balanceOf(lp),                    0); 
+        assertEq(pool.balanceOf(lp),                    0);
         assertEq(pool.balanceOf(wm),                    1_000e6);
         assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6); 
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
         assertEq(withdrawalManager.exitCycleId(lp),     3);
 
         vm.prank(lp);
-        uint256 sharesReturned = pool.removeShares(1_000e6);
+        uint256 sharesReturned = pool.removeShares(1_000e6, lp);
 
         // Pre state assertions
-        assertEq(sharesReturned,                        1_000e6);   
-        assertEq(pool.balanceOf(lp),                    1_000e6); 
+        assertEq(sharesReturned,                        1_000e6);
+        assertEq(pool.balanceOf(lp),                    1_000e6);
         assertEq(pool.balanceOf(wm),                    0);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.lockedShares(lp),    0); 
+        assertEq(withdrawalManager.lockedShares(lp),    0);
         assertEq(withdrawalManager.exitCycleId(lp),     0);
     }
 
@@ -54,21 +54,21 @@ contract RemoveSharesTests is TestBase {
         vm.warp(start + 50 weeks);
 
         // Pre state assertions
-        assertEq(pool.balanceOf(lp),                    0); 
+        assertEq(pool.balanceOf(lp),                    0);
         assertEq(pool.balanceOf(wm),                    1_000e6);
         assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6); 
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
         assertEq(withdrawalManager.exitCycleId(lp),     3);
 
         vm.prank(lp);
-        uint256 sharesReturned = pool.removeShares(1_000e6);
+        uint256 sharesReturned = pool.removeShares(1_000e6, lp);
 
         // Pre state assertions
-        assertEq(sharesReturned,                        1_000e6);   
-        assertEq(pool.balanceOf(lp),                    1_000e6); 
+        assertEq(sharesReturned,                        1_000e6);
+        assertEq(pool.balanceOf(lp),                    1_000e6);
         assertEq(pool.balanceOf(wm),                    0);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.lockedShares(lp),    0); 
+        assertEq(withdrawalManager.lockedShares(lp),    0);
         assertEq(withdrawalManager.exitCycleId(lp),     0);
     }
 
@@ -90,7 +90,7 @@ contract RemoveSharesFailureTests is TestBase {
         depositLiquidity(lp, 1_000e6);
 
         vm.prank(lp);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
     }
 
     function test_removeShares_failIfProtocolIsPaused() external {
@@ -98,7 +98,7 @@ contract RemoveSharesFailureTests is TestBase {
         globals.setProtocolPause(true);
 
         vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
-        pool.removeShares(1_000e6);
+        pool.removeShares(1_000e6, lp);
     }
 
     function test_removeShares_failIfNotPool() external {
@@ -113,15 +113,15 @@ contract RemoveSharesFailureTests is TestBase {
 
     function test_removeShares_failIfWithdrawalIsPending() external {
         vm.warp(start + 2 weeks - 1);
-        
+
         vm.prank(lp);
         vm.expectRevert("WM:RS:WITHDRAWAL_PENDING");
-        pool.removeShares(1_000e6);
+        pool.removeShares(1_000e6, lp);
 
         // Success call
         vm.prank(lp);
         vm.warp(start + 2 weeks);
-        pool.removeShares(1_000e6);
+        pool.removeShares(1_000e6, lp);
     }
 
     function test_removeShares_failIfInvalidShares() external {
@@ -129,7 +129,7 @@ contract RemoveSharesFailureTests is TestBase {
 
         vm.prank(lp);
         vm.expectRevert("WM:RS:SHARES_OOB");
-        pool.removeShares(1_000e6 + 1);
+        pool.removeShares(1_000e6 + 1, lp);
     }
 
     function test_removeShares_failIfInvalidSharesWithZero() external {
@@ -137,7 +137,7 @@ contract RemoveSharesFailureTests is TestBase {
 
         vm.prank(lp);
         vm.expectRevert("WM:RS:SHARES_OOB");
-        pool.removeShares(0);
+        pool.removeShares(0, lp);
     }
 
     function test_removeShares_failIfTransferFail() external {
@@ -149,7 +149,7 @@ contract RemoveSharesFailureTests is TestBase {
 
         vm.prank(lp);
         vm.expectRevert("WM:RS:TRANSFER_FAIL");
-        pool.removeShares(1_000e6);
+        pool.removeShares(1_000e6, lp);
     }
 
 }

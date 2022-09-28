@@ -84,7 +84,7 @@ contract FundTests is TestBaseWithAssertions {
     function test_fund_failIfTotalSupplyIsZero() external {
         // Burn the supply
         vm.startPrank(lp);
-        pool.requestRedeem(1_500_000e6);
+        pool.requestRedeem(1_500_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -133,7 +133,7 @@ contract FundTests is TestBaseWithAssertions {
 
         // Lock the liquidity
         vm.prank(lp);
-        pool.requestRedeem(500_000e6 + 1);
+        pool.requestRedeem(500_000e6 + 1, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -142,7 +142,7 @@ contract FundTests is TestBaseWithAssertions {
         poolManager.fund(uint256(1_000_000e6), address(loan), address(loanManager));
 
         vm.prank(lp);
-        pool.removeShares(1);  // Remove so exactly 500k is locked.
+        pool.removeShares(1, lp);  // Remove so exactly 500k is locked.
 
         vm.warp(start + 4 weeks);
 

@@ -36,7 +36,7 @@ contract RequestWithdrawTests is TestBase {
         assertEq(withdrawalManager.lockedShares(lp),    0);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
 
-        uint256 shares = pool.requestWithdraw(1_000e6);
+        uint256 shares = pool.requestWithdraw(1_000e6, lp);
 
         assertEq(shares, 1_000e6);
 
@@ -68,7 +68,7 @@ contract RequestWithdrawTests is TestBase {
         assertEq(withdrawalManager.lockedShares(lp),    0);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
 
-        uint256 shares = pool.requestWithdraw(withdrawAmount);
+        uint256 shares = pool.requestWithdraw(withdrawAmount, lp);
 
         assertEq(shares, withdrawAmount);
 
@@ -102,7 +102,7 @@ contract SingleUserWithdrawTests is TestBase {
 
         vm.startPrank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -141,7 +141,7 @@ contract SingleUserWithdrawTests is TestBase {
 
         vm.startPrank(lp);
 
-        pool.requestWithdraw(withdrawAmount);
+        pool.requestWithdraw(withdrawAmount, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -177,7 +177,7 @@ contract SingleUserWithdrawTests is TestBase {
 
         vm.startPrank(lp);
 
-        pool.requestWithdraw(1_000e6);  // Transfers 1000 shares to the WM.
+        pool.requestWithdraw(1_000e6, lp);  // Transfers 1000 shares to the WM.
 
         // Transfer cash into pool to increase totalAssets
         fundsAsset.mint(address(pool), 250e6);
@@ -231,7 +231,7 @@ contract RequestWithdrawFailureTests is TestBase {
 
     function test_requestWithdraw_failIfZeroShares() external {
         vm.expectRevert("P:RR:ZERO_SHARES");
-        pool.requestWithdraw(0);
+        pool.requestWithdraw(0, lp);
     }
 
     function test_requestWithdraw_failIfNotPool() external {
@@ -246,11 +246,11 @@ contract RequestWithdrawFailureTests is TestBase {
 
     function test_requestWithdraw_failIfAlreadyLockedShares() external {
         vm.prank(lp);
-        pool.requestWithdraw(1e6);
+        pool.requestWithdraw(1e6, lp);
 
         vm.prank(lp);
         vm.expectRevert("WM:AS:WITHDRAWAL_PENDING");
-        pool.requestWithdraw(1e6);
+        pool.requestWithdraw(1e6, lp);
     }
 
 }
@@ -284,7 +284,7 @@ contract WithdrawFailureTests is TestBase {
     function test_withdraw_failWithInvalidAmountOfShares() external {
         vm.startPrank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -303,7 +303,7 @@ contract WithdrawFailureTests is TestBase {
     function test_withdraw_failIfNotInWindow() external {
         vm.startPrank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 1 weeks);
 
@@ -320,7 +320,7 @@ contract WithdrawFailureTests is TestBase {
     function test_withdraw_failIfNoBalanceOnWM() external {
         vm.prank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -335,7 +335,7 @@ contract WithdrawFailureTests is TestBase {
     function test_withdraw_failWithZeroReceiver() external {
         vm.prank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -346,7 +346,7 @@ contract WithdrawFailureTests is TestBase {
     function test_withdraw_failIfNoApprove() external {
         vm.prank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -357,7 +357,7 @@ contract WithdrawFailureTests is TestBase {
     function test_withdraw_failWithInsufficientApproval() external {
         vm.prank(lp);
 
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 

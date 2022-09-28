@@ -1016,7 +1016,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         // Burn the supply
         vm.startPrank(lp);
-        pool.requestRedeem(fullBalance);
+        pool.requestRedeem(fullBalance, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -1048,7 +1048,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     function test_acceptNewTerms_failIfLockedLiquidity() external {
         // Lock the liquidity
         vm.prank(lp);
-        pool.requestRedeem(500_000e6 + 1);
+        pool.requestRedeem(500_000e6 + 1, lp);
 
         vm.warp(start + 2 weeks);
 

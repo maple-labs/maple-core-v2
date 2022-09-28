@@ -345,7 +345,7 @@ contract TestBase is TestUtils {
 
     function requestRedeem(address lp, uint256 amount) internal {
         vm.prank(lp);
-        pool.requestRedeem(amount);
+        pool.requestRedeem(amount, lp);
     }
 
     function redeem(address lp, uint256 amount) internal returns (uint256 assets_) {

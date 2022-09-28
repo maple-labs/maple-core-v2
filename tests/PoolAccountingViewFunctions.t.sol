@@ -295,7 +295,7 @@ contract MaxRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp1), 1_000e6);
 
         vm.prank(lp1);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp1);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -310,7 +310,7 @@ contract MaxRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp1), 1_000e6);
 
         vm.prank(lp1);
-        uint256 shares = pool.requestRedeem(1_000e6);
+        uint256 shares = pool.requestRedeem(1_000e6, lp1);
 
         assertEq(shares, 1_000e6);
         assertEq(pool.maxRedeem(lp1), 0);
@@ -350,7 +350,7 @@ contract MaxWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp1), 1_000e6);
 
         vm.prank(lp1);
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp1);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -365,7 +365,7 @@ contract MaxWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp1), 1_000e6);
 
         vm.prank(lp1);
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp1);
 
         assertEq(pool.maxWithdraw(lp1), 0);
 
@@ -392,7 +392,7 @@ contract PreviewRedeemTests is TestBase {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp1);
 
         vm.expectRevert("WM:PE:INVALID_SHARES");
         pool.previewRedeem(1);
@@ -408,7 +408,7 @@ contract PreviewRedeemTests is TestBase {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp1);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -420,7 +420,7 @@ contract PreviewRedeemTests is TestBase {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp1);
 
         vm.warp(start + 2 weeks);
 
@@ -443,7 +443,7 @@ contract PreviewWithdrawTests is TestBase {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp1);
 
         vm.expectRevert("WM:PE:INVALID_SHARES");
         pool.previewWithdraw(1);
@@ -461,7 +461,7 @@ contract PreviewWithdrawTests is TestBase {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp1);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -473,7 +473,7 @@ contract PreviewWithdrawTests is TestBase {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
-        pool.requestWithdraw(1_000e6);
+        pool.requestWithdraw(1_000e6, lp1);
 
         vm.warp(start + 2 weeks);
 

@@ -36,7 +36,7 @@ contract RequestRedeemTests is TestBase {
         assertEq(withdrawalManager.lockedShares(lp),    0);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
 
-        uint256 shares = pool.requestRedeem(1_000e6);
+        uint256 shares = pool.requestRedeem(1_000e6, lp);
 
         assertEq(shares, 1_000e6);
 
@@ -68,7 +68,7 @@ contract RequestRedeemTests is TestBase {
         assertEq(withdrawalManager.lockedShares(lp),    0);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
 
-        uint256 assets = pool.requestRedeem(redeemAmount);
+        uint256 assets = pool.requestRedeem(redeemAmount, lp);
 
         assertEq(assets, redeemAmount);
 
@@ -102,7 +102,7 @@ contract RedeemTests is TestBase {
 
         vm.startPrank(lp);
 
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -141,7 +141,7 @@ contract RedeemTests is TestBase {
 
         vm.startPrank(lp);
 
-        pool.requestRedeem(redeemAmount);
+        pool.requestRedeem(redeemAmount, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -180,7 +180,7 @@ contract RedeemTests is TestBase {
 
         vm.startPrank(lp);
 
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -513,7 +513,7 @@ contract RequestRedeemFailureTests is TestBase {
 
     function test_requestRedeem_failIfZeroShares() external {
         vm.expectRevert("P:RR:ZERO_SHARES");
-        pool.requestRedeem(0);
+        pool.requestRedeem(0, lp);
     }
 
     function test_requestRedeem_failIfNotPool() external {
@@ -528,11 +528,11 @@ contract RequestRedeemFailureTests is TestBase {
 
     function test_requestRedeem_failIfAlreadyLockedShares() external {
         vm.prank(lp);
-        pool.requestRedeem(1e6);
+        pool.requestRedeem(1e6, lp);
 
         vm.prank(lp);
         vm.expectRevert("WM:AS:WITHDRAWAL_PENDING");
-        pool.requestRedeem(1e6);
+        pool.requestRedeem(1e6, lp);
     }
 
 }
@@ -566,7 +566,7 @@ contract RedeemFailureTests is TestBase {
     function test_redeem_failWithInvalidAmountOfShares() external {
         vm.startPrank(lp);
 
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -585,7 +585,7 @@ contract RedeemFailureTests is TestBase {
     function test_redeem_failIfNotInWindow() external {
         vm.startPrank(lp);
 
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 1 weeks);
 
@@ -602,7 +602,7 @@ contract RedeemFailureTests is TestBase {
     function test_redeem_failIfNoBalanceOnWM() external {
         vm.prank(lp);
 
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -617,7 +617,7 @@ contract RedeemFailureTests is TestBase {
     function test_redeem_failWithZeroReceiver() external {
         vm.prank(lp);
 
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -627,7 +627,7 @@ contract RedeemFailureTests is TestBase {
 
     function test_redeem_failIfNoApprove() external {
         vm.prank(lp);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -637,7 +637,7 @@ contract RedeemFailureTests is TestBase {
 
     function test_redeem_failWithInsufficientApproval() external {
         vm.prank(lp);
-        pool.requestRedeem(1_000e6);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
