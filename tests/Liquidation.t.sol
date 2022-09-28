@@ -73,13 +73,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -111,13 +113,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
@@ -259,13 +263,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
+            paymentDueDate:      start + 1_000_000,  // Keep original date in case impair loan reverted
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -299,13 +305,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({
@@ -422,13 +430,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -471,13 +481,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
@@ -560,13 +572,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
+            paymentDueDate:      start + 1_000_000,  // Keep original date in case impair loan reverted
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -600,13 +614,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({
@@ -676,13 +692,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -714,13 +732,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
@@ -862,13 +882,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
+            paymentDueDate:      start + 1_000_000,  // Keep original date in case impair loan reverted
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -902,13 +924,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({
@@ -1023,13 +1047,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1072,13 +1098,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
@@ -1161,13 +1189,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
+            paymentDueDate:      start + 1_000_000,  // Keep original date in case impair loan reverted
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1201,13 +1231,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({
@@ -1274,13 +1306,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1312,13 +1346,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
@@ -1461,13 +1497,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
+            paymentDueDate:      start + 1_000_000,  // Keep original date in case impair loan reverted
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1501,13 +1539,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({
@@ -1625,13 +1665,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1674,13 +1716,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLoanManager({
@@ -1749,13 +1793,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
             issuanceRate:        0.0009e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000  // Keep original date in case impair loan reverted
+            paymentDueDate:      start + 1_000_000,  // Keep original date in case impair loan reverted
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1789,13 +1835,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({
@@ -1885,13 +1933,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start,
-            paymentDueDate:      start + ONE_MONTH
+            paymentDueDate:      start + ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1924,13 +1974,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
 
         vm.warp(start + ONE_MONTH);
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start,
-            paymentDueDate:      start + ONE_MONTH
+            paymentDueDate:      start + ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -1963,13 +2015,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH,
-            paymentDueDate:      start + 2 * ONE_MONTH
+            paymentDueDate:      start + 2 * ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLiquidationInfo({
@@ -2019,13 +2073,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH,
-            paymentDueDate:      start + 2 * ONE_MONTH
+            paymentDueDate:      start + 2 * ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLiquidationInfo({
@@ -2096,13 +2152,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH,
-            paymentDueDate:      start + 2 * ONE_MONTH
+            paymentDueDate:      start + 2 * ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLiquidationInfo({
@@ -2170,13 +2228,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 1
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 2 * ONE_MONTH,
-            paymentDueDate:      start + 3 * ONE_MONTH
+            paymentDueDate:      start + 3 * ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLiquidationInfo({
@@ -2229,13 +2289,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 1
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
             issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
             startDate:           start + 1 * ONE_MONTH + ONE_MONTH / 5,
-            paymentDueDate:      start + 2 * ONE_MONTH + ONE_MONTH / 5
+            paymentDueDate:      start + 2 * ONE_MONTH + ONE_MONTH / 5,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLiquidationInfo({
@@ -2289,13 +2351,15 @@ contract LoanImpairmentTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
             issuanceRate:        0,
             startDate:           0,
-            paymentDueDate:      0
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
         });
 
         assertLiquidationInfo({

@@ -54,23 +54,27 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     // TODO: Investigate reverting back to tuples to expose changes easier.
-    function assertLoanInfo(
+    function assertPaymentInfo(
         Loan    loan,
         uint256 incomingNetInterest,
         uint256 refinanceInterest,
         uint256 issuanceRate,
         uint256 startDate,
-        uint256 paymentDueDate
+        uint256 paymentDueDate,
+        uint256 platformFeeRate,
+        uint256 delegateFeeRate
     )
         internal
     {
         ILoanManagerStructs.PaymentInfo memory loanInfo = ILoanManagerStructs(address(loanManager)).payments(loanManager.paymentIdOf(address(loan)));
 
-        assertEq(loanInfo.incomingNetInterest, incomingNetInterest, "loanInfo.incomingNetInterest");
-        assertEq(loanInfo.refinanceInterest,   refinanceInterest,   "loanInfo.refinanceInterest");
-        assertEq(loanInfo.issuanceRate,        issuanceRate,        "loanInfo.issuanceRate");
-        assertEq(loanInfo.startDate,           startDate,           "loanInfo.startDate");
-        assertEq(loanInfo.paymentDueDate,      paymentDueDate,      "loanInfo.paymentDueDate");
+        assertEq(loanInfo.incomingNetInterest,       incomingNetInterest, "loanInfo.incomingNetInterest");
+        assertEq(loanInfo.refinanceInterest,         refinanceInterest,   "loanInfo.refinanceInterest");
+        assertEq(loanInfo.issuanceRate,              issuanceRate,        "loanInfo.issuanceRate");
+        assertEq(loanInfo.startDate,                 startDate,           "loanInfo.startDate");
+        assertEq(loanInfo.paymentDueDate,            paymentDueDate,      "loanInfo.paymentDueDate");
+        assertEq(loanInfo.platformManagementFeeRate, platformFeeRate,     "loanInfo.platformManagementFeeRate");
+        assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate,     "loanInfo.delegateFeeRate");
     }
 
     function assertLoanManager(

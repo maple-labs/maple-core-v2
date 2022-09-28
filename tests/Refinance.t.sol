@@ -87,13 +87,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -138,13 +140,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 1_000_000,
-            paymentDueDate:      start + 3_000_000
+            paymentDueDate:      start + 3_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -185,13 +189,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 3_000_000,
-            paymentDueDate:      start + 5_000_000
+            paymentDueDate:      start + 5_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -255,13 +261,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -308,13 +316,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.18e6 * 1e30,
             startDate:           start + 1_000_000,
-            paymentDueDate:      start + 2_000_000
+            paymentDueDate:      start + 2_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -355,13 +365,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
             startDate:           start + 2_000_000,
-            paymentDueDate:      start + 3_000_000
+            paymentDueDate:      start + 3_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -425,13 +437,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -476,13 +490,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.18e6 * 1e30,
             startDate:           start + 1_000_000,
-            paymentDueDate:      start + 2_000_000
+            paymentDueDate:      start + 2_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -522,13 +538,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
             startDate:           start + 2_000_000,
-            paymentDueDate:      start + 3_000_000
+            paymentDueDate:      start + 3_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -592,13 +610,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -643,13 +663,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 1_000_000,
-            paymentDueDate:      start + 2_000_000
+            paymentDueDate:      start + 2_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -689,13 +711,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 62_809_667673,
             refinanceInterest:   0,
             issuanceRate:        0.062809667673e6 * 1e30,
             startDate:           start + 2_000_000,
-            paymentDueDate:      start + 3_000_000
+            paymentDueDate:      start + 3_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -759,13 +783,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start,
-            paymentDueDate:      start + 1_000_000
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -810,13 +836,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   181_656e6,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 1_500_000,
-            paymentDueDate:      start + 3_500_000
+            paymentDueDate:      start + 3_500_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
@@ -857,13 +885,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanInfo({
+        assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 3_500_000,
-            paymentDueDate:      start + 5_500_000
+            paymentDueDate:      start + 5_500_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
         });
 
         assertLoanManager({
