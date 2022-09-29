@@ -5,11 +5,17 @@ import { Address, console, InvariantTest } from "../../modules/contract-test-uti
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
+import { WarperBase } from "./actors/Warper.sol";
+
 contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
 
     function setUp() public override {
         super.setUp();
         _excludeAllContracts();
+
+        WarperBase warper = new WarperBase();
+
+        addTargetContract(address(warper));
     }
 
     function invariant_totalSupplyGtZero() external {
@@ -20,6 +26,10 @@ contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
         excludeContract(governor);
         excludeContract(poolDelegate);
         excludeContract(treasury);
+
+        excludeContract(liquidatorFactory);
+        excludeContract(liquidatorInitializer);
+        excludeContract(liquidatorImplementation);
 
         excludeContract(loanFactory);
         excludeContract(loanImplementation);
@@ -38,10 +48,10 @@ contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
         excludeContract(withdrawalManagerInitializer);
 
         excludeContract(address(collateralAsset));
-        excludeContract(address(fundsAsset));
-        excludeContract(address(globals));
         excludeContract(address(deployer));
+        excludeContract(address(globals));
         excludeContract(address(feeManager));
+        excludeContract(address(fundsAsset));
         excludeContract(address(loanManager));
         excludeContract(address(pool));
         excludeContract(address(poolCover));
@@ -49,9 +59,6 @@ contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
         excludeContract(address(withdrawalManager));
 
         excludeContract(globals.implementation());
-        excludeContract(loanManager.implementation());
-        excludeContract(poolManager.implementation());
-        excludeContract(withdrawalManager.implementation());
     }
 
 }
