@@ -6,9 +6,9 @@ import { TestUtils } from "../../../modules/contract-test-utils/contracts/test.s
 contract WarperBase is TestUtils {
 
     function warp(uint256 warpAmount_) external {
-        // warpAmount_ = constrictToRange(warpAmount_, 0, 10 days);
+        warpAmount_ = constrictToRange(warpAmount_, 0, 10 days);
 
-        // vm.warp(block.timestamp);
+        vm.warp(block.timestamp);
     }
 
 }

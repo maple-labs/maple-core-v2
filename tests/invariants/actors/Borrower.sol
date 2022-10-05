@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
+import { TestUtils }  from "../../../modules/contract-test-utils/contracts/test.sol";
 import { IMapleLoan } from "../../../modules/loan/contracts/interfaces/IMapleLoan.sol";
 
-contract BorrowerBase {
+contract BorrowerBase is TestUtils {
 
     IMapleLoan loan;
 
@@ -18,6 +19,28 @@ contract BorrowerBase {
     function closeLoan(uint256 amount_) public virtual returns (uint256 principal_, uint256 interest_, uint256 fees_) {
         return loan.closeLoan(amount_);
     }
+
+    // function createLoan(
+    //     uint256[3] memory termDetails,
+    //     uint256[3] memory amounts,
+    //     uint256[4] memory rates
+    // ) internal returns (Loan loan) {
+    //     vm.prank(governor);
+    //     globals.setValidBorrower(address(this), true);  // TODO: Remove this
+
+    //     loan = Loan(LoanFactory(loanFactory).createInstance({
+    //         arguments_: new LoanInitializer().encodeArguments({
+    //             borrower_:    address(this),
+    //             feeManager_:  address(feeManager),
+    //             assets_:      [address(collateralAsset), address(fundsAsset)],
+    //             termDetails_: termDetails,
+    //             amounts_:     amounts,
+    //             rates_:       rates,
+    //             fees_:        [nextDelegateOriginationFee, nextDelegateServiceFee]
+    //         }),
+    //         salt_: "SALT"
+    //     }));
+    // }
 
     function drawdownFunds(uint256 amount_, address destination_) public virtual returns (uint256 collateralPosted_) {
         return loan.drawdownFunds(amount_, destination_);

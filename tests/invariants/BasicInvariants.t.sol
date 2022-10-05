@@ -5,21 +5,27 @@ import { Address, console, InvariantTest } from "../../modules/contract-test-uti
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
+import { LpBase }     from "./actors/Lp.sol";
 import { WarperBase } from "./actors/Warper.sol";
 
 contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
 
     function setUp() public override {
         super.setUp();
+
         _excludeAllContracts();
 
-        WarperBase warper = new WarperBase();
+        address warper = address(new WarperBase());
+        address lp     = address(new LpBase(address(pool)));
 
-        addTargetContract(address(warper));
+        targetContract(lp);
+        targetContract(warper);
+
+        targetSender(address(0xbeef));
     }
 
     function invariant_totalSupplyGtZero() external {
-        // assertTrue(pool.totalSupply() >= 0);
+        assertTrue(pool.totalSupply() >= 0);
     }
 
     function _excludeAllContracts() internal {
