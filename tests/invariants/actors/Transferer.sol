@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { IERC20 } from "../../../modules/erc20/contracts/interfaces/IERC20.sol";
 
-contract SkimmerBase {
+contract TransfererBase {
 
     IERC20 token;
 

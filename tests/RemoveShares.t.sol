@@ -49,6 +49,36 @@ contract RemoveSharesTests is TestBase {
         assertEq(withdrawalManager.exitCycleId(lp),     0);
     }
 
+    function test_removeShares_withApproval() public {
+        // Warp to post withdrawal period
+        vm.warp(start + 2 weeks + 1);
+
+        address sender = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        // Pre state assertions
+        assertEq(pool.balanceOf(lp),                    0);
+        assertEq(pool.balanceOf(wm),                    1_000e6);
+        assertEq(pool.allowance(lp, sender),            1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+
+        vm.prank(sender);
+        uint256 sharesReturned = pool.removeShares(1_000e6, lp);
+
+        // Post state assertions
+        assertEq(sharesReturned,                        1_000e6);
+        assertEq(pool.balanceOf(lp),                    1_000e6);
+        assertEq(pool.balanceOf(wm),                    0);
+        assertEq(pool.allowance(lp, sender),            0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+    }
+
     function test_removeShares_pastTheRedemptionWindow() public {
         // Warp to way after the period closes
         vm.warp(start + 50 weeks);
@@ -72,12 +102,69 @@ contract RemoveSharesTests is TestBase {
         assertEq(withdrawalManager.exitCycleId(lp),     0);
     }
 
+    function test_removeShares_sameAddressCallingTwice() external {
+        address sender = address(new Address());
+
+        uint256 senderShares = depositLiquidity(sender, 1_000e6);
+
+        vm.prank(sender);
+        pool.requestRedeem(senderShares, sender);
+
+        // Warp to redemption period
+        vm.warp(start + 2 weeks + 1);
+
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        // Pre state assertions
+        assertEq(pool.balanceOf(sender),                 0);
+        assertEq(pool.balanceOf(lp),                     0);
+        assertEq(pool.balanceOf(wm),                     1_000e6 + senderShares);
+        assertEq(pool.allowance(lp, sender),             1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3),  1_000e6 + senderShares);
+        assertEq(withdrawalManager.lockedShares(lp),     1_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp),      3);
+        assertEq(withdrawalManager.lockedShares(sender), senderShares);
+        assertEq(withdrawalManager.exitCycleId(sender),  3);
+
+        vm.prank(sender);
+        uint256 sharesReturned = pool.removeShares(1_000e6, lp);
+
+        // Intermediary assertions
+        assertEq(sharesReturned,                         1_000e6);
+        assertEq(pool.balanceOf(sender),                 0);
+        assertEq(pool.balanceOf(lp),                     1_000e6);
+        assertEq(pool.balanceOf(wm),                     senderShares);
+        assertEq(pool.allowance(lp, sender),             0);
+        assertEq(withdrawalManager.totalCycleShares(3),  senderShares);
+        assertEq(withdrawalManager.lockedShares(lp),     0);
+        assertEq(withdrawalManager.exitCycleId(lp),      0);
+        assertEq(withdrawalManager.lockedShares(sender), senderShares);
+        assertEq(withdrawalManager.exitCycleId(sender),  3);
+
+        // Sender redeems their own shares
+        vm.prank(sender);
+        sharesReturned = pool.removeShares(senderShares, sender);
+
+        assertEq(sharesReturned,                         senderShares);
+        assertEq(pool.balanceOf(sender),                 senderShares);
+        assertEq(pool.balanceOf(lp),                     1_000e6);
+        assertEq(pool.balanceOf(wm),                     0);
+        assertEq(pool.allowance(lp, sender),             0);
+        assertEq(withdrawalManager.totalCycleShares(3),  0);
+        assertEq(withdrawalManager.lockedShares(lp),     0);
+        assertEq(withdrawalManager.exitCycleId(lp),      0);
+        assertEq(withdrawalManager.lockedShares(sender), 0);
+        assertEq(withdrawalManager.exitCycleId(sender),  0);
+    }
+
 }
 
 contract RemoveSharesFailureTests is TestBase {
 
     address borrower;
     address lp;
+    address lp2;
     address wm;
 
     function setUp() public override {
@@ -109,6 +196,43 @@ contract RemoveSharesFailureTests is TestBase {
     function test_removeShares_failIfNotPoolManager() external {
         vm.expectRevert("WM:RS:NOT_POOL_MANAGER");
         withdrawalManager.removeShares(1_000e6, address(lp));
+    }
+
+    function test_removeShares_failIfInsufficientApproval() external {
+        vm.warp(start + 2 weeks);
+
+        address sender = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6 - 1);
+
+        vm.prank(sender);
+        vm.expectRevert(ARITHMETIC_ERROR);
+        pool.removeShares(1_000e6, lp);
+
+        // With enough approval
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        vm.prank(sender);
+        pool.removeShares(1_000e6, lp);
+    }
+
+    function test_removeShares_failIfRemovedTwice() external {
+        vm.warp(start + 2 weeks);
+
+        address sender = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        vm.prank(sender);
+        pool.removeShares(1_000e6, lp);
+
+        // Try removing again, now lp calling directly
+        vm.prank(lp);
+        vm.expectRevert(ARITHMETIC_ERROR);
+        pool.removeShares(1_000e6, lp);
     }
 
     function test_removeShares_failIfWithdrawalIsPending() external {

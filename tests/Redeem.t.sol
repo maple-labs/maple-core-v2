@@ -25,10 +25,6 @@ contract RequestRedeemTests is TestBase {
 
         vm.startPrank(lp);
 
-        assertEq(fundsAsset.balanceOf(address(lp)),   0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_000e6);
-
-        assertEq(pool.totalSupply(), 1_000e6);
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
@@ -40,12 +36,38 @@ contract RequestRedeemTests is TestBase {
 
         assertEq(shares, 1_000e6);
 
-        assertEq(fundsAsset.balanceOf(address(lp)),   0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_000e6);
-
-        assertEq(pool.totalSupply(), 1_000e6);
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+    }
+
+    function test_requestRedeem_withApproval() external {
+        depositLiquidity(lp, 1_000e6);
+
+        address sender = address(new Address());
+
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        assertEq(pool.balanceOf(lp),         1_000e6);
+        assertEq(pool.balanceOf(wm),         0);
+        assertEq(pool.allowance(lp, sender), 1_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+
+        vm.prank(sender);
+        uint256 shares = pool.requestRedeem(1_000e6, lp);
+
+        assertEq(shares, 1_000e6);
+
+        assertEq(pool.balanceOf(lp),         0);
+        assertEq(pool.balanceOf(wm),         1_000e6);
+        assertEq(pool.allowance(lp, sender), 0);
 
         assertEq(withdrawalManager.exitCycleId(lp),     3);
         assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
@@ -205,6 +227,60 @@ contract RedeemTests is TestBase {
         assertEq(pool.totalSupply(), 0);
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+    }
+
+    function test_redeem_singleUser_withApprovals() external {
+        address sender = address(new Address());
+
+        depositLiquidity(lp, 1_000e6);
+
+        // Transfer cash into pool to increase totalAssets
+        fundsAsset.mint(address(pool), 250e6);
+
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        assertEq(pool.allowance(lp, sender), 1_000e6);
+
+        vm.prank(sender);
+        pool.requestRedeem(1_000e6, lp);
+
+        vm.warp(start + 2 weeks);
+
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_250e6);
+
+        assertEq(pool.totalSupply(),         1_000e6);
+        assertEq(pool.balanceOf(lp),         0);
+        assertEq(pool.balanceOf(wm),         1_000e6);
+        assertEq(pool.allowance(lp, sender), 0);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+
+        // Needs a second approval
+        vm.prank(lp);
+        pool.approve(sender, 1_000e6);
+
+        assertEq(pool.allowance(lp, sender), 1_000e6);
+
+        vm.prank(sender);
+        uint256 assets = pool.redeem(1_000e6, lp, lp);
+
+        assertEq(assets, 1_250e6);
+
+        assertEq(fundsAsset.balanceOf(address(lp)),   1_250e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+
+        assertEq(pool.totalSupply(),         0);
+        assertEq(pool.balanceOf(lp),         0);
+        assertEq(pool.balanceOf(wm),         0);
+        assertEq(pool.allowance(lp, sender), 0);
 
         assertEq(withdrawalManager.exitCycleId(lp),     0);
         assertEq(withdrawalManager.lockedShares(lp),    0);
@@ -511,7 +587,19 @@ contract RequestRedeemFailureTests is TestBase {
         depositLiquidity(lp, 1_000e6);
     }
 
+    function test_requestRedeem_failIfInsufficientApproval() external {
+        vm.expectRevert(ARITHMETIC_ERROR);
+        pool.requestRedeem(1_000e6, lp);
+
+        vm.prank(lp);
+        pool.approve(address(this), 1000e6 - 1);
+
+        vm.expectRevert(ARITHMETIC_ERROR);
+        pool.requestRedeem(1_000e6, lp);
+    }
+
     function test_requestRedeem_failIfZeroShares() external {
+        vm.prank(lp);
         vm.expectRevert("P:RR:ZERO_SHARES");
         pool.requestRedeem(0, lp);
     }
