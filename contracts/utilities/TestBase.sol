@@ -164,6 +164,7 @@ contract TestBase is TestUtils {
         globals.setMapleTreasury(treasury);
         globals.setSecurityAdmin(governor);
         globals.setValidPoolAsset(address(fundsAsset), true);
+        globals.setValidCollateralAsset(address(collateralAsset), true);
         globals.setValidPoolDelegate(poolDelegate, true);
         globals.setValidPoolDeployer(address(deployer), true);
         globals.setManualOverridePrice(address(fundsAsset),      1e8);     // 1     USD / 1 USDC
