@@ -88,7 +88,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./scripts/invariant.sh
+        run: ./scripts/invariant.sh -p deep
 
   local_simulations:
     runs-on: ubuntu-latest
