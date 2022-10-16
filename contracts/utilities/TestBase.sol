@@ -130,6 +130,7 @@ contract TestBase is TestUtils {
         vm.startPrank(governor);
 
         globals.setValidFactory("LIQUIDATOR",         liquidatorFactory,        true);
+        globals.setValidFactory("LOAN",               loanFactory,              true);
         globals.setValidFactory("LOAN_MANAGER",       loanManagerFactory,       true);
         globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,       true);
         globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory, true);
@@ -149,9 +150,6 @@ contract TestBase is TestUtils {
         WithdrawalManagerFactory(withdrawalManagerFactory).registerImplementation(1, withdrawalManagerImplementation, withdrawalManagerInitializer);
         WithdrawalManagerFactory(withdrawalManagerFactory).setDefaultVersion(1);
 
-        globals.setValidFactory("POOL_MANAGER",       address(poolManagerFactory),       true);
-        globals.setValidFactory("LOAN_MANAGER",       address(loanManagerFactory),       true);
-        globals.setValidFactory("WITHDRAWAL_MANAGER", address(withdrawalManagerFactory), true);
         vm.stopPrank();
     }
 

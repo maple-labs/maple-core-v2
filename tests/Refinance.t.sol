@@ -984,7 +984,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     }
 
     function test_acceptNewTerms_failIfNotPoolDelegate() external {
-        vm.expectRevert("PM:ANT:NOT_PD");
+        vm.expectRevert("PM:VAFL:NOT_PD");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
@@ -992,7 +992,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         address fakeLoan = address(new Address());
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ANT:INVALID_LOAN_MANAGER");
+        vm.expectRevert("PM:VAFL:INVALID_LOAN_MANAGER");
         poolManager.acceptNewTerms(fakeLoan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
@@ -1001,7 +1001,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         globals.setValidBorrower(borrower, false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ANT:INVALID_BORROWER");
+        vm.expectRevert("PM:VAFL:INVALID_BORROWER");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
@@ -1024,7 +1024,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         vm.stopPrank();
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ANT:ZERO_SUPPLY");
+        vm.expectRevert("PM:VAFL:ZERO_SUPPLY");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
@@ -1035,13 +1035,13 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         fundsAsset.mint(address(poolManager.poolDelegateCover()), 1e6 - 1);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ANT:INSUFFICIENT_COVER");
+        vm.expectRevert("PM:VAFL:INSUFFICIENT_COVER");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failWithFailedTransfer() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ANT:TRANSFER_FAIL");
+        vm.expectRevert("PM:VAFL:TRANSFER_FAIL");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6 + 1);
     }
 
@@ -1053,7 +1053,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         vm.warp(start + 2 weeks);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ANT:LOCKED_LIQUIDITY");
+        vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6);
     }
 

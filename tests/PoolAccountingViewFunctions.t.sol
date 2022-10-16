@@ -394,7 +394,7 @@ contract PreviewRedeemTests is TestBase {
         vm.startPrank(lp1);
         pool.requestRedeem(1_000e6, lp1);
 
-        vm.expectRevert("WM:PE:INVALID_SHARES");
+        vm.expectRevert("WM:PR:INVALID_SHARES");
         pool.previewRedeem(1);
     }
 
@@ -439,25 +439,25 @@ contract PreviewWithdrawTests is TestBase {
         lp1 = address(new Address());
     }
 
-    function test_previewWithdraw_invalidShares() external {
+    function test_previewWithdraw_invalidShares_notEnabled() external {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
         pool.requestWithdraw(1_000e6, lp1);
 
-        vm.expectRevert("WM:PE:INVALID_SHARES");
+        vm.expectRevert("WM:PW:NOT_ENABLED");
         pool.previewWithdraw(1);
     }
 
-    function test_previewWithdraw_noLockedShares_notInExitWindow() external {
+    function test_previewWithdraw_noLockedShares_notInExitWindow_notEnabled() external {
         depositLiquidity(lp1, 1_000e6);
 
         vm.prank(lp1);
-        vm.expectRevert("WM:PR:NO_REQUEST");
+        vm.expectRevert("WM:PW:NOT_ENABLED");
         pool.previewWithdraw(0);
     }
 
-    function test_previewWithdraw_lockedShares_notInExitWindow() external {
+    function test_previewWithdraw_lockedShares_notInExitWindow_notEnabled() external {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
@@ -465,11 +465,11 @@ contract PreviewWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks - 1);
 
-        vm.expectRevert("WM:PR:NOT_IN_WINDOW");
+        vm.expectRevert("WM:PW:NOT_ENABLED");
         pool.previewWithdraw(1_000e6);
     }
 
-    function test_previewWithdraw_lockedShares_inExitWindow() external {
+    function test_previewWithdraw_lockedShares_inExitWindow_notEnabled() external {
         depositLiquidity(lp1, 1_000e6);
 
         vm.startPrank(lp1);
@@ -477,7 +477,8 @@ contract PreviewWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertEq(pool.previewWithdraw(1_000e6), 1_000e6);
+        vm.expectRevert("WM:PW:NOT_ENABLED");
+        pool.previewWithdraw(1_000e6);
     }
 
 }

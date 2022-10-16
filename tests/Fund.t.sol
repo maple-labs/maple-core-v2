@@ -62,13 +62,13 @@ contract FundTests is TestBaseWithAssertions {
     }
 
     function test_fund_failIfNotPoolDelegate() external {
-        vm.expectRevert("PM:F:NOT_PD");
+        vm.expectRevert("PM:VAFL:NOT_PD");
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
     }
 
     function test_fund_failIfInvalidLoanManager() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:INVALID_LOAN_MANAGER");
+        vm.expectRevert("PM:VAFL:INVALID_LOAN_MANAGER");
         poolManager.fund(uint256(1_500_000e6), address(loan), address(1));
     }
 
@@ -77,7 +77,7 @@ contract FundTests is TestBaseWithAssertions {
         globals.setValidBorrower(borrower, false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:INVALID_BORROWER");
+        vm.expectRevert("PM:VAFL:INVALID_BORROWER");
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
     }
 
@@ -92,7 +92,7 @@ contract FundTests is TestBaseWithAssertions {
         vm.stopPrank();
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:ZERO_SUPPLY");
+        vm.expectRevert("PM:VAFL:ZERO_SUPPLY");
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
     }
 
@@ -103,13 +103,13 @@ contract FundTests is TestBaseWithAssertions {
         fundsAsset.mint(address(poolManager.poolDelegateCover()), 1e6 - 1);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:INSUFFICIENT_COVER");
+        vm.expectRevert("PM:VAFL:INSUFFICIENT_COVER");
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
     }
 
     function test_fund_failIfPrincipalIsGreaterThanAssetBalance() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:TRANSFER_FAIL");
+        vm.expectRevert("PM:VAFL:TRANSFER_FAIL");
         poolManager.fund(uint256(1_500_000e6 + 1), address(loan), address(loanManager));
     }
 
@@ -119,7 +119,7 @@ contract FundTests is TestBaseWithAssertions {
         fundsAsset.approve(address(poolManager), 0);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:TRANSFER_FAIL");
+        vm.expectRevert("PM:VAFL:TRANSFER_FAIL");
         poolManager.fund(uint256(1_000_000e6), address(loan), address(loanManager));
     }
 
@@ -138,7 +138,7 @@ contract FundTests is TestBaseWithAssertions {
         vm.warp(start + 2 weeks);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:F:LOCKED_LIQUIDITY");
+        vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
         poolManager.fund(uint256(1_000_000e6), address(loan), address(loanManager));
 
         vm.prank(lp);

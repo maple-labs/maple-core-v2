@@ -14,7 +14,7 @@ echo Using profile: $FOUNDRY_PROFILE
 
 if [ -z "$test" ];
 then
-    forge test --ffi;
+    forge test --ffi --no-match-test "invariant";
 else
     forge test --ffi --match "$test";
 fi
