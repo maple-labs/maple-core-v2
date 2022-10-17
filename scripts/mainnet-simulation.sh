@@ -9,7 +9,7 @@ do
     esac
 done
 
-export FOUNDRY_PROFILE=$profile
+export FOUNDRY_PROFILE=mainnet_simulations
 echo Using profile: $FOUNDRY_PROFILE
 
 if [ -z "$test" ];

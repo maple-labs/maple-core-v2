@@ -31,14 +31,14 @@ test = 'simulations/local'  # The test directory
 runs = 20
 
 [profile.deep.invariant]
-runs           = 1       # The number of calls to make in the invariant tests
-depth          = 10_000  # The number of times to run the invariant tests
-call_override  = false   # Override calls
-fail_on_revert = true    # Fail the test if the contract reverts
+runs           = 10    # The number of calls to make in the invariant tests
+depth          = 100   # The number of times to run the invariant tests
+call_override  = false # Override calls
+fail_on_revert = true  # Fail the test if the contract reverts
 
 [profile.super_deep.fuzz]
 fuzz_runs = 5000
 
 [profile.super_deep.invariant]
-runs  = 10           # The number of calls to make in the invariant tests
-depth = 100_000_000  # The number of times to run the invariant tests
+runs  = 100     # The number of calls to make in the invariant tests
+depth = 10_000  # The number of times to run the invariant tests
