@@ -6,8 +6,7 @@ solc_version    = '0.8.7'                 # Override for the solc version (setti
 optimizer       = false                   # Enable or disable the solc optimizer
 optimizer_runs  = 200                     # The number of optimizer runs
 verbosity       = 3                       # The verbosity of tests
-block_timestamp = 1_622_400_000              # Timestamp for tests (non-zero)
-# block_timestamp = 100_000              # Timestamp for tests (non-zero)
+block_timestamp = 1_622_400_000           # Timestamp for tests (non-zero)
 gas_limit       = "18446744073709551615"  # Gas limit for tests
 
 [fuzz]

@@ -1,4 +1,4 @@
-name: Forge Tests (PR)
+name: Forge Tests
 
 on:
   push:
