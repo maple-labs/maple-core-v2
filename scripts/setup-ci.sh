@@ -25,7 +25,11 @@ git submodule update --init --recursive modules/loan
 git submodule update --init --recursive modules/loan-v301
 
 echo "$SSH_KEY_MIGRATION_HELPERS" > $HOME/.ssh/id_rsa
-git submodule update --init --recursive modules/migration-helpers
+git submodule update --init modules/migration-helpers
+echo "$SSH_KEY_NTP" > $HOME/.ssh/id_rsa
+cd modules/migration-helpers
+git submodule update --init --recursive
+cd ../..
 
 echo "$SSH_KEY_POOL_V2" > $HOME/.ssh/id_rsa
 git submodule update --init modules/pool-v2

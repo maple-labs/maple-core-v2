@@ -3,9 +3,16 @@ pragma solidity 0.8.7;
 
 interface IDebtLockerLike {
 
+    function implementation() external view returns (address implementation_);
+
+    function pool() external view returns (address pool_);
+
     function poolDelegate() external view returns (address poolDelegate_);
 
     function setPendingLender(address newLender_) external;
+
+    function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
+
 }
 
 interface IERC20Like {
@@ -18,37 +25,17 @@ interface IERC20Like {
 
 }
 
-interface IGlobalsLike {
-
-    function platformManagementFeeRate(address poolManager_) external view returns (uint256 platformManagementFeeRate_);
-
-}
-
-interface ILoanFactoryLike {
-
-    function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
-
-}
-
-interface ILoanInitializerLike {
-
-    function encodeArguments(
-        address borrower_,
-        address[2] memory assets_,
-        uint256[3] memory termDetails_,
-        uint256[3] memory amounts_,
-        uint256[4] memory rates_
-    ) external pure returns (bytes memory encodedArguments_);
-
-}
-
 interface IMapleProxiedLike {
 
-    function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
+    function factory() external view returns (address factory_);
 
 }
 
 interface IMapleProxyFactoryLike {
+
+    function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
+
+    function defaultVersion() external view returns (uint256 defaultVersion_);
 
     function enableUpgradePath(uint256 fromVersion_, uint256 toVersion_, address migrator_) external;
 
@@ -80,9 +67,11 @@ interface IMapleLoanLike {
 
     function drawableFunds() external view returns (uint256 drawableFunds_);
 
+    function fundsAsset() external view returns (address fundsAsset_);
+
     function getClosingPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
 
-    function getNextPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_);
+    function getNextPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 delegateFee_, uint256 treasuryFee_);
 
     function implementation() external view returns (address implementation_);
 
@@ -102,15 +91,11 @@ interface IMapleLoanLike {
 
 }
 
-interface IMplRewardsLike {
-
-    function exit() external;
-
-}
-
 interface IPoolLike {
 
     function balanceOf(address account_) external returns(uint256 balance_);
+
+    function claim(address loan, address dlFactory) external;
 
     function deactivate() external;
 
@@ -128,6 +113,10 @@ interface IPoolLike {
 
     function liquidityLocker() external pure returns (address);
 
+    function name() external view returns (string memory);
+
+    function poolDelegate() external view returns (address);
+
     function poolLosses() external view returns (uint256);
 
     function poolState() external returns(uint8 state);
@@ -137,6 +126,8 @@ interface IPoolLike {
     function recognizableLossesOf(address _owner) external view returns (uint256);
 
     function setLiquidityCap(uint256 newLiquidityCap) external;
+
+    function symbol() external view returns (string memory);
 
     function withdraw(uint256 amt) external;
 
@@ -152,24 +143,26 @@ interface IPoolManagerLike {
 
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
 
+    function loanManagerList(uint256 index_) external view returns (address loanManager_);
+
     function pool() external view returns (address pool_);
+
+    function poolDelegate() external view returns (address poolDelegate_);
+
+    function setOpenToPublic() external;
 
     function totalAssets() external view returns (uint256 totalAssets_);
 
 }
 
-interface IStakeLockerLike {
+interface ITransitionLoanManagerLike {
 
-    function balanceOf(address owner) external view returns(uint256);
+    function add(address loan_) external;
 
-    function custodyAllowance(address from, address custodian) external view returns(uint256);
+    function principalOut() external view returns (uint256 principalOut_);
 
-    function intendToUnstake() external;
+    function takeOwnership(address[] calldata loans_) external;
 
-    function isUnstakeAllowed(address from) external view returns (bool);
-
-    function totalCustodyAllowance(address owner) external view returns(uint256);
-
-    function unstake(uint256 amt) external;
+    function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
 
 }
