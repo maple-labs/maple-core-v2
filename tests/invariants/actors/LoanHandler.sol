@@ -270,14 +270,13 @@ contract LoanHandler is TestUtils {
 
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
 
-        console.log("paymentWithEarliestDueDate", paymentWithEarliestDueDate);
+        // console.log("paymentWithEarliestDueDate", paymentWithEarliestDueDate);
 
         if (paymentWithEarliestDueDate != 0) {
             ( , , earliestPaymentDueDate ) = loanManager.sortedPayments(loanManager.paymentWithEarliestDueDate());
-            console.log("earliestPaymentDueDate", earliestPaymentDueDate);
+            // console.log("earliestPaymentDueDate", earliestPaymentDueDate);
         } else {
             earliestPaymentDueDate = block.timestamp;
-            console.log("sii");
         }
 
         require(earliestPaymentDueDate == loanManager.domainEnd(), "Not equal");
@@ -298,13 +297,13 @@ contract LoanHandler is TestUtils {
 
         ( , interest_, ) = loan_.getNextPaymentBreakdown();
 
-        console.log("loan", address(loan_));
-        console.log("numLoans", numLoans);
-        console.log("interest", interest_);
+        // console.log("loan", address(loan_));
+        // console.log("numLoans", numLoans);
+        // console.log("interest", interest_);
 
         uint256 netInterest = interest_ * (1e6 - IMapleGlobals(globals).platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate()) / 1e6;
 
-        console.log("netInterest", netInterest);
+        // console.log("netInterest", netInterest);
 
         // if (block.timestamp < previousPaymentDueDate) {
         //     console.log("write lateIntervalInterest zero", block.timestamp, previousPaymentDueDate);

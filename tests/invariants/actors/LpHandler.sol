@@ -94,22 +94,22 @@ contract LpHander is TestUtils {
         // console.log("pool.totalAssets()", pool.totalAssets());
         // console.log("pool.totalSupply()", pool.totalSupply());
 
-        for (uint256 i; i < numLps; ++i) {
-            address lp = lps[i];
+        // for (uint256 i; i < numLps; ++i) {
+        //     address lp = lps[i];
 
-            console.log("lp", i);
+        //     console.log("lp", i);
 
-            if (pool.totalSupply() == 0) return;
+        //     if (pool.totalSupply() == 0) return;
 
-            ( , , bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
+        //     ( , , bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
 
-            uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * pool.totalAssets() / pool.totalSupply();
+        //     uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * pool.totalAssets() / pool.totalSupply();
 
-            console.log("1 ", totalRequestedLiquidity);
-            console.log("2 ", fundsAsset.balanceOf(address(pool)));
+        //     console.log("1 ", totalRequestedLiquidity);
+        //     console.log("2 ", fundsAsset.balanceOf(address(pool)));
 
-            assertTrue(partialLiquidity == (fundsAsset.balanceOf(address(pool)) <= totalRequestedLiquidity));
-        }
+        //     assertTrue(partialLiquidity == (fundsAsset.balanceOf(address(pool)) <= totalRequestedLiquidity));
+        // }
 
 
         _;

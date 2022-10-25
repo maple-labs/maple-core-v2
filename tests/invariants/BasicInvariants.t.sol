@@ -235,10 +235,6 @@ contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
     }
 
     function invariant_loanManager_H_assetsUnderManagementEqSumPrincipalAndInterest() external useCurrentTimestamp {
-        console.log("loanManager.assetsUnderManagement()", loanManager.assetsUnderManagement());
-        console.log("loanHandler.sum_loan_principal()   ", loanHandler.sum_loan_principal());
-        console.log("getAllOutstandingInterest()        ", getAllOutstandingInterest());
-
         assertWithinDiff(
             loanManager.assetsUnderManagement(),
             getAllOutstandingInterest() + loanHandler.sum_loan_principal(),
@@ -555,25 +551,25 @@ contract BasicInterestAccrualTest is InvariantTest, TestBaseWithAssertions {
                 ? netInterest
                 : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());  // Use longer if early payment made
 
-        console.log("");
-        console.log("paymentTimestamp         ", paymentTimestamp);
-        console.log("fundingTime              ", fundingTime);
-        console.log("block.timestamp          ", block.timestamp);
-        console.log("earliestPaymentDueDate   ", earliestPaymentDueDate);
-        console.log("loan.nextPaymentDueDate()", loan.nextPaymentDueDate());
-        console.log("loan.paymentInterval()   ", loan.paymentInterval());
-        console.log("netInterest              ", netInterest);
-        console.log("startDate                ", startDate);
-        console.log("endDate                  ", endDate);
-        console.log("interestAccrued_         ", interestAccrued_);
+        // console.log("");
+        // console.log("paymentTimestamp         ", paymentTimestamp);
+        // console.log("fundingTime              ", fundingTime);
+        // console.log("block.timestamp          ", block.timestamp);
+        // console.log("earliestPaymentDueDate   ", earliestPaymentDueDate);
+        // console.log("loan.nextPaymentDueDate()", loan.nextPaymentDueDate());
+        // console.log("loan.paymentInterval()   ", loan.paymentInterval());
+        // console.log("netInterest              ", netInterest);
+        // console.log("startDate                ", startDate);
+        // console.log("endDate                  ", endDate);
+        // console.log("interestAccrued_         ", interestAccrued_);
         // console.log("lateInterest             ", loanHandler.lateIntervalInterest(loan_));
-        console.log("-------------------------");
-        console.log("domainStart                             ", loanManager.domainStart());
-        console.log("domainEnd                               ", loanManager.domainEnd());
-        console.log("block.timestamp                         ", block.timestamp);
-        console.log("accruedInterest                         ", loanManager.getAccruedInterest());
-        console.log("accountedInterest                       ", loanManager.accountedInterest());
-        console.log("outstandingInterest                     ", loanManager.getAccruedInterest() + loanManager.accountedInterest());
+        // console.log("-------------------------");
+        // console.log("domainStart                             ", loanManager.domainStart());
+        // console.log("domainEnd                               ", loanManager.domainEnd());
+        // console.log("block.timestamp                         ", block.timestamp);
+        // console.log("accruedInterest                         ", loanManager.getAccruedInterest());
+        // console.log("accountedInterest                       ", loanManager.accountedInterest());
+        // console.log("outstandingInterest                     ", loanManager.getAccruedInterest() + loanManager.accountedInterest());
 
         // interestAccrued_ += loanHandler.lateIntervalInterest(loan_);
     }
