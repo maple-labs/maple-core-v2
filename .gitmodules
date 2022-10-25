@@ -38,3 +38,7 @@
 [submodule "modules/liquidations"]
 	path = modules/liquidations
 	url = git@github.com:maple-labs/liquidations.git
+[submodule "modules/loan-v302"]
+	path = modules/loan-v302
+	url = git@github.com:maple-labs/loan
+	branch = v3.02

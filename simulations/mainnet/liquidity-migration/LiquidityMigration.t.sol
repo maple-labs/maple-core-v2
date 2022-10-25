@@ -15,6 +15,7 @@ import { MapleLoanInitializer as MapleLoanV4Initializer } from "../../../modules
 import { MapleLoanV4Migrator }                            from "../../../modules/loan/contracts/MapleLoanV4Migrator.sol";
 
 import { MapleLoan as MapleLoanV301 } from "../../../modules/loan-v301/contracts/MapleLoan.sol";
+import { MapleLoan as MapleLoanV302 } from "../../../modules/loan-v302/contracts/MapleLoan.sol";
 
 import { AccountingChecker }                         from "../../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
 import { DeactivationOracle }                        from "../../../modules/migration-helpers/contracts/DeactivationOracle.sol";
@@ -140,10 +141,12 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         debtLockerFactory.enableUpgradePath(300, 400, address(new DebtLockerV4Migrator()));
 
         loanFactory.registerImplementation(301, address(new MapleLoanV301()), address(loanV3Initializer));
+        loanFactory.registerImplementation(302, address(new MapleLoanV302()), address(0));
         loanFactory.registerImplementation(400, address(new MapleLoanV4()),   address(new MapleLoanV4Initializer()));
         loanFactory.enableUpgradePath(200, 301, address(0));
         loanFactory.enableUpgradePath(300, 301, address(0));
-        loanFactory.enableUpgradePath(301, 400, address(new MapleLoanV4Migrator()));
+        loanFactory.enableUpgradePath(301, 302, address(0));
+        loanFactory.enableUpgradePath(302, 400, address(new MapleLoanV4Migrator()));
         loanFactory.setDefaultVersion(301);
 
         loanManagerFactory.registerImplementation(100, address(new TransitionLoanManager()), address(new LoanManagerInitializer()));
@@ -184,14 +187,20 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
 
         claimAllLoans(poolV1, loans);
 
+        /***************************************************************************/
+        /*** Step 4: Lock all actions on the loan by migrating it to v3.02       ***/
+        /***************************************************************************/
+
+        upgradeLoansToV302(loans);
+
         /******************************************************************/
-        /*** Step 4: Lock Pool deposits by setting liquidityCap to zero ***/
+        /*** Step 5: Lock Pool deposits by setting liquidityCap to zero ***/
         /******************************************************************/
 
         lockPoolV1Deposits(poolV1);
 
         /***************************************************************************/
-        /*** Step 5: Lock Pool withdrawals by funding a loan with remaining cash ***/
+        /*** Step 6: Lock Pool withdrawals by funding a loan with remaining cash ***/
         /***************************************************************************/
 
         // Check if a migration loan needs to be funded.
@@ -204,10 +213,13 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
 
             // Upgrade the newly created debt locker of the migration loan.
             upgradeDebtLockerToV4(poolV1, migrationLoan);
+
+            vm.prank(globalAdmin);
+            migrationLoan.upgrade(302, new bytes(0));
         }
 
         /*******************************/
-        /*** Step 6: Deploy new Pool ***/
+        /*** Step 7: Deploy new Pool ***/
         /*******************************/
 
         // Deploy the new version of the pool.
@@ -218,7 +230,7 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         // TODO: Add cover
 
         /***************************************************************/
-        /*** Step 7: Add Loans to LM, setting up parallel accounting ***/
+        /*** Step 8: Add Loans to LM, setting up parallel accounting ***/
         /***************************************************************/
 
         address[] memory loanAddresses = convertToAddresses(loans);
@@ -229,21 +241,21 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         uint256 loansAddedTimestamp = block.timestamp;
 
         /**********************************************/
-        /*** Step 8: Activate the Pool from Globals ***/
+        /*** Step 9: Activate the Pool from Globals ***/
         /**********************************************/
 
         vm.prank(governor);
         mapleGlobalsV2.activatePoolManager(address(poolManager));
 
-        /*****************************************************************************/
-        /*** Step 9: Open the Pool or allowlist the pool to allow airdrop to occur ***/
-        /*****************************************************************************/
+        /******************************************************************************/
+        /*** Step 10: Open the Pool or allowlist the pool to allow airdrop to occur ***/
+        /******************************************************************************/
 
         openPoolV2(poolManager);  // TODO: Add whitelisting for permissioned pools.
 
-        /**********************************************************/
-        /*** Step 10: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
-        /**********************************************************/
+        /***********************************************************/
+        /*** Step 11: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
+        /***********************************************************/
 
         // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
         vm.startPrank(migrationMultisig);
@@ -252,7 +264,7 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
 
         /******************************************************************************/
-        /*** Step 11: Set the pending lender in all outstanding Loans to be the TLM ***/
+        /*** Step 12: Set the pending lender in all outstanding Loans to be the TLM ***/
         /******************************************************************************/
 
         migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses);
@@ -260,7 +272,7 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
 
         /*********************************************************************************/
-        /*** Step 12: Accept the pending lender in all outstanding Loans to be the TLM ***/
+        /*** Step 13: Accept the pending lender in all outstanding Loans to be the TLM ***/
         /*********************************************************************************/
 
         migrationHelper.takeOwnershipOfLoans(address(transitionLoanManager), loanAddresses);
@@ -268,7 +280,7 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
 
         /*****************************************************/
-        /*** Step 13: Upgrade the LoanManager from the TLM ***/
+        /*** Step 14: Upgrade the LoanManager from the TLM ***/
         /*****************************************************/
 
         migrationHelper.upgradeLoanManager(address(transitionLoanManager), 200);
@@ -282,13 +294,13 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
 
         /****************************************/
-        /*** Step 14: Upgrade all loans to V4 ***/
+        /*** Step 15: Upgrade all loans to V4 ***/
         /****************************************/
 
         upgradeLoansToV4(loans);
 
         /******************************************************************/
-        /*** Step 15: Close the cash loan, adding liquidity to the pool ***/
+        /*** Step 16: Close the cash loan, adding liquidity to the pool ***/
         /******************************************************************/
 
         if (availableLiquidity > 0) {
@@ -298,7 +310,7 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
 
         /***********************************/
-        /*** Step 16: Deactivate Pool V1 ***/
+        /*** Step 17: Deactivate Pool V1 ***/
         /***********************************/
 
         deactivatePoolV1(poolV1);  // TODO: Investigate and possibly move to another function.
@@ -480,6 +492,13 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         }
 
         // TODO: Assert all loans are upgraded.
+    }
+
+    function upgradeLoansToV302(IMapleLoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            vm.prank(globalAdmin);
+            loans[i].upgrade(302, new bytes(0));
+        }
     }
 
     function upgradeLoansToV4(IMapleLoanLike[] memory loans) internal {
