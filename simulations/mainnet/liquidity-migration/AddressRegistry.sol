@@ -6,7 +6,9 @@ import {
     IMapleGlobalsLike,
     IMapleLoanLike,
     IMapleProxyFactoryLike,
-    IPoolLike
+    IMplRewardsLike,
+    IPoolLike,
+    IStakeLockerLike
 } from "./Interfaces.sol";
 
 contract AddressRegistry {
@@ -47,7 +49,9 @@ contract AddressRegistry {
 
     // TODO: Create a script for fetching all loans and lps at any block number.
 
-    IPoolLike mavenUsdcPoolV1 = IPoolLike(0x6F6c8013f639979C84b756C7FC1500eB5aF18Dc4);
+    IPoolLike        mavenUsdcPoolV1      = IPoolLike(0x6F6c8013f639979C84b756C7FC1500eB5aF18Dc4);
+    IMplRewardsLike  mavenUsdcRewards     = IMplRewardsLike(0xe5A1cb65E7a608E778B3Ccb02F7B2DFeFeE783B4);
+    IStakeLockerLike mavenUsdcStakeLocker = IStakeLockerLike(0xbb7866435b8e5D3F6c2EA8b720c8F79db6f7C1b4);
 
     address[] mavenUsdcLps = [
         address(0xE79bC301E7DfaeB5Eb0A3cC3be3AB71CF721aE6F),
@@ -446,6 +450,43 @@ contract AddressRegistry {
         address(0xfFEF59Ed193185aA2AD61fE1C7c4AFa17A8CA789)
     ];
 
+    address[] mavenUsdcCoverProviders = [
+        address(0x0c8bFC46C4fB39b6eEd7814E8830fAc0a45F8D6D),
+        address(0x0f07EBbd719C9aAd480AcE5f6aA2c044E92380Ac),
+        address(0x186cf5714316F47BC59e30a850615A3f938d7D79),
+        address(0x1B793b70834A80B1CF1b9C279084409De419c956),
+        address(0x1B793b70834A80B1CF1b9C279084409De419c956),
+        address(0x2719150aEA3b6bEcfC85229f8A89B7F94AEccE1b),
+        address(0x360C3f56976c2429658Ba9AA763BdF1Ff835A50A),
+        address(0x3Fa457EACC2d90570C9d2a435a9a59f9A46605E1),
+        address(0x52705A276D86c4dc7f33a54AF565C038FbdB8e2a),
+        address(0x53e73538c28A96B68d92E5B049C3996BE048D3A2),
+        address(0x607F2D398D51CC0D2E87036C02b36c250A9f3909),
+        address(0x6f9BB7e454f5B3eb2310343f0E99269dC2BB8A1d),
+        address(0x7371Da5AC817C05547da65a84EACd72D653027AF),
+        address(0x7E0Df04CBeA8fC4740D2d64a84E34d1a028987D4),
+        address(0x8735F6C54b98d8C4da04115caee48B1ff31e7E9C),
+        address(0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D),
+        address(0x8B4aa04E9642b387293cE6fFfA42715a9cd19f3C),
+        address(0x8fe8F4AE3DD8AA5c190e42fA108560996b35942A),
+        address(0xa2e759bDb0BF658eD2812aDa1Ecff0D6Ca4F68AE),
+        address(0xa44A09B196d767061Cc252c30d253Ced797f035f),
+        address(0xB187a6d7BFAdbca875164eB2Be8A862b320Dfc98),
+        address(0xB204Ff6f1074d4fF83FAb608671A982dB46DB3f2),
+        address(0xbAa882D68FC5325fC3899dE264F24B5981523A5C),
+        address(0xc6E4Ad3ccdfC65687D2d60a454a8bdDc1F4d6c06),
+        address(0xc87d690a8D20FAE8509aa27db0850B199645327C),
+        address(0xcD89D190353b1D0D4C103102C38b76F7696D511d),
+        address(0xDe3258C1C45a557F4924d1E4e3d0A4E5341607Ee),
+        address(0xe015c0D33389e5F0382CceeC817CC3032edE113D),
+        address(0xe18B7E20c0b9A8FA16C20911B706Be8DC69d3485),
+        address(0xEF9355e1f3Ed17459078DFb54bf609C3f65E3f34),
+        address(0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4),
+        address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C),
+        address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C),
+        address(0x990d11977378D4610776e6646b2cAAe543Ea4EDA)
+    ];
+
     IMapleLoanLike[] mavenUsdcLoans = [
         // INACTIVE: IMapleLoanLike(0x0839103F604835F6F4923ae3B8cD0647d068DBED),
         // INACTIVE: IMapleLoanLike(0x098e3d390028E6DDC8ba8f2A7348D58C4E439C4A),
@@ -528,7 +569,9 @@ contract AddressRegistry {
     /*** Maven 11 - USDC (Permissioned)                                                                                         ***/
     /******************************************************************************************************************************/
 
-    IPoolLike mavenPermissionedPoolV1 = IPoolLike(0xCC8058526De295c6aD917Cb41416366D69A24CdE);
+    IPoolLike        mavenPermissionedPoolV1      = IPoolLike(0xCC8058526De295c6aD917Cb41416366D69A24CdE);
+    IMplRewardsLike  mavenPermissionedRewards     = IMplRewardsLike(address(0));
+    IStakeLockerLike mavenPermissionedStakeLocker = IStakeLockerLike(0x15D297B15A631D1f3B53A337D31BDd2d950d5402);
 
     address[] mavenPermissionedLps = [
         address(0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7),
@@ -566,7 +609,9 @@ contract AddressRegistry {
     /*** Maven 11 - WETH                                                                                                        ***/
     /******************************************************************************************************************************/
 
-    IPoolLike mavenWethPoolV1 = IPoolLike(0x1A066b0109545455BC771E49e6EDef6303cb0A93);
+    IPoolLike        mavenWethPoolV1      = IPoolLike(0x1A066b0109545455BC771E49e6EDef6303cb0A93);
+    IMplRewardsLike  mavenWethRewards     = IMplRewardsLike(0x0a76C7913C94F2AF16958FbDF9b4CF0bBdb159d8);
+    IStakeLockerLike mavenWethStakeLocker = IStakeLockerLike(0xD5Deeb06859369e42cf1906408eD6Cb249E0e002);
 
     address[] mavenWethLps = [
         address(0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3),
@@ -653,7 +698,9 @@ contract AddressRegistry {
     /*** Orthogonal Trading - USDC 01                                                                                           ***/
     /******************************************************************************************************************************/
 
-    IPoolLike orthogonalPoolV1 = IPoolLike(0xFeBd6F15Df3B73DC4307B1d7E65D46413e710C27);
+    IPoolLike        orthogonalPoolV1      = IPoolLike(0xFeBd6F15Df3B73DC4307B1d7E65D46413e710C27);
+    IMplRewardsLike  orthogonalRewards     = IMplRewardsLike(0xf9D4D5a018d91e9BCCC1e35Ea78FcfEcF4c5Cbca);
+    IStakeLockerLike orthogonalStakeLocker = IStakeLockerLike(0x12B2BbBfAB2CE6789DF5659E9AC27A4A91C96C5C);
 
     address[] orthogonalLps = [
         address(0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3),
@@ -961,6 +1008,43 @@ contract AddressRegistry {
         address(0xfB27C8582976F1A29d58e89Bcc89dA1e54D78076)
     ];
 
+    address[] orthogonalCoverProviders = [
+        address(0x04eB07C283Cd6d9bf237118e2732D8b6Ee5eE457),
+        address(0x09F41c916B5C2e26706fEbf7c4666d2afE57419A),
+        address(0x0BD1454fa01dD11bF6646BF8bc17a3E48Fda3734),
+        address(0x0e8bC80BAeb4DE22e8bE1007EFDFaE79CD15EDF7),
+        address(0x12Be641f6CE5d30E422e1573e0759496Dc127614),
+        address(0x1e79F6714c7dFBb6504357786A2aaBb2304dE2DD),
+        address(0x2291F52bddc937b5B840d15E551e1DA8C80c2B3c),
+        address(0x26b4b3d787B9B763aDa19203059D621Bca3a870f),
+        address(0x2e2E066432bA88688C83d9F62E8e5E0e25646a5D),
+        address(0x39Fa9C5d71A0eCd684B6Ce62c5EE897a6D2874d2),
+        address(0x468b84EfDf2AdFCEdde007403290E8FC396A0b3F),
+        address(0x53e73538c28A96B68d92E5B049C3996BE048D3A2),
+        address(0x554959af42454442370c782b9F2F7265D64Fb469),
+        address(0x6ab791754298D6D6d7C182DC1572126B4eD24897),
+        address(0x6bfd30747Ba72Ac7BB2f20D6138e1312020fAFe8),
+        address(0x710fDB2dc7774A9755cA36070704D7B12625DfF5),
+        address(0x7371Da5AC817C05547da65a84EACd72D653027AF),
+        address(0x75A8c6047De5A6aC0a6f15438DFe32C9B97e2299),
+        address(0x81FA0f35b54790F78e76C74D05Bd6d95632C030b),
+        address(0x86220aA5b12cb8eFb255F53e90e30bA6893cf059),
+        address(0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D),
+        address(0x929A5753C41eaed288F946bCBFe4a954Ad341797),
+        address(0x9376878e0a52a0A71570DB963467d789cFF44Fe2),
+        address(0xA5D591875cE13D7abf04d63419e2970F0d51Aa51),
+        address(0xA5D591875cE13D7abf04d63419e2970F0d51Aa51),
+        address(0xb9648d93832cAbefA403145D99b15869834b04E3),
+        address(0xBD235D7aAA1171B25c52B097F1daA36cd527C550),
+        address(0xD591c28C3396008FFb936521C9ceb4cCcc801d27),
+        address(0xD6F82502F20647dd8d78DFFb6AD7F8D8193d5e29),
+        address(0xe015c0D33389e5F0382CceeC817CC3032edE113D),
+        address(0xe72AFd50bDECdf13e46d89E56AFa58b0d5698fDF),
+        address(0xeba98049A242D9788C2FE12B74F774080a17BF3e),
+        address(0xF4Ae6165c3E05Ae7426c5B5200E8b9A7565aC595),
+        address(0xF9107317B0fF77eD5b7ADea15e50514A3564002B)
+    ];
+
     IMapleLoanLike[] orthogonalLoans = [
         // INACTIVE: IMapleLoanLike(0x01E4533E02Cb4da3578E8B329dcEc2F7E53cDdA3),
         // INACTIVE: IMapleLoanLike(0x0525436f5c1df9C918c696264845c3e2C7c23f77),
@@ -1047,7 +1131,9 @@ contract AddressRegistry {
     /*** Icebreaker Finance - USDC                                                                                              ***/
     /******************************************************************************************************************************/
 
-    IPoolLike icebreakerPoolV1 = IPoolLike(0x733f56782d21b403E5Ee9c8343645E1535F73CD4);
+    IPoolLike        icebreakerPoolV1      = IPoolLike(0x733f56782d21b403E5Ee9c8343645E1535F73CD4);
+    IMplRewardsLike  icebreakerRewards     = IMplRewardsLike(address(0));
+    IStakeLockerLike icebreakerStakeLocker = IStakeLockerLike(0x12B2BbBfAB2CE6789DF5659E9AC27A4A91C96C5C);
 
     address[] icebreakerLps = [
         address(0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7),

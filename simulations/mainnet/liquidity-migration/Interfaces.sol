@@ -91,6 +91,13 @@ interface IMapleLoanLike {
 
 }
 
+interface IMplRewardsLike {
+
+    function exit() external;
+
+}
+
+
 interface IPoolLike {
 
     function balanceOf(address account_) external returns(uint256 balance_);
@@ -129,6 +136,8 @@ interface IPoolLike {
 
     function symbol() external view returns (string memory);
 
+    function stakeLocker() external view returns (address stakeLocker_);
+
     function withdraw(uint256 amt) external;
 
     function withdrawableFundsOf(address _owner) external view returns (uint256);
@@ -152,6 +161,28 @@ interface IPoolManagerLike {
     function setOpenToPublic() external;
 
     function totalAssets() external view returns (uint256 totalAssets_);
+
+}
+
+interface IStakeLockerLike {
+
+    function balanceOf(address owner) external view returns(uint256);
+
+    function custodyAllowance(address from, address custodian) external view returns(uint256);
+
+    function intendToUnstake() external;
+   
+    function isUnstakeAllowed(address from) external view returns (bool);
+
+    function recognizableLossesOf(address) external view returns (uint256);
+
+    function setLockupPeriod(uint256 newLockupPeriod) external;
+
+    function stakeAsset() external view returns (address stakeAsset_);
+
+    function totalCustodyAllowance(address owner) external view returns(uint256);
+
+    function unstake(uint256 amt) external;
 
 }
 

@@ -43,8 +43,10 @@ import {
     IMapleGlobalsLike,
     IMapleLoanLike,
     IMapleProxiedLike,
+    IMplRewardsLike,
     IPoolLike,
     IPoolManagerLike,
+    IStakeLockerLike,
     ITransitionLoanManagerLike
 } from "./Interfaces.sol";
 
@@ -71,11 +73,30 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
 
         assertInitialState();
 
+        // Pre-migration steps
+        prepareForMigration(mavenWethPoolV1,         mavenWethLoans);
+        prepareForMigration(mavenUsdcPoolV1,         mavenUsdcLoans);
+        prepareForMigration(mavenPermissionedPoolV1, mavenPermissionedLoans);
+        prepareForMigration(orthogonalPoolV1,        orthogonalLoans);
+        prepareForMigration(icebreakerPoolV1,        icebreakerLoans);
+
+        // Migration procedure
         migratePool(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
         migratePool(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
         migratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
         migratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
         migratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
+
+        // Deactivation
+        postMigration(mavenWethPoolV1,         mavenWethRewards,         mavenWethStakeLocker,         125_049.87499e18);
+        postMigration(mavenUsdcPoolV1,         mavenUsdcRewards,         mavenUsdcStakeLocker,         153.022e18);
+        postMigration(mavenPermissionedPoolV1, mavenPermissionedRewards, mavenPermissionedStakeLocker, 16.319926286804447168e18);
+        postMigration(orthogonalPoolV1,        orthogonalRewards,        orthogonalStakeLocker,        175.122243323160822654e18);
+        postMigration(icebreakerPoolV1,        icebreakerRewards,        icebreakerStakeLocker,        0);
+
+        // Make cover providers withdraws
+        withdrawCover(mavenUsdcStakeLocker,  mavenUsdcRewards,  mavenUsdcCoverProviders);
+        withdrawCover(orthogonalStakeLocker, orthogonalRewards, orthogonalCoverProviders);
 
         assertFinalState();
     }
@@ -169,6 +190,164 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
 
     function migratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal {
 
+
+        /******************************************************************/
+        /*** Step 1: Lock Pool deposits by setting liquidityCap to zero ***/
+        /******************************************************************/
+
+        lockPoolV1Deposits(poolV1);
+
+        /***************************************************************************/
+        /*** Step 2: Lock Pool withdrawals by funding a loan with remaining cash ***/
+        /***************************************************************************/
+
+        // Check if a migration loan needs to be funded.
+        uint256 availableLiquidity = calculateAvailableLiquidity(poolV1);
+        IMapleLoanLike migrationLoan;
+
+        if (availableLiquidity > 0) {
+            // Create a loan using all of the available cash in the pool (if there is any).
+            migrationLoan = createMigrationLoan(poolV1, loans, availableLiquidity);
+
+            // Upgrade the newly created debt locker of the migration loan.
+            upgradeDebtLockerToV4(poolV1, migrationLoan);
+        }
+
+        /***************************************************************************/
+        /*** Step 3: Lock all actions on the loan by migrating it to v3.02       ***/
+        /***************************************************************************/
+
+        upgradeLoansToV302(loans);
+
+        /*******************************/
+        /*** Step 4: Deploy new Pool ***/
+        /*******************************/
+
+        // Deploy the new version of the pool.
+        IPoolManagerLike           poolManager           = IPoolManagerLike(deployPoolV2(poolV1));
+        ITransitionLoanManagerLike transitionLoanManager = ITransitionLoanManagerLike(poolManager.loanManagerList(0));
+        IPoolLike                  poolV2                = IPoolLike(poolManager.pool());
+
+        // TODO: Add cover
+
+        /***************************************************************/
+        /*** Step 5: Add Loans to LM, setting up parallel accounting ***/
+        /***************************************************************/
+
+        address[] memory loanAddresses = convertToAddresses(loans);
+
+        vm.prank(migrationMultisig);
+        migrationHelper.addLoansToLM(address(transitionLoanManager), loanAddresses);
+
+        uint256 loansAddedTimestamp = block.timestamp;
+
+        /**********************************************/
+        /*** Step 6: Activate the Pool from Globals ***/
+        /**********************************************/
+
+        vm.prank(governor);
+        mapleGlobalsV2.activatePoolManager(address(poolManager));
+
+        /*****************************************************************************/
+        /*** Step 7: Open the Pool or allowlist the pool to allow airdrop to occur ***/
+        /*****************************************************************************/
+
+        openPoolV2(poolManager);  // TODO: Add whitelisting for permissioned pools.
+
+        /**********************************************************/
+        /*** Step 8: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
+        /**********************************************************/
+
+        // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
+        vm.startPrank(migrationMultisig);
+        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps);
+
+        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
+
+        /*****************************************************************************/
+        /*** Step 9: Set the pending lender in all outstanding Loans to be the TLM ***/
+        /*****************************************************************************/
+
+        migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses);
+
+        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
+
+        /*********************************************************************************/
+        /*** Step 10: Accept the pending lender in all outstanding Loans to be the TLM ***/
+        /*********************************************************************************/
+
+        migrationHelper.takeOwnershipOfLoans(address(transitionLoanManager), loanAddresses);
+
+        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
+
+        /*****************************************************/
+        /*** Step 11: Upgrade the LoanManager from the TLM ***/
+        /*****************************************************/
+
+        migrationHelper.upgradeLoanManager(address(transitionLoanManager), 200);
+
+        vm.stopPrank();
+
+        assertEq(poolV2.totalSupply(), getPoolV1TotalValue(poolV1));
+
+        assertPrincipalOut(transitionLoanManager, loans);  // TODO: Add assertions against PoolV1
+
+        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
+
+        /****************************************/
+        /*** Step 12: Upgrade all loans to V4 ***/
+        /****************************************/
+
+        upgradeLoansToV4(loans);
+
+        /******************************************************************/
+        /*** Step 13: Close the cash loan, adding liquidity to the pool ***/
+        /******************************************************************/
+
+        if (availableLiquidity > 0) {
+            closeMigrationLoan(migrationLoan, loans);
+        }
+
+        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
+    }
+
+    function postMigration(IPoolLike poolV1, IMplRewardsLike rewards, IStakeLockerLike stakeLocker, uint256 delegateBalance_) internal {
+        address poolDelegate_ = poolV1.poolDelegate();
+
+        /***********************************/
+        /*** Step 1: Deactivate Pool V1 ***/
+        /***********************************/
+
+        deactivatePoolV1(poolV1);
+
+        /********************************/
+        /*** Step 2: Exit MPL Rewards ***/
+        /********************************/
+
+        if (address(rewards) != address(0)) {
+            exitRewards(rewards, stakeLocker, poolDelegate_);
+        }
+
+        /**********************************/
+        /*** Step 3: Request to unstake ***/
+        /**********************************/
+
+        // Assert that the provided balance matches the stake locker balance.
+        assertEq(stakeLocker.balanceOf(poolDelegate_), delegateBalance_);
+
+        if (delegateBalance_ > 0) {
+            // Wait for unlock period
+            vm.warp(block.timestamp + 864000);
+
+            requestUnstake(stakeLocker, poolDelegate_);
+
+            vm.warp(block.timestamp + 864000);
+
+            unstakeDelegateCover(stakeLocker, poolDelegate_, delegateBalance_);
+        }
+    }
+
+    function prepareForMigration(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
         /*******************************************/
         /*** Step 1: Upgrade all Loans to v3.0.1 ***/
         /*******************************************/
@@ -186,134 +365,6 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         /*******************************************/
 
         claimAllLoans(poolV1, loans);
-
-        /***************************************************************************/
-        /*** Step 4: Lock all actions on the loan by migrating it to v3.02       ***/
-        /***************************************************************************/
-
-        upgradeLoansToV302(loans);
-
-        /******************************************************************/
-        /*** Step 5: Lock Pool deposits by setting liquidityCap to zero ***/
-        /******************************************************************/
-
-        lockPoolV1Deposits(poolV1);
-
-        /***************************************************************************/
-        /*** Step 6: Lock Pool withdrawals by funding a loan with remaining cash ***/
-        /***************************************************************************/
-
-        // Check if a migration loan needs to be funded.
-        uint256 availableLiquidity = calculateAvailableLiquidity(poolV1);
-        IMapleLoanLike migrationLoan;
-
-        if (availableLiquidity > 0) {
-            // Create a loan using all of the available cash in the pool (if there is any).
-            migrationLoan = createMigrationLoan(poolV1, loans, availableLiquidity);
-
-            // Upgrade the newly created debt locker of the migration loan.
-            upgradeDebtLockerToV4(poolV1, migrationLoan);
-
-            vm.prank(globalAdmin);
-            migrationLoan.upgrade(302, new bytes(0));
-        }
-
-        /*******************************/
-        /*** Step 7: Deploy new Pool ***/
-        /*******************************/
-
-        // Deploy the new version of the pool.
-        IPoolManagerLike           poolManager           = IPoolManagerLike(deployPoolV2(poolV1));
-        ITransitionLoanManagerLike transitionLoanManager = ITransitionLoanManagerLike(poolManager.loanManagerList(0));
-        IPoolLike                  poolV2                = IPoolLike(poolManager.pool());
-
-        // TODO: Add cover
-
-        /***************************************************************/
-        /*** Step 8: Add Loans to LM, setting up parallel accounting ***/
-        /***************************************************************/
-
-        address[] memory loanAddresses = convertToAddresses(loans);
-
-        vm.prank(migrationMultisig);
-        migrationHelper.addLoansToLM(address(transitionLoanManager), loanAddresses);
-
-        uint256 loansAddedTimestamp = block.timestamp;
-
-        /**********************************************/
-        /*** Step 9: Activate the Pool from Globals ***/
-        /**********************************************/
-
-        vm.prank(governor);
-        mapleGlobalsV2.activatePoolManager(address(poolManager));
-
-        /******************************************************************************/
-        /*** Step 10: Open the Pool or allowlist the pool to allow airdrop to occur ***/
-        /******************************************************************************/
-
-        openPoolV2(poolManager);  // TODO: Add whitelisting for permissioned pools.
-
-        /***********************************************************/
-        /*** Step 11: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
-        /***********************************************************/
-
-        // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
-        vm.startPrank(migrationMultisig);
-        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps);
-
-        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
-
-        /******************************************************************************/
-        /*** Step 12: Set the pending lender in all outstanding Loans to be the TLM ***/
-        /******************************************************************************/
-
-        migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses);
-
-        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
-
-        /*********************************************************************************/
-        /*** Step 13: Accept the pending lender in all outstanding Loans to be the TLM ***/
-        /*********************************************************************************/
-
-        migrationHelper.takeOwnershipOfLoans(address(transitionLoanManager), loanAddresses);
-
-        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
-
-        /*****************************************************/
-        /*** Step 14: Upgrade the LoanManager from the TLM ***/
-        /*****************************************************/
-
-        migrationHelper.upgradeLoanManager(address(transitionLoanManager), 200);
-
-        vm.stopPrank();
-
-        assertEq(poolV2.totalSupply(), getPoolV1TotalValue(poolV1));
-
-        assertPrincipalOut(transitionLoanManager, loans);  // TODO: Add assertions against PoolV1
-
-        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
-
-        /****************************************/
-        /*** Step 15: Upgrade all loans to V4 ***/
-        /****************************************/
-
-        upgradeLoansToV4(loans);
-
-        /******************************************************************/
-        /*** Step 16: Close the cash loan, adding liquidity to the pool ***/
-        /******************************************************************/
-
-        if (availableLiquidity > 0) {
-            closeMigrationLoan(migrationLoan, loans);
-        }
-
-        assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
-
-        /***********************************/
-        /*** Step 17: Deactivate Pool V1 ***/
-        /***********************************/
-
-        deactivatePoolV1(poolV1);  // TODO: Investigate and possibly move to another function.
     }
 
     /******************************************************************************************************************************/
@@ -408,8 +459,10 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         vm.prank(governor);
         mapleGlobalsV1.setPriceOracle(asset, address(oracle));
 
-        vm.prank(poolV1.poolDelegate());
+        vm.startPrank(poolV1.poolDelegate());
         poolV1.deactivate();
+        IStakeLockerLike(poolV1.stakeLocker()).setLockupPeriod(0);
+        vm.stopPrank();
     }
 
     function deployPoolV2(IPoolLike poolV1) internal returns (IPoolManagerLike poolManager) {
@@ -448,6 +501,16 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         poolManager = IPoolManagerLike(poolManagerAddress);
     }
 
+    function exitRewards(IMplRewardsLike rewards, IStakeLockerLike stakeLocker, address poolDelegate) internal {
+        vm.startPrank(poolDelegate);
+
+        if (stakeLocker.custodyAllowance(poolDelegate, address(rewards)) > 0) {
+            rewards.exit();
+        }
+
+        vm.stopPrank();
+    }
+
     function getPoolV1TotalValue(IPoolLike poolV1) internal view returns (uint256 totalValue) {
         totalValue = poolV1.totalSupply() + poolV1.interestSum() - poolV1.poolLosses();
     }
@@ -462,6 +525,31 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
     function openPoolV2(IPoolManagerLike poolManager) internal {
         vm.prank(poolManager.poolDelegate());
         poolManager.setOpenToPublic();
+    }
+
+    function requestUnstake(IStakeLockerLike stakeLocker, address poolDelegate) internal {
+        vm.prank(poolDelegate);
+        stakeLocker.intendToUnstake();
+    }
+
+    function unstakeDelegateCover(IStakeLockerLike stakeLocker, address poolDelegate, uint256 delegateBalance_) internal {
+        IERC20Like bpt = IERC20Like(stakeLocker.stakeAsset());
+
+        uint256 initialStakeLockerBPTBalance   = bpt.balanceOf(address(stakeLocker));
+        uint256 initialPoolDelegateBPTBalance  = bpt.balanceOf(address(poolDelegate));
+        uint256 losses                         = stakeLocker.recognizableLossesOf(poolDelegate);
+
+        vm.startPrank(poolDelegate);
+        stakeLocker.unstake(stakeLocker.balanceOf(poolDelegate));
+        vm.stopPrank();
+
+        uint256 endStakeLockerBPTBalance  = bpt.balanceOf(address(stakeLocker));
+        uint256 endPoolDelegateBPTBalance = bpt.balanceOf(address(poolDelegate));
+
+        assertEq(delegateBalance_ - losses, endPoolDelegateBPTBalance - initialPoolDelegateBPTBalance);
+        assertEq(delegateBalance_ - losses, initialStakeLockerBPTBalance - endStakeLockerBPTBalance);
+        assertEq(stakeLocker.balanceOf(poolDelegate), 0);                                      // All the delegate stake was withdrawn
+
     }
 
     function upgradeDebtLockersToV4(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
@@ -508,6 +596,43 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
         }
 
         // TODO: Assert all loans are upgraded.
+    }
+
+    function withdrawCover(IStakeLockerLike stakeLocker, IMplRewardsLike rewards, address[] storage coverProviders) internal {
+       for (uint256 i = 0; i < coverProviders.length; i++) {
+            // If User has allowance in the rewards contract, exit it.
+            if (stakeLocker.custodyAllowance(coverProviders[i], address(rewards)) > 0) {
+                vm.prank(coverProviders[i]);
+                rewards.exit();
+            }
+
+            if (stakeLocker.balanceOf(coverProviders[i]) > 0) {
+                vm.prank(coverProviders[i]);
+                stakeLocker.intendToUnstake();
+            }
+        }
+
+        // Warp past the cooldown period
+        vm.warp(block.timestamp + 864000);
+
+        for (uint256 i = 0; i < coverProviders.length; i++) {
+            if (stakeLocker.balanceOf(coverProviders[i]) > 0) {
+                IERC20Like bpt = IERC20Like(stakeLocker.stakeAsset());
+
+                uint256 initialStakeLockerBPTBalance = bpt.balanceOf(address(stakeLocker));
+                uint256 initialProviderBPTBalance    = bpt.balanceOf(address(coverProviders[i]));
+
+                vm.startPrank(coverProviders[i]);
+                stakeLocker.unstake(stakeLocker.balanceOf(coverProviders[i]));
+                vm.stopPrank();
+
+                uint256 endStakeLockerBPTBalance = bpt.balanceOf(address(stakeLocker));
+                uint256 endProviderBPTBalance    = bpt.balanceOf(address(coverProviders[i]));
+
+                assertEq(endProviderBPTBalance - initialProviderBPTBalance, initialStakeLockerBPTBalance - endStakeLockerBPTBalance); // BPTs moved from stake locker to provider
+                assertEq(stakeLocker.balanceOf(coverProviders[i]), 0);
+            }
+        }
     }
 
 }
