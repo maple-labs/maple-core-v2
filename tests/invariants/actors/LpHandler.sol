@@ -61,87 +61,8 @@ contract LpHander is TestUtils {
     /******************************************************************************************************************************/
 
     modifier useTimestamps {
-        // currentLp = lps[constrictToRange(lpIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
-        // vm.startPrank(currentLp);
-
-        // for (uint256 i; i < numLps; ++i) {
-        //     console.log("lp2             ", i);
-        //     console.log("lp2 address     ", lps[i]);
-        // }
-
         vm.warp(testContract.currentTimestamp());
-        // console.log("");
-        // console.log("LP BEFORE");
-        // ILoanManager loanManager = ILoanManager(IPoolManager(pool.manager()).loanManagerList(0));
-        // ( , , uint256 earliestPaymentDueDate ) = loanManager.sortedPayments(loanManager.paymentWithEarliestDueDate());
-        // console.log("loanManager.paymentWithEarliestDueDate()", loanManager.paymentWithEarliestDueDate());
-        // console.log("loanManager.domainStart()               ", loanManager.domainStart());
-        // console.log("earliestPaymentDueDate                  ", earliestPaymentDueDate);
-        // console.log("loanManager.issuanceRate()           ", loanManager.loanManagerList(0)).issuanceRate());
-        // console.log("sum_loanManager_paymentIssuanceRate()", sum_loanManager_p?aymentIssuanceRate);
-
-        // uint256 sumBalanceOfAssets;
-        // for (uint256 i; i < numHolders; ++i) {
-        //     console.log("lp             ", i);
-        //     console.log("lp address     ", holders[i]);
-        //     console.log("balanceOf      ", pool.balanceOf(holders[i]));
-        //     console.log("balanceOfAssets", pool.balanceOfAssets(holders[i]));
-        //     sumBalanceOfAssets += pool.balanceOfAssets(holders[i]);
-        // }
-
-        // console.log("---");
-        // console.log("sumBalanceOfAssets", sumBalanceOfAssets);
-        // console.log("pool.totalAssets()", pool.totalAssets());
-        // console.log("pool.totalSupply()", pool.totalSupply());
-
-        // for (uint256 i; i < numLps; ++i) {
-        //     address lp = lps[i];
-
-        //     console.log("lp", i);
-
-        //     if (pool.totalSupply() == 0) return;
-
-        //     ( , , bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
-
-        //     uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * pool.totalAssets() / pool.totalSupply();
-
-        //     console.log("1 ", totalRequestedLiquidity);
-        //     console.log("2 ", fundsAsset.balanceOf(address(pool)));
-
-        //     assertTrue(partialLiquidity == (fundsAsset.balanceOf(address(pool)) <= totalRequestedLiquidity));
-        // }
-
-
         _;
-
-        // console.log("");
-        // console.log("LP AFTER");
-        // ILoanManager loanManager = ILoanManager(IPoolManager(pool.manager()).loanManagerList(0));
-        // ( , , uint256 earliestPaymentDueDate ) = loanManager.sortedPayments(loanManager.paymentWithEarliestDueDate());
-        // console.log("loanManager.paymentWithEarliestDueDate()", loanManager.paymentWithEarliestDueDate());
-        // console.log("loanManager.domainStart()               ", loanManager.domainStart());
-        // console.log("earliestPaymentDueDate                  ", earliestPaymentDueDate);
-        // console.log("loanManager.issuanceRate()           ", loanManager.loanManagerList(0)).issuanceRate());
-        // console.log("sum_loanManager_paymentIssuanceRate()", sum_loanManager_p?aymentIssuanceRate);
-
-        // uint256 sumBalanceOfAssets2;
-        // for (uint256 i; i < numHolders; ++i) {
-        //     console.log("lp             ", i);
-        //     console.log("lp address     ", holders[i]);
-        //     console.log("balanceOf      ", pool.balanceOf(holders[i]));
-        //     console.log("balanceOfAssets", pool.balanceOfAssets(holders[i]));
-        //     sumBalanceOfAssets2 += pool.balanceOfAssets(holders[i]);
-        // }
-
-        // console.log("---");
-        // console.log("sumBalanceOfAssets", sumBalanceOfAssets2);
-        // console.log("pool.totalAssets()", pool.totalAssets());
-        // console.log("pool.totalSupply()", pool.totalSupply());
-
-        // console.log("pool.totalSupply()", pool.totalSupply());
-        // console.log("pool.totalAssets()", pool.totalAssets());
-
-
         testContract.setCurrentTimestamp(block.timestamp);
     }
 
@@ -164,10 +85,6 @@ contract LpHander is TestUtils {
 
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
-
-        // console.log("deposit");
-        // console.log("assets_  ", assets_);
-        // console.log("currentLp", currentLp);
 
         pool.deposit(assets_, currentLp);  // TODO: Fuzz receiver
     }

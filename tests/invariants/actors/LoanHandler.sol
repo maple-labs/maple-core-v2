@@ -61,6 +61,9 @@ contract LoanHandler is TestUtils {
     uint256 public sum_loan_principal;
     uint256 public sum_loanManager_paymentIssuanceRate;
 
+    // Max values
+    uint256 maxLoans;
+
     // Loan info
     uint256 public earliestPaymentDueDate;
 
@@ -81,7 +84,8 @@ contract LoanHandler is TestUtils {
         address loanFactory_,
         address poolManager_,
         address testContract_,
-        uint256 numBorrowers_
+        uint256 numBorrowers_,
+        uint256 maxLoans_
     ) {
         feeManager  = feeManager_;
         globals     = globals_;
@@ -107,6 +111,7 @@ contract LoanHandler is TestUtils {
         }
 
         numBorrowers = numBorrowers_;
+        maxLoans     = maxLoans_;
     }
 
     /******************************************************************************************************************************/
@@ -116,38 +121,6 @@ contract LoanHandler is TestUtils {
     modifier useTimestamps() {
         vm.warp(testContract.currentTimestamp());
         _;
-        // ( , , uint256 earliestPaymentDueDate ) = loanManager.sortedPayments(loanManager.paymentWithEarliestDueDate());
-        // console.log("LH");
-        // console.log("pool.totalAssets()                      ", pool.totalAssets());
-        // console.log("pool.totalSupply()                      ", pool.totalSupply());
-        // console.log("pool.convertToShares(pool.totalAssets())", pool.convertToShares(pool.totalAssets()));
-        // console.log("loanManager.paymentWithEarliestDueDate()", loanManager.paymentWithEarliestDueDate());
-        // console.log("loanManager.domainStart()               ", loanManager.domainStart());
-        // console.log("earliestPaymentDueDate                  ", earliestPaymentDueDate);
-        // console.log("expectedTotalAssets                     ", fundsAsset.balanceOf(address(pool)) + testContract.getAllOutstandingInterest() + sum_loan_principal);
-        // console.log("fundsAsset.balanceOf(address(pool))     ", fundsAsset.balanceOf(address(pool)));
-        // console.log("domainStart                             ", loanManager.domainStart());
-        // console.log("domainEnd                               ", loanManager.domainEnd());
-        // console.log("block.timestamp                         ", block.timestamp);
-        // console.log("accruedInterest                         ", loanManager.getAccruedInterest());
-        // console.log("accountedInterest                       ", loanManager.accountedInterest());
-        // console.log("outstandingInterest                     ", loanManager.getAccruedInterest() + loanManager.accountedInterest());
-        // console.log("testContract.getAllOutstandingInterest()", testContract.getAllOutstandingInterest());
-        // console.log("sum_loan_principal                      ", sum_loan_principal);
-
-        // for (uint256 i; i < numLoans; ++i) {
-        //     IMapleLoan loan = IMapleLoan(activeLoans[i]);
-        //     // console.log("loan.collateral()        ", loan.collateral());
-        //     // console.log("loan.collateralRequired()", loan.collateralRequired());
-        //     // console.log("loan.drawableFunds()     ", loan.drawableFunds());
-        //     // console.log("loan.principalRequested()", loan.principalRequested());
-        //     // console.log("loan.principal()         ", loan.principal());
-        //     // assertTrue(
-        //     //     loan.drawableFunds() >= loan.principal() ||
-        //     //     loan.collateral() >= loan.collateralRequired() * (loan.principal() - loan.drawableFunds()) / loan.principalRequested()
-        //     // );
-        // }
-
         testContract.setCurrentTimestamp(block.timestamp);
     }
 
@@ -164,7 +137,7 @@ contract LoanHandler is TestUtils {
     ) external useTimestamps {
         numCalls++;
 
-        // if (numLoans > 0) return;
+        if (numLoans > maxLoans) return;
 
         address borrower_ = borrowers[constrictToRange(borrowerIndexSeed_, 0, numBorrowers - 1)];
 
@@ -270,11 +243,8 @@ contract LoanHandler is TestUtils {
 
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
 
-        // console.log("paymentWithEarliestDueDate", paymentWithEarliestDueDate);
-
         if (paymentWithEarliestDueDate != 0) {
             ( , , earliestPaymentDueDate ) = loanManager.sortedPayments(loanManager.paymentWithEarliestDueDate());
-            // console.log("earliestPaymentDueDate", earliestPaymentDueDate);
         } else {
             earliestPaymentDueDate = block.timestamp;
         }
@@ -297,27 +267,7 @@ contract LoanHandler is TestUtils {
 
         ( , interest_, ) = loan_.getNextPaymentBreakdown();
 
-        // console.log("loan", address(loan_));
-        // console.log("numLoans", numLoans);
-        // console.log("interest", interest_);
-
         uint256 netInterest = interest_ * (1e6 - IMapleGlobals(globals).platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate()) / 1e6;
-
-        // console.log("netInterest", netInterest);
-
-        // if (block.timestamp < previousPaymentDueDate) {
-        //     console.log("write lateIntervalInterest zero", block.timestamp, previousPaymentDueDate);
-        //     lateIntervalInterest[address(loan_)] = 0;
-        // } else {
-        //     console.log("write lateIntervalInterest non", block.timestamp, previousPaymentDueDate);
-        //     console.log("write lateIntervalInterest non", block.timestamp - previousPaymentDueDate > loan_.paymentInterval());
-        //     console.log("write lateIntervalInterest non", netInterest);
-        //     lateIntervalInterest[address(loan_)] =
-        //         block.timestamp - previousPaymentDueDate > loan_.paymentInterval()
-        //             ? netInterest
-        //             : netInterest * (block.timestamp - previousPaymentDueDate) / loan_.paymentInterval();
-        //     console.log("write lateIntervalInterest non", lateIntervalInterest[address(loan_)]);
-        // }
 
         ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
 
@@ -342,12 +292,6 @@ contract LoanHandler is TestUtils {
     function min(uint256 a_, uint256 b_) internal pure returns (uint256 minimum_) {
         minimum_ = a_ < b_ ? a_ : b_;
     }
-
-    // function logState(bytes32 key) external {
-    //     if (key != "randomWord") return;
-    //     console.log("loanManager.issuanceRate()           ", loanManager.issuanceRate());
-    //     console.log("sum_loanManager_paymentIssuanceRate()", sum_loanManager_paymentIssuanceRate);
-    // }
 
 }
 
