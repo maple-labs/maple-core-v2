@@ -307,6 +307,18 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
+    function closeLoan(Loan loan) internal {
+       ( uint256 principal_, uint256 interest_, uint256 fees_ ) = loan.getClosingPaymentBreakdown();
+
+        uint256 payment = principal_ + interest_ + fees_;
+
+        // Mint to loan
+        fundsAsset.mint(address(loan), payment);
+
+        vm.prank(loan.borrower());
+        loan.closeLoan(0);
+    }
+
     function setupFees(
         uint256 platformOriginationFeeRate,
         uint256 platformServiceFeeRate,
