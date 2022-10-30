@@ -206,7 +206,7 @@ contract LoanHandler is TestUtils {
         numberOfCalls["createLoanAndFund"]++;
     }
 
-    function makePayment(uint256 borrowerIndexSeed_, uint256 loanIndexSeed_) external useTimestamps {
+    function makePayment(uint256 borrowerIndexSeed_, uint256 loanIndexSeed_) public virtual useTimestamps {
         numCalls++;
 
         if (activeLoans.length == 0) return;

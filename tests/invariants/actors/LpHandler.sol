@@ -3,15 +3,15 @@ pragma solidity 0.8.7;
 
 import { Address, console, TestUtils } from "../../../modules/contract-test-utils/contracts/test.sol";
 
-import { MockERC20 }          from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
-import { IPool }              from "../../../modules/pool-v2/contracts/interfaces/IPool.sol";
-import { IPoolManager }       from "../../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
-import { ILoanManager }       from "../../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
+import { MockERC20 }         from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { IPool }             from "../../../modules/pool-v2/contracts/interfaces/IPool.sol";
+import { IPoolManager }      from "../../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
+import { ILoanManager }      from "../../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
 import { WithdrawalManager } from "../../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 
 import { ITest } from "../interfaces/ITest.sol";
 
-contract LpHander is TestUtils {
+contract LpHandler is TestUtils {
 
     /******************************************************************************************************************************/
     /*** State Variables                                                                                                        ***/

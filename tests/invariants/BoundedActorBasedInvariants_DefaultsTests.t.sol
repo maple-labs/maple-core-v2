@@ -7,12 +7,12 @@ import { IMapleLoanFeeManager }            from "../../modules/loan/contracts/in
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
-import { LoanHandler } from "./actors/LoanHandler.sol";
-import { LpHandler }   from "./actors/LpHandler.sol";
+import { LoanHandlerWithDefaults } from "./actors/LoanHandlerWithDefaults.sol";
+import { LpHandler }               from "./actors/LpHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
-contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
+contract BoundedActorBasedInvariants_DefaultsTests is BaseInvariants {
 
     /******************************************************************************************************************************/
     /*** State Variables                                                                                                        ***/
@@ -20,7 +20,7 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
 
     uint256 constant public NUM_BORROWERS = 5;
     uint256 constant public NUM_LPS       = 10;
-    uint256 constant public MAX_NUM_LOANS = 50;
+    uint256 constant public MAX_NUM_LOANS = 20;
 
     /******************************************************************************************************************************/
     /*** Setup Function                                                                                                         ***/
@@ -33,17 +33,18 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
 
         currentTimestamp = block.timestamp;
 
-        loanHandler = new LoanHandler({
-            collateralAsset_: address(collateralAsset),
-            feeManager_:      address(feeManager),
-            fundsAsset_:      address(fundsAsset),
-            globals_:         address(globals),
-            governor_:        governor,
-            loanFactory_:     loanFactory,
-            poolManager_:     address(poolManager),
-            testContract_:    address(this),
-            numBorrowers_:    NUM_BORROWERS,
-            maxLoans_:        MAX_NUM_LOANS
+        loanHandler = new LoanHandlerWithDefaults({
+            collateralAsset_:   address(collateralAsset),
+            feeManager_:        address(feeManager),
+            fundsAsset_:        address(fundsAsset),
+            globals_:           address(globals),
+            governor_:          governor,
+            loanFactory_:       loanFactory,
+            liquidatorFactory_: liquidatorFactory,
+            poolManager_:       address(poolManager),
+            testContract_:      address(this),
+            numBorrowers_:      NUM_BORROWERS,
+            maxLoans_:          MAX_NUM_LOANS
         });
 
         lpHandler = new LpHandler(address(pool), address(this), NUM_LPS);
@@ -55,12 +56,22 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
     }
 
     /******************************************************************************************************************************/
+    /*** Invariants Removed                                                                                                     ***/
+    /*******************************************************************************************************************************
+
+    * Pool
+        * Invariant F: balanceOfAssets[user] >= balanceOf[user]
+
+    *******************************************************************************************************************************/
+
+    /******************************************************************************************************************************/
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                       ***/
     /******************************************************************************************************************************/
 
-    function invariant_loan_A_B_C_loanManager_L_M_N() external useCurrentTimestamp {
+    function invariant_loan_A_B_loanManager_L_M_N() external useCurrentTimestamp {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
             address loan = loanHandler.activeLoans(i);
+
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
             assert_loan_invariant_C(loan);
@@ -111,8 +122,6 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
 
             sumBalanceOfAssets += pool.balanceOfAssets(holder);
             sumBalanceOf       += pool.balanceOf(holder);
-
-            assert_pool_invariant_F(holder);
         }
 
         assert_pool_invariant_B(sumBalanceOfAssets);
@@ -167,5 +176,3 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
     function invariant_withdrawalManager_N() external useCurrentTimestamp { assert_withdrawalManager_invariant_N(); }
 
 }
-
-

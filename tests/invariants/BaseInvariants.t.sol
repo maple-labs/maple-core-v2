@@ -8,7 +8,7 @@ import { IMapleLoanFeeManager }            from "../../modules/loan/contracts/in
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
 import { LoanHandler } from "./actors/LoanHandler.sol";
-import { LpHander }    from "./actors/LpHandler.sol";
+import { LpHandler }   from "./actors/LpHandler.sol";
 
 contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
@@ -17,7 +17,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     /******************************************************************************************************************************/
 
     LoanHandler loanHandler;
-    LpHander    lpHandler;
+    LpHandler   lpHandler;
 
     uint256 setTimestamps;
 
@@ -131,9 +131,13 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         IMapleLoan           loan       = IMapleLoan(loan_);
         IMapleLoanFeeManager feeManager = IMapleLoanFeeManager(loan.feeManager());
 
+        // The loan is matured or repossessed, the invariant will underflow because delegateOriginationFee > 0
+        if (loan.nextPaymentDueDate() == 0) return;
+
         uint256 platformOriginationFee = feeManager.getPlatformOriginationFee(address(loan), loan.principalRequested());
         uint256 fundedAmount           = loan.principal() - feeManager.delegateOriginationFee(address(loan)) - platformOriginationFee;
 
+        // If there is outstanding principal and the loan is not matured/defaulted
         if (loan.drawableFunds() < fundedAmount) {
             assertGe(loan.collateral(), loan.collateralRequired() * (fundedAmount - loan.drawableFunds()) / fundedAmount, "Loan Invariant C");
         }
@@ -501,8 +505,6 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
     function getAllOutstandingInterest() public returns (uint256 sumOutstandingInterest_) {
         for (uint256 i = 0; i < loanHandler.numLoans(); i++) {
-
-            // console.log("loan", i);
 
             assertTrue(loanHandler.earliestPaymentDueDate() == loanManager.domainEnd());
 
