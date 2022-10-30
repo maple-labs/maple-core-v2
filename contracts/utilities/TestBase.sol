@@ -250,6 +250,11 @@ contract TestBase is TestUtils {
         }));
     }
 
+    function defaultLoan(Loan loan) internal {
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+    }
+
     function depositCover(uint256 cover) internal {
         vm.startPrank(poolDelegate);
         fundsAsset.approve(address(poolManager), cover);
@@ -293,6 +298,11 @@ contract TestBase is TestUtils {
         collateralAsset.mint(address(loan), amounts[0]);
         loan.drawdownFunds(loan.drawableFunds(), borrower);
         vm.stopPrank();
+    }
+
+    function impairLoan(Loan loan) internal {
+        vm.prank(poolDelegate);
+        poolManager.impairLoan(address(loan));
     }
 
     function makePayment(Loan loan) internal {
@@ -362,14 +372,6 @@ contract TestBase is TestUtils {
     function redeem(address lp, uint256 amount) internal returns (uint256 assets_) {
         vm.prank(lp);
         assets_ = pool.redeem(amount, lp, lp);
-    }
-
-    function updateWithdrawal(address lp, uint256 sharesToTransfer) internal {
-        // TODO
-    }
-
-    function withdraw(address lp, uint256 sharesToTransfer) internal {
-        // TODO
     }
 
 }
