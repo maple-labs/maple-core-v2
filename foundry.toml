@@ -40,5 +40,5 @@ fail_on_revert = true  # Fail the test if the contract reverts
 fuzz_runs = 5000
 
 [profile.super_deep.invariant]
-runs  = 500  # The number of calls to make in the invariant tests
-depth = 500  # The number of times to run the invariant tests
+runs  = 200  # The number of calls to make in the invariant tests
+depth = 250  # The number of times to run the invariant tests
