@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, console  } from "../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
+import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
 
-import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
-import { LoanActionGenerator } from "../contracts/actions/LoanActionGenerator.sol";
+import { LoanActionGenerator } from "../../contracts/actions/LoanActionGenerator.sol";
 
-import { ActionHandler } from "../contracts/ActionHandler.sol";
-import { LoanScenario  } from "../contracts/LoanScenario.sol";
+import { ActionHandler } from "../../contracts/ActionHandler.sol";
+import { LoanScenario  } from "../../contracts/LoanScenario.sol";
 
-import { ILoanLike, ILoanActionLike } from "../contracts/interfaces/Interfaces.sol";
+import { ILoanLike, ILoanActionLike } from "../../contracts/interfaces/Interfaces.sol";
 
 contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertions {
 

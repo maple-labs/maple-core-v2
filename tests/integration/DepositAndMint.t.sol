@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, console   } from "../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 as Asset } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { Address, console   } from "../../modules/contract-test-utils/contracts/test.sol";
+import { MockERC20 as Asset } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
-import { TestBase } from "../contracts/utilities/TestBase.sol";
+import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract EnterBase is TestBase {
 

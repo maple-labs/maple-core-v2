@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, console   } from "../modules/contract-test-utils/contracts/test.sol";
-import { IMapleProxyFactory } from "../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
-import { LoanManager        } from "../modules/pool-v2/contracts/LoanManager.sol";
-import { PoolManager        } from "../modules/pool-v2/contracts/PoolManager.sol";
-import { WithdrawalManager  } from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import { Address, console   } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IMapleProxyFactory } from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { LoanManager        } from "../../modules/pool-v2/contracts/LoanManager.sol";
+import { PoolManager        } from "../../modules/pool-v2/contracts/PoolManager.sol";
+import { WithdrawalManager  } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 
-import { TestBase } from "../contracts/utilities/TestBase.sol";
+import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract LoanManagerUpgradeTests is TestBase {
 
@@ -556,5 +556,5 @@ contract UnscheduleCallTests is TestBase {
 
         assertTrue(!globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs));
     }
-    
+
 }

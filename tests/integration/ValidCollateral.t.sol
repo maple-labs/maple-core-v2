@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestBase } from "../contracts/utilities/TestBase.sol";
+import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
-import { Address } from "../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan                       } from "../modules/loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory         } from "../modules/loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanInitializer as LoanInitializer } from "../modules/loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoan as Loan                       } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory as LoanFactory         } from "../../modules/loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan/contracts/MapleLoanInitializer.sol";
 
 contract ValidCollateralTests is TestBase {
 

@@ -1,8 +1,8 @@
 pragma solidity 0.8.7;
 
-import { TestBase } from "../contracts/utilities/TestBase.sol";
+import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
-import { Address  } from "../modules/contract-test-utils/contracts/test.sol";
+import { Address  } from "../../modules/contract-test-utils/contracts/test.sol";
 
 contract RemoveSharesTests is TestBase {
 

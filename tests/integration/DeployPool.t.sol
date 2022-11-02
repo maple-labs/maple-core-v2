@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
-import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
+import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { IMapleProxyFactory } from "../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IMapleProxyFactory } from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { ILoanManager } from "../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
-import { IPool        } from "../modules/pool-v2/contracts/interfaces/IPool.sol";
-import { IPoolManager } from "../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
+import { ILoanManager } from "../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
+import { IPool        } from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
+import { IPoolManager } from "../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
 
-import { IWithdrawalManager } from "../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
+import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
 contract DeployPoolTests is TestBaseWithAssertions {
 

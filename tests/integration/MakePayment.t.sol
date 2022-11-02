@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../contracts/utilities/TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
-import { Address, console } from "../modules/contract-test-utils/contracts/test.sol";
+import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 contract MakePaymentFailureTests is TestBaseWithAssertions {
 
@@ -50,10 +50,10 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
         uint256 fullPayment = principalPortion + interestPortion + feesPortion;
 
         // mint to borrower
-        fundsAsset.mint(borrower, fullPayment);  
+        fundsAsset.mint(borrower, fullPayment);
 
         vm.prank(borrower);
-        fundsAsset.approve(address(loan), fullPayment - 1);      
+        fundsAsset.approve(address(loan), fullPayment - 1);
 
         vm.expectRevert("ML:MP:TRANSFER_FROM_FAILED");
         loan.makePayment(fullPayment);
@@ -63,7 +63,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
         (uint256 principalPortion, uint256 interestPortion, uint256 feesPortion) = loan.getNextPaymentBreakdown();
 
         // mint to loan, not including fees
-        fundsAsset.mint(address(loan), principalPortion + interestPortion + feesPortion - 1);        
+        fundsAsset.mint(address(loan), principalPortion + interestPortion + feesPortion - 1);
 
         vm.prank(borrower);
         vm.expectRevert(ARITHMETIC_ERROR);  // NOTE: When there's not enough balance, the tx fails in the ERC20 with an underflow rather than on the ERC20-helper library with the error message.
