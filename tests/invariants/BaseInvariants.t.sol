@@ -71,7 +71,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         * Invariant H: convertToExitShares == convertToShares
         * Invariant I: totalAssets == poolManager.totalAssets()
         * Invariant J: unrealizedLosses == poolManager.unrealizedLosses()
-        * Invariant K: convertToExitShares == poolManager.converToExitShares()
+        * Invariant K: convertToExitShares == poolManager.convertToExitShares()
 
      PoolManager (non-liquidating)
         * Invariant A: totalAssets == cash + ∑assetsUnderManagement[loanManager]
@@ -106,7 +106,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         * refinanceInterest
 
         fund
-        * Treausry balance increases
+        * Treasury balance increases
         * PD balance increases if cover
         * payment management rates equal current rates
         * domainStart == block.timestamp
@@ -194,7 +194,8 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_loanManager_invariant_F() internal {
-        assertLe(loanManager.unrealizedLosses(), loanManager.assetsUnderManagement(), "LoanManager Invariant F");
+        assertLe(loanManager.unrealizedLosses(), loanManager.assetsUnderManagement() + 1, "LoanManager Invariant F");
+        // NOTE: To account for precision errors for unrealizedLosses(), we add 1 to the AUM
     }
 
     function assert_loanManager_invariant_G() internal {
@@ -424,6 +425,11 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
         if (loan.nextPaymentDueDate() == 0) return 0;
 
+        if (loan.isImpaired()) {
+            ( , , uint256 regularInterest , , , ) = loanManager.liquidationInfo(loan_);
+            return regularInterest;
+        }
+
         ( , uint256[3] memory interestArray, ) = loan.getNextPaymentDetailedBreakdown();
 
         uint256 fundingTime      = loanHandler.fundingTime(loan_);
@@ -514,8 +520,13 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
     function getSumIssuanceRates() public view returns (uint256 sumIssuanceRate_) {
         for (uint256 i = 0; i < loanHandler.numLoans(); i++) {
-            ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loanHandler.activeLoans(i))));
+            address loan_ = loanHandler.activeLoans(i);
+            ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(loan_));
             sumIssuanceRate_ += issuanceRate;
+
+            if (IMapleLoan(loan_).isImpaired()) {
+                sumIssuanceRate_ -= issuanceRate;  // If the loan is impaired the issuance rate is 0
+            }
         }
     }
 
