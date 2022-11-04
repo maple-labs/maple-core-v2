@@ -396,4 +396,387 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     }
 
+    // Test 12
+    function test_poolScenario_loanWithVeryHighInterestRate() external {
+        address lp1 = address(new Address());
+
+        depositLiquidity(lp1, 4_000_000e6);
+
+        assertTotalAssets(4_000_000e6);
+        assertEq(pool.balanceOf(lp1), 4_000_000e6);
+
+        // This loan will be funded and then never interacted with again.
+        Loan loan1 = fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e30), uint256(0.1e18), uint256(0), uint256(0)]
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          90_000_000_000e6 * 1e30,
+            domainStart:           start,
+            domainEnd:             start + 1_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 90_000_000_000_000_000e6,
+            refinanceInterest:   0,
+            issuanceRate:        90_000_000_000e6 * 1e30,
+            startDate:           start,
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  100_000_000_000_000_000e6,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 1_000_000,
+            paymentsRemaining: 3
+        });
+
+        assertTotalAssets(4_000_000e6);
+
+        vm.warp(start + 800_000);
+
+        assertTotalAssets(4_000_000e6 + 72_000_000_000_000_000e6);
+
+        // Although the values here don't revert, if they were a bit higher, they would in the `getNextPaymentBreakdown` function
+        // Currently, the way out of the situation would be to either:
+        // 1. Refinance using a custom refinancer that can manually alter the storage of the interest rate.
+        // 2. Close the loan, paying only the closing interest.
+
+        closeLoan(loan1);
+
+        // TotalAssets went down due to the loan closure.
+        assertTotalAssets(4_000_000e6 + 90_000e6); // 1% of 1_000_000e6, removing management fees
+
+        // Loan Manager should be in a coherent state
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          0,
+            assetsUnderManagement: 0,
+            issuanceRate:          0,
+            domainStart:           start + 800_000,
+            domainEnd:             start + 800_000,
+            unrealizedLosses:      0
+        });
+
+        assertLoanInfoWasDeleted(loan1);
+    }
+
+    // Test 13
+    function test_poolScenario_loanWithZeroInterestRate() external {
+        address lp1 = address(new Address());
+
+        depositLiquidity(lp1, 4_000_000e6);
+
+        assertTotalAssets(4_000_000e6);
+        assertEq(pool.balanceOf(lp1), 4_000_000e6);
+
+        // This loan will be funded and then never interacted with again.
+        Loan loan1 = fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)]
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0,
+            domainStart:           start,
+            domainEnd:             start + 1_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           start,
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  0,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 1_000_000,
+            paymentsRemaining: 3
+        });
+
+        assertTotalAssets(4_000_000e6);
+
+        // Perform early payment
+        vm.warp(start + 800_000);
+
+        assertTotalAssets(4_000_000e6);
+
+        makePayment(loan1);
+
+        assertTotalAssets(4_000_000e6);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0,
+            domainStart:           start + 800_000,
+            domainEnd:             start + 2_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           start + 800_000,
+            paymentDueDate:      start + 2_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  0,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 2_000_000,
+            paymentsRemaining: 2
+        });
+
+        // Second payment will be made late
+        vm.warp(start + 2_100_000);
+
+        assertTotalAssets(4_000_000e6);
+
+        makePayment(loan1);
+
+        assertTotalAssets(4_000_000e6 + 9_000e6); // 1 day worth of late interest
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0,
+            domainStart:           start + 2_100_000,
+            domainEnd:             start + 3_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           start + 2_000_000,
+            paymentDueDate:      start + 3_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 1_000_000e6,
+            incomingInterest:  0,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 3_000_000,
+            paymentsRemaining: 1
+        });
+
+        vm.warp(start + 2_900_000);
+
+        makePayment(loan1);
+
+        assertTotalAssets(4_000_000e6 + 9_000e6); // 1 day worth of late interest
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          0,
+            assetsUnderManagement: 0,
+            issuanceRate:          0,
+            domainStart:           start + 2_900_000,
+            domainEnd:             start + 2_900_000,
+            unrealizedLosses:      0
+        });
+    }
+
+    // Test 14
+    function test_poolScenario_loanWithZeroInterestRateAndDefaultWithCover() external {
+        depositCover({ cover: 200_000e6 });
+
+        vm.prank(governor);
+        globals.setMaxCoverLiquidationPercent(address(poolManager), 0.5e6);
+
+        address lp1 = address(new Address());
+
+        depositLiquidity(lp1, 4_000_000e6);
+
+        assertTotalAssets(4_000_000e6);
+        assertEq(pool.balanceOf(lp1), 4_000_000e6);
+
+        // This loan will be funded and then never interacted with again.
+        Loan loan1 = fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)]
+        });
+
+        // Burn to reset fee assertions
+        fundsAsset.burn(treasury,     fundsAsset.balanceOf(treasury));
+        fundsAsset.burn(poolDelegate, fundsAsset.balanceOf(poolDelegate));
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0,
+            domainStart:           start,
+            domainEnd:             start + 1_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           start,
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  0,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 1_000_000,
+            paymentsRemaining: 3
+        });
+
+        assertTotalAssets(4_000_000e6);
+
+        // Perform late payment
+        vm.warp(start + 1_100_000);
+
+        address poolCover = address(poolManager.poolDelegateCover());
+
+        uint256 initialCover = fundsAsset.balanceOf(poolCover);
+
+        assertEq(fundsAsset.balanceOf(poolCover),     200_000e6);
+        assertEq(fundsAsset.balanceOf(treasury),      0);
+        assertEq(fundsAsset.balanceOf(poolDelegate),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6);
+
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan1), address(liquidatorFactory));
+
+        // No management fee to recover since interest rate is zero.
+        uint256 platformServiceFee    = uint256(1_000_000e6) * 0.31536e6 * 1_000_000 seconds / 1e6 / 365 days;
+        uint256 platformManagementFee = uint256(1_000_000e6) * 0.01e6 * 0.08e6 / 1e6 / 1e6;  // 1% flat late fee, net
+
+        assertEq(platformServiceFee,    10_000e6);
+        assertEq(platformManagementFee, 800e6);
+
+        assertEq(fundsAsset.balanceOf(poolCover),     100_000e6);
+        assertEq(fundsAsset.balanceOf(treasury),      10_800e6);  // Both platform fees are recovered first, remainder goes to pool
+        assertEq(fundsAsset.balanceOf(poolDelegate),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6 + 100_000e6 - 10_800e6);  // Remaining cover goes to pool, up to 50%
+
+        assertTotalAssets(3_000_000e6 + 100_000e6 - 10_800e6);
+
+        assertLoanInfoWasDeleted(loan1);
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         0,
+            refinanceInterest: 0,
+            paymentDueDate:    0,
+            paymentsRemaining: 0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           0,
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
+        });
+
+        assertLiquidationInfo({
+            loan:                loan1,
+            principal:           0,
+            interest:            0,
+            lateInterest:        0,
+            platformFees:        0,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        uint256 finalCover = fundsAsset.balanceOf(address(poolManager.poolDelegateCover()));
+
+        assertEq(initialCover, 200_000e6);
+        assertEq(finalCover,   100_000e6);
+    }
+
+    // Test 15
+    function test_poolScenario_intendToWithdrawAndChangeWMToZero() external {
+        address lp1 = address(new Address());
+
+        depositLiquidity(lp1, 4_000_000e6);
+
+        assertTotalAssets(4_000_000e6);
+        assertEq(pool.balanceOf(lp1), 4_000_000e6);
+
+        vm.prank(lp1);
+        pool.requestRedeem(2_000_000e6, lp1); // Request half of the shares
+
+        vm.prank(poolDelegate);
+        poolManager.setWithdrawalManager(address(0));
+
+        vm.warp(start + 2 weeks);
+
+        vm.prank(lp1);
+        try pool.redeem(2_000_000e6, lp1, lp1) { assertTrue(false, "Did not fail" ); } catch { }
+    }
+
 }
