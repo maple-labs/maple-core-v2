@@ -318,7 +318,7 @@ contract RequestWithdrawFailureTests is TestBase {
     }
 
     function test_requestWithdraw_failIfZeroShares() external {
-        vm.expectRevert("P:RR:ZERO_SHARES");
+        vm.expectRevert("WM:AS:NO_OP");
         pool.requestWithdraw(0, lp);
     }
 

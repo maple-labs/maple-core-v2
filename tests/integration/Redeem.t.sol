@@ -44,6 +44,44 @@ contract RequestRedeemTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
     }
 
+    function test_requestRedeem_refresh() external {
+        depositLiquidity(lp, 1_000e6);
+
+        vm.startPrank(lp);
+
+        assertEq(pool.balanceOf(lp), 1_000e6);
+        assertEq(pool.balanceOf(wm), 0);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+
+        uint256 shares = pool.requestRedeem(1_000e6, lp);
+
+        assertEq(shares, 1_000e6);
+
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 1_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+
+        vm.warp(start + 2 weeks);
+
+        shares = pool.requestRedeem(0, lp);
+
+        assertEq(shares, 0);
+
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 1_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     5);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(withdrawalManager.totalCycleShares(5), 1_000e6);
+    }
+
     function test_requestRedeem_withApproval() external {
         depositLiquidity(lp, 1_000e6);
 
@@ -600,7 +638,7 @@ contract RequestRedeemFailureTests is TestBase {
 
     function test_requestRedeem_failIfZeroShares() external {
         vm.prank(lp);
-        vm.expectRevert("P:RR:ZERO_SHARES");
+        vm.expectRevert("WM:AS:NO_OP");
         pool.requestRedeem(0, lp);
     }
 
