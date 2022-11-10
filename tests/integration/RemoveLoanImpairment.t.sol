@@ -62,7 +62,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
 
     function test_removeLoanImpairment_notImpaired() external {
         vm.prank(address(poolDelegate));
-        vm.expectRevert("ML:RLI:NOT_IMPAIRED");
+        vm.expectRevert("LM:RLI:PAST_DATE");
         poolManager.removeLoanImpairment(address(loan));
     }
 
@@ -72,7 +72,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
 
         vm.warp(start + 30 days + 1);
         vm.prank(address(poolDelegate));
-        vm.expectRevert("ML:RLI:PAST_DATE");
+        vm.expectRevert("LM:RLI:PAST_DATE");
         poolManager.removeLoanImpairment(address(loan));
 
         vm.warp(start + 30 days);

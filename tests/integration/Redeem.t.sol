@@ -686,7 +686,7 @@ contract RedeemFailureTests is TestBase {
 
     function test_redeem_failIfNotPoolManager() external {
         vm.expectRevert("WM:PE:NOT_PM");
-        withdrawalManager.processExit(address(lp), 1_000e6);
+        withdrawalManager.processExit(1_000e6, address(lp));
     }
 
     function test_redeem_failWithInvalidAmountOfShares() external {
@@ -704,7 +704,7 @@ contract RedeemFailureTests is TestBase {
     }
 
     function test_redeem_failIfNoRequest() external {
-        vm.expectRevert("WM:PR:NO_REQUEST");
+        vm.expectRevert("WM:PE:NO_REQUEST");
         pool.redeem(0, lp, lp);
     }
 
@@ -715,13 +715,13 @@ contract RedeemFailureTests is TestBase {
 
         vm.warp(start + 1 weeks);
 
-        vm.expectRevert("WM:PR:NOT_IN_WINDOW");
+        vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.redeem(1_000e6, lp, lp);
 
         // Warping to a second after window close
         vm.warp(start + 1 weeks + 2 days + 1);
 
-        vm.expectRevert("WM:PR:NOT_IN_WINDOW");
+        vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.redeem(1_000e6, lp, lp);
     }
 

@@ -366,7 +366,7 @@ contract WithdrawFailureTests is TestBase {
 
     function test_withdraw_failIfNotPoolManager() external {
         vm.expectRevert("WM:PE:NOT_PM");
-        withdrawalManager.processExit(address(lp), 1_000e6);
+        withdrawalManager.processExit(1_000e6, address(lp));
     }
 
     function test_withdraw_failWithInvalidAmountOfShares() external {
@@ -384,7 +384,7 @@ contract WithdrawFailureTests is TestBase {
     }
 
     function test_withdraw_failIfNoRequest() external {
-        vm.expectRevert("WM:PR:NO_REQUEST");
+        vm.expectRevert("WM:PE:NO_REQUEST");
         pool.withdraw(0, lp, lp);
     }
 
@@ -395,13 +395,13 @@ contract WithdrawFailureTests is TestBase {
 
         vm.warp(start + 1 weeks);
 
-        vm.expectRevert("WM:PR:NOT_IN_WINDOW");
+        vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.withdraw(1_000e6, lp, lp);
 
         // Warping to a second after window close
         vm.warp(start + 1 weeks + 2 days + 1);
 
-        vm.expectRevert("WM:PR:NOT_IN_WINDOW");
+        vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.withdraw(1_000e6, lp, lp);
     }
 

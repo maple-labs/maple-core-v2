@@ -394,14 +394,12 @@ contract PreviewRedeemTests is TestBase {
         vm.startPrank(lp1);
         pool.requestRedeem(1_000e6, lp1);
 
-        vm.expectRevert("WM:PR:INVALID_SHARES");
-        pool.previewRedeem(1);
+        assertEq(pool.previewRedeem(1), 0);
     }
 
     function test_previewRedeem_noLockedShares_notInExitWindow() external {
         vm.prank(lp1);
-        vm.expectRevert("WM:PR:NO_REQUEST");
-        pool.previewRedeem(0);
+        assertEq(pool.previewRedeem(0), 0);
     }
 
     function test_previewRedeem_lockedShares_notInExitWindow() external {
@@ -412,8 +410,7 @@ contract PreviewRedeemTests is TestBase {
 
         vm.warp(start + 2 weeks - 1);
 
-        vm.expectRevert("WM:PR:NOT_IN_WINDOW");
-        pool.previewRedeem(1_000e6);
+        assertEq(pool.previewRedeem(1_000e6), 0);
     }
 
     function test_previewRedeem_lockedShares_inExitWindow() external {
@@ -445,16 +442,14 @@ contract PreviewWithdrawTests is TestBase {
         vm.startPrank(lp1);
         pool.requestWithdraw(1_000e6, lp1);
 
-        vm.expectRevert("WM:PW:NOT_ENABLED");
-        pool.previewWithdraw(1);
+        assertEq(pool.previewWithdraw(1), 0);
     }
 
     function test_previewWithdraw_noLockedShares_notInExitWindow_notEnabled() external {
         depositLiquidity(lp1, 1_000e6);
 
         vm.prank(lp1);
-        vm.expectRevert("WM:PW:NOT_ENABLED");
-        pool.previewWithdraw(0);
+        assertEq(pool.previewWithdraw(0), 0);
     }
 
     function test_previewWithdraw_lockedShares_notInExitWindow_notEnabled() external {
@@ -465,8 +460,7 @@ contract PreviewWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks - 1);
 
-        vm.expectRevert("WM:PW:NOT_ENABLED");
-        pool.previewWithdraw(1_000e6);
+        assertEq(pool.previewWithdraw(1_000e6), 0);
     }
 
     function test_previewWithdraw_lockedShares_inExitWindow_notEnabled() external {
@@ -477,8 +471,7 @@ contract PreviewWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        vm.expectRevert("WM:PW:NOT_ENABLED");
-        pool.previewWithdraw(1_000e6);
+        assertEq(pool.previewWithdraw(1_000e6), 0);  // Note: Will always return 0 as not enabled
     }
 
 }
