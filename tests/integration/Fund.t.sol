@@ -184,8 +184,6 @@ contract FundTests is TestBaseWithAssertions {
         // Add unaccounted funds.
         fundsAsset.mint(address(loan), 13_500e6);
 
-        assertEq(poolManager.loanManagers(address(loan)), address(0));
-
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.domainEnd(),                  0);
         assertEq(loanManager.domainStart(),                0);
@@ -241,8 +239,6 @@ contract FundTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
 
-        assertEq(poolManager.loanManagers(address(loan)), address(loanManager));
-
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.domainEnd(),                  start + 1_000_000);
         assertEq(loanManager.domainStart(),                start);
@@ -296,8 +292,6 @@ contract FundTests is TestBaseWithAssertions {
     }
 
     function test_fund_oneLoan() external {
-        assertEq(poolManager.loanManagers(address(loan)), address(0));
-
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.domainEnd(),                  0);
         assertEq(loanManager.domainStart(),                0);
@@ -352,8 +346,6 @@ contract FundTests is TestBaseWithAssertions {
         // Fund the loan.
         vm.prank(poolDelegate);
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
-
-        assertEq(poolManager.loanManagers(address(loan)), address(loanManager));
 
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.domainEnd(),                  start + 1_000_000);
@@ -411,8 +403,6 @@ contract FundTests is TestBaseWithAssertions {
         // Fund the first loan.
         vm.prank(poolDelegate);
         poolManager.fund(uint256(1_500_000e6), address(loan), address(loanManager));
-
-        assertEq(poolManager.loanManagers(address(loan)), address(loanManager));
 
         assertEq(loanManager.paymentIdOf(address(loan)), 1);
 
@@ -473,9 +463,6 @@ contract FundTests is TestBaseWithAssertions {
         vm.warp(start + 1_000);
         vm.prank(poolDelegate);
         poolManager.fund(uint256(750_000e6), address(loan2), address(loanManager));
-
-        assertEq(poolManager.loanManagers(address(loan)),  address(loanManager));
-        assertEq(poolManager.loanManagers(address(loan2)), address(loanManager));
 
         assertEq(loanManager.paymentIdOf(address(loan)),  1);
         assertEq(loanManager.paymentIdOf(address(loan2)), 2);

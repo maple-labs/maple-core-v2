@@ -260,7 +260,7 @@ contract LiquidityMigrationTest is TestUtils, AddressRegistry {
 
         // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
         vm.startPrank(migrationMultisig);
-        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps);
+        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, 100e6);
 
         assertPoolAccounting(poolManager, loans, loansAddedTimestamp);
 

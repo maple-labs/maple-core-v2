@@ -43,6 +43,7 @@ contract TestBase is TestUtils {
     address governor;
     address poolDelegate;
     address treasury;
+    address migrationAdmin;
 
     address liquidatorFactory;
     address loanFactory;
@@ -98,9 +99,10 @@ contract TestBase is TestUtils {
     /********************************/
 
     function _createAccounts() internal {
-        governor     = address(new Address());
-        poolDelegate = address(new Address());
-        treasury     = address(new Address());
+        governor       = address(new Address());
+        poolDelegate   = address(new Address());
+        treasury       = address(new Address());
+        migrationAdmin = address(new Address());
     }
 
     function _createAssets() internal {
@@ -160,6 +162,7 @@ contract TestBase is TestUtils {
 
         vm.startPrank(governor);
         globals.setMapleTreasury(treasury);
+        globals.setMigrationAdmin(migrationAdmin);
         globals.setSecurityAdmin(governor);
         globals.setValidPoolAsset(address(fundsAsset), true);
         globals.setValidCollateralAsset(address(collateralAsset), true);
