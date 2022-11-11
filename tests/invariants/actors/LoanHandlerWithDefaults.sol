@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { console }       from "../../../modules/contract-test-utils/contracts/test.sol";
 import { IMapleGlobals } from "../../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
-import { IMapleLoan }    from "../../../modules/loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoan }    from "../../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
 import { ILiquidator }   from "../../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
 import { LoanHandler } from "./LoanHandler.sol";

@@ -8,8 +8,8 @@ import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
 import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan as Loan }    from "../../modules/loan/contracts/MapleLoan.sol";
-import { MapleLoanInitializer } from "../../modules/loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoan as Loan }    from "../../modules/loan-v401/contracts/MapleLoan.sol";
+import { MapleLoanInitializer } from "../../modules/loan-v401/contracts/MapleLoanInitializer.sol";
 
 import { ILoanManagerInitializer } from "../../modules/pool-v2/contracts/interfaces/ILoanManagerInitializer.sol";
 import { IMapleProxyFactory }      from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
@@ -120,7 +120,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.expectRevert("MPF:CI:FAILED");  // NOTE: Protocol paused error will not bubble up
         IMapleProxyFactory(loanFactory).createInstance(arguments, salt_);
-        
+
         /******************************************************************************************************************************/
         /*** Pool                                                                                                                   ***/
         /******************************************************************************************************************************/

@@ -21,6 +21,8 @@ interface IERC20Like {
 
     function balanceOf(address account_) external view returns(uint256);
 
+    function decimals() external view returns (uint8 decimals_);
+
     function transfer(address to_, uint256 amount) external returns (bool success_);
 
 }
@@ -41,19 +43,23 @@ interface IMapleProxyFactoryLike {
 
     function implementationOf(uint256 version_) external view returns (address implementation_);
 
+    function setDefaultVersion(uint256 version_) external;
+
+    function setGlobals(address globals_) external;
+
     function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
 
     function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
 
     function versionOf(address implementation_) external view returns (uint256 version_);
 
-    function setDefaultVersion(uint256 version_) external;
-
 }
 
 interface IMapleGlobalsLike {
 
     function setPriceOracle(address asset, address oracle) external;
+
+    function setProtocolPause(bool pause) external;
 
 }
 
@@ -148,6 +154,8 @@ interface IPoolLike {
 
 interface IPoolManagerLike {
 
+    function acceptPendingPoolDelegate() external;
+
     function asset() external view returns (address asset_);
 
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
@@ -160,6 +168,8 @@ interface IPoolManagerLike {
 
     function setOpenToPublic() external;
 
+    function setPendingPoolDelegate(address pendingPoolDelegate_) external;
+
     function totalAssets() external view returns (uint256 totalAssets_);
 
 }
@@ -171,8 +181,10 @@ interface IStakeLockerLike {
     function custodyAllowance(address from, address custodian) external view returns(uint256);
 
     function intendToUnstake() external;
-   
+
     function isUnstakeAllowed(address from) external view returns (bool);
+
+    function pool() external view returns (address);
 
     function recognizableLossesOf(address) external view returns (uint256);
 
@@ -189,6 +201,8 @@ interface IStakeLockerLike {
 interface ITransitionLoanManagerLike {
 
     function add(address loan_) external;
+
+    function domainEnd() external view returns (uint256 domainEnd_);
 
     function principalOut() external view returns (uint256 principalOut_);
 

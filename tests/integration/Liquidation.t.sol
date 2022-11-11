@@ -6,7 +6,7 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
 import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 contract LoanLiquidationTests is TestBaseWithAssertions {
 

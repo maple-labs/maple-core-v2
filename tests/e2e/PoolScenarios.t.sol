@@ -5,8 +5,8 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { Refinancer }        from "../../modules/loan/contracts/Refinancer.sol";
-import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { Refinancer }        from "../../modules/loan-v401/contracts/Refinancer.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 contract PoolScenarioTests is TestBaseWithAssertions {
 

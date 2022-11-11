@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { IMapleLoan } from "../../../modules/loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoan } from "../../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
 
 contract SkimmerBase {
 

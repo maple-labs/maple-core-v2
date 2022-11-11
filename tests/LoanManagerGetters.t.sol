@@ -4,10 +4,10 @@ pragma solidity 0.8.7;
 import { TestBase } from "../contracts/utilities/TestBase.sol";
 
 import { Address }           from "../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan as Loan } from "../modules/loan-v401/contracts/MapleLoan.sol";
 
 contract LoanManagerGetterTests is TestBase {
-    
+
     Loan loan;
 
     function setUp() public override {
@@ -48,7 +48,7 @@ contract LoanManagerGetterTests is TestBase {
         assertEq(loanManager.principalOut(),               1_000_000e6);
         assertEq(loanManager.unrealizedLosses(),           0);
     }
-    
+
     function test_loanManagerGetters_liquidationInformation() external {
         // Returns false when loan has not yet defaulted.
         assertTrue(!loanManager.isLiquidationActive(address(loan)));
@@ -80,14 +80,14 @@ contract LoanManagerGetterTests is TestBase {
     function test_loanManagerGetters_paymentInformation() external {
         assertEq(loanManager.paymentIdOf(address(loan)), 1);
 
-        (   
+        (
             uint24  platformManagementFeeRate,
             uint24  delegateManagementFeeRate,
-            uint48  startDate,                
-            uint48  paymentDueDate,           
-            uint128 incomingNetInterest,      
-            uint128 refinanceInterest,        
-            uint256 issuanceRate 
+            uint48  startDate,
+            uint48  paymentDueDate,
+            uint128 incomingNetInterest,
+            uint128 refinanceInterest,
+            uint256 issuanceRate
         ) = loanManager.payments(1);
 
             assertEq(platformManagementFeeRate, 0);

@@ -4,7 +4,7 @@ pragma solidity 0.8.7;
 import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 contract RequestRedeemTests is TestBase {
 
@@ -634,12 +634,6 @@ contract RequestRedeemFailureTests is TestBase {
 
         vm.expectRevert(ARITHMETIC_ERROR);
         pool.requestRedeem(1_000e6, lp);
-    }
-
-    function test_requestRedeem_failIfZeroShares() external {
-        vm.prank(lp);
-        vm.expectRevert("WM:AS:NO_OP");
-        pool.requestRedeem(0, lp);
     }
 
     function test_requestRedeem_failIfNotPool() external {

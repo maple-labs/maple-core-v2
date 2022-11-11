@@ -2,10 +2,6 @@
 	path = modules/contract-test-utils
 	url = git@github.com:maple-labs/contract-test-utils.git
 	ignore = dirty
-[submodule "modules/loan"]
-	path = modules/loan
-	url = git@github.com:maple-labs/loan.git
-	ignore = dirty
 [submodule "modules/withdrawal-manager"]
 	path = modules/withdrawal-manager
 	url = git@github.com:maple-labs/withdrawal-manager.git
@@ -25,20 +21,24 @@
 [submodule "modules/migration-helpers"]
 	path = modules/migration-helpers
 	url = git@github.com:maple-labs/migration-helpers
-[submodule "modules/contract-test-utils"]
-	path = modules/contract-test-utils
-	url = git@github.com:maple-labs/contract-test-utils.git
 [submodule "modules/pool-v2"]
 	path = modules/pool-v2
 	url = git@github.com:maple-labs/pool-v2.git
-[submodule "modules/loan-v301"]
-	path = modules/loan-v301
-	url = git@github.com:maple-labs/loan
-	branch = v3.01
 [submodule "modules/liquidations"]
 	path = modules/liquidations
 	url = git@github.com:maple-labs/liquidations.git
+[submodule "modules/loan-v301"]
+	path = modules/loan-v301
+	url = git@github.com:maple-labs/loan.git
+	branch = v3.01
 [submodule "modules/loan-v302"]
 	path = modules/loan-v302
-	url = git@github.com:maple-labs/loan
-	branch = v3.02
+	url = git@github.com:maple-labs/loan.git
+	branch = v3.01
+[submodule "modules/loan-v400"]
+	path = modules/loan-v400
+	url = git@github.com:maple-labs/loan.git
+[submodule "modules/loan-v401"]
+	path = modules/loan-v401
+	url = git@github.com:maple-labs/loan.git
+	branch = V4.01

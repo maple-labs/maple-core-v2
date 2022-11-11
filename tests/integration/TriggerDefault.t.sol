@@ -4,7 +4,7 @@ pragma solidity 0.8.7;
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
 import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 contract TriggerDefaultFailureTests is TestBaseWithAssertions {
 

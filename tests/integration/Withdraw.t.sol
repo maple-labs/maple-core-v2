@@ -4,7 +4,7 @@ pragma solidity 0.8.7;
 import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 contract RequestWithdrawTests is TestBase {
 
@@ -315,11 +315,6 @@ contract RequestWithdrawFailureTests is TestBase {
 
         vm.expectRevert(ARITHMETIC_ERROR);
         pool.requestWithdraw(1_000e6, lp);
-    }
-
-    function test_requestWithdraw_failIfZeroShares() external {
-        vm.expectRevert("WM:AS:NO_OP");
-        pool.requestWithdraw(0, lp);
     }
 
     function test_requestWithdraw_failIfNotPool() external {

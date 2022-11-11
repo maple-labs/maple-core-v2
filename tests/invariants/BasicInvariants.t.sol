@@ -2,8 +2,8 @@
 pragma solidity 0.8.7;
 
 import { Address, console, InvariantTest } from "../../modules/contract-test-utils/contracts/test.sol";
-import { IMapleLoan }                      from "../../modules/loan/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFeeManager }            from "../../modules/loan/contracts/interfaces/IMapleLoanFeeManager.sol";
+import { IMapleLoan }                      from "../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFeeManager }            from "../../modules/loan-v401/contracts/interfaces/IMapleLoanFeeManager.sol";
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
