@@ -1,39 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, console, TestUtils } from "../../../modules/contract-test-utils/contracts/test.sol";
+import { Address, console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { DebtLocker as DebtLockerV4 } from "../../../modules/debt-locker-v4/contracts/DebtLocker.sol";
-import { DebtLockerV4Migrator }       from "../../../modules/debt-locker-v4/contracts/DebtLockerV4Migrator.sol";
+import { DebtLocker as DebtLockerV4 } from "../../modules/debt-locker-v4/contracts/DebtLocker.sol";
+import { DebtLockerV4Migrator }       from "../../modules/debt-locker-v4/contracts/DebtLockerV4Migrator.sol";
 
-import { MapleGlobals }                           from "../../../modules/globals-v2/contracts/MapleGlobals.sol";
-import { NonTransparentProxy as MapleGlobalsNTP } from "../../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { MapleGlobals }                           from "../../modules/globals-v2/contracts/MapleGlobals.sol";
+import { NonTransparentProxy as MapleGlobalsNTP } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { MapleLoan as MapleLoanV4 }                       from "../../../modules/loan-v400/contracts/MapleLoan.sol";
-import { MapleLoanFeeManager }                            from "../../../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as MapleLoanV4Initializer } from "../../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
-import { MapleLoanV4Migrator }                            from "../../../modules/loan-v400/contracts/MapleLoanV4Migrator.sol";
+import { MapleLoan as MapleLoanV4 }                       from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoanFeeManager }                            from "../../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer as MapleLoanV4Initializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
+import { MapleLoanV4Migrator }                            from "../../modules/loan-v400/contracts/MapleLoanV4Migrator.sol";
 
-import { MapleLoan as MapleLoanV301 } from "../../../modules/loan-v301/contracts/MapleLoan.sol";
-import { MapleLoan as MapleLoanV302 } from "../../../modules/loan-v302/contracts/MapleLoan.sol";
+import { MapleLoan as MapleLoanV301 } from "../../modules/loan-v301/contracts/MapleLoan.sol";
+import { MapleLoan as MapleLoanV302 } from "../../modules/loan-v302/contracts/MapleLoan.sol";
 
-import { AccountingChecker }                         from "../../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
-import { DeactivationOracle }                        from "../../../modules/migration-helpers/contracts/DeactivationOracle.sol";
-import { MigrationHelper }                           from "../../../modules/migration-helpers/contracts/MigrationHelper.sol";
-import { NonTransparentProxy as MigrationHelperNTP } from "../../../modules/migration-helpers/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { AccountingChecker }                         from "../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
+import { DeactivationOracle }                        from "../../modules/migration-helpers/contracts/DeactivationOracle.sol";
+import { MigrationHelper }                           from "../../modules/migration-helpers/contracts/MigrationHelper.sol";
+import { NonTransparentProxy as MigrationHelperNTP } from "../../modules/migration-helpers/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { LoanManager }            from "../../../modules/pool-v2/contracts/LoanManager.sol";
-import { LoanManagerFactory }     from "../../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
-import { LoanManagerInitializer } from "../../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
-import { PoolDeployer }           from "../../../modules/pool-v2/contracts/PoolDeployer.sol";
-import { PoolManager }            from "../../../modules/pool-v2/contracts/PoolManager.sol";
-import { PoolManagerFactory }     from "../../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
-import { PoolManagerInitializer } from "../../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
-import { TransitionLoanManager }  from "../../../modules/pool-v2/contracts/TransitionLoanManager.sol";
+import { LoanManager }            from "../../modules/pool-v2/contracts/LoanManager.sol";
+import { LoanManagerFactory }     from "../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
+import { LoanManagerInitializer } from "../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
+import { PoolDeployer }           from "../../modules/pool-v2/contracts/PoolDeployer.sol";
+import { PoolManager }            from "../../modules/pool-v2/contracts/PoolManager.sol";
+import { PoolManagerFactory }     from "../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
+import { PoolManagerInitializer } from "../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
+import { TransitionLoanManager }  from "../../modules/pool-v2/contracts/TransitionLoanManager.sol";
 
-import { WithdrawalManager }            from "../../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-import { WithdrawalManagerFactory }     from "../../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
-import { WithdrawalManagerInitializer } from "../../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
+import { WithdrawalManager }            from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import { WithdrawalManagerFactory }     from "../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
+import { WithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
 import { AddressRegistry } from "./AddressRegistry.sol";
 
@@ -50,7 +50,7 @@ import {
     ITransitionLoanManagerLike
 } from "./Interfaces.sol";
 
-contract LiquidityMigrationTests is TestUtils, AddressRegistry {
+contract SimulationBase is TestUtils, AddressRegistry {
 
     address migrationMultisig = address(new Address());
 
@@ -75,79 +75,6 @@ contract LiquidityMigrationTests is TestUtils, AddressRegistry {
     mapping(address => address)        public temporaryPDs;
     mapping(address => uint256)        public loansAddedTimestamps;   // Timestamp when loans were added
     mapping(address => uint256)        public lastUpdatedTimestamps;  // Last timestamp that a LoanManager's accounting was updated
-
-    function test_liquidityMigration_approach1() external {
-        // Nov 4
-        setUpLoanV301();
-
-        // Pre-migration steps
-        // Nov 4 - Dec 5
-        upgradeLoansToV301(mavenWethLoans);
-        upgradeLoansToV301(mavenUsdcLoans);
-        upgradeLoansToV301(mavenPermissionedLoans);
-        upgradeLoansToV301(orthogonalLoans);
-        upgradeLoansToV301(icebreakerLoans);
-
-        // Dec 1
-        deployProtocol();
-
-        // Dec 3
-        payUpcomingLoans(mavenWethLoans);
-        payUpcomingLoans(mavenUsdcLoans);
-        payUpcomingLoans(mavenPermissionedLoans);
-        payUpcomingLoans(orthogonalLoans);
-        payUpcomingLoans(icebreakerLoans);
-
-        // Dec 5
-        freezePoolV1(mavenWethPoolV1,         mavenWethLoans);         // 2 hours
-        freezePoolV1(mavenUsdcPoolV1,         mavenUsdcLoans);         // 2 hours
-        freezePoolV1(mavenPermissionedPoolV1, mavenPermissionedLoans); // 2 hours
-        freezePoolV1(orthogonalPoolV1,        orthogonalLoans);        // 2 hours
-        freezePoolV1(icebreakerPoolV1,        icebreakerLoans);        // 2 hours
-
-        vm.prank(globalAdmin);
-        mapleGlobalsV1.setProtocolPause(true);
-
-        // Dec 5-7
-        mavenWethPoolManager         = deployAndMigratePool(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
-        mavenUsdcPoolManager         = deployAndMigratePool(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
-        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
-        orthogonalPoolManager        = deployAndMigratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
-        icebreakerPoolManager        = deployAndMigratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
-
-        // Dec 7
-        vm.prank(governor);
-        loanFactory.setGlobals(address(mapleGlobalsV2));  // 2min
-
-        // Dec 7
-        payBackCashLoan(address(mavenWethPoolV1),         mavenWethPoolManager,         mavenWethLoans);
-        payBackCashLoan(address(mavenUsdcPoolV1),         mavenUsdcPoolManager,         mavenUsdcLoans);
-        payBackCashLoan(address(mavenPermissionedPoolV1), mavenPermissionedPoolManager, mavenPermissionedLoans);
-        payBackCashLoan(address(orthogonalPoolV1),        orthogonalPoolManager,        orthogonalLoans);
-        payBackCashLoan(address(icebreakerPoolV1),        icebreakerPoolManager,        icebreakerLoans);
-
-        transferPoolDelegate(mavenWethPoolManager,         mavenWethPoolV1.poolDelegate());
-        transferPoolDelegate(mavenUsdcPoolManager,         mavenUsdcPoolV1.poolDelegate());
-        transferPoolDelegate(mavenPermissionedPoolManager, mavenPermissionedPoolV1.poolDelegate());
-        transferPoolDelegate(orthogonalPoolManager,        orthogonalPoolV1.poolDelegate());
-        transferPoolDelegate(icebreakerPoolManager,        icebreakerPoolV1.poolDelegate());
-
-        // Dec 8
-        vm.prank(globalAdmin);
-        mapleGlobalsV1.setProtocolPause(false);
-
-        // Dec 8
-        deprecatePoolV1(mavenWethPoolV1,         mavenWethRewards,         mavenWethStakeLocker,         125_049.87499e18);
-        deprecatePoolV1(mavenUsdcPoolV1,         mavenUsdcRewards,         mavenUsdcStakeLocker,         153.022e18);
-        deprecatePoolV1(mavenPermissionedPoolV1, mavenPermissionedRewards, mavenPermissionedStakeLocker, 16.319926286804447168e18);
-        deprecatePoolV1(orthogonalPoolV1,        orthogonalRewards,        orthogonalStakeLocker,        175.122243323160822654e18);
-        deprecatePoolV1(icebreakerPoolV1,        icebreakerRewards,        icebreakerStakeLocker,        0);
-
-        // Make cover providers withdraw
-        // TODO: Move these before and make another function to do all payments
-        withdrawCover(mavenUsdcStakeLocker,  mavenUsdcRewards,  mavenUsdcCoverProviders);
-        withdrawCover(orthogonalStakeLocker, orthogonalRewards, orthogonalCoverProviders);
-    }
 
     /******************************************************************************************************************************/
     /*** Setup Functions                                                                                                        ***/
