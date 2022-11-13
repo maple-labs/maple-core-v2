@@ -27,6 +27,16 @@ interface IERC20Like {
 
 }
 
+interface ILoanManagerLike {
+
+    function setLoanTransferAdmin(address newLoanTransferAdmin_) external;
+
+    function setOwnershipTo(address[] calldata loans_, address[] calldata newLenders_) external;
+
+    function takeOwnership(address[] calldata loans_) external;
+
+}
+
 interface IMapleProxiedLike {
 
     function factory() external view returns (address factory_);
@@ -60,6 +70,11 @@ interface IMapleGlobalsLike {
     function setPriceOracle(address asset, address oracle) external;
 
     function setProtocolPause(bool pause) external;
+}
+
+interface IMapleLoanV3Like {
+
+    function getEarlyPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 delegateFee_, uint256 treasuryFee_);
 
 }
 

@@ -40,6 +40,7 @@ import { AddressRegistry } from "./AddressRegistry.sol";
 import {
     IDebtLockerLike,
     IERC20Like,
+    ILoanManagerLike,
     IMapleGlobalsLike,
     IMapleLoanLike,
     IMapleProxiedLike,
@@ -52,7 +53,8 @@ import {
 
 contract SimulationBase is TestUtils, AddressRegistry {
 
-    address migrationMultisig = address(new Address());
+    address migrationMultisig     = address(new Address());
+    address securityAdminMultisig = address(new Address());
 
     AccountingChecker accountingChecker;
     MigrationHelper   migrationHelper;
@@ -75,6 +77,18 @@ contract SimulationBase is TestUtils, AddressRegistry {
     mapping(address => address)        public temporaryPDs;
     mapping(address => uint256)        public loansAddedTimestamps;   // Timestamp when loans were added
     mapping(address => uint256)        public lastUpdatedTimestamps;  // Last timestamp that a LoanManager's accounting was updated
+    mapping(address => address)        public loansOriginalLender;    // Store DebtLocker of loan for rollback
+
+    mapping(address => PoolState) public snapshottedPoolState;
+
+    struct PoolState {
+        uint256 cash;
+        uint256 interestSum;
+        uint256 liquidityCap;
+        uint256 poolLosses;
+        uint256 principalOut;
+        uint256 totalSupply;
+    }
 
     /******************************************************************************************************************************/
     /*** Setup Functions                                                                                                        ***/
@@ -165,6 +179,8 @@ contract SimulationBase is TestUtils, AddressRegistry {
         mapleGlobalsV2.setBootstrapMint(address(wbtc), 0.00001000e8);
         mapleGlobalsV2.setBootstrapMint(address(weth), 0.000100000000000000e18);
 
+        mapleGlobalsV2.setSecurityAdmin(securityAdminMultisig);
+
         vm.stopPrank();
     }
 
@@ -206,11 +222,19 @@ contract SimulationBase is TestUtils, AddressRegistry {
         vm.stopPrank();
     }
 
+    function configureFactoriesForPoolUnfreeze() internal {
+        // Enable upgrade paths
+        vm.startPrank(governor);
+        debtLockerFactory.enableUpgradePath(400, 300, address(0));
+        loanFactory.enableUpgradePath(302, 301, address(0));
+        vm.stopPrank();
+    }
+
     /******************************************************************************************************************************/
     /*** Migration Functions                                                                                                    ***/
     /******************************************************************************************************************************/
 
-    function payUpcomingLoans(IMapleLoanLike[] storage loans) internal {
+    function payAndClaimUpcomingLoans(IMapleLoanLike[] storage loans) internal {
         for (uint256 i; i < loans.length; ++i) {
             IMapleLoanLike loan       = loans[i];
             IERC20Like     fundsAsset = IERC20Like(loan.fundsAsset());
@@ -228,6 +252,14 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
                 fundsAsset.approve(address(loan), paymentAmount);
                 loan.makePayment(paymentAmount);
+
+                vm.stopPrank();
+
+                IDebtLockerLike debtLocker = IDebtLockerLike(loan.lender());
+
+                vm.startPrank(debtLocker.poolDelegate());
+
+                IPoolLike(debtLocker.pool()).claim(address(loan), address(debtLockerFactory));
 
                 vm.stopPrank();
             }
@@ -259,9 +291,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
         upgradeLoansToV302(loans);  // 30min (should pre-build transaction)
 
-        // TODO: If a borrower makes a payment in between the time the loan upgrades are submitted and mined,
-        //       we can revert that loan to 301 and then claim fund another migration loan.
-        // Add step to check claimable again here.
+        // TODO: Add step to check claimable again here.
 
         /***************************************************************************/
         /*** Step 5: Lock Pool withdrawals by funding a loan with remaining cash ***/
@@ -283,9 +313,6 @@ contract SimulationBase is TestUtils, AddressRegistry {
             vm.prank(globalAdmin);
             migrationLoan.upgrade(302, new bytes(0));
         }
-
-        // TODO: Upgrade to migrator loan to v302
-        // TODO: Remove borrower ACL from 301 and 302 upgrades
     }
 
     function deployAndMigratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
@@ -331,9 +358,8 @@ contract SimulationBase is TestUtils, AddressRegistry {
         /**********************************************************/
 
         // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
-        // TODO: Reduce diff
         vm.startPrank(migrationMultisig);
-        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, 100e6);
+        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, lps.length * 2);
 
         // NOTE: Failure happens here because globals v2 lacks a `delegateManagementFeeRate` needed by the AccountingChecker's `_checkAssetsUnderManagement`.
         assertPoolAccounting(poolManager, loans);
@@ -432,8 +458,31 @@ contract SimulationBase is TestUtils, AddressRegistry {
     }
 
     /******************************************************************************************************************************/
+    /*** Contingency Helpers                                                                                                    ***/
+    /******************************************************************************************************************************/
+
+    function unfreezePoolV1(IPoolLike poolV1, IMapleLoanLike[] storage loans, uint256 liquidityCap) internal {
+        configureFactoriesForPoolUnfreeze();
+
+        downgradeLoansTo301(loans);
+
+        downgradeDebtLockersTo300(poolV1, loans);
+
+        paybackMigrationLoanToPoolV1(poolV1, loans);
+
+        setLiquidityCap(poolV1, liquidityCap);
+    }
+
+    /******************************************************************************************************************************/
     /*** Utility Functions                                                                                                      ***/
     /******************************************************************************************************************************/
+
+    function assertDebtLockerVersion(uint256 version_ , IDebtLockerLike debtLocker_) internal {
+        address implementation_ = debtLockerFactory.implementationOf(version_);
+
+        assertEq(debtLocker_.implementation(),                              implementation_);
+        assertEq(debtLockerFactory.versionOf(debtLocker_.implementation()), version_);
+    }
 
     function assertFinalState() internal {
         // TODO: Add additional assertions here.
@@ -442,6 +491,19 @@ contract SimulationBase is TestUtils, AddressRegistry {
     function assertInitialState() internal {
         // TODO: Add additional assertions here.
         assertTrue(debtLockerFactory.upgradeEnabledForPath(200, 400));
+    }
+
+    function assertLoanVersion(uint256 version_,  IMapleLoanLike loan_) internal {
+        address implementation_ = loanFactory.implementationOf(version_);
+
+        assertEq(loan_.implementation(),                        implementation_);
+        assertEq(loanFactory.versionOf(loan_.implementation()), version_);
+    }
+
+    function assertLoansBelongToPool(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            assertEq(IDebtLockerLike(loans[i].lender()).pool(), address(poolV1));
+        }
     }
 
     function assertPoolAccounting(IPoolManagerLike poolManager, IMapleLoanLike[] storage loans) internal {
@@ -462,6 +524,20 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
             vm.warp(block.timestamp + 1 minutes);
         }
+    }
+
+    // This could be refactored to be a more useful function, taking in an expected difference as parameter for each variable.
+    function assertPoolMatchesSnapshotted(IPoolLike poolV1) internal {
+        PoolState storage poolState = snapshottedPoolState[(address(poolV1))];
+
+        IERC20Like poolAsset = IERC20Like(poolV1.liquidityAsset());
+
+        assertEq(poolAsset.balanceOf(poolV1.liquidityLocker()), poolState.cash);
+        assertEq(poolV1.interestSum(),                          poolState.interestSum);
+        assertEq(poolV1.liquidityCap(),                         poolState.liquidityCap);
+        assertEq(poolV1.poolLosses(),                           poolState.poolLosses);
+        assertEq(poolV1.principalOut(),                         poolState.principalOut);
+        assertEq(poolV1.totalSupply(),                          poolState.totalSupply);
     }
 
     function assertPrincipalOut(ITransitionLoanManagerLike transitionLoanManager, IMapleLoanLike[] storage loans) internal {
@@ -573,6 +649,26 @@ contract SimulationBase is TestUtils, AddressRegistry {
         poolManager = IPoolManagerLike(poolManagerAddress);
     }
 
+    function downgradeDebtLockersTo300(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            IDebtLockerLike debtLocker = IDebtLockerLike(loans[i].lender());
+
+            vm.prank(poolV1.poolDelegate());
+            debtLocker.upgrade(300, new bytes(0));
+            assertDebtLockerVersion(300, debtLocker);
+        }
+    }
+
+    function downgradeLoansTo301(IMapleLoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            address upgrader = loanFactory.versionOf(loans[i].implementation()) == 400 ? securityAdminMultisig : globalAdmin;
+
+            vm.prank(upgrader);
+            loans[i].upgrade(301, new bytes(0));
+            assertLoanVersion(301, loans[i]);
+        }
+    }
+
     function exitRewards(IMplRewardsLike rewards, IStakeLockerLike stakeLocker, address poolDelegate) internal {
         vm.startPrank(poolDelegate);
 
@@ -601,6 +697,20 @@ contract SimulationBase is TestUtils, AddressRegistry {
         poolManager.setOpenToPublic();
     }
 
+    function paybackMigrationLoanToPoolV1(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
+        IMapleLoanLike migrationLoan = migrationLoans[address(poolV1)];
+
+        // Payback Migration loan
+        if (address(migrationLoan) != address(0)) {
+            vm.prank(migrationLoan.borrower());
+            migrationLoan.closeLoan(0);
+            loans.pop();
+
+            vm.prank(poolV1.poolDelegate());
+            poolV1.claim(address(migrationLoan), address(debtLockerFactory));
+        }
+    }
+
     function requestUnstake(IStakeLockerLike stakeLocker, address poolDelegate) internal {
         vm.prank(poolDelegate);
         stakeLocker.intendToUnstake();
@@ -612,6 +722,32 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
         vm.prank(newDelegate_);
         poolManager.acceptPendingPoolDelegate();
+    }
+
+    function setLiquidityCap(IPoolLike poolV1, uint256 liquidityCap) internal {
+        vm.prank(poolV1.poolDelegate());
+        poolV1.setLiquidityCap(liquidityCap);  // NOTE: Need to pass in old liquidity cap
+        assertEq(poolV1.liquidityCap(), liquidityCap);
+    }
+
+    function snapshotPoolState(IPoolLike poolV1) internal {
+        IERC20Like poolAsset = IERC20Like(poolV1.liquidityAsset());
+
+        snapshottedPoolState[address(poolV1)] = PoolState({
+            cash:         poolAsset.balanceOf(poolV1.liquidityLocker()),
+            interestSum:  poolV1.interestSum(),
+            liquidityCap: poolV1.liquidityCap(),
+            poolLosses:   poolV1.poolLosses(),
+            principalOut: poolV1.principalOut(),
+            totalSupply:  poolV1.totalSupply()
+        });
+    }
+
+    function storeOriginalLoanLender(IMapleLoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            address debtLocker = loans[i].lender();
+            loansOriginalLender[address(loans[i])] = debtLocker;
+        }
     }
 
     function unstakeDelegateCover(IStakeLockerLike stakeLocker, address poolDelegate, uint256 delegateBalance_) internal {
