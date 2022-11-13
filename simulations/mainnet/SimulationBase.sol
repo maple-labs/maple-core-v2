@@ -404,6 +404,72 @@ contract SimulationBase is TestUtils, AddressRegistry {
         upgradeLoansToV4(loans);
     }
 
+    function deployAndMigratePoolUpToLoanManagerUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
+        /*******************************/
+        /*** Step 4: Deploy new Pool ***/
+        /*******************************/
+
+        // Deploy the new version of the pool.
+        poolManager = IPoolManagerLike(deployPoolV2(poolV1));  // 30min
+
+        ITransitionLoanManagerLike transitionLoanManager = ITransitionLoanManagerLike(poolManager.loanManagerList(0));
+
+        /***************************************************************/
+        /*** Step 5: Add Loans to LM, setting up parallel accounting ***/
+        /***************************************************************/
+
+        address[] memory loanAddresses = convertToAddresses(loans);
+
+        vm.prank(migrationMultisig);
+        migrationHelper.addLoansToLoanManager(address(transitionLoanManager), loanAddresses);  // 2min (1hr of validation)
+
+        uint256 loansAddedTimestamp = block.timestamp;
+
+        lastUpdatedTimestamps[address(transitionLoanManager)] = loansAddedTimestamp;
+        loansAddedTimestamps[address(transitionLoanManager)]  = loansAddedTimestamp;
+
+        /**********************************************/
+        /*** Step 6: Activate the Pool from Globals ***/
+        /**********************************************/
+
+        vm.prank(governor);
+        mapleGlobalsV2.activatePoolManager(address(poolManager));  // 2min
+
+        /*****************************************************************************/
+        /*** Step 7: Open the Pool or allowlist the pool to allow airdrop to occur ***/
+        /*****************************************************************************/
+
+        openPoolV2(poolManager);  // TODO: Add whitelisting for permissioned pools.  // 5min
+
+        /**********************************************************/
+        /*** Step 8: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
+        /**********************************************************/
+
+        // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
+        vm.startPrank(migrationMultisig);
+        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, lps.length * 2);  // 1 hour
+
+        assertPoolAccounting(poolManager, loans);
+
+        /*****************************************************************************/
+        /*** Step 9: Set the pending lender in all outstanding Loans to be the TLM ***/
+        /*****************************************************************************/
+
+        migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses);
+
+        assertPoolAccounting(poolManager, loans);
+
+        /*********************************************************************************/
+        /*** Step 10: Accept the pending lender in all outstanding Loans to be the TLM ***/
+        /*********************************************************************************/
+
+        migrationHelper.takeOwnershipOfLoans(address(transitionLoanManager), loanAddresses);
+
+        assertPoolAccounting(poolManager, loans);
+
+        vm.stopPrank();
+    }
+
     function payBackCashLoan(address poolV1, IPoolManagerLike poolManager, IMapleLoanLike[] storage loans) internal {
         /******************************************************************/
         /*** Step 13: Close the cash loan, adding liquidity to the pool ***/
@@ -714,6 +780,27 @@ contract SimulationBase is TestUtils, AddressRegistry {
     function requestUnstake(IStakeLockerLike stakeLocker, address poolDelegate) internal {
         vm.prank(poolDelegate);
         stakeLocker.intendToUnstake();
+    }
+
+    function returnLoansToDebtLocker(address transitionLoanManager_, IMapleLoanLike[] storage loans) internal {
+        uint256 loansLength_ = loans.length;
+
+        address[] memory debtLockerAddresses = new address[](loansLength_);
+        address[] memory loans_              = new address[](loansLength_);
+
+        for (uint256 i = 0; i < loansLength_; i++) {
+            address loan_ = address(loans[i]);
+            debtLockerAddresses[i] = loansOriginalLender[loan_];
+            loans_[i]              = loan_;
+        }
+
+        // Give ownership of loans back to the debtLocker
+        vm.prank(migrationMultisig);
+        migrationHelper.rollback_takeOwnershipOfLoans(transitionLoanManager_, loans_);
+
+        for (uint256 i = 0; i < loansLength_; i++) {
+            assertEq(loans[i].lender(), debtLockerAddresses[i]);
+        }
     }
 
     function transferPoolDelegate(IPoolManagerLike poolManager, address newDelegate_) internal {
