@@ -361,3 +361,176 @@ contract LiquidityMigrationRollbackTransferLoans is SimulationBase {
     }
 
 }
+
+contract LiquidityMigrationRollbackFromUpgradedLoanManager is SimulationBase {
+    /******************************************************************************************************************************/
+    /*** Contingency Measures                                                                                                   ***/
+    /*******************************************************************************************************************************
+    * Stage:    Deploy and Migrate Pool (Assuming we haven't upgrade to loan V4 yet)
+                Note: Rollback occurs slightly differently depending on if we have upgraded to the LM from the TLM
+      Measures: The goal would be to get back to the state prior to deploying and migrating the pool which would involve
+                1. We can ignore the pools v2 deployment
+                2. We call the loanManager v200 implementation to give ownership of the loans back to the debt lockers
+                this involves calling the setOwnershipTo() and takeOwnership() functions
+                3. Apply measures from Frozen Pool stage if we wish to revert back to starting state
+    *******************************************************************************************************************************/
+
+    function setUp() external {
+        setUpLoanV301();
+
+        upgradeLoansToV301(mavenWethLoans);
+        upgradeLoansToV301(mavenUsdcLoans);
+        upgradeLoansToV301(mavenPermissionedLoans);
+        upgradeLoansToV301(orthogonalLoans);
+        upgradeLoansToV301(icebreakerLoans);
+
+        deployProtocol();
+
+        payAndClaimUpcomingLoans(mavenWethLoans);
+        payAndClaimUpcomingLoans(mavenUsdcLoans);
+        payAndClaimUpcomingLoans(mavenPermissionedLoans);
+        payAndClaimUpcomingLoans(orthogonalLoans);
+        payAndClaimUpcomingLoans(icebreakerLoans);
+
+        // Orthogonal has a loan with claimable funds that it's more than 5 days from payment away. We need to claim it here before the pool is snapshoted
+        claimAllLoans(orthogonalPoolV1, orthogonalLoans);
+
+        snapshotPoolState(mavenWethPoolV1);
+        snapshotPoolState(mavenUsdcPoolV1);
+        snapshotPoolState(mavenPermissionedPoolV1);
+        snapshotPoolState(orthogonalPoolV1);
+        snapshotPoolState(icebreakerPoolV1);
+
+        freezePoolV1(mavenWethPoolV1,         mavenWethLoans);
+        freezePoolV1(mavenUsdcPoolV1,         mavenUsdcLoans);
+        freezePoolV1(mavenPermissionedPoolV1, mavenPermissionedLoans);
+        freezePoolV1(orthogonalPoolV1,        orthogonalLoans);
+        freezePoolV1(icebreakerPoolV1,        icebreakerLoans);
+
+        storeOriginalLoanLender(mavenWethLoans);
+        storeOriginalLoanLender(mavenUsdcLoans);
+        storeOriginalLoanLender(mavenPermissionedLoans);
+        storeOriginalLoanLender(orthogonalLoans);
+        storeOriginalLoanLender(icebreakerLoans);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(true);
+    }
+
+    function test_rollback_upgradedLoanManager_mavenWethPool() external {
+        mavenWethPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenWethPoolV1, mavenWethLoans, mavenWethLps);
+
+        setLoanTransferAdmin(mavenWethPoolManager);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(false);
+
+        returnLoansToDebtLocker(mavenWethPoolManager.loanManagerList(0), mavenWethLoans);
+        unfreezePoolV1(mavenWethPoolV1, mavenWethLoans, 35_000e18);
+
+        assertPoolMatchesSnapshotted(mavenWethPoolV1);
+        assertLoansBelongToPool(mavenWethPoolV1, mavenWethLoans);
+    }
+
+    function test_rollback_upgradedLoanManager_mavenUsdcPool() external {
+        mavenUsdcPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps);
+
+        setLoanTransferAdmin(mavenUsdcPoolManager);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(false);
+
+        returnLoansToDebtLocker(mavenUsdcPoolManager.loanManagerList(0), mavenUsdcLoans);
+        unfreezePoolV1(mavenUsdcPoolV1, mavenUsdcLoans, 350_000_000e6);
+
+        assertPoolMatchesSnapshotted(mavenUsdcPoolV1);
+        assertLoansBelongToPool(mavenUsdcPoolV1, mavenUsdcLoans);
+    }
+
+    function test_rollback_upgradedLoanManager_mavenPermissionedPool() external {
+        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
+
+        setLoanTransferAdmin(mavenPermissionedPoolManager);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(false);
+
+        returnLoansToDebtLocker(mavenPermissionedPoolManager.loanManagerList(0), mavenPermissionedLoans);
+        unfreezePoolV1(mavenPermissionedPoolV1, mavenPermissionedLoans, 60_000_000e6);
+
+        assertPoolMatchesSnapshotted(mavenPermissionedPoolV1);
+        assertLoansBelongToPool(mavenPermissionedPoolV1, mavenPermissionedLoans);
+    }
+
+    function test_rollback_upgradedLoanManager_orthogonalPool() external {
+        orthogonalPoolManager = deployAndMigratePoolUpToLoanUpgrade(orthogonalPoolV1, orthogonalLoans, orthogonalLps);
+
+        setLoanTransferAdmin(orthogonalPoolManager);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(false);
+
+        returnLoansToDebtLocker(orthogonalPoolManager.loanManagerList(0), orthogonalLoans);
+        unfreezePoolV1(orthogonalPoolV1, orthogonalLoans, 450_000_000e6);
+
+        assertPoolMatchesSnapshotted(orthogonalPoolV1);
+        assertLoansBelongToPool(orthogonalPoolV1, orthogonalLoans);
+    }
+
+    function test_rollback_upgradedLoanManager_icebreakerPool() external {
+        icebreakerPoolManager = deployAndMigratePoolUpToLoanUpgrade(icebreakerPoolV1, icebreakerLoans, icebreakerLps);
+
+        setLoanTransferAdmin(icebreakerPoolManager);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(false);
+
+        returnLoansToDebtLocker(icebreakerPoolManager.loanManagerList(0), icebreakerLoans);
+        unfreezePoolV1(icebreakerPoolV1, icebreakerLoans, 300_000_000e6);
+
+        assertPoolMatchesSnapshotted(icebreakerPoolV1);
+        assertLoansBelongToPool(icebreakerPoolV1, icebreakerLoans);
+    }
+
+    function test_rollback_upgradedLoanManager_allPools() external {
+        mavenWethPoolManager         = deployAndMigratePoolUpToLoanUpgrade(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
+        mavenUsdcPoolManager         = deployAndMigratePoolUpToLoanUpgrade(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
+        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
+        orthogonalPoolManager        = deployAndMigratePoolUpToLoanUpgrade(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
+        icebreakerPoolManager        = deployAndMigratePoolUpToLoanUpgrade(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
+
+        setLoanTransferAdmin(mavenWethPoolManager);
+        setLoanTransferAdmin(mavenUsdcPoolManager);
+        setLoanTransferAdmin(mavenPermissionedPoolManager);
+        setLoanTransferAdmin(orthogonalPoolManager);
+        setLoanTransferAdmin(icebreakerPoolManager);
+
+        vm.prank(globalAdmin);
+        mapleGlobalsV1.setProtocolPause(false);
+
+        returnLoansToDebtLocker(mavenWethPoolManager.loanManagerList(0),         mavenWethLoans);
+        returnLoansToDebtLocker(mavenUsdcPoolManager.loanManagerList(0),         mavenUsdcLoans);
+        returnLoansToDebtLocker(mavenPermissionedPoolManager.loanManagerList(0), mavenPermissionedLoans);
+        returnLoansToDebtLocker(orthogonalPoolManager.loanManagerList(0),        orthogonalLoans);
+        returnLoansToDebtLocker(icebreakerPoolManager.loanManagerList(0),        icebreakerLoans);
+
+        unfreezePoolV1(mavenWethPoolV1,         mavenWethLoans,         35_000e18);
+        unfreezePoolV1(mavenUsdcPoolV1,         mavenUsdcLoans,         350_000_000e6);
+        unfreezePoolV1(mavenPermissionedPoolV1, mavenPermissionedLoans, 60_000_000e6);
+        unfreezePoolV1(orthogonalPoolV1,        orthogonalLoans,        450_000_000e6);
+        unfreezePoolV1(icebreakerPoolV1,        icebreakerLoans,        300_000_000e6);
+
+        assertPoolMatchesSnapshotted(mavenWethPoolV1);
+        assertPoolMatchesSnapshotted(mavenUsdcPoolV1);
+        assertPoolMatchesSnapshotted(mavenPermissionedPoolV1);
+        assertPoolMatchesSnapshotted(orthogonalPoolV1);
+        assertPoolMatchesSnapshotted(icebreakerPoolV1);
+
+        assertLoansBelongToPool(mavenWethPoolV1,         mavenWethLoans);
+        assertLoansBelongToPool(mavenUsdcPoolV1,         mavenUsdcLoans);
+        assertLoansBelongToPool(mavenPermissionedPoolV1, mavenPermissionedLoans);
+        assertLoansBelongToPool(orthogonalPoolV1,        orthogonalLoans);
+        assertLoansBelongToPool(icebreakerPoolV1,        icebreakerLoans);
+    }
+
+}

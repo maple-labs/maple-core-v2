@@ -41,6 +41,8 @@ interface IMapleProxiedLike {
 
     function factory() external view returns (address factory_);
 
+    function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
+
 }
 
 interface IMapleProxyFactoryLike {

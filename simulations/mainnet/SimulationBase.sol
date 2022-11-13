@@ -222,14 +222,6 @@ contract SimulationBase is TestUtils, AddressRegistry {
         vm.stopPrank();
     }
 
-    function configureFactoriesForPoolUnfreeze() internal {
-        // Enable upgrade paths
-        vm.startPrank(governor);
-        debtLockerFactory.enableUpgradePath(400, 300, address(0));
-        loanFactory.enableUpgradePath(302, 301, address(0));
-        vm.stopPrank();
-    }
-
     /******************************************************************************************************************************/
     /*** Migration Functions                                                                                                    ***/
     /******************************************************************************************************************************/
@@ -315,95 +307,6 @@ contract SimulationBase is TestUtils, AddressRegistry {
         }
     }
 
-    function deployAndMigratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
-        /*******************************/
-        /*** Step 4: Deploy new Pool ***/
-        /*******************************/
-
-        // Deploy the new version of the pool.
-        poolManager = IPoolManagerLike(deployPoolV2(poolV1));  // 30min
-
-        ITransitionLoanManagerLike transitionLoanManager = ITransitionLoanManagerLike(poolManager.loanManagerList(0));
-        IPoolLike                  poolV2                = IPoolLike(poolManager.pool());
-
-        /***************************************************************/
-        /*** Step 5: Add Loans to LM, setting up parallel accounting ***/
-        /***************************************************************/
-
-        address[] memory loanAddresses = convertToAddresses(loans);
-
-        vm.prank(migrationMultisig);
-        migrationHelper.addLoansToLoanManager(address(transitionLoanManager), loanAddresses);  // 2min (1hr of validation)
-
-        uint256 loansAddedTimestamp = block.timestamp;
-
-        lastUpdatedTimestamps[address(transitionLoanManager)] = loansAddedTimestamp;
-        loansAddedTimestamps[address(transitionLoanManager)]  = loansAddedTimestamp;
-
-        /**********************************************/
-        /*** Step 6: Activate the Pool from Globals ***/
-        /**********************************************/
-
-        vm.prank(governor);
-        mapleGlobalsV2.activatePoolManager(address(poolManager));  // 2min
-
-        /*****************************************************************************/
-        /*** Step 7: Open the Pool or allowlist the pool to allow airdrop to occur ***/
-        /*****************************************************************************/
-
-        openPoolV2(poolManager);  // TODO: Add whitelisting for permissioned pools.  // 5min
-
-        /**********************************************************/
-        /*** Step 8: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
-        /**********************************************************/
-
-        // TODO: Add functionality to allowlist LPs in case of permissioned pool prior to airdrop.
-        vm.startPrank(migrationMultisig);
-        migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, lps.length * 2);
-
-        // NOTE: Failure happens here because globals v2 lacks a `delegateManagementFeeRate` needed by the AccountingChecker's `_checkAssetsUnderManagement`.
-        assertPoolAccounting(poolManager, loans);
-
-        /*****************************************************************************/
-        /*** Step 9: Set the pending lender in all outstanding Loans to be the TLM ***/
-        /*****************************************************************************/
-
-        migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses);
-
-        assertPoolAccounting(poolManager, loans);
-
-        /*********************************************************************************/
-        /*** Step 10: Accept the pending lender in all outstanding Loans to be the TLM ***/
-        /*********************************************************************************/
-
-        migrationHelper.takeOwnershipOfLoans(address(transitionLoanManager), loanAddresses);
-
-        assertPoolAccounting(poolManager, loans);
-
-        /*****************************************************/
-        /*** Step 11: Upgrade the LoanManager from the TLM ***/
-        /*****************************************************/
-
-        migrationHelper.upgradeLoanManager(address(transitionLoanManager), 200);
-
-        vm.stopPrank();
-
-        assertEq(poolV2.totalSupply(), getPoolV1TotalValue(poolV1));
-
-        // NOTE: transitionLoanManager is now a normal loanManager.
-        assertPrincipalOut(transitionLoanManager, loans);  // TODO: Add assertions against PoolV1
-
-        assertPoolAccounting(poolManager, loans);
-
-        /****************************************/
-        /*** Step 12: Upgrade all loans to V4 ***/
-        /****************************************/
-
-        assertPoolAccounting(poolManager, loans);
-
-        upgradeLoansToV4(loans);
-    }
-
     function deployAndMigratePoolUpToLoanManagerUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
         /*******************************/
         /*** Step 4: Deploy new Pool ***/
@@ -470,6 +373,39 @@ contract SimulationBase is TestUtils, AddressRegistry {
         vm.stopPrank();
     }
 
+    function deployAndMigratePoolUpToLoanUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
+        poolManager = deployAndMigratePoolUpToLoanManagerUpgrade(poolV1, loans, lps);
+
+        ITransitionLoanManagerLike transitionLoanManager = ITransitionLoanManagerLike(poolManager.loanManagerList(0));
+        IPoolLike                  poolV2                = IPoolLike(poolManager.pool());
+
+        /*****************************************************/
+        /*** Step 11: Upgrade the LoanManager from the TLM ***/
+        /*****************************************************/
+
+        vm.prank(migrationMultisig);
+        migrationHelper.upgradeLoanManager(address(transitionLoanManager), 200);
+
+        assertEq(poolV2.totalSupply(), getPoolV1TotalValue(poolV1));
+
+        // NOTE: transitionLoanManager is now a normal loanManager.
+        assertPrincipalOut(transitionLoanManager, loans);  // TODO: Add assertions against PoolV1
+
+        assertPoolAccounting(poolManager, loans);
+    }
+
+    function deployAndMigratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
+        poolManager = deployAndMigratePoolUpToLoanUpgrade(poolV1, loans, lps);
+
+        /****************************************/
+        /*** Step 12: Upgrade all loans to V4 ***/
+        /****************************************/
+
+        assertPoolAccounting(poolManager, loans);
+
+        upgradeLoansToV4(loans);
+    }
+
     function payBackCashLoan(address poolV1, IPoolManagerLike poolManager, IMapleLoanLike[] storage loans) internal {
         /******************************************************************/
         /*** Step 13: Close the cash loan, adding liquidity to the pool ***/
@@ -527,10 +463,30 @@ contract SimulationBase is TestUtils, AddressRegistry {
     /*** Contingency Helpers                                                                                                    ***/
     /******************************************************************************************************************************/
 
+    function configureFactoriesForPoolUnfreeze() internal {
+        vm.startPrank(governor);
+        debtLockerFactory.enableUpgradePath(400, 300, address(0));
+        loanFactory.enableUpgradePath(302, 301, address(0));
+        vm.stopPrank();
+    }
+
+    function configureLoanFactoryFor400To302Downgrade() internal {
+        vm.prank(governor);
+        loanFactory.enableUpgradePath(400, 302, address(0));
+    }
+
+    function setLoanTransferAdmin(IPoolManagerLike poolManager) internal {
+        vm.startPrank(poolManager.poolDelegate());
+
+        LoanManager(poolManager.loanManagerList(0)).setLoanTransferAdmin(address(migrationHelper));
+
+        vm.stopPrank();
+    }
+
     function unfreezePoolV1(IPoolLike poolV1, IMapleLoanLike[] storage loans, uint256 liquidityCap) internal {
         configureFactoriesForPoolUnfreeze();
 
-        downgradeLoansTo301(loans);
+        downgradeLoans302To301(loans);
 
         downgradeDebtLockersTo300(poolV1, loans);
 
@@ -725,14 +681,29 @@ contract SimulationBase is TestUtils, AddressRegistry {
         }
     }
 
-    function downgradeLoansTo301(IMapleLoanLike[] storage loans) internal {
+    function downgradeLoans400To302(IMapleLoanLike[] storage loans) internal {
         for (uint256 i = 0; i < loans.length; i++) {
-            address upgrader = loanFactory.versionOf(loans[i].implementation()) == 400 ? securityAdminMultisig : globalAdmin;
+            vm.prank(securityAdminMultisig);
+            loans[i].upgrade(302, new bytes(0));
+            assertLoanVersion(302, loans[i]);
+        }
+    }
 
-            vm.prank(upgrader);
+    function downgradeLoans302To301(IMapleLoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            vm.prank(globalAdmin);
             loans[i].upgrade(301, new bytes(0));
             assertLoanVersion(301, loans[i]);
         }
+    }
+
+    function downgradeLoanManager(IPoolManagerLike poolManager, address loanManager_) internal {
+        // Set Loan transfer admin on LoanManager
+        vm.prank(poolManager.poolDelegate());
+        ILoanManagerLike(loanManager_).setLoanTransferAdmin(address(migrationHelper));
+
+        vm.prank(governor);
+        IMapleProxiedLike(loanManager_).upgrade(100, new bytes(0));
     }
 
     function exitRewards(IMplRewardsLike rewards, IStakeLockerLike stakeLocker, address poolDelegate) internal {
