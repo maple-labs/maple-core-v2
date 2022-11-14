@@ -159,7 +159,7 @@ contract LoanHandler is TestUtils {
 
         if (
             pool.totalSupply() == 0 ||
-            fundsAsset.balanceOf(address(pool)) - IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity() < amounts_[1]
+            getDiff(fundsAsset.balanceOf(address(pool)), IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity()) < amounts_[1]
         ) return;
 
         vm.startPrank(borrower_);
