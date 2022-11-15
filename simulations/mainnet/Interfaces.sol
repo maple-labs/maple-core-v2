@@ -123,7 +123,7 @@ interface IMplRewardsLike {
 
 interface IPoolLike {
 
-    function balanceOf(address account_) external returns(uint256 balance_);
+    function balanceOf(address account_) external view returns (uint256 balance_);
 
     function claim(address loan, address dlFactory) external;
 

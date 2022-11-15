@@ -610,6 +610,22 @@ contract SimulationBase is TestUtils, AddressRegistry {
         availableLiquidity = IERC20Like(poolV1.liquidityAsset()).balanceOf(poolV1.liquidityLocker());
     }
 
+    function compareLpPositions(IPoolLike poolV1, address poolV2, address[] storage lps) internal {
+        uint256 poolV1TotalValue  = getPoolV1TotalValue(poolV1);
+        uint256 poolV2TotalSupply = IPoolLike(poolV2).totalSupply();
+
+        for (uint256 i; i < lps.length; ++i) {
+            uint256 v1Position = getV1Position(poolV1, lps[i]);
+            uint256 v2Position = IPoolLike(poolV2).balanceOf(lps[i]);
+
+            uint256 v1Equity = v1Position * 1e18 / poolV1TotalValue;
+            uint256 v2Equity = v2Position * 1e18 / poolV2TotalSupply;
+
+            assertEq(v1Position, v2Position);
+            assertEq(v1Equity,   v2Equity);
+        }
+    }
+
     function claimAllLoans(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
         address poolDelegate = poolV1.poolDelegate();
 
@@ -763,6 +779,18 @@ contract SimulationBase is TestUtils, AddressRegistry {
         }
 
         vm.stopPrank();
+    }
+
+    function getV1Position(IPoolLike poolV1, address lp) internal view returns (uint256 positionValue) {
+        IERC20Like asset = IERC20Like(poolV1.liquidityAsset());
+
+        positionValue = poolV1.balanceOf(lp) * 10 ** asset.decimals() / 1e18 + poolV1.withdrawableFundsOf(lp) - poolV1.recognizableLossesOf(lp);
+    }
+
+    function getSumPosition(IPoolLike poolV1, address[] storage lps) internal view returns (uint256 positionValue) {
+        for (uint256 i = 0; i < lps.length; i++) {
+            positionValue += getV1Position(poolV1, lps[i]);
+        }
     }
 
     function getPoolV1TotalValue(IPoolLike poolV1) internal view returns (uint256 totalValue) {

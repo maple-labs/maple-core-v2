@@ -46,6 +46,12 @@ contract LiquidityMigrationTests is SimulationBase {
         orthogonalPoolManager        = deployAndMigratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps,        true);
         icebreakerPoolManager        = deployAndMigratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps,        false);
 
+        compareLpPositions(mavenWethPoolV1,         mavenWethPoolManager.pool(),         mavenWethLps);
+        compareLpPositions(mavenUsdcPoolV1,         mavenUsdcPoolManager.pool(),         mavenUsdcLps);
+        compareLpPositions(mavenPermissionedPoolV1, mavenPermissionedPoolManager.pool(), mavenPermissionedLps);
+        compareLpPositions(orthogonalPoolV1,        orthogonalPoolManager.pool(),        orthogonalLps);
+        compareLpPositions(icebreakerPoolV1,        icebreakerPoolManager.pool(),        icebreakerLps);
+
         // Dec 7
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));  // 2min
