@@ -63,6 +63,12 @@ contract LiquidityMigrationTests is SimulationBase {
         payBackCashLoan(address(orthogonalPoolV1),        orthogonalPoolManager,        orthogonalLoans);
         payBackCashLoan(address(icebreakerPoolV1),        icebreakerPoolManager,        icebreakerLoans);
 
+        upgradeLoansToV401(mavenWethLoans);
+        upgradeLoansToV401(mavenUsdcLoans);
+        upgradeLoansToV401(mavenPermissionedLoans);
+        upgradeLoansToV401(orthogonalLoans);
+        upgradeLoansToV401(icebreakerLoans);
+
         transferPoolDelegate(mavenWethPoolManager,         finalPDs[address(mavenWethPoolV1)]);
         transferPoolDelegate(mavenUsdcPoolManager,         finalPDs[address(mavenUsdcPoolV1)]);
         transferPoolDelegate(mavenPermissionedPoolManager, finalPDs[address(mavenPermissionedPoolV1)]);

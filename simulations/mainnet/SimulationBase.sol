@@ -9,13 +9,14 @@ import { DebtLockerV4Migrator }       from "../../modules/debt-locker-v4/contrac
 import { MapleGlobals }                           from "../../modules/globals-v2/contracts/MapleGlobals.sol";
 import { NonTransparentProxy as MapleGlobalsNTP } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { MapleLoan as MapleLoanV4 }                       from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoan as MapleLoanV400 }                     from "../../modules/loan-v400/contracts/MapleLoan.sol";
 import { MapleLoanFeeManager }                            from "../../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
 import { MapleLoanInitializer as MapleLoanV4Initializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
 import { MapleLoanV4Migrator }                            from "../../modules/loan-v400/contracts/MapleLoanV4Migrator.sol";
 
 import { MapleLoan as MapleLoanV301 } from "../../modules/loan-v301/contracts/MapleLoan.sol";
 import { MapleLoan as MapleLoanV302 } from "../../modules/loan-v302/contracts/MapleLoan.sol";
+import { MapleLoan as MapleLoanV401 } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 import { AccountingChecker }                         from "../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
 import { DeactivationOracle }                        from "../../modules/migration-helpers/contracts/DeactivationOracle.sol";
@@ -98,6 +99,9 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
     function deployProtocol() internal {
         createGlobals();
+
+        feeManager = new MapleLoanFeeManager(address(mapleGlobalsV2));
+
         createFactories();
         setupFactories();
         createHelpers();
@@ -130,7 +134,6 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
     function createGlobals() internal {
         mapleGlobalsV2 = MapleGlobals(address(new MapleGlobalsNTP(governor, address(new MapleGlobals()))));
-        feeManager     = new MapleLoanFeeManager(address(mapleGlobalsV2));
         poolDeployer   = new PoolDeployer(address(mapleGlobalsV2));
 
         vm.startPrank(governor);
@@ -173,7 +176,6 @@ contract SimulationBase is TestUtils, AddressRegistry {
             finalPDs[address(mavenWethPoolV1)] = address(new Address()),
             true
         );
-
 
         mapleGlobalsV2.setValidPoolDelegate(
             temporaryPDs[address(orthogonalPoolV1)] = address(new Address()),
@@ -225,18 +227,26 @@ contract SimulationBase is TestUtils, AddressRegistry {
     function setupFactories() internal {
         vm.startPrank(governor);
 
-        debtLockerFactory.registerImplementation(400, address(new DebtLockerV4()), address(debtLockerV3Initializer));
-        debtLockerFactory.enableUpgradePath(200, 400, address(new DebtLockerV4Migrator()));
-        debtLockerFactory.enableUpgradePath(300, 400, address(new DebtLockerV4Migrator()));
+        address debtLockerV4Migrator = address(new DebtLockerV4Migrator());
 
-        loanFactory.registerImplementation(302, address(new MapleLoanV302()), address(0));
-        loanFactory.registerImplementation(400, address(new MapleLoanV4()),   address(new MapleLoanV4Initializer()));
+        debtLockerFactory.registerImplementation(400, address(new DebtLockerV4()), debtLockerV3Initializer);
+        debtLockerFactory.enableUpgradePath(200, 400, debtLockerV4Migrator);
+        debtLockerFactory.enableUpgradePath(300, 400, debtLockerV4Migrator);
+
+        address mapleLoanV4Initializer = address(new MapleLoanV4Initializer());
+
+        loanFactory.registerImplementation(302, address(new MapleLoanV302()), loanV3Initializer);
+        loanFactory.registerImplementation(400, address(new MapleLoanV400()), mapleLoanV4Initializer);
+        loanFactory.registerImplementation(401, address(new MapleLoanV401()), mapleLoanV4Initializer);
         loanFactory.enableUpgradePath(301, 302, address(0));
         loanFactory.enableUpgradePath(302, 400, address(new MapleLoanV4Migrator()));
+        loanFactory.enableUpgradePath(400, 401, address(0));
         loanFactory.setDefaultVersion(301);
 
-        loanManagerFactory.registerImplementation(100, address(new TransitionLoanManager()), address(new LoanManagerInitializer()));
-        loanManagerFactory.registerImplementation(200, address(new LoanManager()),           address(new LoanManagerInitializer()));
+        address loanManagerInitializer = address(new LoanManagerInitializer());
+
+        loanManagerFactory.registerImplementation(100, address(new TransitionLoanManager()), loanManagerInitializer);
+        loanManagerFactory.registerImplementation(200, address(new LoanManager()),           loanManagerInitializer);
         loanManagerFactory.enableUpgradePath(100, 200, address(0));
         loanManagerFactory.setDefaultVersion(100);
 
@@ -430,7 +440,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
         assertPoolAccounting(poolManager, loans);
 
-        upgradeLoansToV4(loans);
+        upgradeLoansToV400(loans);
     }
 
     function payBackCashLoan(address poolV1, IPoolManagerLike poolManager, IMapleLoanLike[] storage loans) internal {
@@ -608,10 +618,15 @@ contract SimulationBase is TestUtils, AddressRegistry {
     function compareLpPositions(IPoolLike poolV1, address poolV2, address[] storage lps) internal {
         uint256 poolV1TotalValue  = getPoolV1TotalValue(poolV1);
         uint256 poolV2TotalSupply = IPoolLike(poolV2).totalSupply();
+        uint256 sumPosition       = getSumPosition(poolV1, lps);
 
         for (uint256 i; i < lps.length; ++i) {
             uint256 v1Position = getV1Position(poolV1, lps[i]);
             uint256 v2Position = IPoolLike(poolV2).balanceOf(lps[i]);
+
+            if (i == 0) {
+                v1Position += poolV1TotalValue - sumPosition;
+            }
 
             uint256 v1Equity = v1Position * 1e18 / poolV1TotalValue;
             uint256 v2Equity = v2Position * 1e18 / poolV2TotalSupply;
@@ -737,7 +752,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         for (uint256 i = 0; i < loans.length; i++) {
             IDebtLockerLike debtLocker = IDebtLockerLike(loans[i].lender());
 
-            vm.prank(poolV1.poolDelegate());
+            vm.prank(mapleGlobalsV1.globalAdmin());
             debtLocker.upgrade(300, new bytes(0));
             assertDebtLockerVersion(300, debtLocker);
         }
@@ -979,10 +994,19 @@ contract SimulationBase is TestUtils, AddressRegistry {
         }
     }
 
-    function upgradeLoansToV4(IMapleLoanLike[] memory loans) internal {
+    function upgradeLoansToV400(IMapleLoanLike[] memory loans) internal {
         for (uint256 i = 0; i < loans.length; i++) {
             vm.prank(globalAdmin);
             loans[i].upgrade(400, abi.encode(address(feeManager)));
+        }
+
+        // TODO: Assert all loans are upgraded.
+    }
+
+    function upgradeLoansToV401(IMapleLoanLike[] memory loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            vm.prank(securityAdminMultisig);
+            loans[i].upgrade(401, "");
         }
 
         // TODO: Assert all loans are upgraded.

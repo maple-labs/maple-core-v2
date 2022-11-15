@@ -69,6 +69,8 @@ interface IMapleProxyFactoryLike {
 
 interface IMapleGlobalsLike {
 
+    function globalAdmin() external view returns (address);
+
     function setPriceOracle(address asset, address oracle) external;
 
     function setProtocolPause(bool pause) external;
