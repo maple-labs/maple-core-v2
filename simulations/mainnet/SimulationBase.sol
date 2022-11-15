@@ -475,12 +475,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         assertEq(stakeLocker.balanceOf(poolDelegate_), delegateBalance_);
 
         if (delegateBalance_ > 0) {
-            // Wait for unlock period
-            vm.warp(block.timestamp + 864000);
-
             requestUnstake(stakeLocker, poolDelegate_);
-
-            vm.warp(block.timestamp + 864000);
 
             unstakeDelegateCover(stakeLocker, poolDelegate_, delegateBalance_);
         }
@@ -672,13 +667,15 @@ contract SimulationBase is TestUtils, AddressRegistry {
         loans.push(migrationLoan);
     }
 
-    // TODO: Update this so it doesn't create a separate oracle for each USDC pool.
     function deactivatePoolV1(IPoolLike poolV1) internal {
         address asset = poolV1.liquidityAsset();
         DeactivationOracle oracle = new DeactivationOracle();
 
-        vm.prank(governor);
+        vm.startPrank(governor);
         mapleGlobalsV1.setPriceOracle(asset, address(oracle));
+        mapleGlobalsV1.setStakerCooldownPeriod(0);
+        mapleGlobalsV1.setStakerUnstakeWindow(type(uint256).max);
+        vm.stopPrank();
 
         vm.startPrank(poolV1.poolDelegate());
         poolV1.deactivate();
@@ -799,6 +796,15 @@ contract SimulationBase is TestUtils, AddressRegistry {
         totalValue = poolV1.totalSupply() * 10 ** asset.decimals() / 1e18 + poolV1.interestSum() - poolV1.poolLosses();
     }
 
+    function handleCoverProviderEdgeCase() internal {
+        // Handle weird scenario in maven usdc and orthogonal pool, where users have increased the allowance, but haven't actually staked.
+        vm.prank(0x8476D9239fe38Ca683c6017B250112121cdB8D9B);
+        IMplRewardsLike(address(orthogonalRewards)).stake(701882135971108600);
+
+        vm.prank(0xFe14c77979Ea159605b0fABDeB59B1166C3D95e3);
+        IMplRewardsLike(address(mavenUsdcRewards)).stake(299953726765028070);
+    }
+
     function increaseLiquidityCap(IPoolManagerLike poolManager, uint256 newCap) internal {
         vm.prank(poolManager.poolDelegate());
         poolManager.setLiquidityCap(newCap);
@@ -821,6 +827,12 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
         // Get the asset
         erc20_mint(asset, lp, amount);
+
+        if (!poolManager.openToPublic()) {
+            vm.startPrank(poolManager.poolDelegate());
+            poolManager.setAllowedLender(lp, true);
+            vm.stopPrank();
+        }
 
         vm.startPrank(lp);
         IERC20Like(asset).approve(address(poolV2), amount);
@@ -977,11 +989,12 @@ contract SimulationBase is TestUtils, AddressRegistry {
     }
 
     function withdrawCover(IStakeLockerLike stakeLocker, IMplRewardsLike rewards, address[] storage coverProviders) internal {
-        address poolDelegate = IPoolLike(stakeLocker.pool()).poolDelegate();
+        IERC20Like bpt = IERC20Like(stakeLocker.stakeAsset());
+
+        // Due to the default on the Orthogonal Pool, some amount of dust will be left in the StakeLocker.
+        uint256 acceptedDust = stakeLocker == orthogonalStakeLocker ? 0.003053321892584837e18 : 0;
 
         for (uint256 i = 0; i < coverProviders.length; i++) {
-            if (coverProviders[i] == poolDelegate) continue;
-
             // If User has allowance in the rewards contract, exit it.
             if (stakeLocker.custodyAllowance(coverProviders[i], address(rewards)) > 0) {
                 vm.prank(coverProviders[i]);
@@ -991,22 +1004,23 @@ contract SimulationBase is TestUtils, AddressRegistry {
             if (stakeLocker.balanceOf(coverProviders[i]) > 0) {
                 vm.prank(coverProviders[i]);
                 stakeLocker.intendToUnstake();
-            }
-        }
 
-        // Warp past the cooldown period
-        vm.warp(block.timestamp + 864000);
-
-        for (uint256 i = 0; i < coverProviders.length; i++) {
-            if (stakeLocker.balanceOf(coverProviders[i]) > 0 && coverProviders[i] != poolDelegate) {
-                IERC20Like bpt = IERC20Like(stakeLocker.stakeAsset());
-
+                // Perform the unstake
                 uint256 initialStakeLockerBPTBalance = bpt.balanceOf(address(stakeLocker));
                 uint256 initialProviderBPTBalance    = bpt.balanceOf(address(coverProviders[i]));
 
-                vm.startPrank(coverProviders[i]);
-                stakeLocker.unstake(stakeLocker.balanceOf(coverProviders[i]));
-                vm.stopPrank();
+                // Due to losses on orthogonal pool, the last unstaker takes a slight loss
+                if (coverProviders[i] == 0xF9107317B0fF77eD5b7ADea15e50514A3564002B) {
+                    vm.prank(coverProviders[i]);
+                    stakeLocker.unstake(6029602120323463);
+
+                    assertEq(stakeLocker.balanceOf(coverProviders[i]), acceptedDust);
+                    continue;
+                } else {
+                    vm.startPrank(coverProviders[i]);
+                    stakeLocker.unstake(stakeLocker.balanceOf(coverProviders[i]));
+                    vm.stopPrank();
+                }
 
                 uint256 endStakeLockerBPTBalance = bpt.balanceOf(address(stakeLocker));
                 uint256 endProviderBPTBalance    = bpt.balanceOf(address(coverProviders[i]));
@@ -1015,6 +1029,10 @@ contract SimulationBase is TestUtils, AddressRegistry {
                 assertEq(stakeLocker.balanceOf(coverProviders[i]), 0);
             }
         }
+
+        // Not 0 for orthogonal, but 0 for the other pools.
+        assertEq(stakeLocker.totalSupply(),                   acceptedDust);
+        assertWithinDiff(bpt.balanceOf(address(stakeLocker)), acceptedDust, 19); // This difference of 19 is what is makes the last provider not able to withdraw the entirety of his
     }
 
     /******************************************************************************************************************************/

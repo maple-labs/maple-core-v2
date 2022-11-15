@@ -72,6 +72,10 @@ interface IMapleGlobalsLike {
     function setPriceOracle(address asset, address oracle) external;
 
     function setProtocolPause(bool pause) external;
+
+    function setStakerCooldownPeriod(uint256 cooldown_) external;
+
+    function setStakerUnstakeWindow(uint256 window_) external;
 }
 
 interface IMapleLoanV3Like {
@@ -117,6 +121,8 @@ interface IMapleLoanLike {
 interface IMplRewardsLike {
 
     function exit() external;
+
+    function stake(uint256 amt) external;
 
 }
 
@@ -189,6 +195,8 @@ interface IPoolManagerLike {
 
     function loanManagerList(uint256 index_) external view returns (address loanManager_);
 
+    function openToPublic() external view returns (bool openToPublic_);
+
     function pool() external view returns (address pool_);
 
     function poolDelegate() external view returns (address poolDelegate_);
@@ -226,6 +234,8 @@ interface IStakeLockerLike {
     function stakeAsset() external view returns (address stakeAsset_);
 
     function totalCustodyAllowance(address owner) external view returns(uint256);
+
+    function totalSupply() external view returns(uint256);
 
     function unstake(uint256 amt) external;
 

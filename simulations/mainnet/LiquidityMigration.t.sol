@@ -78,12 +78,16 @@ contract LiquidityMigrationTests is SimulationBase {
         deprecatePoolV1(mavenUsdcPoolV1,         mavenUsdcRewards,         mavenUsdcStakeLocker,         153.022e18);
         deprecatePoolV1(mavenPermissionedPoolV1, mavenPermissionedRewards, mavenPermissionedStakeLocker, 16.319926286804447168e18);
         deprecatePoolV1(orthogonalPoolV1,        orthogonalRewards,        orthogonalStakeLocker,        175.122243323160822654e18);
-        deprecatePoolV1(icebreakerPoolV1,        icebreakerRewards,        icebreakerStakeLocker,        0);
+        deprecatePoolV1(icebreakerPoolV1,        icebreakerRewards,        icebreakerStakeLocker,        104.254119288711119987e18);
+
+        handleCoverProviderEdgeCase();
 
         // Make cover providers withdraw
-        // TODO: Move these before and make another function to do all payments
-        withdrawCover(mavenUsdcStakeLocker,  mavenUsdcRewards,  mavenUsdcCoverProviders);
-        withdrawCover(orthogonalStakeLocker, orthogonalRewards, orthogonalCoverProviders);
+        withdrawCover(mavenWethStakeLocker,         mavenWethRewards,         mavenWethCoverProviders);
+        withdrawCover(mavenPermissionedStakeLocker, mavenPermissionedRewards, mavenPermissionedCoverProviders);
+        withdrawCover(icebreakerStakeLocker,        icebreakerRewards,        icebreakerCoverProviders);
+        withdrawCover(mavenUsdcStakeLocker,         mavenUsdcRewards,         mavenUsdcCoverProviders);
+        withdrawCover(orthogonalStakeLocker,        orthogonalRewards,        orthogonalCoverProviders);
 
         // PoolV2 Lifecycle start
         depositCover(mavenWethPoolManager,         750e18);
@@ -108,18 +112,6 @@ contract LiquidityMigrationTests is SimulationBase {
 }
 
 contract LiquidityMigrationRollbackFrozenPoolTests is SimulationBase {
-    /******************************************************************************************************************************/
-    /*** Contingency Measures                                                                                                   ***/
-    /*******************************************************************************************************************************
-
-    * Stage:    Frozen Pool
-      Measures: The goal would be to get back to the state prior to freezing the pool which would involve:
-                1. Set loan and debtLocker factories to allow the downgrade path.
-                2. Reverting the debt lockers back to V300
-                3. Reverting the loans back to V301
-                4. Pay back migration loan
-                5. Remove the 0 liquidity cap on the pool to 'unlock' it
-    *******************************************************************************************************************************/
 
     function setUp() external {
         setUpLoanV301();
@@ -585,7 +577,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     }
 
     function test_rollback_upgradedV4Loans_mavenWethPool() external {
-        mavenWethPoolManager = deployAndMigratePool(mavenWethPoolV1, mavenWethLoans, mavenWethLps);
+        mavenWethPoolManager = deployAndMigratePool(mavenWethPoolV1, mavenWethLoans, mavenWethLps, true);
 
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));
@@ -613,7 +605,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     }
 
     function test_rollback_upgradedV4Loans_mavenUsdcPool() external {
-        mavenUsdcPoolManager = deployAndMigratePool(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps);
+        mavenUsdcPoolManager = deployAndMigratePool(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps, true);
 
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));
@@ -641,7 +633,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     }
 
     function test_rollback_upgradedV4Loans_mavenPermissionedPool() external {
-        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
+        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
 
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));
@@ -669,7 +661,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     }
 
     function test_rollback_upgradedV4Loans_orthogonalPool() external {
-        orthogonalPoolManager = deployAndMigratePool(orthogonalPoolV1, orthogonalLoans, orthogonalLps);
+        orthogonalPoolManager = deployAndMigratePool(orthogonalPoolV1, orthogonalLoans, orthogonalLps, true);
 
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));
@@ -697,7 +689,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     }
 
     function test_rollback_upgradedV4Loans_icebreakerPool() external {
-        icebreakerPoolManager = deployAndMigratePool(icebreakerPoolV1, icebreakerLoans, icebreakerLps);
+        icebreakerPoolManager = deployAndMigratePool(icebreakerPoolV1, icebreakerLoans, icebreakerLps, false);
 
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));
@@ -725,11 +717,11 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     }
 
     function test_rollback_upgradedV4Loans_allPools() external {
-        mavenWethPoolManager         = deployAndMigratePool(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
-        mavenUsdcPoolManager         = deployAndMigratePool(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
-        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
-        orthogonalPoolManager        = deployAndMigratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
-        icebreakerPoolManager        = deployAndMigratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
+        mavenWethPoolManager         = deployAndMigratePool(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps,         true);
+        mavenUsdcPoolManager         = deployAndMigratePool(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps,         true);
+        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
+        orthogonalPoolManager        = deployAndMigratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps,        true);
+        icebreakerPoolManager        = deployAndMigratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps,        false);
 
         vm.prank(governor);
         loanFactory.setGlobals(address(mapleGlobalsV2));

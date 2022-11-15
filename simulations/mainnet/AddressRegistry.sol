@@ -453,9 +453,9 @@ contract AddressRegistry {
     address[] mavenUsdcCoverProviders = [
         address(0x0c8bFC46C4fB39b6eEd7814E8830fAc0a45F8D6D),
         address(0x0f07EBbd719C9aAd480AcE5f6aA2c044E92380Ac),
+        address(0x1B793b70834A80B1CF1b9C279084409De419c956),
         address(0x186cf5714316F47BC59e30a850615A3f938d7D79),
-        address(0x1B793b70834A80B1CF1b9C279084409De419c956),
-        address(0x1B793b70834A80B1CF1b9C279084409De419c956),
+        address(0x212F527CBf536af122931FEf9EED1De87f8dF6Ed),
         address(0x2719150aEA3b6bEcfC85229f8A89B7F94AEccE1b),
         address(0x360C3f56976c2429658Ba9AA763BdF1Ff835A50A),
         address(0x3Fa457EACC2d90570C9d2a435a9a59f9A46605E1),
@@ -474,6 +474,7 @@ contract AddressRegistry {
         address(0xB187a6d7BFAdbca875164eB2Be8A862b320Dfc98),
         address(0xB204Ff6f1074d4fF83FAb608671A982dB46DB3f2),
         address(0xbAa882D68FC5325fC3899dE264F24B5981523A5C),
+        address(0xbF780E695A8c37ae8c4030Cc75FfEcCDCF03FddC),
         address(0xc6E4Ad3ccdfC65687D2d60a454a8bdDc1F4d6c06),
         address(0xc87d690a8D20FAE8509aa27db0850B199645327C),
         address(0xcD89D190353b1D0D4C103102C38b76F7696D511d),
@@ -481,8 +482,8 @@ contract AddressRegistry {
         address(0xe015c0D33389e5F0382CceeC817CC3032edE113D),
         address(0xe18B7E20c0b9A8FA16C20911B706Be8DC69d3485),
         address(0xEF9355e1f3Ed17459078DFb54bf609C3f65E3f34),
+        address(0xFe14c77979Ea159605b0fABDeB59B1166C3D95e3),
         address(0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4),
-        address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C),
         address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C),
         address(0x990d11977378D4610776e6646b2cAAe543Ea4EDA)
     ];
@@ -595,6 +596,8 @@ contract AddressRegistry {
         address(0xf628CE21e0808a57112fb9031b511A95172B490E)
     ];
 
+    address[] mavenPermissionedCoverProviders = [0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4];
+
     IMapleLoanLike[] mavenPermissionedLoans = [
         IMapleLoanLike(0x20276b8BE9a16359D167C2FB7224C2dbfe0e77Db),
         IMapleLoanLike(0x310dde90Ac108db90eCF7Eaa54524972d708d03b),
@@ -672,6 +675,12 @@ contract AddressRegistry {
         address(0xfa38A1dB71e675a5F7C9d318955F787CDbB5c1de),
         address(0xFaCf46Ea1E0aD2681103E726F64CFC503E9dA5D6),
         address(0xFE4AD60c8EC639Ca7002d7612d5987DDFC16A4fB)
+    ];
+
+    address[] mavenWethCoverProviders = [
+        address(0x990d11977378D4610776e6646b2cAAe543Ea4EDA),
+        address(0x31c039383d787457b75D185D820D4A37aB80DAD2),
+        address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C)
     ];
 
     IMapleLoanLike[] mavenWethLoans = [
@@ -1028,12 +1037,13 @@ contract AddressRegistry {
         address(0x7371Da5AC817C05547da65a84EACd72D653027AF),
         address(0x75A8c6047De5A6aC0a6f15438DFe32C9B97e2299),
         address(0x81FA0f35b54790F78e76C74D05Bd6d95632C030b),
+        address(0x8476D9239fe38Ca683c6017B250112121cdB8D9B),
         address(0x86220aA5b12cb8eFb255F53e90e30bA6893cf059),
         address(0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D),
         address(0x929A5753C41eaed288F946bCBFe4a954Ad341797),
         address(0x9376878e0a52a0A71570DB963467d789cFF44Fe2),
         address(0xA5D591875cE13D7abf04d63419e2970F0d51Aa51),
-        address(0xA5D591875cE13D7abf04d63419e2970F0d51Aa51),
+        address(0xA6cCb9483E3E7a737E3a4F5B72a1Ce51838ba122),
         address(0xb9648d93832cAbefA403145D99b15869834b04E3),
         address(0xBD235D7aAA1171B25c52B097F1daA36cd527C550),
         address(0xD591c28C3396008FFb936521C9ceb4cCcc801d27),
@@ -1133,7 +1143,7 @@ contract AddressRegistry {
 
     IPoolLike        icebreakerPoolV1      = IPoolLike(0x733f56782d21b403E5Ee9c8343645E1535F73CD4);
     IMplRewardsLike  icebreakerRewards     = IMplRewardsLike(address(0));
-    IStakeLockerLike icebreakerStakeLocker = IStakeLockerLike(0x12B2BbBfAB2CE6789DF5659E9AC27A4A91C96C5C);
+    IStakeLockerLike icebreakerStakeLocker = IStakeLockerLike(0x1dC467a44aE188fc3eee41d88A32511D261e511B);
 
     address[] icebreakerLps = [
         address(0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7),
@@ -1141,6 +1151,9 @@ contract AddressRegistry {
         address(0x221c7c5a448c87F6834818f255d28e5A8124C4A1)
     ];
 
+    address[] icebreakerCoverProviders = [0x184e46651946B861654436027bffdC97f9a45079];
+
     IMapleLoanLike[] icebreakerLoans;
 
 }
+
