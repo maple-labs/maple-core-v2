@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { CloseLoanAction                   } from "../../contracts/actions/CloseLoanAction.sol";
 import { DrawdownLoanAction                } from "../../contracts/actions/DrawdownLoanAction.sol";
@@ -10,6 +10,7 @@ import { FundLoanAction                    } from "../../contracts/actions/FundL
 import { ImpairLoanAction                  } from "../../contracts/actions/ImpairLoanAction.sol";
 import { LiquidationAction                 } from "../../contracts/actions/LiquidationAction.sol";
 import { MakePaymentAction                 } from "../../contracts/actions/MakePaymentAction.sol";
+import { RefinanceAction                   } from "../../contracts/actions/RefinanceAction.sol";
 import { TriggerDefaultAction              } from "../../contracts/actions/TriggerDefaultAction.sol";
 
 import { IAction          } from "../interfaces/IAction.sol";
@@ -49,6 +50,19 @@ contract LoanActionGenerator is TestUtils, IActionGenerator {
                     description_: string(abi.encodePacked("Impair loan", scenario_.name(), "'")),
                     poolManager_: scenario_.poolManager(),
                     loan_:        address(loan_)
+                }));
+            }
+
+            if (scenario_.refinancerOffset(payment) != 0) {
+                actions.push(new RefinanceAction({
+                    timestamp_:         uint256(int256(scenario_.fundingTime()) + int256(payment * scenario_.loan().paymentInterval()) + scenario_.refinancerOffset(payment)),
+                    description_:       string(abi.encodePacked("Refinance '", scenario_.name(), "'")),
+                    loan_:              loan_,
+                    poolManager_:       scenario_.poolManager(),
+                    refinancer_:        scenario_.refinancer(),
+                    principalIncrease_: scenario_.principalIncrease(),
+                    returnFundAmount_:  scenario_.returnFundAmount(),
+                    calls_:             scenario_.getRefinanceCalls()
                 }));
             }
 
