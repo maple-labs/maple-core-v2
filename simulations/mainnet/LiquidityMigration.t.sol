@@ -40,11 +40,11 @@ contract LiquidityMigrationTests is SimulationBase {
         mapleGlobalsV1.setProtocolPause(true);
 
         // Dec 5-7
-        mavenWethPoolManager         = deployAndMigratePool(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
-        mavenUsdcPoolManager         = deployAndMigratePool(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
-        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
-        orthogonalPoolManager        = deployAndMigratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
-        icebreakerPoolManager        = deployAndMigratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
+        mavenWethPoolManager         = deployAndMigratePool(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps,         true);
+        mavenUsdcPoolManager         = deployAndMigratePool(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps,         true);
+        mavenPermissionedPoolManager = deployAndMigratePool(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
+        orthogonalPoolManager        = deployAndMigratePool(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps,        true);
+        icebreakerPoolManager        = deployAndMigratePool(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps,        false);
 
         // Dec 7
         vm.prank(governor);
@@ -265,7 +265,7 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     }
 
     function test_rollback_transferLoans_mavenWethPool() external {
-        mavenWethPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenWethPoolV1, mavenWethLoans, mavenWethLps);
+        mavenWethPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenWethPoolV1, mavenWethLoans, mavenWethLps, true);
 
         // Rollback
         vm.prank(globalAdmin);
@@ -279,7 +279,7 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     }
 
     function test_rollback_transferLoans_mavenUsdcPool() external {
-        mavenUsdcPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps);
+        mavenUsdcPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps, true);
 
         // Rollback
         vm.prank(globalAdmin);
@@ -293,7 +293,7 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     }
 
     function test_rollback_transferLoans_mavenPermissionedPool() external {
-        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
+        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
 
         // Rollback
         vm.prank(globalAdmin);
@@ -307,7 +307,7 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     }
 
     function test_rollback_transferLoans_orthogonalPool() external {
-        orthogonalPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(orthogonalPoolV1, orthogonalLoans, orthogonalLps);
+        orthogonalPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(orthogonalPoolV1, orthogonalLoans, orthogonalLps, true);
 
         // Rollback
         vm.prank(globalAdmin);
@@ -321,7 +321,7 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     }
 
     function test_rollback_transferLoans_icebreakerPool() external {
-        icebreakerPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(icebreakerPoolV1, icebreakerLoans, icebreakerLps);
+        icebreakerPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(icebreakerPoolV1, icebreakerLoans, icebreakerLps, false);
 
         // Rollback
         vm.prank(globalAdmin);
@@ -335,11 +335,11 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     }
 
     function test_rollback_transferLoans_allPools() external {
-        mavenWethPoolManager         = deployAndMigratePoolUpToLoanManagerUpgrade(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
-        mavenUsdcPoolManager         = deployAndMigratePoolUpToLoanManagerUpgrade(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
-        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
-        orthogonalPoolManager        = deployAndMigratePoolUpToLoanManagerUpgrade(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
-        icebreakerPoolManager        = deployAndMigratePoolUpToLoanManagerUpgrade(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
+        mavenWethPoolManager         = deployAndMigratePoolUpToLoanManagerUpgrade(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps,         true);
+        mavenUsdcPoolManager         = deployAndMigratePoolUpToLoanManagerUpgrade(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps,         true);
+        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanManagerUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
+        orthogonalPoolManager        = deployAndMigratePoolUpToLoanManagerUpgrade(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps,        true);
+        icebreakerPoolManager        = deployAndMigratePoolUpToLoanManagerUpgrade(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps,        false);
 
         // Rollback
         vm.prank(globalAdmin);
@@ -417,7 +417,7 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     }
 
     function test_rollback_upgradedLoanManager_mavenWethPool() external {
-        mavenWethPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenWethPoolV1, mavenWethLoans, mavenWethLps);
+        mavenWethPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenWethPoolV1, mavenWethLoans, mavenWethLps, true);
 
         setLoanTransferAdmin(mavenWethPoolManager);
 
@@ -432,7 +432,7 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     }
 
     function test_rollback_upgradedLoanManager_mavenUsdcPool() external {
-        mavenUsdcPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps);
+        mavenUsdcPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps, true);
 
         setLoanTransferAdmin(mavenUsdcPoolManager);
 
@@ -447,7 +447,7 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     }
 
     function test_rollback_upgradedLoanManager_mavenPermissionedPool() external {
-        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
+        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
 
         setLoanTransferAdmin(mavenPermissionedPoolManager);
 
@@ -462,7 +462,7 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     }
 
     function test_rollback_upgradedLoanManager_orthogonalPool() external {
-        orthogonalPoolManager = deployAndMigratePoolUpToLoanUpgrade(orthogonalPoolV1, orthogonalLoans, orthogonalLps);
+        orthogonalPoolManager = deployAndMigratePoolUpToLoanUpgrade(orthogonalPoolV1, orthogonalLoans, orthogonalLps, true);
 
         setLoanTransferAdmin(orthogonalPoolManager);
 
@@ -477,7 +477,7 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     }
 
     function test_rollback_upgradedLoanManager_icebreakerPool() external {
-        icebreakerPoolManager = deployAndMigratePoolUpToLoanUpgrade(icebreakerPoolV1, icebreakerLoans, icebreakerLps);
+        icebreakerPoolManager = deployAndMigratePoolUpToLoanUpgrade(icebreakerPoolV1, icebreakerLoans, icebreakerLps, false);
 
         setLoanTransferAdmin(icebreakerPoolManager);
 
@@ -492,11 +492,11 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     }
 
     function test_rollback_upgradedLoanManager_allPools() external {
-        mavenWethPoolManager         = deployAndMigratePoolUpToLoanUpgrade(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps);
-        mavenUsdcPoolManager         = deployAndMigratePoolUpToLoanUpgrade(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps);
-        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps);
-        orthogonalPoolManager        = deployAndMigratePoolUpToLoanUpgrade(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps);
-        icebreakerPoolManager        = deployAndMigratePoolUpToLoanUpgrade(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps);
+        mavenWethPoolManager         = deployAndMigratePoolUpToLoanUpgrade(mavenWethPoolV1,         mavenWethLoans,         mavenWethLps,         true);
+        mavenUsdcPoolManager         = deployAndMigratePoolUpToLoanUpgrade(mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps,         true);
+        mavenPermissionedPoolManager = deployAndMigratePoolUpToLoanUpgrade(mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
+        orthogonalPoolManager        = deployAndMigratePoolUpToLoanUpgrade(orthogonalPoolV1,        orthogonalLoans,        orthogonalLps,        true);
+        icebreakerPoolManager        = deployAndMigratePoolUpToLoanUpgrade(icebreakerPoolV1,        icebreakerLoans,        icebreakerLps,        false);
 
         setLoanTransferAdmin(mavenWethPoolManager);
         setLoanTransferAdmin(mavenUsdcPoolManager);

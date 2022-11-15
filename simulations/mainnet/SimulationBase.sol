@@ -334,7 +334,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         }
     }
 
-    function deployAndMigratePoolUpToLoanManagerUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
+    function deployAndMigratePoolUpToLoanManagerUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps, bool open) internal returns (IPoolManagerLike poolManager) {
         /*******************************/
         /*** Step 4: Deploy new Pool ***/
         /*******************************/
@@ -369,7 +369,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         /*** Step 7: Open the Pool or allowlist the pool to allow airdrop to occur ***/
         /*****************************************************************************/
 
-        openPoolV2(poolManager);  // TODO: Add whitelisting for permissioned pools.  // 5min
+        open ? openPoolV2(poolManager) : allowLenders(poolManager, lps); // 5min
 
         /**********************************************************/
         /*** Step 8: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
@@ -400,8 +400,8 @@ contract SimulationBase is TestUtils, AddressRegistry {
         vm.stopPrank();
     }
 
-    function deployAndMigratePoolUpToLoanUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
-        poolManager = deployAndMigratePoolUpToLoanManagerUpgrade(poolV1, loans, lps);
+    function deployAndMigratePoolUpToLoanUpgrade(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps, bool open) internal returns (IPoolManagerLike poolManager) {
+        poolManager = deployAndMigratePoolUpToLoanManagerUpgrade(poolV1, loans, lps, open);
 
         ITransitionLoanManagerLike transitionLoanManager = ITransitionLoanManagerLike(poolManager.loanManagerList(0));
         IPoolLike                  poolV2                = IPoolLike(poolManager.pool());
@@ -421,8 +421,8 @@ contract SimulationBase is TestUtils, AddressRegistry {
         assertPoolAccounting(poolManager, loans);
     }
 
-    function deployAndMigratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps) internal returns (IPoolManagerLike poolManager) {
-        poolManager = deployAndMigratePoolUpToLoanUpgrade(poolV1, loans, lps);
+    function deployAndMigratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps, bool open) internal returns (IPoolManagerLike poolManager) {
+        poolManager = deployAndMigratePoolUpToLoanUpgrade(poolV1, loans, lps, open);
 
         /****************************************/
         /*** Step 12: Upgrade all loans to V4 ***/
@@ -525,6 +525,14 @@ contract SimulationBase is TestUtils, AddressRegistry {
     /******************************************************************************************************************************/
     /*** Utility Functions                                                                                                      ***/
     /******************************************************************************************************************************/
+
+    function allowLenders(IPoolManagerLike poolManager, address[] memory lps) internal {
+        vm.startPrank(poolManager.poolDelegate());
+        for (uint256 i; i < lps.length; ++i) {
+            poolManager.setAllowedLender(lps[i], true);
+        }
+        vm.stopPrank();
+    }
 
     function assertDebtLockerVersion(uint256 version_ , IDebtLockerLike debtLocker_) internal {
         address implementation_ = debtLockerFactory.implementationOf(version_);

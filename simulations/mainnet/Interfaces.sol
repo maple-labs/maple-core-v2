@@ -193,6 +193,8 @@ interface IPoolManagerLike {
 
     function poolDelegate() external view returns (address poolDelegate_);
 
+    function setAllowedLender(address lender_, bool isValid_) external;
+
     function poolDelegateCover() external view returns (address poolDelegateCover_);
 
     function setLiquidityCap(uint256 newLiquidityCap_) external;
