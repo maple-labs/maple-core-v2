@@ -46,6 +46,7 @@ import {
     IMapleProxiedLike,
     IMplRewardsLike,
     IPoolLike,
+    IPoolV2Like,
     IPoolManagerLike,
     IStakeLockerLike,
     ITransitionLoanManagerLike
@@ -75,6 +76,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
     mapping(address => IMapleLoanLike) public migrationLoans;
     mapping(address => address)        public temporaryPDs;
+    mapping(address => address)        public finalPDs;
     mapping(address => uint256)        public loansAddedTimestamps;   // Timestamp when loans were added
     mapping(address => uint256)        public lastUpdatedTimestamps;  // Last timestamp that a LoanManager's accounting was updated
     mapping(address => address)        public loansOriginalLender;    // Store DebtLocker of loan for rollback
@@ -140,10 +142,15 @@ contract SimulationBase is TestUtils, AddressRegistry {
         mapleGlobalsV2.setValidPoolAsset(address(wbtc), true);
         mapleGlobalsV2.setValidPoolAsset(address(weth), true);
 
-        // Create the temporary PD
+        // Create the temporary and the final PDs
 
         mapleGlobalsV2.setValidPoolDelegate(
             temporaryPDs[address(mavenPermissionedPoolV1)] = address(new Address()),
+            true
+        );
+
+        mapleGlobalsV2.setValidPoolDelegate(
+            finalPDs[address(mavenPermissionedPoolV1)] = address(new Address()),
             true
         );
 
@@ -153,12 +160,28 @@ contract SimulationBase is TestUtils, AddressRegistry {
         );
 
         mapleGlobalsV2.setValidPoolDelegate(
+            finalPDs[address(mavenUsdcPoolV1)] = address(new Address()),
+            true
+        );
+
+        mapleGlobalsV2.setValidPoolDelegate(
             temporaryPDs[address(mavenWethPoolV1)] = address(new Address()),
             true
         );
 
         mapleGlobalsV2.setValidPoolDelegate(
+            finalPDs[address(mavenWethPoolV1)] = address(new Address()),
+            true
+        );
+
+
+        mapleGlobalsV2.setValidPoolDelegate(
             temporaryPDs[address(orthogonalPoolV1)] = address(new Address()),
+            true
+        );
+
+        mapleGlobalsV2.setValidPoolDelegate(
+            finalPDs[address(orthogonalPoolV1)] = address(new Address()),
             true
         );
 
@@ -167,6 +190,10 @@ contract SimulationBase is TestUtils, AddressRegistry {
             true
         );
 
+        mapleGlobalsV2.setValidPoolDelegate(
+            finalPDs[address(icebreakerPoolV1)] = address(new Address()),
+            true
+        );
 
         mapleGlobalsV2.setValidPoolDelegate(mavenPermissionedPoolV1.poolDelegate(), true);
         mapleGlobalsV2.setValidPoolDelegate(mavenUsdcPoolV1.poolDelegate(),         true);
@@ -649,7 +676,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         ];
 
         uint256[6] memory configParams = [
-            type(uint256).max,
+            0,
             0.1e6,
             0,
             7 days,
@@ -669,6 +696,20 @@ contract SimulationBase is TestUtils, AddressRegistry {
         vm.stopPrank();
 
         poolManager = IPoolManagerLike(poolManagerAddress);
+    }
+
+    function depositCover(IPoolManagerLike poolManager, uint256 amount) internal {
+        IERC20Like asset     = IERC20Like(poolManager.asset());
+        address poolDelegate = poolManager.poolDelegate();
+
+        erc20_mint(address(asset), poolDelegate, amount);
+
+        vm.startPrank(poolDelegate);
+        asset.approve(address(poolManager), amount);
+        poolManager.depositCover(amount);
+        vm.stopPrank();
+
+        assertEq(IERC20Like(asset).balanceOf(poolManager.poolDelegateCover()), amount);
     }
 
     function downgradeDebtLockersTo300(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
@@ -722,11 +763,36 @@ contract SimulationBase is TestUtils, AddressRegistry {
         totalValue = poolV1.totalSupply() * 10 ** asset.decimals() / 1e18 + poolV1.interestSum() - poolV1.poolLosses();
     }
 
+    function increaseLiquidityCap(IPoolManagerLike poolManager, uint256 newCap) internal {
+        vm.prank(poolManager.poolDelegate());
+        poolManager.setLiquidityCap(newCap);
+    }
+
     function lockPoolV1Deposits(IPoolLike poolV1) internal {
         vm.prank(poolV1.poolDelegate());
         poolV1.setLiquidityCap(0);
 
         assertEq(poolV1.liquidityCap(), 0);
+    }
+
+    function makeDeposit(IPoolManagerLike poolManager, uint256 amount) internal {
+        // Create an LP
+        address asset  = poolManager.asset();
+        address lp     = address(new Address());
+        address poolV2 = poolManager.pool();
+
+        uint256 initialBalance = IERC20Like(asset).balanceOf(poolV2);
+
+        // Get the asset
+        erc20_mint(asset, lp, amount);
+
+        vm.startPrank(lp);
+        IERC20Like(asset).approve(address(poolV2), amount);
+        uint256 shares = IPoolV2Like(poolV2).deposit(amount, lp);
+        vm.stopPrank();
+
+        assertEq(IERC20Like(asset).balanceOf(poolV2), initialBalance + amount);
+        assertEq(IERC20Like(poolV2).balanceOf(lp),    shares);
     }
 
     function openPoolV2(IPoolManagerLike poolManager) internal {
@@ -913,6 +979,21 @@ contract SimulationBase is TestUtils, AddressRegistry {
                 assertEq(stakeLocker.balanceOf(coverProviders[i]), 0);
             }
         }
+    }
+
+    /******************************************************************************************************************************/
+    /*** Token Functions                                                                                                        ***/
+    /******************************************************************************************************************************/
+
+    function erc20_mint(address token, address account, uint256 amount) internal {
+        uint256 mintSlot;
+
+        require(token == address(usdc) || token == address(weth), "erc20_mint:INVALID_TOKEN");
+
+        if (token == address(usdc)) mintSlot = 9;
+        if (token == address(weth)) mintSlot = 3;
+
+        erc20_mint(token, mintSlot, account, amount);
     }
 
 }

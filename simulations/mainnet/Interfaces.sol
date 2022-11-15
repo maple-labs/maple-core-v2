@@ -169,6 +169,14 @@ interface IPoolLike {
 
 }
 
+interface IPoolV2Like {
+
+    function asset() external view returns (address asset_);
+
+    function deposit(uint256 assets_, address receiver_) external returns (uint256 shares_);
+
+}
+
 interface IPoolManagerLike {
 
     function acceptPendingPoolDelegate() external;
@@ -177,11 +185,17 @@ interface IPoolManagerLike {
 
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
 
+    function depositCover(uint256 amount_) external;
+
     function loanManagerList(uint256 index_) external view returns (address loanManager_);
 
     function pool() external view returns (address pool_);
 
     function poolDelegate() external view returns (address poolDelegate_);
+
+    function poolDelegateCover() external view returns (address poolDelegateCover_);
+
+    function setLiquidityCap(uint256 newLiquidityCap_) external;
 
     function setOpenToPublic() external;
 

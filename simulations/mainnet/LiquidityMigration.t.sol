@@ -57,11 +57,11 @@ contract LiquidityMigrationTests is SimulationBase {
         payBackCashLoan(address(orthogonalPoolV1),        orthogonalPoolManager,        orthogonalLoans);
         payBackCashLoan(address(icebreakerPoolV1),        icebreakerPoolManager,        icebreakerLoans);
 
-        transferPoolDelegate(mavenWethPoolManager,         mavenWethPoolV1.poolDelegate());
-        transferPoolDelegate(mavenUsdcPoolManager,         mavenUsdcPoolV1.poolDelegate());
-        transferPoolDelegate(mavenPermissionedPoolManager, mavenPermissionedPoolV1.poolDelegate());
-        transferPoolDelegate(orthogonalPoolManager,        orthogonalPoolV1.poolDelegate());
-        transferPoolDelegate(icebreakerPoolManager,        icebreakerPoolV1.poolDelegate());
+        transferPoolDelegate(mavenWethPoolManager,         finalPDs[address(mavenWethPoolV1)]);
+        transferPoolDelegate(mavenUsdcPoolManager,         finalPDs[address(mavenUsdcPoolV1)]);
+        transferPoolDelegate(mavenPermissionedPoolManager, finalPDs[address(mavenPermissionedPoolV1)]);
+        transferPoolDelegate(orthogonalPoolManager,        finalPDs[address(orthogonalPoolV1)]);
+        transferPoolDelegate(icebreakerPoolManager,        finalPDs[address(icebreakerPoolV1)]);
 
         // Dec 8
         vm.prank(globalAdmin);
@@ -78,6 +78,25 @@ contract LiquidityMigrationTests is SimulationBase {
         // TODO: Move these before and make another function to do all payments
         withdrawCover(mavenUsdcStakeLocker,  mavenUsdcRewards,  mavenUsdcCoverProviders);
         withdrawCover(orthogonalStakeLocker, orthogonalRewards, orthogonalCoverProviders);
+
+        // PoolV2 Lifecycle start
+        depositCover(mavenWethPoolManager,         750e18);
+        depositCover(mavenUsdcPoolManager,         1_000_000e6);
+        depositCover(mavenPermissionedPoolManager, 1_750_000e6);
+        depositCover(orthogonalPoolManager,        2_500_000e6);
+        depositCover(icebreakerPoolManager,        500_000e6);
+
+        increaseLiquidityCap(mavenWethPoolManager,         100_000e18);
+        increaseLiquidityCap(mavenUsdcPoolManager,         100_000_000e6);
+        increaseLiquidityCap(mavenPermissionedPoolManager, 100_000_000e6);
+        increaseLiquidityCap(orthogonalPoolManager,        100_000_000e6);
+        increaseLiquidityCap(icebreakerPoolManager,        100_000_000e6);
+
+        makeDeposit(mavenWethPoolManager,         100e18);
+        makeDeposit(mavenUsdcPoolManager,         100_000e6);
+        makeDeposit(mavenPermissionedPoolManager, 100_000e6);
+        makeDeposit(orthogonalPoolManager,        100_000e6);
+        makeDeposit(icebreakerPoolManager,        100_000e6);
     }
 
 }
