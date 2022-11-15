@@ -135,7 +135,17 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         if (loan.nextPaymentDueDate() == 0) return;
 
         uint256 platformOriginationFee = feeManager.getPlatformOriginationFee(address(loan), loan.principalRequested());
-        uint256 fundedAmount           = loan.principal() - feeManager.delegateOriginationFee(address(loan)) - platformOriginationFee;
+
+        if (loan.principal() < (feeManager.delegateOriginationFee(address(loan)) - platformOriginationFee) && loan.drawableFunds() < loan.principal()) {
+            assertGe(
+                    loan.collateral(),
+                    loan.collateralRequired() * (loan.principal() - loan.drawableFunds()) + loan.principalRequested() - 1 / loan.principalRequested(),
+                    "Loan Invariant C"
+            );
+            return;
+        }
+
+        uint256 fundedAmount = loan.principal() - feeManager.delegateOriginationFee(address(loan)) - platformOriginationFee;
 
         // If there is outstanding principal and the loan is not matured/defaulted
         if (loan.drawableFunds() < fundedAmount) {
