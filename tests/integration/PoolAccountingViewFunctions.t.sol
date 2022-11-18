@@ -350,7 +350,7 @@ contract MaxWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp1), 1_000e6);
 
         vm.prank(lp1);
-        pool.requestWithdraw(1_000e6, lp1);
+        pool.requestRedeem(1_000e6, lp1);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -365,7 +365,7 @@ contract MaxWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp1), 1_000e6);
 
         vm.prank(lp1);
-        pool.requestWithdraw(1_000e6, lp1);
+        pool.requestRedeem(1_000e6, lp1);
 
         assertEq(pool.maxWithdraw(lp1), 0);
 
@@ -373,7 +373,26 @@ contract MaxWithdrawTests is TestBase {
 
         assertTrue(withdrawalManager.isInExitWindow(lp1));
 
-        assertEq(pool.maxWithdraw(lp1), 1_000e6);
+        assertEq(pool.maxWithdraw(lp1), 0);
+    }
+
+    function testFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
+        assets_ = constrictToRange(assets_, 1, 1_000e6);
+
+        depositLiquidity(lp1, assets_);
+
+        assertEq(pool.balanceOf(lp1), assets_);
+
+        vm.prank(lp1);
+        pool.requestRedeem(assets_, lp1);
+
+        assertEq(pool.maxWithdraw(lp1), 0);
+
+        vm.warp(start + 2 weeks);
+
+        assertTrue(withdrawalManager.isInExitWindow(lp1));
+
+        assertEq(pool.maxWithdraw(lp1), 0);
     }
 
 }
@@ -436,42 +455,54 @@ contract PreviewWithdrawTests is TestBase {
         lp1 = address(new Address());
     }
 
-    function test_previewWithdraw_invalidShares_notEnabled() external {
+    function test_previewWithdraw() external {
         depositLiquidity(lp1, 1_000e6);
 
-        vm.startPrank(lp1);
-        pool.requestWithdraw(1_000e6, lp1);
-
-        assertEq(pool.previewWithdraw(1), 0);
+        vm.prank(lp1);
+        assertEq(pool.previewWithdraw(1_000e6), 0);
     }
 
-    function test_previewWithdraw_noLockedShares_notInExitWindow_notEnabled() external {
+    function test_previewWithdraw_zeroAssetsWithDeposit() external {
         depositLiquidity(lp1, 1_000e6);
 
         vm.prank(lp1);
         assertEq(pool.previewWithdraw(0), 0);
     }
 
-    function test_previewWithdraw_lockedShares_notInExitWindow_notEnabled() external {
-        depositLiquidity(lp1, 1_000e6);
+    function test_previewWithdraw_zeroAssetsWithoutDeposit() external {
+        vm.prank(lp1);
+        assertEq(pool.previewWithdraw(0), 0);
+    }
+
+    function testFuzz_previewWithdraw_lockedShares_notInExitWindow(uint256 assets_) external {
+        assets_ = constrictToRange(assets_, 1, 1_000e6);
+
+        depositLiquidity(lp1, assets_);
 
         vm.startPrank(lp1);
-        pool.requestWithdraw(1_000e6, lp1);
+        pool.requestRedeem(assets_, lp1);
 
         vm.warp(start + 2 weeks - 1);
 
-        assertEq(pool.previewWithdraw(1_000e6), 0);
+        assertEq(pool.previewWithdraw(assets_), 0);
     }
 
-    function test_previewWithdraw_lockedShares_inExitWindow_notEnabled() external {
-        depositLiquidity(lp1, 1_000e6);
+    function testFuzz_previewWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
+        assets_ = constrictToRange(assets_, 1, 1_000e6);
+
+        depositLiquidity(lp1, assets_);
 
         vm.startPrank(lp1);
-        pool.requestWithdraw(1_000e6, lp1);
+        pool.requestRedeem(assets_, lp1);
 
         vm.warp(start + 2 weeks);
 
-        assertEq(pool.previewWithdraw(1_000e6), 0);  // Note: Will always return 0 as not enabled
+        assertEq(pool.previewWithdraw(assets_), 0);
+    }
+
+    function testFuzz_previewWithdraw(uint256 assets_) external {
+        vm.prank(lp1);
+        assertEq(pool.previewWithdraw(assets_), 0);
     }
 
 }

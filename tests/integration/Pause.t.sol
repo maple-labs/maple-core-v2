@@ -80,16 +80,16 @@ contract PauseTests is TestBaseWithAssertions {
         bytes32 salt_ = keccak256(abi.encode(pausePoolDelegate));
         bytes memory arguments = IPoolManagerInitializer(poolManagerInitializer).encodeArguments(pausePoolDelegate, address(fundsAsset), 0, "Maple Pool", "MP");
 
-        vm.expectRevert("MPF:CI:FAILED");  // NOTE: Protocol paused error will not bubble up
         vm.prank(address(deployer));
+        vm.expectRevert("MPF:PROTOCOL_PAUSED");
         IMapleProxyFactory(poolManagerFactory).createInstance(arguments, salt_);
 
         // Loan Manager
 
         arguments = ILoanManagerInitializer(loanManagerInitializer).encodeArguments(address(pool));
 
-        vm.expectRevert("MPF:CI:FAILED");  // NOTE: Protocol paused error will not bubble up
         vm.prank(address(deployer));
+        vm.expectRevert("MPF:PROTOCOL_PAUSED");
         IMapleProxyFactory(loanManagerFactory).createInstance(arguments, salt_);
 
         // Withdrawal Manager
@@ -225,9 +225,6 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.setDelegateManagementFeeRate(0);
-
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.setImplementation(address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.setLiquidityCap(0);
