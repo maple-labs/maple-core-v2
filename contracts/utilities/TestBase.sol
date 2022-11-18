@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
 import { Address, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";

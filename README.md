@@ -2,7 +2,6 @@
 
 [![Foundry][foundry-badge]][foundry]
 ![Foundry CI](https://github.com/maple-labs/maple-v2-core/actions/workflows/forge.yaml/badge.svg)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
