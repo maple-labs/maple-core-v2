@@ -156,6 +156,27 @@ contract DeployPoolTests is TestBaseWithAssertions {
         });
     }
 
+    function test_deployPool_failWithNonZeroSupplyAndZeroMigrationAdmin() external {
+        vm.prank(governor);
+        globals.setMigrationAdmin(address(0));
+
+        fundsAsset.mint(poolDelegate, 1_000_000e6);
+
+        vm.startPrank(poolDelegate);
+
+        fundsAsset.approve(address(deployer), 1_000_000e6);
+
+        vm.expectRevert("MPF:CI:FAILED");
+        deployer.deployPool({
+            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            asset_:        address(fundsAsset),
+            name_:         "Maple Pool",
+            symbol_:       "MP",
+            configParams_: [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6]
+        });
+    }
+
     function test_deployPool_failWithZeroWindowDuration() external {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -221,6 +242,53 @@ contract DeployPoolTests is TestBaseWithAssertions {
     function test_deployPool_failIfCalledWMFactoryDirectly() external {
         vm.expectRevert("WMF:CI:NOT_DEPLOYER");
         IMapleProxyFactory(withdrawalManagerFactory).createInstance(new bytes(0), "salt");
+    }
+
+    function test_deployPool_successWithZeroMigrationAdmin() external {
+        vm.prank(governor);
+        globals.setMigrationAdmin(address(0));
+
+        fundsAsset.mint(poolDelegate, 1_000_000e6);
+
+        vm.startPrank(poolDelegate);
+
+        fundsAsset.approve(address(deployer), 1_000_000e6);
+
+        ( address poolManager_, address loanManager_, address withdrawalManager_) = deployer.deployPool({
+            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            asset_:        address(fundsAsset),
+            name_:         "Maple Pool",
+            symbol_:       "MP",
+            configParams_: [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 0]
+        });
+
+        // Just testing that the deployment succeeded, the full assertion are made in the tests below.
+        assertTrue(poolManager_       != address(0));
+        assertTrue(loanManager_       != address(0));
+        assertTrue(withdrawalManager_ != address(0));
+    }
+
+    function test_deployPool_successWithInitialSupply() external {
+        fundsAsset.mint(poolDelegate, 1_000_000e6);
+
+        vm.startPrank(poolDelegate);
+
+        fundsAsset.approve(address(deployer), 1_000_000e6);
+
+        ( address poolManager_, address loanManager_, address withdrawalManager_) = deployer.deployPool({
+            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            asset_:        address(fundsAsset),
+            name_:         "Maple Pool",
+            symbol_:       "MP",
+            configParams_: [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6]
+        });
+
+        // Just testing that the deployment succeeded, the full assertion are made in the tests below.
+        assertTrue(poolManager_       != address(0));
+        assertTrue(loanManager_       != address(0));
+        assertTrue(withdrawalManager_ != address(0));
     }
 
     function test_deployPool_success() external {
