@@ -769,3 +769,353 @@ contract RedeemFailureTests is TestBase {
     }
 
 }
+
+contract RedeemIntegrationTests is TestBase {
+
+    address private borrower;
+    address private lp1;
+    address private lp2;
+    address private wm;
+
+    Loan loan;
+
+    function setUp() public override {
+        super.setUp();
+
+        lp1      = address(new Address());
+        lp2      = address(new Address());
+        borrower = address(new Address());
+        wm       = address(withdrawalManager);
+
+        depositLiquidity(lp1, 3_000_000e6);
+        depositLiquidity(lp2, 3_000_000e6);
+
+        vm.prank(governor);
+        globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
+
+        depositCover({ cover: 1_000_000e6 });
+    }
+
+    function _fundAndDrawLoanWithDynamicCollateral(uint256 collateralAmount_) internal {
+        loan = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
+            amounts:     [uint256(collateralAmount_), uint256(2_000_000e6), uint256(2_000_000e6)],
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
+        });
+    }
+
+
+    function test_redeem_oneLPWithImpairedLoan() external {
+        // Check balance on pool
+        assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6 * 2);
+
+        // Fund and Draw a Loan
+        _fundAndDrawLoanWithDynamicCollateral(1_000_000e6);
+
+        // Check balance on pool after loan
+        assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - 2_000_000e6);
+
+        // Loan is not impaired
+        assertTrue(!loan.isImpaired());
+
+        // Request the redeem
+        vm.prank(lp1);
+        pool.requestRedeem(1_000_000e6, lp1);
+
+        vm.prank(address(poolDelegate));
+        poolManager.impairLoan(address(loan));
+
+        // Loan should be impaired
+        assertTrue(loan.isImpaired());
+
+        // Warp to the withdrawal cycle
+        vm.warp(start + 2 weeks);
+
+        // Check the totalSupply and totalAssets
+        assertEq(pool.totalSupply(), 3_000_000e6 * 2);
+        assertEq(pool.totalAssets(), 3_000_000e6 * 2);
+
+        // Check locked shares for lp1 and cycles inherent info
+        assertEq(withdrawalManager.lockedShares(lp1),   1_000_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp1),    3);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6);
+
+        // Losses should be the amount of the loan
+        assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
+
+        // When there's enough liquidity to redeem
+        uint256 shouldRedeemSC         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
+        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 1_000_000e6)                           / (3_000_000e6 * uint256(2));
+        assertEq(shouldRedeemSC, shouldRedeemCalculated);
+        assertEq(shouldRedeemSC, 666_666.666666e6);
+
+        // Redeem and check amount
+        vm.startPrank(lp1);
+        uint256 amountToRedeem = pool.previewRedeem(1_000_000e6);
+        uint256 redeemed       = pool.redeem(1_000_000e6, lp1, lp1);
+        vm.stopPrank();
+
+        // Check the calculated amount against the smart contract
+        assertEq(redeemed, amountToRedeem);
+        assertEq(redeemed, shouldRedeemSC);
+        assertEq(redeemed, 666_666.666666e6);
+
+        // Check balances of pool and lp1
+        assertEq(fundsAsset.balanceOf(lp1),           redeemed);
+        assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - (2_000_000e6) - redeemed);
+
+        // Check the totalSupply and totalAssets
+        assertEq(pool.totalSupply(), (3_000_000e6 * 2) - (1_000_000e6));
+        assertEq(pool.totalAssets(), (3_000_000e6 * 2) - redeemed);
+
+        // Check the pool balances
+        assertEq(pool.balanceOf(lp1), 3_000_000e6 - 1_000_000e6);
+        assertEq(pool.balanceOf(lp2), 3_000_000e6);
+        assertEq(pool.balanceOf(wm),  0);
+
+        // Check locked shares for lp1 and cycles inherent info
+        assertEq(withdrawalManager.exitCycleId(lp1),    0);
+        assertEq(withdrawalManager.lockedShares(lp1),   0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+    }
+
+
+    function test_redeem_twoLPsWithImpairedLoan() external {
+        // Check balance on pool
+        assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6 * 2);
+
+        // Fund and Draw a Loan
+        _fundAndDrawLoanWithDynamicCollateral(1_000_000e6);
+
+        // Check balance on pool after loan
+        assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - 2_000_000e6);
+
+        // Loan is not impaired
+        assertTrue(!loan.isImpaired());
+
+        // LP1 Request the redeem
+        vm.prank(lp1);
+        pool.requestRedeem(1_000_000e6, lp1);
+
+        // LP2 Request the redeem
+        vm.prank(lp2);
+        pool.requestRedeem(2_000_000e6, lp2);
+
+        vm.prank(address(poolDelegate));
+        poolManager.impairLoan(address(loan));
+
+        // Loan should be impaired
+        assertTrue(loan.isImpaired());
+        vm.stopPrank();
+
+        // Warp to the withdrawal cycle
+        vm.warp(start + 2 weeks);
+
+        // Check the totalSupply and totalAssets
+        assertEq(pool.totalSupply(), 3_000_000e6 * 2);
+        assertEq(pool.totalAssets(), 3_000_000e6 * 2);
+
+        // Check locked shares for lp1 and cycles inherent info
+        assertEq(withdrawalManager.lockedShares(lp1), 1_000_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp1),  3);
+
+        // Check locked shares for lp2 and cycles inherent info
+        assertEq(withdrawalManager.lockedShares(lp2),   2_000_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp2),    3);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
+
+        // Losses should be the amount of the loan
+        assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
+
+        // When there's enough liquidity to redeem
+        uint256 shouldRedeemSC         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
+        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * (1_000_000e6 + 2_000_000e6))           / (3_000_000e6 * uint256(2));
+        assertEq(shouldRedeemSC, shouldRedeemCalculated);
+        assertEq(shouldRedeemSC, 2_000_000e6); // 1:2/3 exchange rate, no rounding error
+
+        uint256 shouldRedeemSCLP1         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
+        uint256 shouldRedeemCalculatedLP1 = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 1_000_000e6)                         / (3_000_000e6 * uint256(2));
+        assertEq(shouldRedeemSCLP1, shouldRedeemCalculatedLP1);
+        assertEq(shouldRedeemSCLP1, 666_666.666666e6);
+
+        uint256 shouldRedeemSCLP2         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp2)) / pool.totalSupply();
+        uint256 shouldRedeemCalculatedLP2 = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 2_000_000e6)                         / (3_000_000e6 * uint256(2));
+        assertEq(shouldRedeemSCLP2, shouldRedeemCalculatedLP2);
+        assertEq(shouldRedeemSCLP2, 1_333_333.333333e6);
+
+        // Redeem and check amount LP1
+        vm.startPrank(lp1);
+        uint256 amountToRedeemLP1 = pool.previewRedeem(1_000_000e6);
+        uint256 redeemedLP1       = pool.redeem(1_000_000e6, lp1, lp1);
+        vm.stopPrank();
+
+        // // Redeem and check amount LP2
+        vm.startPrank(lp2);
+        uint256 amountToRedeemLP2 = pool.previewRedeem(2_000_000e6);
+        uint256 redeemedLP2       = pool.redeem(2_000_000e6, lp2, lp2);
+        vm.stopPrank();
+
+        // Check the calculated amount against the smart contract
+        assertEq(redeemedLP1, amountToRedeemLP1);
+        assertEq(redeemedLP1, shouldRedeemSCLP1);
+        assertEq(redeemedLP1, 666_666.666666e6);
+
+        assertEq(redeemedLP2, amountToRedeemLP2);
+        assertEq(redeemedLP2, shouldRedeemSCLP2);
+        assertEq(redeemedLP2, 1_333_333.333333e6);
+
+        // Check balances of pool, lp1 and lp2
+        assertEq(fundsAsset.balanceOf(lp1),           redeemedLP1);
+        assertEq(fundsAsset.balanceOf(lp2),           redeemedLP2);
+        assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - (2_000_000e6) - (redeemedLP1 + redeemedLP2));
+        assertEq(fundsAsset.balanceOf(address(pool)), 2_000_000.000001e6);  // Rounding
+
+        // Check the totalSupply and totalAssets
+        // Pool liquidity minus locked by lp1 and locked by lp2
+        assertEq(pool.totalSupply(), (3_000_000e6 * 2) - (1_000_000e6 + 2_000_000e6));
+        // Pool liquidity minus redeeemed by lp1 and redeemed by lp2
+        assertEq(pool.totalAssets(), (3_000_000e6 * 2) - (redeemedLP1 + redeemedLP2));
+        assertEq(pool.totalAssets(), 4_000_000.000001e6);  // Rounding
+
+        // Check the pool balances
+        assertEq(pool.balanceOf(lp1), 3_000_000e6 - 1_000_000e6);
+        assertEq(pool.balanceOf(lp2), 3_000_000e6 - 2_000_000e6);
+        assertEq(pool.balanceOf(wm),  0);
+
+        // Check locked shares for lp1, lp2 and cycles inherent info
+        assertEq(withdrawalManager.exitCycleId(lp1),     0);
+        assertEq(withdrawalManager.lockedShares(lp1),    0);
+        assertEq(withdrawalManager.exitCycleId(lp2),     0);
+        assertEq(withdrawalManager.lockedShares(lp2),    0);
+        assertEq(withdrawalManager.totalCycleShares(3),  0);
+    }
+
+    function test_redeem_twoLPSWithImpairedLoanAndTriggerDefault() external {
+        // Check balance on pool
+        assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6 * 2);
+
+        // Fund and Draw a Loan
+        _fundAndDrawLoanWithDynamicCollateral(0);
+
+        // Check balance on pool after loan
+        assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - 2_000_000e6);
+
+        // Loan is not impaired
+        assertTrue(!loan.isImpaired());
+
+        // LP1 Request the redeem
+        vm.prank(lp1);
+        pool.requestRedeem(1_000_000e6, lp1);
+
+        // LP2 Request the redeem
+        vm.prank(lp2);
+        pool.requestRedeem(2_000_000e6, lp2);
+
+        vm.prank(address(poolDelegate));
+        poolManager.impairLoan(address(loan));
+
+        // Loan should be impaired
+        assertTrue(loan.isImpaired());
+        vm.stopPrank();
+
+        // Warp to the withdrawal cycle
+        vm.warp(start + 2 weeks);
+
+        // Check the totalSupply and totalAssets
+        assertEq(pool.totalSupply(), 3_000_000e6 * 2);
+        assertEq(pool.totalAssets(), 3_000_000e6 * 2);
+
+        // Check locked shares for lp1 and cycles inherent info
+        assertEq(withdrawalManager.lockedShares(lp1),   1_000_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp1),    3);
+        assertEq(withdrawalManager.lockedShares(lp2),   2_000_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp2),    3);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
+
+        // Losses should be the amount of the loan
+        assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
+
+        // When there's enough liquidity to redeem
+        uint256 shouldRedeemSC         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
+        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * (1_000_000e6 + 2_000_000e6))           / (3_000_000e6 * uint256(2));
+        assertEq(shouldRedeemSC, shouldRedeemCalculated);
+        assertEq(shouldRedeemSC, 2_000_000e6);
+
+        uint256 shouldRedeemSCLP1         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
+        uint256 shouldRedeemCalculatedLP1 = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 1_000_000e6)                         / (3_000_000e6 * uint256(2));
+        assertEq(shouldRedeemSCLP1, shouldRedeemCalculatedLP1);
+        assertEq(shouldRedeemSCLP1, 666_666.666666e6);
+
+        // Redeem and check amount LP1
+        vm.startPrank(lp1);
+        uint256 amountToRedeemLP1 = pool.previewRedeem(1_000_000e6);
+        uint256 redeemedLP1       = pool.redeem(1_000_000e6, lp1, lp1);
+        vm.stopPrank();
+
+        // Check the calculated amount against the smart contract
+        assertEq(redeemedLP1,       amountToRedeemLP1);
+        assertEq(redeemedLP1,       shouldRedeemSCLP1);
+        assertEq(shouldRedeemSCLP1, 666_666.666666e6);
+
+        // Assert cover hasn't been touched
+        assertEq(fundsAsset.balanceOf(address(poolCover)), 1_000_000e6);
+
+        // Trigger Default on the loan
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+
+        // Check cover was used
+        assertEq(fundsAsset.balanceOf(address(poolCover)), 600_000e6);
+
+        // Deposits - loan default + recovered from cover - lp1withdrawn
+        uint256 totalAssets = 6_000_000e6 - 2_000_000e6 + 400_000e6 - redeemedLP1;
+        assertEq(poolManager.totalAssets(), totalAssets);
+
+        // Deposits - withdrawn by Lp1
+        uint256 totalSupply = 6_000_000e6 - 1_000_000e6;
+        assertEq(pool.totalSupply(), totalSupply);
+
+        uint256 shouldRedeemSCLP2         = ((poolManager.totalAssets()) * withdrawalManager.lockedShares(lp2)) / pool.totalSupply();
+        uint256 shouldRedeemCalculatedLP2 = (totalAssets * 2_000_000e6)                                         / totalSupply;
+        assertEq(shouldRedeemSCLP2, shouldRedeemCalculatedLP2);
+        assertEq(shouldRedeemSCLP2, 1_493_333.333333e6);
+
+        // Redeem and check amount LP2
+        vm.startPrank(lp2);
+        uint256 amountToRedeemLP2 = pool.previewRedeem(2_000_000e6);
+        uint256 redeemedLP2       = pool.redeem(2_000_000e6, lp2, lp2);
+        vm.stopPrank();
+
+        // Check the calculated amount against the smart contract
+        assertEq(redeemedLP2,       amountToRedeemLP2);
+        assertEq(redeemedLP2,       shouldRedeemSCLP2);
+        assertEq(shouldRedeemSCLP2, 1_493_333.333333e6);
+
+        // Check balances of pool, lp1 and lp2
+        assertEq(fundsAsset.balanceOf(lp1), redeemedLP1);
+        assertEq(fundsAsset.balanceOf(lp2), redeemedLP2);
+        assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - (2_000_000e6 - 400_000e6) - (redeemedLP1 + redeemedLP2));
+
+        // Check the totalSupply and totalAssets
+        // Pool liquidity minus locked by lp1 and locked by lp1
+        assertEq(pool.totalSupply(), totalSupply - 2_000_000e6);
+
+        // Pool liquidity minus redeemed by both LPs minus LOAN lost
+        assertEq(pool.totalAssets(), (3_000_000e6 * 2) - (redeemedLP1 + redeemedLP2) - (2_000_000e6 - 400_000e6));
+
+        // Check the pool balances
+        assertEq(pool.balanceOf(lp1), 3_000_000e6 - 1_000_000e6);
+        assertEq(pool.balanceOf(lp2), 3_000_000e6 - 2_000_000e6);
+        assertEq(pool.balanceOf(wm),  0);
+
+        // Check locked shares for lp1, lp2 and cycles inherent info
+        assertEq(withdrawalManager.exitCycleId(lp1),    0);
+        assertEq(withdrawalManager.lockedShares(lp1),   0);
+        assertEq(withdrawalManager.exitCycleId(lp2),    0);
+        assertEq(withdrawalManager.lockedShares(lp2),   0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+    }
+
+}
