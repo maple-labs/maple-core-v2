@@ -127,6 +127,10 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
         assert_poolManager_invariant_A();
     }
 
+    function invariant_poolManager_B() external useCurrentTimestamp { 
+        assert_poolManager_invariant_B(); 
+    }
+
     /******************************************************************************************************************************/
     /*** Withdrawal Manager Invariants                                                                                          ***/
     /******************************************************************************************************************************/

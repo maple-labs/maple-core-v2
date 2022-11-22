@@ -204,8 +204,17 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_loanManager_invariant_F() internal {
-        assertLe(loanManager.unrealizedLosses(), loanManager.assetsUnderManagement() + 1, "LoanManager Invariant F");
         // NOTE: To account for precision errors for unrealizedLosses(), we add 1 to the AUM
+        uint256 losses   = loanManager.unrealizedLosses();
+        uint256 aum      = loanManager.assetsUnderManagement();
+        uint256 payments = loanHandler.numPayments();
+
+        if (losses > aum) {
+            assertWithinDiff(losses, aum, payments + 1);
+        } else {
+            assertLe(losses, aum + 1, "LoanManager Invariant F");
+
+        }
     }
 
     function assert_loanManager_invariant_G() internal {
@@ -324,6 +333,10 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,
             "PoolManager Invariant A"
         );
+    }
+
+    function assert_poolManager_invariant_B() internal {
+        assertTrue(poolManager.unrealizedLosses() <= poolManager.totalAssets(), "PoolManager Invariant B");
     }
 
     /******************************************************************************************************************************/

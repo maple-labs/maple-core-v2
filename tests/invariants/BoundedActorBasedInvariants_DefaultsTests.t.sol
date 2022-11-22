@@ -132,8 +132,12 @@ contract BoundedActorBasedInvariants_DefaultsTests is BaseInvariants {
     /*** Pool Manager Invariants                                                                                                ***/
     /******************************************************************************************************************************/
 
-    function invariant_poolManager_A_totalAssetsEqCashPlusAUM() external useCurrentTimestamp {
+    function invariant_poolManager_A() external useCurrentTimestamp {
         assert_poolManager_invariant_A();
+    }
+
+    function invariant_poolManager_B() external useCurrentTimestamp {
+        assert_poolManager_invariant_B();
     }
 
     /******************************************************************************************************************************/
