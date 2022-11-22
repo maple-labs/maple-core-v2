@@ -117,6 +117,13 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertTrue(liquidationInfo.triggeredByGovernor == triggeredByGovernor, "triggeredByGovernor");
     }
 
+    function assertPoolState(uint256 totalAssets, uint256 totalSupply, uint256 unrealizedLosses, uint256 availableLiquidity) internal {
+        assertEq(pool.totalAssets(),                  totalAssets,        "totalAssets");
+        assertEq(pool.totalSupply(),                  totalSupply,        "totalSupply");
+        assertEq(pool.unrealizedLosses(),             unrealizedLosses,   "unrealizedLosses");
+        assertEq(fundsAsset.balanceOf(address(pool)), availableLiquidity, "availableLiquidity");
+    }
+
     function assertPoolManager(uint256 totalAssets, uint256 unrealizedLosses) internal {
         assertEq(poolManager.totalAssets(),      totalAssets,      "totalAssets");
         assertEq(poolManager.unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
@@ -132,13 +139,16 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 previousExitCycleId,
         uint256 previousCycleTotalShares,
         uint256 currentExitCycleId,
-        uint256 currentCycleTotalShares
+        uint256 currentCycleTotalShares,
+        uint256 withdrawalManagerTotalShares
     ) internal {
         assertEq(withdrawalManager.lockedShares(lp), lockedShares);
         assertEq(withdrawalManager.exitCycleId(lp),  currentExitCycleId);
 
         assertEq(withdrawalManager.totalCycleShares(previousExitCycleId), previousCycleTotalShares);
         assertEq(withdrawalManager.totalCycleShares(currentExitCycleId),  currentCycleTotalShares);
+
+        assertEq(pool.balanceOf(address(withdrawalManager)), withdrawalManagerTotalShares);
     }
 
 }

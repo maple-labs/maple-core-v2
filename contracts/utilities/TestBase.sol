@@ -321,7 +321,7 @@ contract TestBase is TestUtils {
     }
 
     function closeLoan(Loan loan) internal {
-       ( uint256 principal_, uint256 interest_, uint256 fees_ ) = loan.getClosingPaymentBreakdown();
+        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = loan.getClosingPaymentBreakdown();
 
         uint256 payment = principal_ + interest_ + fees_;
 
@@ -330,7 +330,7 @@ contract TestBase is TestUtils {
 
         vm.prank(loan.borrower());
         loan.closeLoan(0);
-    }
+     }
 
     function setupFees(
         uint256 platformOriginationFeeRate,
