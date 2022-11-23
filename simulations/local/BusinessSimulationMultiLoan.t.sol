@@ -112,4 +112,151 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         simulation.run();
     }
 
+    function test_businessSimulationMultiLoan1() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-1');
+
+        // Loan 1 actions
+        scenarios[0].setPaymentOffset(1, -15 days);
+        scenarios[0].setPaymentOffset(2, -10 days);
+        scenarios[0].setPaymentOffset(3,  -2 days);
+        scenarios[0].setPaymentOffset(4,   5 days);
+        scenarios[0].setPaymentOffset(5,   3 days);
+
+        string memory fileName = "business-sim-multi-loan-1";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
+    function test_businessSimulationMultiLoan2() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-2');
+
+        // Loan 2 actions
+        scenarios[0].setPaymentOffset(1, -15 days);
+        scenarios[0].setPaymentOffset(2, -10 days);
+
+        bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
+        scenarios[0].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+
+        scenarios[0].setLoanImpairment(5, -4 days);
+
+        string memory fileName = "business-sim-multi-loan-2";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
+    function test_businessSimulationMultiLoan3() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-3');
+
+        // Loan 3 actions
+        scenarios[0].setPaymentOffset(1, -15 days);
+        scenarios[0].setPaymentOffset(2, -10 days);
+
+        bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
+        scenarios[0].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+
+        scenarios[0].setLoanImpairment(5, -4 days);
+
+        scenarios[0].setLiquidation(5, 0, 0, 0);  // Note: No offset as impairment on payment day 150
+
+        string memory fileName = "business-sim-multi-loan-3";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
+    function test_businessSimulationMultiLoan4() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-4');
+
+        // Loan 4 actions
+        scenarios[0].setPaymentOffset(1, -15 days);
+        scenarios[0].setPaymentOffset(2, -10 days);
+        scenarios[0].setPaymentOffset(3,   5 days);
+
+        scenarios[0].setLoanImpairment(4, 2 days);
+
+        scenarios[0].setPaymentOffset(4, 4 days);
+
+        string memory fileName = "business-sim-multi-loan-4";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
+    function test_businessSimulationMultiLoan5() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-5');
+
+        // Loan 5 actions
+        scenarios[0].setPaymentOffset(1, 5 days);
+        scenarios[0].setPaymentOffset(2, 5 days);
+
+        bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
+        scenarios[0].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+
+        scenarios[0].setClosingPayment(4);
+
+        string memory fileName = "business-sim-multi-loan-5";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
+    function test_businessSimulationMultiLoan6() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-6');
+
+        // Loan 6 actions
+        scenarios[0].setPaymentOffset(1, 5 days);
+        scenarios[0].setPaymentOffset(2, 5 days);
+
+        scenarios[0].setLiquidation(3, 5 days, 0, 0);
+
+        string memory fileName = "business-sim-multi-loan-6";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
+    function test_businessSimulationMultiLoan7() external {
+        initialLiquidity = 1_000e6;
+
+        _createSimulationLoan(1_000e6, 1_000e6, 0, 'loan-7');
+
+        // Loan 7 actions
+        scenarios[0].setPaymentOffset(1, -15 days);
+        scenarios[0].setPaymentOffset(2,  32 days);
+        scenarios[0].setPaymentOffset(3,   2 days);
+
+        string memory fileName = "business-sim-multi-loan-7";
+
+        setUpSimulation(fileName);
+
+        setUpBusinessLogger(fileName);
+        simulation.run();
+    }
+
 }
