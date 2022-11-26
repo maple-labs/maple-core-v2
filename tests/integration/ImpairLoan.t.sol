@@ -583,4 +583,133 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         );
     }
 
+    function test_impairLoan_thenRepayAfterOriginalDueDate() external {
+
+        // Warp in discrete days increment until we are past the original due date.
+        vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + (26 * ONE_DAY));
+
+        assertTrue(block.timestamp >= start + (2 * ONE_MONTH));
+
+        /********************************************************/
+        /*** Make a payment a day after the original due date ***/
+        /********************************************************/
+
+        makePayment(loan);
+
+        assertLoanState({
+            loan:              loan,
+            principal:         1_000_000e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 2 * ONE_MONTH + ONE_MONTH / 5,
+            paymentsRemaining: 1
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
+            refinanceInterest:   0,
+            issuanceRate:        5_625e6 * 1e30 / ONE_MONTH,
+            startDate:           start + 1 * ONE_MONTH + ONE_MONTH / 5,
+            paymentDueDate:      start + 2 * ONE_MONTH + ONE_MONTH / 5,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           0,
+            interest:            0,
+            lateInterest:        0,
+            platformFees:        0,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     26 * uint256(5_625e6) * 12 / 365,  // 26 days of interest: 26 * 5,625 * 12 / 365
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + (26 * uint256(5_625e6) * 12 / 365),
+            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:           start + ONE_MONTH + ONE_MONTH / 5 + (26 * ONE_DAY),
+            domainEnd:             start + ONE_MONTH + ONE_MONTH / 5 + ONE_MONTH,
+            unrealizedLosses:      0
+        });
+
+        assertPoolManager({
+            totalAssets:      500_000e6 + 1_000_000e6 + 2 * 5_625e6 + 52 * uint256(5_625e6) * 12 / 365,  // 26 days (5_625e6 * 12 / 365) accounted for twice as part is from late interest and part is from the next interval
+            unrealizedLosses: 0
+        });
+
+        // Pool balance:          500,000 + (2 * 5,621 ) + 56 * 5,625 * (12 / 365)
+        // Pool delegate balance: 900     + 275 +   125 * (1 + 12 / 365)
+        // Treasury balance:      1,300   + 550 +   500 * (1 + 12 / 365)
+
+        assertAssetBalances(
+            [address(borrower),  address(pool),             address(poolCover), address(poolDelegate),   address(treasury)      ],
+            [uint256(999_250e6), uint256(516_058.219178e6), uint256(100_000e6), uint256(1_406.849315e6), uint256(27_77.397260e6)]
+        );
+
+        /*****************************/
+        /*** Make the last payment ***/
+        /*****************************/
+
+        vm.warp(start + 2 * ONE_MONTH + ONE_MONTH / 5);
+        makePayment(loan);
+
+        assertLoanState({
+            loan:              loan,
+            principal:         0,
+            refinanceInterest: 0,
+            paymentDueDate:    0,
+            paymentsRemaining: 0
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           0,
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
+        });
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           0,
+            interest:            0,
+            lateInterest:        0,
+            platformFees:        0,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          0,
+            assetsUnderManagement: 0,
+            issuanceRate:          0,
+            domainStart:           block.timestamp,
+            domainEnd:             block.timestamp,
+            unrealizedLosses:      0
+        });
+
+        // pool balance:          1,000,000 + 500,000 + (3 * 5,621 ) + 26 * 5,625 * (12 / 365)  // Three payments plus 26 days of late interest.
+        // pool delegate balance: 900       + 2 * 275 +   125 * (2 + 12 / 365)
+        // treasury balance:      1,300     + 2 * 550 +   500 * (2 + 12 / 365)
+
+        assertPoolManager({
+            totalAssets:      1_521_683.219178e6,
+            unrealizedLosses: 0
+        });
+
+        assertAssetBalances(
+            [address(borrower),  address(pool),               address(poolCover), address(poolDelegate),   address(treasury)      ],
+            [uint256(999_250e6), uint256(1_521_683.219178e6), uint256(100_000e6), uint256(1_806.849315e6), uint256(3_827.397260e6)]
+        );
+    }
+
 }
