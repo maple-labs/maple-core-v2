@@ -51,7 +51,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
         poolManager.impairLoan(address(loan));
 
         vm.prank(address(poolDelegate));
-        vm.expectRevert("LM:RLI:NOT_AUTHORIZED");
+        vm.expectRevert("LM:RLI:NO_AUTH");
         poolManager.removeLoanImpairment(address(loan));
     }
 

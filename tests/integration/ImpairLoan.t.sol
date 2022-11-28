@@ -64,7 +64,7 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
         poolManager.impairLoan(address(loan));
 
         vm.prank(address(poolDelegate));
-        vm.expectRevert("LM:IL:ALREADY_IMPAIRED");
+        vm.expectRevert("LM:IL:IMPAIRED");
         poolManager.impairLoan(address(loan));
     }
 

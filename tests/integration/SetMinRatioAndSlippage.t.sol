@@ -23,7 +23,7 @@ contract SetMinRatioTests is TestBase {
     }
 
     function test_setMinRatio_notPoolManager() external {
-        vm.expectRevert("LM:SMR:NOT_POOL_MANAGER");
+        vm.expectRevert("LM:SMR:NOT_PM");
         loanManager.setMinRatio(COLLATERAL_ASSET, 1000e6);
     }
 
@@ -61,7 +61,7 @@ contract SetSlippageTests is TestBase {
     }
 
     function test_setAllowedSlippage_notPoolManager() external {
-        vm.expectRevert("LM:SAS:NOT_POOL_MANAGER");
+        vm.expectRevert("LM:SAS:NOT_PM");
         loanManager.setAllowedSlippage(COLLATERAL_ASSET, 0.1e6);
     }
 

@@ -325,6 +325,58 @@ contract RedeemTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 0);
     }
 
+    function test_redeem_singleUser_noLiquidity_notOwner() external {
+        depositLiquidity(lp, 1_000_000e6);
+
+        vm.prank(lp);
+        pool.requestRedeem(1_000_000e6, lp);
+
+        // Fund a loan with all the liquidity
+        fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+        });
+
+        vm.warp(start + 2 weeks);
+
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+
+        assertEq(pool.totalSupply(), 1_000_000e6);
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 1_000_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6);
+
+        assertEq(pool.allowance(lp, address(this)), 0);
+
+        vm.expectRevert("PM:PR:NO_ALLOWANCE");
+        pool.redeem(1_000_000e6, lp, lp);
+
+        vm.prank(lp);
+        pool.approve(address(this), 1);
+
+        assertEq(pool.allowance(lp, address(this)), 1);
+
+        pool.redeem(1_000_000e6, lp, lp);
+
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+
+        assertEq(pool.totalSupply(), 1_000_000e6);
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 1_000_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     4);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(withdrawalManager.totalCycleShares(4), 1_000_000e6);
+    }
+
     function test_redeem_singleUser_noLiquidity() external {
         depositLiquidity(lp, 1_000_000e6);
 
@@ -683,7 +735,7 @@ contract RequestRedeemFailureTests is TestBase {
 
     function test_requestRedeem_failIfNotPool() external {
         vm.expectRevert("PM:RR:NOT_POOL");
-        poolManager.requestRedeem(0, address(lp));
+        poolManager.requestRedeem(0, address(lp), address(lp));
     }
 
     function test_requestRedeem_failIfNotPM() external {
@@ -720,7 +772,7 @@ contract RedeemFailureTests is TestBase {
 
     function test_redeem_failIfNotPool() external {
         vm.expectRevert("PM:PR:NOT_POOL");
-        poolManager.processRedeem(1, lp);
+        poolManager.processRedeem(1, lp, lp);
     }
 
     function test_redeem_failIfNotPoolManager() external {
@@ -743,6 +795,7 @@ contract RedeemFailureTests is TestBase {
     }
 
     function test_redeem_failIfNoRequest() external {
+        vm.prank(lp);
         vm.expectRevert("WM:PE:NO_REQUEST");
         pool.redeem(0, lp, lp);
     }
@@ -775,6 +828,7 @@ contract RedeemFailureTests is TestBase {
         vm.prank(address(withdrawalManager));
         pool.transfer(address(0), 1_000e6);
 
+        vm.prank(lp);
         vm.expectRevert("WM:PE:TRANSFER_FAIL");
         pool.redeem(1_000e6, lp, lp);
     }
@@ -786,6 +840,7 @@ contract RedeemFailureTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
+        vm.prank(lp);
         vm.expectRevert("P:B:ZERO_RECEIVER");
         pool.redeem(1_000e6, address(0), lp);
     }
@@ -796,7 +851,7 @@ contract RedeemFailureTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert("PM:PR:NO_ALLOWANCE");
         pool.redeem(1_000e6, lp, lp);
     }
 

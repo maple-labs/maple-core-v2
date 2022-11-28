@@ -151,7 +151,7 @@ contract FundTests is TestBaseWithAssertions {
     }
 
     function test_fund_failIfNotPoolManager() external {
-        vm.expectRevert("LM:F:NOT_POOL_MANAGER");
+        vm.expectRevert("LM:F:NOT_PM");
         loanManager.fund(address(loan));
     }
 

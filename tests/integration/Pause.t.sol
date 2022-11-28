@@ -259,7 +259,7 @@ contract PauseTests is TestBaseWithAssertions {
         poolManager.impairLoan(address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.processRedeem(0, address(0));
+        poolManager.processRedeem(0, address(0), address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.removeLoanImpairment(address(0));
@@ -271,7 +271,7 @@ contract PauseTests is TestBaseWithAssertions {
         poolManager.removeShares(0, address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.requestRedeem(0, address(0));
+        poolManager.requestRedeem(0, address(0), address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.setActive(true);

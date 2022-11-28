@@ -109,7 +109,7 @@ contract RequestWithdrawFailureTests is TestBase {
 
     function test_requestWithdraw_failIfNotPool() external {
         vm.expectRevert("PM:RR:NOT_POOL");
-        poolManager.requestRedeem(0, address(lp));
+        poolManager.requestRedeem(0, address(lp), address(lp));
     }
 
     function test_requestWithdraw_failIfNotPM() external {
@@ -137,7 +137,7 @@ contract WithdrawFailureTests is TestBase {
 
     function test_withdraw_failIfNotPool() external {
         vm.expectRevert("PM:PR:NOT_POOL");
-        poolManager.processRedeem(1, lp);
+        poolManager.processRedeem(1, lp, lp);
     }
 
     function test_withdraw_failIfNotPoolManager() external {

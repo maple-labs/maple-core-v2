@@ -42,7 +42,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
 
     function test_finishCollateralLiquidation_notPoolManager() external {
         vm.prank(address(1));
-        vm.expectRevert("LM:FCL:NOT_POOL_MANAGER");
+        vm.expectRevert("LM:FCL:NOT_PM");
         loanManager.finishCollateralLiquidation(address(loan));
     }
 
@@ -54,7 +54,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
         vm.prank(address(poolDelegate));
-        vm.expectRevert("LM:FCL:LIQ_STILL_ACTIVE");
+        vm.expectRevert("LM:FCL:LIQ_ACTIVE");
         poolManager.finishCollateralLiquidation(address(loan));
     }
 
