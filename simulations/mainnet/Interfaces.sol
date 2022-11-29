@@ -98,6 +98,10 @@ interface IMapleLoanLike {
 
     function closeLoan(uint256 amount_) external returns (uint256 principal_, uint256 interest_);
 
+    function collateral() external view returns (uint256 collateral_);
+
+    function collateralAsset() external view returns (address collateralAsset_);
+
     function drawableFunds() external view returns (uint256 drawableFunds_);
 
     function fundsAsset() external view returns (address fundsAsset_);

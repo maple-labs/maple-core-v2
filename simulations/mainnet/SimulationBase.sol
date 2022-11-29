@@ -301,6 +301,9 @@ contract SimulationBase is TestUtils, AddressRegistry {
                 vm.stopPrank();
             }
         }
+
+        // Check skimable amount
+        checkUnnacountedAmount(loans);
     }
 
     function freezePoolV1(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
@@ -628,6 +631,18 @@ contract SimulationBase is TestUtils, AddressRegistry {
     function calculateAvailableLiquidity(IPoolLike poolV1) internal view returns (uint256 availableLiquidity) {
         availableLiquidity = IERC20Like(poolV1.liquidityAsset()).balanceOf(poolV1.liquidityLocker());
     }
+
+    function checkUnnacountedAmount(IMapleLoanLike[] storage loans) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            // Since there's no public `getUnaccountedAmount()` function, we have to calculate it ourselves.
+            IMapleLoanLike loan        = loans[i];
+            IERC20Like fundsAsset      = IERC20Like(loan.fundsAsset());
+            IERC20Like collateralAsset = IERC20Like(loan.collateralAsset());
+
+            assertEq(fundsAsset.balanceOf(address(loan)),      loan.claimableFunds() + loan.drawableFunds());
+            assertEq(collateralAsset.balanceOf(address(loan)), loan.collateral());
+        }
+    } 
 
     function compareLpPositions(IPoolLike poolV1, address poolV2, address[] storage lps) internal {
         uint256 poolV1TotalValue  = getPoolV1TotalValue(poolV1);
