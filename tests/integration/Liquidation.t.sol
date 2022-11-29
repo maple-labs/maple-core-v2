@@ -1936,14 +1936,14 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
     }
 
     function test_finishLiquidation_failIfNotPoolManager() external {
-        vm.expectRevert("LM:FCL:NOT_POOL_MANAGER");
+        vm.expectRevert("LM:FCL:NOT_PM");
         loanManager.finishCollateralLiquidation(address(loan));
     }
 
     function test_finishLiquidation_failIfLiquidationNotActive() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:FCL:LIQ_STILL_ACTIVE");
+        vm.expectRevert("LM:FCL:LIQ_ACTIVE");
         poolManager.finishCollateralLiquidation(address(loan));
     }
-    
+
 }

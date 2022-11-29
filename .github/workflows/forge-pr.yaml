@@ -117,7 +117,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./scripts/test.sh -p local_simulation
+        run: ./scripts/test.sh -p local_simulations
 
   mainnet_simulations:
     runs-on: ubuntu-latest
