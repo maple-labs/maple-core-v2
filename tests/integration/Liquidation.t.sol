@@ -1879,3 +1879,71 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
 }
+
+contract FinishLiquidationFailureTests is TestBaseWithAssertions {
+
+    address borrower = address(new Address());
+    address lp       = address(new Address());
+
+    Loan loan;
+
+    uint256 platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        depositLiquidity({
+            lp: lp,
+            liquidity: 1_500_000e6
+        });
+
+        setupFees({
+            delegateOriginationFee:     500e6,
+            delegateServiceFee:         275e6,
+            delegateManagementFeeRate:  0.02e6,    // 1,000,000 * 3.1536% * 2% * 1,000,000 / (365 * 86400) = 20
+            platformOriginationFeeRate: 0.001e6,   // 1,000,000 * 0.10%   * 3  * 1,000,000 / (365 * 86400) = 95.129375e6
+            platformServiceFeeRate:     0.0066e6,  // 1,000,000 * 0.66%        * 1,000,000 / (365 * 86400) = 209.2846270e6
+            platformManagementFeeRate:  0.08e6     // 1,000,000 * 3.1536% * 8% * 1,000,000 / (365 * 86400) = 80
+        });
+
+        vm.prank(governor);
+        globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
+
+        depositCover({ cover: 10_000_000e6 });
+
+        loan = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+        });
+
+        /***********************************************/
+        /*** Warp to end of 1nd Payment grace period ***/
+        /***********************************************/
+
+        // Since we round up days when it comes to late interest, this payment is 6 days late.
+        vm.warp(start + 1_000_000 + 5 days + 1);
+
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+    }
+
+    function test_finishLiquidation_failIfNotPD() external {
+        vm.expectRevert("PM:FCL:NOT_AUTHORIZED");
+        poolManager.finishCollateralLiquidation(address(loan));
+    }
+
+    function test_finishLiquidation_failIfNotPoolManager() external {
+        vm.expectRevert("LM:FCL:NOT_POOL_MANAGER");
+        loanManager.finishCollateralLiquidation(address(loan));
+    }
+
+    function test_finishLiquidation_failIfLiquidationNotActive() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:FCL:LIQ_STILL_ACTIVE");
+        poolManager.finishCollateralLiquidation(address(loan));
+    }
+    
+}
