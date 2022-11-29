@@ -29,9 +29,19 @@ interface IERC20Like {
 
 interface ILoanManagerLike {
 
+    function paymentIdOf(address loan_) external view returns (uint24 paymentId_);
+
+    function paymentWithEarliestDueDate() external view returns (uint24 paymentWithEarliestDueDate_);
+
     function setLoanTransferAdmin(address newLoanTransferAdmin_) external;
 
     function setOwnershipTo(address[] calldata loans_, address[] calldata newLenders_) external;
+
+    function sortedPayments(uint256 paymentId_) external view returns (
+        uint24 previous,
+        uint24 next,
+        uint48 paymentDueDate
+    );
 
     function takeOwnership(address[] calldata loans_) external;
 
@@ -40,6 +50,8 @@ interface ILoanManagerLike {
 interface IMapleProxiedLike {
 
     function factory() external view returns (address factory_);
+
+    function implementation() external view returns (address implementation_);
 
     function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
 
@@ -82,11 +94,18 @@ interface IMapleGlobalsLike {
     function setStakerCooldownPeriod(uint256 cooldown_) external;
 
     function setStakerUnstakeWindow(uint256 window_) external;
+
 }
 
 interface IMapleLoanV3Like {
 
     function getEarlyPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 delegateFee_, uint256 treasuryFee_);
+
+}
+
+interface IMapleLoanV4Like {
+
+    function getNextPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
 
 }
 
@@ -112,6 +131,8 @@ interface IMapleLoanLike {
 
     function implementation() external view returns (address implementation_);
 
+    function isImpaired() external view returns (bool isImpaired_);
+
     function lender() external view returns (address lender_);
 
     function makePayment(uint256 amount_) external returns (uint256 principal_, uint256 interest_);
@@ -120,9 +141,13 @@ interface IMapleLoanLike {
 
     function paymentInterval() external view returns (uint256 paymentInterval_);
 
+    function paymentsRemaining() external view returns (uint256 paymentsRemaining_);
+
     function pendingLender() external view returns (address pendingLender_);
 
     function principal() external view returns (uint256 principal_);
+
+    function returnFunds(uint256 amount_) external;
 
     function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
 
@@ -135,7 +160,6 @@ interface IMplRewardsLike {
     function stake(uint256 amt) external;
 
 }
-
 
 interface IPoolLike {
 
@@ -185,7 +209,7 @@ interface IPoolLike {
 
 }
 
-interface IPoolV2Like {
+interface IPoolV2Like is IERC20Like {
 
     function asset() external view returns (address asset_);
 
@@ -202,6 +226,8 @@ interface IPoolManagerLike {
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
 
     function depositCover(uint256 amount_) external;
+
+    function liquidityCap() external view returns (uint256 liquidityCap_);
 
     function loanManagerList(uint256 index_) external view returns (address loanManager_);
 
@@ -222,6 +248,8 @@ interface IPoolManagerLike {
     function setPendingPoolDelegate(address pendingPoolDelegate_) external;
 
     function totalAssets() external view returns (uint256 totalAssets_);
+
+    function withdrawalManager() external view returns (address withdrawalManager_);
 
 }
 

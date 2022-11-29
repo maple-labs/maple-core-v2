@@ -14,7 +14,7 @@ echo Using profile: $FOUNDRY_PROFILE
 
 if [ -z "$test" ];
 then
-    forge test --fork-block-number=15790000 --fork-url "$ETH_RPC_URL";
+    forge test --ffi --fork-url "$ETH_RPC_URL";
 else
-    forge test --match "$test" --fork-block-number=15790000 --fork-url "$ETH_RPC_URL";
+    forge test --ffi --match "$test" --fork-url "$ETH_RPC_URL";
 fi
