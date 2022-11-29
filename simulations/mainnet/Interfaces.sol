@@ -71,6 +71,10 @@ interface IMapleGlobalsLike {
 
     function globalAdmin() external view returns (address);
 
+    function setMaxCoverLiquidationPercent(address poolManager_, uint256 maxCoverLiquidationPercent_) external;
+
+    function setMinCoverAmount(address poolManager_, uint256 minCoverAmount_) external;
+
     function setPriceOracle(address asset, address oracle) external;
 
     function setProtocolPause(bool pause) external;

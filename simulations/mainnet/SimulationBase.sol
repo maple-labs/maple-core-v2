@@ -78,6 +78,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
     mapping(address => IMapleLoanLike) public migrationLoans;
     mapping(address => address)        public temporaryPDs;
     mapping(address => address)        public finalPDs;
+    mapping(address => uint256)        public coverAmounts;
     mapping(address => uint256)        public loansAddedTimestamps;   // Timestamp when loans were added
     mapping(address => uint256)        public lastUpdatedTimestamps;  // Last timestamp that a LoanManager's accounting was updated
     mapping(address => address)        public loansOriginalLender;    // Store DebtLocker of loan for rollback
@@ -209,6 +210,13 @@ contract SimulationBase is TestUtils, AddressRegistry {
         mapleGlobalsV2.setBootstrapMint(address(weth), 0.000100000000000000e18);
 
         mapleGlobalsV2.setSecurityAdmin(securityAdminMultisig);
+
+        // Save the necessary pool cover amount for each pool
+        coverAmounts[address(mavenPermissionedPoolV1)] = 1_750_000e6; 
+        coverAmounts[address(mavenUsdcPoolV1)]         = 1_000_000e6;
+        coverAmounts[address(mavenWethPoolV1)]         = 750e18;
+        coverAmounts[address(orthogonalPoolV1)]        = 2_500_000e6;
+        coverAmounts[address(icebreakerPoolV1)]        = 500_000e6;
 
         vm.stopPrank();
     }
@@ -433,6 +441,12 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
     function deployAndMigratePool(IPoolLike poolV1, IMapleLoanLike[] storage loans, address[] storage lps, bool open) internal returns (IPoolManagerLike poolManager) {
         poolManager = deployAndMigratePoolUpToLoanUpgrade(poolV1, loans, lps, open);
+
+        // Configure the min cover amount in globals
+        vm.startPrank(governor);
+        mapleGlobalsV2.setMinCoverAmount(address(poolManager),             coverAmounts[address(poolV1)]);
+        mapleGlobalsV2.setMaxCoverLiquidationPercent(address(poolManager), 0.5e6); // TODO double check with commercial team before deployment.
+        vm.stopPrank();
 
         /****************************************/
         /*** Step 12: Upgrade all loans to V4 ***/
