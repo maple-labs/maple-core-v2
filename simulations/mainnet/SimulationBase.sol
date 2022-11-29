@@ -625,7 +625,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
             uint256 v2Position = IPoolLike(poolV2).balanceOf(lps[i]);
 
             if (i == 0) {
-                v1Position += poolV1TotalValue - sumPosition;
+                v1Position += poolV1TotalValue > sumPosition ? poolV1TotalValue - sumPosition : 0;
             }
 
             uint256 v1Equity = v1Position * 1e18 / poolV1TotalValue;
