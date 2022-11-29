@@ -779,4 +779,246 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         try pool.redeem(2_000_000e6, lp1, lp1) { assertTrue(false, "Did not fail" ); } catch { }
     }
 
+    function test_poolScenario_impairLoanWithLatePaymentAndRefinance() external {
+        depositCover({ cover: 200_000e6 });
+
+        address lp1      = address(new Address());
+        address borrower = address(new Address());
+
+        depositLiquidity(lp1, 1_000_000e6);
+
+        assertTotalAssets(1_000_000e6);
+        assertEq(pool.balanceOf(lp1), 1_000_000e6);
+
+        // This loan will be refinanced
+        Loan loan = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(0), uint256(30 days), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
+        });
+
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+
+        uint256 dailyLoanInterest      = annualLoanInterest * 1 days / 365 days;
+        uint256 dailyLoanInterestGross = (1_000_000e6 * 0.031536e18 / 1e18) * 1 days / 365 days;
+
+        uint256 issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
+
+        assertEq(annualLoanInterest,     28382.4e6);
+        assertEq(dailyLoanInterestGross, 86.4e6);
+        assertEq(dailyLoanInterest,      77.76e6);
+        assertEq(issuanceRate,           900e30);
+
+        assertPoolState({
+            totalSupply:        1_000_000e6,
+            totalAssets:        1_000_000e6 ,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          issuanceRate,
+            domainStart:           start,
+            domainEnd:             start + 30 days,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: dailyLoanInterest * 30,
+            refinanceInterest:   0,
+            issuanceRate:        issuanceRate,
+            startDate:           start,
+            paymentDueDate:      start + 30 days,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        uint256 platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 30 days / 1e6 / 365 days;
+
+        assertEq(platformServiceFee, 25920e6);
+
+        assertLoanState({
+            loan:              loan,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  dailyLoanInterestGross * 30,
+            incomingFees:      platformServiceFee + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 30 days,
+            paymentsRemaining: 3
+        });
+
+        vm.warp(start + 10 days);
+
+        {
+            // Refinance Loan and stack too deep
+            bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
+
+            Refinancer refinancer = new Refinancer();
+
+            vm.startPrank(borrower);
+            loan.proposeNewTerms(address(refinancer), block.timestamp, data);
+            fundsAsset.mint(borrower, 30_000e6);
+            fundsAsset.approve(address(loan), 30_000e6);
+            loan.returnFunds(30_000e6);  // Return funds to pay origination fees.
+            vm.stopPrank();
+
+            vm.prank(poolDelegate);
+            poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, data, 0);
+        }
+
+        platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
+
+        assertLoanState({
+            loan:              loan,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  dailyLoanInterestGross * 70,
+            incomingFees:      platformServiceFee + 400e6,
+            refinanceInterest: dailyLoanInterestGross * 10,
+            paymentDueDate:    start + 70 days,
+            paymentsRemaining: 3
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     dailyLoanInterest * 10,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + dailyLoanInterest * 10,
+            issuanceRate:          issuanceRate,
+            domainStart:           start + 10 days,
+            domainEnd:             start + 70 days,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: dailyLoanInterest * 60,
+            refinanceInterest:   dailyLoanInterest * 10,
+            issuanceRate:        issuanceRate,
+            startDate:           start + 10 days,
+            paymentDueDate:      start + 70 days,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertPoolState({
+            totalSupply:        1_000_000e6,
+            totalAssets:        1_000_000e6 + dailyLoanInterest * 10 ,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        vm.warp(start + 75 days);
+        vm.prank(poolDelegate);
+        loanManager.updateAccounting();
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     dailyLoanInterest * 70,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + dailyLoanInterest * 70,
+            issuanceRate:          0,
+            domainStart:           start + 75 days,
+            domainEnd:             start + 75 days,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: dailyLoanInterest * 60,
+            refinanceInterest:   dailyLoanInterest * 10,
+            issuanceRate:        0,
+            startDate:           start + 10 days,
+            paymentDueDate:      start + 70 days,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        // Impair Loan
+        vm.prank(poolDelegate);
+        poolManager.impairLoan(address(loan));
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     dailyLoanInterest * 70,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + dailyLoanInterest * 70,
+            issuanceRate:          0,
+            domainStart:           start + 75 days,
+            domainEnd:             start + 75 days,
+            unrealizedLosses:      1_000_000e6 + (dailyLoanInterest * 70)  // Note: 10 days from refinance interest and 60 days from accrued interest after refinance
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: dailyLoanInterest * 60,
+            refinanceInterest:   dailyLoanInterest * 10,
+            issuanceRate:        0,
+            startDate:           start + 10 days,
+            paymentDueDate:      start + 70 days,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;  // NOTE: 10 days from refinance interest and 60 days from payment interval
+
+        uint256 platformManagementFee = dailyLoanInterestGross * 75 * 0.08e6 / 1e6;
+
+        assertEq(platformManagementFee, 518.4e6);
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           1_000_000e6,
+            interest:            dailyLoanInterest * 70,
+            lateInterest:        dailyLoanInterest * 5,
+            platformFees:        platformServiceFee + platformManagementFee,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        assertPoolState({
+            totalSupply:        1_000_000e6,
+            totalAssets:        1_000_000e6 + dailyLoanInterest * 70,
+            unrealizedLosses:   1_000_000e6 + dailyLoanInterest * 70,
+            availableLiquidity: 0
+        });
+
+        makePayment(loan);
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           0,
+            interest:            0,
+            lateInterest:        0,
+            platformFees:        0,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     dailyLoanInterest * 5,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + dailyLoanInterest * 5,
+            issuanceRate:          issuanceRate,
+            domainStart:           start + 75 days,
+            domainEnd:             start + 75 days + 55 days,
+            unrealizedLosses:      0
+        });
+
+        assertPoolState({
+            totalSupply:        1_000_000e6,
+            totalAssets:        1_000_000e6 + dailyLoanInterest * 75 + dailyLoanInterest * 5,
+            unrealizedLosses:   0,
+            availableLiquidity: dailyLoanInterest * 75
+        });
+    }
+
 }
