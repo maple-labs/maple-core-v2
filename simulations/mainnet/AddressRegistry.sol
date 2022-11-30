@@ -853,7 +853,7 @@ contract AddressRegistry {
     ];
 
     IMapleLoanLike[] orthogonalLoans = [
-        IMapleLoanLike(0x1F1b8762CC4F8a2C637207E14Dea7A5C3FAD8bC1),
+        IMapleLoanLike(0x1F1b8762CC4F8a2C637207E14Dea7A5C3FAD8bC1),  // NOTE: Gnosis safe borrower
         IMapleLoanLike(0x249B5907564f0Cf3Fb771b013A6f9f33e1225657),
         // IMapleLoanLike(0x323BCa025F293f9663F3162fF6cBC8EDb8cF02B5),  Babel loan
         IMapleLoanLike(0xb43623a3c0501b026d099038d2De26e489d4A147)
