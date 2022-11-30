@@ -6,7 +6,7 @@ import { Address, console, TestUtils } from "../../modules/contract-test-utils/c
 import { DebtLocker as DebtLockerV4 } from "../../modules/debt-locker-v4/contracts/DebtLocker.sol";
 import { DebtLockerV4Migrator }       from "../../modules/debt-locker-v4/contracts/DebtLockerV4Migrator.sol";
 
-import { MapleGlobals }                           from "../../modules/globals-v2/contracts/MapleGlobals.sol";
+import { MapleGlobals as MapleGlobalsV2 }         from "../../modules/globals-v2/contracts/MapleGlobals.sol";
 import { NonTransparentProxy as MapleGlobalsNTP } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
 import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
@@ -71,13 +71,34 @@ contract SimulationBase is TestUtils, AddressRegistry {
         uint256 totalSupply;
     }
 
-    address migrationMultisig     = address(new Address());
-    address securityAdminMultisig = address(new Address());
+    // Deployment Addresses
+    address debtLockerV4Migrator;
+    address debtLockerV4Implementation;
+    address deactivationOracle;
+
+    address mapleLoanV302Implementation;
+    address mapleLoanV400Implementation;
+    address mapleLoanV401Implementation;
+    address mapleLoanV4Initializer;
+    address mapleLoanV4Migrator;
+
+    address liquidatorImplementation;
+    address liquidatorInitializer;
+
+    address loanManagerImplementation;
+    address loanManagerInitializer;
+    address transitionLoanManagerImplementaiton;
+
+    address poolManagerImplementation;
+    address poolManagerInitializer;
+
+    address withdrawalManagerImplementation;
+    address withdrawalManagerInitializer;
 
     AccountingChecker internal accountingChecker;
     MigrationHelper   internal migrationHelper;
 
-    MapleGlobals        internal mapleGlobalsV2;
+    MapleGlobalsV2      internal mapleGlobalsV2;
     MapleLoanFeeManager internal feeManager;
     PoolDeployer        internal poolDeployer;
     Refinancer          internal refinancer;
@@ -109,28 +130,100 @@ contract SimulationBase is TestUtils, AddressRegistry {
     /*** Migration lifecycle Functions                                                                                          ***/
     /******************************************************************************************************************************/
 
-    function preMigration() internal {
+    function preDeployment() internal {
         upgradeAllLoansToV301();
     }
 
     function deployProtocol() internal {
-        createGlobals();
+        // Step 1: Deploy Globals (Set Governor to deployer)
+        address mapleGlobalsV2Implementation = address(new MapleGlobalsV2());
 
-        refinancer = new Refinancer();
+        mapleGlobalsV2 = MapleGlobalsV2(address(new MapleGlobalsNTP(deployer, mapleGlobalsV2Implementation)));
+
+        // Step 2: Deploy FeeManager
         feeManager = new MapleLoanFeeManager(address(mapleGlobalsV2));
 
-        createFactories();
-        setupFactories();
-        createHelpers();
-    }
+        // Step 3: Deploy PoolDeployer
+        poolDeployer = new PoolDeployer(address(mapleGlobalsV2));
 
-    function createFactories() internal {
+        // Step 4: Liquidator Factory Deployments and Configuration
         liquidatorFactory        = new LiquidatorFactory(address(mapleGlobalsV2));
-        poolManagerFactory       = new PoolManagerFactory(address(mapleGlobalsV2));
-        loanManagerFactory       = new LoanManagerFactory(address(mapleGlobalsV2));
-        withdrawalManagerFactory = new WithdrawalManagerFactory(address(mapleGlobalsV2));
+        liquidatorImplementation = address(new Liquidator());
+        liquidatorInitializer    = address(new LiquidatorInitializer());
 
-        vm.startPrank(governor);
+        liquidatorFactory.registerImplementation(200, liquidatorImplementation, liquidatorInitializer);
+        liquidatorFactory.setDefaultVersion(200);
+
+        // Step 5: Loan Manager Factory Deployments and Configuration
+        loanManagerFactory                  = new LoanManagerFactory(address(mapleGlobalsV2));
+        loanManagerImplementation           = address(new LoanManager());
+        loanManagerInitializer              = address(new LoanManagerInitializer());
+        transitionLoanManagerImplementaiton = address(new TransitionLoanManager());
+
+        loanManagerFactory.registerImplementation(100, transitionLoanManagerImplementaiton, loanManagerInitializer);
+        loanManagerFactory.registerImplementation(200, loanManagerImplementation,           loanManagerInitializer);
+        loanManagerFactory.enableUpgradePath(100, 200, address(0));
+        loanManagerFactory.setDefaultVersion(100);
+
+        // Step 6: Pool Manager Factory Deployments and Configuration
+        poolManagerFactory        = new PoolManagerFactory(address(mapleGlobalsV2));
+        poolManagerImplementation = address(new PoolManager());
+        poolManagerInitializer    = address(new PoolManagerInitializer());
+
+        poolManagerFactory.registerImplementation(100, poolManagerImplementation, poolManagerInitializer);
+        poolManagerFactory.setDefaultVersion(100);
+
+        // Step 7: Withdrawal Manager Factory Deployments and Configuration
+        withdrawalManagerFactory        = new WithdrawalManagerFactory(address(mapleGlobalsV2));
+        withdrawalManagerImplementation = address(new WithdrawalManager());
+        withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
+
+        withdrawalManagerFactory.registerImplementation(100, withdrawalManagerImplementation, withdrawalManagerInitializer);
+        withdrawalManagerFactory.setDefaultVersion(100);
+
+        // Step 8: Loan Factory Deployments
+        // TODO - not set on factory... done in mainnet?
+        mapleLoanV302Implementation = address(new MapleLoanV302());
+        mapleLoanV4Initializer      = address(new MapleLoanV4Initializer());
+        mapleLoanV400Implementation = address(new MapleLoanV400());
+        mapleLoanV401Implementation = address(new MapleLoanV401());
+        mapleLoanV4Migrator         = address(new MapleLoanV4Migrator());
+
+        // TODO DL factory is not set - Already done on mainnet?
+        // Step 9: DebtLocker Factory Deployments -
+        debtLockerV4Migrator       = address(new DebtLockerV4Migrator());
+        debtLockerV4Implementation = address(new DebtLockerV4());
+
+        // Step 10: Deploy MigrationHelper, AccountingChecker, and DeactivationOracle
+        accountingChecker  = new AccountingChecker(address(mapleGlobalsV2));
+        deactivationOracle = address(new DeactivationOracle());
+
+        address migrationHelperImplementation = address(new MigrationHelper());
+
+        migrationHelper = MigrationHelper(address(new MigrationHelperNTP(deployer, migrationHelperImplementation)));
+
+        // Step 11: Configure MigrationHelper
+        migrationHelper.setPendingAdmin(migrationMultisig);
+        migrationHelper.setGlobals(address(mapleGlobalsV2));
+
+        // Step 12: Configure Globals Addresses
+        mapleGlobalsV2.setMapleTreasury(mapleTreasury);
+        mapleGlobalsV2.setSecurityAdmin(securityAdminMultisig);
+        mapleGlobalsV2.setMigrationAdmin(address(migrationHelper));
+
+        // Step 13: Set Globals Valid Addresses
+        mapleGlobalsV2.setValidPoolDeployer(address(poolDeployer), true);
+
+        mapleGlobalsV2.setValidPoolDelegate(icebreakerPD,        true);
+        mapleGlobalsV2.setValidPoolDelegate(mavenPermissionedPD, true);
+        mapleGlobalsV2.setValidPoolDelegate(mavenUsdcPD,         true);
+        mapleGlobalsV2.setValidPoolDelegate(mavenWethPD,         true);
+        mapleGlobalsV2.setValidPoolDelegate(orthogonalPD,        true);
+
+        mapleGlobalsV2.setValidPoolAsset(address(usdc), true);
+        mapleGlobalsV2.setValidPoolAsset(address(weth), true);
+
+        mapleGlobalsV2.setValidCollateralAsset(address(wbtc), true); // TODO set weth and usdc?
 
         mapleGlobalsV2.setValidFactory("LIQUIDATOR",         address(liquidatorFactory),        true);
         mapleGlobalsV2.setValidFactory("LOAN",               address(loanFactory),              true);
@@ -138,40 +231,41 @@ contract SimulationBase is TestUtils, AddressRegistry {
         mapleGlobalsV2.setValidFactory("POOL_MANAGER",       address(poolManagerFactory),       true);
         mapleGlobalsV2.setValidFactory("WITHDRAWAL_MANAGER", address(withdrawalManagerFactory), true);
 
-        vm.stopPrank();
+        // Step 14: Configure Globals Values
+        mapleGlobalsV2.setBootstrapMint(address(usdc), 0.100000e6);
+        mapleGlobalsV2.setBootstrapMint(address(weth), 0.0001e18);
+
+        mapleGlobalsV2.setDefaultTimelockParameters(1 weeks, 2 days);
+
+        // Step 15: Transfer governor
+        mapleGlobalsV2.setPendingGovernor(tempGovernor);
     }
 
-    function createGlobals() internal {
-        mapleGlobalsV2 = MapleGlobals(address(new MapleGlobalsNTP(governor, address(new MapleGlobals()))));
-        poolDeployer   = new PoolDeployer(address(mapleGlobalsV2));
+    // Perform deployment steps used for simulation and test that are not necessary for mainnet deployment
+    function finishDeploymentForSimulation() internal {
+        refinancer = new Refinancer();
 
-        vm.startPrank(governor);
+        // Link temporary PDs
+        temporaryPDs[address(mavenPermissionedPoolV1)] = mavenPermissionedPD;
+        temporaryPDs[address(mavenUsdcPoolV1)]         = mavenUsdcPD;
+        temporaryPDs[address(mavenWethPoolV1)]         = mavenWethPD;
+        temporaryPDs[address(orthogonalPoolV1)]        = orthogonalPD;
+        temporaryPDs[address(icebreakerPoolV1)]        = icebreakerPD;
 
-        mapleGlobalsV2.setMapleTreasury(mapleTreasury);
-        mapleGlobalsV2.setValidPoolDeployer(address(poolDeployer), true);
+        // Save the necessary pool cover amount for each pool
+        coverAmounts[address(mavenPermissionedPoolV1)] = 1_750_000e6;
+        coverAmounts[address(mavenUsdcPoolV1)]         = 1_000_000e6;
+        coverAmounts[address(mavenWethPoolV1)]         = 750e18;
+        coverAmounts[address(orthogonalPoolV1)]        = 2_500_000e6;
+        coverAmounts[address(icebreakerPoolV1)]        = 500_000e6;
 
-        mapleGlobalsV2.setValidPoolAsset(address(usdc), true);
-        mapleGlobalsV2.setValidPoolAsset(address(wbtc), true);
-        mapleGlobalsV2.setValidPoolAsset(address(weth), true);
-
+        vm.startPrank(tempGovernor);
         mapleGlobalsV2.setValidCollateralAsset(address(usdc), true);
-        mapleGlobalsV2.setValidCollateralAsset(address(wbtc), true);
         mapleGlobalsV2.setValidCollateralAsset(address(weth), true);
 
-        // Create the temporary and the final PDs
-
-        mapleGlobalsV2.setValidPoolDelegate(
-            temporaryPDs[address(mavenPermissionedPoolV1)] = address(new Address()),
-            true
-        );
-
+        // TODO Create the "final" and the final PDs
         mapleGlobalsV2.setValidPoolDelegate(
             finalPDs[address(mavenPermissionedPoolV1)] = address(new Address()),
-            true
-        );
-
-        mapleGlobalsV2.setValidPoolDelegate(
-            temporaryPDs[address(mavenUsdcPoolV1)] = address(new Address()),
             true
         );
 
@@ -181,27 +275,12 @@ contract SimulationBase is TestUtils, AddressRegistry {
         );
 
         mapleGlobalsV2.setValidPoolDelegate(
-            temporaryPDs[address(mavenWethPoolV1)] = address(new Address()),
-            true
-        );
-
-        mapleGlobalsV2.setValidPoolDelegate(
             finalPDs[address(mavenWethPoolV1)] = address(new Address()),
             true
         );
 
         mapleGlobalsV2.setValidPoolDelegate(
-            temporaryPDs[address(orthogonalPoolV1)] = address(new Address()),
-            true
-        );
-
-        mapleGlobalsV2.setValidPoolDelegate(
             finalPDs[address(orthogonalPoolV1)] = address(new Address()),
-            true
-        );
-
-        mapleGlobalsV2.setValidPoolDelegate(
-            temporaryPDs[address(icebreakerPoolV1)] = address(new Address()),
             true
         );
 
@@ -216,76 +295,55 @@ contract SimulationBase is TestUtils, AddressRegistry {
         mapleGlobalsV2.setValidPoolDelegate(orthogonalPoolV1.poolDelegate(),        true);
         mapleGlobalsV2.setValidPoolDelegate(icebreakerPoolV1.poolDelegate(),        true);
 
-        // Set bootstrap mints for various assets
-        mapleGlobalsV2.setBootstrapMint(address(usdc), 0.100000e6);
-        mapleGlobalsV2.setBootstrapMint(address(wbtc), 0.00001000e8);
-        mapleGlobalsV2.setBootstrapMint(address(weth), 0.000100000000000000e18);
-
-        mapleGlobalsV2.setSecurityAdmin(securityAdminMultisig);
-
-        // Save the necessary pool cover amount for each pool
-        coverAmounts[address(mavenPermissionedPoolV1)] = 1_750_000e6;
-        coverAmounts[address(mavenUsdcPoolV1)]         = 1_000_000e6;
-        coverAmounts[address(mavenWethPoolV1)]         = 750e18;
-        coverAmounts[address(orthogonalPoolV1)]        = 2_500_000e6;
-        coverAmounts[address(icebreakerPoolV1)]        = 500_000e6;
-
-        // Set valid borrowers
-
-        for (uint256 i; i < mavenUsdcLoans.length; ++i) {
-            mapleGlobalsV2.setValidBorrower(mavenUsdcLoans[i].borrower(), true);
-        }
-
-        for (uint256 i; i < mavenPermissionedLoans.length; ++i) {
-            mapleGlobalsV2.setValidBorrower(mavenPermissionedLoans[i].borrower(), true);
-        }
-
-        for (uint256 i; i < mavenWethLoans.length; ++i) {
-            mapleGlobalsV2.setValidBorrower(mavenWethLoans[i].borrower(), true);
-        }
-
-        for (uint256 i; i < orthogonalLoans.length; ++i) {
-            mapleGlobalsV2.setValidBorrower(orthogonalLoans[i].borrower(), true);
-        }
-
-        for (uint256 i; i < icebreakerLoans.length; ++i) {
-            mapleGlobalsV2.setValidBorrower(icebreakerLoans[i].borrower(), true);
-        }
-
         vm.stopPrank();
     }
 
-    function createHelpers() internal {
-        accountingChecker = new AccountingChecker(address(mapleGlobalsV2));
-        migrationHelper   = MigrationHelper(address(new MigrationHelperNTP(migrationMultisig, address(new MigrationHelper()))));
-
-        vm.prank(migrationMultisig);
-        migrationHelper.setGlobals(address(mapleGlobalsV2));
-
-        vm.prank(governor);
-        mapleGlobalsV2.setMigrationAdmin(address(migrationHelper));
-    }
-
     function deployAndMigrate() internal {
-        preMigration();
+        preDeployment();
+
+        vm.startPrank(deployer);
         deployProtocol();
+        vm.stopPrank();
+
+        // Make the governor the tempGovernor
+        vm.prank(tempGovernor);
+        mapleGlobalsV2.acceptGovernor();
+
+        // Take the ownership of the migration helper
+        vm.prank(migrationMultisig);
+        migrationHelper.acceptOwner();
+
+        finishDeploymentForSimulation();
+        setupFactoriesForSimulation();
+
         migrate();
         postMigration();
     }
 
-    function setupFactories() internal {
-        vm.startPrank(governor);
+    function deployForSimulation() internal {
+        vm.startPrank(deployer);
+        deployProtocol();
+        vm.stopPrank();
 
-        address debtLockerV4Migrator = address(new DebtLockerV4Migrator());
+        // Make the governor the tempGovernor
+        vm.prank(tempGovernor);
+        mapleGlobalsV2.acceptGovernor();
+
+        // Take the ownership of the migration helper
+        vm.prank(migrationMultisig);
+        migrationHelper.acceptOwner();
+
+        finishDeploymentForSimulation();
+        setupFactoriesForSimulation();
+    }
+
+    // Factoris not handled by deployment script but needed for simulation
+    function setupFactoriesForSimulation() internal {
+        vm.startPrank(governor);
 
         debtLockerFactory.registerImplementation(400, address(new DebtLockerV4()), debtLockerV3Initializer);
         debtLockerFactory.enableUpgradePath(200, 400, debtLockerV4Migrator);
         debtLockerFactory.enableUpgradePath(300, 400, debtLockerV4Migrator);
-
-        liquidatorFactory.registerImplementation(100, address(new Liquidator()), address(new LiquidatorInitializer()));
-        liquidatorFactory.setDefaultVersion(100);
-
-        address mapleLoanV4Initializer = address(new MapleLoanV4Initializer());
 
         loanFactory.registerImplementation(302, address(new MapleLoanV302()), loanV3Initializer);
         loanFactory.registerImplementation(400, address(new MapleLoanV400()), mapleLoanV4Initializer);
@@ -294,19 +352,6 @@ contract SimulationBase is TestUtils, AddressRegistry {
         loanFactory.enableUpgradePath(302, 400, address(new MapleLoanV4Migrator()));
         loanFactory.enableUpgradePath(400, 401, address(0));
         loanFactory.setDefaultVersion(301);
-
-        address loanManagerInitializer = address(new LoanManagerInitializer());
-
-        loanManagerFactory.registerImplementation(100, address(new TransitionLoanManager()), loanManagerInitializer);
-        loanManagerFactory.registerImplementation(200, address(new LoanManager()),           loanManagerInitializer);
-        loanManagerFactory.enableUpgradePath(100, 200, address(0));
-        loanManagerFactory.setDefaultVersion(100);
-
-        poolManagerFactory.registerImplementation(100, address(new PoolManager()), address(new PoolManagerInitializer()));
-        poolManagerFactory.setDefaultVersion(100);
-
-        withdrawalManagerFactory.registerImplementation(100, address(new WithdrawalManager()), address(new WithdrawalManagerInitializer()));
-        withdrawalManagerFactory.setDefaultVersion(100);
 
         vm.stopPrank();
     }
@@ -332,9 +377,15 @@ contract SimulationBase is TestUtils, AddressRegistry {
         payBackAllCashLoan();
         upgradeAllLoansToV401();
         transferAllPoolDelegates();
+
+        vm.prank(tempGovernor);
+        mapleGlobalsV2.setPendingGovernor(governor);
     }
 
     function postMigration() internal {
+        vm.prank(governor);
+        mapleGlobalsV2.acceptGovernor();
+
         // Dec 8
         setV1ProtocolPause(false);
 
@@ -452,16 +503,16 @@ contract SimulationBase is TestUtils, AddressRegistry {
         // Remove loans that were paid off during the pay upcoming loans step
         // TODO: Split into two arrays so the migration loans are visible in the AddressRegistry
         for (uint256 i; i < loans.length; ++i) {
-            if (loans[i].paymentsRemaining() > 0) continue;
-
-            loans[i] = loans[loans.length - 1];
-            loans.pop();
+            if (loans[i].paymentsRemaining() == 0) {
+                loans[i] = loans[loans.length - 1];
+                loans.pop();
+            }
         }
 
         address[] memory loanAddresses = convertToAddresses(loans);
 
         vm.prank(migrationMultisig);
-        migrationHelper.addLoansToLoanManager(address(transitionLoanManager), loanAddresses);  // 2min (1hr of validation)
+        migrationHelper.addLoansToLoanManager(address(poolV1), address(transitionLoanManager), loanAddresses, 201e6);  // TODO: Change to 2 once Ortho loans are claimed pre-deployment
 
         uint256 loansAddedTimestamp = block.timestamp;
 
@@ -472,7 +523,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         /*** Step 6: Activate the Pool from Globals ***/
         /**********************************************/
 
-        vm.prank(governor);
+        vm.prank(tempGovernor);
         mapleGlobalsV2.activatePoolManager(address(poolManager));  // 2min
 
         /*****************************************************************************/
@@ -505,7 +556,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         /*** Step 9: Set the pending lender in all outstanding Loans to be the TLM ***/
         /*****************************************************************************/
 
-        migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses);
+        migrationHelper.setPendingLenders(address(poolV1), address(poolManager), address(loanFactory), loanAddresses, 201e6);
 
         assertPoolAccounting(poolManager, loans);
 
@@ -513,7 +564,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
         /*** Step 10: Accept the pending lender in all outstanding Loans to be the TLM ***/
         /*********************************************************************************/
 
-        migrationHelper.takeOwnershipOfLoans(address(transitionLoanManager), loanAddresses);
+        migrationHelper.takeOwnershipOfLoans(address(poolV1), address(transitionLoanManager), loanAddresses, 201e6);
 
         assertPoolAccounting(poolManager, loans);
 
@@ -545,9 +596,9 @@ contract SimulationBase is TestUtils, AddressRegistry {
         poolManager = deployAndMigratePoolUpToLoanUpgrade(poolV1, loans, lps, open);
 
         // Configure the min cover amount in globals
-        vm.startPrank(governor);
+        vm.startPrank(tempGovernor);
         mapleGlobalsV2.setMinCoverAmount(address(poolManager),             coverAmounts[address(poolV1)]);
-        mapleGlobalsV2.setMaxCoverLiquidationPercent(address(poolManager), 0.5e6); // TODO double check with commercial team before deployment.
+        mapleGlobalsV2.setMaxCoverLiquidationPercent(address(poolManager), 0.5e6);
         vm.stopPrank();
 
         /****************************************/
@@ -619,7 +670,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
     }
 
     function configureLoanFactoryFor400To302Downgrade() internal {
-        vm.prank(governor);
+        vm.prank(mapleGlobalsV2.governor());
         loanFactory.enableUpgradePath(400, 302, address(0));
     }
 
@@ -656,7 +707,7 @@ contract SimulationBase is TestUtils, AddressRegistry {
     }
 
     function rollbackFromUpgradedV4Loans(IPoolLike pool, IPoolManagerLike poolManager, IMapleLoanLike[] storage loans, uint256 liquidityCap) internal {
-        vm.prank(governor);
+        vm.prank(mapleGlobalsV2.governor());
         loanFactory.enableUpgradePath(400, 302, address(0));
 
         downgradeLoans400To302(loans);
@@ -998,6 +1049,11 @@ contract SimulationBase is TestUtils, AddressRegistry {
 
         vm.stopPrank();
 
+        uint256 i;
+        while (loans[i] != migrationLoan) i++;
+
+        // Move last element to index of removed loan manager and pop last element.
+        loans[i] = loans[loans.length - 1];
         loans.pop();
     }
 
@@ -1326,8 +1382,10 @@ contract SimulationBase is TestUtils, AddressRegistry {
     }
 
     function setGlobals(address factory, address globals) internal {
-        vm.prank(governor);
-        IMapleProxyFactoryLike(factory).setGlobals(globals);
+        IMapleProxyFactoryLike factory_ = IMapleProxyFactoryLike(factory);
+
+        vm.prank(MapleGlobalsV2(factory_.mapleGlobals()).governor());
+        factory_.setGlobals(globals);
     }
 
     function setV1ProtocolPause(bool paused) internal {

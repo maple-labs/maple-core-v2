@@ -24,3 +24,9 @@ mainnet-sim:
 
 clean:
 	@forge clean
+
+deploy:
+	@scripts/deploy.sh
+
+addresses:
+	@node scripts/parse-broadcast.js >> ./scripts/deploy-addresses-no-name.js

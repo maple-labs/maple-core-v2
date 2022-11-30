@@ -25,7 +25,7 @@ contract LiquidityMigrationRollbackFrozenPoolTests is SimulationBase {
     function setUp() public {
         upgradeAllLoansToV301();
 
-        deployProtocol();
+        deployForSimulation();
 
         payAndClaimAllUpcomingLoans();
 
@@ -99,7 +99,7 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     function setUp() public {
         upgradeAllLoansToV301();
 
-        deployProtocol();
+        deployForSimulation();
 
         payAndClaimAllUpcomingLoans();
 
@@ -182,7 +182,7 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     function setUp() public {
         upgradeAllLoansToV301();
 
-        deployProtocol();
+        deployForSimulation();
 
         payAndClaimAllUpcomingLoans();
 
@@ -266,7 +266,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     function setUp() public {
         upgradeAllLoansToV301();
 
-        deployProtocol();
+        deployForSimulation();
 
         payAndClaimAllUpcomingLoans();
 
@@ -343,8 +343,7 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
         setGlobals(address(loanFactory), address(mapleGlobalsV2));
 
         // Start rollback
-
-        vm.prank(governor);
+        vm.prank(tempGovernor);
         loanFactory.enableUpgradePath(400, 302, address(0));
 
         downgradeAllLoans400To302();

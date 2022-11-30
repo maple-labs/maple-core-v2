@@ -19,10 +19,23 @@ contract AddressRegistry {
     /*** Core Accounts                                                                                                          ***/
     /******************************************************************************************************************************/
 
-    address globalAdmin    = address(0x93CC3E39C91cf93fd57acA416ed6fE66e8bdD573);
-    address governor       = address(0xd6d4Bcde6c816F17889f1Dd3000aF0261B03a196);
-    address mapleTreasury  = address(0xa9466EaBd096449d650D5AEB0dD3dA6F52FD0B19);
-    address migrationAdmin = address(0x93CC3E39C91cf93fd57acA416ed6fE66e8bdD573);
+    address deployer              = address(0x632a45c25d2139E6B2745eC3e7D309dEf99f2b9F);
+    address globalAdmin           = address(0x93CC3E39C91cf93fd57acA416ed6fE66e8bdD573);
+    address governor              = address(0xd6d4Bcde6c816F17889f1Dd3000aF0261B03a196);
+    address mapleTreasury         = address(0xa9466EaBd096449d650D5AEB0dD3dA6F52FD0B19);
+    address migrationMultisig     = address(0x2AD93F308AA812961Ec412a08eD778F4f4933758);
+    address securityAdminMultisig = address(0x6b1A78C1943b03086F7Ee53360f9b0672bD60818);
+    address tempGovernor          = address(0x0D8b2C1F11c5f9cD51de6dB3b256C1e3b0800200);
+
+    /******************************************************************************************************************************/
+    /*** Temporary Pool Delegate Multisigs                                                                                      ***/
+    /******************************************************************************************************************************/
+
+    address icebreakerPD        = address(0x37c610584f7834A8FEb490b73E2aC780AEE31905);
+    address mavenPermissionedPD = address(0xec67fd8445E9a84311E2BD118A21b2fDaACfc7FA);
+    address mavenUsdcPD         = address(0xf11897A0009b3a37f15365A976015E7F22A16d50);
+    address mavenWethPD         = address(0xbFA29AA894229d532D1aD1fd7e4226fce842632C);
+    address orthogonalPD        = address(0x47c388644C7AA8736CA34e3Bfa0ee1F8284778c1);
 
     /******************************************************************************************************************************/
     /*** Asset Contracts                                                                                                        ***/
@@ -461,6 +474,7 @@ contract AddressRegistry {
     IMapleLoanLike[] mavenUsdcLoans = [
         IMapleLoanLike(0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6),
         IMapleLoanLike(0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573),
+        IMapleLoanLike(0x726893373DE92b8272298D76a7D60a5F51b90dA9),
         IMapleLoanLike(0xa58fD39138083783689d700758D00873538C6C2A),
         IMapleLoanLike(0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521),
         IMapleLoanLike(0xF6950F28353cA676100C2a92DD360DEa16A213cE)

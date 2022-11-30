@@ -67,6 +67,8 @@ interface IMapleProxyFactoryLike {
 
     function implementationOf(uint256 version_) external view returns (address implementation_);
 
+    function mapleGlobals() external view returns (address mapleGlobals_);
+
     function setDefaultVersion(uint256 version_) external;
 
     function setGlobals(address globals_) external;

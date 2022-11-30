@@ -9,6 +9,9 @@ verbosity       = 3                       # The verbosity of tests
 block_timestamp = 1_622_400_000           # Timestamp for tests (non-zero)
 gas_limit       = "18446744073709551615"  # Gas limit for tests
 
+[profile.production]
+optimizer = true
+
 [fuzz]
 runs = 1
 
