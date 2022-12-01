@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+
 import {
     IERC20Like,
     IMapleGlobalsLike,
@@ -31,11 +33,23 @@ contract AddressRegistry {
     /*** Temporary Pool Delegate Multisigs                                                                                      ***/
     /******************************************************************************************************************************/
 
-    address icebreakerPD        = address(0x37c610584f7834A8FEb490b73E2aC780AEE31905);
-    address mavenPermissionedPD = address(0xec67fd8445E9a84311E2BD118A21b2fDaACfc7FA);
-    address mavenUsdcPD         = address(0xf11897A0009b3a37f15365A976015E7F22A16d50);
-    address mavenWethPD         = address(0xbFA29AA894229d532D1aD1fd7e4226fce842632C);
-    address orthogonalPD        = address(0x47c388644C7AA8736CA34e3Bfa0ee1F8284778c1);
+    address tempIcebreakerPD        = address(0x37c610584f7834A8FEb490b73E2aC780AEE31905);
+    address tempMavenPermissionedPD = address(0xec67fd8445E9a84311E2BD118A21b2fDaACfc7FA);
+    address tempMavenUsdcPD         = address(0xf11897A0009b3a37f15365A976015E7F22A16d50);
+    address tempMavenWethPD         = address(0xbFA29AA894229d532D1aD1fd7e4226fce842632C);
+    address tempOrthogonalPD        = address(0x47c388644C7AA8736CA34e3Bfa0ee1F8284778c1);
+
+    /******************************************************************************************************************************/
+    /*** Final Pool Delegate Multisigs                                                                                          ***/
+    /******************************************************************************************************************************/
+
+    // TODO: Determine actual addresses
+
+    address finalIcebreakerPD        = address(new Address());
+    address finalMavenPermissionedPD = address(new Address());
+    address finalMavenUsdcPD         = address(new Address());
+    address finalMavenWethPD         = address(new Address());
+    address finalOrthogonalPD        = address(new Address());
 
     /******************************************************************************************************************************/
     /*** Asset Contracts                                                                                                        ***/
@@ -46,15 +60,6 @@ contract AddressRegistry {
     IERC20Like wbtc = IERC20Like(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     IERC20Like weth = IERC20Like(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
-    address internal MPL  = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address internal WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
-    address internal WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address internal USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-
-    address internal MPL_SOURCE  = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address internal WBTC_SOURCE = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
-    address internal WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
-    address internal USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
 
     /******************************************************************************************************************************/
     /*** Protocol Contracts                                                                                                     ***/

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { CSVWriter }                   from "../../modules/contract-test-utils/contracts/csv.sol";
-import { Address, console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { CSVWriter }        from "../../modules/contract-test-utils/contracts/csv.sol";
+import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IERC20 }               from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 import { ILiquidator }          from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
@@ -22,246 +22,6 @@ contract Lifecycle is SimulationBase, CSVWriter {
     mapping(uint256 => address) internal withdrawalQueue;
     uint256 earliestWithdrawal = 1;
     uint256 latestWithdrawal = 0;
-
-    /******************************************************************************************************************************/
-    /*** Helpers                                                                                                                ***/
-    /******************************************************************************************************************************/
-
-    function getCollateralRequiredFor(uint256 principal_, uint256 drawableFunds_, uint256 principalRequested_, uint256 collateralRequired_) internal pure returns (uint256 collateral_) {
-        return principal_ <= drawableFunds_ ? uint256(0) : (collateralRequired_ * (principal_ - drawableFunds_) + principalRequested_ - 1) / principalRequested_;
-    }
-
-    /******************************************************************************************************************************/
-    /*** Borrow Functions                                                                                                       ***/
-    /******************************************************************************************************************************/
-
-    function closeLoan(address loan_) internal {
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IMapleLoan(loan_).getClosingPaymentBreakdown();
-
-        address borrower_   = IMapleLoan(loan_).borrower();
-        address fundsAsset_ = IMapleLoan(loan_).fundsAsset();
-        uint256 payment_    = principal_ + interest_ + fees_;
-
-        erc20_fillAccount(borrower_, fundsAsset_, payment_);
-
-        vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, payment_);
-        IMapleLoan(loan_).closeLoan(payment_);
-        vm.stopPrank();
-    }
-
-    function drawdown(address loan_, uint256 amount_) internal {
-        address borrower_           = IMapleLoan(loan_).borrower();
-        address collateralAsset_    = IMapleLoan(loan_).collateralAsset();
-        uint256 collateralRequired_ = IMapleLoan(loan_).getAdditionalCollateralRequiredFor(amount_);
-
-        erc20_fillAccount(borrower_, collateralAsset_, collateralRequired_);
-
-        vm.startPrank(borrower_);
-        IERC20(collateralAsset_).approve(loan_, collateralRequired_);
-        IMapleLoan(loan_).drawdownFunds(amount_, borrower_);
-        vm.stopPrank();
-    }
-
-    function makePayment(address loan_) internal {
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IMapleLoan(loan_).getNextPaymentBreakdown();
-
-        address borrower_   = IMapleLoan(loan_).borrower();
-        address fundsAsset_ = IMapleLoan(loan_).fundsAsset();
-        uint256 payment_    = principal_ + interest_ + fees_;
-
-        erc20_fillAccount(borrower_, fundsAsset_, payment_);
-
-        vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, payment_);
-        IMapleLoan(loan_).makePayment(payment_);
-        vm.stopPrank();
-    }
-
-    function postCollateral(address loan_, uint256 amount_) internal {
-        address borrower_        = IMapleLoan(loan_).borrower();
-        address collateralAsset_ = IMapleLoan(loan_).collateralAsset();
-
-        erc20_fillAccount(borrower_, collateralAsset_, amount_);
-
-        vm.startPrank(borrower_);
-        IERC20(collateralAsset_).approve(loan_, amount_);
-        IMapleLoan(loan_).postCollateral(amount_);
-        vm.stopPrank();
-    }
-
-    function proposeRefinance(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_, uint256 principalIncrease_, uint256 collateralRequiredIncrease_) internal {
-        address borrower_              = IMapleLoan(loan_).borrower();
-        uint256 newPrincipal_          = IMapleLoan(loan_).principal() + principalIncrease_;
-        uint256 newPrincipalRequested_ = IMapleLoan(loan_).principalRequested() + principalIncrease_;
-        uint256 newCollateralRequired_ = IMapleLoan(loan_).collateralRequired() + collateralRequiredIncrease_;
-        uint256 originationFees_       = IMapleLoanFeeManager(IMapleLoan(loan_).feeManager()).getOriginationFees(loan_, newPrincipalRequested_);
-        uint256 drawableFunds_         = IMapleLoan(loan_).drawableFunds();
-
-        if (originationFees_ != 0) {                                    // If there are originationFees_
-            if (drawableFunds_ > originationFees_) {                    // and sufficient drawableFunds_ to pay them
-                drawableFunds_ -= originationFees_;                     // then decrement from drawableFunds_ for the collateralRequired_ math
-            } else {
-                returnFunds(loan_, originationFees_ - drawableFunds_);  // else return enough to pay the originationFees_
-                drawableFunds_ = 0;                                     // and zero the drawableFunds_ for the collateralRequired_ math
-            }
-        }
-
-        uint256 requiredCollateral_ = getCollateralRequiredFor(newPrincipal_, drawableFunds_, newPrincipalRequested_, newCollateralRequired_);
-        uint256 collateral_         = IMapleLoan(loan_).collateral();
-
-        // If the post-refinance required collateral given the post-refinance drawableFunds, then post collateral.
-        if (requiredCollateral_ > collateral_) postCollateral(loan_, requiredCollateral_ - collateral_);
-
-        vm.startPrank(borrower_);
-        IMapleLoan(loan_).proposeNewTerms(refinancer_, expiry_, refinanceCalls_);
-        vm.stopPrank();
-    }
-
-    function removeCollateral(address loan_, uint256 amount_) internal {
-        address borrower_   = IMapleLoan(loan_).borrower();
-
-        vm.startPrank(borrower_);
-        IMapleLoan(loan_).removeCollateral(amount_, borrower_);
-        vm.stopPrank();
-    }
-
-    function returnFunds(address loan_, uint256 amount_) internal {
-        address borrower_   = IMapleLoan(loan_).borrower();
-        address fundsAsset_ = IMapleLoan(loan_).fundsAsset();
-
-        erc20_fillAccount(borrower_, fundsAsset_, amount_);
-
-        vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, amount_);
-        IMapleLoan(loan_).returnFunds(amount_);
-        vm.stopPrank();
-    }
-
-    function rejectNewTerms(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        address borrower_ = IMapleLoan(loan_).borrower();
-
-        vm.startPrank(borrower_);
-        IMapleLoan(loan_).rejectNewTerms(refinancer_, expiry_, refinanceCalls_);
-        vm.stopPrank();
-    }
-
-    /******************************************************************************************************************************/
-    /*** Liquidity Provider Functions                                                                                           ***/
-    /******************************************************************************************************************************/
-
-    function depositLiquidity(address pool_, address account_, uint256 amount_) internal {
-        address asset_ = IPool(pool_).asset();
-
-        erc20_fillAccount(account_, asset_, amount_);
-
-        vm.startPrank(account_);
-        IERC20(asset_).approve(pool_, amount_);
-        IPool(pool_).deposit(amount_, account_);
-        vm.stopPrank();
-    }
-
-    function requestRedeem(address pool_, address account_, uint256 amount_) internal {
-        vm.startPrank(account_);
-        IPool(pool_).requestRedeem(amount_, account_);
-        vm.stopPrank();
-    }
-
-    function redeem(address pool_, address account_, uint256 amount_) internal {
-        vm.startPrank(account_);
-        IPool(pool_).redeem(amount_, account_, account_);
-        vm.stopPrank();
-    }
-
-    /******************************************************************************************************************************/
-    /*** Pool Delegate Functions                                                                                                ***/
-    /******************************************************************************************************************************/
-
-    function acceptRefinance(address poolManager_, address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_, uint256 principalIncrease_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
-        vm.stopPrank();
-    }
-
-    function fundLoan(address poolManager_, address loan_) internal {
-        address poolDelegate_       = IPoolManager(poolManager_).poolDelegate();
-        address loanManager_        = IPoolManager(poolManager_).loanManagerList(0);  // TODO: always?
-        uint256 principalRequested_ = IMapleLoan(loan_).principalRequested();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).fund(principalRequested_, loan_, loanManager_);
-        vm.stopPrank();
-    }
-
-    function impairLoan(address poolManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).impairLoan(loan_);
-        vm.stopPrank();
-    }
-
-    function removeLoanImpairment(address poolManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).removeLoanImpairment(loan_);
-        vm.stopPrank();
-    }
-
-    function finishCollateralLiquidation(address poolManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).finishCollateralLiquidation(loan_);
-        vm.stopPrank();
-    }
-
-    function triggerDefault(address poolManager_, address loan_, address liquidatorFactory_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).triggerDefault(loan_, liquidatorFactory_);
-        vm.stopPrank();
-    }
-
-    function depositCover(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-        address asset_        = IPool(IPoolManager(poolManager_).pool()).asset();
-
-        erc20_fillAccount(poolDelegate_, asset_, amount_);
-
-        vm.startPrank(poolDelegate_);
-        IERC20(asset_).approve(poolManager_, amount_);
-        IPoolManager(poolManager_).depositCover(amount_);
-        vm.stopPrank();
-    }
-
-    function withdrawCover(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).withdrawCover(amount_, poolDelegate_);
-        vm.stopPrank();
-    }
-
-    function enableLender(address poolManager_, address lender_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).setAllowedLender(lender_, true);
-        vm.stopPrank();
-    }
-
-    function setLiquidityCap(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).setLiquidityCap(amount_);
-        vm.stopPrank();
-    }
 
     /******************************************************************************************************************************/
     /*** Lifecycle Helpers                                                                                                      ***/
@@ -414,14 +174,14 @@ contract Lifecycle is SimulationBase, CSVWriter {
 
     function createDepositorRandomly(address poolManager_, address[] storage lps_, uint256 seed_) internal {
         address lp_ = address(new Address());
-        enableLender(poolManager_, lp_);
+        allowLender(poolManager_, lp_);
         increaseDepositorByRandomAmount(poolManager_, lp_, seed_++);
         lps_.push(lp_);
     }
 
     function createDepositor(address poolManager_, address[] storage lps_, uint256 amount_) internal {
         address lp_ = address(new Address());
-        enableLender(poolManager_, lp_);
+        allowLender(poolManager_, lp_);
         increaseDepositor(poolManager_, lp_, amount_);
         lps_.push(lp_);
     }
@@ -620,7 +380,20 @@ contract Lifecycle is SimulationBase, CSVWriter {
         balances[3] = getBalances(WETH, mavenWethLps);
         balances[4] = getBalances(USDC, orthogonalLps);
 
-        deployAndMigrate();
+        upgradeAllLoansToV301();
+
+        deployProtocol();
+
+        tempGovernorAcceptsV2Governorship();
+
+        migrationMultisigAcceptsMigrationAdministratorship();
+
+        storeCoverAmounts();
+        setupExistingFactories();
+
+        migrateAllPools();
+        postMigration();
+        performAdditionalGlobalsSettings();
 
         address loan;
 
@@ -666,19 +439,19 @@ contract Lifecycle is SimulationBase, CSVWriter {
     }
 
     // function test_complexLifecycle_icebreaker() external {
-    //     migrate();
+    //     migrateAllPools();
     //     performComplexLifecycle(icebreakerPoolManager, icebreakerLoans, icebreakerLps, 0);
     // }
 
     // function test_complexLifecycle_mavenPermissioned() external {
-    //     migrate();
+    //     migrateAllPools();
     //     performComplexLifecycle(mavenPermissionedPoolManager, mavenPermissionedLoans, mavenPermissionedLps, 0);
     // }
 
     // function test_complexLifecycle_mavenUsdc() external {
     //     int256[] memory balances = getBalances(USDC, mavenUsdcLps);
 
-    //     migrate();
+    //     migrateAllPools();
     //     performComplexLifecycle(mavenUsdcPoolManager, mavenUsdcLoans, mavenUsdcLps, 2);
 
     //     makeDir("./output/complex-lifecycle");
@@ -686,12 +459,12 @@ contract Lifecycle is SimulationBase, CSVWriter {
     // }
 
     // function test_complexLifecycle_mavenWeth() external {
-    //     migrate();
+    //     migrateAllPools();
     //     performComplexLifecycle(mavenWethPoolManager, mavenWethLoans, mavenWethLps, 0);
     // }
 
     // function test_complexLifecycle_orthogonal() external {
-    //     migrate();
+    //     migrateAllPools();
     //     performComplexLifecycle(orthogonalPoolManager, orthogonalLoans, orthogonalLps, 0);
     // }
 
