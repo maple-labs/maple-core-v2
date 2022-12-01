@@ -59,6 +59,8 @@ interface IMapleProxiedLike {
 
 interface IMapleProxyFactoryLike {
 
+    function isLoan(address) external view returns (bool);
+
     function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
 
     function defaultVersion() external view returns (uint256 defaultVersion_);
@@ -83,6 +85,12 @@ interface IMapleProxyFactoryLike {
 
 interface IMapleGlobalsLike {
 
+    function governor() external view returns (address governor);
+
+    function getLatestPrice(address asset) external view returns (uint256);
+
+    function ownedPoolManager(address) external view returns (address);
+
     function globalAdmin() external view returns (address);
 
     function setMaxCoverLiquidationPercent(address poolManager_, uint256 maxCoverLiquidationPercent_) external;
@@ -93,9 +101,13 @@ interface IMapleGlobalsLike {
 
     function setProtocolPause(bool pause) external;
 
-    function setStakerCooldownPeriod(uint256 cooldown_) external;
+    function setStakerCooldownPeriod(uint256 cooldown) external;
 
-    function setStakerUnstakeWindow(uint256 window_) external;
+    function setStakerUnstakeWindow(uint256 window) external;
+
+    function stakerCooldownPeriod() external view returns (uint256);
+
+    function stakerUnstakeWindow() external view returns (uint256);
 
 }
 
@@ -124,6 +136,8 @@ interface IMapleLoanLike {
     function collateralAsset() external view returns (address collateralAsset_);
 
     function drawableFunds() external view returns (uint256 drawableFunds_);
+
+    function factory() external view returns (address factory_);
 
     function fundsAsset() external view returns (address fundsAsset_);
 
@@ -185,6 +199,8 @@ interface IPoolLike {
 
     function liquidityLocker() external pure returns (address);
 
+    function manager() external view returns (address);
+
     function name() external view returns (string memory);
 
     function poolDelegate() external view returns (address);
@@ -217,6 +233,8 @@ interface IPoolV2Like is IERC20Like {
 
     function deposit(uint256 assets_, address receiver_) external returns (uint256 shares_);
 
+    function totalSupply() external view returns (uint256 totalSupply_);
+
 }
 
 interface IPoolManagerLike {
@@ -224,6 +242,8 @@ interface IPoolManagerLike {
     function acceptPendingPoolDelegate() external;
 
     function asset() external view returns (address asset_);
+
+    function configured() external view returns (bool);
 
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate_);
 
@@ -257,13 +277,15 @@ interface IPoolManagerLike {
 
 interface IStakeLockerLike {
 
-    function balanceOf(address owner) external view returns(uint256);
+    function balanceOf(address owner) external view returns (uint256);
 
-    function custodyAllowance(address from, address custodian) external view returns(uint256);
+    function custodyAllowance(address from, address custodian) external view returns (uint256);
 
     function intendToUnstake() external;
 
     function isUnstakeAllowed(address from) external view returns (bool);
+
+    function lockupPeriod() external view returns (uint256);
 
     function pool() external view returns (address);
 
@@ -273,11 +295,13 @@ interface IStakeLockerLike {
 
     function stakeAsset() external view returns (address stakeAsset_);
 
-    function totalCustodyAllowance(address owner) external view returns(uint256);
+    function totalCustodyAllowance(address owner) external view returns (uint256);
 
-    function totalSupply() external view returns(uint256);
+    function totalSupply() external view returns (uint256);
 
     function unstake(uint256 amt) external;
+
+    function unstakeCooldown(address) external view returns (uint256);
 
 }
 

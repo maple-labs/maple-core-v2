@@ -66,7 +66,7 @@ contract AddressRegistry {
     /******************************************************************************************************************************/
 
     // TODO: Check if the debt locker initializer is V2 or V3, or if they are the same.
-    address loanV3Initializer       = address(0xCba99a6648450a7bE7f20B1C3258F74Adb662020);
+    address loanV3Initializer       = address(0xfF2CE989b5b5881dB21f67cBe25145FFB053BCCd);
     address debtLockerV3Initializer = address(0x3D01aE38be6D81BD7c8De0D5Cd558eAb3F4cb79b);
 
     IMapleProxyFactoryLike debtLockerFactory = IMapleProxyFactoryLike(0xA83404CAA79989FfF1d84bA883a1b8187397866C);
@@ -484,6 +484,8 @@ contract AddressRegistry {
         IMapleLoanLike(0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521),
         IMapleLoanLike(0xF6950F28353cA676100C2a92DD360DEa16A213cE)
     ];
+
+    // ["0x009fdde3e654cb2495135708dc1590daefb14ea7","0x219fd48e2ef72b8b55c2e3fe78614b350c06d6eb","0x2e46037a6b9720cd4fcb4498e65324908abb8d30","0x3ef96be3c7b9446b78903c40fc509789898f1cef","0x584b52397a51ed108178970675c3d6622df9b2be","0x8c6d9f12c4624afbf4fdcb0892a0fa7e5e6f4412","0x9928c2751aff664cec0a100f36bf2a31c5dcd8c7","0xe83c69d9594118ada9f95af629c989805a33c138"]
 
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC (Permissioned)                                                                                         ***/

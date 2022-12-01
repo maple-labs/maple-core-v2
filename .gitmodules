@@ -21,24 +21,31 @@
 [submodule "modules/migration-helpers"]
 	path = modules/migration-helpers
 	url = git@github.com:maple-labs/migration-helpers
+	ignore = dirty
 [submodule "modules/pool-v2"]
 	path = modules/pool-v2
 	url = git@github.com:maple-labs/pool-v2.git
+	ignore = dirty
 [submodule "modules/liquidations"]
 	path = modules/liquidations
 	url = git@github.com:maple-labs/liquidations.git
+	ignore = dirty
 [submodule "modules/loan-v301"]
 	path = modules/loan-v301
 	url = git@github.com:maple-labs/loan.git
 	branch = v3.01
+	ignore = dirty
 [submodule "modules/loan-v302"]
 	path = modules/loan-v302
 	url = git@github.com:maple-labs/loan.git
 	branch = v3.01
+	ignore = dirty
 [submodule "modules/loan-v400"]
 	path = modules/loan-v400
 	url = git@github.com:maple-labs/loan.git
+	ignore = dirty
 [submodule "modules/loan-v401"]
 	path = modules/loan-v401
 	url = git@github.com:maple-labs/loan.git
 	branch = V4.01
+	ignore = dirty

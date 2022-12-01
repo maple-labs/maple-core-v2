@@ -1,5 +1,3 @@
-
-
 export FOUNDRY_PROFILE=production
 echo using profile $FOUNDRY_PROFILE
 

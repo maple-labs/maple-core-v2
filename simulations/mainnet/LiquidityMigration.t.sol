@@ -3,9 +3,9 @@ pragma solidity 0.8.7;
 
 import { Address, console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { SimulationBase } from "./SimulationBase.sol";
-
 import { IMapleLoanLike, IPoolLike, IPoolManagerLike } from "./Interfaces.sol";
+
+import { SimulationBase } from "./SimulationBase.sol";
 
 contract LiquidityMigrationTests is SimulationBase {
 
