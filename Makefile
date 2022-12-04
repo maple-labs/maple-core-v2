@@ -28,5 +28,17 @@ mainnet-sim:
 clean:
 	@forge clean
 
+pay-upcoming-loans:
+	@scripts/pay-upcoming-loans.sh
+
+upgrade-loans-301:
+	@scripts/upgrade-loans-301.sh
+
+upgrade-dls-400:
+	@scripts/upgrade-dls-400.sh
+
 addresses:
-	@node scripts/parse-broadcast.js >> ./scripts/deploy-addresses-no-name.js
+	@node scripts/parse-broadcast.js > ./scripts/deploy-addresses-no-name.js
+
+validate:
+	@forge script --rpc-url $(ETH_RPC_URL) -vvv simulations/validation/ValidationScripts.s.sol:$(step)

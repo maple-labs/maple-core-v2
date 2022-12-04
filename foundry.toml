@@ -23,8 +23,8 @@ fail_on_revert = true   # Fail the test if the contract reverts
 
 [profile.mainnet_simulations]
 test                = 'simulations/mainnet'  # The test directory
-block_number        = 16077678               # Block number for tests
-fork_block_number   = 16077678
+block_number        = 16105269               # Block number for tests
+fork_block_number   = 16105269
 rpc_storage_caching = { chains = ["mainnet"], endpoints = "all" }
 
 [profile.local_simulations]

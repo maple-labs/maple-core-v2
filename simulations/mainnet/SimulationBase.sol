@@ -132,8 +132,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
     /******************************************************************************************************************************/
 
     function deployProtocol() internal {
-        vm.startPrank(deployer);
-
         // Step 1: Deploy Globals (Set Governor to deployer)
         address mapleGlobalsV2Implementation = address(new MapleGlobalsV2());
 
@@ -250,8 +248,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
         // Step 15: Transfer governor
         mapleGlobalsV2.setPendingGovernor(tempGovernor);
-
-        vm.stopPrank();
     }
 
     function storeCoverAmounts() internal {

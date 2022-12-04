@@ -382,7 +382,11 @@ contract Lifecycle is SimulationBase, CSVWriter {
 
         upgradeAllLoansToV301();
 
+        vm.startPrank(deployer);
+
         deployProtocol();
+
+        vm.stopPrank();
 
         tempGovernorAcceptsV2Governorship();
 

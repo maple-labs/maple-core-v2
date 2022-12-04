@@ -25,6 +25,8 @@ interface IERC20Like {
 
     function transfer(address to_, uint256 amount) external returns (bool success_);
 
+    function totalSupply() external view returns (uint256 totalSupply);
+
 }
 
 interface ILoanManagerLike {
@@ -85,6 +87,8 @@ interface IMapleProxyFactoryLike {
 
 interface IMapleGlobalsLike {
 
+    function activatePoolManager(address poolManager_) external;
+
     function governor() external view returns (address governor);
 
     function getLatestPrice(address asset) external view returns (uint256);
@@ -118,6 +122,8 @@ interface IMapleLoanV3Like {
 }
 
 interface IMapleLoanV4Like {
+
+    function getClosingPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
 
     function getNextPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
 
@@ -231,9 +237,11 @@ interface IPoolV2Like is IERC20Like {
 
     function asset() external view returns (address asset_);
 
+    function convertToAssets(uint256 shares) external view returns(uint256 assets);
+
     function deposit(uint256 assets_, address receiver_) external returns (uint256 shares_);
 
-    function totalSupply() external view returns (uint256 totalSupply_);
+    function totalAssets() external view returns (uint256 totalAssets_);
 
 }
 

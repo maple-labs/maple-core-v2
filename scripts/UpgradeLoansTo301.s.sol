@@ -11,11 +11,6 @@ contract UpgradeLoansTo301 is SimulationBase {
     address[] LoansThatRequireManualMigration;
 
     function run() external {
-
-        /******************************************************************************************************************************/
-        /*** Upgrade Loans to 301                                                                                                   ***/
-        /******************************************************************************************************************************/
-
         upgradeLoansTo301(mavenUsdcLoans);
         upgradeLoansTo301(mavenPermissionedLoans);
         upgradeLoansTo301(mavenWethLoans);
@@ -43,7 +38,9 @@ contract UpgradeLoansTo301 is SimulationBase {
             }
 
             if (loanFactory.versionOf(loan.implementation()) == 300) {
-                vm.setEnv("ETH_FROM", vm.toString(loan.borrower()));
+                console.log("upgrading", address(loan));
+                console.log("borrower", loan.borrower());
+
                 vm.broadcast(loan.borrower());
                 loan.upgrade(301, new bytes(0));
             }

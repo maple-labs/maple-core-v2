@@ -35,6 +35,8 @@ interface ILoanLike {
 
     function claimableFunds() external view returns (uint256 claimableFunds);
 
+    function drawableFunds() external view returns (uint256 principalRequested);
+
     function factory() external view returns (address factory);
 
     function fundsAsset() external view returns (address fundsAsset);
@@ -48,6 +50,8 @@ interface ILoanLike {
     function paymentsRemaining() external view returns (uint256 paymentsRemaining);
 
     function pendingLender() external view returns (address pendingLender);
+
+    function principalRequested() external view returns (uint256 principalRequested);
 
 }
 
@@ -66,6 +70,10 @@ interface IMapleGlobalsV1Like {
     function stakerCooldownPeriod() external view returns (uint256);
 
     function stakerUnstakeWindow() external view returns (uint256);
+
+    function investorFee() external view returns (uint256);
+
+    function treasuryFee() external view returns (uint256);
 
 }
 
@@ -176,6 +184,8 @@ interface IPoolV1Like {
     function liquidityCap() external view returns (uint256 liquidityCap);
 
     function liquidityLocker() external view returns (address liquidityLocker);
+
+    function poolAdmins(address poolAdmin) external view returns (bool isPoolAdmin);
 
     function poolDelegate() external view returns (address poolDelegate);
 

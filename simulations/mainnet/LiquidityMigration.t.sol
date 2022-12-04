@@ -12,7 +12,11 @@ contract LiquidityMigrationTests is SimulationBase {
     function test_liquidityMigration_complete() public {
         upgradeAllLoansToV301();
 
+        vm.startPrank(deployer);
+
         deployProtocol();
+
+        vm.stopPrank();
 
         tempGovernorAcceptsV2Governorship();
 
@@ -43,7 +47,11 @@ contract LiquidityMigrationRollbackFrozenPoolTests is SimulationBase {
     function setUp() public {
         upgradeAllLoansToV301();
 
+        vm.startPrank(deployer);
+
         deployProtocol();
+
+        vm.stopPrank();
 
         tempGovernorAcceptsV2Governorship();
 
@@ -124,7 +132,11 @@ contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
     function setUp() public {
         upgradeAllLoansToV301();
 
+        vm.startPrank(deployer);
+
         deployProtocol();
+
+        vm.stopPrank();
 
         tempGovernorAcceptsV2Governorship();
 
@@ -214,7 +226,11 @@ contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBas
     function setUp() public {
         upgradeAllLoansToV301();
 
+        vm.startPrank(deployer);
+
         deployProtocol();
+
+        vm.stopPrank();
 
         tempGovernorAcceptsV2Governorship();
 
@@ -305,7 +321,11 @@ contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
     function setUp() public {
         upgradeAllLoansToV301();
 
+        vm.startPrank(deployer);
+
         deployProtocol();
+
+        vm.stopPrank();
 
         tempGovernorAcceptsV2Governorship();
 

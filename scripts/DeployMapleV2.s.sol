@@ -6,9 +6,7 @@ import { SimulationBase } from "../simulations/mainnet/SimulationBase.sol";
 contract DeployMapleV2 is SimulationBase {
 
     function run() external {
-        vm.setEnv("ETH_FROM", vm.toString(deployer));
-
-        vm.startBroadcast();
+        vm.startBroadcast(deployer);
 
         deployProtocol();
 

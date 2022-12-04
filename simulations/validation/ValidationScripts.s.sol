@@ -20,71 +20,157 @@ import {
     ITransitionLoanManagerLike
 } from "./Interfaces.sol";
 
-// TODO: Update error messages for all assertions.
-// TODO: Update bytecode hashes before deployment.
+// TODO: Add and update all bytecode hashes.
+// TODO: And and update error messages for all assertions (use sentence case).
 
-contract ValidateDeployment is AddressRegistry, TestUtils {
+contract SetPoolAdmins is AddressRegistry, TestUtils {
+
+    function run() external {
+        validate(mavenPermissionedPoolV1);
+        validate(mavenUsdcPoolV1);
+        validate(mavenWethPoolV1);
+        validate(orthogonalPoolV1);
+        validate(icebreakerPoolV1);
+    }
+
+    function validate(IPoolV1Like poolV1) internal {
+        assertTrue(poolV1.poolAdmins(migrationMultisig), "poolAdmins != migrationMultisig");
+    }
+
+}
+
+contract SetInvestorAndTreasuryFee is AddressRegistry, TestUtils {
+
+    function run() external {
+        assertEq(mapleGlobalsV1.investorFee(), 0, "investorFee != 0");
+        assertEq(mapleGlobalsV1.treasuryFee(), 0, "treasuryFee != 0");
+    }
+
+}
+
+contract PayAndClaimUpcomingLoans is AddressRegistry, TestUtils {
+
+    uint256 constant TOLERANCE = 5 days;
+
+    function run() external {
+        validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
+        validate(orthogonalLoans);
+        validate(icebreakerLoans);
+    }
+
+    function validate(ILoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            uint256 nextPaymentDueDate = loans[i].nextPaymentDueDate();
+
+            assertTrue(nextPaymentDueDate > block.timestamp && nextPaymentDueDate - block.timestamp >= TOLERANCE);
+        }
+    }
+
+}
+
+contract RemoveMaturedLoans is AddressRegistry, TestUtils {
+
+    function run() external {
+        validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
+        validate(orthogonalLoans);
+        validate(icebreakerLoans);
+    }
+
+    function validate(ILoanLike[] storage loans) internal {
+        for (uint i = 0; i < loans.length; i++) {
+            if (loans[i].nextPaymentDueDate() == 0) {
+                console.log("Matured loan: ", address(loans[i]));
+            }
+        }
+    }
+
+}
+
+contract UpgradeLoansToV301 is AddressRegistry, TestUtils {
+
+    function run() external {
+        validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
+        validate(orthogonalLoans);
+        validate(icebreakerLoans);
+    }
+
+    function validate(ILoanLike[] storage loans) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            assertVersion(loans[i], 301, "loan version != v301");
+        }
+    }
+
+    function assertVersion(ILoanLike loan, uint256 version, string memory message) internal {
+        assertEq(loan.implementation(), IMapleProxyFactoryLike(loan.factory()).implementationOf(version), message);
+    }
+
+}
+
+contract DeployProtocol is AddressRegistry, TestUtils {
 
     function run() external {
         // Step 1: Deploy Globals
-        assertEq(hash(address(mapleGlobalsV2Implementation).code), 0xe98811831e450113b600999c3b8ef871dabe6efdca80cf7a30815978af962593);
-        assertEq(hash(address(mapleGlobalsV2Proxy).code),          0xbc67c1986a713f8ec3a64a34cd21085ce685b62c787144275ae09becead09d71);
 
-        assertEq(mapleGlobalsV2Proxy.admin(), deployer);
+        // assertEq(hash(address(mapleGlobalsV2Implementation).code), 0);
+        // assertEq(hash(address(mapleGlobalsV2Proxy).code),          0);
+
+        assertEq(mapleGlobalsV2Proxy.admin(),          deployer);
         assertEq(mapleGlobalsV2Proxy.implementation(), mapleGlobalsV2Implementation);
 
-        // Step 2: Deploy FeeManager
-        assertEq(hash(address(feeManager).code), 0xba9931fd98fcf13e2ae2d1d8c94bf4d3f99f9c41444caf50adec02a02a34b383);
+        // // Step 2: Deploy FeeManager
+        // require(hash(address(feeManager).code) == 0xba9931fd98fcf13e2ae2d1d8c94bf4d3f99f9c41444caf50adec02a02a34b383);
 
         assertEq(feeManager.globals(), address(mapleGlobalsV2Proxy));
 
-        // Step 3: Deploy Loan contracts
-        assertEq(hash(address(loanV302Implementation).code), 0xc526afbf4b792ad95c30128d640a6dae29c0bfb0b6b0674baa135701554b3bc8);
-        assertEq(hash(address(loanV400Initializer).code),    0xf7d8ef4874396425b88f486351ad93e8a06a193c51bd718b0718e4a5deff49b8);
-        assertEq(hash(address(loanV400Implementation).code), 0x797f19d08098cf6ca5051692cf2b073682dae6ef83a361477e86fa949534090f);
-        assertEq(hash(address(loanV401Implementation).code), 0xa424f4b71909b5042fb7e23137e4cc91f0e33a9f62bc2dec0dc037a6ae0785c4);
-        assertEq(hash(address(loanV400Migrator).code),       0xcb89d7d5948b60ff5caa3724753fc375d1af62f14a38e13cfb35e772b25d7235);
+        // // Step 3: Deploy Loan contracts
+        // require(hash(address(loanV302Implementation).code) == 0xc526afbf4b792ad95c30128d640a6dae29c0bfb0b6b0674baa135701554b3bc8);
+        // require(hash(address(loanV400Initializer).code)    == 0xf7d8ef4874396425b88f486351ad93e8a06a193c51bd718b0718e4a5deff49b8);
+        // require(hash(address(loanV400Implementation).code) == 0x797f19d08098cf6ca5051692cf2b073682dae6ef83a361477e86fa949534090f);
+        // require(hash(address(loanV401Implementation).code) == 0xa424f4b71909b5042fb7e23137e4cc91f0e33a9f62bc2dec0dc037a6ae0785c4);
+        // require(hash(address(loanV400Migrator).code)       == 0xcb89d7d5948b60ff5caa3724753fc375d1af62f14a38e13cfb35e772b25d7235);
 
-        // Step 4: Deploy DebtLocker contracts
-        assertEq(hash(address(debtLockerV400Implementation).code), 0x8758bf19e2d5b77c009a098e2dad73a58969878b9c2a88099d49f7a3ae16564c);
-        assertEq(hash(address(debtLockerV400Migrator).code),       0x6cb68800cd4fe71531c292ace7ed3f948cf61b842e8348aec12949902304dcda);
+        // // Step 4: Deploy DebtLocker contracts
+        // require(hash(address(debtLockerV400Implementation).code) == 0x8758bf19e2d5b77c009a098e2dad73a58969878b9c2a88099d49f7a3ae16564c);
+        // require(hash(address(debtLockerV400Migrator).code)       == 0x6cb68800cd4fe71531c292ace7ed3f948cf61b842e8348aec12949902304dcda);
 
-        // Step 5: Deploy PoolDeployer
-        assertEq(hash(address(poolDeployer).code), 0x80ca5753d81f8ba0b0139db619eb9d5062d442b503c43b273895ec9611d8f836);
+        // // Step 5: Deploy PoolDeployer
+        // require(hash(address(poolDeployer).code) == 0x80ca5753d81f8ba0b0139db619eb9d5062d442b503c43b273895ec9611d8f836);
         assertEq(poolDeployer.globals(), address(mapleGlobalsV2Proxy));
 
         // Step 6: Set addresses in GlobalsV2
-        assertEq(mapleGlobalsV2Proxy.mapleTreasury(), mapleTreasury, "maple treasury is invalid");
-        assertEq(mapleGlobalsV2Proxy.securityAdmin(), securityAdmin, "security admin is invalid");
+        assertEq(mapleGlobalsV2Proxy.mapleTreasury(), mapleTreasury);
+        assertEq(mapleGlobalsV2Proxy.securityAdmin(), securityAdmin);
 
         // Step 7: Set valid PoolDeployer
         assertTrue(mapleGlobalsV2Proxy.isPoolDeployer(address(poolDeployer)));
 
         // Step 8: Allowlist assets
         assertTrue(mapleGlobalsV2Proxy.isPoolAsset(address(usdc)));
-        // assertTrue(mapleGlobalsV2Proxy.isPoolAsset(address(wbtc)));
         assertTrue(mapleGlobalsV2Proxy.isPoolAsset(address(weth)));
 
-        // assertTrue(mapleGlobalsV2Proxy.isCollateralAsset(address(usdc)));
         assertTrue(mapleGlobalsV2Proxy.isCollateralAsset(address(wbtc)));
-        // assertTrue(mapleGlobalsV2Proxy.isCollateralAsset(address(weth)));
 
         // Step 9: Set bootstrap mint amounts
         assertEq(mapleGlobalsV2Proxy.bootstrapMint(address(usdc)), 0.100000e6);
         assertEq(mapleGlobalsV2Proxy.bootstrapMint(address(weth)), 0.0001e18);
-        // assertEq(mapleGlobalsV2Proxy.bootstrapMint(address(wbtc)), 0.000001e8);
 
         // Step 10: Set timelock parameters
         ( uint256 delay, uint256 duration ) = mapleGlobalsV2Proxy.defaultTimelockParameters();
 
-        assertEq(delay,    1 weeks, "invalid default timelock delay");
-        assertEq(duration, 2 days,  "invalid default timelock duration");
+        assertEq(delay,    1 weeks);
+        assertEq(duration, 2 days);
 
-        // Step 11: Deploy factories
-        assertEq(hash(address(liquidatorFactory).code),        0x433ce0af096b3c31c8c58199fdbf61b31b3349ab814c93357796abf19541afa3);
-        assertEq(hash(address(loanManagerFactory).code),       0x5186459623fa2a11ac7ef2b67ecc5422ae89db285f52067f5c184c296980a710);
-        assertEq(hash(address(poolManagerFactory).code),       0xbccd77d181035dd68ac7d2cccec92fd2255d92caed710b808da68319d3671b48);
-        assertEq(hash(address(withdrawalManagerFactory).code), 0x511c9e987be73335e8e1a731de673425b8e604b499f34153beea696f22f7c820);
+        // // Step 11: Deploy factories
+        // require(hash(address(liquidatorFactory).code)        == 0x433ce0af096b3c31c8c58199fdbf61b31b3349ab814c93357796abf19541afa3);
+        // require(hash(address(loanManagerFactory).code)       == 0x5186459623fa2a11ac7ef2b67ecc5422ae89db285f52067f5c184c296980a710);
+        // require(hash(address(poolManagerFactory).code)       == 0xbccd77d181035dd68ac7d2cccec92fd2255d92caed710b808da68319d3671b48);
+        // require(hash(address(withdrawalManagerFactory).code) == 0x511c9e987be73335e8e1a731de673425b8e604b499f34153beea696f22f7c820);
 
         // Step 12: Add factories to Globals
         assertTrue(mapleGlobalsV2Proxy.isFactory("LIQUIDATOR",         address(liquidatorFactory)));
@@ -93,48 +179,48 @@ contract ValidateDeployment is AddressRegistry, TestUtils {
         assertTrue(mapleGlobalsV2Proxy.isFactory("POOL_MANAGER",       address(poolManagerFactory)));
         assertTrue(mapleGlobalsV2Proxy.isFactory("WITHDRAWAL_MANAGER", address(withdrawalManagerFactory)));
 
-        // Step 13: Deploy implementations
-        assertEq(hash(address(liquidatorImplementation).code),            0x99903ea508b26095b559a5c4fe47fa97c41f92a6aa6e40e8003a71bbb8055a02);
-        assertEq(hash(address(loanManagerImplementation).code),           0xed07ea66d7e96b1533b9df97e5feaa1601c287e8571ee0b14d39e16dc0031340);
-        assertEq(hash(address(poolManagerImplementation).code),           0x8f127c7c4c3a4d9feeb6f05daff9d7aab872f1d6a074e70095712a932615b67b);
-        assertEq(hash(address(transitionLoanManagerImplementation).code), 0x30267fd06310b45f57411ce9fc4956d6d084c20c7a0fd8a4c741bebcdd92a413);
-        assertEq(hash(address(withdrawalManagerImplementation).code),     0xba1f7e2ed6282cc6019bd17a1bb7b652c680a7bf9a01ebfaeaa66dfab7347e23);
+        // // Step 13: Deploy implementations
+        // require(hash(address(liquidatorImplementation).code)            == 0x99903ea508b26095b559a5c4fe47fa97c41f92a6aa6e40e8003a71bbb8055a02);
+        // require(hash(address(loanManagerImplementation).code)           == 0xed07ea66d7e96b1533b9df97e5feaa1601c287e8571ee0b14d39e16dc0031340);
+        // require(hash(address(poolManagerImplementation).code)           == 0x8f127c7c4c3a4d9feeb6f05daff9d7aab872f1d6a074e70095712a932615b67b);
+        // require(hash(address(transitionLoanManagerImplementation).code) == 0x30267fd06310b45f57411ce9fc4956d6d084c20c7a0fd8a4c741bebcdd92a413);
+        // require(hash(address(withdrawalManagerImplementation).code)     == 0xba1f7e2ed6282cc6019bd17a1bb7b652c680a7bf9a01ebfaeaa66dfab7347e23);
 
-        // Step 14: Deploy initializers
-        assertEq(hash(address(liquidatorInitializer).code),        0xd41d6fb51c9272f9f454901da9c81c49627ed2272d6b5a3f4304247b9cdad4a6);
-        assertEq(hash(address(loanManagerInitializer).code),       0xdbdf2a37fb0fb0462dba734855f48f6c6e8e8e78c8e76b4fa669dfb2ba52c900);
-        assertEq(hash(address(poolManagerInitializer).code),       0x776f445dc1aad31345cb0a7fd8fe82caf86862658f0115bc7fa5267e64decb93);
-        assertEq(hash(address(withdrawalManagerInitializer).code), 0x757e74bb9b28dd9fa7be32d6c683965aee3aa252eb67491e7a0a510ab33d696e);
+        // // Step 14: Deploy initializers
+        // require(hash(address(liquidatorInitializer).code)        == 0xd41d6fb51c9272f9f454901da9c81c49627ed2272d6b5a3f4304247b9cdad4a6);
+        // require(hash(address(loanManagerInitializer).code)       == 0xdbdf2a37fb0fb0462dba734855f48f6c6e8e8e78c8e76b4fa669dfb2ba52c900);
+        // require(hash(address(poolManagerInitializer).code)       == 0x776f445dc1aad31345cb0a7fd8fe82caf86862658f0115bc7fa5267e64decb93);
+        // require(hash(address(withdrawalManagerInitializer).code) == 0x757e74bb9b28dd9fa7be32d6c683965aee3aa252eb67491e7a0a510ab33d696e);
 
         // Step 15: Configure LiquidatorFactory
-        assertEq(liquidatorFactory.versionOf(liquidatorImplementation), 200, "liquidator v200 implementation not set");
-        assertEq(liquidatorFactory.migratorForPath(200, 200), liquidatorInitializer, "liquidator v200 initializer not set");
+        assertEq(liquidatorFactory.versionOf(liquidatorImplementation), 200);
+        assertEq(liquidatorFactory.migratorForPath(200, 200), liquidatorInitializer);
 
-        assertEq(liquidatorFactory.defaultVersion(), 200, "liquidator v200 version not set as default");
+        assertEq(liquidatorFactory.defaultVersion(), 200);
 
         // Step 16: Configure LoanManagerFactory
-        assertEq(loanManagerFactory.versionOf(transitionLoanManagerImplementation), 100, "loan manager v100 implementation not set");
-        assertEq(loanManagerFactory.migratorForPath(100, 100), loanManagerInitializer, "loan manager v100 initializer not set");
+        assertEq(loanManagerFactory.versionOf(transitionLoanManagerImplementation), 100);
+        assertEq(loanManagerFactory.migratorForPath(100, 100), loanManagerInitializer);
 
-        assertEq(loanManagerFactory.versionOf(loanManagerImplementation), 200, "loan manager v200 implementation not set");
-        assertEq(loanManagerFactory.migratorForPath(200, 200), loanManagerInitializer, "loan manager v200 initializer not set");
+        assertEq(loanManagerFactory.versionOf(loanManagerImplementation), 200);
+        assertEq(loanManagerFactory.migratorForPath(200, 200), loanManagerInitializer);
 
-        assertEq(loanManagerFactory.migratorForPath(100, 200), address(0), "loan manager v100 to v200 migrator not set");
-        assertTrue(loanManagerFactory.upgradeEnabledForPath(100, 200), "loan manager v100 to v200 upgrade disabled");
+        assertEq(loanManagerFactory.migratorForPath(100, 200), address(0));
+        assertTrue(loanManagerFactory.upgradeEnabledForPath(100, 200));
 
-        assertEq(loanManagerFactory.defaultVersion(), 100, "loan manager v100 version not set as default");
+        assertEq(loanManagerFactory.defaultVersion(), 100);
 
         // Step 17: Configure PoolManagerFactory
-        assertEq(poolManagerFactory.versionOf(poolManagerImplementation), 100, "pool manager v100 implementation not set");
-        assertEq(poolManagerFactory.migratorForPath(100, 100), poolManagerInitializer, "pool manager v100 initializer not set");
+        assertEq(poolManagerFactory.versionOf(poolManagerImplementation), 100);
+        assertEq(poolManagerFactory.migratorForPath(100, 100), poolManagerInitializer);
 
-        assertEq(poolManagerFactory.defaultVersion(), 100, "pool manager v100 version not set as default");
+        assertEq(poolManagerFactory.defaultVersion(), 100);
 
         // Step 18: Configure WithdrawalManagerFactory
-        assertEq(withdrawalManagerFactory.versionOf(withdrawalManagerImplementation), 100, "withdrawal manager v100 implementation not set");
-        assertEq(withdrawalManagerFactory.migratorForPath(100, 100), withdrawalManagerInitializer, "withdrawal manager v100 initializer not set");
+        assertEq(withdrawalManagerFactory.versionOf(withdrawalManagerImplementation), 100);
+        assertEq(withdrawalManagerFactory.migratorForPath(100, 100), withdrawalManagerInitializer);
 
-        assertEq(withdrawalManagerFactory.defaultVersion(), 100, "withdrawal manager v100 version not set as default");
+        assertEq(withdrawalManagerFactory.defaultVersion(), 100);
 
         // Step 19: Allowlist Temporary Pool Delegate Multisigs
         assertTrue(mapleGlobalsV2Proxy.isPoolDelegate(icebreakerTemporaryPd));
@@ -143,28 +229,29 @@ contract ValidateDeployment is AddressRegistry, TestUtils {
         assertTrue(mapleGlobalsV2Proxy.isPoolDelegate(mavenWethTemporaryPd));
         assertTrue(mapleGlobalsV2Proxy.isPoolDelegate(orthogonalTemporaryPd));
 
-        // Step 20: Deploy MigrationHelper and AccountingChecker
-        assertEq(hash(address(accountingChecker).code),             0x631c02bf196ab7c425ac3cfe9e9cb9e18c28f851ce7ad1b37ae8a4613eeb4432);
-        assertEq(hash(address(deactivationOracle).code),            0x56211ef942d9bc7d3bd6bf04ef92215b93325103f0bc865673fe7edfa60941ea);
-        assertEq(hash(address(migrationHelperImplementation).code), 0xccddff32ff633bd388be9ae1bc4e475bac316e37fa1d23e12a6079cafbec1705);
-        assertEq(hash(address(migrationHelperProxy).code),          0x6de3ee7ca258dcd4e4e4510d50b85fc7b39adb97f614a483d1708cdd89f9389e);
+        // // Step 20: Deploy MigrationHelper and AccountingChecker
+        // require(hash(address(accountingChecker).code)             == 0x631c02bf196ab7c425ac3cfe9e9cb9e18c28f851ce7ad1b37ae8a4613eeb4432);
+        // require(hash(address(deactivationOracle).code)            == 0x56211ef942d9bc7d3bd6bf04ef92215b93325103f0bc865673fe7edfa60941ea);
+        // require(hash(address(migrationHelperImplementation).code) == 0xccddff32ff633bd388be9ae1bc4e475bac316e37fa1d23e12a6079cafbec1705);
+        // require(hash(address(migrationHelperProxy).code)          == 0x6de3ee7ca258dcd4e4e4510d50b85fc7b39adb97f614a483d1708cdd89f9389e);
 
         assertEq(accountingChecker.globals(), address(mapleGlobalsV2Proxy));
 
-        assertEq(migrationHelperProxy.admin(), deployer);
+        assertEq(migrationHelperProxy.admin(),          deployer);
         assertEq(migrationHelperProxy.implementation(), migrationHelperImplementation);
 
         // Step 21: Configure MigrationHelper
-        assertEq(migrationHelperProxy.pendingAdmin(), migrationMultisig,            "migration helper: pending admin is invalid");
-        assertEq(migrationHelperProxy.globalsV2(),    address(mapleGlobalsV2Proxy), "migration helper: globals is invalid");
+        assertEq(migrationHelperProxy.pendingAdmin(), migrationMultisig);
+        assertEq(migrationHelperProxy.globalsV2(),    address(mapleGlobalsV2Proxy));
 
         // Step 22: Set the MigrationHelper in Globals
-        assertEq(mapleGlobalsV2Proxy.migrationAdmin(), migrationMultisig, "maple globals: migration admin is invalid");
+        assertEq(mapleGlobalsV2Proxy.migrationAdmin(), address(migrationHelperProxy));
 
         // Step 23: Transfer governor
-        assertEq(mapleGlobalsV2Proxy.pendingGovernor(), tempGovernor, "maple globals: pending governor is invalid");
+        assertEq(mapleGlobalsV2Proxy.pendingGovernor(), tempGovernor);
 
         // TODO: Include validation of oracles after they are included in the deployment.
+        // TODO: Include validation of refinancer after it's included in the deployment.
     }
 
     function hash(bytes memory code) internal pure returns (bytes32 bytecodeHash) {
@@ -173,25 +260,25 @@ contract ValidateDeployment is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateTempGovernorIsSet is AddressRegistry, TestUtils {
+contract SetTemporaryGovernor is AddressRegistry, TestUtils {
 
     function run() external {
-        assertEq(mapleGlobalsV2Proxy.pendingGovernor(), address(0), "pendingGovernor != zero");
-        assertEq(mapleGlobalsV2Proxy.governor(), address(tempGovernor), "governor != tempGovernor");
+        assertEq(mapleGlobalsV2Proxy.pendingGovernor(), address(0),            "pendingGovernor != zero");
+        assertEq(mapleGlobalsV2Proxy.governor(),        address(tempGovernor), "governor != tempGovernor");
     }
 
 }
 
-contract ValidateMigrationHelperOwnerIsSet is AddressRegistry, TestUtils {
+contract SetMigrationMultisig is AddressRegistry, TestUtils {
 
     function run() external {
-        assertEq(migrationHelperProxy.pendingAdmin(), address(0), "pendingAdmin != zero");
-        assertEq(migrationHelperProxy.admin(), address(migrationMultisig), "admin != migrationMultisig");
+        assertEq(migrationHelperProxy.pendingAdmin(), address(0),                 "pendingAdmin != zero");
+        assertEq(migrationHelperProxy.admin(),        address(migrationMultisig), "admin != migrationMultisig");
     }
 
 }
 
-contract ValidateDebtLockerFactory is AddressRegistry, TestUtils {
+contract RegisterDebtLockers is AddressRegistry, TestUtils {
 
     function run() external {
         assertEq(debtLockerFactory.versionOf(debtLockerV400Implementation), 400, "debt locker v400 implementation not set");
@@ -203,7 +290,7 @@ contract ValidateDebtLockerFactory is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateLoanFactory is AddressRegistry, TestUtils {
+contract RegisterLoans is AddressRegistry, TestUtils {
 
     function run() external {
         assertEq(loanFactory.versionOf(loanV302Implementation), 302, "loan v302 implementation not set");
@@ -227,44 +314,12 @@ contract ValidateLoanFactory is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateLoanV301Registration is AddressRegistry, TestUtils {
+contract UpgradeDebtLockersToV400 is AddressRegistry, TestUtils {
 
     function run() external {
-        assertTrue(loanFactory.implementationOf(301) != address(0));
-        assertTrue(loanFactory.upgradeEnabledForPath(200, 301), "loan v200 to v301 upgrade is not enabled");
-        assertTrue(loanFactory.upgradeEnabledForPath(300, 301), "loan v300 to v301 upgrade is not enabled");
-    }
-
-}
-
-contract ValidateAllLoansAreV301 is AddressRegistry, TestUtils {
-
-    function run() external {
-        validate(mavenWethLoans);
-        validate(mavenUsdcLoans);
         validate(mavenPermissionedLoans);
-        validate(orthogonalLoans);
-        validate(icebreakerLoans);
-    }
-
-    function validate(ILoanLike[] storage loans) internal {
-        for (uint256 i = 0; i < loans.length; i++) {
-            assertVersion(loans[i], 301, "loan version is not v301");
-        }
-    }
-
-    function assertVersion(ILoanLike loan, uint256 version, string memory message) internal {
-        assertEq(loan.implementation(), IMapleProxyFactoryLike(loan.factory()).implementationOf(version), message);
-    }
-
-}
-
-contract ValidateAllDebtLockersAreV400 is AddressRegistry, TestUtils {
-
-    function run() external {
-        validate(mavenWethLoans);
         validate(mavenUsdcLoans);
-        validate(mavenPermissionedLoans);
+        validate(mavenWethLoans);
         validate(orthogonalLoans);
         validate(icebreakerLoans);
     }
@@ -281,81 +336,36 @@ contract ValidateAllDebtLockersAreV400 is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateAllLoansArePaidAndClaimed is AddressRegistry, TestUtils {
+contract ClaimAllLoans is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethLoans);
-        validate(mavenUsdcLoans);
         validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
         validate(orthogonalLoans);
         validate(icebreakerLoans);
     }
 
     function validate(ILoanLike[] storage loans) internal {
         for (uint256 i = 0; i < loans.length; i++) {
-            if (loans[i].nextPaymentDueDate() == 0) continue;
-            if (loans[i].nextPaymentDueDate() - block.timestamp >= 5 days) continue;
-
-            address debtLocker = loans[i].lender();
-            IERC20Like asset = IERC20Like(loans[i].fundsAsset());
-
-            assertEq(loans[i].claimableFunds(),     0);
-            assertEq(loans[i].nextPaymentDueDate(), 0);
-            assertEq(loans[i].paymentsRemaining(),  0);
-
-            assertEq(asset.balanceOf(address(loans[i])), 0);
-            assertEq(asset.balanceOf(debtLocker),        0);
-        }
-    }
-
-}
-
-contract ValidateLiquidityCapIsSetToZero is AddressRegistry, TestUtils {
-
-    function run() external {
-        validate(mavenWethPoolV1);
-        validate(mavenUsdcPoolV1);
-        validate(mavenPermissionedPoolV1);
-        validate(orthogonalPoolV1);
-        validate(icebreakerPoolV1);
-    }
-
-    function validate(IPoolV1Like poolV1) internal {
-        assertEq(poolV1.liquidityCap(), 0);
-    }
-
-}
-
-contract ValidateAllLoansAreClaimed is AddressRegistry, TestUtils {
-
-    function run() external {
-        validate(mavenWethLoans);
-        validate(mavenUsdcLoans);
-        validate(mavenPermissionedLoans);
-        validate(orthogonalLoans);
-        validate(icebreakerLoans);
-    }
-
-    function validate(ILoanLike[] storage loans) internal {
-        for (uint256 i = 0; i < loans.length; i++) {
-            IERC20Like asset = IERC20Like(loans[i].fundsAsset());
-            address debtLocker = loans[i].lender();
-
             assertEq(loans[i].claimableFunds(), 0);
 
-            assertEq(asset.balanceOf(address(loans[i])), 0);
-            assertEq(asset.balanceOf(debtLocker),        0);
+            IERC20Like asset = IERC20Like(loans[i].fundsAsset());
+            address debtLocker = loans[i].lender();
+
+            assertEq(asset.balanceOf(address(loans[i])),   0);
+            assertEq(asset.balanceOf(address(debtLocker)), 0);
         }
     }
 
 }
 
-contract ValidateAllLoansAreV302 is AddressRegistry, TestUtils {
+contract UpgradeLoansToV302 is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethLoans);
-        validate(mavenUsdcLoans);
         validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
         validate(orthogonalLoans);
         validate(icebreakerLoans);
     }
@@ -372,56 +382,107 @@ contract ValidateAllLoansAreV302 is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateV1ProtocolIsPaused is AddressRegistry, TestUtils {
+contract SetLiquidityCapsToZero is AddressRegistry, TestUtils {
 
     function run() external {
-        assertTrue(mapleGlobalsV1Proxy.protocolPaused());
+        validate(mavenPermissionedPoolV1);
+        validate(mavenUsdcPoolV1);
+        validate(mavenWethPoolV1);
+        validate(orthogonalPoolV1);
+        validate(icebreakerPoolV1);
+    }
+
+    function validate(IPoolV1Like poolV1) internal {
+        assertEq(poolV1.liquidityCap(), 0);
+    }
+
+}
+
+contract QueryLiquidityLockers is AddressRegistry, TestUtils {
+
+    function run() external {
+        validate(mavenPermissionedPoolV1);
+        validate(mavenUsdcPoolV1);
+        validate(mavenWethPoolV1);
+        validate(orthogonalPoolV1);
+        validate(icebreakerPoolV1);
+    }
+
+    function validate(IPoolV1Like poolV1) internal {
+        IERC20Like asset = IERC20Like(poolV1.liquidityAsset());
+
+        console.log(asset.balanceOf(poolV1.liquidityLocker()));
     }
 
 }
 
 // NOTE: Don't forget to include the migration loan in all further loan checks.
-contract ValidateMigrationLoanIsFunded is AddressRegistry, TestUtils {
+contract CreateMigrationLoans is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolV1,         mavenWethMigrationLoan,         0);
-        validate(mavenUsdcPoolV1,         mavenUsdcMigrationLoan,         0);
         validate(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan, 0);
-        validate(orthogonalPoolV1,        orthogonalMigrationLoan,        0);
-        validate(icebreakerPoolV1,        icebreakerMigrationLoan,        0);
+        validate(mavenUsdcPoolV1,         mavenUsdcMigrationLoan,         10078904.109590e6);
+        validate(mavenWethPoolV1,         mavenWethMigrationLoan,         5015.161383043639410457e18);
+        validate(orthogonalPoolV1,        orthogonalMigrationLoan,        39973865.060340e6);
+        validate(icebreakerPoolV1,        icebreakerMigrationLoan,        5649999.999995e6);
     }
 
-    function validate(IPoolV1Like poolV1, ILoanLike loan, uint256 funds) internal {
-        IERC20Like asset = IERC20Like(loan.fundsAsset());
+    function validate(IPoolV1Like poolV1, ILoanLike migrationLoan, uint256 principalRequested) internal {
+        if (address(migrationLoan) != address(0)) {
+            IERC20Like asset = IERC20Like(poolV1.liquidityAsset());
 
-        assertEq(asset.balanceOf(address(loan)), funds);
-        assertEq(asset.balanceOf(poolV1.liquidityLocker()), 0);
+            assertEq(asset.balanceOf(poolV1.liquidityLocker()), principalRequested);
+            assertEq(migrationLoan.principalRequested(),        principalRequested);
+        }
     }
 
 }
 
-contract ValidateMigrationLoanIsUpgraded is AddressRegistry, TestUtils {
+contract FundMigrationLoans is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethMigrationLoan);
-        validate(mavenUsdcMigrationLoan);
+        validate(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan, 0);
+        validate(mavenUsdcPoolV1,         mavenUsdcMigrationLoan,         10078904.109590e6);
+        validate(mavenWethPoolV1,         mavenWethMigrationLoan,         5015.161383043639410457e18);
+        validate(orthogonalPoolV1,        orthogonalMigrationLoan,        39973865.060340e6);
+        validate(icebreakerPoolV1,        icebreakerMigrationLoan,        5649999.999995e6);
+    }
+
+    function validate(IPoolV1Like poolV1, ILoanLike migrationLoan, uint256 funds) internal {
+        if (address(migrationLoan) != address(0)) {
+            IERC20Like asset = IERC20Like(migrationLoan.fundsAsset());
+
+            assertEq(migrationLoan.drawableFunds(), funds);
+
+            assertEq(asset.balanceOf(address(migrationLoan)),   funds);
+            assertEq(asset.balanceOf(poolV1.liquidityLocker()), 0);
+        }
+    }
+
+}
+
+contract UpgradeMigrationLoans is AddressRegistry, TestUtils {
+
+    function run() external {
         validate(mavenPermissionedMigrationLoan);
+        validate(mavenUsdcMigrationLoan);
+        validate(mavenWethMigrationLoan);
         validate(orthogonalMigrationLoan);
         validate(icebreakerMigrationLoan);
     }
 
-    function validate(ILoanLike loan) internal {
-        assertEq(loan.implementation(), IMapleProxyFactoryLike(loan.factory()).implementationOf(302));
+    function validate(ILoanLike migrationLoan) internal {
+        assertEq(migrationLoan.implementation(), IMapleProxyFactoryLike(migrationLoan.factory()).implementationOf(400));
     }
 
 }
 
-contract ValidateMigrationDebtLockerIsUpgraded is AddressRegistry, TestUtils {
+contract UpgradeMigrationDebtLockers is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethMigrationLoan);
-        validate(mavenUsdcMigrationLoan);
         validate(mavenPermissionedMigrationLoan);
+        validate(mavenUsdcMigrationLoan);
+        validate(mavenWethMigrationLoan);
         validate(orthogonalMigrationLoan);
         validate(icebreakerMigrationLoan);
     }
@@ -433,12 +494,20 @@ contract ValidateMigrationDebtLockerIsUpgraded is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateAllPoolsHaveBeenDeployed is AddressRegistry, TestUtils {
+contract PauseProtocol is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolV2);
-        validate(mavenUsdcPoolV2);
+        assertTrue(mapleGlobalsV1.protocolPaused());
+    }
+
+}
+
+contract DeployPools is AddressRegistry, TestUtils {
+
+    function run() external {
         validate(mavenPermissionedPoolV2);
+        validate(mavenUsdcPoolV2);
+        validate(mavenWethPoolV2);
         validate(orthogonalPoolV2);
         validate(icebreakerPoolV2);
     }
@@ -455,12 +524,12 @@ contract ValidateAllPoolsHaveBeenDeployed is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateAllLoansHaveBeenAddedToTLM is AddressRegistry, TestUtils {
+contract AddLoansToTLM is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethTransitionLoanManager);
-        validate(mavenUsdcTransitionLoanManager);
         validate(mavenPermissionedTransitionLoanManager);
+        validate(mavenUsdcTransitionLoanManager);
+        validate(mavenWethTransitionLoanManager);
         validate(orthogonalTransitionLoanManager);
         validate(icebreakerTransitionLoanManager);
     }
@@ -471,12 +540,12 @@ contract ValidateAllLoansHaveBeenAddedToTLM is AddressRegistry, TestUtils {
 
 }
 
-contract ValidatePoolsAreActivated is AddressRegistry, TestUtils {
+contract ActivatePools is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolManager);
-        validate(mavenUsdcPoolManager);
         validate(mavenPermissionedPoolManager);
+        validate(mavenUsdcPoolManager);
+        validate(mavenWethPoolManager);
         validate(orthogonalPoolManager);
         validate(icebreakerPoolManager);
     }
@@ -489,11 +558,11 @@ contract ValidatePoolsAreActivated is AddressRegistry, TestUtils {
 
 }
 
-contract ValidatePoolIsOpened is AddressRegistry, TestUtils {
+contract OpenPools is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolManager);
         validate(mavenUsdcPoolManager);
+        validate(mavenWethPoolManager);
         validate(orthogonalPoolManager);
         validate(icebreakerPoolManager);
     }
@@ -506,7 +575,7 @@ contract ValidatePoolIsOpened is AddressRegistry, TestUtils {
 
 }
 
-contract ValidatePoolIsPermissioned is AddressRegistry, TestUtils {
+contract PermissionPools is AddressRegistry, TestUtils {
 
     function run() external {
         assertTrue(!mavenPermissionedPoolManager.openToPublic(), "pool open to public");
@@ -520,17 +589,13 @@ contract ValidatePoolIsPermissioned is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateBorrowersAreWhitelisted is AddressRegistry, TestUtils {
+contract WhitelistBorrowers is AddressRegistry, TestUtils {
 
     // TODO
 
 }
 
-contract ValidateTokensAreAirdropped is AddressRegistry, TestUtils {
-
-    /**********************************************************/
-    /*** Step 8: Airdrop PoolV2 LP tokens to all PoolV1 LPs ***/
-    /**********************************************************/
+contract AirdropTokens is AddressRegistry, TestUtils {
 
     function run() external {
         // validate(mavenWethPoolManager,         );
@@ -541,17 +606,17 @@ contract ValidateTokensAreAirdropped is AddressRegistry, TestUtils {
     }
 
     function validate() internal {
-        // migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, lps.length * 2);  // 1 hour
+        // TODO: // migrationHelper.airdropTokens(address(poolV1), address(poolManager), lps, lps, lps.length * 2);
     }
 
 }
 
-contract ValidatePendingLendersAreSet is AddressRegistry, TestUtils {
+contract SetPendingLenders is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethLoans,         mavenWethTransitionLoanManager);
-        validate(mavenUsdcLoans,         mavenUsdcTransitionLoanManager);
         validate(mavenPermissionedLoans, mavenPermissionedTransitionLoanManager);
+        validate(mavenUsdcLoans,         mavenUsdcTransitionLoanManager);
+        validate(mavenWethLoans,         mavenWethTransitionLoanManager);
         validate(orthogonalLoans,        orthogonalTransitionLoanManager);
         validate(icebreakerLoans,        icebreakerTransitionLoanManager);
     }
@@ -559,17 +624,18 @@ contract ValidatePendingLendersAreSet is AddressRegistry, TestUtils {
     function validate(ILoanLike[] storage loans, ITransitionLoanManagerLike tlm) internal {
         for (uint i = 0; i < loans.length; i++) {
             assertEq(loans[i].pendingLender(), address(tlm), "pending lender != tlm");
+            // TODO: Assert lender
         }
     }
 
 }
 
-contract ValidatePendingLendersAreAccepted is AddressRegistry, TestUtils {
+contract AcceptPendingLenders is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethLoans,         mavenWethTransitionLoanManager);
-        validate(mavenUsdcLoans,         mavenUsdcTransitionLoanManager);
         validate(mavenPermissionedLoans, mavenPermissionedTransitionLoanManager);
+        validate(mavenUsdcLoans,         mavenUsdcTransitionLoanManager);
+        validate(mavenWethLoans,         mavenWethTransitionLoanManager);
         validate(orthogonalLoans,        orthogonalTransitionLoanManager);
         validate(icebreakerLoans,        icebreakerTransitionLoanManager);
     }
@@ -583,12 +649,12 @@ contract ValidatePendingLendersAreAccepted is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateTlmIsUpgraded is AddressRegistry, TestUtils {
+contract UpgradeTLM is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethTransitionLoanManager);
-        validate(mavenUsdcTransitionLoanManager);
         validate(mavenPermissionedTransitionLoanManager);
+        validate(mavenUsdcTransitionLoanManager);
+        validate(mavenWethTransitionLoanManager);
         validate(orthogonalTransitionLoanManager);
         validate(icebreakerTransitionLoanManager);
     }
@@ -599,7 +665,7 @@ contract ValidateTlmIsUpgraded is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateCoverAndLiquidationAmounts is AddressRegistry, TestUtils {
+contract SetCoverAndLiquidationAmounts is AddressRegistry, TestUtils {
 
     function run() external {
         validate(mapleGlobalsV2Proxy, mavenWethPoolManager,         750e18);
@@ -616,12 +682,12 @@ contract ValidateCoverAndLiquidationAmounts is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateAllLoansAreV400 is AddressRegistry, TestUtils {
+contract UpgradeLoansToV400 is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethLoans);
-        validate(mavenUsdcLoans);
         validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
         validate(orthogonalLoans);
         validate(icebreakerLoans);
     }
@@ -638,12 +704,12 @@ contract ValidateAllLoansAreV400 is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateLpPositions is AddressRegistry, TestUtils {
+contract CheckLpPositions is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolV1,         mavenWethPoolV2,         mavenWethLps);
-        validate(mavenUsdcPoolV1,         mavenUsdcPoolV2,         mavenUsdcLps);
         validate(mavenPermissionedPoolV1, mavenPermissionedPoolV2, mavenPermissionedLps);
+        validate(mavenUsdcPoolV1,         mavenUsdcPoolV2,         mavenUsdcLps);
+        validate(mavenWethPoolV1,         mavenWethPoolV2,         mavenWethLps);
         validate(orthogonalPoolV1,        orthogonalPoolV2,        orthogonalLps);
         validate(icebreakerPoolV1,        icebreakerPoolV2,        icebreakerLps);
     }
@@ -686,12 +752,12 @@ contract ValidateLpPositions is AddressRegistry, TestUtils {
     }
 }
 
-contract ValidateMigrationLoanIsClosed is AddressRegistry, TestUtils {
+contract CloseMigrationLoans is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethMigrationLoan);
-        validate(mavenUsdcMigrationLoan);
         validate(mavenPermissionedMigrationLoan);
+        validate(mavenUsdcMigrationLoan);
+        validate(mavenWethMigrationLoan);
         validate(orthogonalMigrationLoan);
         validate(icebreakerMigrationLoan);
     }
@@ -703,12 +769,12 @@ contract ValidateMigrationLoanIsClosed is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateAllLoansAreV401 is AddressRegistry, TestUtils {
+contract UpgradeLoansToV401 is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethLoans);
-        validate(mavenUsdcLoans);
         validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
         validate(orthogonalLoans);
         validate(icebreakerLoans);
     }
@@ -725,12 +791,12 @@ contract ValidateAllLoansAreV401 is AddressRegistry, TestUtils {
 
 }
 
-contract ValidatePoolDelegatesAreTransferred is AddressRegistry, TestUtils {
+contract TransferPoolDelegates is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolManager,         mavenWethFinalPd);
-        validate(mavenUsdcPoolManager,         mavenUsdcFinalPd);
         validate(mavenPermissionedPoolManager, mavenPermissionedFinalPd);
+        validate(mavenUsdcPoolManager,         mavenUsdcFinalPd);
+        validate(mavenWethPoolManager,         mavenWethFinalPd);
         validate(orthogonalPoolManager,        orthogonalFinalPd);
         validate(icebreakerPoolManager,        icebreakerFinalPd);
     }
@@ -741,12 +807,12 @@ contract ValidatePoolDelegatesAreTransferred is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateOldPoolsAreDeprecated is AddressRegistry, TestUtils {
+contract DeprecatePools is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolV1);
-        validate(mavenUsdcPoolV1);
         validate(mavenPermissionedPoolV1);
+        validate(mavenUsdcPoolV1);
+        validate(mavenWethPoolV1);
         validate(orthogonalPoolV1);
         validate(icebreakerPoolV1);
     }
@@ -755,9 +821,9 @@ contract ValidateOldPoolsAreDeprecated is AddressRegistry, TestUtils {
         address asset = poolV1.liquidityAsset();
         IStakeLockerLike stakeLocker = IStakeLockerLike(poolV1.stakeLocker());
 
-        assertEq(mapleGlobalsV1Proxy.getLatestPrice(asset),  1e8);  // TODO: Is this always the returned value?
-        assertEq(mapleGlobalsV1Proxy.stakerCooldownPeriod(), 0);
-        assertEq(mapleGlobalsV1Proxy.stakerUnstakeWindow(),  0);
+        assertEq(mapleGlobalsV1.getLatestPrice(asset),  1e8);  // TODO: Is this always the returned value?
+        assertEq(mapleGlobalsV1.stakerCooldownPeriod(), 0);
+        assertEq(mapleGlobalsV1.stakerUnstakeWindow(),  0);
 
         // Initialized: 0, Finalized: 1, Deactivated: 2
         assertEq(poolV1.poolState(),         2);
@@ -766,12 +832,13 @@ contract ValidateOldPoolsAreDeprecated is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateOldCoverIsWithdrawn is AddressRegistry, TestUtils {
+// TODO: Add a subgraph query to fetch cover providers
+contract WithdrawCover is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethStakeLocker,         mavenWethRewards,         mavenWethCoverProviders);
-        validate(mavenUsdcStakeLocker,         mavenUsdcRewards,         mavenUsdcCoverProviders);
         validate(mavenPermissionedStakeLocker, mavenPermissionedRewards, mavenPermissionedCoverProviders);
+        validate(mavenUsdcStakeLocker,         mavenUsdcRewards,         mavenUsdcCoverProviders);
+        validate(mavenWethStakeLocker,         mavenWethRewards,         mavenWethCoverProviders);
         validate(orthogonalStakeLocker,        orthogonalRewards,        orthogonalCoverProviders);
         validate(icebreakerStakeLocker,        icebreakerRewards,        icebreakerCoverProviders);
     }
@@ -782,12 +849,12 @@ contract ValidateOldCoverIsWithdrawn is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateNewCoverIsDeposited is AddressRegistry, TestUtils {
+contract DepositCover is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolManager,         750e18);
-        validate(mavenUsdcPoolManager,         1_000_000e6);
         validate(mavenPermissionedPoolManager, 1_750_000e6);
+        validate(mavenUsdcPoolManager,         1_000_000e6);
+        validate(mavenWethPoolManager,         750e18);
         validate(orthogonalPoolManager,        2_500_000e6);
         validate(icebreakerPoolManager,        500_000e6);
     }
@@ -801,12 +868,12 @@ contract ValidateNewCoverIsDeposited is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateLiquidityCapsAreIncreased is AddressRegistry, TestUtils {
+contract IncreaseLiquidityCaps is AddressRegistry, TestUtils {
 
     function run() external {
-        validate(mavenWethPoolManager,         100_000e18);
-        validate(mavenUsdcPoolManager,         100_000_000e6);
         validate(mavenPermissionedPoolManager, 100_000_000e6);
+        validate(mavenUsdcPoolManager,         100_000_000e6);
+        validate(mavenWethPoolManager,         100_000e18);
         validate(orthogonalPoolManager,        100_000_000e6);
         validate(icebreakerPoolManager,        100_000_000e6);
     }
@@ -817,31 +884,39 @@ contract ValidateLiquidityCapsAreIncreased is AddressRegistry, TestUtils {
 
 }
 
-contract ValidateV1ProtocolIsUnpaused is AddressRegistry, TestUtils {
+contract UnpauseProtocol is AddressRegistry, TestUtils {
 
     function run() external {
-        assertTrue(!mapleGlobalsV1Proxy.protocolPaused());
+        assertTrue(!mapleGlobalsV1.protocolPaused());
     }
 
 }
 
 // TODO: Add post migration validation
 
-contract RequestUnstakeValidationScript is AddressRegistry, TestUtils {
+// contract RequestUnstakeValidationScript is AddressRegistry, TestUtils {
 
-    function run() external {
-        validate(mavenWethStakeLocker,         mavenWethPoolV1.poolDelegate(),         1_622_400_000);
-        validate(mavenUsdcStakeLocker,         mavenUsdcPoolV1.poolDelegate(),         1_622_400_000);
-        validate(mavenPermissionedStakeLocker, mavenPermissionedPoolV1.poolDelegate(), 1_622_400_000);
-        validate(orthogonalStakeLocker,        orthogonalPoolV1.poolDelegate(),        1_622_400_000);
-        validate(icebreakerStakeLocker,        icebreakerPoolV1.poolDelegate(),        1_622_400_000);
-    }
+//     function run() external {
+//         validate(mavenPermissionedStakeLocker, mavenPermissionedPoolV1.poolDelegate(), 1_622_400_000);
+//         validate(mavenUsdcStakeLocker,         mavenUsdcPoolV1.poolDelegate(),         1_622_400_000);
+//         validate(mavenWethStakeLocker,         mavenWethPoolV1.poolDelegate(),         1_622_400_000);
+//         validate(orthogonalStakeLocker,        orthogonalPoolV1.poolDelegate(),        1_622_400_000);
+//         validate(icebreakerStakeLocker,        icebreakerPoolV1.poolDelegate(),        1_622_400_000);
+//     }
 
-    function validate(IStakeLockerLike stakeLocker, address poolDelegate, uint256 timestamp) internal {
-        assertEq(stakeLocker.unstakeCooldown(poolDelegate), timestamp);
-    }
+//     function validate(IStakeLockerLike stakeLocker, address poolDelegate, uint256 timestamp) internal {
+//         assertEq(stakeLocker.unstakeCooldown(poolDelegate), timestamp);
+//     }
 
-}
+// }
+
+// contract ValidateDefaultVersionsAreSet is AddressRegistry, TestUtils {
+
+//     function run() external {
+//         // assertEq()
+//     }
+
+// }
 
 // contract UnstakeDelegateCoverValidationScript is AddressRegistry, TestUtils {
 
