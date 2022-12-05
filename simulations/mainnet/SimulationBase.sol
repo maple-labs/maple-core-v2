@@ -246,7 +246,12 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
         mapleGlobalsV2.setDefaultTimelockParameters(1 weeks, 2 days);
 
-        // Step 15: Transfer governor
+        // Step 15: Configure oracles
+        mapleGlobalsV2.setPriceOracle(address(wbtc), address(btcUsdOracle));
+        mapleGlobalsV2.setPriceOracle(address(usdc), address(usdUsdOracle));
+        mapleGlobalsV2.setPriceOracle(address(weth), address(ethUsdOracle));
+
+        // Step 16: Transfer governor
         mapleGlobalsV2.setPendingGovernor(tempGovernor);
     }
 
