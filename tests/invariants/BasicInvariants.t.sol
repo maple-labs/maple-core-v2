@@ -33,6 +33,16 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
 
         currentTimestamp = block.timestamp;
 
+        // TODO: Add to handler
+        setupFees({
+            delegateOriginationFee:     500e6,  // TODO: Remove as not used
+            delegateServiceFee:         300e6,  // TODO: Remove as not used
+            delegateManagementFeeRate:  0.02e6,
+            platformOriginationFeeRate: 0.001e6,
+            platformServiceFeeRate:     0.005e6,  // 10k after 1m seconds
+            platformManagementFeeRate:  0.08e6
+        });
+
         loanHandler = new LoanHandler({
             collateralAsset_: address(collateralAsset),
             feeManager_:      address(feeManager),
@@ -127,8 +137,8 @@ contract BoundedActorBasedInvariants_NoDefaultTests is BaseInvariants {
         assert_poolManager_invariant_A();
     }
 
-    function invariant_poolManager_B() external useCurrentTimestamp { 
-        assert_poolManager_invariant_B(); 
+    function invariant_poolManager_B() external useCurrentTimestamp {
+        assert_poolManager_invariant_B();
     }
 
     /******************************************************************************************************************************/
