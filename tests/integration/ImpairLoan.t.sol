@@ -598,6 +598,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
     uint256 constant GROSS_MONTHLY_INTEREST      = 1_000_000e6 * ONE_MONTH * 0.075e18 / 365 days / 1e18;
     uint256 constant MONTHLY_INTEREST            = GROSS_MONTHLY_INTEREST * 0.9e6 / 1e6;
     uint256 constant GROSS_MONTHLY_LATE_INTEREST = 1_000_000e6 * ONE_MONTH * 0.085e18 / 365 days / 1e18;
+    uint256 constant MONTHLY_LATE_INTEREST       = GROSS_MONTHLY_LATE_INTEREST * 0.9e6 / 1e6;
 
     uint256 platformServiceFee = uint256(1_000_000e6) * 0.0066e6 * ONE_MONTH / 365 days / 1e6;
 
@@ -646,7 +647,6 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
     }
 
     function test_impairLoan_earlyThenRefinance() external {
-
         // Warp 5 days into second payment cycle
         vm.warp(start + ONE_MONTH + 5 days);
         vm.prank(poolDelegate);
@@ -827,6 +827,146 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         assertAssetBalances(
             [address(borrower),  address(pool),             address(poolCover), address(poolDelegate),   address(treasury)],
             [uint256(999_250e6), uint256(518_847.602740e6), uint256(100_000e6), uint256(2_289.041095e6), uint256(3_832.420089e6)]
+        );
+    }
+
+    function test_impairLoan_lateThenRefinance() external {
+        /**********************************/
+        /*** Impair loan when it's late ***/
+        /**********************************/
+
+        vm.warp(start + 2 * ONE_MONTH + 1 days);
+        vm.prank(poolDelegate);
+        poolManager.impairLoan(address(loan));
+
+        assertLoanState({
+            loan:              loan,
+            principal:         1_000_000e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 2 * ONE_MONTH,
+            paymentsRemaining: 2
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: MONTHLY_INTEREST - 1,  // -1 due to rounding error.
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           start + 1 * ONE_MONTH,
+            paymentDueDate:      start + 2 * ONE_MONTH,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           1_000_000e6,
+            interest:            MONTHLY_INTEREST - 1,
+            lateInterest:        MONTHLY_LATE_INTEREST * 1 days / ONE_MONTH - 1,
+            platformFees:        platformServiceFee + (GROSS_MONTHLY_INTEREST + GROSS_MONTHLY_LATE_INTEREST * 1 days / ONE_MONTH) * 0.08e6 / 1e6,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     MONTHLY_INTEREST - 1,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + MONTHLY_INTEREST - 1,
+            issuanceRate:          0,
+            domainStart:           block.timestamp,
+            domainEnd:             block.timestamp,
+            unrealizedLosses:      1_000_000e6 + MONTHLY_INTEREST - 1
+        });
+
+        assertPoolManager({
+            totalAssets:      1_000_000e6 + (MONTHLY_INTEREST - 1) + 500_000e6 + 5_625e6,
+            unrealizedLosses: 1_000_000e6 + (MONTHLY_INTEREST - 1)
+        });
+
+        assertAssetBalances(
+            [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
+            [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
+        );
+
+        vm.warp(start + 2 * ONE_MONTH + 3 days); // Warp two more days.
+
+        // Revert a late impairment fails
+        vm.prank(governor);
+        vm.expectRevert("LM:RLI:PAST_DATE");
+        poolManager.removeLoanImpairment(address(loan));
+
+        // Refinance - setting the payment interval will reset the payment due date.
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", ONE_MONTH);
+
+        vm.startPrank(borrower);
+        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan), 10_000e6);
+        loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+
+        // Impairment was removed
+        assertTrue(!loan.isImpaired());
+
+        uint256 expectedRefinanceInterest =
+            GROSS_MONTHLY_INTEREST +
+            GROSS_MONTHLY_INTEREST * 3 days / ONE_MONTH +
+            GROSS_MONTHLY_LATE_INTEREST * 3 days / ONE_MONTH;
+
+        uint256 expectedNetRefinanceInterest = expectedRefinanceInterest * 0.9e6 / 1e6;
+
+        assertLoanState({
+            loan:              loan,
+            principal:         1_000_000e6,
+            refinanceInterest: expectedRefinanceInterest,
+            paymentDueDate:    start + 3 * ONE_MONTH + 3 days,
+            paymentsRemaining: 2
+        });
+
+        assertPaymentInfo({
+            loan:                loan,
+            incomingNetInterest: MONTHLY_INTEREST - 1,
+            refinanceInterest:   expectedNetRefinanceInterest,
+            issuanceRate:        MONTHLY_INTEREST * 1e30 / ONE_MONTH,
+            startDate:           start + 2 * ONE_MONTH + 3 days,
+            paymentDueDate:      start + 3 * ONE_MONTH + 3 days,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           0,
+            interest:            0,
+            lateInterest:        0,
+            platformFees:        0,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     expectedNetRefinanceInterest,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + expectedNetRefinanceInterest,
+            issuanceRate:          MONTHLY_INTEREST * 1e30 / ONE_MONTH,
+            domainStart:           start + 2 * ONE_MONTH + 3 days,
+            domainEnd:             start + 3 * ONE_MONTH + 3 days,
+            unrealizedLosses:      0
+        });
+
+        assertPoolManager({
+            totalAssets:      1_000_000e6 + 500_000e6 + expectedNetRefinanceInterest + MONTHLY_INTEREST,
+            unrealizedLosses: 0
+        });
+
+        assertAssetBalances(
+            [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
+            [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(1_400e6),      uint256(1_466.666666e6)]
         );
     }
 
