@@ -265,7 +265,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
     }
 
     function performAdditionalGlobalsSettings() internal {
-        vm.startPrank(governor);
+        vm.startPrank(mapleGlobalsV2.governor());
 
         mapleGlobalsV2.setValidPoolAsset(address(wbtc), true);
 
@@ -286,7 +286,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
     }
 
     function setupExistingFactories() internal {
-        vm.startPrank(governor);
+        vm.startPrank(mapleGlobalsV1.governor());
 
         debtLockerFactory.registerImplementation(400, address(new DebtLockerV4()), debtLockerV3Initializer);
         debtLockerFactory.enableUpgradePath(200, 400, debtLockerV4Migrator);

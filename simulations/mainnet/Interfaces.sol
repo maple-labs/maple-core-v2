@@ -141,7 +141,17 @@ interface IMapleLoanLike {
 
     function collateralAsset() external view returns (address collateralAsset_);
 
+    function collateralRequired() external view returns (uint256 collateralRequired_);
+
+    function delegateFee() external view returns (uint256 delegateFee_);
+
     function drawableFunds() external view returns (uint256 drawableFunds_);
+
+    function earlyFeeRate() external view returns (uint256 earlyFeeRate_);
+
+    function endingPrincipal() external view returns (uint256 endingPrincipal_);
+
+    function feeManager() external view returns (address feeManager_);
 
     function factory() external view returns (address factory_);
 
@@ -150,6 +160,14 @@ interface IMapleLoanLike {
     function getClosingPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 fees_);
 
     function getNextPaymentBreakdown() external view returns (uint256 principal_, uint256 interest_, uint256 delegateFee_, uint256 treasuryFee_);
+
+    function gracePeriod() external view returns (uint256 gracePeriod_);
+
+    function interestRate() external view returns (uint256 interestRate_);
+
+    function lateFeeRate() external view returns (uint256 lateFeeRate_);
+
+    function lateInterestPremium() external view returns (uint256 lateInterestPremium_);
 
     function implementation() external view returns (address implementation_);
 
@@ -165,9 +183,19 @@ interface IMapleLoanLike {
 
     function paymentsRemaining() external view returns (uint256 paymentsRemaining_);
 
+    function pendingBorrower() external view returns (address pendingBorrower_);
+
     function pendingLender() external view returns (address pendingLender_);
 
     function principal() external view returns (uint256 principal_);
+
+    function principalRequested() external view returns (uint256 principalRequested_);
+
+    function refinanceCommitment() external view returns (bytes32 refinanceCommitment_);
+
+    function refinanceInterest() external view returns (uint256 refinanceInterest_);
+
+    function treasuryFee() external view returns (uint256 treasuryFee_);
 
     function returnFunds(uint256 amount_) external;
 
