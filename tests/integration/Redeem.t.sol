@@ -187,7 +187,7 @@ contract RequestRedeemTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
     }
 
-    function testFuzz_requestRedeem(uint256 depositAmount, uint256 redeemAmount) external {
+    function testDeepFuzz_requestRedeem(uint256 depositAmount, uint256 redeemAmount) external {
         depositAmount = constrictToRange(depositAmount, 1, 1e30);
         redeemAmount  = constrictToRange(redeemAmount,  1, depositAmount);
 
@@ -268,7 +268,7 @@ contract RedeemTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 0);
     }
 
-    function testFuzz_redeem_singleUser_fullLiquidity_oneToOne(uint256 depositAmount, uint256 redeemAmount) external {
+    function testDeepFuzz_redeem_singleUser_fullLiquidity_oneToOne(uint256 depositAmount, uint256 redeemAmount) external {
         depositAmount = constrictToRange(depositAmount, 1, 1e30);
         redeemAmount  = constrictToRange(redeemAmount,  1, depositAmount);
 

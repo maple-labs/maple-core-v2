@@ -82,7 +82,7 @@ contract DepositTest is EnterBase {
         assertEq(poolManager.totalAssets(), 1_000_000e6);
     }
 
-    function testFuzz_deposit_singleUser(uint256 depositAmount) public {
+    function testDeepFuzz_deposit_singleUser(uint256 depositAmount) public {
         // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
         depositAmount = constrictToRange(depositAmount, 1, type(uint256).max - 1);
 
@@ -171,7 +171,7 @@ contract DepositTest is EnterBase {
         assertEq(poolManager.totalAssets(), 4_000_000e6);
     }
 
-    function testFuzz_deposit_variableExchangeRate(uint256 depositAmount, uint256 warpTime) public {
+    function testDeepFuzz_deposit_variableExchangeRate(uint256 depositAmount, uint256 warpTime) public {
         address initialDepositor = address(new Address());
 
         // Initial user does a deposit
@@ -274,7 +274,7 @@ contract DepositWithPermitTests is EnterBase {
         assertEq(poolManager.totalAssets(), 1_000_000e6);
     }
 
-    function testFuzz_depositWithPermit_singleUser(uint256 depositAmount) public {
+    function testDeepFuzz_depositWithPermit_singleUser(uint256 depositAmount) public {
         // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
         depositAmount = constrictToRange(depositAmount, 1, type(uint256).max - 1);
 
@@ -695,7 +695,7 @@ contract MintTest is EnterBase {
         assertEq(poolManager.totalAssets(), 1_000_000e6);
     }
 
-    function testFuzz_mint_singleUser(uint256 mintAmount) public {
+    function testDeepFuzz_mint_singleUser(uint256 mintAmount) public {
         // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
         mintAmount = constrictToRange(mintAmount, 1, type(uint256).max - 1);
 
@@ -784,7 +784,7 @@ contract MintTest is EnterBase {
         assertEq(poolManager.totalAssets(), 4_000_000e6);
     }
 
-    function testFuzz_mint_variableExchangeRate(uint256 assetAmount, uint256 warpTime) public {
+    function testDeepFuzz_mint_variableExchangeRate(uint256 assetAmount, uint256 warpTime) public {
 
         address initialDepositor = address(new Address());
 
@@ -891,7 +891,7 @@ contract MintWithPermitTests is EnterBase {
         assertEq(poolManager.totalAssets(), 1_000_000e6);
     }
 
-    function testFuzz_mintWithPermit_singleUser(uint256 mintAmount) public {
+    function testDeepFuzz_mintWithPermit_singleUser(uint256 mintAmount) public {
         vm.assume(mintAmount > 0);
         vm.assume(mintAmount <= type(uint256).max - 1); // With max uint256, the assertion of allowance after deposit fails because in the token is treated as infinite allowance.
 

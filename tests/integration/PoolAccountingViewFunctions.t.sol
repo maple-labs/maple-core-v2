@@ -41,7 +41,7 @@ contract BalanceOfAssetsTests is TestBase {
         assertEq(pool.balanceOfAssets(lp2), 6_000e6);
     }
 
-    function testFuzz_balanceOfAssets(uint256 depositAmount1, uint256 depositAmount2, uint256 additionalAmount) external {
+    function testDeepFuzz_balanceOfAssets(uint256 depositAmount1, uint256 depositAmount2, uint256 additionalAmount) external {
         depositAmount1   = constrictToRange(depositAmount1,   1, 1e29);
         depositAmount2   = constrictToRange(depositAmount2,   1, 1e29);
         additionalAmount = constrictToRange(additionalAmount, 1, 1e29);
@@ -126,7 +126,7 @@ contract MaxDepositTests is TestBase {
         assertEq(pool.maxDeposit(lp2), 600e6);
     }
 
-    function testFuzz_maxDeposit_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
+    function testDeepFuzz_maxDeposit_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
         liquidityCap = constrictToRange(liquidityCap, 1, 1e29);
         totalAssets  = constrictToRange(totalAssets,  1, 1e29);
 
@@ -198,7 +198,7 @@ contract MaxMintTests is TestBase {
         assertEq(pool.maxMint(lp2), 600e6);
     }
 
-    function testFuzz_maxMint_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
+    function testDeepFuzz_maxMint_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
         liquidityCap = constrictToRange(liquidityCap, 1, 1e29);
         totalAssets  = constrictToRange(totalAssets,  1, 1e29);
 
@@ -237,7 +237,7 @@ contract MaxMintTests is TestBase {
         assertEq(pool.maxMint(lp2), 4_000e6);
     }
 
-    function testFuzz_maxMint_exchangeRateGtOne(uint256 liquidityCap, uint256 depositAmount, uint256 transferAmount) external {
+    function testDeepFuzz_maxMint_exchangeRateGtOne(uint256 liquidityCap, uint256 depositAmount, uint256 transferAmount) external {
         liquidityCap   = constrictToRange(liquidityCap,   1, 1e29);
         depositAmount  = constrictToRange(depositAmount,  1, liquidityCap);
         transferAmount = constrictToRange(transferAmount, 1, 1e29);
@@ -376,7 +376,7 @@ contract MaxWithdrawTests is TestBase {
         assertEq(pool.maxWithdraw(lp1), 0);
     }
 
-    function testFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
+    function testDeepFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
         assets_ = constrictToRange(assets_, 1, 1_000e6);
 
         depositLiquidity(lp1, assets_);
@@ -474,7 +474,7 @@ contract PreviewWithdrawTests is TestBase {
         assertEq(pool.previewWithdraw(0), 0);
     }
 
-    function testFuzz_previewWithdraw_lockedShares_notInExitWindow(uint256 assets_) external {
+    function testDeepFuzz_previewWithdraw_lockedShares_notInExitWindow(uint256 assets_) external {
         assets_ = constrictToRange(assets_, 1, 1_000e6);
 
         depositLiquidity(lp1, assets_);
@@ -487,7 +487,7 @@ contract PreviewWithdrawTests is TestBase {
         assertEq(pool.previewWithdraw(assets_), 0);
     }
 
-    function testFuzz_previewWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
+    function testDeepFuzz_previewWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
         assets_ = constrictToRange(assets_, 1, 1_000e6);
 
         depositLiquidity(lp1, assets_);
@@ -500,7 +500,7 @@ contract PreviewWithdrawTests is TestBase {
         assertEq(pool.previewWithdraw(assets_), 0);
     }
 
-    function testFuzz_previewWithdraw(uint256 assets_) external {
+    function testDeepFuzz_previewWithdraw(uint256 assets_) external {
         vm.prank(lp1);
         assertEq(pool.previewWithdraw(assets_), 0);
     }

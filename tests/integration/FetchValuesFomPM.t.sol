@@ -12,7 +12,7 @@ contract PoolManagerGetterTests is TestBase {
         assertEq(poolManager.globals(),  address(globals));
     }
 
-    function testFuzz_getEscrowParams_shouldReturnValues(uint256 amount) external {
+    function testDeepFuzz_getEscrowParams_shouldReturnValues(uint256 amount) external {
         amount = constrictToRange(amount, 0, 1e29);
 
         address account = address(new Address());

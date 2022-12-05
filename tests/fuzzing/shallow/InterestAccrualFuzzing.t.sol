@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
+import { Address, console  } from "../../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan as Loan } from "../../../modules/loan-v401/contracts/MapleLoan.sol";
 
-import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../../contracts/utilities/TestBaseWithAssertions.sol";
 
-import { LoanActionGenerator } from "../../contracts/actions/LoanActionGenerator.sol";
+import { LoanActionGenerator } from "../../../contracts/actions/LoanActionGenerator.sol";
 
-import { ActionHandler } from "../../contracts/ActionHandler.sol";
-import { LoanScenario  } from "../../contracts/LoanScenario.sol";
+import { ActionHandler } from "../../../contracts/ActionHandler.sol";
+import { LoanScenario  } from "../../../contracts/LoanScenario.sol";
 
-import { ILoanLike, ILoanActionLike } from "../../contracts/interfaces/Interfaces.sol";
+import { ILoanLike, ILoanActionLike } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertions {
 
@@ -34,7 +34,7 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
         lp       = address(new Address());
     }
 
-    function testFuzz_interestAccrual(uint256 seed) public {
+    function testShallowFuzz_interestAccrual(uint256 seed) public {
 
         seed = constrictToRange(seed, 0, 1e29);
 

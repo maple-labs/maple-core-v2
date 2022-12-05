@@ -58,7 +58,7 @@ contract RequestWithdrawTests is TestBase {
     }
 
 
-    function testFuzz_requestWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
+    function testDeepFuzz_requestWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
         depositAmount  = constrictToRange(depositAmount,  1, 1e30);
         withdrawAmount = constrictToRange(withdrawAmount, 1, depositAmount);
 
@@ -150,7 +150,7 @@ contract WithdrawFailureTests is TestBase {
         pool.withdraw(0, lp, lp);
     }
 
-    function testFuzz_withdraw(uint256 assets_, address receiver_, address owner_) external {
+    function testDeepFuzz_withdraw(uint256 assets_, address receiver_, address owner_) external {
         vm.expectRevert("PM:PW:NOT_ENABLED");
         pool.withdraw(assets_, receiver_, owner_);
     }

@@ -14,7 +14,7 @@ echo Using profile: $FOUNDRY_PROFILE
 
 if [ -z "$test" ];
 then
-    forge test --ffi --no-match-test "invariant";
+    forge test --ffi --no-match-test "invariant" --no-match-path "tests/fuzzing/shallow/*.t.sol";
 else
     forge test --ffi --match "$test";
 fi
