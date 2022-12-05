@@ -504,18 +504,151 @@ contract PauseProtocol is AddressRegistry, TestUtils {
 
 contract DeployPools is AddressRegistry, TestUtils {
 
-    function run() external {
-        validate(mavenPermissionedPoolV2);
-        validate(mavenUsdcPoolV2);
-        validate(mavenWethPoolV2);
-        validate(orthogonalPoolV2);
-        validate(icebreakerPoolV2);
+    struct PoolConfiguration {
+        address poolDelegate;
+        address asset;
+        address pool;
+        address loanManager;
+        address poolDelegateCover;
+        address withdrawalManager;
+        bool    active;
+        bool    configured;
+        bool    openToPublic;
+        uint256 liquidityCap;
+        uint256 delegateManagementFeeRate;
     }
 
-    function validate(IPoolV2Like poolV2) internal {
+    function run() external {
+
+        // TODO separate per pool?
+        
+        // Maven Permissioned Pool
+        validatePool(mavenPermissionedPoolV2, mavenPermissionedPoolV1, address(mavenPermissionedPoolManager), address(usdc));
+        validatePoolManager(
+            mavenPermissionedPoolManager, 
+                PoolConfiguration({
+                poolDelegate:              address(mavenPermissionedTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(mavenPermissionedPoolV2),
+                loanManager:               address(mavenPermissionedTransitionLoanManager),
+                poolDelegateCover:         address(mavenPermissionedPoolDelegateCover),
+                withdrawalManager:         address(mavenPermissionedWithdrawalManager),
+                active:                    true,
+                configured:                true,
+                openToPublic:              false,
+                liquidityCap:              0,
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+        // Maven Usdc Pool
+        validatePool(mavenUsdcPoolV2, mavenUsdcPoolV1, address(mavenUsdcPoolManager), address(usdc));
+        validatePoolManager(
+                mavenUsdcPoolManager, 
+                PoolConfiguration({
+                poolDelegate:              address(mavenUsdcTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(mavenUsdcPoolV2),
+                loanManager:               address(mavenUsdcTransitionLoanManager),
+                poolDelegateCover:         address(mavenUsdcPoolDelegateCover),
+                withdrawalManager:         address(mavenUsdcWithdrawalManager),
+                active:                    true,
+                configured:                true,
+                openToPublic:              true,
+                liquidityCap:              0,
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+        // Maven Weth Pool
+        validatePool(mavenWethPoolV2, mavenWethPoolV1, address(mavenWethPoolManager), address(usdc));
+        validatePoolManager(
+                mavenWethPoolManager, 
+                PoolConfiguration({
+                poolDelegate:              address(mavenWethTemporaryPd),
+                asset:                     address(weth),
+                pool:                      address(mavenWethPoolV2),
+                loanManager:               address(mavenWethTransitionLoanManager),
+                poolDelegateCover:         address(mavenWethPoolDelegateCover),
+                withdrawalManager:         address(mavenWethWithdrawalManager),
+                active:                    true,
+                configured:                true,
+                openToPublic:              true,
+                liquidityCap:              0,
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+        // Orthogonal Pool
+        validatePool(orthogonalPoolV2, orthogonalPoolV1, address(orthogonalPoolManager), address(usdc));
+        validatePoolManager(
+                orthogonalPoolManager, 
+                PoolConfiguration({
+                poolDelegate:              address(orthogonalTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(orthogonalPoolV2),
+                loanManager:               address(orthogonalTransitionLoanManager),
+                poolDelegateCover:         address(orthogonalPoolDelegateCover),
+                withdrawalManager:         address(orthogonalWithdrawalManager),
+                active:                    true,
+                configured:                true,
+                openToPublic:              true,
+                liquidityCap:              0,
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+
+        // Icebreaker
+        validatePool(icebreakerPoolV2, icebreakerPoolV1, address(icebreakerPoolManager), address(usdc));
+        validatePoolManager(
+                icebreakerPoolManager, 
+                PoolConfiguration({
+                poolDelegate:              address(icebreakerTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(icebreakerPoolV2),
+                loanManager:               address(icebreakerTransitionLoanManager),
+                poolDelegateCover:         address(icebreakerPoolDelegateCover),
+                withdrawalManager:         address(icebreakerWithdrawalManager),
+                active:                    true,
+                configured:                true,
+                openToPublic:              true,
+                liquidityCap:              0,
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+    }
+
+    function validatePool(IPoolV2Like poolV2, IPoolV1Like poolV1, address poolManager_, address asset_) internal {
         assertEq(hash(address(poolV2).code), 0);
 
-        // TODO: assert rest of pool and manager state
+        // Pool Assertions
+        assertEq(poolV2.totalSupply(), getPoolV1TotalValue(poolV1));
+        assertEq(poolV2.asset(),       poolV1.liquidityAsset());
+        assertEq(poolV2.asset(),       asset_);
+        assertEq(poolV2.manager(),     poolManager_);
+    }
+
+    function validatePoolManager(IPoolManagerLike poolManager_, PoolConfiguration memory poolConfig) internal {
+        assertEq(poolManager_.poolDelegate(),              poolConfig.poolDelegate);
+        assertEq(poolManager_.asset(),                     poolConfig.asset);
+        assertEq(poolManager_.pool(),                      poolConfig.pool);   
+        assertEq(poolManager_.poolDelegateCover(),         poolConfig.poolDelegateCover);
+        assertEq(poolManager_.withdrawalManager(),         poolConfig.withdrawalManager);
+        assertEq(poolManager_.liquidityCap(),              poolConfig.liquidityCap);
+        assertEq(poolManager_.delegateManagementFeeRate(), poolConfig.delegateManagementFeeRate);
+
+        assertTrue(poolManager_.configured() == poolConfig.openToPublic);
+        assertTrue(poolManager_.active()     == poolConfig.active);
+
+        // Loan Manager
+        assertTrue(poolManager_.isLoanManager());
+        assertEq(poolManager_.loanManagerList(0), poolConfig.loanManager);
+
+        // Fixed Value
+        assertEq(poolManager_.pendingPoolDelegate(), address(0));
+    }
+
+    function getPoolV1TotalValue(IPoolV1Like poolV1) internal view returns (uint256 totalValue) {
+        IERC20Like asset = IERC20Like(poolV1.liquidityAsset());
+
+        totalValue = poolV1.totalSupply() * 10 ** asset.decimals() / 1e18 + poolV1.interestSum() - poolV1.poolLosses();
     }
 
     function hash(bytes memory code) internal pure returns (bytes32 bytecodeHash) {

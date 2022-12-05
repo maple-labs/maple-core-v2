@@ -136,7 +136,9 @@ contract AddressRegistry {
     IStakeLockerLike           mavenUsdcStakeLocker           = IStakeLockerLike(0xbb7866435b8e5D3F6c2EA8b720c8F79db6f7C1b4);
     ITransitionLoanManagerLike mavenUsdcTransitionLoanManager = ITransitionLoanManagerLike(0xbeDb4E752320d4ca7c7d841357Dc6A2D045d5Ca9);
     IWithdrawalManagerLike     mavenUsdcWithdrawalManager     = IWithdrawalManagerLike(address(0));
-
+    
+    address mavenUsdcPoolDelegateCover = address(0);
+                             
     address[] mavenUsdcLps = [
         0x00080000158A9930aeb508823103b0a977161c47,
         0x000ab07b26c48EF3Caf9ec23520D86794c9fd74a,
@@ -544,6 +546,8 @@ contract AddressRegistry {
     IStakeLockerLike           mavenPermissionedStakeLocker           = IStakeLockerLike(0x15D297B15A631D1f3B53A337D31BDd2d950d5402);
     ITransitionLoanManagerLike mavenPermissionedTransitionLoanManager = ITransitionLoanManagerLike(0x2AD0Fc5d17a1bBb9bC7D85657936F77224397197);
     IWithdrawalManagerLike     mavenPermissionedWithdrawalManager     = IWithdrawalManagerLike(address(0));
+    
+    address mavenPermissionedPoolDelegateCover = address(0);
 
     address[] mavenPermissionedLps = [
         0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
@@ -574,6 +578,8 @@ contract AddressRegistry {
     IStakeLockerLike           mavenWethStakeLocker           = IStakeLockerLike(0xD5Deeb06859369e42cf1906408eD6Cb249E0e002);
     ITransitionLoanManagerLike mavenWethTransitionLoanManager = ITransitionLoanManagerLike(0x4DA2eAF4c9be3ff024e5fa42A06db6Ca8Fab69cd);
     IWithdrawalManagerLike     mavenWethWithdrawalManager     = IWithdrawalManagerLike(address(0));
+
+    address mavenWethPoolDelegateCover = address(0);
 
     address[] mavenWethLps = [
         0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
@@ -650,6 +656,8 @@ contract AddressRegistry {
     IStakeLockerLike           orthogonalStakeLocker           = IStakeLockerLike(0x12B2BbBfAB2CE6789DF5659E9AC27A4A91C96C5C);
     ITransitionLoanManagerLike orthogonalTransitionLoanManager = ITransitionLoanManagerLike(0x84D7a18B7738EBCDc2A5d1AD630A9c7ff08733db);
     IWithdrawalManagerLike     orthogonalWithdrawalManager     = IWithdrawalManagerLike(address(0));
+
+    address orthogonalPoolDelegateCover = address(0);
 
     address[] orthogonalLps = [
         0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
@@ -940,6 +948,8 @@ contract AddressRegistry {
     IStakeLockerLike           icebreakerStakeLocker           = IStakeLockerLike(0x1dC467a44aE188fc3eee41d88A32511D261e511B);
     ITransitionLoanManagerLike icebreakerTransitionLoanManager = ITransitionLoanManagerLike(0x5936A3E150d039425469D1616523f44c498730d7);
     IWithdrawalManagerLike     icebreakerWithdrawalManager     = IWithdrawalManagerLike(address(0));
+
+    address icebreakerPoolDelegateCover = address(0);
 
     address[] icebreakerLps = [
         0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
