@@ -17,6 +17,8 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
     address lp2;
     address lp3;
 
+    address[] lps;
+
     Loan loan;
 
     function setUp() public override {
@@ -26,6 +28,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         lp1      = address(new Address());
         lp2      = address(new Address());
         lp3      = address(new Address());
+
+        // Setup 50 random Addresses for LPs
+        for (uint256 i = 0; i < 50; i++) {
+            lps.push(address(new Address()));
+        }
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -984,6 +991,739 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             totalAssets:        0,
             unrealizedLosses:   0,
             availableLiquidity: 0
+        });
+    }
+
+    function test_scenario_impairLoanAndRedeem_removeSharesRepayLoanAndRedeem() external {
+        // 2 LPs deposit
+        depositLiquidity(lp1, 1_000_000e6);
+        depositLiquidity(lp2, 1_000_000e6);
+
+        assertEq(pool.balanceOf(lp1), 1_000_000e6);
+        assertEq(pool.balanceOf(lp2), 1_000_000e6);
+
+        // Fund a new loan
+        loan = fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
+        });
+
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+
+        uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
+
+        uint256 issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
+
+        assertEq(annualLoanInterest, 28382.4e6);
+        assertEq(dailyLoanInterest,  77.76e6);
+        assertEq(issuanceRate,       900e30);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          issuanceRate,
+            domainStart:           start,
+            domainEnd:             start + 30 days,
+            unrealizedLosses:      0
+        });
+
+        assertWithdrawalManagerState({
+            lp:                           lp1,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 0
+        });
+
+        // LP1 requests to redeem
+        vm.warp(start + 1 days);
+
+        vm.prank(lp1);
+        pool.requestRedeem(1_000_000e6, lp1);
+
+        assertEq(pool.balanceOf(lp1), 0);
+
+        assertWithdrawalManagerState({
+            lp:                           lp1,
+            lockedShares:                 1_000_000e6,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           3,
+            currentCycleTotalShares:      1_000_000e6,
+            withdrawalManagerTotalShares: 1_000_000e6
+        });
+
+        assertWithdrawalManagerState({
+            lp:                           lp2,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 1_000_000e6
+        });
+
+        // LP2 requests to redeem
+        vm.warp(start + 2 days);
+
+        vm.prank(lp2);
+        pool.requestRedeem(1_000_000e6, lp2);
+
+        assertEq(pool.balanceOf(lp2), 0);
+
+        assertWithdrawalManagerState({
+            lp:                           lp2,
+            lockedShares:                 1_000_000e6,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           3,
+            currentCycleTotalShares:      2_000_000e6,
+            withdrawalManagerTotalShares: 2_000_000e6
+        });
+
+        // Warp to withdraw window
+        vm.warp(start + 2 weeks + 1 days);
+
+        uint256 loanInterestAccrued = 15 * dailyLoanInterest;
+
+        assertPoolState({
+            totalSupply:        2_000_000e6,
+            totalAssets:        2_000_000e6 + loanInterestAccrued,
+            unrealizedLosses:   0,
+            availableLiquidity: 1_000_000e6
+        });
+
+        assertEq((pool.totalAssets() - pool.unrealizedLosses()) * 1e6 / pool.totalSupply(), 1.000583e6);
+
+        // Impair the loan
+        vm.prank(poolDelegate);
+        poolManager.impairLoan(address(loan));
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     loanInterestAccrued,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + loanInterestAccrued,
+            issuanceRate:          0,
+            domainStart:           block.timestamp,
+            domainEnd:             block.timestamp,
+            unrealizedLosses:      1_000_000e6 + loanInterestAccrued
+        });
+
+        assertPoolState({
+            totalSupply:        2_000_000e6,
+            totalAssets:        2_000_000e6 + loanInterestAccrued,
+            unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
+            availableLiquidity: 1_000_000e6
+        });
+
+        assertEq((pool.totalAssets() - pool.unrealizedLosses()) * 1e6 / pool.totalSupply(), 0.5e6);
+
+        // LP1 removes shares from withdraw queue
+        vm.prank(lp1);
+        pool.removeShares(1_000_000e6, lp1);
+
+        assertEq(pool.balanceOf(lp1), 1_000_000e6);
+
+        assertWithdrawalManagerState({
+            lp:                           lp1,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 1_000_000e6
+        });
+
+        assertEq(fundsAsset.balanceOf(lp1), 0);
+
+        // Repay loan in full
+        closeLoan(loan);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          0,
+            assetsUnderManagement: 0,
+            issuanceRate:          0,
+            domainStart:           block.timestamp,
+            domainEnd:             block.timestamp,
+            unrealizedLosses:      0
+        });
+
+        uint256 loanPrincipal     = 1_000_000e6;
+        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 45_000e6
+
+        assertEq(closeLoanInterest, 45_000e6);
+
+        assertPoolState({
+            totalSupply:        2_000_000e6,
+            totalAssets:        2_000_000e6 + closeLoanInterest,
+            unrealizedLosses:   0,
+            availableLiquidity: 2_000_000e6 + closeLoanInterest
+        });
+
+        assertEq((pool.totalAssets() - pool.unrealizedLosses()) * 1e6 / pool.totalSupply(), 1.0225e6);
+
+        // Forward further into the withdraw window
+        vm.warp(start + 2 weeks + 2 days - 1 seconds);
+
+        vm.prank(lp2);
+        pool.redeem(1_000_000e6, lp2, lp2);
+
+        assertEq(pool.balanceOf(lp2), 0);
+
+        assertWithdrawalManagerState({
+            lp:                           lp2,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 0
+        });
+
+        assertEq(fundsAsset.balanceOf(lp2), 1_000_000e6 + (closeLoanInterest / 2));
+        assertEq(fundsAsset.balanceOf(lp2), 1_022_500e6);
+
+        assertPoolState({
+            totalSupply:        1_000_000e6,
+            totalAssets:        1_000_000e6 + 22_500e6,
+            unrealizedLosses:   0,
+            availableLiquidity: 1_000_000e6 + 22_500e6
+        });
+    }
+
+    function test_scenario_multipleUsers_impairLoanAndRedeem_repayLoanAndRedeem() external {
+        // Deposit liquidity from 50 LPs
+        for (uint256 i = 0; i < 50; i++) {
+            depositLiquidity(lps[i], 1_000_000e6);
+            assertEq(pool.balanceOf(lps[i]), 1_000_000e6);
+        }
+
+        // Fund a new loan at 50% of pool liquidity
+        loan = fundAndDrawdownLoan({
+            borrower:    address(new Address()),
+            termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
+            amounts:     [uint256(0), uint256(25_000_000e6), uint256(25_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
+        });
+
+        uint256 annualLoanInterest = 25_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+
+        uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
+
+        uint256 issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
+
+        assertEq(annualLoanInterest, 709_560e6);
+        assertEq(dailyLoanInterest,  1944e6);
+        assertEq(issuanceRate,       22_500e30);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          25_000_000e6,
+            assetsUnderManagement: 25_000_000e6,
+            issuanceRate:          issuanceRate,
+            domainStart:           start,
+            domainEnd:             start + 30 days,
+            unrealizedLosses:      0
+        });
+
+        uint256 totalLpTokenAmount;
+
+        // All LPs request to redeem
+        for (uint256 i = 0; i < 50; i++) {
+            uint256 lpTokenAmount = pool.balanceOf(lps[i]);
+
+            assertWithdrawalManagerState({
+                lp:                           lps[i],
+                lockedShares:                 0,
+                previousExitCycleId:          0,
+                previousCycleTotalShares:     0,
+                currentExitCycleId:           0,
+                currentCycleTotalShares:      0,
+                withdrawalManagerTotalShares: totalLpTokenAmount == 0 ? 0 : totalLpTokenAmount
+            });
+
+            vm.warp(start + 1 days + (i * 12 seconds));
+
+            vm.prank(lps[i]);
+            pool.requestRedeem(lpTokenAmount, lps[i]);
+
+            assertEq(pool.balanceOf(lps[i]), 0);
+
+            totalLpTokenAmount += lpTokenAmount;
+
+            assertWithdrawalManagerState({
+                lp:                           lps[i],
+                lockedShares:                 lpTokenAmount,
+                previousExitCycleId:          0,
+                previousCycleTotalShares:     0,
+                currentExitCycleId:           3,
+                currentCycleTotalShares:      totalLpTokenAmount,
+                withdrawalManagerTotalShares: totalLpTokenAmount
+            });
+        }
+
+        // Warp to WW
+        vm.warp(start + 2 weeks + 1 days);
+
+        uint256 loanInterestAccrued = 15 * dailyLoanInterest;
+
+        assertPoolState({
+            totalSupply:        50_000_000e6,
+            totalAssets:        50_000_000e6 + loanInterestAccrued,
+            unrealizedLosses:   0,
+            availableLiquidity: 25_000_000e6
+        });
+
+        // Impair the loan
+        vm.prank(poolDelegate);
+        poolManager.impairLoan(address(loan));
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     loanInterestAccrued,
+            principalOut:          25_000_000e6,
+            assetsUnderManagement: 25_000_000e6 + loanInterestAccrued,
+            issuanceRate:          0,
+            domainStart:           block.timestamp,
+            domainEnd:             block.timestamp,
+            unrealizedLosses:      25_000_000e6 + loanInterestAccrued
+        });
+
+        assertPoolState({
+            totalSupply:        50_000_000e6,
+            totalAssets:        50_000_000e6 + loanInterestAccrued,
+            unrealizedLosses:   25_000_000e6 + loanInterestAccrued,
+            availableLiquidity: 25_000_000e6
+        });
+
+        uint256 totalAssetRedemptionsFirst30Lps;
+
+        // Redeem 30 LPs
+        for (uint256 i = 0; i < 30; i++) {
+            uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
+
+            totalLpTokenAmount -= userLockedShares;
+
+            vm.prank(lps[i]);
+            pool.redeem(userLockedShares, lps[i], lps[i]);
+
+            assertEq(pool.balanceOf(lps[i]), 0);
+
+            assertWithdrawalManagerState({
+                lp:                           lps[i],
+                lockedShares:                 0,
+                previousExitCycleId:          0,
+                previousCycleTotalShares:     0,
+                currentExitCycleId:           0,
+                currentCycleTotalShares:      0,
+                withdrawalManagerTotalShares: totalLpTokenAmount
+            });
+
+            assertEq(fundsAsset.balanceOf(lps[i]), 500_000e6);
+
+            totalAssetRedemptionsFirst30Lps += fundsAsset.balanceOf(lps[i]);
+        }
+
+        assertEq(totalAssetRedemptionsFirst30Lps, 15_000_000e6);
+
+        assertPoolState({
+            totalSupply:        20_000_000e6,
+            totalAssets:        50_000_000e6 + loanInterestAccrued - totalAssetRedemptionsFirst30Lps,
+            unrealizedLosses:   25_000_000e6 + loanInterestAccrued,
+            availableLiquidity: 10_000_000e6
+        });
+
+        // Repay the loan
+        vm.warp(start + 2 weeks + 1 days);
+
+        closeLoan(loan);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          0,
+            assetsUnderManagement: 0,
+            issuanceRate:          0,
+            domainStart:           block.timestamp,
+            domainEnd:             block.timestamp,
+            unrealizedLosses:      0
+        });
+
+        uint256 loanPrincipal     = 25_000_000e6;
+        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 1_125_000e6
+
+        assertEq(closeLoanInterest, 1_125_000e6);
+
+        assertPoolState({
+            totalSupply:        20_000_000e6,
+            totalAssets:        50_000_000e6 + closeLoanInterest - totalAssetRedemptionsFirst30Lps,
+            unrealizedLosses:   0,
+            availableLiquidity: 50_000_000e6 + closeLoanInterest - totalAssetRedemptionsFirst30Lps
+        });
+
+        // Expected fundsAsset amount per LP
+        // TotalAssets / TotalSupply = 36_125_000e6 / 20_000_000e6 = 1_806_250e6
+        assertEq(pool.totalAssets() * 1e6 / pool.totalSupply() * 1e6, 1_806_250e6);
+
+        // Redeem the remaining LPs
+        for (uint256 i = 30; i < 50; i++) {
+            uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
+
+            totalLpTokenAmount -= userLockedShares;
+
+            vm.warp(start + 2 weeks + 1.5 days + (i * 12 seconds));
+
+            vm.prank(lps[i]);
+            pool.redeem(userLockedShares, lps[i], lps[i]);
+
+            assertEq(pool.balanceOf(lps[i]), 0);
+
+            assertWithdrawalManagerState({
+                lp:                           lps[i],
+                lockedShares:                 0,
+                previousExitCycleId:          0,
+                previousCycleTotalShares:     0,
+                currentExitCycleId:           0,
+                currentCycleTotalShares:      0,
+                withdrawalManagerTotalShares: totalLpTokenAmount
+            });
+
+            assertEq(fundsAsset.balanceOf(lps[i]), 1_806_250e6);
+        }
+
+        assertPoolState({
+            totalSupply:        0,
+            totalAssets:        0,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+    }
+
+    function test_scenario_fundPayAndRefinanceLoanWithPartialRedemptions_removeSharesAndCloseLoan() external {
+        // 3 LPs deposit
+        depositLiquidity(lp1, 1_000_000e6);
+        depositLiquidity(lp2, 1_000_000e6);
+        depositLiquidity(lp3, 1_000_000e6);
+
+        assertEq(pool.balanceOf(lp1), 1_000_000e6);
+        assertEq(pool.balanceOf(lp2), 1_000_000e6);
+        assertEq(pool.balanceOf(lp3), 1_000_000e6);
+
+        assertWithdrawalManagerState({
+            lp:                           lp1,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 0
+        });
+
+        // LP1 requests to redeem
+        vm.warp(start + 1 seconds);
+
+        vm.prank(lp1);
+        pool.requestRedeem(500_000e6, lp1);
+
+        assertEq(pool.balanceOf(lp1), 500_000e6);
+
+        assertWithdrawalManagerState({
+            lp:                           lp1,
+            lockedShares:                 500_000e6,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           3,
+            currentCycleTotalShares:      500_000e6,
+            withdrawalManagerTotalShares: 500_000e6
+        });
+
+        assertWithdrawalManagerState({
+            lp:                           lp2,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 500_000e6
+        });
+
+        // LP2 requests to redeem
+        vm.warp(start + 2 seconds);
+
+        vm.prank(lp2);
+        pool.requestRedeem(500_000e6, lp2);
+
+        assertEq(pool.balanceOf(lp2), 500_000e6);
+
+        assertWithdrawalManagerState({
+            lp:                           lp2,
+            lockedShares:                 500_000e6,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           3,
+            currentCycleTotalShares:      1_000_000e6,
+            withdrawalManagerTotalShares: 1_000_000e6
+        });
+
+        assertWithdrawalManagerState({
+            lp:                           lp3,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 1_000_000e6
+        });
+
+        vm.prank(lp3);
+        pool.requestRedeem(1_000_000e6, lp3);
+
+        assertEq(pool.balanceOf(lp3), 0);
+
+        assertWithdrawalManagerState({
+            lp:                           lp3,
+            lockedShares:                 1_000_000e6,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           3,
+            currentCycleTotalShares:      2_000_000e6,
+            withdrawalManagerTotalShares: 2_000_000e6
+        });
+
+        assertPoolState({
+            totalSupply:        3_000_000e6,
+            totalAssets:        3_000_000e6,
+            unrealizedLosses:   0,
+            availableLiquidity: 3_000_000e6
+        });
+
+        // Warp to fund new loan a day after initial redemption requests
+        vm.warp(start + 1 days);
+
+        loan = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(0), uint256(30 days), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
+        });
+
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+
+        uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
+
+        uint256 issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
+
+        assertEq(annualLoanInterest, 28382.4e6);
+        assertEq(dailyLoanInterest,  77.76e6);
+        assertEq(issuanceRate,       900e30);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          issuanceRate,
+            domainStart:           start + 1 days,
+            domainEnd:             start + 1 days + 30 days,
+            unrealizedLosses:      0
+        });
+
+        assertPoolState({
+            totalSupply:        3_000_000e6,
+            totalAssets:        3_000_000e6,
+            unrealizedLosses:   0,
+            availableLiquidity: 2_000_000e6
+        });
+
+        // Make payment to get interest in the pool
+        makePayment(loan);
+
+        // Issuance domain over 60 days due to early payment
+        issuanceRate = (dailyLoanInterest * 30) * 1e30 / 60 days;
+
+        assertEq(issuanceRate, 450e30);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          issuanceRate,
+            domainStart:           start + 1 days,
+            domainEnd:             start + 1 days + 60 days,
+            unrealizedLosses:      0
+        });
+
+        uint256 interestInPool = 30 * dailyLoanInterest;
+
+        assertEq(interestInPool, 2_332.8e6);
+
+        assertPoolState({
+            totalSupply:        3_000_000e6,
+            totalAssets:        3_000_000e6 + interestInPool,
+            unrealizedLosses:   0,
+            availableLiquidity: 2_000_000e6 + interestInPool
+        });
+
+        // Warp to WW
+        vm.warp(start + 2 weeks);
+
+        uint256 loanInterestAccrued = 13 * dailyLoanInterest / 2;  // Note: Half as much accrued due to domain doubling
+
+        assertEq(loanInterestAccrued, 505.44e6);
+
+        assertPoolState({
+            totalSupply:        3_000_000e6,
+            totalAssets:        3_000_000e6 + interestInPool + loanInterestAccrued,
+            unrealizedLosses:   0,
+            availableLiquidity: 2_000_000e6 + interestInPool
+        });
+
+        // Redeem LP1
+        vm.prank(lp1);
+        pool.redeem(500_000e6, lp1, lp1);
+
+        assertEq(pool.balanceOf(lp1), 500_000e6);
+
+        // Expected fundsAsset amount from 500_000e6 shares
+        assertEq(500_000e6 * (3_000_000e6 + interestInPool + loanInterestAccrued) / 3_000_000e6, 500_473.04e6);
+
+        assertEq(fundsAsset.balanceOf(lp1), 500_473.04e6);
+
+        uint256 interestWithdrawn = 473.04e6;
+
+        assertWithdrawalManagerState({
+            lp:                           lp1,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 1_500_000e6
+        });
+
+        assertPoolState({
+            totalSupply:        2_500_000e6,
+            totalAssets:        2_500_000e6 + interestInPool + loanInterestAccrued - interestWithdrawn,
+            unrealizedLosses:   0,
+            availableLiquidity: 1_500_000e6 + interestInPool - interestWithdrawn
+        });
+
+        // Refinance Loan
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
+
+        Refinancer refinancer = new Refinancer();
+
+        vm.startPrank(borrower);
+        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        fundsAsset.mint(borrower, 30_000e6);
+        fundsAsset.approve(address(loan), 30_000e6);
+        loan.returnFunds(30_000e6);  // Return funds to pay origination fees.
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+
+        issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
+
+        assertEq(issuanceRate, 900e30);
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          issuanceRate,
+            domainStart:           start + 2 weeks,
+            domainEnd:             start + 2 weeks + 60 days,
+            unrealizedLosses:      0
+        });
+
+        assertPoolState({
+            totalSupply:        2_500_000e6,
+            totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn,
+            unrealizedLosses:   0,
+            availableLiquidity: 1_500_000e6 + interestInPool - interestWithdrawn
+        });
+
+        // LP2 removes shares
+        vm.prank(lp2);
+        pool.removeShares(500_000e6, lp2);
+
+        assertEq(pool.balanceOf(lp2), 1_000_000e6);
+
+        assertWithdrawalManagerState({
+            lp:                           lp2,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 1_000_000e6
+        });
+
+        assertPoolState({
+            totalSupply:        2_500_000e6,
+            totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn,
+            unrealizedLosses:   0,
+            availableLiquidity: 1_500_000e6 + interestInPool - interestWithdrawn
+        });
+
+        // Warp to WW
+        vm.warp(start + 2 weeks + 1 days);
+
+        // Repay Loan in full
+        closeLoan(loan);
+
+        uint256 loanPrincipal     = 1_000_000e6;
+        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 45_000e6
+
+        assertEq(closeLoanInterest, 45_000e6);
+
+        assertPoolState({
+            totalSupply:        2_500_000e6,
+            totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest,
+            unrealizedLosses:   0,
+            availableLiquidity: 2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest
+        });
+
+        // Redeem LP3
+        vm.prank(lp3);
+        pool.redeem(1_000_000e6, lp3, lp3);
+
+        uint256 lp3FullWithdrawal = 1_000_000e6 + 18_743.904e6;
+
+        // Expected fundsAsset amount from 1_000_000e6 shares
+        assertEq(1_000_000e6 * (2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest) / 2_500_000e6, lp3FullWithdrawal);
+
+        assertEq(pool.balanceOf(lp3),       0);
+        assertEq(fundsAsset.balanceOf(lp3), lp3FullWithdrawal);
+
+        assertPoolState({
+            totalSupply:        1_500_000e6,
+            totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest - lp3FullWithdrawal,
+            unrealizedLosses:   0,
+            availableLiquidity: 2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest - lp3FullWithdrawal
+        });
+
+        assertWithdrawalManagerState({
+            lp:                           lp3,
+            lockedShares:                 0,
+            previousExitCycleId:          0,
+            previousCycleTotalShares:     0,
+            currentExitCycleId:           0,
+            currentCycleTotalShares:      0,
+            withdrawalManagerTotalShares: 0
         });
     }
 
