@@ -117,31 +117,30 @@ contract DeployProtocol is AddressRegistry, TestUtils {
 
     function run() external {
         // Step 1: Deploy Globals
-
-        // assertEq(hash(address(mapleGlobalsV2Implementation).code), 0);
-        // assertEq(hash(address(mapleGlobalsV2Proxy).code),          0);
+        assertEq(hash(address(mapleGlobalsV2Implementation).code), 0x7f8f00f34d98cb9159eb610be220ddf8831f949a680a1a9235a165b44c10f358);
+        assertEq(hash(address(mapleGlobalsV2Proxy).code),          0x68ef8494eef4cbddfd9186d28f4152465fbe01c7c7ca23f7ad55258a056a63c6);
 
         assertEq(mapleGlobalsV2Proxy.admin(),          deployer);
         assertEq(mapleGlobalsV2Proxy.implementation(), mapleGlobalsV2Implementation);
 
-        // // Step 2: Deploy FeeManager
-        // require(hash(address(feeManager).code) == 0xba9931fd98fcf13e2ae2d1d8c94bf4d3f99f9c41444caf50adec02a02a34b383);
+        // Step 2: Deploy FeeManager
+        assertEq(hash(address(feeManager).code), 0xeda0b8a07ec772cc345d84caaac0a95591b8dd090179f03dd427f40f0ed2d181);
 
         assertEq(feeManager.globals(), address(mapleGlobalsV2Proxy));
 
-        // // Step 3: Deploy Loan contracts
-        // require(hash(address(loanV302Implementation).code) == 0xc526afbf4b792ad95c30128d640a6dae29c0bfb0b6b0674baa135701554b3bc8);
-        // require(hash(address(loanV400Initializer).code)    == 0xf7d8ef4874396425b88f486351ad93e8a06a193c51bd718b0718e4a5deff49b8);
-        // require(hash(address(loanV400Implementation).code) == 0x797f19d08098cf6ca5051692cf2b073682dae6ef83a361477e86fa949534090f);
-        // require(hash(address(loanV401Implementation).code) == 0xa424f4b71909b5042fb7e23137e4cc91f0e33a9f62bc2dec0dc037a6ae0785c4);
-        // require(hash(address(loanV400Migrator).code)       == 0xcb89d7d5948b60ff5caa3724753fc375d1af62f14a38e13cfb35e772b25d7235);
+        // Step 3: Deploy Loan contracts
+        assertEq(hash(address(loanV302Implementation).code), 0x0ef7cb3cb917189811b8415f495a75f29ee86da37b3d11f9ebd016b1d91d2f91);
+        assertEq(hash(address(loanV400Initializer).code),    0x46ccdebd96ffac13c7f0b8de92a685dbdc5f75ead38ebd9ea0cfa3b45f7a0476);
+        assertEq(hash(address(loanV400Implementation).code), 0x3a4d877fc6684f8ecca69ddd8516a91f1e71364e7d25e5a832127e81bb7d13cc);
+        assertEq(hash(address(loanV400Migrator).code),       0x2ee0a69cf65afd91fd8ecf359882f7092230b488abd5ea0f0f0ac1babdcca17e);
 
-        // // Step 4: Deploy DebtLocker contracts
-        // require(hash(address(debtLockerV400Implementation).code) == 0x8758bf19e2d5b77c009a098e2dad73a58969878b9c2a88099d49f7a3ae16564c);
-        // require(hash(address(debtLockerV400Migrator).code)       == 0x6cb68800cd4fe71531c292ace7ed3f948cf61b842e8348aec12949902304dcda);
+        // Step 4: Deploy DebtLocker contracts
+        assertEq(hash(address(debtLockerV400Implementation).code), 0x2997c917c29bc186e6623f04809af7193ebccb9a5fb9c026911e255fb3177023);
+        assertEq(hash(address(debtLockerV400Migrator).code),       0x52f85e9d6dd6f16069d227279bdfa32c92fe9042f6249399d3e9b23adae4831e);
 
         // // Step 5: Deploy PoolDeployer
-        // require(hash(address(poolDeployer).code) == 0x80ca5753d81f8ba0b0139db619eb9d5062d442b503c43b273895ec9611d8f836);
+        assertEq(hash(address(poolDeployer).code), 0x5d1673eb250e69d9e9626f1174d94302f2d79982fb4a91a2f95d20b6cd372e58);
+
         assertEq(poolDeployer.globals(), address(mapleGlobalsV2Proxy));
 
         // Step 6: Set addresses in GlobalsV2
@@ -167,11 +166,11 @@ contract DeployProtocol is AddressRegistry, TestUtils {
         assertEq(delay,    1 weeks);
         assertEq(duration, 2 days);
 
-        // // Step 11: Deploy factories
-        // require(hash(address(liquidatorFactory).code)        == 0x433ce0af096b3c31c8c58199fdbf61b31b3349ab814c93357796abf19541afa3);
-        // require(hash(address(loanManagerFactory).code)       == 0x5186459623fa2a11ac7ef2b67ecc5422ae89db285f52067f5c184c296980a710);
-        // require(hash(address(poolManagerFactory).code)       == 0xbccd77d181035dd68ac7d2cccec92fd2255d92caed710b808da68319d3671b48);
-        // require(hash(address(withdrawalManagerFactory).code) == 0x511c9e987be73335e8e1a731de673425b8e604b499f34153beea696f22f7c820);
+        // Step 11: Deploy factories
+        assertEq(hash(address(liquidatorFactory).code),        0xdcb011ff44326687db40bf89317617d8d1bfa719792167c348f7cc18869ea00a);
+        assertEq(hash(address(loanManagerFactory).code),       0xdbb33075e0c7b40708d91da2ff0b8079b3b10dbf7b1b4ed7ea361be9820853c9);
+        assertEq(hash(address(poolManagerFactory).code),       0xcce0f3de8b59f96e8a8c3e2e2ef62c98471e9da7d3b3e7b67a797a7330683af5);
+        assertEq(hash(address(withdrawalManagerFactory).code), 0x39c7708bb3c15bc3937ae195ff1165e48fea959884328267ceb05ff779c42cbb);
 
         // Step 12: Add factories to Globals
         assertTrue(mapleGlobalsV2Proxy.isFactory("LIQUIDATOR",         address(liquidatorFactory)));
@@ -180,18 +179,18 @@ contract DeployProtocol is AddressRegistry, TestUtils {
         assertTrue(mapleGlobalsV2Proxy.isFactory("POOL_MANAGER",       address(poolManagerFactory)));
         assertTrue(mapleGlobalsV2Proxy.isFactory("WITHDRAWAL_MANAGER", address(withdrawalManagerFactory)));
 
-        // // Step 13: Deploy implementations
-        // require(hash(address(liquidatorImplementation).code)            == 0x99903ea508b26095b559a5c4fe47fa97c41f92a6aa6e40e8003a71bbb8055a02);
-        // require(hash(address(loanManagerImplementation).code)           == 0xed07ea66d7e96b1533b9df97e5feaa1601c287e8571ee0b14d39e16dc0031340);
-        // require(hash(address(poolManagerImplementation).code)           == 0x8f127c7c4c3a4d9feeb6f05daff9d7aab872f1d6a074e70095712a932615b67b);
-        // require(hash(address(transitionLoanManagerImplementation).code) == 0x30267fd06310b45f57411ce9fc4956d6d084c20c7a0fd8a4c741bebcdd92a413);
-        // require(hash(address(withdrawalManagerImplementation).code)     == 0xba1f7e2ed6282cc6019bd17a1bb7b652c680a7bf9a01ebfaeaa66dfab7347e23);
+        // Step 13: Deploy implementations
+        assertEq(hash(address(liquidatorImplementation).code),            0x2228119726f9db19c9fb746b16eff3b4014e7bdf60cc8f69ae9065e53073fa2c);
+        assertEq(hash(address(loanManagerImplementation).code),           0x9049add2e5987fea245b694a2d1df8e54cc10226fa24f653ec933bf20f824224);
+        assertEq(hash(address(poolManagerImplementation).code),           0xc305580ec768baa5f8bb063a3c962f1a7b518dc2ad8f59ec2ea6511f23e4082b);
+        assertEq(hash(address(transitionLoanManagerImplementation).code), 0x99705e3583d4cdc51a0239a438cba8fea7b983b0db05deac1f6427ec034fefc7);
+        assertEq(hash(address(withdrawalManagerImplementation).code),     0x73cacd589ed3a3b1c983dfec5de3cd4b44aec9850c2bb7f770e32fdc7cac1ae7);
 
-        // // Step 14: Deploy initializers
-        // require(hash(address(liquidatorInitializer).code)        == 0xd41d6fb51c9272f9f454901da9c81c49627ed2272d6b5a3f4304247b9cdad4a6);
-        // require(hash(address(loanManagerInitializer).code)       == 0xdbdf2a37fb0fb0462dba734855f48f6c6e8e8e78c8e76b4fa669dfb2ba52c900);
-        // require(hash(address(poolManagerInitializer).code)       == 0x776f445dc1aad31345cb0a7fd8fe82caf86862658f0115bc7fa5267e64decb93);
-        // require(hash(address(withdrawalManagerInitializer).code) == 0x757e74bb9b28dd9fa7be32d6c683965aee3aa252eb67491e7a0a510ab33d696e);
+        // Step 14: Deploy initializers
+        assertEq(hash(address(liquidatorInitializer).code),        0xc79fbf65c93e10e0a85a415bc04aba7f7bb8f652380577662a6587fa0a6c82be);
+        assertEq(hash(address(loanManagerInitializer).code),       0x8d983de33cbf96ca54e9a564e0a96ef46a29da300720998c7529eb9a2c58049a);
+        assertEq(hash(address(poolManagerInitializer).code),       0x5cd8109a2339d5543ed65425029d620a927df3c13b9652ed69520d6313d2eb93);
+        assertEq(hash(address(withdrawalManagerInitializer).code), 0xd28a2368f9fa100442ee9fd209035721180c2c75e1ca0244f5c1a5d013f28313);
 
         // Step 15: Configure LiquidatorFactory
         assertEq(liquidatorFactory.versionOf(liquidatorImplementation), 200);
@@ -230,11 +229,11 @@ contract DeployProtocol is AddressRegistry, TestUtils {
         assertTrue(mapleGlobalsV2Proxy.isPoolDelegate(mavenWethTemporaryPd));
         assertTrue(mapleGlobalsV2Proxy.isPoolDelegate(orthogonalTemporaryPd));
 
-        // // Step 20: Deploy MigrationHelper and AccountingChecker
-        // require(hash(address(accountingChecker).code)             == 0x631c02bf196ab7c425ac3cfe9e9cb9e18c28f851ce7ad1b37ae8a4613eeb4432);
-        // require(hash(address(deactivationOracle).code)            == 0x56211ef942d9bc7d3bd6bf04ef92215b93325103f0bc865673fe7edfa60941ea);
-        // require(hash(address(migrationHelperImplementation).code) == 0xccddff32ff633bd388be9ae1bc4e475bac316e37fa1d23e12a6079cafbec1705);
-        // require(hash(address(migrationHelperProxy).code)          == 0x6de3ee7ca258dcd4e4e4510d50b85fc7b39adb97f614a483d1708cdd89f9389e);
+        // Step 20: Deploy MigrationHelper and AccountingChecker
+        assertEq(hash(address(accountingChecker).code),             0xe45c193af3ed73882badc9b2adb464e88cb6a8c389651d9036a45360f51df841);
+        assertEq(hash(address(deactivationOracle).code),            0xe44025c6c2dd15f6c3877ea5d5e5a2629597056f4042b3c9dda3728ff8547e72);
+        assertEq(hash(address(migrationHelperImplementation).code), 0x8c38c3346296f6193ea7033fb2df2b6aada2d69dea50aadc30474b7323942cd8);
+        assertEq(hash(address(migrationHelperProxy).code),          0xe01426b1af69fc6df8bcae5d9da313c2bb16b54b4ba70d7907406e242b072b75);
 
         assertEq(accountingChecker.globals(), address(mapleGlobalsV2Proxy));
 
@@ -251,8 +250,10 @@ contract DeployProtocol is AddressRegistry, TestUtils {
         // Step 23: Transfer governor
         assertEq(mapleGlobalsV2Proxy.pendingGovernor(), tempGovernor);
 
+        // Step 24: Check refinancer bytecode hash
+        assertEq(hash(address(refinancer).code), 0x0bb294e63bd6018fa9b2465c6e7ecc9cef967bb91d5cb36d5f3882ebe08486ee);
+
         // TODO: Include validation of oracles after they are included in the deployment.
-        // TODO: Include validation of refinancer after it's included in the deployment.
     }
 
     function hash(bytes memory code) internal pure returns (bytes32 bytecodeHash) {
@@ -300,8 +301,8 @@ contract RegisterLoans is AddressRegistry, TestUtils {
         assertEq(loanFactory.versionOf(loanV400Implementation), 400, "loan v400 implementation not set");
         assertEq(loanFactory.migratorForPath(400, 400), loanV400Initializer, "loan v400 initializer not set");
 
-        assertEq(loanFactory.versionOf(loanV401Implementation), 401, "loan v401 implementation not set");
-        assertEq(loanFactory.migratorForPath(401, 401), loanV400Initializer, "loan v401 initializer not set");
+        // assertEq(loanFactory.versionOf(loanV401Implementation), 401, "loan v401 implementation not set");
+        // assertEq(loanFactory.migratorForPath(401, 401), loanV400Initializer, "loan v401 initializer not set");
 
         assertEq(loanFactory.migratorForPath(301, 302), address(0), "loan v301 to v302 migrator is not zero");
         assertTrue(loanFactory.upgradeEnabledForPath(301, 302), "loan v301 to v302 upgrade disabled");
@@ -309,8 +310,8 @@ contract RegisterLoans is AddressRegistry, TestUtils {
         assertEq(loanFactory.migratorForPath(302, 400), loanV400Migrator, "loan v302 to v400 migrator not set");
         assertTrue(loanFactory.upgradeEnabledForPath(302, 400), "loan v302 to v400 upgrade disabled");
 
-        assertEq(loanFactory.migratorForPath(400, 401), address(0), "loan v400 to v401 migrator is not zero");
-        assertTrue(loanFactory.upgradeEnabledForPath(400, 401), "loan v400 to v401 upgrade disabled");
+        // assertEq(loanFactory.migratorForPath(400, 401), address(0), "loan v400 to v401 migrator is not zero");
+        // assertTrue(loanFactory.upgradeEnabledForPath(400, 401), "loan v400 to v401 upgrade disabled");
     }
 
 }

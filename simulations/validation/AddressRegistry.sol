@@ -82,47 +82,46 @@ contract AddressRegistry {
 
     // NOTE: These contracts are ordered the same way they are deployed, not alphabetically.
 
-    address constant mapleGlobalsV2Implementation    = address(0xFc04d3019C10E9e27A9a1925DA14ee1607571247);
-    IMapleGlobalsV2Like constant mapleGlobalsV2Proxy = IMapleGlobalsV2Like(0x8FA4d5ABCa02d359c142EB703DcD7038BD41eB3D);
+    address constant mapleGlobalsV2Implementation    = address(0x0ad92cb3Fc4cd6697E0f14Fb75F3d7da3Bb2e056);
+    IMapleGlobalsV2Like constant mapleGlobalsV2Proxy = IMapleGlobalsV2Like(0x804a6F5F667170F545Bf14e5DDB48C70B788390C);
 
-    IFeeManagerLike constant feeManager = IFeeManagerLike(0x7f9f32D17DAf5A587D9Cbb3A9F044ac7EC0573C6);
+    IFeeManagerLike constant feeManager = IFeeManagerLike(0xFeACa6A5703E6F9DE0ebE0975C93AE34c00523F2);
 
-    IPoolDeployerLike constant poolDeployer = IPoolDeployerLike(0x7b92a5f98F085A4Feb0fD1407ca8B5930c76b43d);
+    IPoolDeployerLike constant poolDeployer = IPoolDeployerLike(0x9322fCbb9cf9F04728AD9CB62c80a12615FF9aDc);
 
-    IMapleProxyFactoryLike constant liquidatorFactory = IMapleProxyFactoryLike(0xdF710d1cD24C66B9D0ddaABfb080303D03B58982);
-    address constant liquidatorImplementation         = address(0x5D69fFb684A84B982ac2e28bB98b06b5E2319Bb7);
-    address constant liquidatorInitializer            = address(0xbb8A9C956eb8bCF1E62efcF66d24591057fD02CE);
+    IMapleProxyFactoryLike constant liquidatorFactory = IMapleProxyFactoryLike(0xa2091116649b070D2a27Fc5C85c9820302114c63);
+    address constant liquidatorImplementation         = address(0xe6a03Ba967172a1FF218FEE686445f444258021A);
+    address constant liquidatorInitializer            = address(0xED9D14F83eddd08572c403175FFf41c42a35a149);
 
-    IMapleProxyFactoryLike constant loanManagerFactory   = IMapleProxyFactoryLike(0x7b136f4DFa038E762B7eC392DBEBD5E531D12Db8);
-    address constant loanManagerImplementation           = address(0xC3De6f9f2a52230d0c87dBFe9eBeA6cA88F18192);
-    address constant loanManagerInitializer              = address(0xDB131Ba5043489be2390fCfeee1a69A6c9061E07);
-    address constant transitionLoanManagerImplementation = address(0x4B9D5980a98a942953E980CD7903748c4cC89E3F);
+    IMapleProxyFactoryLike constant loanManagerFactory   = IMapleProxyFactoryLike(0x1551717AE4FdCB65ed028F7fB7abA39908f6A7A6);
+    address constant loanManagerImplementation           = address(0x9303aed6231F131F8e61D579cb69aea4DF365F3D);
+    address constant loanManagerInitializer              = address(0x1cAddEC2A39232253D0a2424C21543f216284bf2);
+    address constant transitionLoanManagerImplementation = address(0x8057206A6C52e8d17e8c0EBE4C1Bb777d1876c8D);
 
-    IMapleProxyFactoryLike constant poolManagerFactory = IMapleProxyFactoryLike(0x52c3bfcCbf159C8878D2ba7212E678aa7B478AB4);
-    address constant poolManagerImplementation         = address(0xB80358B98d1DF867f811240Eb8E50FbB9C1Ea067);
-    address constant poolManagerInitializer            = address(0xb535a4313D247275EcC79A4Ca77616D92d197c31);
+    IMapleProxyFactoryLike constant poolManagerFactory = IMapleProxyFactoryLike(0xE463cD473EcC1d1A4ecF20b62624D84DD20a8339);
+    address constant poolManagerImplementation         = address(0x09Fe53d404fBE13750047eCdB64Ec6aa6Fae46e6);
+    address constant poolManagerInitializer            = address(0x0B240bf499773905802eE4DE43f96407C436d549);
 
-    IMapleProxyFactoryLike constant withdrawalManagerFactory = IMapleProxyFactoryLike(0x804a6F5F667170F545Bf14e5DDB48C70B788390C);
-    address constant withdrawalManagerImplementation         = address(0xFeACa6A5703E6F9DE0ebE0975C93AE34c00523F2);
-    address constant withdrawalManagerInitializer            = address(0x9322fCbb9cf9F04728AD9CB62c80a12615FF9aDc);
+    IMapleProxyFactoryLike constant withdrawalManagerFactory = IMapleProxyFactoryLike(0xb9e25B584dc4a7C9d47aEF577f111fBE5705773B);
+    address constant withdrawalManagerImplementation         = address(0xB12EC38e3508b0919fa989A0e60fde489b46F430);
+    address constant withdrawalManagerInitializer            = address(0x1063dCa836894b12f29003CA2899ff806A2B0B31);
 
-    address constant loanV302Implementation = address(0xED9D14F83eddd08572c403175FFf41c42a35a149);
-    address constant loanV400Initializer    = address(0xA3eDaeB74c065CEEa730327154a778B9a34f0a45);
-    address constant loanV400Implementation = address(0x350A93b01835321eE410742940C2825a91d09d14);
-    address constant loanV401Implementation = address(0x1551717AE4FdCB65ed028F7fB7abA39908f6A7A6);
-    address constant loanV400Migrator       = address(0x9303aed6231F131F8e61D579cb69aea4DF365F3D);
+    address constant loanV302Implementation = address(0x608FA47Ff8bD47FC5EC8bfB36925E5Dbd4ede68d);
+    address constant loanV400Initializer    = address(0xDAa12dd385CbD04C60494efBbE8E757Ec1B649Ca);
+    address constant loanV400Implementation = address(0xe7Bd3cc389B2182E6eC350fa9c90670dD76c061c);
+    address constant loanV400Migrator       = address(0xb4Be919810c6F4ce20b2D3cC221FD5D737B46C3E);
 
-    address constant debtLockerV400Migrator       = address(0x1cAddEC2A39232253D0a2424C21543f216284bf2);
-    address constant debtLockerV400Implementation = address(0x8057206A6C52e8d17e8c0EBE4C1Bb777d1876c8D);
+    address constant debtLockerV400Migrator       = address(0x5Bf3863b0355a547ecA79Ab489addd6092717431);
+    address constant debtLockerV400Implementation = address(0x4FB5AC98E33C3F5a4C7a51974A34e125d3F4E003);
 
-    IAccountingCheckerLike constant accountingChecker = IAccountingCheckerLike(0x36cD3315B2D84A82dD4b719112cD8F804A687159);
+    IAccountingCheckerLike constant accountingChecker = IAccountingCheckerLike(0x4c9CEa7f6aCE3Dc0D85b86c1925542AdeCE1eF15);
 
-    address constant deactivationOracle = address(0x112eB47ffFDEe2886beE9dDB66fe786F32d8D685);
+    address constant deactivationOracle = address(0xaF99aBBc5F12CE93C144733073A80c57e81296ab);
 
-    address constant migrationHelperImplementation     = address(0xab35C3A2A0e6e87FF44A7842712Fe90AaB04c73D);
-    IMigrationHelperLike constant migrationHelperProxy = IMigrationHelperLike(0xb36419f1790CAebf85dd45dF659199F9957c41A4);
+    address constant migrationHelperImplementation     = address(0xd8B74109916C0bBFDbE5e4345fF9584bDE47044a);
+    IMigrationHelperLike constant migrationHelperProxy = IMigrationHelperLike(0x580B1A894b9FbdBf7d29Ba9b492807Bf539dD508);
 
-    address constant refinancer = address(0xE463cD473EcC1d1A4ecF20b62624D84DD20a8339);
+    address constant refinancer = address(0xec90671c2c8f4cCBb6074938f893306a13402251);
 
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC 01                                                                                                     ***/
