@@ -72,7 +72,6 @@ contract AddressRegistry {
     /*** Protocol Contracts                                                                                                     ***/
     /******************************************************************************************************************************/
 
-    // TODO: Check if the debt locker initializer is V2 or V3, or if they are the same.
     address loanV3Initializer       = address(0xfF2CE989b5b5881dB21f67cBe25145FFB053BCCd);
     address debtLockerV3Initializer = address(0x3D01aE38be6D81BD7c8De0D5Cd558eAb3F4cb79b);
 
@@ -83,8 +82,6 @@ contract AddressRegistry {
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC 01                                                                                                     ***/
     /******************************************************************************************************************************/
-
-    // TODO: Create a script for fetching all loans and lps at any block number.
 
     IPoolLike        mavenUsdcPoolV1      = IPoolLike(0x6F6c8013f639979C84b756C7FC1500eB5aF18Dc4);
     IMplRewardsLike  mavenUsdcRewards     = IMplRewardsLike(0xe5A1cb65E7a608E778B3Ccb02F7B2DFeFeE783B4);
@@ -210,6 +207,7 @@ contract AddressRegistry {
         0x5118b43F116543c03197eB94A53F2fe6d50Ec9F3,
         0x51332610225DafaBddA9b5e3e05475d87402752c,
         0x52d597334A853Cfc0e5aFDE7E813Ae5a7E965176,
+        0x553210AcF00A98286077D4E93B3B476be5e1794D,
         0x556D5F0a4a56675f4a3CF1fB5293328b20e338A6,
         0x5570fad9Aa8f4487C074aD4De085960705B22d63,
         0x5672c178F19d375578E6Fd3494ED077267f032a1,
@@ -401,6 +399,7 @@ contract AddressRegistry {
         0xE0A998E2416159Ec62A02b15E52760f85aBfa13e,
         0xe2D0E650707383336E97365545a68d207757F1c2,
         0xe31f3CCA152Fbbe45d73Ef64dE25d81228F8f7a7,
+        0xe47E1ac440A31A8C77C825cF30D9a91f6352Bc84,
         0xE4BBe2f185Fb37EffC311c190d0DB2Ec8Eb46893,
         0xE4de1953e5e8C8685c6d41020faAbF5dc23711D1,
         0xe58Aa11A1AD425b12B4a3155124245cd36DA4f5e,
@@ -538,7 +537,6 @@ contract AddressRegistry {
         0x688B5c7B549339922C0D2243debE2Fe921A1A488,
         0x73F7261cF493105202F8dcbB11C126a65703dA55,
         0x86950F7fC23920aFb83523d8362FaD39712ec719,
-        0x8d26C9DAC7E16738752fa1446b956A97C63e2F39,
         0x8dcB33D373966486885aA933c2dcb2B134bA9445,
         0x8eB2E34552A618f92bA32E045a06529b186dC8Da,
         0x9164E822Db664A1B139F39Cc3eCC40aecd276b0F,
@@ -551,7 +549,6 @@ contract AddressRegistry {
         0xaB3efcD5583d2EBc01742CF1C88B7C034Fd0A8eC,
         0xACf14710b3A8E5F47369eAb81E728e0052811DbF,
         0xAF0B4E80a78017B0F9290B3D943dEB4B727346C8,
-        0xb44cD5c304e1A9dD56C621D47060939df83a9238,
         0xb6D844E2529Bc79a444662aa55f72acA08fd8f54,
         0xCfc7e5C3f931080e1f865f117dAD0e2DFb504e99,
         0xe2008b01A2AD0A9AeEA9f71ecC6A176138553a61,
@@ -594,7 +591,6 @@ contract AddressRegistry {
     address[] orthogonalLps = [
         0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
         0x00843213a104A752Ec360108688979e378204137,
-        0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
         0x01930dC6d5D5EF8D02e02dc163C33c4a963752Fb,
         0x02d7F86F6e4aB78F4020E001204372072aB364C8,
         0x032e7c4e7F677D5559Ab1b8b74F3108bcbc09cDB,
@@ -726,7 +722,6 @@ contract AddressRegistry {
         0x8F99729DF9E57e1f927982cb803D004378b775bb,
         0x9376878e0a52a0A71570DB963467d789cFF44Fe2,
         0x948b1Ce64180e3d50489E7111194cf069e73785a,
-        0x961870e8aA20DD1A6a5833d0854a6A5c4Ad77EC0,
         0x979581C17a030F70e3B13129F2DdF2bC84a17a8E,
         0x97Ba2CCF0c43ef10a09B2C53DB0DF4572f18FE7C,
         0x98B2180e96cB483162E2aab070E38A0b03c34C7d,
@@ -796,7 +791,6 @@ contract AddressRegistry {
         0xdd7D5859824917560Ba0586F4A4df2a5Fcd9825A,
         0xdE0f4538010c538A1bCA467722E626475cE5F955,
         0xdF0635793e91D4F8e7426Dbd9Ed08471186F428D,
-        0xdfb2345cb3E38d515E4edF949EC21e09509f82A1,
         0xe15cf0EDe90e9059188fc8439014D1fFE29E0bbc,
         0xe480c1b7A4f2990B91fBDE616D4B4DCe06482b42,
         0xE4BBe2f185Fb37EffC311c190d0DB2Ec8Eb46893,

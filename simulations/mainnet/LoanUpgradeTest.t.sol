@@ -1,49 +1,36 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { SimulationBase } from "./SimulationBase.sol";
 
-import {
-    IDebtLockerLike,
-    IERC20Like,
-    ILoanManagerLike,
-    IMapleGlobalsLike,
-    IMapleLoanLike,
-    IMapleProxiedLike,
-    IMplRewardsLike,
-    IPoolLike,
-    IPoolV2Like,
-    IPoolManagerLike,
-    IStakeLockerLike,
-    ITransitionLoanManagerLike
-} from "./Interfaces.sol";
+import { IMapleLoanLike } from "./Interfaces.sol";
 
 contract LoanUpgradeTest is SimulationBase {
 
     struct Loan3Storage {
-        address _borrower;         
-        address _lender;           
-        address _pendingBorrower;  
-        address _pendingLender;    
-        address _collateralAsset;  
-        address _fundsAsset;      
-        uint256 _gracePeriod;     
-        uint256 _paymentInterval; 
-        uint256 _interestRate;         
-        uint256 _earlyFeeRate;         
-        uint256 _lateFeeRate;         
-        uint256 _lateInterestPremium; 
-        uint256 _collateralRequired;  
-        uint256 _principalRequested;  
-        uint256 _endingPrincipal;    
-        uint256 _drawableFunds;      
-        uint256 _claimableFunds;      
-        uint256 _collateral;         
-        uint256 _nextPaymentDueDate;  
-        uint256 _paymentsRemaining;  
-        uint256 _principal;           
+        address _borrower;
+        address _lender;
+        address _pendingBorrower;
+        address _pendingLender;
+        address _collateralAsset;
+        address _fundsAsset;
+        uint256 _gracePeriod;
+        uint256 _paymentInterval;
+        uint256 _interestRate;
+        uint256 _earlyFeeRate;
+        uint256 _lateFeeRate;
+        uint256 _lateInterestPremium;
+        uint256 _collateralRequired;
+        uint256 _principalRequested;
+        uint256 _endingPrincipal;
+        uint256 _drawableFunds;
+        uint256 _claimableFunds;
+        uint256 _collateral;
+        uint256 _nextPaymentDueDate;
+        uint256 _paymentsRemaining;
+        uint256 _principal;
         bytes32 _refinanceCommitment;
         uint256 _refinanceInterest;
         uint256 _delegateFee;
@@ -53,11 +40,10 @@ contract LoanUpgradeTest is SimulationBase {
     mapping(address => Loan3Storage) internal loan3Storage;
 
     function test_loanUpgrade() external {
-        payAndClaimUpcomingLoans(mavenWethLoans);
-        payAndClaimUpcomingLoans(mavenUsdcLoans);
-        payAndClaimUpcomingLoans(mavenPermissionedLoans);
-        payAndClaimUpcomingLoans(orthogonalLoans);
-        payAndClaimUpcomingLoans(icebreakerLoans);
+        // Pre-Deployment Requirements
+        setPoolAdminsToMigrationMultisig();  // LMP #1
+        zeroInvestorFeeAndTreasuryFee();     // LMP #2
+        payAndClaimAllUpcomingLoans();       // LMP #3
 
         snapshotLoanState300(mavenWethLoans);
         snapshotLoanState300(mavenUsdcLoans);
@@ -65,11 +51,7 @@ contract LoanUpgradeTest is SimulationBase {
         snapshotLoanState300(orthogonalLoans);
         snapshotLoanState300(icebreakerLoans);
 
-        upgradeLoansToV301(mavenWethLoans);
-        upgradeLoansToV301(mavenUsdcLoans);
-        upgradeLoansToV301(mavenPermissionedLoans);
-        upgradeLoansToV301(orthogonalLoans);
-        upgradeLoansToV301(icebreakerLoans);
+        upgradeAllLoansToV301();  // LMP #4
 
         assertAllLoans(mavenWethLoans,         301);
         assertAllLoans(mavenUsdcLoans,         301);
@@ -77,41 +59,57 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(orthogonalLoans,        301);
         assertAllLoans(icebreakerLoans,        301);
 
-        vm.startPrank(deployer);
-        deployProtocol();
-        vm.stopPrank();
+        deployProtocol();  // LMP #5
 
-        // Make the governor the tempGovernor
-        vm.prank(tempGovernor);
-        mapleGlobalsV2.acceptGovernor();
-        vm.stopPrank();
+        tempGovernorAcceptsV2Governorship();  // LMP #6
 
-        setupExistingFactories();
-        performAdditionalGlobalsSettings();
+        migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
 
-        // Take the ownership of the migration helper
-        vm.prank(migrationMultisig);
-        migrationHelper.acceptOwner();
+        setupExistingFactories();  // LMP #8
 
-        freezeAllPoolV1s();      
+        upgradeAllDebtLockersToV400();  // LMP #9
+        claimAllLoans();                // LMP #10
+        upgradeAllLoansToV302();        // LMP #11
+        lockAllPoolV1Deposits();        // LMP #12
+        createAllMigrationLoans();      // LMP #13
 
-        vm.prank(globalAdmin);
-        mapleGlobalsV1.setProtocolPause(true);
+        // Migration Loan Funding
+        // NOTE: Technically, each loan is funded and their DebtLockers are upgraded per pool before moving onto the next
+        fundAllMigrationLoans();               // LMP #14
+        upgradeAllMigrationLoanDebtLockers();  // LMP #15
 
-        mavenWethPoolManager         = deployAndMigratePool(tempMavenWethPD,         mavenWethPoolV1,         mavenWethLoans,         mavenWethLps,         true);
-        mavenUsdcPoolManager         = deployAndMigratePool(tempMavenUsdcPD,         mavenUsdcPoolV1,         mavenUsdcLoans,         mavenUsdcLps,         true);
-        mavenPermissionedPoolManager = deployAndMigratePool(tempMavenPermissionedPD, mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
-        orthogonalPoolManager        = deployAndMigratePool(tempOrthogonalPD,        orthogonalPoolV1,        orthogonalLoans,        orthogonalLps,        true);
-        icebreakerPoolManager        = deployAndMigratePool(tempIcebreakerPD,        icebreakerPoolV1,        icebreakerLoans,        icebreakerLps,        false);
+        upgradeAllMigrationLoansToV302();  // LMP #16
 
-        vm.prank(governor);
-        loanFactory.setGlobals(address(mapleGlobalsV2)); 
+        pauseV1Protocol();  // LMP #17
 
-        payBackCashLoan(address(mavenWethPoolV1),         mavenWethPoolManager,         mavenWethLoans);
-        payBackCashLoan(address(mavenUsdcPoolV1),         mavenUsdcPoolManager,         mavenUsdcLoans);
-        payBackCashLoan(address(mavenPermissionedPoolV1), mavenPermissionedPoolManager, mavenPermissionedLoans);
-        payBackCashLoan(address(orthogonalPoolV1),        orthogonalPoolManager,        orthogonalLoans);
-        payBackCashLoan(address(icebreakerPoolV1),        icebreakerPoolManager,        icebreakerLoans);
+        deployAllPoolV2s();  // LMP #18
+
+        addLoansToAllLoanManagers();  // LMP #19
+
+        // Prepare for Airdrops
+        activateAllPoolManagers();  // LMP #20
+        openOrAllowOnAllPoolV2s();  // LMP #21
+
+        airdropTokensForAllPools();  // LMP #22
+        assertAllPoolAccounting();
+
+        // Transfer Loans
+        // TODO: Do we really need all these repetitive assertions? Especially that we have validation script now.
+        setAllPendingLenders();      // LMP #23
+        assertAllPoolAccounting();
+        takeAllOwnershipsOfLoans();  // LMP #24
+        assertAllPoolAccounting();
+        upgradeAllLoanManagers();    // LMP #25
+        assertAllPrincipalOuts();
+        assertAllTotalSupplies();
+        assertAllPoolAccounting();
+        setAllCoverParameters();
+        assertAllPoolAccounting();
+        upgradeAllLoansToV400();        // LMP #26
+
+        // Close Migration Loans
+        setGlobalsOfLoanFactoryToV2();  // LMP #27
+        closeAllMigrationLoans();       // LMP #28
 
         assertAllLoans(mavenWethLoans,         400);
         assertAllLoans(mavenUsdcLoans,         400);
@@ -119,11 +117,15 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(orthogonalLoans,        400);
         assertAllLoans(icebreakerLoans,        400);
 
-        upgradeLoansToV401(mavenWethLoans);
-        upgradeLoansToV401(mavenUsdcLoans);
-        upgradeLoansToV401(mavenPermissionedLoans);
-        upgradeLoansToV401(orthogonalLoans);
-        upgradeLoansToV401(icebreakerLoans);
+        tempGovernorTransfersV2Governorship();  // LMP #39
+
+        governorAcceptsV2Governorship();  // LMP #40
+
+        deployLoan401();  // LMP #42
+
+        setupLoanFactoryFor401();  // LMP #43
+
+        upgradeAllLoansToV401();  // LMP #44
 
         assertAllLoans(mavenWethLoans,         401);
         assertAllLoans(mavenUsdcLoans,         401);
@@ -133,64 +135,64 @@ contract LoanUpgradeTest is SimulationBase {
     }
 
     function assertAllLoans(IMapleLoanLike[] memory loans, uint256 version) internal {
-        for (uint256 i; i < loans.length; i++) {
+        for (uint256 i; i < loans.length; ++i) {
             if (version == 301)                   assertLoanState301(loans[i]);
             if (version == 401 || version == 400) assertLoanState401(loans[i]);
         }
     }
 
     function assertLoanState301(IMapleLoanLike loan) internal {
-        Loan3Storage storage snapshotedLoan = loan3Storage[address(loan)];
+        Loan3Storage storage loanSnapshot = loan3Storage[address(loan)];
 
-        assertEq(loan.borrower(),            snapshotedLoan._borrower);
-        assertEq(loan.lender(),              snapshotedLoan._lender);
-        assertEq(loan.pendingBorrower(),     snapshotedLoan._pendingBorrower);
-        assertEq(loan.pendingLender(),       snapshotedLoan._pendingLender);
-        assertEq(loan.collateralAsset(),     snapshotedLoan._collateralAsset);
-        assertEq(loan.fundsAsset(),          snapshotedLoan._fundsAsset);
-        assertEq(loan.gracePeriod(),         snapshotedLoan._gracePeriod);
-        assertEq(loan.paymentInterval(),     snapshotedLoan._paymentInterval);
-        assertEq(loan.interestRate(),        snapshotedLoan._interestRate);
-        assertEq(loan.earlyFeeRate(),        snapshotedLoan._earlyFeeRate);
-        assertEq(loan.lateFeeRate(),         snapshotedLoan._lateFeeRate);
-        assertEq(loan.lateInterestPremium(), snapshotedLoan._lateInterestPremium);
-        assertEq(loan.collateralRequired(),  snapshotedLoan._collateralRequired);
-        assertEq(loan.principalRequested(),  snapshotedLoan._principalRequested);
-        assertEq(loan.endingPrincipal(),     snapshotedLoan._endingPrincipal);
-        assertEq(loan.drawableFunds(),       snapshotedLoan._drawableFunds);
-        assertEq(loan.claimableFunds(),      snapshotedLoan._claimableFunds);
-        assertEq(loan.collateral(),          snapshotedLoan._collateral);
-        assertEq(loan.nextPaymentDueDate(),  snapshotedLoan._nextPaymentDueDate);
-        assertEq(loan.paymentsRemaining(),   snapshotedLoan._paymentsRemaining);
-        assertEq(loan.principal(),           snapshotedLoan._principal);
-        assertEq(loan.refinanceCommitment(), snapshotedLoan._refinanceCommitment);
-        assertEq(loan.delegateFee(),         snapshotedLoan._delegateFee);
-        assertEq(loan.treasuryFee(),         snapshotedLoan._treasuryFee);
+        assertEq(loan.borrower(),            loanSnapshot._borrower);
+        assertEq(loan.lender(),              loanSnapshot._lender);
+        assertEq(loan.pendingBorrower(),     loanSnapshot._pendingBorrower);
+        assertEq(loan.pendingLender(),       loanSnapshot._pendingLender);
+        assertEq(loan.collateralAsset(),     loanSnapshot._collateralAsset);
+        assertEq(loan.fundsAsset(),          loanSnapshot._fundsAsset);
+        assertEq(loan.gracePeriod(),         loanSnapshot._gracePeriod);
+        assertEq(loan.paymentInterval(),     loanSnapshot._paymentInterval);
+        assertEq(loan.interestRate(),        loanSnapshot._interestRate);
+        assertEq(loan.earlyFeeRate(),        loanSnapshot._earlyFeeRate);
+        assertEq(loan.lateFeeRate(),         loanSnapshot._lateFeeRate);
+        assertEq(loan.lateInterestPremium(), loanSnapshot._lateInterestPremium);
+        assertEq(loan.collateralRequired(),  loanSnapshot._collateralRequired);
+        assertEq(loan.principalRequested(),  loanSnapshot._principalRequested);
+        assertEq(loan.endingPrincipal(),     loanSnapshot._endingPrincipal);
+        assertEq(loan.drawableFunds(),       loanSnapshot._drawableFunds);
+        assertEq(loan.claimableFunds(),      loanSnapshot._claimableFunds);
+        assertEq(loan.collateral(),          loanSnapshot._collateral);
+        assertEq(loan.nextPaymentDueDate(),  loanSnapshot._nextPaymentDueDate);
+        assertEq(loan.paymentsRemaining(),   loanSnapshot._paymentsRemaining);
+        assertEq(loan.principal(),           loanSnapshot._principal);
+        assertEq(loan.refinanceCommitment(), loanSnapshot._refinanceCommitment);
+        assertEq(loan.delegateFee(),         loanSnapshot._delegateFee);
+        assertEq(loan.treasuryFee(),         loanSnapshot._treasuryFee);
     }
 
     // The lender has changed in V4.01, and a few storage slots were deprecated.
     function assertLoanState401(IMapleLoanLike loan) internal {
-        Loan3Storage storage snapshotedLoan = loan3Storage[address(loan)];
+        Loan3Storage storage loanSnapshot = loan3Storage[address(loan)];
 
-        assertEq(loan.borrower(),            snapshotedLoan._borrower);
-        assertEq(loan.pendingBorrower(),     snapshotedLoan._pendingBorrower);
-        assertEq(loan.pendingLender(),       snapshotedLoan._pendingLender);
-        assertEq(loan.collateralAsset(),     snapshotedLoan._collateralAsset);
-        assertEq(loan.fundsAsset(),          snapshotedLoan._fundsAsset);
-        assertEq(loan.gracePeriod(),         snapshotedLoan._gracePeriod);
-        assertEq(loan.paymentInterval(),     snapshotedLoan._paymentInterval);
-        assertEq(loan.interestRate(),        snapshotedLoan._interestRate);
-        assertEq(loan.lateFeeRate(),         snapshotedLoan._lateFeeRate);
-        assertEq(loan.lateInterestPremium(), snapshotedLoan._lateInterestPremium);
-        assertEq(loan.collateralRequired(),  snapshotedLoan._collateralRequired);
-        assertEq(loan.principalRequested(),  snapshotedLoan._principalRequested);
-        assertEq(loan.endingPrincipal(),     snapshotedLoan._endingPrincipal);
-        assertEq(loan.drawableFunds(),       snapshotedLoan._drawableFunds);
-        assertEq(loan.collateral(),          snapshotedLoan._collateral);
-        assertEq(loan.nextPaymentDueDate(),  snapshotedLoan._nextPaymentDueDate);
-        assertEq(loan.paymentsRemaining(),   snapshotedLoan._paymentsRemaining);
-        assertEq(loan.principal(),           snapshotedLoan._principal);
-        assertEq(loan.refinanceCommitment(), snapshotedLoan._refinanceCommitment);
+        assertEq(loan.borrower(),            loanSnapshot._borrower);
+        assertEq(loan.pendingBorrower(),     loanSnapshot._pendingBorrower);
+        assertEq(loan.pendingLender(),       loanSnapshot._pendingLender);
+        assertEq(loan.collateralAsset(),     loanSnapshot._collateralAsset);
+        assertEq(loan.fundsAsset(),          loanSnapshot._fundsAsset);
+        assertEq(loan.gracePeriod(),         loanSnapshot._gracePeriod);
+        assertEq(loan.paymentInterval(),     loanSnapshot._paymentInterval);
+        assertEq(loan.interestRate(),        loanSnapshot._interestRate);
+        assertEq(loan.lateFeeRate(),         loanSnapshot._lateFeeRate);
+        assertEq(loan.lateInterestPremium(), loanSnapshot._lateInterestPremium);
+        assertEq(loan.collateralRequired(),  loanSnapshot._collateralRequired);
+        assertEq(loan.principalRequested(),  loanSnapshot._principalRequested);
+        assertEq(loan.endingPrincipal(),     loanSnapshot._endingPrincipal);
+        assertEq(loan.drawableFunds(),       loanSnapshot._drawableFunds);
+        assertEq(loan.collateral(),          loanSnapshot._collateral);
+        assertEq(loan.nextPaymentDueDate(),  loanSnapshot._nextPaymentDueDate);
+        assertEq(loan.paymentsRemaining(),   loanSnapshot._paymentsRemaining);
+        assertEq(loan.principal(),           loanSnapshot._principal);
+        assertEq(loan.refinanceCommitment(), loanSnapshot._refinanceCommitment);
 
         // V4 specific assertion
         assertEq(loan.feeManager(), address(feeManager));
@@ -226,6 +228,6 @@ contract LoanUpgradeTest is SimulationBase {
             loan3Storage[address(loan)]._delegateFee         = loan.delegateFee();
             loan3Storage[address(loan)]._treasuryFee         = loan.treasuryFee();
         }
-    } 
+    }
 
 }

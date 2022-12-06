@@ -221,7 +221,7 @@ contract GenericActions is TestUtils {
 
     function fundLoan(address poolManager_, address loan_) internal {
         address poolDelegate_       = IPoolManager(poolManager_).poolDelegate();
-        address loanManager_        = IPoolManager(poolManager_).loanManagerList(0);  // TODO: always?
+        address loanManager_        = IPoolManager(poolManager_).loanManagerList(0);
         uint256 principalRequested_ = IMapleLoan(loan_).principalRequested();
 
         vm.startPrank(poolDelegate_);

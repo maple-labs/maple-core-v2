@@ -10,423 +10,319 @@ import { SimulationBase } from "./SimulationBase.sol";
 contract LiquidityMigrationTests is SimulationBase {
 
     function test_liquidityMigration_complete() public {
-        upgradeAllLoansToV301();
-
-        vm.startPrank(deployer);
-
-        deployProtocol();
-
-        vm.stopPrank();
-
-        tempGovernorAcceptsV2Governorship();
-
-        migrationMultisigAcceptsMigrationAdministratorship();
-
-        storeCoverAmounts();
-        setupExistingFactories();
-
-        migrateAllPools();
-        postMigration();
-
-        // PoolV2 Lifecycle start
-        depositAllCovers();
-        increaseAllLiquidityCaps();
-
-        // TODO: Remove these arbitrary tests as lifecycle tests are better.
-        depositLiquidity(mavenWethPoolManager.pool(),         address(new Address()), 100e18);
-        depositLiquidity(mavenUsdcPoolManager.pool(),         address(new Address()), 100_000e6);
-        depositLiquidity(mavenPermissionedPoolManager.pool(), address(new Address()), 100_000e6);
-        depositLiquidity(orthogonalPoolManager.pool(),        address(new Address()), 100_000e6);
-        depositLiquidity(icebreakerPoolManager.pool(),        address(new Address()), 100_000e6);
+        performEntireMigration();
     }
 
 }
 
-contract LiquidityMigrationRollbackFrozenPoolTests is SimulationBase {
+contract RollbackBase is SimulationBase {
 
-    function setUp() public {
-        upgradeAllLoansToV301();
-
-        vm.startPrank(deployer);
-
-        deployProtocol();
-
-        vm.stopPrank();
-
-        tempGovernorAcceptsV2Governorship();
-
-        migrationMultisigAcceptsMigrationAdministratorship();
-
-        storeCoverAmounts();
-        setupExistingFactories();
-
-        payAndClaimAllUpcomingLoans();
-
-        // Orthogonal has a loan with claimable funds that it's more than 5 days from payment away. We need to claim it here before the pool is snapshotted
-        claimAllLoans(orthogonalPoolV1, orthogonalLoans);
-
-        snapshotAllPoolStates();
-    }
-
-    function test_rollback_frozenPool_mavenWeth() public {
-        migrationKickoffOnPoolV1(mavenWethPoolV1, mavenWethLoans, tempMavenWethPD);
-
-        rollbackMigrationKickoffOnPoolV1(mavenWethPoolV1, mavenWethLoans, 35_000e18);
-
-        assertPoolMatchesSnapshot(mavenWethPoolV1);
-        assertLoansBelongToPool(mavenWethPoolV1, mavenWethLoans);
-    }
-
-    function test_rollback_frozenPool_mavenPermissioned() public {
-        migrationKickoffOnPoolV1(mavenPermissionedPoolV1, mavenPermissionedLoans, tempMavenPermissionedPD);
-
-        rollbackMigrationKickoffOnPoolV1(mavenPermissionedPoolV1, mavenPermissionedLoans, 60_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenPermissionedPoolV1);
-        assertLoansBelongToPool(mavenPermissionedPoolV1, mavenPermissionedLoans);
-    }
-
-    function test_rollback_frozenPool_mavenUsdc() public {
-        migrationKickoffOnPoolV1(mavenUsdcPoolV1, mavenUsdcLoans, tempMavenUsdcPD);
-
-        rollbackMigrationKickoffOnPoolV1(mavenUsdcPoolV1, mavenUsdcLoans, 350_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenUsdcPoolV1);
-        assertLoansBelongToPool(mavenUsdcPoolV1, mavenUsdcLoans);
-    }
-
-    function test_rollback_frozenPool_orthogonal() public {
-        migrationKickoffOnPoolV1(orthogonalPoolV1, orthogonalLoans, tempOrthogonalPD);
-
-        rollbackMigrationKickoffOnPoolV1(orthogonalPoolV1, orthogonalLoans, 450_000_000e6);
-
-        assertPoolMatchesSnapshot(orthogonalPoolV1);
-        assertLoansBelongToPool(orthogonalPoolV1, orthogonalLoans);
-    }
-
-    function test_rollback_frozenPool_icebreaker() public {
-        migrationKickoffOnPoolV1(icebreakerPoolV1, icebreakerLoans, tempIcebreakerPD);
-
-        rollbackMigrationKickoffOnPoolV1(icebreakerPoolV1, icebreakerLoans, 300_000_000e6);
-
-        assertPoolMatchesSnapshot(icebreakerPoolV1);
-        assertLoansBelongToPool(icebreakerPoolV1, icebreakerLoans);
-    }
-
-    function test_rollback_frozenPool_allPools() public {
+    modifier checkStateRestored() {
         snapshotAllPoolStates();
 
-        freezeAllPoolV1s();
-
-        unfreezeAllPoolV1s();
+        _;
 
         assertAllPoolsMatchSnapshot();
+    }
+
+    modifier checkLoansBelongToRespectivePools() {
+        _;
 
         assertAllLoansBelongToRespectivePools();
+    }
+
+    function goto_lmp_2() internal {
+        setPoolAdminsToMigrationMultisig();  // LMP #1
+    }
+
+    function goto_lmp_3() internal {
+        goto_lmp_2();
+        zeroInvestorFeeAndTreasuryFee();  // LMP #2
+    }
+
+    function goto_lmp_4() internal {
+        goto_lmp_3();
+        payAndClaimAllUpcomingLoans();  // LMP #3
+    }
+
+    function goto_lmp_5() internal {
+        goto_lmp_4();
+        upgradeAllLoansToV301();  // LMP #4
+    }
+
+    function goto_lmp_6() internal {
+        goto_lmp_5();
+        deployProtocol();  // LMP #5
+    }
+
+    function goto_lmp_7() internal {
+        goto_lmp_6();
+        tempGovernorAcceptsV2Governorship();  // LMP #6
+    }
+
+    function goto_lmp_8() internal {
+        goto_lmp_7();
+        migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
+    }
+
+    function goto_lmp_9() internal {
+        goto_lmp_8();
+        storeCoverAmounts();       // TODO: where is the earliest this can/should go? Hardcode inline instead?
+        setupExistingFactories();  // LMP #8
+    }
+
+    function goto_lmp_10() internal {
+        goto_lmp_9();
+        upgradeAllDebtLockersToV400();  // LMP #9
+    }
+
+    function goto_lmp_11() internal {
+        goto_lmp_10();
+        claimAllLoans();  // LMP #10
+    }
+
+    function goto_lmp_12() internal {
+        goto_lmp_11();
+        upgradeAllLoansToV302();  // LMP #11
+    }
+
+    function goto_lmp_13() internal {
+        goto_lmp_12();
+        lockAllPoolV1Deposits();  // LMP #12
+    }
+
+    function goto_lmp_14() internal {
+        goto_lmp_13();
+        createAllMigrationLoans();  // LMP #13
+    }
+
+    function goto_lmp_15() internal {
+        goto_lmp_14();
+        // NOTE: Technically, each loan is funded and their DebtLockers are upgraded per pool before moving onto the next
+        fundAllMigrationLoans();  // LMP #14
+    }
+
+    function goto_lmp_16() internal {
+        goto_lmp_15();
+        // NOTE: Technically, each loan is funded and their DebtLockers are upgraded per pool before moving onto the next
+        upgradeAllMigrationLoanDebtLockers();  // LMP #15
+    }
+
+    function goto_lmp_17() internal {
+        goto_lmp_16();
+        upgradeAllMigrationLoansToV302();  // LMP #16
+    }
+
+    function goto_lmp_18() internal {
+        goto_lmp_17();
+        pauseV1Protocol();  // LMP #17
+    }
+
+    function goto_lmp_19() internal {
+        goto_lmp_18();
+        deployAllPoolV2s();  // LMP #18
+    }
+
+    function goto_lmp_20() internal {
+        goto_lmp_19();
+        addLoansToAllLoanManagers();  // LMP #19
+    }
+
+    function goto_lmp_21() internal {
+        goto_lmp_20();
+        activateAllPoolManagers();  // LMP #20
+    }
+
+    function goto_lmp_22() internal {
+        goto_lmp_21();
+        openOrAllowOnAllPoolV2s();  // LMP #21
+    }
+
+    function goto_lmp_23() internal {
+        goto_lmp_22();
+        airdropTokensForAllPools();  // LMP #22
+    }
+
+    function goto_lmp_24() internal {
+        goto_lmp_23();
+        setAllPendingLenders();  // LMP #23
+    }
+
+    function goto_lmp_25() internal {
+        goto_lmp_24();
+        takeAllOwnershipsOfLoans();  // LMP #24
+    }
+
+    function goto_lmp_26() internal {
+        goto_lmp_25();
+        upgradeAllLoanManagers();  // LMP #25
     }
 
 }
 
-contract LiquidityMigrationRollbackTransferLoansTests is SimulationBase {
+// Rollback LMP #4
+contract RollbackFromV301LoansTests is RollbackBase {
 
     function setUp() public {
-        upgradeAllLoansToV301();
-
-        vm.startPrank(deployer);
-
-        deployProtocol();
-
-        vm.stopPrank();
-
-        tempGovernorAcceptsV2Governorship();
-
-        migrationMultisigAcceptsMigrationAdministratorship();
-
-        storeCoverAmounts();
-        setupExistingFactories();
-
-        payAndClaimAllUpcomingLoans();
-
-        // Orthogonal has a loan with claimable funds that it's more than 5 days from payment away. We need to claim it here before the pool is snapshoted
-        claimAllLoans(orthogonalPoolV1, orthogonalLoans);
-
-        snapshotAllPoolStates();
-
-        freezeAllPoolV1s();
-
-        storeAllOriginalLoanLenders();
-
-        setV1ProtocolPause(true);
+        goto_lmp_4();
     }
 
-    function test_rollback_transferLoans_mavenWethPool() public {
-        mavenWethPoolManager = migrationStepsUpToLoanManagerUpgrade(tempMavenWethPD, mavenWethPoolV1, mavenWethLoans, mavenWethLps, true);
+    function test_rollback_from_V301_loans() public checkStateRestored checkLoansBelongToRespectivePools {
+        upgradeAllLoansToV301();  // LMP #4
 
-        rollbackFromTransferredLoans(mavenWethPoolV1, mavenWethPoolManager, mavenWethLoans, 35_000e18);
-
-        assertPoolMatchesSnapshot(mavenWethPoolV1);
-        assertLoansBelongToPool(mavenWethPoolV1, mavenWethLoans);
-    }
-
-    function test_rollback_transferLoans_mavenUsdcPool() public {
-        mavenUsdcPoolManager = migrationStepsUpToLoanManagerUpgrade(tempMavenUsdcPD, mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps, true);
-
-        rollbackFromTransferredLoans(mavenUsdcPoolV1, mavenUsdcPoolManager, mavenUsdcLoans, 350_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenUsdcPoolV1);
-        assertLoansBelongToPool(mavenUsdcPoolV1, mavenUsdcLoans);
-    }
-
-    function test_rollback_transferLoans_mavenPermissionedPool() public {
-        mavenPermissionedPoolManager = migrationStepsUpToLoanManagerUpgrade(tempMavenPermissionedPD, mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
-
-        rollbackFromTransferredLoans(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLoans, 60_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenPermissionedPoolV1);
-        assertLoansBelongToPool(mavenPermissionedPoolV1, mavenPermissionedLoans);
-    }
-
-    function test_rollback_transferLoans_orthogonalPool() public {
-        orthogonalPoolManager = migrationStepsUpToLoanManagerUpgrade(tempOrthogonalPD, orthogonalPoolV1, orthogonalLoans, orthogonalLps, true);
-
-        rollbackFromTransferredLoans(orthogonalPoolV1, orthogonalPoolManager, orthogonalLoans, 450_000_000e6);
-
-        assertPoolMatchesSnapshot(orthogonalPoolV1);
-        assertLoansBelongToPool(orthogonalPoolV1, orthogonalLoans);
-    }
-
-    function test_rollback_transferLoans_icebreakerPool() public {
-        icebreakerPoolManager = migrationStepsUpToLoanManagerUpgrade(tempIcebreakerPD, icebreakerPoolV1, icebreakerLoans, icebreakerLps, false);
-
-        rollbackFromTransferredLoans(icebreakerPoolV1, icebreakerPoolManager, icebreakerLoans, 300_000_000e6);
-
-        assertPoolMatchesSnapshot(icebreakerPoolV1);
-        assertLoansBelongToPool(icebreakerPoolV1, icebreakerLoans);
-    }
-
-    function test_rollback_transferLoans_allPools() public {
-        deployAndMigrateAllPoolsUpToLoanManagerUpgrade();
-
-        // Rollback
-        setV1ProtocolPause(false);
-
-        returnAllLoansToDebtLockers();
-
-        unfreezeAllPoolV1s();
-
-        assertAllPoolsMatchSnapshot();
-
-        assertAllLoansBelongToRespectivePools();
+        enableLoanDowngradeFromV301();
+        disableLoanUpgradeFromV300();
+        downgradeAllLoansFromV301();  // Rollback LMP #4
     }
 
 }
 
-contract LiquidityMigrationRollbackFromUpgradedLoanManagerTests is SimulationBase {
+// Rollback LMP #9
+contract RollbackFromV400DebtLockersTests is RollbackBase {
 
     function setUp() public {
-        upgradeAllLoansToV301();
-
-        vm.startPrank(deployer);
-
-        deployProtocol();
-
-        vm.stopPrank();
-
-        tempGovernorAcceptsV2Governorship();
-
-        migrationMultisigAcceptsMigrationAdministratorship();
-
-        storeCoverAmounts();
-        setupExistingFactories();
-
-        payAndClaimAllUpcomingLoans();
-
-        // Orthogonal has a loan with claimable funds that it's more than 5 days from payment away. We need to claim it here before the pool is snapshoted
-        claimAllLoans(orthogonalPoolV1, orthogonalLoans);
-
-        snapshotAllPoolStates();
-
-        freezeAllPoolV1s();
-
-        storeAllOriginalLoanLenders();
-
-        setV1ProtocolPause(true);
+        goto_lmp_9();
     }
 
-    function test_rollback_upgradedLoanManager_mavenWethPool() public {
-        mavenWethPoolManager = migrationStepsIncludingLoanManagerUpgrade(tempMavenWethPD, mavenWethPoolV1, mavenWethLoans, mavenWethLps, true);
+    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+        upgradeAllDebtLockersToV400();  // LMP #9
 
-        rollbackFromUpgradedLoanManager(mavenWethPoolV1, mavenWethPoolManager, mavenWethLoans, 35_000e18);
-
-        assertPoolMatchesSnapshot(mavenWethPoolV1);
-        assertLoansBelongToPool(mavenWethPoolV1, mavenWethLoans);
-    }
-
-    function test_rollback_upgradedLoanManager_mavenUsdcPool() public {
-        mavenUsdcPoolManager = migrationStepsIncludingLoanManagerUpgrade(tempMavenUsdcPD, mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps, true);
-
-        rollbackFromUpgradedLoanManager(mavenUsdcPoolV1, mavenUsdcPoolManager, mavenUsdcLoans, 350_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenUsdcPoolV1);
-        assertLoansBelongToPool(mavenUsdcPoolV1, mavenUsdcLoans);
-    }
-
-    function test_rollback_upgradedLoanManager_mavenPermissionedPool() public {
-        mavenPermissionedPoolManager = migrationStepsIncludingLoanManagerUpgrade(tempMavenPermissionedPD, mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
-
-        rollbackFromUpgradedLoanManager(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLoans, 60_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenPermissionedPoolV1);
-        assertLoansBelongToPool(mavenPermissionedPoolV1, mavenPermissionedLoans);
-    }
-
-    function test_rollback_upgradedLoanManager_orthogonalPool() public {
-        orthogonalPoolManager = migrationStepsIncludingLoanManagerUpgrade(tempOrthogonalPD, orthogonalPoolV1, orthogonalLoans, orthogonalLps, true);
-
-        rollbackFromUpgradedLoanManager(orthogonalPoolV1, orthogonalPoolManager, orthogonalLoans, 450_000_000e6);
-
-        assertPoolMatchesSnapshot(orthogonalPoolV1);
-        assertLoansBelongToPool(orthogonalPoolV1, orthogonalLoans);
-    }
-
-    function test_rollback_upgradedLoanManager_icebreakerPool() public {
-        icebreakerPoolManager = migrationStepsIncludingLoanManagerUpgrade(tempIcebreakerPD, icebreakerPoolV1, icebreakerLoans, icebreakerLps, false);
-
-        rollbackFromUpgradedLoanManager(icebreakerPoolV1, icebreakerPoolManager, icebreakerLoans, 300_000_000e6);
-
-        assertPoolMatchesSnapshot(icebreakerPoolV1);
-        assertLoansBelongToPool(icebreakerPoolV1, icebreakerLoans);
-    }
-
-    function test_rollback_upgradedLoanManager_allPools() public {
-        deployAndMigrateAllPoolsUpToLoanUpgrade();
-
-        setAllLoanTransferAdmins();
-
-        setV1ProtocolPause(false);
-
-        returnAllLoansToDebtLockers();
-
-        unfreezeAllPoolV1s();
-
-        assertAllPoolsMatchSnapshot();
-
-        assertAllLoansBelongToRespectivePools();
+        enableDebtLockerDowngradeFromV400();
+        disableDebtLockerUpgradeFromV300();
+        downgradeAllDebtLockersFromV400();  // Rollback LMP #9
     }
 
 }
 
-contract LiquidityMigrationRollbackFromUpgradedV4LoanTests is SimulationBase {
+// Rollback LMP #11
+contract RollbackFromV302LoansTests is RollbackBase {
 
     function setUp() public {
-        upgradeAllLoansToV301();
-
-        vm.startPrank(deployer);
-
-        deployProtocol();
-
-        vm.stopPrank();
-
-        tempGovernorAcceptsV2Governorship();
-
-        migrationMultisigAcceptsMigrationAdministratorship();
-
-        storeCoverAmounts();
-        setupExistingFactories();
-
-        payAndClaimAllUpcomingLoans();
-
-        // Orthogonal has a loan with claimable funds that it's more than 5 days from payment away. We need to claim it here before the pool is snapshoted
-        claimAllLoans(orthogonalPoolV1, orthogonalLoans);
-
-        snapshotAllPoolStates();
-
-        freezeAllPoolV1s();
-
-        storeAllOriginalLoanLenders();
-
-        setV1ProtocolPause(true);
+        goto_lmp_11();
     }
 
-    function test_rollback_upgradedV4Loans_mavenWethPool() public {
-        mavenWethPoolManager = deployAndMigratePool(tempMavenWethPD, mavenWethPoolV1, mavenWethLoans, mavenWethLps, true);
+    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+        upgradeAllLoansToV302();  // LMP #11
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV2));
-
-        rollbackFromUpgradedV4Loans(mavenWethPoolV1, mavenWethPoolManager, mavenWethLoans, 35_000e18);
-
-        assertPoolMatchesSnapshot(mavenWethPoolV1);
-        assertLoansBelongToPool(mavenWethPoolV1, mavenWethLoans);
+        enableLoanDowngradeFromV302();
+        downgradeAllLoansFromV302();  // Rollback LMP #11
     }
 
-    function test_rollback_upgradedV4Loans_mavenUsdcPool() public {
-        mavenUsdcPoolManager = deployAndMigratePool(tempMavenUsdcPD, mavenUsdcPoolV1, mavenUsdcLoans, mavenUsdcLps, true);
+}
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV2));
+// Rollback LMP #14
+contract RollbackFromFundedMigrationLoansTests is RollbackBase {
 
-        rollbackFromUpgradedV4Loans(mavenUsdcPoolV1, mavenUsdcPoolManager, mavenUsdcLoans, 350_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenUsdcPoolV1);
-        assertLoansBelongToPool(mavenUsdcPoolV1, mavenUsdcLoans);
+    function setUp() public {
+        goto_lmp_14();
     }
 
-    function test_rollback_upgradedV4Loans_mavenPermissionedPool() public {
-        mavenPermissionedPoolManager = deployAndMigratePool(tempMavenPermissionedPD, mavenPermissionedPoolV1, mavenPermissionedLoans, mavenPermissionedLps, false);
+    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+        fundAllMigrationLoans();  // LMP #14
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV2));
-
-        rollbackFromUpgradedV4Loans(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLoans, 60_000_000e6);
-
-        assertPoolMatchesSnapshot(mavenPermissionedPoolV1);
-        assertLoansBelongToPool(mavenPermissionedPoolV1, mavenPermissionedLoans);
+        paybackAllMigrationLoansToPoolV1s();  // Rollback LMP #14
     }
 
-    function test_rollback_upgradedV4Loans_orthogonalPool() public {
-        orthogonalPoolManager = deployAndMigratePool(tempOrthogonalPD, orthogonalPoolV1, orthogonalLoans, orthogonalLps, true);
+}
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV2));
+// Rollback LMP #15
+contract RollbackFromV400DebtLockersOfMigrationLoansTests is RollbackBase {
 
-        rollbackFromUpgradedV4Loans(orthogonalPoolV1, orthogonalPoolManager, orthogonalLoans, 450_000_000e6);
-
-        assertPoolMatchesSnapshot(orthogonalPoolV1);
-        assertLoansBelongToPool(orthogonalPoolV1, orthogonalLoans);
+    function setUp() public {
+        goto_lmp_15();
     }
 
-    function test_rollback_upgradedV4Loans_icebreakerPool() public {
-        icebreakerPoolManager = deployAndMigratePool(tempIcebreakerPD, icebreakerPoolV1, icebreakerLoans, icebreakerLps, false);
+    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+        upgradeAllMigrationLoanDebtLockers();  // LMP #15
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV2));
-
-        rollbackFromUpgradedV4Loans(icebreakerPoolV1, icebreakerPoolManager, icebreakerLoans, 300_000_000e6);
-
-        assertPoolMatchesSnapshot(icebreakerPoolV1);
-        assertLoansBelongToPool(icebreakerPoolV1, icebreakerLoans);
+        enableDebtLockerDowngradeFromV400();
+        downgradeAllMigrationLoanDebtLockersFromV400();  // Rollback LMP #15
     }
 
-    function test_rollback_upgradedV4Loans_allPools() public {
-        deployAndMigrateAllPools();
+}
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV2));
+// Rollback LMP #16
+contract RollbackFromV302MigrationLoansTests is RollbackBase {
 
-        // Start rollback
-        vm.prank(tempGovernor);
-        loanFactory.enableUpgradePath(400, 302, address(0));
+    function setUp() public {
+        goto_lmp_16();
+    }
 
-        downgradeAllLoans400To302();
+    function test_rollback_from_V302_migration_loans() public checkStateRestored checkLoansBelongToRespectivePools {
+        upgradeAllMigrationLoansToV302();  // LMP #16
 
-        setGlobalsOfFactory(address(loanFactory), address(mapleGlobalsV1));
+        enableLoanDowngradeFromV302();
+        downgradeAllMigrationLoansFromV302();  // Rollback LMP #15
+    }
 
-        setAllLoanTransferAdmins();
+}
 
-        setV1ProtocolPause(false);
+// Rollback LMP #23
+contract RollbackFromSetPendingLenderTests is RollbackBase {
 
-        returnAllLoansToDebtLockers();
+    function setUp() public {
+        goto_lmp_23();
+    }
 
-        unfreezeAllPoolV1s();
+    function test_rollback_from_setPendingLender() public checkStateRestored checkLoansBelongToRespectivePools {
+        setAllPendingLenders();  // LMP #23
 
-        assertAllPoolsMatchSnapshot();
+        unsetPendingLendersForAllPools();  // Rollback LMP #23
+    }
 
-        assertAllLoansBelongToRespectivePools();
+}
+
+// Rollback LMP #24
+contract RollbackFromTransferredOwnershipOsLoansTests is RollbackBase {
+
+    function setUp() public {
+        goto_lmp_24();
+    }
+
+    function test_rollback_from_setPendingLender() public checkStateRestored checkLoansBelongToRespectivePools {
+        takeAllOwnershipsOfLoans();  // LMP #24
+
+        revertOwnershipOfLoansForAllPools();  // Rollback LMP #24
+    }
+
+}
+
+// Rollback LMP #25
+// TODO: Test rolling back further to return the loans to the original pools.
+contract RollbackFromV200LoanManagersTests is RollbackBase {
+
+    function setUp() public {
+        goto_lmp_25();
+    }
+
+    function test_rollback_from_v200_loanManagers() public checkStateRestored {
+        upgradeAllLoanManagers();  // LMP #25
+
+        enableLoanManagerDowngradeFromV200();
+        downgradeAllLoanManagersFromV200();    // Rollback LMP #25
+    }
+
+}
+
+// Rollback LMP #26
+// TODO: Test rolling back further to return the loans to the original pools.
+contract RollbackFromV400LoansTests is RollbackBase {
+
+    function setUp() public {
+        goto_lmp_26();
+    }
+
+    function test_rollback_from_v400_loans() public checkStateRestored {
+        upgradeAllLoansToV400();  // LMP #26
+
+        enableLoanDowngradeFromV400();
+        disableLoanUpgradeFromV302();
+        unpauseV1Protocol();
+        setGlobalsOfLoanFactoryToV2();
+
+        downgradeAllLoansFromV400();  // Rollback LMP #26
+
+        setGlobalsOfLoanFactoryToV1();
     }
 
 }

@@ -8,9 +8,12 @@ contract DeployMapleV2 is SimulationBase {
     function run() external {
         vm.startBroadcast(deployer);
 
-        deployProtocol();
+        _deployProtocol();
 
         vm.stopBroadcast();
+
+        // TODO: sim to end of migration
+        // TODO: run simple lifecycle
 
         // setupFactoriesForSimulation();
 

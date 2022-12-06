@@ -20,6 +20,7 @@ import {
     ITransitionLoanManagerLike
 } from "./Interfaces.sol";
 
+// TODO: move each validation run() into a properly named function in './simulations/mainnet/Validations', so they can be called individually. Each run() here can call them too.
 // TODO: Add and update all bytecode hashes.
 // TODO: And and update error messages for all assertions (use sentence case).
 
@@ -521,11 +522,11 @@ contract DeployPools is AddressRegistry, TestUtils {
     function run() external {
 
         // TODO separate per pool?
-        
+
         // Maven Permissioned Pool
         validatePool(mavenPermissionedPoolV2, mavenPermissionedPoolV1, address(mavenPermissionedPoolManager), address(usdc));
         validatePoolManager(
-            mavenPermissionedPoolManager, 
+            mavenPermissionedPoolManager,
                 PoolConfiguration({
                 poolDelegate:              address(mavenPermissionedTemporaryPd),
                 asset:                     address(usdc),
@@ -543,7 +544,7 @@ contract DeployPools is AddressRegistry, TestUtils {
         // Maven Usdc Pool
         validatePool(mavenUsdcPoolV2, mavenUsdcPoolV1, address(mavenUsdcPoolManager), address(usdc));
         validatePoolManager(
-                mavenUsdcPoolManager, 
+                mavenUsdcPoolManager,
                 PoolConfiguration({
                 poolDelegate:              address(mavenUsdcTemporaryPd),
                 asset:                     address(usdc),
@@ -561,7 +562,7 @@ contract DeployPools is AddressRegistry, TestUtils {
         // Maven Weth Pool
         validatePool(mavenWethPoolV2, mavenWethPoolV1, address(mavenWethPoolManager), address(usdc));
         validatePoolManager(
-                mavenWethPoolManager, 
+                mavenWethPoolManager,
                 PoolConfiguration({
                 poolDelegate:              address(mavenWethTemporaryPd),
                 asset:                     address(weth),
@@ -579,7 +580,7 @@ contract DeployPools is AddressRegistry, TestUtils {
         // Orthogonal Pool
         validatePool(orthogonalPoolV2, orthogonalPoolV1, address(orthogonalPoolManager), address(usdc));
         validatePoolManager(
-                orthogonalPoolManager, 
+                orthogonalPoolManager,
                 PoolConfiguration({
                 poolDelegate:              address(orthogonalTemporaryPd),
                 asset:                     address(usdc),
@@ -598,7 +599,7 @@ contract DeployPools is AddressRegistry, TestUtils {
         // Icebreaker
         validatePool(icebreakerPoolV2, icebreakerPoolV1, address(icebreakerPoolManager), address(usdc));
         validatePoolManager(
-                icebreakerPoolManager, 
+                icebreakerPoolManager,
                 PoolConfiguration({
                 poolDelegate:              address(icebreakerTemporaryPd),
                 asset:                     address(usdc),
@@ -628,7 +629,7 @@ contract DeployPools is AddressRegistry, TestUtils {
     function validatePoolManager(IPoolManagerLike poolManager_, PoolConfiguration memory poolConfig) internal {
         assertEq(poolManager_.poolDelegate(),              poolConfig.poolDelegate);
         assertEq(poolManager_.asset(),                     poolConfig.asset);
-        assertEq(poolManager_.pool(),                      poolConfig.pool);   
+        assertEq(poolManager_.pool(),                      poolConfig.pool);
         assertEq(poolManager_.poolDelegateCover(),         poolConfig.poolDelegateCover);
         assertEq(poolManager_.withdrawalManager(),         poolConfig.withdrawalManager);
         assertEq(poolManager_.liquidityCap(),              poolConfig.liquidityCap);

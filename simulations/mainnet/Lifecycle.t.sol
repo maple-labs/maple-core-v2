@@ -380,23 +380,8 @@ contract Lifecycle is SimulationBase, CSVWriter {
         balances[3] = getBalances(WETH, mavenWethLps);
         balances[4] = getBalances(USDC, orthogonalLps);
 
-        upgradeAllLoansToV301();
+        performEntireMigration();
 
-        vm.startPrank(deployer);
-
-        deployProtocol();
-
-        vm.stopPrank();
-
-        tempGovernorAcceptsV2Governorship();
-
-        migrationMultisigAcceptsMigrationAdministratorship();
-
-        storeCoverAmounts();
-        setupExistingFactories();
-
-        migrateAllPools();
-        postMigration();
         performAdditionalGlobalsSettings();
 
         address loan;
@@ -426,6 +411,14 @@ contract Lifecycle is SimulationBase, CSVWriter {
             else if (earliest == 3) redeemAll(mavenWethPoolManager.pool(),         mavenWethLps);
             else if (earliest == 4) redeemAll(orthogonalPoolManager.pool(),        orthogonalLps);
         }
+
+        vm.startPrank(governor);
+        mapleGlobalsV2.setMinCoverAmount(address(icebreakerPoolManager),        0);
+        mapleGlobalsV2.setMinCoverAmount(address(mavenPermissionedPoolManager), 0);
+        mapleGlobalsV2.setMinCoverAmount(address(mavenUsdcPoolManager),         0);
+        mapleGlobalsV2.setMinCoverAmount(address(mavenWethPoolManager),         0);
+        mapleGlobalsV2.setMinCoverAmount(address(orthogonalPoolManager),        0);
+        vm.stopPrank();
 
         withdrawAllPoolCover(address(icebreakerPoolManager));
         withdrawAllPoolCover(address(mavenPermissionedPoolManager));

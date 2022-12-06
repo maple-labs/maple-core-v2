@@ -48,7 +48,7 @@ contract AddressRegistry {
     /*** Final Pool Delegate Multisigs                                                                                          ***/
     /******************************************************************************************************************************/
 
-    // TODO: Updated addresses.
+    // TODO: Updated addresses.  // TODO: check
     address icebreakerFinalPd        = address(0x37c610584f7834A8FEb490b73E2aC780AEE31905);
     address mavenPermissionedFinalPd = address(0xec67fd8445E9a84311E2BD118A21b2fDaACfc7FA);
     address mavenUsdcFinalPd         = address(0xf11897A0009b3a37f15365A976015E7F22A16d50);
