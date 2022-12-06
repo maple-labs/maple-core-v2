@@ -1021,4 +1021,380 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
     }
 
+    // Test 19
+    function test_poolScenarios_refinanceATwoPeriodsLateLoan() external {
+        address lp1      = address(new Address());
+        address borrower = address(new Address());
+
+        Refinancer refinancer = new Refinancer();
+
+        depositLiquidity(lp1, 2_500_000e6);
+
+        Loan loan1 = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)]
+        });
+
+        // Loan Manager should be in a coherent state
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0.09e6 * 1e30,
+            domainStart:           start,
+            domainEnd:             start + 1_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 90_000e6,
+            refinanceInterest:   0,
+            issuanceRate:        0.09e6 * 1e30,
+            startDate:           start,
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  100_000e6,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 1_000_000,
+            paymentsRemaining: 3
+        });
+
+        // Make the loan late
+        vm.warp(start + 2_500_000);  // Two and a half periods late
+
+        assertTotalAssets(2_500_000e6 + 90_000e6);
+
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        vm.startPrank(borrower);
+        loan1.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan1), 10_000e6);
+        loan1.returnFunds(10_000e6);
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan1), address(refinancer), block.timestamp + 1, data, 0);
+
+        // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
+        uint256 grossRefinanceInterest = 250_000e6 + 18 days * 0.11e6;
+        uint256 netRefinanceInterest   = grossRefinanceInterest * 0.9e6 / 1e6;
+
+        assertEq(grossRefinanceInterest, 421_072e6);
+        assertEq(netRefinanceInterest,   378_964.8e6);
+
+        // Principal + 225_000e6 (period from start to refinance) + late interest(18 * 86400 * 0.099)
+        assertTotalAssets(2_500_000e6 + netRefinanceInterest);
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  200_000e6 + grossRefinanceInterest,
+            incomingFees:      25_000e6 + 750e6 + 20_000e6 + 300e6,  // 2_500_000s of platform fees + 2_500_000s of delegate service fees + service fees for period after refinance
+            refinanceInterest: grossRefinanceInterest,
+            paymentDueDate:    start + 4_500_000,
+            paymentsRemaining: 3
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 180_000e6,
+            refinanceInterest:   netRefinanceInterest,
+            issuanceRate:        0.09e6 * 1e30,
+            startDate:           start + 2_500_000,
+            paymentDueDate:      start + 4_500_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     netRefinanceInterest,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + netRefinanceInterest,
+            issuanceRate:          0.09e6 * 1e30,
+            domainStart:           start + 2_500_000,
+            domainEnd:             start + 4_500_000,
+            unrealizedLosses:      0
+        });
+
+        // Warp to next payment, 200 sec early
+        vm.warp(start + 2_500_000 + 1_800_000);
+
+        // Principal + accountedInterest + accruedInterest up to domainEnd
+        assertTotalAssets(2_500_000e6 + netRefinanceInterest + 1_800_000 * 0.09e6);
+
+        makePayment(loan1);
+
+        // Principal + refinanceInterest + installment + 10 days of late interest
+        assertTotalAssets(2_500_000e6 + netRefinanceInterest + 180_000e6);
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  200_000e6,
+            incomingFees:      20_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 6_500_000,
+            paymentsRemaining: 2
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0.081818181818181818181818181818181818e6 * 1e30,
+            domainStart:           start + 4_300_000,
+            domainEnd:             start + 6_500_000,
+            unrealizedLosses:      0
+        });
+    }
+
+    // Test 20
+    function test_poolScenarios_refinanceLateLoanAndDefault() external {
+        address lp1      = address(new Address());
+        address borrower = address(new Address());
+
+        Refinancer refinancer = new Refinancer();
+
+        depositLiquidity(lp1, 2_500_000e6);
+
+        Loan loan1 = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)]
+        });
+
+        // Loan Manager should be in a coherent state
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6,
+            issuanceRate:          0.09e6 * 1e30,
+            domainStart:           start,
+            domainEnd:             start + 1_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 90_000e6,
+            refinanceInterest:   0,
+            issuanceRate:        0.09e6 * 1e30,
+            startDate:           start,
+            paymentDueDate:      start + 1_000_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  100_000e6,
+            incomingFees:      10_000e6 + 300e6,
+            refinanceInterest: 0,
+            paymentDueDate:    start + 1_000_000,
+            paymentsRemaining: 3
+        });
+
+        // Make the loan late
+        vm.warp(start + 1_500_000);
+
+        assertTotalAssets(2_500_000e6 + 90_000e6);
+
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        vm.startPrank(borrower);
+        loan1.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        fundsAsset.mint(borrower, 10_000e6);
+        fundsAsset.approve(address(loan1), 10_000e6);
+        loan1.returnFunds(10_000e6);
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        poolManager.acceptNewTerms(address(loan1), address(refinancer), block.timestamp + 1, data, 0);
+
+        // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
+        uint256 grossRefinanceInterest = 150_000e6 + 6 days * 0.11e6;
+        uint256 netRefinanceInterest   = grossRefinanceInterest * 0.9e6 / 1e6;
+
+        assertEq(grossRefinanceInterest, 207_024e6);
+        assertEq(netRefinanceInterest,   186_321.6e6);
+
+        // Principal + 135_000e6 (period from start to refinance) + late interest(6 * 86400 * 0.09)
+        assertTotalAssets(2_500_000e6 + netRefinanceInterest);
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  200_000e6 + grossRefinanceInterest,
+            incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,  // 10_000e6 of platform service fees + 300e6 of delegate service fees.
+            refinanceInterest: grossRefinanceInterest,
+            paymentDueDate:    start + 3_500_000,
+            paymentsRemaining: 3
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 180_000e6,
+            refinanceInterest:   netRefinanceInterest,
+            issuanceRate:        0.09e6 * 1e30,
+            startDate:           start + 1_500_000,
+            paymentDueDate:      start + 3_500_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     netRefinanceInterest,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + netRefinanceInterest,  // Principal + refinanceInterest
+            issuanceRate:          0.09e6 * 1e30,
+            domainStart:           start + 1_500_000,
+            domainEnd:             start + 3_500_000,
+            unrealizedLosses:      0
+        });
+
+        // Move the loan to default (100k seconds late)
+        vm.warp(start + 3_600_000);
+
+        // Pre default assertions
+        assertTotalAssets(2_500_000e6 + netRefinanceInterest + 180_000e6);
+
+        assertLoanState({
+            loan:              loan1,
+            principal:         1_000_000e6,
+            incomingPrincipal: 0,
+            incomingInterest:  grossRefinanceInterest + 200_000e6 + 2 days * 0.11e6,  // Refinance interest + installment + late interest
+            incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,                   // 10_000e6 of platform service fees + 300e6 of delegate service fees.
+            refinanceInterest: grossRefinanceInterest,
+            paymentDueDate:    start + 3_500_000,
+            paymentsRemaining: 3
+        });
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 180_000e6,
+            refinanceInterest:   netRefinanceInterest,
+            issuanceRate:        0.09e6 * 1e30,
+            startDate:           start + 1_500_000,
+            paymentDueDate:      start + 3_500_000,
+            platformFeeRate:     0.08e6,
+            delegateFeeRate:     0.02e6
+        });
+
+        assertLoanManager({
+            accruedInterest:       180_000e6,
+            accountedInterest:     netRefinanceInterest,
+            principalOut:          1_000_000e6,
+            assetsUnderManagement: 1_000_000e6 + netRefinanceInterest + 180_000e6,  // principal + accounted interest + accrued interest
+            issuanceRate:          0.09e6 * 1e30,
+            domainStart:           start + 1_500_000,
+            domainEnd:             start + 3_500_000,
+            unrealizedLosses:      0
+        });
+
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan1), liquidatorFactory);
+
+        assertTotalAssets(1_500_000e6); // Only the amount in the pool
+
+        assertPaymentInfo({
+            loan:                loan1,
+            incomingNetInterest: 0,
+            refinanceInterest:   0,
+            issuanceRate:        0,
+            startDate:           0,
+            paymentDueDate:      0,
+            platformFeeRate:     0,
+            delegateFeeRate:     0
+        });
+
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     0,
+            principalOut:          0,
+            assetsUnderManagement: 0,
+            issuanceRate:          0,
+            domainStart:           start + 3_600_000,
+            domainEnd:             start + 3_600_000,
+            unrealizedLosses:      0
+        });
+    }
+
+    // Test 21
+    function test_poolScenarios_stressTestAdvanceGlobalPaymentAccounting() external {
+        address lp1 = address(new Address());
+
+        depositLiquidity(lp1, 400_000_000e6);
+
+        assertTotalAssets(400_000_000e6);
+
+        for (uint256 i = 0; i < 150; i++) {
+            fundAndDrawdownLoan({
+                borrower:    address(new Address()),
+                termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+                amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+                rates:       [uint256(3.1536e18), uint256(0.1e18), uint256(0.01e18), uint256(0.31536e18)]
+            });
+        }
+
+        assertTotalAssets(400_000_000e6);
+
+        // Advance another 2_000_000 seconds so all loans are surely late
+        vm.warp(start + 2_000_000);
+
+        // Loan Manager should be in a coherent state
+        assertLoanManager({
+            accruedInterest:       150 * 90_000e6,
+            accountedInterest:     0,
+            principalOut:          150_000_000e6,
+            assetsUnderManagement: 150_000_000e6 + 150 * 90_000e6,
+            issuanceRate:          150 * 0.09e6 * 1e30,               // All loans are late
+            domainStart:           start,
+            domainEnd:             start + 1_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertTotalAssets(400_000_000e6 + 150 * 90_000e6);
+
+        // Advance accounting for all loans
+        vm.prank(poolDelegate);
+        loanManager.updateAccounting();
+
+        // Loan Manager should be in a coherent state
+        assertLoanManager({
+            accruedInterest:       0,
+            accountedInterest:     150 * 90_000e6,
+            principalOut:          150_000_000e6,
+            assetsUnderManagement: 150_000_000e6 + 150 * 90_000e6,
+            issuanceRate:          0,               // All loans are late
+            domainStart:           start + 2_000_000,
+            domainEnd:             start + 2_000_000,
+            unrealizedLosses:      0
+        });
+
+        assertTotalAssets(400_000_000e6 + 150 * 90_000e6);
+    }
+
 }

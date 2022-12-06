@@ -330,7 +330,7 @@ contract TestBase is TestUtils {
 
         vm.prank(loan.borrower());
         loan.closeLoan(0);
-     }
+    }
 
     function setupFees(
         uint256 platformOriginationFeeRate,
