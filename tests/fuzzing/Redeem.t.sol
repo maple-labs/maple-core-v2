@@ -37,6 +37,10 @@ contract RedeemFuzzTests is FuzzBase {
         if (caller   == address(0)) caller   = address(1);
         if (receiver == address(0)) receiver = address(1);
 
+        vm.assume(owner    != address(pool));
+        vm.assume(caller   != address(pool));
+        vm.assume(receiver != address(pool));
+
         totalSupply      = constrictToRange(totalSupply,      1, 1e30);
         totalAssets      = constrictToRange(totalAssets,      0, 1e30);
         unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);

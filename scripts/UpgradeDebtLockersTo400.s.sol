@@ -10,7 +10,7 @@ import { DebtLockerV4Migrator }       from "../modules/debt-locker-v4/contracts/
 import { IDebtLockerLike, IMapleLoanLike } from "../simulations/mainnet/Interfaces.sol";
 import { SimulationBase }                  from "../simulations/mainnet/SimulationBase.sol";
 
-contract UpgradeDebtLockersTo400Base is SimulationBase {
+contract UpgradeDebtLockersTo400 is SimulationBase {
 
     // Note: Update Address of Migration Admin if needed
     address migrationAdminScript = 0xb36419f1790CAebf85dd45dF659199F9957c41A4;
@@ -21,6 +21,7 @@ contract UpgradeDebtLockersTo400Base is SimulationBase {
         upgradeDebtLockersTo400(mavenWethLoans);
         upgradeDebtLockersTo400(orthogonalLoans);
         upgradeDebtLockersTo400(icebreakerLoans);
+        // upgradeDebtLockersTo400(unorderedMigrationLoans);
     }
 
     function upgradeDebtLockersTo400(IMapleLoanLike[] storage loans) internal {

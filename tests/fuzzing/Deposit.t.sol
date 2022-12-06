@@ -27,6 +27,9 @@ contract DepositFuzzTests is FuzzBase {
         if (depositor == address(0)) depositor = address(1);
         if (receiver  == address(0)) receiver  = address(1);
 
+        vm.assume(depositor != address(pool));
+        vm.assume(receiver  != address(pool));
+
         totalSupply      = constrictToRange(totalSupply,      0, 1e30);
         totalAssets      = constrictToRange(totalAssets,      0, 1e30);
         unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);

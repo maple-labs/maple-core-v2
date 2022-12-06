@@ -34,9 +34,17 @@ contract GetFrozenPoolState is SimulationBase {
 
         console.log("cash        ", cash);
         console.log("principalOut", poolV1.principalOut());
+        console.log("total       ", poolV1.principalOut() + cash);
 
-        console.log("poolValue", getPoolV1TotalValue(poolV1));
-        console.log("sumLps   ", getSumPosition(poolV1, lps));
+        uint256 totalValue = getPoolV1TotalValue(poolV1);
+        uint256 sumValue   = getSumPosition(poolV1, lps);
+
+        console.log("poolValue   ", totalValue);
+        console.log("sumLps      ", sumValue);
+
+        // console.log("Value diff  ", totalValue - poolV1.principalOut());
+        console.log("LP diff     ", totalValue - sumValue);
+        console.log("");
     }
 
 }

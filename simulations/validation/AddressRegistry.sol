@@ -123,21 +123,28 @@ contract AddressRegistry {
 
     address constant refinancer = address(0xec90671c2c8f4cCBb6074938f893306a13402251);
 
+    ILoanLike[] unorderedMigrationLoans = [
+        ILoanLike(0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b),
+        ILoanLike(0x132aCcE7BD6F8Ce8D4575Bf309E5055F5c70aC55),
+        ILoanLike(0x4165cb429CAEC4b1078C26A77DbE67d01E28cABb),
+        ILoanLike(0x163CF4362477c7eB3d7609C8a4d86051A4FE17b5)
+    ];
+
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC 01                                                                                                     ***/
     /******************************************************************************************************************************/
 
-    ILoanLike                  mavenUsdcMigrationLoan         = ILoanLike(0x02dDccDad9B7bBd6a411c99Ee6D64Ab4b1B237d3);
+    ILoanLike                  mavenUsdcMigrationLoan         = ILoanLike(0x132aCcE7BD6F8Ce8D4575Bf309E5055F5c70aC55);
     IPoolV1Like                mavenUsdcPoolV1                = IPoolV1Like(0x6F6c8013f639979C84b756C7FC1500eB5aF18Dc4);
-    IPoolV2Like                mavenUsdcPoolV2                = IPoolV2Like(0x2bb636d63F806c5F205cD1185EAeb9a6967D607B);
-    IPoolManagerLike           mavenUsdcPoolManager           = IPoolManagerLike(0x4C0036c7310CCaF9b5F10F9A80dDe6e60a452AcD);
+    IPoolV2Like                mavenUsdcPoolV2                = IPoolV2Like(0xfF09bD9c4353c46b7C0FfA2D5714314662f2ebd4);
+    IPoolManagerLike           mavenUsdcPoolManager           = IPoolManagerLike(0x1e1e4764A507E8445465595cE0707Aee17d67EED);
     IMplRewardsLike            mavenUsdcRewards               = IMplRewardsLike(0xe5A1cb65E7a608E778B3Ccb02F7B2DFeFeE783B4);
     IStakeLockerLike           mavenUsdcStakeLocker           = IStakeLockerLike(0xbb7866435b8e5D3F6c2EA8b720c8F79db6f7C1b4);
-    ITransitionLoanManagerLike mavenUsdcTransitionLoanManager = ITransitionLoanManagerLike(0xbeDb4E752320d4ca7c7d841357Dc6A2D045d5Ca9);
-    IWithdrawalManagerLike     mavenUsdcWithdrawalManager     = IWithdrawalManagerLike(address(0));
-    
+    ITransitionLoanManagerLike mavenUsdcTransitionLoanManager = ITransitionLoanManagerLike(0x109ADbBD4f52918378a75Bc93DF2A70fC04F720F);
+    IWithdrawalManagerLike     mavenUsdcWithdrawalManager     = IWithdrawalManagerLike(0x4C129fa22654d1f9c3c4d30EB5a43CC8dA454A11);
+
     address mavenUsdcPoolDelegateCover = address(0);
-                             
+
     address[] mavenUsdcLps = [
         0x00080000158A9930aeb508823103b0a977161c47,
         0x000ab07b26c48EF3Caf9ec23520D86794c9fd74a,
@@ -544,8 +551,8 @@ contract AddressRegistry {
     IMplRewardsLike            mavenPermissionedRewards               = IMplRewardsLike(address(0));
     IStakeLockerLike           mavenPermissionedStakeLocker           = IStakeLockerLike(0x15D297B15A631D1f3B53A337D31BDd2d950d5402);
     ITransitionLoanManagerLike mavenPermissionedTransitionLoanManager = ITransitionLoanManagerLike(0x2AD0Fc5d17a1bBb9bC7D85657936F77224397197);
-    IWithdrawalManagerLike     mavenPermissionedWithdrawalManager     = IWithdrawalManagerLike(address(0));
-    
+    IWithdrawalManagerLike     mavenPermissionedWithdrawalManager     = IWithdrawalManagerLike(0x55e65F59BAdA61b1154F6A762f4E1D7e2CeB9E5d);
+
     address mavenPermissionedPoolDelegateCover = address(0);
 
     address[] mavenPermissionedLps = [
@@ -569,14 +576,14 @@ contract AddressRegistry {
     /*** Maven 11 - WETH                                                                                                        ***/
     /******************************************************************************************************************************/
 
-    ILoanLike                  mavenWethMigrationLoan         = ILoanLike(0xdEB22b339659A5e0114958f04F1D60e3aDFd9A81);
+    ILoanLike                  mavenWethMigrationLoan         = ILoanLike(0x4165cb429CAEC4b1078C26A77DbE67d01E28cABb);
     IPoolV1Like                mavenWethPoolV1                = IPoolV1Like(0x1A066b0109545455BC771E49e6EDef6303cb0A93);
-    IPoolV2Like                mavenWethPoolV2                = IPoolV2Like(0x469Dd8efb3516B0a77D9128eC431cBAC7CB15A6D);
-    IPoolManagerLike           mavenWethPoolManager           = IPoolManagerLike(0xe3f76fC7187ff943a27EDc52678b09F7dBafc6b6);
+    IPoolV2Like                mavenWethPoolV2                = IPoolV2Like(0x6F3c4776Aa3b8C7a3DEbe459F79809a7b80C30c4);
+    IPoolManagerLike           mavenWethPoolManager           = IPoolManagerLike(0xdFBD8926776Ef0ce8d815A399Fc5902A752a362b);
     IMplRewardsLike            mavenWethRewards               = IMplRewardsLike(0x0a76C7913C94F2AF16958FbDF9b4CF0bBdb159d8);
     IStakeLockerLike           mavenWethStakeLocker           = IStakeLockerLike(0xD5Deeb06859369e42cf1906408eD6Cb249E0e002);
-    ITransitionLoanManagerLike mavenWethTransitionLoanManager = ITransitionLoanManagerLike(0x4DA2eAF4c9be3ff024e5fa42A06db6Ca8Fab69cd);
-    IWithdrawalManagerLike     mavenWethWithdrawalManager     = IWithdrawalManagerLike(address(0));
+    ITransitionLoanManagerLike mavenWethTransitionLoanManager = ITransitionLoanManagerLike(0xA64078c536979466E86AB71EB382A185Ad47113b);
+    IWithdrawalManagerLike     mavenWethWithdrawalManager     = IWithdrawalManagerLike(0x6790e019313C97FC11C6B0b3108Cdf947F71B2E3);
 
     address mavenWethPoolDelegateCover = address(0);
 
@@ -647,14 +654,14 @@ contract AddressRegistry {
     /*** Orthogonal Trading - USDC 01                                                                                           ***/
     /******************************************************************************************************************************/
 
-    ILoanLike                  orthogonalMigrationLoan         = ILoanLike(0xdEB22b339659A5e0114958f04F1D60e3aDFd9A81);
+    ILoanLike                  orthogonalMigrationLoan         = ILoanLike(0x163CF4362477c7eB3d7609C8a4d86051A4FE17b5);
     IPoolV1Like                orthogonalPoolV1                = IPoolV1Like(0xFeBd6F15Df3B73DC4307B1d7E65D46413e710C27);
-    IPoolV2Like                orthogonalPoolV2                = IPoolV2Like(0xB3f743FafEC34De80A38d24522137Dd5e555c572);
-    IPoolManagerLike           orthogonalPoolManager           = IPoolManagerLike(0x0DBC050CA1179d9C2d130f19143C2dAccFDf8C62);
+    IPoolV2Like                orthogonalPoolV2                = IPoolV2Like(0xd6fd728884Ba453147fC8De267A4aE294158f0FF);
+    IPoolManagerLike           orthogonalPoolManager           = IPoolManagerLike(0x06Ad9d70b1F099B0c48a015DBc2357766d2ab142);
     IMplRewardsLike            orthogonalRewards               = IMplRewardsLike(0xf9D4D5a018d91e9BCCC1e35Ea78FcfEcF4c5Cbca);
     IStakeLockerLike           orthogonalStakeLocker           = IStakeLockerLike(0x12B2BbBfAB2CE6789DF5659E9AC27A4A91C96C5C);
-    ITransitionLoanManagerLike orthogonalTransitionLoanManager = ITransitionLoanManagerLike(0x84D7a18B7738EBCDc2A5d1AD630A9c7ff08733db);
-    IWithdrawalManagerLike     orthogonalWithdrawalManager     = IWithdrawalManagerLike(address(0));
+    ITransitionLoanManagerLike orthogonalTransitionLoanManager = ITransitionLoanManagerLike(0xc7aa964966AB7E1B4f023506A9009f776fe1791F);
+    IWithdrawalManagerLike     orthogonalWithdrawalManager     = IWithdrawalManagerLike(0xDc288148510c731027D50E344D2d70f8ba19Abf1);
 
     address orthogonalPoolDelegateCover = address(0);
 
@@ -939,14 +946,14 @@ contract AddressRegistry {
     /*** Icebreaker Finance - USDC                                                                                              ***/
     /******************************************************************************************************************************/
 
-    ILoanLike                  icebreakerMigrationLoan         = ILoanLike(0xdeBfA922772BeE5584Fdc40bE905001455c7cCe6);
+    ILoanLike                  icebreakerMigrationLoan         = ILoanLike(0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b);
     IPoolV1Like                icebreakerPoolV1                = IPoolV1Like(0x733f56782d21b403E5Ee9c8343645E1535F73CD4);
     IPoolV2Like                icebreakerPoolV2                = IPoolV2Like(0x0739A80584869093AfEB54E9Df33dD679fd884Db);
     IPoolManagerLike           icebreakerPoolManager           = IPoolManagerLike(0x2FE12fAb072d38920803bd0D3A64613c99d2CdE3);
     IMplRewardsLike            icebreakerRewards               = IMplRewardsLike(address(0));
     IStakeLockerLike           icebreakerStakeLocker           = IStakeLockerLike(0x1dC467a44aE188fc3eee41d88A32511D261e511B);
     ITransitionLoanManagerLike icebreakerTransitionLoanManager = ITransitionLoanManagerLike(0x5936A3E150d039425469D1616523f44c498730d7);
-    IWithdrawalManagerLike     icebreakerWithdrawalManager     = IWithdrawalManagerLike(address(0));
+    IWithdrawalManagerLike     icebreakerWithdrawalManager     = IWithdrawalManagerLike(0x4192F3DBa022a0099878155844C5383667F987e2);
 
     address icebreakerPoolDelegateCover = address(0);
 

@@ -79,6 +79,13 @@ contract AddressRegistry {
     IMapleProxyFactoryLike loanFactory       = IMapleProxyFactoryLike(0x36a7350309B2Eb30F3B908aB0154851B5ED81db0);
     IMapleGlobalsLike      mapleGlobalsV1    = IMapleGlobalsLike(0xC234c62c8C09687DFf0d9047e40042cd166F3600);
 
+    IMapleLoanLike[] unorderedMigrationLoans = [
+        IMapleLoanLike(0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b),
+        IMapleLoanLike(0x132aCcE7BD6F8Ce8D4575Bf309E5055F5c70aC55),
+        IMapleLoanLike(0x4165cb429CAEC4b1078C26A77DbE67d01E28cABb),
+        IMapleLoanLike(0x163CF4362477c7eB3d7609C8a4d86051A4FE17b5)
+    ];
+
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC 01                                                                                                     ***/
     /******************************************************************************************************************************/

@@ -156,7 +156,9 @@ interface IPoolManagerLike {
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate);
 
     function isLoanManager() external view returns (bool isLoanManager);
- 
+
+    function globals() external view returns (address globals);
+
     function isValidLender(address lender) external view returns (bool isValidLender);
 
     function liquidityCap() external view returns (uint256 liquidityCap);
@@ -172,6 +174,8 @@ interface IPoolManagerLike {
     function poolDelegate() external view returns (address poolDelegate);
 
     function poolDelegateCover() external view returns (address poolDelegateCover);
+
+    function setOpenToPublic() external;
 
     function totalAssets() external view returns (uint256 totalAssets);
 
@@ -216,6 +220,8 @@ interface IPoolV2Like {
     function balanceOf(address account) external view returns (uint256 balance);
 
     function manager() external view returns (address manager);
+
+    function name() external view returns (string memory name);
 
     function totalSupply() external view returns (uint256 totalSupply);
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { SimulationBase } from "../simulations/mainnet/SimulationBase.sol";
+import { Lifecycle } from "../simulations/mainnet/Lifecycle.t.sol";
 
-contract DeployMapleV2 is SimulationBase {
+contract DeployMapleV2 is Lifecycle {
 
     function run() external {
         vm.startBroadcast(deployer);
@@ -11,18 +11,6 @@ contract DeployMapleV2 is SimulationBase {
         _deployProtocol();
 
         vm.stopBroadcast();
-
-        // TODO: sim to end of migration
-        // TODO: run simple lifecycle
-
-        // setupFactoriesForSimulation();
-
-        // migrate();
-
-        // // PoolV2 Lifecycle start
-        // depositAllCovers();
-        // increaseAllLiquidityCaps();
-        // makeAllDeposits();
     }
 
 }
