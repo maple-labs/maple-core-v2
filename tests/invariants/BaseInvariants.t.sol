@@ -279,7 +279,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_pool_invariant_C() internal {
-        assertGe(pool.totalAssets(), pool.totalAssets(), "Pool Invariant C");
+        assertGe(pool.totalAssets(), pool.totalSupply(), "Pool Invariant C");
     }
 
     function assert_pool_invariant_D() internal {

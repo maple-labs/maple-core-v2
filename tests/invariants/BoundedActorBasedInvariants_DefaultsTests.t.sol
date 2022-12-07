@@ -60,6 +60,7 @@ contract BoundedActorBasedInvariants_DefaultsTests is BaseInvariants {
     /*******************************************************************************************************************************
 
     * Pool
+        * Invariant C: totalAssets >= totalSupply (in non-liquidating scenario)
         * Invariant F: balanceOfAssets[user] >= balanceOf[user]
 
     *******************************************************************************************************************************/
@@ -105,7 +106,6 @@ contract BoundedActorBasedInvariants_DefaultsTests is BaseInvariants {
     /******************************************************************************************************************************/
 
     function invariant_pool_A() external useCurrentTimestamp { assert_pool_invariant_A(); }
-    function invariant_pool_C() external useCurrentTimestamp { assert_pool_invariant_C(); }
     function invariant_pool_D() external useCurrentTimestamp { assert_pool_invariant_D(); }
     function invariant_pool_E() external useCurrentTimestamp { assert_pool_invariant_E(); }
     function invariant_pool_H() external useCurrentTimestamp { assert_pool_invariant_H(); }

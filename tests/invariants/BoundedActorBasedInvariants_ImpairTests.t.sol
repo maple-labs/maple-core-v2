@@ -67,6 +67,7 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
             NOTE: Payments mapping state on Loan Manager is out of date during impairment
 
      * Pool
+        * Invariant C: totalAssets >= totalSupply (in non-liquidating scenario)
         * Invariant H: convertToExitShares == convertToShares
             NOTE: Not applicable as unrealized losses changes exchange rate
 
@@ -114,7 +115,6 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
     /******************************************************************************************************************************/
 
     function invariant_pool_A() external useCurrentTimestamp { assert_pool_invariant_A(); }
-    function invariant_pool_C() external useCurrentTimestamp { assert_pool_invariant_C(); }
     function invariant_pool_D() external useCurrentTimestamp { assert_pool_invariant_D(); }
     function invariant_pool_E() external useCurrentTimestamp { assert_pool_invariant_E(); }
     function invariant_pool_I() external useCurrentTimestamp { assert_pool_invariant_I(); }
