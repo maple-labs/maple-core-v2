@@ -24,9 +24,18 @@ import {
 // TODO: Move each validation run() into a properly named function in './simulations/mainnet/Validations', so they can be called individually. Each run() here can call them too.
 // TODO: Add and update error messages for all assertions (use sentence case).
 
-contract SetPoolAdmins is SimulationBase {
+contract ValidationBase is SimulationBase {
 
-    function run() external {
+    modifier failLoudly() {
+        _;
+        require(!failed);
+    }
+
+}
+
+contract SetPoolAdmins is ValidationBase {
+
+    function run() external failLoudly {
         validate(mavenPermissionedPoolV1);
         validate(mavenUsdcPoolV1);
         validate(mavenWethPoolV1);
@@ -40,20 +49,20 @@ contract SetPoolAdmins is SimulationBase {
 
 }
 
-contract SetInvestorAndTreasuryFee is SimulationBase {
+contract SetInvestorAndTreasuryFee is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).investorFee(), 0, "investorFee != 0");
         assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).treasuryFee(), 0, "treasuryFee != 0");
     }
 
 }
 
-contract PayAndClaimUpcomingLoans is SimulationBase {
+contract PayAndClaimUpcomingLoans is ValidationBase {
 
     uint256 constant TOLERANCE = 1 days;
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedLoans);
         validate(mavenUsdcLoans);
         validate(mavenWethLoans);
@@ -74,9 +83,9 @@ contract PayAndClaimUpcomingLoans is SimulationBase {
 
 }
 
-contract RemoveMaturedLoans is SimulationBase {
+contract RemoveMaturedLoans is ValidationBase {
 
-    function run() external view {
+    function run() external view failLoudly {
         validate(mavenPermissionedLoans);
         validate(mavenUsdcLoans);
         validate(mavenWethLoans);
@@ -94,9 +103,9 @@ contract RemoveMaturedLoans is SimulationBase {
 
 }
 
-contract UpgradeLoansToV301 is SimulationBase {
+contract UpgradeLoansToV301 is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedLoans);
         validate(mavenUsdcLoans);
         validate(mavenWethLoans);
@@ -113,9 +122,9 @@ contract UpgradeLoansToV301 is SimulationBase {
 
 }
 
-contract DeployProtocol is SimulationBase {
+contract DeployProtocol is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         // Step 1: Deploy Globals
         assertEq(hash(mapleGlobalsV2Implementation.code), 0x7f8f00f34d98cb9159eb610be220ddf8831f949a680a1a9235a165b44c10f358);
         assertEq(hash(mapleGlobalsV2Proxy.code),          0x68ef8494eef4cbddfd9186d28f4152465fbe01c7c7ca23f7ad55258a056a63c6);
@@ -266,27 +275,27 @@ contract DeployProtocol is SimulationBase {
 
 }
 
-contract SetTemporaryGovernor is SimulationBase {
+contract SetTemporaryGovernor is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         assertEq(IMapleGlobalsV2Like(mapleGlobalsV2Proxy).pendingGovernor(), address(0),   "pendingGovernor != zero");
         assertEq(IMapleGlobalsV2Like(mapleGlobalsV2Proxy).governor(),        tempGovernor, "governor != tempGovernor");
     }
 
 }
 
-contract SetMigrationMultisig is SimulationBase {
+contract SetMigrationMultisig is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         assertEq(IMigrationHelperLike(migrationHelperProxy).pendingAdmin(), address(0),        "pendingAdmin != zero");
         assertEq(IMigrationHelperLike(migrationHelperProxy).admin(),        migrationMultisig, "admin != migrationMultisig");
     }
 
 }
 
-contract RegisterDebtLockers is SimulationBase {
+contract RegisterDebtLockers is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         assertEq(IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLockerV400Implementation), 400,         "debt locker v400 implementation not set");
         assertEq(IMapleProxyFactoryLike(debtLockerFactory).migratorForPath(400, 400), debtLockerV300Initializer, "debt locker v400 initializer not set");
 
@@ -296,33 +305,27 @@ contract RegisterDebtLockers is SimulationBase {
 
 }
 
-contract RegisterLoans is SimulationBase {
+contract RegisterLoans is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV302Implementation), 302,         "loan v302 implementation not set");
         assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(302, 302), loanV300Initializer, "loan v302 initializer not set");
 
         assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV400Implementation), 400,         "loan v400 implementation not set");
         assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(400, 400), loanV400Initializer, "loan v400 initializer not set");
 
-        // assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV401Implementation), 401, "loan v401 implementation not set");
-        // assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(401, 401), loanV400Initializer, "loan v401 initializer not set");
-
         assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(301, 302), address(0), "loan v301 to v302 migrator is not zero");
         assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(301, 302),     "loan v301 to v302 upgrade disabled");
 
         assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(302, 400), loanV400Migrator, "loan v302 to v400 migrator not set");
         assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(302, 400),           "loan v302 to v400 upgrade disabled");
-
-        // assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(400, 401), address(0), "loan v400 to v401 migrator is not zero");
-        // assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(400, 401), "loan v400 to v401 upgrade disabled");
     }
 
 }
 
-contract UpgradeDebtLockersToV400 is SimulationBase {
+contract UpgradeDebtLockersToV400 is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedLoans);
         validate(mavenUsdcLoans);
         validate(mavenWethLoans);
@@ -338,9 +341,9 @@ contract UpgradeDebtLockersToV400 is SimulationBase {
 
 }
 
-contract ClaimAllLoans is SimulationBase {
+contract ClaimAllLoans is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedLoans);
         validate(mavenUsdcLoans);
         validate(mavenWethLoans);
@@ -364,14 +367,27 @@ contract ClaimAllLoans is SimulationBase {
 
 }
 
-contract UpgradeLoansToV302 is SimulationBase {
+contract UpgradeLoansToV302 is ValidationBase {
 
-    function run() external {
-        // validate(mavenPermissionedLoans);
-        // validate(mavenUsdcLoans);
-        // validate(mavenWethLoans);
-        // validate(orthogonalLoans);
-        // validate(icebreakerLoans);
+    function run() external failLoudly {
+        validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
+        validate(orthogonalLoans);
+        validate(icebreakerLoans);
+    }
+
+    function validate(address[] storage loans) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            assertVersion(302, loans[i]);
+        }
+    }
+
+}
+
+contract UpgradeMigrationLoansToV302 is ValidationBase {
+
+    function run() external failLoudly {
         validate(unorderedMigrationLoans);
     }
 
@@ -383,9 +399,9 @@ contract UpgradeLoansToV302 is SimulationBase {
 
 }
 
-contract SetLiquidityCapsToZero is SimulationBase {
+contract SetLiquidityCapsToZero is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolV1);
         validate(mavenUsdcPoolV1);
         validate(mavenWethPoolV1);
@@ -399,9 +415,9 @@ contract SetLiquidityCapsToZero is SimulationBase {
 
 }
 
-contract QueryLiquidityLockers is SimulationBase {
+contract QueryLiquidityLockers is ValidationBase {
 
-    function run() external view {
+    function run() external view failLoudly {
         console.log("mavenPermissionedPoolV1");
         validate(mavenPermissionedPoolV1);
 
@@ -430,9 +446,9 @@ contract QueryLiquidityLockers is SimulationBase {
 
 }
 
-contract QueryMigrationLoans is SimulationBase {
+contract QueryMigrationLoans is ValidationBase {
 
-    function run() external view {
+    function run() external view failLoudly {
         for (uint256 i; i < unorderedMigrationLoans.length; ++i) {
             console.log("");
             console.log("address           ", unorderedMigrationLoans[i]);
@@ -453,9 +469,9 @@ contract QueryMigrationLoans is SimulationBase {
 }
 
 // NOTE: Don't forget to include the migration loan in all further loan checks.
-contract CreateMigrationLoans is SimulationBase {
+contract CreateMigrationLoans is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan, 0);
         validate(mavenUsdcPoolV1,         mavenUsdcMigrationLoan,         10_082_630.136986e6);
         validate(mavenWethPoolV1,         mavenWethMigrationLoan,         5015.766314550488725657e18);
@@ -474,15 +490,7 @@ contract CreateMigrationLoans is SimulationBase {
 
 }
 
-contract FundMigrationLoans is SimulationBase {
-
-    function run() external {
-        validate(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan, 0);
-        validate(mavenUsdcPoolV1,         mavenUsdcMigrationLoan,         10_082_630.136986e6);
-        validate(mavenWethPoolV1,         mavenWethMigrationLoan,         5015.766314550488725657e18);
-        validate(orthogonalPoolV1,        orthogonalMigrationLoan,        1_084_954.227602e6);
-        validate(icebreakerPoolV1,        icebreakerMigrationLoan,        5_649_999.999995e6);
-    }
+abstract contract FundMigrationLoans is ValidationBase {
 
     function validate(address poolV1, address migrationLoan, uint256 funds) internal {
         if (migrationLoan == address(0)) return;
@@ -497,9 +505,49 @@ contract FundMigrationLoans is SimulationBase {
 
 }
 
-contract UpgradeMigrationLoans is SimulationBase {
+contract FundMigrationLoansMavenPermissioned is FundMigrationLoans {
 
-    function run() external {
+    function run() external failLoudly {
+        validate(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan, 0);
+    }
+
+}
+
+contract FundMigrationLoansMavenUsdc is FundMigrationLoans {
+
+    function run() external failLoudly {
+        validate(mavenUsdcPoolV1, mavenUsdcMigrationLoan, 10_082_630.136986e6);
+    }
+
+}
+
+contract FundMigrationLoansMavenWeth is FundMigrationLoans {
+
+    function run() external failLoudly {
+        validate(mavenWethPoolV1, mavenWethMigrationLoan, 5015.766314550488725657e18);
+    }
+
+}
+
+contract FundMigrationLoansOrthogonal is FundMigrationLoans {
+
+    function run() external failLoudly {
+        validate(orthogonalPoolV1, orthogonalMigrationLoan, 1_084_954.227602e6);
+    }
+
+}
+
+contract FundMigrationLoansIcebreaker is FundMigrationLoans {
+
+    function run() external failLoudly {
+        validate(icebreakerPoolV1, icebreakerMigrationLoan, 5_649_999.999995e6);
+    }
+
+}
+
+contract UpgradeMigrationLoans is ValidationBase {
+
+    function run() external failLoudly {
         validate(mavenPermissionedMigrationLoan);
         validate(mavenUsdcMigrationLoan);
         validate(mavenWethMigrationLoan);
@@ -515,15 +563,7 @@ contract UpgradeMigrationLoans is SimulationBase {
 
 }
 
-contract UpgradeMigrationDebtLockers is SimulationBase {
-
-    function run() external {
-        validate(mavenPermissionedMigrationLoan);
-        validate(mavenUsdcMigrationLoan);
-        validate(mavenWethMigrationLoan);
-        validate(orthogonalMigrationLoan);
-        validate(icebreakerMigrationLoan);
-    }
+contract UpgradeMigrationDebtLockers is ValidationBase {
 
     function validate(address migrationLoan) internal {
         if (migrationLoan == address(0)) return;
@@ -534,15 +574,55 @@ contract UpgradeMigrationDebtLockers is SimulationBase {
 
 }
 
-contract PauseProtocol is SimulationBase {
+contract UpgradeMigrationDebtLockersMavenPermissioned is UpgradeMigrationDebtLockers {
 
-    function run() external {
+    function run() external failLoudly {
+        validate(mavenPermissionedMigrationLoan);
+    }
+
+}
+
+contract UpgradeMigrationDebtLockersMavenUsdc is UpgradeMigrationDebtLockers {
+
+    function run() external failLoudly {
+        validate(mavenUsdcMigrationLoan);
+    }
+
+}
+
+contract UpgradeMigrationDebtLockersMavenWeth is UpgradeMigrationDebtLockers {
+
+    function run() external failLoudly {
+        validate(mavenWethMigrationLoan);
+    }
+
+}
+
+contract UpgradeMigrationDebtLockersOrthogonal is UpgradeMigrationDebtLockers {
+
+    function run() external failLoudly {
+        validate(orthogonalMigrationLoan);
+    }
+
+}
+
+contract UpgradeMigrationDebtLockersIcebreaker is UpgradeMigrationDebtLockers {
+
+    function run() external failLoudly {
+        validate(icebreakerMigrationLoan);
+    }
+
+}
+
+contract PauseProtocol is ValidationBase {
+
+    function run() external failLoudly {
         assertTrue(IMapleGlobalsV1Like(mapleGlobalsV1).protocolPaused());
     }
 
 }
 
-contract QueryPoolV2Info is SimulationBase {
+contract QueryPoolV2Info is ValidationBase {
 
     function logPoolV2Info(address poolV2) internal view {
         IPoolManagerLike poolManager = IPoolManagerLike(IPoolV2Like(poolV2).manager());
@@ -557,7 +637,7 @@ contract QueryPoolV2Info is SimulationBase {
 
 contract QueryMavenPermPoolV2Addresses is QueryPoolV2Info {
 
-    function run() external view {
+    function run() external view failLoudly {
         logPoolV2Info(mavenPermissionedPoolV2);
     }
 
@@ -565,7 +645,7 @@ contract QueryMavenPermPoolV2Addresses is QueryPoolV2Info {
 
 contract QueryMavenUsdcPoolV2Addresses is QueryPoolV2Info {
 
-    function run() external view {
+    function run() external view failLoudly {
         logPoolV2Info(mavenUsdcPoolV2);
     }
 
@@ -573,7 +653,7 @@ contract QueryMavenUsdcPoolV2Addresses is QueryPoolV2Info {
 
 contract QueryMavenWethPoolV2Addresses is QueryPoolV2Info {
 
-    function run() external view {
+    function run() external view failLoudly {
         logPoolV2Info(mavenWethPoolV2);
     }
 
@@ -581,7 +661,7 @@ contract QueryMavenWethPoolV2Addresses is QueryPoolV2Info {
 
 contract QueryOrthogonalPoolV2Addresses is QueryPoolV2Info {
 
-    function run() external view {
+    function run() external view failLoudly {
         logPoolV2Info(orthogonalPoolV2);
     }
 
@@ -589,13 +669,13 @@ contract QueryOrthogonalPoolV2Addresses is QueryPoolV2Info {
 
 contract QueryIcebreakerPoolV2Addresses is QueryPoolV2Info {
 
-    function run() external view {
+    function run() external view failLoudly {
         logPoolV2Info(icebreakerPoolV2);
     }
 
 }
 
-contract DeployPools is SimulationBase {
+abstract contract DeployPools is ValidationBase {
 
     struct PoolConfiguration {
         address poolDelegate;
@@ -604,108 +684,7 @@ contract DeployPools is SimulationBase {
         address loanManager;
         address poolDelegateCover;
         address withdrawalManager;
-        bool    active;
-        bool    configured;
-        bool    openToPublic;
-        uint256 liquidityCap;
         uint256 delegateManagementFeeRate;
-    }
-
-    function run() external {
-
-        // TODO separate per pool?
-
-        // Maven Permissioned Pool
-        validatePool(mavenPermissionedPoolV2, mavenPermissionedPoolV1, mavenPermissionedPoolManager, usdc);
-        validatePoolManager(
-            mavenPermissionedPoolManager,
-                PoolConfiguration({
-                poolDelegate:              mavenPermissionedTemporaryPd,
-                asset:                     usdc,
-                pool:                      mavenPermissionedPoolV2,
-                loanManager:               mavenPermissionedLoanManager,
-                poolDelegateCover:         mavenPermissionedPoolDelegateCover,
-                withdrawalManager:         mavenPermissionedWithdrawalManager,
-                active:                    true,
-                configured:                true,
-                openToPublic:              false,
-                liquidityCap:              0,
-                delegateManagementFeeRate: 0.1e6
-        }));
-
-        // Maven Usdc Pool
-        validatePool(mavenUsdcPoolV2, mavenUsdcPoolV1, mavenUsdcPoolManager, usdc);
-        validatePoolManager(
-                mavenUsdcPoolManager,
-                PoolConfiguration({
-                poolDelegate:              mavenUsdcTemporaryPd,
-                asset:                     usdc,
-                pool:                      mavenUsdcPoolV2,
-                loanManager:               mavenUsdcLoanManager,
-                poolDelegateCover:         mavenUsdcPoolDelegateCover,
-                withdrawalManager:         mavenUsdcWithdrawalManager,
-                active:                    true,
-                configured:                true,
-                openToPublic:              true,
-                liquidityCap:              0,
-                delegateManagementFeeRate: 0.1e6
-        }));
-
-        // Maven Weth Pool
-        validatePool(mavenWethPoolV2, mavenWethPoolV1, mavenWethPoolManager, usdc);
-        validatePoolManager(
-                mavenWethPoolManager,
-                PoolConfiguration({
-                poolDelegate:              mavenWethTemporaryPd,
-                asset:                     weth,
-                pool:                      mavenWethPoolV2,
-                loanManager:               mavenWethLoanManager,
-                poolDelegateCover:         mavenWethPoolDelegateCover,
-                withdrawalManager:         mavenWethWithdrawalManager,
-                active:                    true,
-                configured:                true,
-                openToPublic:              true,
-                liquidityCap:              0,
-                delegateManagementFeeRate: 0.1e6
-        }));
-
-        // Orthogonal Pool
-        validatePool(orthogonalPoolV2, orthogonalPoolV1, orthogonalPoolManager, usdc);
-        validatePoolManager(
-                orthogonalPoolManager,
-                PoolConfiguration({
-                poolDelegate:              orthogonalTemporaryPd,
-                asset:                     usdc,
-                pool:                      orthogonalPoolV2,
-                loanManager:               orthogonalLoanManager,
-                poolDelegateCover:         orthogonalPoolDelegateCover,
-                withdrawalManager:         orthogonalWithdrawalManager,
-                active:                    true,
-                configured:                true,
-                openToPublic:              true,
-                liquidityCap:              0,
-                delegateManagementFeeRate: 0.1e6
-        }));
-
-
-        // Icebreaker
-        validatePool(icebreakerPoolV2, icebreakerPoolV1, icebreakerPoolManager, usdc);
-        validatePoolManager(
-                icebreakerPoolManager,
-                PoolConfiguration({
-                poolDelegate:              icebreakerTemporaryPd,
-                asset:                     usdc,
-                pool:                      icebreakerPoolV2,
-                loanManager:               icebreakerLoanManager,
-                poolDelegateCover:         icebreakerPoolDelegateCover,
-                withdrawalManager:         icebreakerWithdrawalManager,
-                active:                    true,
-                configured:                true,
-                openToPublic:              false,
-                liquidityCap:              0,
-                delegateManagementFeeRate: 0.1e6
-        }));
-
     }
 
     function validatePool(address poolV2, address poolV1, address poolManager_, address asset_) internal {
@@ -728,14 +707,16 @@ contract DeployPools is SimulationBase {
         assertEq(poolManager_.pool(),                      poolConfig.pool);
         assertEq(poolManager_.poolDelegateCover(),         poolConfig.poolDelegateCover);
         assertEq(poolManager_.withdrawalManager(),         poolConfig.withdrawalManager);
-        assertEq(poolManager_.liquidityCap(),              poolConfig.liquidityCap);
         assertEq(poolManager_.delegateManagementFeeRate(), poolConfig.delegateManagementFeeRate);
 
-        assertTrue(poolManager_.configured() == poolConfig.openToPublic);
-        assertTrue(poolManager_.active()     == poolConfig.active);
+        assertEq(poolManager_.liquidityCap(), 0);
+
+        assertTrue(poolManager_.configured());
+        assertTrue(!poolManager_.active());
+        assertTrue(!poolManager_.openToPublic());
 
         // Loan Manager
-        assertTrue(poolManager_.isLoanManager());
+        assertTrue(poolManager_.isLoanManager(poolConfig.loanManager));
         assertEq(poolManager_.loanManagerList(0), poolConfig.loanManager);
 
         // Fixed Value
@@ -748,9 +729,113 @@ contract DeployPools is SimulationBase {
 
 }
 
-contract AddLoansToTLM is SimulationBase {
+contract DeployPoolMavenPermissioned is DeployPools {
 
-    function run() external {
+    function run() external failLoudly {
+        // Maven Permissioned Pool
+        validatePool(mavenPermissionedPoolV2, mavenPermissionedPoolV1, address(mavenPermissionedPoolManager), address(usdc));
+        validatePoolManager(
+            mavenPermissionedPoolManager,
+                PoolConfiguration({
+                poolDelegate:              address(mavenPermissionedTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(mavenPermissionedPoolV2),
+                loanManager:               address(mavenPermissionedLoanManager),
+                poolDelegateCover:         address(mavenPermissionedPoolDelegateCover),
+                withdrawalManager:         address(mavenPermissionedWithdrawalManager),
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+    }
+}
+
+contract DeployPoolMavenUsdc is DeployPools {
+
+    function run() external failLoudly {
+
+        // Maven Usdc Pool
+        validatePool(mavenUsdcPoolV2, mavenUsdcPoolV1, address(mavenUsdcPoolManager), address(usdc));
+        validatePoolManager(
+                mavenUsdcPoolManager,
+                PoolConfiguration({
+                poolDelegate:              address(mavenUsdcTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(mavenUsdcPoolV2),
+                loanManager:               address(mavenUsdcLoanManager),
+                poolDelegateCover:         address(mavenUsdcPoolDelegateCover),
+                withdrawalManager:         address(mavenUsdcWithdrawalManager),
+                delegateManagementFeeRate: 0.1e6
+        }));
+    }
+
+}
+
+contract DeployPoolMavenWeth is DeployPools {
+
+    function run() external failLoudly {
+        // Maven Weth Pool
+        validatePool(mavenWethPoolV2, mavenWethPoolV1, address(mavenWethPoolManager), address(weth));
+        validatePoolManager(
+                mavenWethPoolManager,
+                PoolConfiguration({
+                poolDelegate:              address(mavenWethTemporaryPd),
+                asset:                     address(weth),
+                pool:                      address(mavenWethPoolV2),
+                loanManager:               address(mavenWethLoanManager),
+                poolDelegateCover:         address(mavenWethPoolDelegateCover),
+                withdrawalManager:         address(mavenWethWithdrawalManager),
+                delegateManagementFeeRate: 0.1e6
+        }));
+    }
+
+}
+
+
+contract DeployPoolOrthogonal is DeployPools {
+
+    function run() external failLoudly {
+        // Orthogonal Pool
+        validatePool(orthogonalPoolV2, orthogonalPoolV1, address(orthogonalPoolManager), address(usdc));
+        validatePoolManager(
+                orthogonalPoolManager,
+                PoolConfiguration({
+                poolDelegate:              address(orthogonalTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(orthogonalPoolV2),
+                loanManager:               address(orthogonalLoanManager),
+                poolDelegateCover:         address(orthogonalPoolDelegateCover),
+                withdrawalManager:         address(orthogonalWithdrawalManager),
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+    }
+
+}
+
+contract DeployPoolIcebreaker is DeployPools {
+
+    function run() external failLoudly {
+        // Icebreaker
+        validatePool(icebreakerPoolV2, icebreakerPoolV1, address(icebreakerPoolManager), address(usdc));
+        validatePoolManager(
+                icebreakerPoolManager,
+                PoolConfiguration({
+                poolDelegate:              address(icebreakerTemporaryPd),
+                asset:                     address(usdc),
+                pool:                      address(icebreakerPoolV2),
+                loanManager:               address(icebreakerLoanManager),
+                poolDelegateCover:         address(icebreakerPoolDelegateCover),
+                withdrawalManager:         address(icebreakerWithdrawalManager),
+                delegateManagementFeeRate: 0.1e6
+        }));
+
+    }
+
+}
+
+contract AddLoansToTLM is ValidationBase {
+
+    function run() external failLoudly {
         validate(mavenPermissionedLoanManager);
         validate(mavenUsdcLoanManager);
         validate(mavenWethLoanManager);
@@ -764,9 +849,9 @@ contract AddLoansToTLM is SimulationBase {
 
 }
 
-contract ActivatePools is SimulationBase {
+contract ActivatePools is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolManager);
         validate(mavenUsdcPoolManager);
         validate(mavenWethPoolManager);
@@ -782,9 +867,9 @@ contract ActivatePools is SimulationBase {
 
 }
 
-contract OpenPools is SimulationBase {
+contract OpenPools is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenUsdcPoolManager);
         validate(mavenWethPoolManager);
         validate(orthogonalPoolManager);
@@ -797,9 +882,9 @@ contract OpenPools is SimulationBase {
 
 }
 
-contract PermissionPools is SimulationBase {
+contract PermissionPools is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolManager, mavenPermissionedLps);
         validate(icebreakerPoolManager,        icebreakerLps);
     }
@@ -818,120 +903,9 @@ contract PermissionPools is SimulationBase {
 
 }
 
-contract WhitelistBorrowers is SimulationBase {
+contract Airdrop is ValidationBase {
 
-    // TODO
-
-}
-
-contract AirdropTokens is SimulationBase {
-
-    function run() external {
-        // validate(mavenWethPoolManager,         );
-        // validate(mavenUsdcPoolManager,         );
-        // validate(mavenPermissionedPoolManager, );
-        // validate(orthogonalPoolManager,        );
-        // validate(icebreakerPoolManager,        );
-    }
-
-    function validate() internal {
-        // TODO: // migrationHelper.airdropTokens(poolV1, poolManager, lps, lps, lps.length * 2);
-    }
-
-}
-
-contract SetPendingLenders is SimulationBase {
-
-    function run() external {
-        validate(mavenPermissionedLoans, mavenPermissionedLoanManager);
-        validate(mavenUsdcLoans,         mavenUsdcLoanManager);
-        validate(mavenWethLoans,         mavenWethLoanManager);
-        validate(orthogonalLoans,        orthogonalLoanManager);
-        validate(icebreakerLoans,        icebreakerLoanManager);
-    }
-
-    function validate(address[] storage loans, address tlm) internal {
-        for (uint256 i; i < loans.length; ++i) {
-            assertEq(IMapleLoanLike(loans[i]).pendingLender(), tlm, "pending lender != tlm");
-            // TODO: Assert lender
-        }
-    }
-
-}
-
-contract AcceptPendingLenders is SimulationBase {
-
-    function run() external {
-        validate(mavenPermissionedLoans, mavenPermissionedLoanManager);
-        validate(mavenUsdcLoans,         mavenUsdcLoanManager);
-        validate(mavenWethLoans,         mavenWethLoanManager);
-        validate(orthogonalLoans,        orthogonalLoanManager);
-        validate(icebreakerLoans,        icebreakerLoanManager);
-    }
-
-    function validate(address[] storage loans, address tlm) internal {
-        for (uint256 i; i < loans.length; ++i) {
-            assertEq(IMapleLoanLike(loans[i]).lender(),        tlm,        "lender != tlm");
-            assertEq(IMapleLoanLike(loans[i]).pendingLender(), address(0), "pending lender != 0");
-        }
-    }
-
-}
-
-contract UpgradeTLM is SimulationBase {
-
-    function run() external {
-        validate(mavenPermissionedLoanManager);
-        validate(mavenUsdcLoanManager);
-        validate(mavenWethLoanManager);
-        validate(orthogonalLoanManager);
-        validate(icebreakerLoanManager);
-    }
-
-    function validate(address tlm) internal {
-        assertVersion(200, tlm);
-    }
-
-}
-
-contract SetCoverAndLiquidationAmounts is SimulationBase {
-
-    function run() external {
-        validate(mavenWethPoolManager,         750e18);
-        validate(mavenUsdcPoolManager,         1_000_000e6);
-        validate(mavenPermissionedPoolManager, 1_750_000e6);
-        validate(orthogonalPoolManager,        2_500_000e6);
-        validate(icebreakerPoolManager,        500_000e6);
-    }
-
-    function validate(address poolManager, uint256 minCoverAmount) internal {
-        assertEq(IMapleGlobalsV2Like(mapleGlobalsV2Proxy).minCoverAmount(poolManager),             minCoverAmount);
-        assertEq(IMapleGlobalsV2Like(mapleGlobalsV2Proxy).maxCoverLiquidationPercent(poolManager), 0.5e6);
-    }
-
-}
-
-contract UpgradeLoansToV400 is SimulationBase {
-
-    function run() external {
-        validate(mavenPermissionedLoans);
-        validate(mavenUsdcLoans);
-        validate(mavenWethLoans);
-        validate(orthogonalLoans);
-        validate(icebreakerLoans);
-    }
-
-    function validate(address[] storage loans) internal {
-        for (uint256 i; i < loans.length; ++i) {
-            assertVersion(400, loans[i]);
-        }
-    }
-
-}
-
-contract CheckLpPositions is SimulationBase {
-
-    function run() external {
+    function run() external failLoudly {
         console.log("mavenPermissionedPoolV1");
         validate(mavenPermissionedPoolV1, mavenPermissionedPoolV2, mavenPermissionedLps);
 
@@ -971,9 +945,81 @@ contract CheckLpPositions is SimulationBase {
 
 }
 
-contract CloseMigrationLoans is SimulationBase {
+contract SetPendingLenders is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
+        validate(mavenPermissionedLoans, mavenPermissionedLoanManager);
+        validate(mavenUsdcLoans,         mavenUsdcLoanManager);
+        validate(mavenWethLoans,         mavenWethLoanManager);
+        validate(orthogonalLoans,        orthogonalLoanManager);
+        validate(icebreakerLoans,        icebreakerLoanManager);
+    }
+
+    function validate(address[] storage loans, address tlm) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            assertEq(IMapleLoanLike(loans[i]).pendingLender(), tlm, "pending lender != tlm");
+            // TODO: Assert lender
+        }
+    }
+
+}
+
+contract AcceptPendingLenders is ValidationBase {
+
+    function run() external failLoudly {
+        validate(mavenPermissionedLoans, mavenPermissionedLoanManager);
+        validate(mavenUsdcLoans,         mavenUsdcLoanManager);
+        validate(mavenWethLoans,         mavenWethLoanManager);
+        validate(orthogonalLoans,        orthogonalLoanManager);
+        validate(icebreakerLoans,        icebreakerLoanManager);
+    }
+
+    function validate(address[] storage loans, address tlm) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            assertEq(IMapleLoanLike(loans[i]).lender(),        tlm,        "lender != tlm");
+            assertEq(IMapleLoanLike(loans[i]).pendingLender(), address(0), "pending lender != 0");
+        }
+    }
+
+}
+
+contract UpgradeTLM is ValidationBase {
+
+    function run() external failLoudly {
+        validate(mavenPermissionedLoanManager);
+        validate(mavenUsdcLoanManager);
+        validate(mavenWethLoanManager);
+        validate(orthogonalLoanManager);
+        validate(icebreakerLoanManager);
+    }
+
+    function validate(address tlm) internal {
+        assertVersion(200, tlm);
+    }
+
+}
+
+contract UpgradeLoansToV400 is ValidationBase {
+
+    function run() external failLoudly {
+        validate(mavenPermissionedLoans);
+        validate(mavenUsdcLoans);
+        validate(mavenWethLoans);
+        validate(orthogonalLoans);
+        validate(icebreakerLoans);
+    }
+
+    function validate(address[] storage loans) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            assertVersion(400, loans[i]);
+        }
+    }
+
+}
+
+contract CloseMigrationLoans is ValidationBase {
+
+    function run() external failLoudly {
         validate(mavenPermissionedMigrationLoan);
         validate(mavenUsdcMigrationLoan);
         validate(mavenWethMigrationLoan);
@@ -988,9 +1034,9 @@ contract CloseMigrationLoans is SimulationBase {
 
 }
 
-contract UpgradeLoansToV401 is SimulationBase {
+contract UpgradeLoansToV401 is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedLoans);
         validate(mavenUsdcLoans);
         validate(mavenWethLoans);
@@ -1006,9 +1052,9 @@ contract UpgradeLoansToV401 is SimulationBase {
 
 }
 
-contract TransferPoolDelegates is SimulationBase {
+contract TransferPoolDelegates is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolManager, mavenPermissionedFinalPd);
         validate(mavenUsdcPoolManager,         mavenUsdcFinalPd);
         validate(mavenWethPoolManager,         mavenWethFinalPd);
@@ -1022,9 +1068,9 @@ contract TransferPoolDelegates is SimulationBase {
 
 }
 
-contract DeprecatePools is SimulationBase {
+contract DeprecatePools is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolV1);
         validate(mavenUsdcPoolV1);
         validate(mavenWethPoolV1);
@@ -1042,16 +1088,16 @@ contract DeprecatePools is SimulationBase {
         assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).stakerCooldownPeriod(), 0);
 
         // Initialized: 0, Finalized: 1, Deactivated: 2
-        assertEq(pool.poolState(),         2);
+        assertEq(pool.poolState(),           2);
         assertEq(stakeLocker.lockupPeriod(), 0);
     }
 
 }
 
 // TODO: Add a subgraph query to fetch cover providers
-contract WithdrawCover is SimulationBase {
+contract WithdrawCover is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedStakeLocker, mavenPermissionedRewards, mavenPermissionedCoverProviders);
         validate(mavenUsdcStakeLocker,         mavenUsdcRewards,         mavenUsdcCoverProviders);
         validate(mavenWethStakeLocker,         mavenWethRewards,         mavenWethCoverProviders);
@@ -1065,9 +1111,9 @@ contract WithdrawCover is SimulationBase {
 
 }
 
-contract DepositCover is SimulationBase {
+contract DepositCover is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolManager, 1_750_000e6);
         validate(mavenUsdcPoolManager,         1_000_000e6);
         validate(mavenWethPoolManager,         750e18);
@@ -1088,9 +1134,9 @@ contract DepositCover is SimulationBase {
 
 }
 
-contract IncreaseLiquidityCaps is SimulationBase {
+contract IncreaseLiquidityCaps is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         validate(mavenPermissionedPoolManager, 100_000_000e6);
         validate(mavenUsdcPoolManager,         100_000_000e6);
         validate(mavenWethPoolManager,         100_000e18);
@@ -1104,9 +1150,9 @@ contract IncreaseLiquidityCaps is SimulationBase {
 
 }
 
-contract UnpauseProtocol is SimulationBase {
+contract UnpauseProtocol is ValidationBase {
 
-    function run() external {
+    function run() external failLoudly {
         assertTrue(!IMapleGlobalsV1Like(mapleGlobalsV1).protocolPaused());
     }
 
@@ -1116,7 +1162,7 @@ contract UnpauseProtocol is SimulationBase {
 
 // contract RequestUnstakeValidationScript is SimulationBase {
 
-//     function run() external {
+//     function run() external failLoudly {
 //         validate(mavenPermissionedStakeLocker, mavenPermissionedPoolV1.poolDelegate(), 1_622_400_000);
 //         validate(mavenUsdcStakeLocker,         mavenUsdcPoolV1.poolDelegate(),         1_622_400_000);
 //         validate(mavenWethStakeLocker,         mavenWethPoolV1.poolDelegate(),         1_622_400_000);
@@ -1132,7 +1178,7 @@ contract UnpauseProtocol is SimulationBase {
 
 // contract ValidateDefaultVersionsAreSet is SimulationBase {
 
-//     function run() external {
+//     function run() external failLoudly {
 //         // assertEq()
 //     }
 
@@ -1140,7 +1186,7 @@ contract UnpauseProtocol is SimulationBase {
 
 // contract UnstakeDelegateCoverValidationScript is SimulationBase {
 
-//     function run() external {
+//     function run() external failLoudly {
 //         validate(mavenWethStakeLocker,         mavenWethPoolV1.poolDelegate(),         125_049.87499e18,          0, 0, 0);
 //         validate(mavenUsdcStakeLocker,         mavenUsdcPoolV1.poolDelegate(),         153.022e18,                0, 0, 0);
 //         validate(mavenPermissionedStakeLocker, mavenPermissionedPoolV1.poolDelegate(), 16.319926286804447168e18,  0, 0, 0);

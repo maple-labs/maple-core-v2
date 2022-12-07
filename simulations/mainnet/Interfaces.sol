@@ -331,7 +331,7 @@ interface IPoolManagerLike {
 
     function depositCover(uint256 amount) external;
 
-    function isLoanManager() external view returns (bool isLoanManager);
+    function isLoanManager(address loanManager) external view returns (bool isLoanManager);
 
     function isValidLender(address lender) external view returns (bool isValidLender);
 
