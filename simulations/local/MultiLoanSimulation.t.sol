@@ -25,7 +25,7 @@ contract MultiLoanSimulation is SimulationBase {
                 rates:       [uint256(0.12e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
             poolManager_:       address(poolManager),
-            liquidatorFactory_: address(liquidatorFactory),
+            liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start,
             name_:              "loan-1"
         }));
@@ -39,7 +39,7 @@ contract MultiLoanSimulation is SimulationBase {
                 rates:       [uint256(0.10e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
             poolManager_:       address(poolManager),
-            liquidatorFactory_: address(liquidatorFactory),
+            liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start + 5.12 days,
             name_:              "loan-2"
         }));
@@ -53,7 +53,7 @@ contract MultiLoanSimulation is SimulationBase {
                 rates:       [uint256(0.16e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
             poolManager_:       address(poolManager),
-            liquidatorFactory_: address(liquidatorFactory),
+            liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start + 8.88 days,
             name_:              "loan-3"
         }));
@@ -67,7 +67,7 @@ contract MultiLoanSimulation is SimulationBase {
                 rates:       [uint256(0.08e18), uint256(0.02e18), uint256(0), uint256(0)]
             })),
             poolManager_:       address(poolManager),
-            liquidatorFactory_: address(liquidatorFactory),
+            liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start + 12.4 days,
             name_:              "loan-4"
         }));

@@ -13,15 +13,22 @@ import { IPoolManager }         from "../../modules/pool-v2/contracts/interfaces
 import { IRefinancer }          from "../../modules/loan-v401/contracts/interfaces/IRefinancer.sol";
 import { IWithdrawalManager }   from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
-import { IERC20Like, ILoanManagerLike, IMapleLoanLike, IPoolManagerLike } from "./Interfaces.sol";
+import {
+    IERC20Like,
+    ILoanManagerLike,
+    IMapleGlobalsV2Like,
+    IMapleProxyFactoryLike,
+    IPoolManagerLike
+} from "./Interfaces.sol";
 
 import { SimulationBase } from "./SimulationBase.sol";
 
 contract Lifecycle is SimulationBase, CSVWriter {
 
-    mapping(uint256 => address) internal withdrawalQueue;
     uint256 earliestWithdrawal = 1;
     uint256 latestWithdrawal = 0;
+
+    mapping(uint256 => address) internal withdrawalQueue;
 
     /******************************************************************************************************************************/
     /*** Lifecycle Helpers                                                                                                      ***/
@@ -37,7 +44,7 @@ contract Lifecycle is SimulationBase, CSVWriter {
         amount_                  = (getRandomNumber(seed_++) % tenPercentOfPool) + onePercentOfPool;
     }
 
-    function getRandomNumber(uint256 seed_) internal view returns (uint256 number_) {
+    function getRandomNumber(uint256 seed_) internal pure returns (uint256 number_) {
         number_ = uint256(keccak256(abi.encode(seed_++)));
     }
 
@@ -144,8 +151,8 @@ contract Lifecycle is SimulationBase, CSVWriter {
         bytes[] memory refinanceCalls_ = new bytes[](1);
         refinanceCalls_[0] = abi.encodeWithSelector(IRefinancer.setPaymentsRemaining.selector, IMapleLoan(loan_).paymentsRemaining() + 2);
 
-        proposeRefinance(loan_, address(refinancer), block.timestamp, refinanceCalls_, 0, 0);
-        acceptRefinance(poolManager_, loan_, address(refinancer), block.timestamp, refinanceCalls_, 0);
+        proposeRefinance(loan_, refinancer, block.timestamp, refinanceCalls_, 0, 0);
+        acceptRefinance(poolManager_, loan_, refinancer, block.timestamp, refinanceCalls_, 0);
     }
 
     function increaseDepositor(address poolManager_, address lp_, uint256 amount_) internal {
@@ -186,11 +193,11 @@ contract Lifecycle is SimulationBase, CSVWriter {
         lps_.push(lp_);
     }
 
-    function fundNewLoan(address poolManager_, IMapleLoanLike[] storage loans_, address[] storage lps_, uint256 seed_) internal {
+    function fundNewLoan(address poolManager_, address[] storage loans_, address[] storage lps_, uint256 seed_) internal {
         address borrower_ = address(new Address());
 
         vm.startPrank(governor);
-        mapleGlobalsV2.setValidBorrower(borrower_, true);
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setValidBorrower(borrower_, true);
         vm.stopPrank();
 
         uint256 principal_ = 3 * getRandomSensibleAmount(poolManager_, seed_++);
@@ -202,8 +209,8 @@ contract Lifecycle is SimulationBase, CSVWriter {
         uint256[4] memory rates_       = [uint256(0.05e18), uint256(0.05e18), uint256(0.05e18), uint256(0.05e18)];
         uint256[2] memory fees_        = [getRealAmount(1, poolManager_), getRealAmount(1, poolManager_)];
 
-        address loan_ = loanFactory.createInstance(
-            abi.encode(borrower_, address(feeManager), assets_, termDetails_, amounts_, rates_, fees_),
+        address loan_ = IMapleProxyFactoryLike(loanFactory).createInstance(
+            abi.encode(borrower_, feeManager, assets_, termDetails_, amounts_, rates_, fees_),
             bytes32(getRandomNumber(seed_++))
         );
 
@@ -224,7 +231,7 @@ contract Lifecycle is SimulationBase, CSVWriter {
 
         console.log(block.timestamp, "Funding Loan         ", loan_, principal_);
         fundLoan(poolManager_, loan_);
-        loans_.push(IMapleLoanLike(loan_));
+        loans_.push(loan_);
     }
 
     function makeRandomRedeemRequest(address pool_, address[] storage lps_, uint256 seed_) internal {
@@ -260,7 +267,7 @@ contract Lifecycle is SimulationBase, CSVWriter {
         if (lateTime > block.timestamp) vm.warp(lateTime);
 
         console.log(block.timestamp, "Triggering Default   ", loan_);
-        triggerDefault(poolManager_, loan_, address(liquidatorFactory));
+        triggerDefault(poolManager_, loan_, liquidatorFactory);
 
         // ( , , , , , address liquidator_ ) = ILoanManagerLike(IPoolManager(poolManager_).loanManagerList(0)).liquidationInfo(loan_);
     }
@@ -275,10 +282,10 @@ contract Lifecycle is SimulationBase, CSVWriter {
         initCSV(path_, headers);
     }
 
-    function _logOutSortedPayments(IPoolManagerLike poolManager_) internal {
+    function _logOutSortedPayments(address poolManager_) internal view {
         console.log(" --- SortedPayments --- ");
 
-        ILoanManagerLike loanManager_ = ILoanManagerLike(poolManager_.loanManagerList(0));
+        ILoanManagerLike loanManager_ = ILoanManagerLike(IPoolManagerLike(poolManager_).loanManagerList(0));
 
         uint24 paymentId = loanManager_.paymentWithEarliestDueDate();
 
@@ -293,7 +300,7 @@ contract Lifecycle is SimulationBase, CSVWriter {
         console.log(" --- -------------- --- ");
     }
 
-    function performComplexLifecycle(IPoolManagerLike poolManager_, IMapleLoanLike[] storage loans_, address[] storage lps_, uint256 seed_) internal {
+    function performComplexLifecycle(address poolManager_, address[] storage loans_, address[] storage lps_, uint256 seed_) internal {
         // Divide seed by 2 so we can increment "infinitely".
         seed_ /= 2;
 
@@ -303,7 +310,7 @@ contract Lifecycle is SimulationBase, CSVWriter {
 
         // Run this loop until all loans are repaid
         while ((loan = getNextLoan(loans_)) != address(0)) {
-            handleWithdrawalQueue(address(poolManager_));
+            handleWithdrawalQueue(poolManager_);
 
             if (IMapleLoan(loan).nextPaymentDueDate() > block.timestamp) {
                 // Warp to the halfway point between "now" and when the next payment is due
@@ -321,21 +328,21 @@ contract Lifecycle is SimulationBase, CSVWriter {
             } else if (random < 10) {  // 5% chance loan refinanced
                 // TODO: maybe any open loan
                 console.log(block.timestamp, "Refinancing          ", loan);
-                performRefinance(address(poolManager_), loan);
+                performRefinance(poolManager_, loan);
                 continue;  // Since loan is refinanced
             } else if (random < 30) {  // 20% chance new depositor
-                createDepositorRandomly(address(poolManager_), lps_, seed_++);
+                createDepositorRandomly(poolManager_, lps_, seed_++);
             } else if (random < 45) {  // 15% chance increased depositor
-                increaseRandomDepositorRandomly(address(poolManager_), lps_, seed_++);
+                increaseRandomDepositorRandomly(poolManager_, lps_, seed_++);
             } else if (random < 75) {  // 30% chance withdrawal
-                makeRandomRedeemRequest(poolManager_.pool(), lps_, seed_++);
+                makeRandomRedeemRequest(IPoolManager(poolManager_).pool(), lps_, seed_++);
             } else if (random < 85) {  // 10% chance funding new loan
-                fundNewLoan(address(poolManager_), loans_, lps_, seed_++);
+                fundNewLoan(poolManager_, loans_, lps_, seed_++);
             } else if (random < 95) {  // 10% chance impairing loan
                 console.log(block.timestamp, "Impairing            ", loan);
-                impairLoan(address(poolManager_), loan);
+                impairLoan(poolManager_, loan);
             } else if (random < 100) {  // 5% chance liquidating refinanced
-                liquidateLoan(address(poolManager_), loan);
+                liquidateLoan(poolManager_, loan);
                 continue;  // Since loan is defaulted
             }
 
@@ -343,12 +350,12 @@ contract Lifecycle is SimulationBase, CSVWriter {
             if ((getRandomNumber(seed_++) % 4) == 0) {
                 // If the loan was impaired, warp and trigger default first
                 // NOTE: Need to do this because impaired loan will not be seen by `getNextLoan`.
-                if (random < 95) liquidateLoan(address(poolManager_), loan);
+                if (random < 95) liquidateLoan(poolManager_, loan);
 
                 continue;
             }
 
-            handleWithdrawalQueue(address(poolManager_));
+            handleWithdrawalQueue(poolManager_);
 
             // Warp to some time (early or late by up to 15 days) of the payment due date.
             uint256 someTime = IMapleLoan(loan).nextPaymentDueDate() - 15 days + (getRandomNumber(seed_++) % 30 days);
@@ -359,13 +366,13 @@ contract Lifecycle is SimulationBase, CSVWriter {
             makePayment(loan);
         }
 
-        handleWithdrawalQueue(address(poolManager_));
+        handleWithdrawalQueue(poolManager_);
 
-        vm.warp(requestAllRedemptions(poolManager_.pool(), lps_));
+        vm.warp(requestAllRedemptions(IPoolManager(poolManager_).pool(), lps_));
 
-        redeemAll(poolManager_.pool(), lps_);
+        redeemAll(IPoolManager(poolManager_).pool(), lps_);
 
-        withdrawAllPoolCover(address(poolManager_));
+        withdrawAllPoolCover(poolManager_);
     }
 
     /******************************************************************************************************************************/
@@ -393,11 +400,11 @@ contract Lifecycle is SimulationBase, CSVWriter {
 
         uint256[] memory exitTimestamps = new uint256[](5);
 
-        exitTimestamps[0] = requestAllRedemptions(icebreakerPoolManager.pool(),        icebreakerLps);
-        exitTimestamps[1] = requestAllRedemptions(mavenPermissionedPoolManager.pool(), mavenPermissionedLps);
-        exitTimestamps[2] = requestAllRedemptions(mavenUsdcPoolManager.pool(),         mavenUsdcLps);
-        exitTimestamps[3] = requestAllRedemptions(mavenWethPoolManager.pool(),         mavenWethLps);
-        exitTimestamps[4] = requestAllRedemptions(orthogonalPoolManager.pool(),        orthogonalLps);
+        exitTimestamps[0] = requestAllRedemptions(IPoolManagerLike(icebreakerPoolManager).pool(),        icebreakerLps);
+        exitTimestamps[1] = requestAllRedemptions(IPoolManagerLike(mavenPermissionedPoolManager).pool(), mavenPermissionedLps);
+        exitTimestamps[2] = requestAllRedemptions(IPoolManagerLike(mavenUsdcPoolManager).pool(),         mavenUsdcLps);
+        exitTimestamps[3] = requestAllRedemptions(IPoolManagerLike(mavenWethPoolManager).pool(),         mavenWethLps);
+        exitTimestamps[4] = requestAllRedemptions(IPoolManagerLike(orthogonalPoolManager).pool(),        orthogonalLps);
 
         int256 earliest;
 
@@ -405,26 +412,26 @@ contract Lifecycle is SimulationBase, CSVWriter {
             vm.warp(exitTimestamps[uint256(earliest)]);
             exitTimestamps[uint256(earliest)] = 0;
 
-            if      (earliest == 0) redeemAll(icebreakerPoolManager.pool(),        icebreakerLps);
-            else if (earliest == 1) redeemAll(mavenPermissionedPoolManager.pool(), mavenPermissionedLps);
-            else if (earliest == 2) redeemAll(mavenUsdcPoolManager.pool(),         mavenUsdcLps);
-            else if (earliest == 3) redeemAll(mavenWethPoolManager.pool(),         mavenWethLps);
-            else if (earliest == 4) redeemAll(orthogonalPoolManager.pool(),        orthogonalLps);
+            if      (earliest == 0) redeemAll(IPoolManagerLike(icebreakerPoolManager).pool(),        icebreakerLps);
+            else if (earliest == 1) redeemAll(IPoolManagerLike(mavenPermissionedPoolManager).pool(), mavenPermissionedLps);
+            else if (earliest == 2) redeemAll(IPoolManagerLike(mavenUsdcPoolManager).pool(),         mavenUsdcLps);
+            else if (earliest == 3) redeemAll(IPoolManagerLike(mavenWethPoolManager).pool(),         mavenWethLps);
+            else if (earliest == 4) redeemAll(IPoolManagerLike(orthogonalPoolManager).pool(),        orthogonalLps);
         }
 
         vm.startPrank(governor);
-        mapleGlobalsV2.setMinCoverAmount(address(icebreakerPoolManager),        0);
-        mapleGlobalsV2.setMinCoverAmount(address(mavenPermissionedPoolManager), 0);
-        mapleGlobalsV2.setMinCoverAmount(address(mavenUsdcPoolManager),         0);
-        mapleGlobalsV2.setMinCoverAmount(address(mavenWethPoolManager),         0);
-        mapleGlobalsV2.setMinCoverAmount(address(orthogonalPoolManager),        0);
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMinCoverAmount(icebreakerPoolManager,        0);
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMinCoverAmount(mavenPermissionedPoolManager, 0);
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMinCoverAmount(mavenUsdcPoolManager,         0);
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMinCoverAmount(mavenWethPoolManager,         0);
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMinCoverAmount(orthogonalPoolManager,        0);
         vm.stopPrank();
 
-        withdrawAllPoolCover(address(icebreakerPoolManager));
-        withdrawAllPoolCover(address(mavenPermissionedPoolManager));
-        withdrawAllPoolCover(address(mavenUsdcPoolManager));
-        withdrawAllPoolCover(address(mavenWethPoolManager));
-        withdrawAllPoolCover(address(orthogonalPoolManager));
+        withdrawAllPoolCover(icebreakerPoolManager);
+        withdrawAllPoolCover(mavenPermissionedPoolManager);
+        withdrawAllPoolCover(mavenUsdcPoolManager);
+        withdrawAllPoolCover(mavenWethPoolManager);
+        withdrawAllPoolCover(orthogonalPoolManager);
 
         makeDir("./output/simple-lifecycle");
 

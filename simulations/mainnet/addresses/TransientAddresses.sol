@@ -1,149 +1,34 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAccountingCheckerLike,
-    IERC20Like,
-    IFeeManagerLike,
-    ILoanLike,
-    IMapleGlobalsV1Like,
-    IMapleGlobalsV2Like,
-    IMapleProxyFactoryLike,
-    IMigrationHelperLike,
-    IMplRewardsLike,
-    IPoolV1Like,
-    IPoolV2Like,
-    IPoolDeployerLike,
-    IPoolManagerLike,
-    IStakeLockerLike,
-    ITransitionLoanManagerLike,
-    IWithdrawalManagerLike
-} from "./Interfaces.sol";
-
-contract AddressRegistry {
+contract TransientAddresses {
 
     /******************************************************************************************************************************/
-    /*** Multisigs / EOAs                                                                                                       ***/
+    /*** Maven 11 - USDC (Permissioned)                                                                                         ***/
     /******************************************************************************************************************************/
 
-    address constant deployer          = address(0x632a45c25d2139E6B2745eC3e7D309dEf99f2b9F);
-    address constant globalAdmin       = address(0x53eBb2f8E7515992412fA4A850F8e2D6c317757E);
-    address constant governor          = address(0xd6d4Bcde6c816F17889f1Dd3000aF0261B03a196);
-    address constant mapleTreasury     = address(0xa9466EaBd096449d650D5AEB0dD3dA6F52FD0B19);
-    address constant migrationMultisig = address(0x2AD93F308AA812961Ec412a08eD778F4f4933758);
-    address constant securityAdmin     = address(0x6b1A78C1943b03086F7Ee53360f9b0672bD60818);
-    address constant tempGovernor      = address(0x0D8b2C1F11c5f9cD51de6dB3b256C1e3b0800200);
+    address[] mavenPermissionedLps = [
+        0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
+        0x219Fd48E2eF72b8b55C2E3Fe78614b350c06D6eB,
+        0x2E46037a6b9720cd4fCb4498E65324908aBb8d30,
+        0x584B52397A51eD108178970675c3D6622DF9B2bE,
+        0x8C6d9F12C4624afBF4fdCB0892A0fA7e5e6F4412,
+        0x9928C2751aff664Cec0a100F36bf2A31c5dcd8c7,
+        0xe83C69d9594118adA9f95AF629C989805a33c138
+    ];
 
-    /******************************************************************************************************************************/
-    /*** Temporary Pool Delegate Multisigs                                                                                      ***/
-    /******************************************************************************************************************************/
+    address[] mavenPermissionedCoverProviders = [
+        0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4
+    ];
 
-    address icebreakerTemporaryPd        = address(0x37c610584f7834A8FEb490b73E2aC780AEE31905);
-    address mavenPermissionedTemporaryPd = address(0xec67fd8445E9a84311E2BD118A21b2fDaACfc7FA);
-    address mavenUsdcTemporaryPd         = address(0xf11897A0009b3a37f15365A976015E7F22A16d50);
-    address mavenWethTemporaryPd         = address(0xbFA29AA894229d532D1aD1fd7e4226fce842632C);
-    address orthogonalTemporaryPd        = address(0x47c388644C7AA8736CA34e3Bfa0ee1F8284778c1);
-
-    /******************************************************************************************************************************/
-    /*** Final Pool Delegate Multisigs                                                                                          ***/
-    /******************************************************************************************************************************/
-
-    // TODO: Updated addresses.  // TODO: check
-    address icebreakerFinalPd        = address(0x37c610584f7834A8FEb490b73E2aC780AEE31905);
-    address mavenPermissionedFinalPd = address(0xec67fd8445E9a84311E2BD118A21b2fDaACfc7FA);
-    address mavenUsdcFinalPd         = address(0xf11897A0009b3a37f15365A976015E7F22A16d50);
-    address mavenWethFinalPd         = address(0xbFA29AA894229d532D1aD1fd7e4226fce842632C);
-    address orthogonalFinalPd        = address(0x47c388644C7AA8736CA34e3Bfa0ee1F8284778c1);
-
-    /******************************************************************************************************************************/
-    /*** Asset Contracts                                                                                                        ***/
-    /******************************************************************************************************************************/
-
-    IERC20Like mpl  = IERC20Like(0x33349B282065b0284d756F0577FB39c158F935e6);
-    IERC20Like usdc = IERC20Like(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-    IERC20Like wbtc = IERC20Like(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
-    IERC20Like weth = IERC20Like(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-
-    /******************************************************************************************************************************/
-    /*** Maple V1 Contracts                                                                                                     ***/
-    /******************************************************************************************************************************/
-
-    address constant loanV300Initializer       = address(0xfF2CE989b5b5881dB21f67cBe25145FFB053BCCd);
-    address constant debtLockerV300Initializer = address(0x3D01aE38be6D81BD7c8De0D5Cd558eAb3F4cb79b);
-
-    IMapleGlobalsV1Like constant mapleGlobalsV1 = IMapleGlobalsV1Like(0xC234c62c8C09687DFf0d9047e40042cd166F3600);
-
-    IMapleProxyFactoryLike constant debtLockerFactory = IMapleProxyFactoryLike(0xA83404CAA79989FfF1d84bA883a1b8187397866C);
-    IMapleProxyFactoryLike constant loanFactory       = IMapleProxyFactoryLike(0x36a7350309B2Eb30F3B908aB0154851B5ED81db0);
-
-    /******************************************************************************************************************************/
-    /*** Maple V2 Contracts                                                                                                     ***/
-    /******************************************************************************************************************************/
-
-    // NOTE: These contracts are ordered the same way they are deployed, not alphabetically.
-
-    address constant mapleGlobalsV2Implementation    = address(0x0ad92cb3Fc4cd6697E0f14Fb75F3d7da3Bb2e056);
-    IMapleGlobalsV2Like constant mapleGlobalsV2Proxy = IMapleGlobalsV2Like(0x804a6F5F667170F545Bf14e5DDB48C70B788390C);
-
-    IFeeManagerLike constant feeManager = IFeeManagerLike(0xFeACa6A5703E6F9DE0ebE0975C93AE34c00523F2);
-
-    IPoolDeployerLike constant poolDeployer = IPoolDeployerLike(0x9322fCbb9cf9F04728AD9CB62c80a12615FF9aDc);
-
-    IMapleProxyFactoryLike constant liquidatorFactory = IMapleProxyFactoryLike(0xa2091116649b070D2a27Fc5C85c9820302114c63);
-    address constant liquidatorImplementation         = address(0xe6a03Ba967172a1FF218FEE686445f444258021A);
-    address constant liquidatorInitializer            = address(0xED9D14F83eddd08572c403175FFf41c42a35a149);
-
-    IMapleProxyFactoryLike constant loanManagerFactory   = IMapleProxyFactoryLike(0x1551717AE4FdCB65ed028F7fB7abA39908f6A7A6);
-    address constant loanManagerImplementation           = address(0x9303aed6231F131F8e61D579cb69aea4DF365F3D);
-    address constant loanManagerInitializer              = address(0x1cAddEC2A39232253D0a2424C21543f216284bf2);
-    address constant transitionLoanManagerImplementation = address(0x8057206A6C52e8d17e8c0EBE4C1Bb777d1876c8D);
-
-    IMapleProxyFactoryLike constant poolManagerFactory = IMapleProxyFactoryLike(0xE463cD473EcC1d1A4ecF20b62624D84DD20a8339);
-    address constant poolManagerImplementation         = address(0x09Fe53d404fBE13750047eCdB64Ec6aa6Fae46e6);
-    address constant poolManagerInitializer            = address(0x0B240bf499773905802eE4DE43f96407C436d549);
-
-    IMapleProxyFactoryLike constant withdrawalManagerFactory = IMapleProxyFactoryLike(0xb9e25B584dc4a7C9d47aEF577f111fBE5705773B);
-    address constant withdrawalManagerImplementation         = address(0xB12EC38e3508b0919fa989A0e60fde489b46F430);
-    address constant withdrawalManagerInitializer            = address(0x1063dCa836894b12f29003CA2899ff806A2B0B31);
-
-    address constant loanV302Implementation = address(0x608FA47Ff8bD47FC5EC8bfB36925E5Dbd4ede68d);
-    address constant loanV400Initializer    = address(0xDAa12dd385CbD04C60494efBbE8E757Ec1B649Ca);
-    address constant loanV400Implementation = address(0xe7Bd3cc389B2182E6eC350fa9c90670dD76c061c);
-    address constant loanV400Migrator       = address(0xb4Be919810c6F4ce20b2D3cC221FD5D737B46C3E);
-
-    address constant debtLockerV400Migrator       = address(0x5Bf3863b0355a547ecA79Ab489addd6092717431);
-    address constant debtLockerV400Implementation = address(0x4FB5AC98E33C3F5a4C7a51974A34e125d3F4E003);
-
-    IAccountingCheckerLike constant accountingChecker = IAccountingCheckerLike(0x4c9CEa7f6aCE3Dc0D85b86c1925542AdeCE1eF15);
-
-    address constant deactivationOracle = address(0xaF99aBBc5F12CE93C144733073A80c57e81296ab);
-
-    address constant migrationHelperImplementation     = address(0xd8B74109916C0bBFDbE5e4345fF9584bDE47044a);
-    IMigrationHelperLike constant migrationHelperProxy = IMigrationHelperLike(0x580B1A894b9FbdBf7d29Ba9b492807Bf539dD508);
-
-    address constant refinancer = address(0xec90671c2c8f4cCBb6074938f893306a13402251);
-
-    ILoanLike[] unorderedMigrationLoans = [
-        ILoanLike(0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b),
-        ILoanLike(0x132aCcE7BD6F8Ce8D4575Bf309E5055F5c70aC55),
-        ILoanLike(0x4165cb429CAEC4b1078C26A77DbE67d01E28cABb),
-        ILoanLike(0x163CF4362477c7eB3d7609C8a4d86051A4FE17b5)
+    address[] mavenPermissionedLoans = [
+        0x500055809685ecebA5eC55786f65440583954501,
+        0xa83b134809183c634A692D5b5F457b78Cd6913e6
     ];
 
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC 01                                                                                                     ***/
     /******************************************************************************************************************************/
-
-    ILoanLike                  mavenUsdcMigrationLoan         = ILoanLike(0x132aCcE7BD6F8Ce8D4575Bf309E5055F5c70aC55);
-    IPoolV1Like                mavenUsdcPoolV1                = IPoolV1Like(0x6F6c8013f639979C84b756C7FC1500eB5aF18Dc4);
-    IPoolV2Like                mavenUsdcPoolV2                = IPoolV2Like(0xfF09bD9c4353c46b7C0FfA2D5714314662f2ebd4);
-    IPoolManagerLike           mavenUsdcPoolManager           = IPoolManagerLike(0x1e1e4764A507E8445465595cE0707Aee17d67EED);
-    IMplRewardsLike            mavenUsdcRewards               = IMplRewardsLike(0xe5A1cb65E7a608E778B3Ccb02F7B2DFeFeE783B4);
-    IStakeLockerLike           mavenUsdcStakeLocker           = IStakeLockerLike(0xbb7866435b8e5D3F6c2EA8b720c8F79db6f7C1b4);
-    ITransitionLoanManagerLike mavenUsdcTransitionLoanManager = ITransitionLoanManagerLike(0x109ADbBD4f52918378a75Bc93DF2A70fC04F720F);
-    IWithdrawalManagerLike     mavenUsdcWithdrawalManager     = IWithdrawalManagerLike(0x4C129fa22654d1f9c3c4d30EB5a43CC8dA454A11);
-
-    address mavenUsdcPoolDelegateCover = address(0);
 
     address[] mavenUsdcLps = [
         0x00080000158A9930aeb508823103b0a977161c47,
@@ -156,6 +41,7 @@ contract AddressRegistry {
         0x03Ad685de7409196894c65f97ced0185170b958b,
         0x056517f7429D68E08d8d5831522a0706B3bb0207,
         0x05b0B5589f548c63C4559f81838fEb48B54a653d,
+        0x066fbDe685FB522E6903B28f833B7E12119a1AbA,
         0x07dc9483bc1839deAB93c4Bf4edcE8c613B794a3,
         0x08003dADc2cA92011ACD55EB06eA97AE5F473de9,
         0x08b1f1847efd58B7e39e8E9E45c674844E4EC844,
@@ -265,6 +151,7 @@ contract AddressRegistry {
         0x5118b43F116543c03197eB94A53F2fe6d50Ec9F3,
         0x51332610225DafaBddA9b5e3e05475d87402752c,
         0x52d597334A853Cfc0e5aFDE7E813Ae5a7E965176,
+        0x553210AcF00A98286077D4E93B3B476be5e1794D,
         0x556D5F0a4a56675f4a3CF1fB5293328b20e338A6,
         0x5570fad9Aa8f4487C074aD4De085960705B22d63,
         0x5672c178F19d375578E6Fd3494ED077267f032a1,
@@ -456,6 +343,7 @@ contract AddressRegistry {
         0xE0A998E2416159Ec62A02b15E52760f85aBfa13e,
         0xe2D0E650707383336E97365545a68d207757F1c2,
         0xe31f3CCA152Fbbe45d73Ef64dE25d81228F8f7a7,
+        0xe47E1ac440A31A8C77C825cF30D9a91f6352Bc84,
         0xE4BBe2f185Fb37EffC311c190d0DB2Ec8Eb46893,
         0xE4de1953e5e8C8685c6d41020faAbF5dc23711D1,
         0xe58Aa11A1AD425b12B4a3155124245cd36DA4f5e,
@@ -495,97 +383,55 @@ contract AddressRegistry {
     ];
 
     address[] mavenUsdcCoverProviders = [
-        address(0x0c8bFC46C4fB39b6eEd7814E8830fAc0a45F8D6D),
-        address(0x0f07EBbd719C9aAd480AcE5f6aA2c044E92380Ac),
-        address(0x1B793b70834A80B1CF1b9C279084409De419c956),
-        address(0x186cf5714316F47BC59e30a850615A3f938d7D79),
-        address(0x212F527CBf536af122931FEf9EED1De87f8dF6Ed),
-        address(0x2719150aEA3b6bEcfC85229f8A89B7F94AEccE1b),
-        address(0x360C3f56976c2429658Ba9AA763BdF1Ff835A50A),
-        address(0x3Fa457EACC2d90570C9d2a435a9a59f9A46605E1),
-        address(0x52705A276D86c4dc7f33a54AF565C038FbdB8e2a),
-        address(0x53e73538c28A96B68d92E5B049C3996BE048D3A2),
-        address(0x607F2D398D51CC0D2E87036C02b36c250A9f3909),
-        address(0x6f9BB7e454f5B3eb2310343f0E99269dC2BB8A1d),
-        address(0x7371Da5AC817C05547da65a84EACd72D653027AF),
-        address(0x7E0Df04CBeA8fC4740D2d64a84E34d1a028987D4),
-        address(0x8735F6C54b98d8C4da04115caee48B1ff31e7E9C),
-        address(0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D),
-        address(0x8B4aa04E9642b387293cE6fFfA42715a9cd19f3C),
-        address(0x8fe8F4AE3DD8AA5c190e42fA108560996b35942A),
-        address(0xa2e759bDb0BF658eD2812aDa1Ecff0D6Ca4F68AE),
-        address(0xa44A09B196d767061Cc252c30d253Ced797f035f),
-        address(0xB187a6d7BFAdbca875164eB2Be8A862b320Dfc98),
-        address(0xB204Ff6f1074d4fF83FAb608671A982dB46DB3f2),
-        address(0xbAa882D68FC5325fC3899dE264F24B5981523A5C),
-        address(0xbF780E695A8c37ae8c4030Cc75FfEcCDCF03FddC),
-        address(0xc6E4Ad3ccdfC65687D2d60a454a8bdDc1F4d6c06),
-        address(0xc87d690a8D20FAE8509aa27db0850B199645327C),
-        address(0xcD89D190353b1D0D4C103102C38b76F7696D511d),
-        address(0xDe3258C1C45a557F4924d1E4e3d0A4E5341607Ee),
-        address(0xe015c0D33389e5F0382CceeC817CC3032edE113D),
-        address(0xe18B7E20c0b9A8FA16C20911B706Be8DC69d3485),
-        address(0xEF9355e1f3Ed17459078DFb54bf609C3f65E3f34),
-        address(0xFe14c77979Ea159605b0fABDeB59B1166C3D95e3),
-        address(0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4),
-        address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C),
-        address(0x990d11977378D4610776e6646b2cAAe543Ea4EDA)
+        0x0c8bFC46C4fB39b6eEd7814E8830fAc0a45F8D6D,
+        0x0f07EBbd719C9aAd480AcE5f6aA2c044E92380Ac,
+        0x1B793b70834A80B1CF1b9C279084409De419c956,
+        0x186cf5714316F47BC59e30a850615A3f938d7D79,
+        0x212F527CBf536af122931FEf9EED1De87f8dF6Ed,
+        0x2719150aEA3b6bEcfC85229f8A89B7F94AEccE1b,
+        0x360C3f56976c2429658Ba9AA763BdF1Ff835A50A,
+        0x3Fa457EACC2d90570C9d2a435a9a59f9A46605E1,
+        0x52705A276D86c4dc7f33a54AF565C038FbdB8e2a,
+        0x53e73538c28A96B68d92E5B049C3996BE048D3A2,
+        0x607F2D398D51CC0D2E87036C02b36c250A9f3909,
+        0x6f9BB7e454f5B3eb2310343f0E99269dC2BB8A1d,
+        0x7371Da5AC817C05547da65a84EACd72D653027AF,
+        0x7E0Df04CBeA8fC4740D2d64a84E34d1a028987D4,
+        0x8735F6C54b98d8C4da04115caee48B1ff31e7E9C,
+        0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D,
+        0x8B4aa04E9642b387293cE6fFfA42715a9cd19f3C,
+        0x8fe8F4AE3DD8AA5c190e42fA108560996b35942A,
+        0xa2e759bDb0BF658eD2812aDa1Ecff0D6Ca4F68AE,
+        0xa44A09B196d767061Cc252c30d253Ced797f035f,
+        0xB187a6d7BFAdbca875164eB2Be8A862b320Dfc98,
+        0xB204Ff6f1074d4fF83FAb608671A982dB46DB3f2,
+        0xbAa882D68FC5325fC3899dE264F24B5981523A5C,
+        0xbF780E695A8c37ae8c4030Cc75FfEcCDCF03FddC,
+        0xc6E4Ad3ccdfC65687D2d60a454a8bdDc1F4d6c06,
+        0xc87d690a8D20FAE8509aa27db0850B199645327C,
+        0xcD89D190353b1D0D4C103102C38b76F7696D511d,
+        0xDe3258C1C45a557F4924d1E4e3d0A4E5341607Ee,
+        0xe015c0D33389e5F0382CceeC817CC3032edE113D,
+        0xe18B7E20c0b9A8FA16C20911B706Be8DC69d3485,
+        0xEF9355e1f3Ed17459078DFb54bf609C3f65E3f34,
+        0xFe14c77979Ea159605b0fABDeB59B1166C3D95e3,
+        0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4,
+        0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C,
+        0x990d11977378D4610776e6646b2cAAe543Ea4EDA
     ];
 
-    ILoanLike[] mavenUsdcLoans = [
-        ILoanLike(0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6),
-        ILoanLike(0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573),
-        ILoanLike(0xa58fD39138083783689d700758D00873538C6C2A),
-        ILoanLike(0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521),
-        ILoanLike(0xF6950F28353cA676100C2a92DD360DEa16A213cE)
-    ];
-
-    /******************************************************************************************************************************/
-    /*** Maven 11 - USDC (Permissioned)                                                                                         ***/
-    /******************************************************************************************************************************/
-
-    ILoanLike                  mavenPermissionedMigrationLoan         = ILoanLike(address(0));
-    IPoolV1Like                mavenPermissionedPoolV1                = IPoolV1Like(0xCC8058526De295c6aD917Cb41416366D69A24CdE);
-    IPoolV2Like                mavenPermissionedPoolV2                = IPoolV2Like(0xEeDaB59F194308acebF65567C04b113c521b4875);
-    IPoolManagerLike           mavenPermissionedPoolManager           = IPoolManagerLike(0x6a2F2c2C6d925a76902a47cA500f178cEb283851);
-    IMplRewardsLike            mavenPermissionedRewards               = IMplRewardsLike(address(0));
-    IStakeLockerLike           mavenPermissionedStakeLocker           = IStakeLockerLike(0x15D297B15A631D1f3B53A337D31BDd2d950d5402);
-    ITransitionLoanManagerLike mavenPermissionedTransitionLoanManager = ITransitionLoanManagerLike(0x2AD0Fc5d17a1bBb9bC7D85657936F77224397197);
-    IWithdrawalManagerLike     mavenPermissionedWithdrawalManager     = IWithdrawalManagerLike(0x55e65F59BAdA61b1154F6A762f4E1D7e2CeB9E5d);
-
-    address mavenPermissionedPoolDelegateCover = address(0);
-
-    address[] mavenPermissionedLps = [
-        0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
-        0x219Fd48E2eF72b8b55C2E3Fe78614b350c06D6eB,
-        0x2E46037a6b9720cd4fCb4498E65324908aBb8d30,
-        0x584B52397A51eD108178970675c3D6622DF9B2bE,
-        0x8C6d9F12C4624afBF4fdCB0892A0fA7e5e6F4412,
-        0x9928C2751aff664Cec0a100F36bf2A31c5dcd8c7,
-        0xe83C69d9594118adA9f95AF629C989805a33c138
-    ];
-
-    address[] mavenPermissionedCoverProviders = [0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4];
-
-    ILoanLike[] mavenPermissionedLoans = [
-        ILoanLike(0x500055809685ecebA5eC55786f65440583954501),
-        ILoanLike(0xa83b134809183c634A692D5b5F457b78Cd6913e6)
+    address[] mavenUsdcLoans = [
+        0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6,
+        0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573,
+        0x726893373DE92b8272298D76a7D60a5F51b90dA9,
+        0xa58fD39138083783689d700758D00873538C6C2A,
+        0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521,
+        0xF6950F28353cA676100C2a92DD360DEa16A213cE
     ];
 
     /******************************************************************************************************************************/
     /*** Maven 11 - WETH                                                                                                        ***/
     /******************************************************************************************************************************/
-
-    ILoanLike                  mavenWethMigrationLoan         = ILoanLike(0x4165cb429CAEC4b1078C26A77DbE67d01E28cABb);
-    IPoolV1Like                mavenWethPoolV1                = IPoolV1Like(0x1A066b0109545455BC771E49e6EDef6303cb0A93);
-    IPoolV2Like                mavenWethPoolV2                = IPoolV2Like(0x6F3c4776Aa3b8C7a3DEbe459F79809a7b80C30c4);
-    IPoolManagerLike           mavenWethPoolManager           = IPoolManagerLike(0xdFBD8926776Ef0ce8d815A399Fc5902A752a362b);
-    IMplRewardsLike            mavenWethRewards               = IMplRewardsLike(0x0a76C7913C94F2AF16958FbDF9b4CF0bBdb159d8);
-    IStakeLockerLike           mavenWethStakeLocker           = IStakeLockerLike(0xD5Deeb06859369e42cf1906408eD6Cb249E0e002);
-    ITransitionLoanManagerLike mavenWethTransitionLoanManager = ITransitionLoanManagerLike(0xA64078c536979466E86AB71EB382A185Ad47113b);
-    IWithdrawalManagerLike     mavenWethWithdrawalManager     = IWithdrawalManagerLike(0x6790e019313C97FC11C6B0b3108Cdf947F71B2E3);
-
-    address mavenWethPoolDelegateCover = address(0);
 
     address[] mavenWethLps = [
         0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
@@ -606,7 +452,6 @@ contract AddressRegistry {
         0x688B5c7B549339922C0D2243debE2Fe921A1A488,
         0x73F7261cF493105202F8dcbB11C126a65703dA55,
         0x86950F7fC23920aFb83523d8362FaD39712ec719,
-        0x8d26C9DAC7E16738752fa1446b956A97C63e2F39,
         0x8dcB33D373966486885aA933c2dcb2B134bA9445,
         0x8eB2E34552A618f92bA32E045a06529b186dC8Da,
         0x9164E822Db664A1B139F39Cc3eCC40aecd276b0F,
@@ -619,7 +464,6 @@ contract AddressRegistry {
         0xaB3efcD5583d2EBc01742CF1C88B7C034Fd0A8eC,
         0xACf14710b3A8E5F47369eAb81E728e0052811DbF,
         0xAF0B4E80a78017B0F9290B3D943dEB4B727346C8,
-        0xb44cD5c304e1A9dD56C621D47060939df83a9238,
         0xb6D844E2529Bc79a444662aa55f72acA08fd8f54,
         0xCfc7e5C3f931080e1f865f117dAD0e2DFb504e99,
         0xe2008b01A2AD0A9AeEA9f71ecC6A176138553a61,
@@ -633,42 +477,31 @@ contract AddressRegistry {
     ];
 
     address[] mavenWethCoverProviders = [
-        address(0x990d11977378D4610776e6646b2cAAe543Ea4EDA),
-        address(0x31c039383d787457b75D185D820D4A37aB80DAD2),
-        address(0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C)
+        0x990d11977378D4610776e6646b2cAAe543Ea4EDA,
+        0x31c039383d787457b75D185D820D4A37aB80DAD2,
+        0x0168002cc0CFeDb3E77Af7172bf28adBD783ce5C
     ];
 
-    ILoanLike[] mavenWethLoans = [
-        ILoanLike(0x0104AE451AD2542aC9250Ebe4a37D0717FdfC60C),
-        ILoanLike(0x2872C1140117a5DE85E0DD06Ed1B439D23707AD1),
-        ILoanLike(0x2cB5c20309B2DbfDda758237f20c94b5F72d0331),
-        ILoanLike(0x40d9fBe05d8F9f1215D5a6d01994ad1a6a097616),
-        ILoanLike(0x4DbE67c683A731807EAAa99A1DF2D3E79ebECA00),
-        ILoanLike(0x64982f1aA56340C0051bDCeFb7a69911Fd9D141d),
-        ILoanLike(0x91A4eEe4D33d9cd7840CAe21A4f408c0919F555D),
-        ILoanLike(0xC8c17328796F472A97B7784cc5F52b802A89deC1),
-        ILoanLike(0xdeF9146F12e22e5c69Fb7b7D181534240c04FdCE)
+    address[] mavenWethLoans = [
+        0x0104AE451AD2542aC9250Ebe4a37D0717FdfC60C,
+        0x2872C1140117a5DE85E0DD06Ed1B439D23707AD1,
+        0x2cB5c20309B2DbfDda758237f20c94b5F72d0331,
+        0x40d9fBe05d8F9f1215D5a6d01994ad1a6a097616,
+        0x4DbE67c683A731807EAAa99A1DF2D3E79ebECA00,
+        0x64982f1aA56340C0051bDCeFb7a69911Fd9D141d,
+        0x91A4eEe4D33d9cd7840CAe21A4f408c0919F555D,
+        0xC8c17328796F472A97B7784cc5F52b802A89deC1,
+        0xdeF9146F12e22e5c69Fb7b7D181534240c04FdCE,
+        0xFcF8725d0D9A786448c5B9b9cc67226d7e4d5c3D
     ];
 
     /******************************************************************************************************************************/
     /*** Orthogonal Trading - USDC 01                                                                                           ***/
     /******************************************************************************************************************************/
 
-    ILoanLike                  orthogonalMigrationLoan         = ILoanLike(0x163CF4362477c7eB3d7609C8a4d86051A4FE17b5);
-    IPoolV1Like                orthogonalPoolV1                = IPoolV1Like(0xFeBd6F15Df3B73DC4307B1d7E65D46413e710C27);
-    IPoolV2Like                orthogonalPoolV2                = IPoolV2Like(0xd6fd728884Ba453147fC8De267A4aE294158f0FF);
-    IPoolManagerLike           orthogonalPoolManager           = IPoolManagerLike(0x06Ad9d70b1F099B0c48a015DBc2357766d2ab142);
-    IMplRewardsLike            orthogonalRewards               = IMplRewardsLike(0xf9D4D5a018d91e9BCCC1e35Ea78FcfEcF4c5Cbca);
-    IStakeLockerLike           orthogonalStakeLocker           = IStakeLockerLike(0x12B2BbBfAB2CE6789DF5659E9AC27A4A91C96C5C);
-    ITransitionLoanManagerLike orthogonalTransitionLoanManager = ITransitionLoanManagerLike(0xc7aa964966AB7E1B4f023506A9009f776fe1791F);
-    IWithdrawalManagerLike     orthogonalWithdrawalManager     = IWithdrawalManagerLike(0xDc288148510c731027D50E344D2d70f8ba19Abf1);
-
-    address orthogonalPoolDelegateCover = address(0);
-
     address[] orthogonalLps = [
         0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
         0x00843213a104A752Ec360108688979e378204137,
-        0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
         0x01930dC6d5D5EF8D02e02dc163C33c4a963752Fb,
         0x02d7F86F6e4aB78F4020E001204372072aB364C8,
         0x032e7c4e7F677D5559Ab1b8b74F3108bcbc09cDB,
@@ -800,7 +633,6 @@ contract AddressRegistry {
         0x8F99729DF9E57e1f927982cb803D004378b775bb,
         0x9376878e0a52a0A71570DB963467d789cFF44Fe2,
         0x948b1Ce64180e3d50489E7111194cf069e73785a,
-        0x961870e8aA20DD1A6a5833d0854a6A5c4Ad77EC0,
         0x979581C17a030F70e3B13129F2DdF2bC84a17a8E,
         0x97Ba2CCF0c43ef10a09B2C53DB0DF4572f18FE7C,
         0x98B2180e96cB483162E2aab070E38A0b03c34C7d,
@@ -870,7 +702,6 @@ contract AddressRegistry {
         0xdd7D5859824917560Ba0586F4A4df2a5Fcd9825A,
         0xdE0f4538010c538A1bCA467722E626475cE5F955,
         0xdF0635793e91D4F8e7426Dbd9Ed08471186F428D,
-        0xdfb2345cb3E38d515E4edF949EC21e09509f82A1,
         0xe15cf0EDe90e9059188fc8439014D1fFE29E0bbc,
         0xe480c1b7A4f2990B91fBDE616D4B4DCe06482b42,
         0xE4BBe2f185Fb37EffC311c190d0DB2Ec8Eb46893,
@@ -900,62 +731,52 @@ contract AddressRegistry {
     ];
 
     address[] orthogonalCoverProviders = [
-        address(0x04eB07C283Cd6d9bf237118e2732D8b6Ee5eE457),
-        address(0x09F41c916B5C2e26706fEbf7c4666d2afE57419A),
-        address(0x0BD1454fa01dD11bF6646BF8bc17a3E48Fda3734),
-        address(0x0e8bC80BAeb4DE22e8bE1007EFDFaE79CD15EDF7),
-        address(0x12Be641f6CE5d30E422e1573e0759496Dc127614),
-        address(0x1e79F6714c7dFBb6504357786A2aaBb2304dE2DD),
-        address(0x2291F52bddc937b5B840d15E551e1DA8C80c2B3c),
-        address(0x26b4b3d787B9B763aDa19203059D621Bca3a870f),
-        address(0x2e2E066432bA88688C83d9F62E8e5E0e25646a5D),
-        address(0x39Fa9C5d71A0eCd684B6Ce62c5EE897a6D2874d2),
-        address(0x468b84EfDf2AdFCEdde007403290E8FC396A0b3F),
-        address(0x53e73538c28A96B68d92E5B049C3996BE048D3A2),
-        address(0x554959af42454442370c782b9F2F7265D64Fb469),
-        address(0x6ab791754298D6D6d7C182DC1572126B4eD24897),
-        address(0x6bfd30747Ba72Ac7BB2f20D6138e1312020fAFe8),
-        address(0x710fDB2dc7774A9755cA36070704D7B12625DfF5),
-        address(0x7371Da5AC817C05547da65a84EACd72D653027AF),
-        address(0x75A8c6047De5A6aC0a6f15438DFe32C9B97e2299),
-        address(0x81FA0f35b54790F78e76C74D05Bd6d95632C030b),
-        address(0x8476D9239fe38Ca683c6017B250112121cdB8D9B),
-        address(0x86220aA5b12cb8eFb255F53e90e30bA6893cf059),
-        address(0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D),
-        address(0x929A5753C41eaed288F946bCBFe4a954Ad341797),
-        address(0x9376878e0a52a0A71570DB963467d789cFF44Fe2),
-        address(0xA5D591875cE13D7abf04d63419e2970F0d51Aa51),
-        address(0xA6cCb9483E3E7a737E3a4F5B72a1Ce51838ba122),
-        address(0xb9648d93832cAbefA403145D99b15869834b04E3),
-        address(0xBD235D7aAA1171B25c52B097F1daA36cd527C550),
-        address(0xD591c28C3396008FFb936521C9ceb4cCcc801d27),
-        address(0xD6F82502F20647dd8d78DFFb6AD7F8D8193d5e29),
-        address(0xe015c0D33389e5F0382CceeC817CC3032edE113D),
-        address(0xe72AFd50bDECdf13e46d89E56AFa58b0d5698fDF),
-        address(0xeba98049A242D9788C2FE12B74F774080a17BF3e),
-        address(0xF4Ae6165c3E05Ae7426c5B5200E8b9A7565aC595),
-        address(0xF9107317B0fF77eD5b7ADea15e50514A3564002B)
+        0x04eB07C283Cd6d9bf237118e2732D8b6Ee5eE457,
+        0x09F41c916B5C2e26706fEbf7c4666d2afE57419A,
+        0x0BD1454fa01dD11bF6646BF8bc17a3E48Fda3734,
+        0x0e8bC80BAeb4DE22e8bE1007EFDFaE79CD15EDF7,
+        0x12Be641f6CE5d30E422e1573e0759496Dc127614,
+        0x1e79F6714c7dFBb6504357786A2aaBb2304dE2DD,
+        0x2291F52bddc937b5B840d15E551e1DA8C80c2B3c,
+        0x26b4b3d787B9B763aDa19203059D621Bca3a870f,
+        0x2e2E066432bA88688C83d9F62E8e5E0e25646a5D,
+        0x39Fa9C5d71A0eCd684B6Ce62c5EE897a6D2874d2,
+        0x468b84EfDf2AdFCEdde007403290E8FC396A0b3F,
+        0x53e73538c28A96B68d92E5B049C3996BE048D3A2,
+        0x554959af42454442370c782b9F2F7265D64Fb469,
+        0x6ab791754298D6D6d7C182DC1572126B4eD24897,
+        0x6bfd30747Ba72Ac7BB2f20D6138e1312020fAFe8,
+        0x710fDB2dc7774A9755cA36070704D7B12625DfF5,
+        0x7371Da5AC817C05547da65a84EACd72D653027AF,
+        0x75A8c6047De5A6aC0a6f15438DFe32C9B97e2299,
+        0x81FA0f35b54790F78e76C74D05Bd6d95632C030b,
+        0x8476D9239fe38Ca683c6017B250112121cdB8D9B,
+        0x86220aA5b12cb8eFb255F53e90e30bA6893cf059,
+        0x885579f1C3d2c2EBaE518AffAf1A0F46829AEaDe,
+        0x8B311BCb95D12b98252b6c1b9f8752de79E8d50D,
+        0x929A5753C41eaed288F946bCBFe4a954Ad341797,
+        0x9376878e0a52a0A71570DB963467d789cFF44Fe2,
+        0xA5D591875cE13D7abf04d63419e2970F0d51Aa51,
+        0xA6cCb9483E3E7a737E3a4F5B72a1Ce51838ba122,
+        0xb9648d93832cAbefA403145D99b15869834b04E3,
+        0xBD235D7aAA1171B25c52B097F1daA36cd527C550,
+        0xD591c28C3396008FFb936521C9ceb4cCcc801d27,
+        0xD6F82502F20647dd8d78DFFb6AD7F8D8193d5e29,
+        0xe015c0D33389e5F0382CceeC817CC3032edE113D,
+        0xe72AFd50bDECdf13e46d89E56AFa58b0d5698fDF,
+        0xeba98049A242D9788C2FE12B74F774080a17BF3e,
+        0xF4Ae6165c3E05Ae7426c5B5200E8b9A7565aC595,
+        0xF9107317B0fF77eD5b7ADea15e50514A3564002B
     ];
 
-    ILoanLike[] orthogonalLoans = [
-        ILoanLike(0x249B5907564f0Cf3Fb771b013A6f9f33e1225657),
-        ILoanLike(0xb43623a3c0501b026d099038d2De26e489d4A147)
+    address[] orthogonalLoans = [
+        0x249B5907564f0Cf3Fb771b013A6f9f33e1225657,
+        0xb43623a3c0501b026d099038d2De26e489d4A147 // Has claimable funds but no principal, will be removed.
     ];
 
     /******************************************************************************************************************************/
     /*** Icebreaker Finance - USDC                                                                                              ***/
     /******************************************************************************************************************************/
-
-    ILoanLike                  icebreakerMigrationLoan         = ILoanLike(0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b);
-    IPoolV1Like                icebreakerPoolV1                = IPoolV1Like(0x733f56782d21b403E5Ee9c8343645E1535F73CD4);
-    IPoolV2Like                icebreakerPoolV2                = IPoolV2Like(0x0739A80584869093AfEB54E9Df33dD679fd884Db);
-    IPoolManagerLike           icebreakerPoolManager           = IPoolManagerLike(0x2FE12fAb072d38920803bd0D3A64613c99d2CdE3);
-    IMplRewardsLike            icebreakerRewards               = IMplRewardsLike(address(0));
-    IStakeLockerLike           icebreakerStakeLocker           = IStakeLockerLike(0x1dC467a44aE188fc3eee41d88A32511D261e511B);
-    ITransitionLoanManagerLike icebreakerTransitionLoanManager = ITransitionLoanManagerLike(0x5936A3E150d039425469D1616523f44c498730d7);
-    IWithdrawalManagerLike     icebreakerWithdrawalManager     = IWithdrawalManagerLike(0x4192F3DBa022a0099878155844C5383667F987e2);
-
-    address icebreakerPoolDelegateCover = address(0);
 
     address[] icebreakerLps = [
         0x009fDDE3E654Cb2495135708dc1590daeFb14Ea7,
@@ -964,8 +785,10 @@ contract AddressRegistry {
         0x5c5d638a1f1e84621641dD847B8554A6F39770F3
     ];
 
-    address[] icebreakerCoverProviders = [0x184e46651946B861654436027bffdC97f9a45079];
+    address[] icebreakerCoverProviders = [
+        0x184e46651946B861654436027bffdC97f9a45079
+    ];
 
-    ILoanLike[] icebreakerLoans;
+    address[] icebreakerLoans;
 
 }

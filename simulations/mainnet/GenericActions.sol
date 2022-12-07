@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { TestUtils, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IERC20 }               from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 import { IMapleLoan }           from "../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
@@ -291,8 +291,8 @@ contract GenericActions is TestUtils {
         vm.stopPrank();
     }
 
+    // NOTE: This works for PoolManagers or PoolV1
     function setLiquidityCap(address poolManager_, uint256 amount_) internal {
-        // NOTE: Technically, this works for poolV1 as well.
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.startPrank(poolDelegate_);

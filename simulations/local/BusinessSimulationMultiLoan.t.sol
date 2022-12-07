@@ -5,9 +5,8 @@ import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { Refinancer } from "../../modules/loan-v401/contracts/Refinancer.sol";
 
-import { LoanScenario   }              from "../../contracts/LoanScenario.sol";
-import { ILoanLike, IPoolManagerLike } from "../../contracts/interfaces/Interfaces.sol";
-import { SimulationBase }              from "../../contracts/utilities/SimulationBase.sol";
+import { LoanScenario }   from "../../contracts/LoanScenario.sol";
+import { SimulationBase } from "../../contracts/utilities/SimulationBase.sol";
 
 contract BusinessSimulationsMultiLoan is SimulationBase {
 
@@ -32,7 +31,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
                 rates:       [uint256(0.15e18), uint256(0), uint256(0), uint256(0)]
             })),
             poolManager_:       address(poolManager),
-            liquidatorFactory_: address(liquidatorFactory),
+            liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start,
             name_:              loanName
         }));

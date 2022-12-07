@@ -12,9 +12,6 @@ import { SimulationBase }                  from "../simulations/mainnet/Simulati
 
 contract UpgradeDebtLockersTo400 is SimulationBase {
 
-    // Note: Update Address of Migration Admin if needed
-    address migrationAdminScript = 0xb36419f1790CAebf85dd45dF659199F9957c41A4;
-
     function run() external {
         upgradeDebtLockersTo400(mavenPermissionedLoans);
         upgradeDebtLockersTo400(mavenUsdcLoans);
@@ -30,14 +27,14 @@ contract UpgradeDebtLockersTo400 is SimulationBase {
 
             if (debtLockerFactory.versionOf(debtLocker.implementation()) == 400) continue;
 
-            if (debtLockerFactory.versionOf(debtLocker.implementation()) == 300) {
-                vm.broadcast(debtLocker.poolDelegate());
-                debtLocker.upgrade(400, abi.encode(migrationAdminScript));
-            }
-
             if (debtLockerFactory.versionOf(debtLocker.implementation()) == 200) {
                 vm.broadcast(debtLocker.poolDelegate());
-                debtLocker.upgrade(400, abi.encode(migrationAdminScript));
+                debtLocker.upgrade(300, abi.encode(migrationMultisig));
+            }
+
+            if (debtLockerFactory.versionOf(debtLocker.implementation()) == 300) {
+                vm.broadcast(debtLocker.poolDelegate());
+                debtLocker.upgrade(400, abi.encode(migrationMultisig));
             }
 
             assertVersion(400, address(debtLocker));

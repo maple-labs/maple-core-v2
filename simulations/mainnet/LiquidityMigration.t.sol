@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
-
-import { IMapleLoanLike, IPoolLike, IPoolManagerLike } from "./Interfaces.sol";
+import { console } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { SimulationBase } from "./SimulationBase.sol";
 
@@ -51,8 +49,9 @@ contract RollbackBase is SimulationBase {
     }
 
     function goto_lmp_6() internal {
+        // NOTE: LMP #5 was already done on mainnet, so skip it.
         goto_lmp_5();
-        deployProtocol();  // LMP #5
+        // deployProtocol();  // LMP #5
     }
 
     function goto_lmp_7() internal {
@@ -67,7 +66,6 @@ contract RollbackBase is SimulationBase {
 
     function goto_lmp_9() internal {
         goto_lmp_8();
-        storeCoverAmounts();       // TODO: where is the earliest this can/should go? Hardcode inline instead?
         setupExistingFactories();  // LMP #8
     }
 

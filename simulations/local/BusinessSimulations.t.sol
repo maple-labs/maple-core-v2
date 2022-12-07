@@ -37,7 +37,7 @@ contract BusinessSimulations is SimulationBase {
                 rates:       [uint256(0.10e18), uint256(0), uint256(0.01e18), uint256(0.05e18)]
             })),
             poolManager_:       address(poolManager),
-            liquidatorFactory_: address(liquidatorFactory),
+            liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start,
             name_:              loanName
         }));

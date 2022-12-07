@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IMapleLoanLike } from "./Interfaces.sol";
 
 import { SimulationBase } from "./SimulationBase.sol";
-
-import { IMapleLoanLike } from "./Interfaces.sol";
 
 contract LoanUpgradeTest is SimulationBase {
 
@@ -59,7 +57,8 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(orthogonalLoans,        301);
         assertAllLoans(icebreakerLoans,        301);
 
-        deployProtocol();  // LMP #5
+        // NOTE: LMP #5 was already done on mainnet.
+        // deployProtocol();  // LMP #5
 
         tempGovernorAcceptsV2Governorship();  // LMP #6
 
@@ -134,73 +133,77 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(icebreakerLoans,        401);
     }
 
-    function assertAllLoans(IMapleLoanLike[] memory loans, uint256 version) internal {
+    function assertAllLoans(address[] memory loans, uint256 version) internal {
         for (uint256 i; i < loans.length; ++i) {
             if (version == 301)                   assertLoanState301(loans[i]);
             if (version == 401 || version == 400) assertLoanState401(loans[i]);
         }
     }
 
-    function assertLoanState301(IMapleLoanLike loan) internal {
-        Loan3Storage storage loanSnapshot = loan3Storage[address(loan)];
+    function assertLoanState301(address loan) internal {
+        Loan3Storage storage loanSnapshot = loan3Storage[loan];
 
-        assertEq(loan.borrower(),            loanSnapshot._borrower);
-        assertEq(loan.lender(),              loanSnapshot._lender);
-        assertEq(loan.pendingBorrower(),     loanSnapshot._pendingBorrower);
-        assertEq(loan.pendingLender(),       loanSnapshot._pendingLender);
-        assertEq(loan.collateralAsset(),     loanSnapshot._collateralAsset);
-        assertEq(loan.fundsAsset(),          loanSnapshot._fundsAsset);
-        assertEq(loan.gracePeriod(),         loanSnapshot._gracePeriod);
-        assertEq(loan.paymentInterval(),     loanSnapshot._paymentInterval);
-        assertEq(loan.interestRate(),        loanSnapshot._interestRate);
-        assertEq(loan.earlyFeeRate(),        loanSnapshot._earlyFeeRate);
-        assertEq(loan.lateFeeRate(),         loanSnapshot._lateFeeRate);
-        assertEq(loan.lateInterestPremium(), loanSnapshot._lateInterestPremium);
-        assertEq(loan.collateralRequired(),  loanSnapshot._collateralRequired);
-        assertEq(loan.principalRequested(),  loanSnapshot._principalRequested);
-        assertEq(loan.endingPrincipal(),     loanSnapshot._endingPrincipal);
-        assertEq(loan.drawableFunds(),       loanSnapshot._drawableFunds);
-        assertEq(loan.claimableFunds(),      loanSnapshot._claimableFunds);
-        assertEq(loan.collateral(),          loanSnapshot._collateral);
-        assertEq(loan.nextPaymentDueDate(),  loanSnapshot._nextPaymentDueDate);
-        assertEq(loan.paymentsRemaining(),   loanSnapshot._paymentsRemaining);
-        assertEq(loan.principal(),           loanSnapshot._principal);
-        assertEq(loan.refinanceCommitment(), loanSnapshot._refinanceCommitment);
-        assertEq(loan.delegateFee(),         loanSnapshot._delegateFee);
-        assertEq(loan.treasuryFee(),         loanSnapshot._treasuryFee);
+        IMapleLoanLike loan_ = IMapleLoanLike(loan);
+
+        assertEq(loan_.borrower(),            loanSnapshot._borrower);
+        assertEq(loan_.lender(),              loanSnapshot._lender);
+        assertEq(loan_.pendingBorrower(),     loanSnapshot._pendingBorrower);
+        assertEq(loan_.pendingLender(),       loanSnapshot._pendingLender);
+        assertEq(loan_.collateralAsset(),     loanSnapshot._collateralAsset);
+        assertEq(loan_.fundsAsset(),          loanSnapshot._fundsAsset);
+        assertEq(loan_.gracePeriod(),         loanSnapshot._gracePeriod);
+        assertEq(loan_.paymentInterval(),     loanSnapshot._paymentInterval);
+        assertEq(loan_.interestRate(),        loanSnapshot._interestRate);
+        assertEq(loan_.earlyFeeRate(),        loanSnapshot._earlyFeeRate);
+        assertEq(loan_.lateFeeRate(),         loanSnapshot._lateFeeRate);
+        assertEq(loan_.lateInterestPremium(), loanSnapshot._lateInterestPremium);
+        assertEq(loan_.collateralRequired(),  loanSnapshot._collateralRequired);
+        assertEq(loan_.principalRequested(),  loanSnapshot._principalRequested);
+        assertEq(loan_.endingPrincipal(),     loanSnapshot._endingPrincipal);
+        assertEq(loan_.drawableFunds(),       loanSnapshot._drawableFunds);
+        assertEq(loan_.claimableFunds(),      loanSnapshot._claimableFunds);
+        assertEq(loan_.collateral(),          loanSnapshot._collateral);
+        assertEq(loan_.nextPaymentDueDate(),  loanSnapshot._nextPaymentDueDate);
+        assertEq(loan_.paymentsRemaining(),   loanSnapshot._paymentsRemaining);
+        assertEq(loan_.principal(),           loanSnapshot._principal);
+        assertEq(loan_.refinanceCommitment(), loanSnapshot._refinanceCommitment);
+        assertEq(loan_.delegateFee(),         loanSnapshot._delegateFee);
+        assertEq(loan_.treasuryFee(),         loanSnapshot._treasuryFee);
     }
 
     // The lender has changed in V4.01, and a few storage slots were deprecated.
-    function assertLoanState401(IMapleLoanLike loan) internal {
-        Loan3Storage storage loanSnapshot = loan3Storage[address(loan)];
+    function assertLoanState401(address loan) internal {
+        Loan3Storage storage loanSnapshot = loan3Storage[loan];
 
-        assertEq(loan.borrower(),            loanSnapshot._borrower);
-        assertEq(loan.pendingBorrower(),     loanSnapshot._pendingBorrower);
-        assertEq(loan.pendingLender(),       loanSnapshot._pendingLender);
-        assertEq(loan.collateralAsset(),     loanSnapshot._collateralAsset);
-        assertEq(loan.fundsAsset(),          loanSnapshot._fundsAsset);
-        assertEq(loan.gracePeriod(),         loanSnapshot._gracePeriod);
-        assertEq(loan.paymentInterval(),     loanSnapshot._paymentInterval);
-        assertEq(loan.interestRate(),        loanSnapshot._interestRate);
-        assertEq(loan.lateFeeRate(),         loanSnapshot._lateFeeRate);
-        assertEq(loan.lateInterestPremium(), loanSnapshot._lateInterestPremium);
-        assertEq(loan.collateralRequired(),  loanSnapshot._collateralRequired);
-        assertEq(loan.principalRequested(),  loanSnapshot._principalRequested);
-        assertEq(loan.endingPrincipal(),     loanSnapshot._endingPrincipal);
-        assertEq(loan.drawableFunds(),       loanSnapshot._drawableFunds);
-        assertEq(loan.collateral(),          loanSnapshot._collateral);
-        assertEq(loan.nextPaymentDueDate(),  loanSnapshot._nextPaymentDueDate);
-        assertEq(loan.paymentsRemaining(),   loanSnapshot._paymentsRemaining);
-        assertEq(loan.principal(),           loanSnapshot._principal);
-        assertEq(loan.refinanceCommitment(), loanSnapshot._refinanceCommitment);
+        IMapleLoanLike loan_ = IMapleLoanLike(loan);
+
+        assertEq(loan_.borrower(),            loanSnapshot._borrower);
+        assertEq(loan_.pendingBorrower(),     loanSnapshot._pendingBorrower);
+        assertEq(loan_.pendingLender(),       loanSnapshot._pendingLender);
+        assertEq(loan_.collateralAsset(),     loanSnapshot._collateralAsset);
+        assertEq(loan_.fundsAsset(),          loanSnapshot._fundsAsset);
+        assertEq(loan_.gracePeriod(),         loanSnapshot._gracePeriod);
+        assertEq(loan_.paymentInterval(),     loanSnapshot._paymentInterval);
+        assertEq(loan_.interestRate(),        loanSnapshot._interestRate);
+        assertEq(loan_.lateFeeRate(),         loanSnapshot._lateFeeRate);
+        assertEq(loan_.lateInterestPremium(), loanSnapshot._lateInterestPremium);
+        assertEq(loan_.collateralRequired(),  loanSnapshot._collateralRequired);
+        assertEq(loan_.principalRequested(),  loanSnapshot._principalRequested);
+        assertEq(loan_.endingPrincipal(),     loanSnapshot._endingPrincipal);
+        assertEq(loan_.drawableFunds(),       loanSnapshot._drawableFunds);
+        assertEq(loan_.collateral(),          loanSnapshot._collateral);
+        assertEq(loan_.nextPaymentDueDate(),  loanSnapshot._nextPaymentDueDate);
+        assertEq(loan_.paymentsRemaining(),   loanSnapshot._paymentsRemaining);
+        assertEq(loan_.principal(),           loanSnapshot._principal);
+        assertEq(loan_.refinanceCommitment(), loanSnapshot._refinanceCommitment);
 
         // V4 specific assertion
-        assertEq(loan.feeManager(), address(feeManager));
+        assertEq(loan_.feeManager(), feeManager);
     }
 
-    function snapshotLoanState300(IMapleLoanLike[] storage loans) internal {
+    function snapshotLoanState300(address[] storage loans) internal {
         for (uint256 i = 0; i < loans.length; i++) {
-            IMapleLoanLike loan = loans[i];
+            IMapleLoanLike loan = IMapleLoanLike(loans[i]);
 
             // Not possible to initialize at once due to stack limit.
             loan3Storage[address(loan)]._borrower            = loan.borrower();
