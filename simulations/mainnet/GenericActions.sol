@@ -4,6 +4,7 @@ pragma solidity 0.8.7;
 import { TestUtils, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IERC20 }               from "../../modules/erc20/contracts/interfaces/IERC20.sol";
+import { IMapleGlobals }        from "../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
 import { IMapleLoan }           from "../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
 import { IMapleLoanFeeManager } from "../../modules/loan-v401/contracts/interfaces/IMapleLoanFeeManager.sol";
 import { IPool }                from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
@@ -201,9 +202,9 @@ contract GenericActions is TestUtils {
         vm.stopPrank();
     }
 
-    function redeem(address pool_, address account_, uint256 amount_) internal {
+    function redeem(address pool_, address account_, uint256 amount_) internal returns (uint256 assets_) {
         vm.startPrank(account_);
-        IPool(pool_).redeem(amount_, account_, account_);
+        assets_ = IPool(pool_).redeem(amount_, account_, account_);
         vm.stopPrank();
     }
 

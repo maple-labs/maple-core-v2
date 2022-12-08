@@ -57,13 +57,12 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(orthogonalLoans,        301);
         assertAllLoans(icebreakerLoans,        301);
 
-        // NOTE: LMP #5 was already done on mainnet.
+        // NOTE: The following step is skipped as it was already performed on mainnet.
         // deployProtocol();  // LMP #5
 
-        tempGovernorAcceptsV2Governorship();  // LMP #6
-
-        migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
-
+        // NOTE: The following steps are skipped as they were already performed on mainnet.
+        // tempGovernorAcceptsV2Governorship();                   // LMP #6
+        // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
         setupExistingFactories();  // LMP #8
 
         upgradeAllDebtLockersToV400();  // LMP #9

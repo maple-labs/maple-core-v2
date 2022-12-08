@@ -51,17 +51,20 @@ contract RollbackBase is SimulationBase {
     function goto_lmp_6() internal {
         // NOTE: LMP #5 was already done on mainnet, so skip it.
         goto_lmp_5();
+        // NOTE: LMP #5 was already done on mainnet, so skip it.
         // deployProtocol();  // LMP #5
     }
 
     function goto_lmp_7() internal {
         goto_lmp_6();
-        tempGovernorAcceptsV2Governorship();  // LMP #6
+        // NOTE: LMP #6 was already done on mainnet, so skip it.
+        // tempGovernorAcceptsV2Governorship();  // LMP #6
     }
 
     function goto_lmp_8() internal {
         goto_lmp_7();
-        migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
+        // NOTE: LMP #7 was already done on mainnet, so skip it.
+        // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
     }
 
     function goto_lmp_9() internal {

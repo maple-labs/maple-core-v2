@@ -32,6 +32,8 @@ interface IAccountingCheckerLike {
 
 interface IDebtLockerLike is IMapleProxiedLike {
 
+    function acceptNewTerms(address refinancer, uint256 deadline, bytes[] calldata calls, uint256 amount) external;
+
     function lender() external view returns (address lender);
 
     function pool() external view returns (address pool);
@@ -224,6 +226,8 @@ interface IMapleLoanLike is IMapleProxiedLike {
 
     function principalRequested() external view returns (uint256 principalRequested);
 
+    function proposeNewTerms(address refinancer, uint256 deadline, bytes[] calldata calls) external;
+
     function refinanceCommitment() external view returns (bytes32 refinanceCommitment);
 
     function refinanceInterest() external view returns (uint256 refinanceInterest);  // Not used yet, but wil be used in complex lifecycle
@@ -330,6 +334,8 @@ interface IPoolManagerLike {
     function delegateManagementFeeRate() external view returns (uint256 delegateManagementFeeRate);
 
     function depositCover(uint256 amount) external;
+
+    function impairLoan(address loan_) external;
 
     function isLoanManager(address loanManager) external view returns (bool isLoanManager);
 
