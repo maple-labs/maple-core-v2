@@ -22,8 +22,8 @@ contract TransientAddresses {
     ];
 
     address[] mavenPermissionedLoans = [
-        0x500055809685ecebA5eC55786f65440583954501,  // will be refinanced and remain late
-        0xa83b134809183c634A692D5b5F457b78Cd6913e6   // to be repaid normally before migration
+        0x500055809685ecebA5eC55786f65440583954501,  // Will be refinanced and remain late
+        0xa83b134809183c634A692D5b5F457b78Cd6913e6   // To be repaid normally before migration
     ];
 
     /******************************************************************************************************************************/
@@ -421,13 +421,22 @@ contract TransientAddresses {
         0x990d11977378D4610776e6646b2cAAe543Ea4EDA
     ];
 
-    address[] mavenUsdcLoans = [
-        0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6,  // will be refinanced and impaired
-        0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573,  // will be impaired
-        0x726893373DE92b8272298D76a7D60a5F51b90dA9,  // is late, and will be refinanced and impaired
+    address[] mavenUsdcLoans_starting = [
+        0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6,  // Will be refinanced and impaired
+        0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573,  // Will be impaired
+        0x726893373DE92b8272298D76a7D60a5F51b90dA9,  // Is late, and will be refinanced and impaired
         0xa58fD39138083783689d700758D00873538C6C2A,
         0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521,
-        0xF6950F28353cA676100C2a92DD360DEa16A213cE   // will be impaired
+        0xF6950F28353cA676100C2a92DD360DEa16A213cE   // Will be impaired
+    ];
+
+    address[] mavenUsdcLoans = [
+        0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6,  // Will be refinanced and impaired
+        0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573,  // Will be impaired
+        0x726893373DE92b8272298D76a7D60a5F51b90dA9,
+        0xa58fD39138083783689d700758D00873538C6C2A,
+        0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521,
+        0xF6950F28353cA676100C2a92DD360DEa16A213cE   // Will be impaired
     ];
 
     /******************************************************************************************************************************/
@@ -445,7 +454,6 @@ contract TransientAddresses {
         0x343b4f05481d70e4fc1f2bE9218B1eb2F755d200,
         0x3af586034a0923Ed561B6C2AD9b3D566162eacd0,
         0x3Ecd0359496F9A49A1b11eB50Bb603C262Ff4218,
-        0x41d1b8a23B814463F001D5213A9E1747c673B5C3,
         0x5118b43F116543c03197eB94A53F2fe6d50Ec9F3,
         0x553210AcF00A98286077D4E93B3B476be5e1794D,
         0x5A30a2C5a2B3B5b76ad721877D4163B599af757a,
@@ -464,7 +472,6 @@ contract TransientAddresses {
         0xaB3efcD5583d2EBc01742CF1C88B7C034Fd0A8eC,
         0xACf14710b3A8E5F47369eAb81E728e0052811DbF,
         0xAF0B4E80a78017B0F9290B3D943dEB4B727346C8,
-        0xb6D844E2529Bc79a444662aa55f72acA08fd8f54,
         0xCfc7e5C3f931080e1f865f117dAD0e2DFb504e99,
         0xe2008b01A2AD0A9AeEA9f71ecC6A176138553a61,
         0xe6B9d0D9fa7707fCB264c9532Db8771d4332bF88,
@@ -484,16 +491,16 @@ contract TransientAddresses {
     ];
 
     address[] mavenWethLoans = [
-        0x0104AE451AD2542aC9250Ebe4a37D0717FdfC60C,  // is late, and will be refinanced and impaired
+        0x0104AE451AD2542aC9250Ebe4a37D0717FdfC60C,  // Is late, and will be refinanced and impaired
         0x2872C1140117a5DE85E0DD06Ed1B439D23707AD1,
-        0x2cB5c20309B2DbfDda758237f20c94b5F72d0331,  // will be refinanced and remain late
+        0x2cB5c20309B2DbfDda758237f20c94b5F72d0331,  // Will be refinanced and remain late
         0x40d9fBe05d8F9f1215D5a6d01994ad1a6a097616,
-        0x4DbE67c683A731807EAAa99A1DF2D3E79ebECA00,  // will be impaired
-        0x64982f1aA56340C0051bDCeFb7a69911Fd9D141d,  // will be refinanced and remain late
-        0x91A4eEe4D33d9cd7840CAe21A4f408c0919F555D,  // will be refinanced and impaired
-        0xC8c17328796F472A97B7784cc5F52b802A89deC1,  // will be impaired
+        0x4DbE67c683A731807EAAa99A1DF2D3E79ebECA00,  // Will be impaired
+        0x64982f1aA56340C0051bDCeFb7a69911Fd9D141d,  // Will be refinanced and remain late
+        0x91A4eEe4D33d9cd7840CAe21A4f408c0919F555D,  // Will be refinanced and impaired
+        0xC8c17328796F472A97B7784cc5F52b802A89deC1,  // Will be impaired
         0xdeF9146F12e22e5c69Fb7b7D181534240c04FdCE,
-        0xFcF8725d0D9A786448c5B9b9cc67226d7e4d5c3D   // is late, will be refinanced and remain late
+        0xFcF8725d0D9A786448c5B9b9cc67226d7e4d5c3D   // Is late, will be refinanced and remain late
     ];
 
     /******************************************************************************************************************************/
@@ -511,7 +518,6 @@ contract TransientAddresses {
         0x0790F2C20b1517F9f93D85Ff72f10Cf8287c8D56,
         0x07AE98D69128300e0Ad7379b1927d8089d1BaeDB,
         0x082Bd48Cf19628D7d3149C6AcCDa9468a39cC07E,
-        0x0a53D9586Dd052a06FCA7649A02b973Cc164c1B4,
         0x0f8CcC8DD9D878aaD26CDDD1b54cAcB3519534E1,
         0x0FeB0f31D67ADBBc950Ac0c5266490A9a9735a49,
         0x0fee1Bb1c5376d660Ea0b40841ebd71a55B98D4e,
@@ -617,7 +623,6 @@ contract TransientAddresses {
         0x8457bBdE947e827FF3DCA20D11aaD5643503B38E,
         0x86220aA5b12cb8eFb255F53e90e30bA6893cf059,
         0x86B3cc69e508e504C4909Bfe9d8d7ae6F31fB896,
-        0x86f0159Ab3a33EB9BD63ABBDbd6c2665010ee1d5,
         0x871061661C9AfE93307D956CBb6250813cdFECF9,
         0x87CdfB28868C5B02D9ea2dC8c09B6919Fd2C8a51,
         0x8a843023F1EEA0C96Ee1C76585EffdEeE4cd0d63,

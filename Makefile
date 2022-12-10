@@ -28,8 +28,8 @@ mainnet-sim:
 clean:
 	@forge clean
 
-pay-upcoming-loans:
-	@scripts/pay-upcoming-loans.sh
+pay-and-refi-upcoming-loans:
+	@scripts/pay-and-refi-upcoming-loans.sh
 
 upgrade-loans-301:
 	@scripts/upgrade-loans-301.sh

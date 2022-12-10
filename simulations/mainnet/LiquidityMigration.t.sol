@@ -69,12 +69,17 @@ contract RollbackBase is SimulationBase {
 
     function goto_lmp_9() internal {
         goto_lmp_8();
-        setupExistingFactories();  // LMP #8
+
+        // NOTE: LMP #8.1 was already done on mainnet, so skip it.
+        // setupExistingFactories();  // LMP #8.1
+
+        deployDebtLocker401AndSetupFactory();  // LMP #8.2
     }
 
     function goto_lmp_10() internal {
         goto_lmp_9();
-        upgradeAllDebtLockersToV400();  // LMP #9
+        upgradeAllDebtLockersToV400();  // LMP #9.1
+        upgradeAllDebtLockersToV401();  // LMP #9.2
     }
 
     function goto_lmp_11() internal {
@@ -126,37 +131,42 @@ contract RollbackBase is SimulationBase {
 
     function goto_lmp_20() internal {
         goto_lmp_19();
-        addLoansToAllLoanManagers();  // LMP #19
+        setFees();  // LMP #19
     }
 
     function goto_lmp_21() internal {
         goto_lmp_20();
-        activateAllPoolManagers();  // LMP #20
+        addLoansToAllLoanManagers();  // LMP #20
     }
 
     function goto_lmp_22() internal {
         goto_lmp_21();
-        openOrAllowOnAllPoolV2s();  // LMP #21
+        activateAllPoolManagers();  // LMP #21
     }
 
     function goto_lmp_23() internal {
         goto_lmp_22();
-        airdropTokensForAllPools();  // LMP #22
+        openOrAllowOnAllPoolV2s();  // LMP #22
     }
 
     function goto_lmp_24() internal {
         goto_lmp_23();
-        setAllPendingLenders();  // LMP #23
+        airdropTokensForAllPools();  // LMP #23
     }
 
     function goto_lmp_25() internal {
         goto_lmp_24();
-        takeAllOwnershipsOfLoans();  // LMP #24
+        setAllPendingLenders();  // LMP #24
     }
 
     function goto_lmp_26() internal {
         goto_lmp_25();
-        upgradeAllLoanManagers();  // LMP #25
+        takeAllOwnershipsOfLoans();  // LMP #25
+    }
+
+    function goto_lmp_27() internal {
+        goto_lmp_26();
+        upgradeAllLoanManagers();  // LMP #26
     }
 
 }
@@ -178,7 +188,7 @@ contract RollbackFromV301LoansTests is RollbackBase {
 
 }
 
-// Rollback LMP #9
+// Rollback LMP #9.1
 contract RollbackFromV400DebtLockersTests is RollbackBase {
 
     function setUp() public {
@@ -186,11 +196,29 @@ contract RollbackFromV400DebtLockersTests is RollbackBase {
     }
 
     function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
-        upgradeAllDebtLockersToV400();  // LMP #9
+        upgradeAllDebtLockersToV400();  // LMP #9.1
 
         enableDebtLockerDowngradeFromV400();
         disableDebtLockerUpgradeFromV300();
-        downgradeAllDebtLockersFromV400();  // Rollback LMP #9
+        downgradeAllDebtLockersFromV400();  // Rollback LMP #9.1
+    }
+
+}
+
+// Rollback LMP #9.2
+contract RollbackFromV401DebtLockersTests is RollbackBase {
+
+    function setUp() public {
+        goto_lmp_9();
+    }
+
+    function test_rollback_from_V401_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+        upgradeAllDebtLockersToV400();  // LMP #9.1
+        upgradeAllDebtLockersToV401();  // LMP #9.2
+
+        enableDebtLockerDowngradeFromV401();
+        disableDebtLockerUpgradeFromV400();
+        downgradeAllDebtLockersFromV401();  // Rollback LMP #9.2
     }
 
 }
@@ -202,7 +230,7 @@ contract RollbackFromV302LoansTests is RollbackBase {
         goto_lmp_11();
     }
 
-    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+    function test_rollback_from_V302_loans() public checkStateRestored checkLoansBelongToRespectivePools {
         upgradeAllLoansToV302();  // LMP #11
 
         enableLoanDowngradeFromV302();
@@ -218,7 +246,7 @@ contract RollbackFromFundedMigrationLoansTests is RollbackBase {
         goto_lmp_14();
     }
 
-    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+    function test_rollback_from_funded_migration_loans() public checkStateRestored checkLoansBelongToRespectivePools {
         fundAllMigrationLoans();  // LMP #14
 
         paybackAllMigrationLoansToPoolV1s();  // Rollback LMP #14
@@ -233,7 +261,7 @@ contract RollbackFromV400DebtLockersOfMigrationLoansTests is RollbackBase {
         goto_lmp_15();
     }
 
-    function test_rollback_from_V400_debtLockers() public checkStateRestored checkLoansBelongToRespectivePools {
+    function test_rollback_from_V400_debtLockers_of_migration_loans() public checkStateRestored checkLoansBelongToRespectivePools {
         upgradeAllMigrationLoanDebtLockers();  // LMP #15
 
         enableDebtLockerDowngradeFromV400();
@@ -258,70 +286,70 @@ contract RollbackFromV302MigrationLoansTests is RollbackBase {
 
 }
 
-// Rollback LMP #23
-contract RollbackFromSetPendingLenderTests is RollbackBase {
-
-    function setUp() public {
-        goto_lmp_23();
-    }
-
-    function test_rollback_from_setPendingLender() public checkStateRestored checkLoansBelongToRespectivePools {
-        setAllPendingLenders();  // LMP #23
-
-        unsetPendingLendersForAllPools();  // Rollback LMP #23
-    }
-
-}
-
 // Rollback LMP #24
-contract RollbackFromTransferredOwnershipOsLoansTests is RollbackBase {
+contract RollbackFromSetPendingLenderTests is RollbackBase {
 
     function setUp() public {
         goto_lmp_24();
     }
 
     function test_rollback_from_setPendingLender() public checkStateRestored checkLoansBelongToRespectivePools {
-        takeAllOwnershipsOfLoans();  // LMP #24
+        setAllPendingLenders();  // LMP #24
 
-        revertOwnershipOfLoansForAllPools();  // Rollback LMP #24
+        unsetPendingLendersForAllPools();  // Rollback LMP #24
     }
 
 }
 
 // Rollback LMP #25
-// TODO: Test rolling back further to return the loans to the original pools.
-contract RollbackFromV200LoanManagersTests is RollbackBase {
+contract RollbackFromTransferredOwnershipOsLoansTests is RollbackBase {
 
     function setUp() public {
         goto_lmp_25();
     }
 
-    function test_rollback_from_v200_loanManagers() public checkStateRestored {
-        upgradeAllLoanManagers();  // LMP #25
+    function test_rollback_from_setPendingLender() public checkStateRestored checkLoansBelongToRespectivePools {
+        takeAllOwnershipsOfLoans();  // LMP #25
 
-        enableLoanManagerDowngradeFromV200();
-        downgradeAllLoanManagersFromV200();    // Rollback LMP #25
+        revertOwnershipOfLoansForAllPools();  // Rollback LMP #25
     }
 
 }
 
 // Rollback LMP #26
 // TODO: Test rolling back further to return the loans to the original pools.
-contract RollbackFromV400LoansTests is RollbackBase {
+contract RollbackFromV200LoanManagersTests is RollbackBase {
 
     function setUp() public {
         goto_lmp_26();
     }
 
+    function test_rollback_from_v200_loanManagers() public checkStateRestored {
+        upgradeAllLoanManagers();  // LMP #26
+
+        enableLoanManagerDowngradeFromV200();
+        downgradeAllLoanManagersFromV200();    // Rollback LMP #26
+    }
+
+}
+
+// Rollback LMP #27
+// TODO: Test rolling back further to return the loans to the original pools.
+contract RollbackFromV400LoansTests is RollbackBase {
+
+    function setUp() public {
+        goto_lmp_27();
+    }
+
     function test_rollback_from_v400_loans() public checkStateRestored {
-        upgradeAllLoansToV400();  // LMP #26
+        upgradeAllLoansToV400();  // LMP #27
 
         enableLoanDowngradeFromV400();
         disableLoanUpgradeFromV302();
         unpauseV1Protocol();
         setGlobalsOfLoanFactoryToV2();
 
-        downgradeAllLoansFromV400();  // Rollback LMP #26
+        downgradeAllLoansFromV400();  // Rollback LMP #27
 
         setGlobalsOfLoanFactoryToV1();
     }

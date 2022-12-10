@@ -16,7 +16,7 @@ contract Lifecycle is LifecycleBase {
 
         simpleLifecycle();
 
-        // writeBalancesChanges("./output/simple-lifecycle", balances);  // TODO: fix
+        writeAllBalanceChanges("./output/simple-lifecycle", balances);
     }
 
     // function test_complexLifecycle_icebreaker() external {
@@ -36,7 +36,7 @@ contract Lifecycle is LifecycleBase {
     //     performComplexLifecycle(mavenUsdcPoolManager, mavenUsdcLoans, mavenUsdcLps, 2);
 
     //     makeDir("./output/complex-lifecycle");
-    //     writeBalanceChanges("./output/complex-lifecycle/mavenUsdc-lp-balance-changes.csv", mavenUsdcLps, getBalanceChanges(USDC, mavenUsdcLps, balances));
+    //     writeAllBalanceChanges("./output/complex-lifecycle/mavenUsdc-lp-balance-changes.csv", mavenUsdcLps, getBalanceChanges(USDC, mavenUsdcLps, balances));
     // }
 
     // function test_complexLifecycle_mavenWeth() external {

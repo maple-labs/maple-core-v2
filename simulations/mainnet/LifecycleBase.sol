@@ -168,6 +168,33 @@ contract LifecycleBase is SimulationBase, CSVWriter {
         }
     }
 
+    function writeAllBalanceChanges(string memory path_, address[] storage lps_, int256[] memory balancesChanges_) internal {
+        string[] memory row = new string[](2);
+        row[0] = "account";
+        row[1] = "balance change";
+
+        initCSV(path_, row);
+
+        for (uint256 i; i < lps_.length; ++i) {
+            row[0] = vm.toString(lps_[i]);
+            row[1] = vm.toString(balancesChanges_[i]);
+
+            addRow(path_, row);
+        }
+
+        writeFile(path_);
+    }
+
+    function writeAllBalanceChanges(string memory path_, int256[][5] memory balances) internal {
+        makeDir(path_);
+
+        writeAllBalanceChanges(string(abi.encodePacked(path_, "/mavenPermissioned-lp-balance-changes.csv")), mavenPermissionedLps, getBalanceChanges(USDC, mavenPermissionedLps, balances[0]));
+        writeAllBalanceChanges(string(abi.encodePacked(path_, "/mavenUsdc-lp-balance-changes.csv")),         mavenUsdcLps,         getBalanceChanges(USDC, mavenUsdcLps,         balances[1]));
+        writeAllBalanceChanges(string(abi.encodePacked(path_, "/mavenWeth-lp-balance-changes.csv")),         mavenWethLps,         getBalanceChanges(WETH, mavenWethLps,         balances[2]));
+        writeAllBalanceChanges(string(abi.encodePacked(path_, "/orthogonal-lp-balance-changes.csv")),        orthogonalLps,        getBalanceChanges(USDC, orthogonalLps,        balances[3]));
+        writeAllBalanceChanges(string(abi.encodePacked(path_, "/icebreaker-lp-balance-changes.csv")),        icebreakerLps,        getBalanceChanges(USDC, icebreakerLps,        balances[4]));
+    }
+
     function writeLPData(
         string memory path_,
         address poolV1,
@@ -218,7 +245,7 @@ contract LifecycleBase is SimulationBase, CSVWriter {
         writeFile(path_);
     }
 
-    function writeBalancesChanges(
+    function writeAllLPData(
         string memory path_,
         uint256[][5] memory redeemedAmounts,
         uint256[][5] memory poolV2Positions1,

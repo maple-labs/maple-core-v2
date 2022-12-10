@@ -7,34 +7,35 @@ import { DebtLocker as DebtLockerV4 } from "../modules/debt-locker-v4/contracts/
 import { DebtLockerFactory }          from "../modules/debt-locker-v4/contracts/DebtLockerFactory.sol";
 import { DebtLockerV4Migrator }       from "../modules/debt-locker-v4/contracts/DebtLockerV4Migrator.sol";
 
-import { IDebtLockerLike, IMapleLoanLike } from "../simulations/mainnet/Interfaces.sol";
-import { SimulationBase }                  from "../simulations/mainnet/SimulationBase.sol";
+import { IDebtLockerLike, IMapleLoanLike, IMapleProxyFactoryLike } from "../simulations/mainnet/Interfaces.sol";
+
+import { SimulationBase } from "../simulations/mainnet/SimulationBase.sol";
 
 contract UpgradeDebtLockersTo400 is SimulationBase {
 
     function run() external {
-        upgradeDebtLockersTo400(mavenPermissionedLoans);
-        upgradeDebtLockersTo400(mavenUsdcLoans);
-        upgradeDebtLockersTo400(mavenWethLoans);
-        upgradeDebtLockersTo400(orthogonalLoans);
-        upgradeDebtLockersTo400(icebreakerLoans);
-        // upgradeDebtLockersTo400(unorderedMigrationLoans);
+        // upgradeDebtLockersTo400(mavenPermissionedLoans);
+        // upgradeDebtLockersTo400(mavenUsdcLoans);
+        // upgradeDebtLockersTo400(mavenWethLoans);
+        // upgradeDebtLockersTo400(orthogonalLoans);
+        // upgradeDebtLockersTo400(icebreakerLoans);
+        upgradeDebtLockersTo400(unorderedMigrationLoans);
     }
 
-    function upgradeDebtLockersTo400(IMapleLoanLike[] storage loans) internal {
+    function upgradeDebtLockersTo400(address[] storage loans) internal {
         for (uint256 i = 0; i < loans.length; i++) {
-            IDebtLockerLike debtLocker = IDebtLockerLike(loans[i].lender());
+            IDebtLockerLike debtLocker = IDebtLockerLike(IMapleLoanLike(loans[i]).lender());
 
-            if (debtLockerFactory.versionOf(debtLocker.implementation()) == 400) continue;
+            if (IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLocker.implementation()) == 400) continue;
 
-            if (debtLockerFactory.versionOf(debtLocker.implementation()) == 200) {
+            if (IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLocker.implementation()) == 200) {
                 vm.broadcast(debtLocker.poolDelegate());
-                debtLocker.upgrade(300, abi.encode(migrationMultisig));
+                debtLocker.upgrade(300, abi.encode(migrationHelperProxy));
             }
 
-            if (debtLockerFactory.versionOf(debtLocker.implementation()) == 300) {
+            if (IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLocker.implementation()) == 300) {
                 vm.broadcast(debtLocker.poolDelegate());
-                debtLocker.upgrade(400, abi.encode(migrationMultisig));
+                debtLocker.upgrade(400, abi.encode(migrationHelperProxy));
             }
 
             assertVersion(400, address(debtLocker));

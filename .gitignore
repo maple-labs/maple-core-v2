@@ -8,3 +8,5 @@ out/
 # Ignore CSV files
 *.csv
 .env
+
+broadcast/

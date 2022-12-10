@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { console } from "../modules/contract-test-utils/contracts/test.sol";
 
-import { IMapleLoanLike } from "../simulations/mainnet/Interfaces.sol";
-import { SimulationBase } from "../simulations/mainnet/SimulationBase.sol";
+import { IMapleLoanLike, IMapleProxyFactoryLike } from "../simulations/mainnet/Interfaces.sol";
+import { SimulationBase }                         from "../simulations/mainnet/SimulationBase.sol";
 
 contract UpgradeLoansTo301 is SimulationBase {
 
@@ -17,9 +17,9 @@ contract UpgradeLoansTo301 is SimulationBase {
         upgradeLoansTo301(orthogonalLoans);
     }
 
-    function upgradeLoansTo301(IMapleLoanLike[] storage loans) internal {
+    function upgradeLoansTo301(address[] storage loans) internal {
         for (uint256 i; i < loans.length; ++i) {
-            IMapleLoanLike loan = loans[i];
+            IMapleLoanLike loan = IMapleLoanLike(loans[i]);
 
             // Note: If borrower is a contract script will fail
             if (address(loan.borrower()).code.length > 0) {
@@ -27,9 +27,9 @@ contract UpgradeLoansTo301 is SimulationBase {
                 continue;
             }
 
-            if (loanFactory.versionOf(loan.implementation()) == 301) continue;
+            if (IMapleProxyFactoryLike(loanFactory).versionOf(loan.implementation()) == 301) continue;
 
-            if (loanFactory.versionOf(loan.implementation()) == 200) {
+            if (IMapleProxyFactoryLike(loanFactory).versionOf(loan.implementation()) == 200) {
                 vm.setEnv("ETH_FROM", vm.toString(loan.borrower()));
                 vm.startBroadcast();
                 loan.upgrade(300, new bytes(0));
@@ -37,7 +37,7 @@ contract UpgradeLoansTo301 is SimulationBase {
                 vm.stopBroadcast();
             }
 
-            if (loanFactory.versionOf(loan.implementation()) == 300) {
+            if (IMapleProxyFactoryLike(loanFactory).versionOf(loan.implementation()) == 300) {
                 console.log("upgrading", address(loan));
                 console.log("borrower", loan.borrower());
 

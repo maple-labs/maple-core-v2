@@ -38,9 +38,10 @@ contract LoanUpgradeTest is SimulationBase {
     mapping(address => Loan3Storage) internal loan3Storage;
 
     function test_loanUpgrade() external {
+
         // Pre-Deployment Requirements
         setPoolAdminsToMigrationMultisig();  // LMP #1
-        zeroInvestorFeeAndTreasuryFee();     // LMP #2
+        // zeroInvestorFeeAndTreasuryFee();     // LMP #2
         payAndClaimAllUpcomingLoans();       // LMP #3
 
         snapshotLoanState300(mavenWethLoans);
@@ -63,10 +64,16 @@ contract LoanUpgradeTest is SimulationBase {
         // NOTE: The following steps are skipped as they were already performed on mainnet.
         // tempGovernorAcceptsV2Governorship();                   // LMP #6
         // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
-        setupExistingFactories();  // LMP #8
+        // setupExistingFactories();  // LMP #8.1
 
-        upgradeAllDebtLockersToV400();  // LMP #9
+        upgradeAllDebtLockersToV400();  // LMP #9.1
+
+        deployDebtLocker401AndSetupFactory();  // LMP #8.2
+
+        upgradeAllDebtLockersToV401();  // LMP #9.2
+
         claimAllLoans();                // LMP #10
+
         upgradeAllLoansToV302();        // LMP #11
         lockAllPoolV1Deposits();        // LMP #12
         createAllMigrationLoans();      // LMP #13
@@ -82,32 +89,34 @@ contract LoanUpgradeTest is SimulationBase {
 
         deployAllPoolV2s();  // LMP #18
 
-        addLoansToAllLoanManagers();  // LMP #19
+        setFees();  // LMP #19
+
+        addLoansToAllLoanManagers();  // LMP #20
 
         // Prepare for Airdrops
-        activateAllPoolManagers();  // LMP #20
-        openOrAllowOnAllPoolV2s();  // LMP #21
+        activateAllPoolManagers();  // LMP #21
+        openOrAllowOnAllPoolV2s();  // LMP #22
 
-        airdropTokensForAllPools();  // LMP #22
+        airdropTokensForAllPools();  // LMP #23
         assertAllPoolAccounting();
 
         // Transfer Loans
         // TODO: Do we really need all these repetitive assertions? Especially that we have validation script now.
-        setAllPendingLenders();      // LMP #23
+        setAllPendingLenders();      // LMP #24
         assertAllPoolAccounting();
-        takeAllOwnershipsOfLoans();  // LMP #24
+        takeAllOwnershipsOfLoans();  // LMP #25
         assertAllPoolAccounting();
-        upgradeAllLoanManagers();    // LMP #25
+        upgradeAllLoanManagers();    // LMP #26
         assertAllPrincipalOuts();
         assertAllTotalSupplies();
         assertAllPoolAccounting();
         setAllCoverParameters();
         assertAllPoolAccounting();
-        upgradeAllLoansToV400();        // LMP #26
+        upgradeAllLoansToV400();        // LMP #27
 
         // Close Migration Loans
-        setGlobalsOfLoanFactoryToV2();  // LMP #27
-        closeAllMigrationLoans();       // LMP #28
+        setGlobalsOfLoanFactoryToV2();  // LMP #28
+        closeAllMigrationLoans();       // LMP #29
 
         assertAllLoans(mavenWethLoans,         400);
         assertAllLoans(mavenUsdcLoans,         400);
@@ -115,15 +124,15 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(orthogonalLoans,        400);
         assertAllLoans(icebreakerLoans,        400);
 
-        tempGovernorTransfersV2Governorship();  // LMP #39
+        tempGovernorTransfersV2Governorship();  // LMP #40
 
-        governorAcceptsV2Governorship();  // LMP #40
+        governorAcceptsV2Governorship();  // LMP #41
 
-        deployLoan401();  // LMP #42
+        deployLoan401();  // LMP #43
 
-        setupLoanFactoryFor401();  // LMP #43
+        setupLoanFactoryFor401();  // LMP #44
 
-        upgradeAllLoansToV401();  // LMP #44
+        upgradeAllLoansToV401();  // LMP #45
 
         assertAllLoans(mavenWethLoans,         401);
         assertAllLoans(mavenUsdcLoans,         401);

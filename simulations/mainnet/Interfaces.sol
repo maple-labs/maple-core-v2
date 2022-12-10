@@ -36,6 +36,8 @@ interface IDebtLockerLike is IMapleProxiedLike {
 
     function lender() external view returns (address lender);
 
+    function loanMigrator() external view returns (address loanMigrator);
+
     function pool() external view returns (address pool);
 
     function poolDelegate() external view returns (address poolDelegate);
@@ -82,15 +84,15 @@ interface IMapleGlobalsV1Like {
 
     function getLatestPrice(address asset) external view returns (uint256 price);
 
+    function globalAdmin() external view returns (address globalAdmin);
+
     function governor() external view returns (address governor);
 
-    function investorFee() external view returns (uint256);
+    function investorFee() external view returns (uint256 investorFee);
 
     function protocolPaused() external view returns (bool protocolPaused);
 
     function setInvestorFee(uint256 investorFee) external;
-
-    function setTreasuryFee(uint256 treasuryFee) external;
 
     function setMaxCoverLiquidationPercent(address poolManager, uint256 maxCoverLiquidationPercent) external;
 
@@ -102,9 +104,11 @@ interface IMapleGlobalsV1Like {
 
     function setStakerCooldownPeriod(uint256 cooldown) external;
 
+    function setTreasuryFee(uint256 treasuryFee) external;
+
     function stakerCooldownPeriod() external view returns (uint256 stakerCooldownPeriod);
 
-    function treasuryFee() external view returns (uint256);
+    function treasuryFee() external view returns (uint256 treasuryFee);
 
 }
 
@@ -144,6 +148,12 @@ interface IMapleGlobalsV2Like {
 
     function pendingGovernor() external view returns (address pendingGovernor);
 
+    function platformManagementFeeRate(address poolManager) external view returns (uint256 platformManagementFeeRate);
+
+    function platformOriginationFeeRate(address poolManager) external view returns (uint256 platformOriginationFeeRate);
+
+    function platformServiceFeeRate(address poolManager) external view returns (uint256 platformServiceFeeRate);
+
     function securityAdmin() external view returns (address securityAdmin);
 
     function setMapleTreasury(address mapleTreasury) external;
@@ -156,6 +166,12 @@ interface IMapleGlobalsV2Like {
 
     function setPendingGovernor(address governor) external;
 
+    function setPlatformManagementFeeRate(address poolManager, uint256 platformManagementFeeRate) external;
+
+    function setPlatformOriginationFeeRate(address poolManager, uint256 platformOriginationFeeRate) external;
+
+    function setPlatformServiceFeeRate(address poolManager, uint256 platformServiceFeeRate) external;
+
     function setSecurityAdmin(address securityAdmin) external;
 
     function setValidBorrower(address poolDelegate, bool isValid) external;
@@ -165,6 +181,12 @@ interface IMapleGlobalsV2Like {
     function setValidPoolAsset(address asset, bool isValid) external;
 
     function setValidPoolDelegate(address poolDelegate, bool isValid) external;
+
+}
+
+interface IMapleLoanV4Like {
+
+    function getNextPaymentDetailedBreakdown() external view returns (uint256 principal_, uint256[3] memory interest_, uint256[2] memory fees_);
 
 }
 
@@ -202,11 +224,11 @@ interface IMapleLoanLike is IMapleProxiedLike {
 
     function interestRate() external view returns (uint256 interestRate);
 
+    function isImpaired() external view returns (bool isImpaired);  // Not used yet, but wil be used in complex lifecycle
+
     function lateFeeRate() external view returns (uint256 lateFeeRate);
 
     function lateInterestPremium() external view returns (uint256 lateInterestPremium);
-
-    function isImpaired() external view returns (bool isImpaired);  // Not used yet, but wil be used in complex lifecycle
 
     function lender() external view returns (address lender);
 
@@ -232,9 +254,9 @@ interface IMapleLoanLike is IMapleProxiedLike {
 
     function refinanceInterest() external view returns (uint256 refinanceInterest);  // Not used yet, but wil be used in complex lifecycle
 
-    function treasuryFee() external view returns (uint256 treasuryFee);
-
     function returnFunds(uint256 amount) external;
+
+    function treasuryFee() external view returns (uint256 treasuryFee);
 
 }
 
@@ -268,13 +290,13 @@ interface IMapleProxyFactoryLike {
 
 interface IMigrationHelperLike {
 
-    function addLoansToLoanManager(address poolV1, address transitionLoanManager, address[] calldata loans, uint256 allowedDiff) external;
-
-    function airdropTokens(address poolV1Address, address poolManager, address[] calldata lpsV1, address[] calldata lpsV2, uint256 allowedDiff) external;
-
     function acceptOwner() external;
 
+    function addLoansToLoanManager(address poolV1, address transitionLoanManager, address[] calldata loans, uint256 allowedDiff) external;
+
     function admin() external view returns (address owner);
+
+    function airdropTokens(address poolV1Address, address poolManager, address[] calldata lpsV1, address[] calldata lpsV2, uint256 allowedDiff) external;
 
     function globalsV2() external view returns (address globals);
 
@@ -405,9 +427,9 @@ interface IPoolV1Like is IERC20Like {
 
     function setPoolAdmin(address poolAdmin, bool allowed) external;
 
-    function symbol() external view returns (string memory symbol);
-
     function stakeLocker() external view returns (address stakeLocker);
+
+    function symbol() external view returns (string memory symbol);
 
     function withdrawableFundsOf(address owner) external view returns (uint256 withdrawableFunds);
 

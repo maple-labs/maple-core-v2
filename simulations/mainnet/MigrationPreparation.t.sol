@@ -66,10 +66,15 @@ contract MigrationPreparationTest is LifecycleBase {
         // NOTE: Skipped as these were already performed on mainnet.
         // tempGovernorAcceptsV2Governorship();                   // LMP #6
         // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
-        setupExistingFactories();                              // LMP #8
+        // setupExistingFactories();                              // LMP #8.1
 
         // Pre-Kickoff
-        upgradeAllDebtLockersToV400();  // LMP #9
+        upgradeAllDebtLockersToV400();  // LMP #9.1
+
+        deployDebtLocker401AndSetupFactory();  // LMP #8.2
+
+        upgradeAllDebtLockersToV401();  // LMP #9.2
+
         claimAllLoans();                // LMP #10
 
         // int256[][5] memory balances = getStartingFundsAssetBalances();
@@ -90,55 +95,57 @@ contract MigrationPreparationTest is LifecycleBase {
 
         deployAllPoolV2s();  // LMP #18
 
+        setFees();  // LMP #19
+
         setAllPoolsFees();
 
-        addLoansToAllLoanManagers();  // LMP #19
+        addLoansToAllLoanManagers();  // LMP #20
 
         // Prepare for Airdrops
-        activateAllPoolManagers();  // LMP #20
-        openOrAllowOnAllPoolV2s();  // LMP #21
+        activateAllPoolManagers();  // LMP #21
+        openOrAllowOnAllPoolV2s();  // LMP #22
 
-        airdropTokensForAllPools();  // LMP #22
+        airdropTokensForAllPools();  // LMP #23
         assertAllPoolAccounting();
 
         uint256[][5] memory poolV2Positions1 = getAllPoolV2Positions();
 
         // Transfer Loans
         // TODO: Do we really need all these repetitive assertions? Especially that we have validation script now.
-        setAllPendingLenders();         // LMP #23
+        setAllPendingLenders();         // LMP #24
         assertAllPoolAccounting();
-        takeAllOwnershipsOfLoans();     // LMP #24
+        takeAllOwnershipsOfLoans();     // LMP #25
         assertAllPoolAccounting();
-        upgradeAllLoanManagers();       // LMP #25
+        upgradeAllLoanManagers();       // LMP #26
         assertAllPrincipalOuts();
         assertAllTotalSupplies();
         assertAllPoolAccounting();
         setAllCoverParameters();
         assertAllPoolAccounting();
 
-        upgradeAllLoansToV400();        // LMP #26
+        upgradeAllLoansToV400();        // LMP #27
 
         compareAllLpPositions();
 
         // Close Migration Loans
-        setGlobalsOfLoanFactoryToV2();  // LMP #27
-        closeAllMigrationLoans();       // LMP #28
+        setGlobalsOfLoanFactoryToV2();  // LMP #28
+        closeAllMigrationLoans();       // LMP #29
 
         // Prepare PoolV1 Deactivation
-        unlockV1Staking();    // LMP #29
-        unpauseV1Protocol();  // LMP #30
+        unlockV1Staking();    // LMP #30
+        unpauseV1Protocol();  // LMP #31
 
-        enableFinalPoolDelegates();  // LMP #36
+        enableFinalPoolDelegates();  // LMP #37
 
-        transferAllPoolDelegates();  // LMPs #37-#38
+        transferAllPoolDelegates();  // LMPs #38-#39
 
         // Transfer Governorship of GlobalsV2
-        tempGovernorTransfersV2Governorship();  // LMPs #39
-        governorAcceptsV2Governorship();        // LMPs #40
+        tempGovernorTransfersV2Governorship();  // LMPs #40
+        governorAcceptsV2Governorship();        // LMPs #41
 
-        setLoanDefault400();  // LMPs #41
+        setLoanDefault400();  // LMPs #42
 
-        finalizeProtocol();  // LMPs #42-#45
+        finalizeProtocol();  // LMPs #43-#46
 
         // PoolV2 Lifecycle start
         depositAllCovers();
@@ -178,7 +185,7 @@ contract MigrationPreparationTest is LifecycleBase {
 
         withdrawAllPoolCoverFromAllPools();
 
-        writeBalancesChanges(
+        writeAllLPData(
             "./output/migration-preparation",
             redeemedAmounts,
             poolV2Positions1,
@@ -284,7 +291,6 @@ contract MigrationPreparationTest is LifecycleBase {
     }
 
     function prepareAllLoans() internal {
-        payAllHealthyLoans();
         claimAllLoans();
         assertNoClaimableLoans();
         refinanceAllUnhealthyLateLoans();
