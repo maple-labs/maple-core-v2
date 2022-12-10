@@ -71,20 +71,10 @@
   },
   {
     name: 'DebtLocker',
-    address: '0x4FB5AC98E33C3F5a4C7a51974A34e125d3F4E003'
+    address: '0xC8Eb6E241919430F2cb076338506Ed760d7bb9D3'
   },
   {
     name: 'AccountingChecker',
-    address: '0x4c9CEa7f6aCE3Dc0D85b86c1925542AdeCE1eF15'
-  },
-  {
-    name: 'DeactivationOracle',
-    address: '0xaF99aBBc5F12CE93C144733073A80c57e81296ab'
-  },
-  {
-    name: 'MigrationHelper',
-    address: '0xd8B74109916C0bBFDbE5e4345fF9584bDE47044a'
-  },
-  { name: null, address: '0x580B1A894b9FbdBf7d29Ba9b492807Bf539dD508' },
-  { name: null, address: '0xec90671c2c8f4cCBb6074938f893306a13402251' }
+    address: '0x78da667CaADD8827690111BEBeCA875723fEAf7C'
+  }
 ]

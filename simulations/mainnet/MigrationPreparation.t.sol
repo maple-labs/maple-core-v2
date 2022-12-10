@@ -71,7 +71,7 @@ contract MigrationPreparationTest is LifecycleBase {
         // Pre-Kickoff
         upgradeAllDebtLockersToV400();  // LMP #9.1
 
-        deployDebtLocker401AndSetupFactory();  // LMP #8.2
+        setUpDebtLockerFactoryFor401();  // LMP #8.2
 
         upgradeAllDebtLockersToV401();  // LMP #9.2
 

@@ -327,11 +327,15 @@ contract SetMigrationMultisig is ValidationBase {
 contract RegisterDebtLockers is ValidationBase {
 
     function run() external validationConfig {
-        assertEq(IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLockerV400Implementation), 400,         "debt locker v400 implementation not set");
-        assertEq(IMapleProxyFactoryLike(debtLockerFactory).migratorForPath(400, 400), debtLockerV300Initializer, "debt locker v400 initializer not set");
+        assertEq(IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLockerV400Implementation), 400,         "DebtLocker v400 implementation not set");
+        assertEq(IMapleProxyFactoryLike(debtLockerFactory).migratorForPath(400, 400), debtLockerV300Initializer, "DebtLocker v400 initializer not set");
 
-        assertEq(IMapleProxyFactoryLike(debtLockerFactory).migratorForPath(300, 400), debtLockerV400Migrator, "debt locker v300 to v400 migrator not set");
-        assertTrue(IMapleProxyFactoryLike(debtLockerFactory).upgradeEnabledForPath(300, 400),                 "debt locker v300 to v400 upgrade disabled");
+        assertEq(IMapleProxyFactoryLike(debtLockerFactory).migratorForPath(300, 400), debtLockerV400Migrator, "DebtLocker v300 to v400 migrator not set");
+        assertTrue(IMapleProxyFactoryLike(debtLockerFactory).upgradeEnabledForPath(300, 400),                 "DebtLocker v300 to v400 upgrade disabled");
+
+        assertEq(IMapleProxyFactoryLike(debtLockerFactory).implementationOf(401), debtLockerV401Implementation, "DebtLocker v300 to v400 migrator not set");
+        assertEq(IMapleProxyFactoryLike(debtLockerFactory).migratorForPath(400, 401), debtLockerV400Migrator,   "DebtLocker v300 to v400 migrator not set");
+        assertTrue(IMapleProxyFactoryLike(debtLockerFactory).upgradeEnabledForPath(400, 401),                   "DebtLocker v300 to v400 upgrade disabled");
     }
 
 }
@@ -339,17 +343,17 @@ contract RegisterDebtLockers is ValidationBase {
 contract RegisterLoans is ValidationBase {
 
     function run() external validationConfig {
-        assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV302Implementation), 302,         "loan v302 implementation not set");
-        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(302, 302), loanV300Initializer, "loan v302 initializer not set");
+        assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV302Implementation), 302,         "Loan v302 implementation not set");
+        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(302, 302), loanV300Initializer, "Loan v302 initializer not set");
 
-        assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV400Implementation), 400,         "loan v400 implementation not set");
-        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(400, 400), loanV400Initializer, "loan v400 initializer not set");
+        assertEq(IMapleProxyFactoryLike(loanFactory).versionOf(loanV400Implementation), 400,         "Loan v400 implementation not set");
+        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(400, 400), loanV400Initializer, "Loan v400 initializer not set");
 
-        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(301, 302), address(0), "loan v301 to v302 migrator is not zero");
-        assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(301, 302),     "loan v301 to v302 upgrade disabled");
+        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(301, 302), address(0), "Loan v301 to v302 migrator is not zero");
+        assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(301, 302),     "Loan v301 to v302 upgrade disabled");
 
-        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(302, 400), loanV400Migrator, "loan v302 to v400 migrator not set");
-        assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(302, 400),           "loan v302 to v400 upgrade disabled");
+        assertEq(IMapleProxyFactoryLike(loanFactory).migratorForPath(302, 400), loanV400Migrator, "Loan v302 to v400 migrator not set");
+        assertTrue(IMapleProxyFactoryLike(loanFactory).upgradeEnabledForPath(302, 400),           "Loan v302 to v400 upgrade disabled");
     }
 
 }
@@ -1400,6 +1404,7 @@ contract TransferPoolDelegates is ValidationBase {
 
 }
 
+// TODO: Update this
 contract DeprecatePools is ValidationBase {
 
     function run() external validationConfig {

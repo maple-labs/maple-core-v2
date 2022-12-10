@@ -104,7 +104,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         // Pre-Kickoff
         upgradeAllDebtLockersToV400();  // LMP #9.1
 
-        deployDebtLocker401AndSetupFactory();  // LMP #8.2
+        setUpDebtLockerFactoryFor401();  // LMP #8.2
 
         upgradeAllDebtLockersToV401();  // LMP #9.2
 
@@ -444,10 +444,17 @@ contract SimulationBase is GenericActions, AddressRegistry {
         mapleGlobalsV2.setPendingGovernor(tempGovernor);
     }
 
+    function _deploy401DebtLockerAndAccountingChecker() internal {
+        debtLockerV401Implementation = address(new DebtLockerV4());
+
+        accountingChecker = address(new AccountingChecker(mapleGlobalsV2Proxy));
+    }
+
     // Liquidity Migration Procedure #5
     function deployProtocol() internal {
         vm.startPrank(deployer);
         _deployProtocol();
+        _deploy401DebtLockerAndAccountingChecker();
         vm.stopPrank();
     }
 
@@ -484,15 +491,11 @@ contract SimulationBase is GenericActions, AddressRegistry {
     }
 
     // Liquidity Migration Procedure #8.2
-    function deployDebtLocker401AndSetupFactory() internal {
-        // NOTE: Deploy another v400 implementation in order to get a new address for 401.
-        vm.prank(deployer);
-        address debtLockerImplementation = address(new DebtLockerV4());
-
+    function setUpDebtLockerFactoryFor401() internal {
         // Configure Factory
         vm.startPrank(IMapleGlobalsV1Like(mapleGlobalsV1).governor());
 
-        IMapleProxyFactoryLike(debtLockerFactory).registerImplementation(401, debtLockerImplementation, address(0));
+        IMapleProxyFactoryLike(debtLockerFactory).registerImplementation(401, debtLockerV401Implementation, address(0));
         IMapleProxyFactoryLike(debtLockerFactory).enableUpgradePath(400, 401, debtLockerV400Migrator);
 
         vm.stopPrank();

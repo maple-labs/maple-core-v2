@@ -102,8 +102,9 @@ contract FixedAddresses {
 
     address debtLockerV400Migrator       = 0x5Bf3863b0355a547ecA79Ab489addd6092717431;
     address debtLockerV400Implementation = 0x4FB5AC98E33C3F5a4C7a51974A34e125d3F4E003;
+    address debtLockerV401Implementation = 0xC8Eb6E241919430F2cb076338506Ed760d7bb9D3;
 
-    address accountingChecker = 0x4c9CEa7f6aCE3Dc0D85b86c1925542AdeCE1eF15;
+    address accountingChecker = 0x78da667CaADD8827690111BEBeCA875723fEAf7C;
 
     address deactivationOracle = 0xaF99aBBc5F12CE93C144733073A80c57e81296ab;
 

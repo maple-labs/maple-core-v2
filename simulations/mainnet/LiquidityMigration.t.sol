@@ -73,7 +73,7 @@ contract RollbackBase is SimulationBase {
         // NOTE: LMP #8.1 was already done on mainnet, so skip it.
         // setupExistingFactories();  // LMP #8.1
 
-        deployDebtLocker401AndSetupFactory();  // LMP #8.2
+        setUpDebtLockerFactoryFor401();  // LMP #8.2
     }
 
     function goto_lmp_10() internal {

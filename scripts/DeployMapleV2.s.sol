@@ -9,6 +9,7 @@ contract DeployMapleV2 is Lifecycle {
         vm.startBroadcast(deployer);
 
         _deployProtocol();
+        _deploy401DebtLockerAndAccountingChecker();
 
         vm.stopBroadcast();
     }
