@@ -154,6 +154,8 @@ interface IMapleGlobalsV2Like {
 
     function platformServiceFeeRate(address poolManager) external view returns (uint256 platformServiceFeeRate);
 
+    function poolDelegates(address poolDelegate_) external view returns (address ownedPoolManager, bool isPoolDelegate);
+
     function securityAdmin() external view returns (address securityAdmin);
 
     function setMapleTreasury(address mapleTreasury) external;

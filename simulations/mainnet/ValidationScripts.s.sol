@@ -28,7 +28,6 @@ import {
 
 // TODO: Move each validation run() into a properly named function in './simulations/mainnet/Validations', so they can be called individually. Each run() here can call them too.
 // TODO: Add and update error messages for all assertions (use sentence case).
-// TODO: check the lp airdrop to different addresses occured (lpV1s can be different than lpV2s)
 
 contract ValidationBase is SimulationBase {
 
@@ -299,7 +298,6 @@ contract DeployProtocol is ValidationBase {
         // Step 24: Check refinancer bytecode hash
         assertEq(hash(refinancer.code), 0x0bb294e63bd6018fa9b2465c6e7ecc9cef967bb91d5cb36d5f3882ebe08486ee);
 
-        // TODO: Include validation of oracles after they are included in the deployment.
     }
 
     function hash(bytes memory code) internal pure returns (bytes32 bytecodeHash) {
@@ -1102,8 +1100,26 @@ contract ActivatePools is ValidationBase {
 
     function validate(address poolManager) internal {
         assertTrue(IPoolManagerLike(poolManager).active(), "pool not active");
+    }
 
-        // TODO: Add MapleGlobalsV2 assertions
+}
+
+contract GlobalsPoolManagerActivated is ValidationBase {
+
+    function run() external validationConfig {
+        validate(mavenPermissionedPoolManager);
+        validate(mavenUsdcPoolManager);
+        validate(mavenWethPoolManager);
+        validate(orthogonalPoolManager);
+        validate(icebreakerPoolManager);
+    }
+
+    function validate(address poolManager_) internal {
+        IMapleGlobalsV2Like globals_ = IMapleGlobalsV2Like(mapleGlobalsV2Proxy);
+
+        ( address ownedPoolManager, ) = globals_.poolDelegates(IPoolManagerLike(poolManager_).poolDelegate());
+
+        assertEq(ownedPoolManager, poolManager_, "pool manager not activated");
     }
 
 }
@@ -1118,7 +1134,6 @@ contract OpenPools is ValidationBase {
 
     function validate(address poolManager) internal {
         assertTrue(IPoolManagerLike(poolManager).openToPublic(), "pool not open to public");
-        // TODO: Add MapleGlobalsV2 assertions
     }
 
 }
@@ -1333,6 +1348,24 @@ contract CloseMigrationLoans is ValidationBase {
 
 }
 
+contract ConfirmPoolV2Cash is ValidationBase {
+
+    function run() external validationConfig {
+        validate(mavenPermissionedPoolV2, 8_765_965.068493e6);
+        validate(mavenUsdcPoolV2,         1.246150e6);
+        validate(mavenWethPoolV2,         1399.613706431366646518e18);
+        validate(orthogonalPoolV2,        17_008_319.288392e6);
+        validate(icebreakerPoolV2,        5_649_999.999995e6);
+    }
+
+    function validate(address pool_, uint256 cash) internal {
+        address fundsAsset_ = IPoolV2Like(pool_).asset();
+
+        assertEq(IERC20Like(fundsAsset_).balanceOf(pool_), cash);
+    }
+
+}
+
 contract UpgradeLoansToV401 is ValidationBase {
 
     function run() external validationConfig {
@@ -1380,15 +1413,48 @@ contract DeprecatePools is ValidationBase {
     function validate(address poolV1) internal {
         IPoolV1Like pool = IPoolV1Like(poolV1);
 
+        // Initialized: 0, Finalized: 1, Deactivated: 2
+        assertEq(pool.poolState(), 2);
+    }
+
+}
+
+contract PriceOraclesSet is ValidationBase {
+
+    function run() external validationConfig {
+        validate(mavenPermissionedPoolV1);
+        validate(mavenUsdcPoolV1);
+        validate(mavenWethPoolV1);
+        validate(orthogonalPoolV1);
+        validate(icebreakerPoolV1);
+    }
+
+    function validate(address poolV1) internal {
+        IPoolV1Like pool = IPoolV1Like(poolV1);
+
         address asset = pool.liquidityAsset();
+
+        assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).getLatestPrice(asset), 1e8);  // TODO: Is this always the returned value?
+    }
+
+}
+
+contract StakeLockersCooldownSet is ValidationBase {
+
+    function run() external validationConfig {
+        validate(mavenPermissionedPoolV1);
+        validate(mavenUsdcPoolV1);
+        validate(mavenWethPoolV1);
+        validate(orthogonalPoolV1);
+        validate(icebreakerPoolV1);
+    }
+
+    function validate(address poolV1) internal {
+        IPoolV1Like pool = IPoolV1Like(poolV1);
+
         IStakeLockerLike stakeLocker = IStakeLockerLike(pool.stakeLocker());
 
-        assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).getLatestPrice(asset),  1e8);  // TODO: Is this always the returned value?
         assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).stakerCooldownPeriod(), 0);
-
-        // Initialized: 0, Finalized: 1, Deactivated: 2
-        assertEq(pool.poolState(),           2);
-        assertEq(stakeLocker.lockupPeriod(), 0);
     }
 
 }
