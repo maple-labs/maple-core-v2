@@ -38,9 +38,6 @@ contract UpgradeLoansTo301 is SimulationBase {
             }
 
             if (IMapleProxyFactoryLike(loanFactory).versionOf(loan.implementation()) == 300) {
-                console.log("upgrading", address(loan));
-                console.log("borrower", loan.borrower());
-
                 vm.broadcast(loan.borrower());
                 loan.upgrade(301, new bytes(0));
             }

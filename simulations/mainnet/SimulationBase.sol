@@ -66,6 +66,8 @@ import {
 
 contract SimulationBase is GenericActions, AddressRegistry {
 
+    uint256 constant END_MIGRATION = 1670986667;  // Dec 13, 2022
+
     struct PoolState {
         uint256 cash;
         uint256 interestSum;
@@ -104,12 +106,11 @@ contract SimulationBase is GenericActions, AddressRegistry {
         // Pre-Kickoff
         upgradeAllDebtLockersToV400();  // LMP #9.1
 
-        setUpDebtLockerFactoryFor401();  // LMP #8.2
+        // setUpDebtLockerFactoryFor401();  // LMP #8.2
 
         upgradeAllDebtLockersToV401();  // LMP #9.2
 
         claimAllLoans();                // LMP #10
-
 
         checkSumOfLoanPrincipalForAllPools();
 
@@ -224,8 +225,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
             uint256 paymentDueDate = loan.nextPaymentDueDate();
 
-            // If the loan is more than 5 days early, skip it
-            if (paymentDueDate > block.timestamp && paymentDueDate - block.timestamp >= 5 days) {
+            if (paymentDueDate > END_MIGRATION) {
                 ++i;
                 continue;
             }
@@ -509,7 +509,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
             if (IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLocker.implementation()) == 400) return;
 
             vm.prank(debtLocker.poolDelegate());
-            debtLocker.upgrade(400, abi.encode(migrationHelperProxy));
+            debtLocker.upgrade(400, abi.encode(address(0)));
 
             assertVersion(400, address(debtLocker));
         }

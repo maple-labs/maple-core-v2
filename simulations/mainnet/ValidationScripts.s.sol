@@ -6,6 +6,7 @@ import { console } from "../../modules/contract-test-utils/contracts/test.sol";
 import { ILoanManager } from "../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
 
 import { SimulationBase } from "./SimulationBase.sol";
+import { LifecycleBase }  from "./LifecycleBase.sol";
 
 import {
     IAccountingCheckerLike,
@@ -94,8 +95,6 @@ contract SetInvestorAndTreasuryFee is ValidationBase {
 }
 
 contract PayAndClaimUpcomingLoans is ValidationBase {
-
-    uint256 constant END_MIGRATION = 1671026400;  // Dec 14, 2022
 
     function run() external validationConfig {
         validate(mavenPermissionedLoans);
@@ -1580,3 +1579,16 @@ contract UnpauseProtocol is ValidationBase {
 
 // TODO: Compare LPs balances from the graph query with the on-chain query for each LP as well as the total pool V1 value.
 // TODO: Utilize accounting checker
+
+contract SimulateLifecycle is LifecycleBase {
+
+    function run() external {
+        // NOTE: Update step numbers as needed.
+        migrate({ fromStep: 11, toStep: 42 });
+
+        payOffAllLoanWhenDue();
+        exitFromAllPoolsWhenPossible();
+        withdrawAllPoolCoverFromAllPools();
+    }
+
+}

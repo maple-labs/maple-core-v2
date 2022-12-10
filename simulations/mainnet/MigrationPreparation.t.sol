@@ -55,10 +55,10 @@ contract MigrationPreparationTest is LifecycleBase {
     function test_migrationPreparation() external {
 
         // Pre-Deployment Requirements
-        setPoolAdminsToMigrationMultisig();  // LMP #1
-        zeroInvestorFeeAndTreasuryFee();     // LMP #2
-        prepareAllLoans();                   // LMP #3 (payAndClaimAllUpcomingLoans)
-        upgradeAllLoansToV301();             // LMP #4
+        // setPoolAdminsToMigrationMultisig();  // LMP #1
+        // zeroInvestorFeeAndTreasuryFee();     // LMP #2
+        // prepareAllLoans();                   // LMP #3 (payAndClaimAllUpcomingLoans)
+        // upgradeAllLoansToV301();             // LMP #4
 
         // NOTE: Skipped as this was already performed on mainnet.
         // deployProtocol();  // LMP #5
@@ -71,7 +71,7 @@ contract MigrationPreparationTest is LifecycleBase {
         // Pre-Kickoff
         upgradeAllDebtLockersToV400();  // LMP #9.1
 
-        setUpDebtLockerFactoryFor401();  // LMP #8.2
+        // setUpDebtLockerFactoryFor401();  // LMP #8.2
 
         upgradeAllDebtLockersToV401();  // LMP #9.2
 

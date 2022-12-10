@@ -481,7 +481,6 @@ contract LifecycleBase is SimulationBase, CSVWriter {
 
             if (someTime > block.timestamp) vm.warp(someTime);
 
-            console.log(block.timestamp, "Paying               ", loan);
             makePayment(loan);
         }
 
@@ -497,6 +496,51 @@ contract LifecycleBase is SimulationBase, CSVWriter {
     /******************************************************************************************************************************/
     /*** Lifecycle Functions                                                                                                    ***/
     /******************************************************************************************************************************/
+
+    function migrate(uint256 fromStep, uint256 toStep) internal {
+        require(fromStep <= toStep, "fromStep must be less than or equal to toStep");
+
+        if (fromStep <= 1  && toStep >= 1)  setPoolAdminsToMigrationMultisig();  // Done
+        if (fromStep <= 2  && toStep >= 2)  zeroInvestorFeeAndTreasuryFee();  // Done
+        if (fromStep <= 3  && toStep >= 3)  payAndClaimAllUpcomingLoans();  // Done
+        if (fromStep <= 4  && toStep >= 4)  upgradeAllLoansToV301();  // Done
+        if (fromStep <= 5  && toStep >= 5)  deployProtocol();  // Done
+        if (fromStep <= 6  && toStep >= 6)  tempGovernorAcceptsV2Governorship();  // Done
+        if (fromStep <= 7  && toStep >= 7)  migrationMultisigAcceptsMigrationAdministratorship();  // Done
+        if (fromStep <= 8  && toStep >= 8)  setupExistingFactories();  // Done
+        if (fromStep <= 9  && toStep >= 9)  upgradeAllDebtLockersToV400();  // Done
+        if (fromStep <= 10 && toStep >= 10) {
+            claimAllLoans();  // Done
+            upgradeAllDebtLockersToV401();
+        }
+        if (fromStep <= 11 && toStep >= 11) upgradeAllLoansToV302();
+        if (fromStep <= 12 && toStep >= 12) lockAllPoolV1Deposits();
+        if (fromStep <= 13 && toStep >= 13) createAllMigrationLoans();
+        if (fromStep <= 14 && toStep >= 14) fundAllMigrationLoans();
+        if (fromStep <= 15 && toStep >= 15) upgradeAllMigrationLoanDebtLockers();
+        if (fromStep <= 16 && toStep >= 16) upgradeAllMigrationLoansToV302();
+        if (fromStep <= 17 && toStep >= 17) pauseV1Protocol();
+        if (fromStep <= 18 && toStep >= 18) deployAllPoolV2s();
+        if (fromStep <= 19 && toStep >= 19) addLoansToAllLoanManagers();
+        if (fromStep <= 20 && toStep >= 20) activateAllPoolManagers();
+        if (fromStep <= 21 && toStep >= 21) openOrAllowOnAllPoolV2s();
+        if (fromStep <= 22 && toStep >= 22) airdropTokensForAllPools();
+        if (fromStep <= 23 && toStep >= 23) setAllPendingLenders();
+        if (fromStep <= 24 && toStep >= 24) takeAllOwnershipsOfLoans();
+        if (fromStep <= 25 && toStep >= 25) upgradeAllLoanManagers();
+        if (fromStep <= 26 && toStep >= 26) upgradeAllLoansToV400();
+        if (fromStep <= 27 && toStep >= 27) setGlobalsOfLoanFactoryToV2();
+        if (fromStep <= 28 && toStep >= 28) closeAllMigrationLoans();
+        if (fromStep <= 29 && toStep >= 29) unlockV1Staking();
+        if (fromStep <= 30 && toStep >= 30) unpauseV1Protocol();
+        if (fromStep <= 31 && toStep >= 31) deactivateAndUnstakeAllPoolV1s();  // 31-35
+        if (fromStep <= 36 && toStep >= 36) enableFinalPoolDelegates();
+        if (fromStep <= 37 && toStep >= 37) transferAllPoolDelegates();  // 37-38
+        if (fromStep <= 39 && toStep >= 39) tempGovernorTransfersV2Governorship();
+        if (fromStep <= 40 && toStep >= 40) governorAcceptsV2Governorship();
+        if (fromStep <= 41 && toStep >= 41) setLoanDefault400();
+        if (fromStep <= 42 && toStep >= 42) finalizeProtocol();  // 42-45
+    }
 
     function payOffAllLoanWhenDue() internal {
         address loan;
@@ -547,12 +591,6 @@ contract LifecycleBase is SimulationBase, CSVWriter {
         withdrawAllPoolCover(mavenUsdcPoolManager);
         withdrawAllPoolCover(mavenWethPoolManager);
         withdrawAllPoolCover(orthogonalPoolManager);
-    }
-
-    function simpleLifecycle() internal {
-        payOffAllLoanWhenDue();
-        exitFromAllPoolsWhenPossible();
-        withdrawAllPoolCoverFromAllPools();
     }
 
 }
