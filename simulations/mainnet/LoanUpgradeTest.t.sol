@@ -42,7 +42,7 @@ contract LoanUpgradeTest is SimulationBase {
         // Pre-Deployment Requirements
         // setPoolAdminsToMigrationMultisig();  // LMP #1
         // zeroInvestorFeeAndTreasuryFee();     // LMP #2
-        payAndClaimAllUpcomingLoans();       // LMP #3
+        // payAndClaimAllUpcomingLoans();       // LMP #3
 
         snapshotLoanState300(mavenWethLoans);
         snapshotLoanState300(mavenUsdcLoans);
@@ -72,7 +72,7 @@ contract LoanUpgradeTest is SimulationBase {
 
         upgradeAllDebtLockersToV401();  // LMP #9.2
 
-        claimAllLoans();                // LMP #10
+        // claimAllLoans();                // LMP #10
 
         upgradeAllLoansToV302();        // LMP #11
         lockAllPoolV1Deposits();        // LMP #12

@@ -66,7 +66,7 @@ import {
 
 contract SimulationBase is GenericActions, AddressRegistry {
 
-    uint256 constant END_MIGRATION = 1670986667;  // Dec 13, 2022
+    uint256 constant END_MIGRATION = 1670925600;  // Dec 13, 2022, 10am EST
 
     struct PoolState {
         uint256 cash;

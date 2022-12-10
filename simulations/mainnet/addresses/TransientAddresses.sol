@@ -22,8 +22,7 @@ contract TransientAddresses {
     ];
 
     address[] mavenPermissionedLoans = [
-        0x500055809685ecebA5eC55786f65440583954501,  // Will be refinanced and remain late
-        0xa83b134809183c634A692D5b5F457b78Cd6913e6   // To be repaid normally before migration
+        0x500055809685ecebA5eC55786f65440583954501   // To be repaid normally before migration
     ];
 
     /******************************************************************************************************************************/
@@ -648,7 +647,6 @@ contract TransientAddresses {
         0x9fF50A0f45Aa14Deb08C86d45139ee2F5Ffe099f,
         0xa05527778c5d874ff4926AF98d162E3fbf4d96DB,
         0xa29d37532F393DC6616875D88635dA97aF557c40,
-        0xA316CAF146A853f8af39477F8BEf800633936f44,
         0xA408a1E70a1aa0f2D20c51785c3153C1D4ae7b6C,
         0xA447663ED37a952580bAD82bA4De0BBf00ABd89A,
         0xA5D591875cE13D7abf04d63419e2970F0d51Aa51,
