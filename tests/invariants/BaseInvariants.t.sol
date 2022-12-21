@@ -404,7 +404,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_withdrawalManager_invariant_K(address lp, uint256 assets) internal {
-        uint256 lpRequestedLiquidity = withdrawalManager.lockedShares(lp) * pool.totalAssets() / pool.totalSupply();
+        uint256 lpRequestedLiquidity = withdrawalManager.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
 
         assertLe(assets, lpRequestedLiquidity, "WithdrawalManager Invariant K");
     }
@@ -435,7 +435,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         ( uint256 windowStart, uint256 windowEnd ) = withdrawalManager.getWindowAtId(currentCycle);
 
         if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
-            assertLe(withdrawalManager.lockedLiquidity(), withdrawalManager.totalCycleShares(currentCycle) * pool.totalAssets() / pool.totalSupply(), "WithdrawalManager Invariant N1");
+            assertLe(withdrawalManager.lockedLiquidity(), withdrawalManager.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(), "WithdrawalManager Invariant N1");
         } else {
             assertEq(withdrawalManager.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
         }

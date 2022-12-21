@@ -154,7 +154,7 @@ contract BoundedActorBasedInvariants_DefaultsTests is BaseInvariants {
 
             sumLockedShares += withdrawalManager.lockedShares(lp);
 
-            uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * pool.totalAssets() / pool.totalSupply();
+            uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
 
             ( uint256 shares, uint256 assets, bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
 

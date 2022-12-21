@@ -71,10 +71,6 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
         * Invariant H: convertToExitShares == convertToShares
             NOTE: Not applicable as unrealized losses changes exchange rate
 
-     * Withdrawal Manager
-        * Invariant L: getRedeemableAmounts.partialLiquidity == (lockedShares[user] * exchangeRate < fundsAsset balance of pool)
-            NOTE: Not applicable as unrealized losses changes exchange rate
-
     *******************************************************************************************************************************/
 
     /******************************************************************************************************************************/
@@ -163,9 +159,9 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
 
             sumLockedShares += withdrawalManager.lockedShares(lp);
 
-            uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * pool.totalAssets() / pool.totalSupply();
+            uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
 
-            ( uint256 shares, uint256 assets, ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
+            ( uint256 shares, uint256 assets, bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
 
             assert_withdrawalManager_invariant_F(shares);
             assert_withdrawalManager_invariant_G(lp, shares);
@@ -174,6 +170,7 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
             assert_withdrawalManager_invariant_I(assets);
             assert_withdrawalManager_invariant_J(assets, totalRequestedLiquidity);
             assert_withdrawalManager_invariant_K(lp, assets);
+            assert_withdrawalManager_invariant_L(partialLiquidity, totalRequestedLiquidity);
         }
 
         assertTrue(pool.balanceOf(address(withdrawalManager)) == sumLockedShares);
