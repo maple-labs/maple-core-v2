@@ -253,7 +253,11 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_loanManager_invariant_L(address loan, uint256 refinanceInterest) internal {
-        assertEq(refinanceInterest, IMapleLoan(loan).refinanceInterest(), "LoanManager Invariant L");
+        uint256 platformManagementFeeRate_ = globals.platformManagementFeeRate(address(poolManager));
+        uint256 delegateManagementFeeRate_ = poolManager.delegateManagementFeeRate();
+        uint256 managementFeeRate_         = platformManagementFeeRate_ + delegateManagementFeeRate_;
+
+        assertEq(refinanceInterest, _getNetInterest(IMapleLoan(loan).refinanceInterest(), managementFeeRate_), "LoanManager Invariant L");
     }
 
     function assert_loanManager_invariant_M(address loan, uint256 paymentDueDate) internal {
@@ -471,6 +475,10 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
             endDate < startDate
                 ? netInterest
                 : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());  // Use longer if early payment made
+    }
+
+    function _getNetInterest(uint256 interest_, uint256 feeRate_) internal pure returns (uint256 netInterest_) {
+        netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
     }
 
     function _excludeAllContracts() internal {
