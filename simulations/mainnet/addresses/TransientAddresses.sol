@@ -420,15 +420,6 @@ contract TransientAddresses {
         0x990d11977378D4610776e6646b2cAAe543Ea4EDA
     ];
 
-    address[] mavenUsdcLoans_starting = [
-        0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6,  // Will be refinanced and impaired
-        0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573,  // Will be impaired
-        0x726893373DE92b8272298D76a7D60a5F51b90dA9,  // Is late, and will be refinanced and impaired
-        0xa58fD39138083783689d700758D00873538C6C2A,
-        0xd027CdD569b6cd1aD13dc82d42d0CD7cDeda3521,
-        0xF6950F28353cA676100C2a92DD360DEa16A213cE   // Will be impaired
-    ];
-
     address[] mavenUsdcLoans = [
         0x245De7E3B9B21B68c2C8D2e4759652F0dbCE65A6,  // Will be refinanced and impaired
         0x502EE6D0b16d834547Fc44344D4BE3E019Fc2573,  // Will be impaired

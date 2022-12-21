@@ -3,14 +3,6 @@ pragma solidity 0.8.7;
 
 contract FutureAddresses {
 
-    address[] unorderedMigrationLoans = [
-        0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b,
-        0x721A55F2972a46042991a946b60B548BeC31a65B,
-        0x3F542d451344Ea0Cb58323d049033Fd46Ae56Ec3,
-        0xF8d7Bcc836439BD8a9207630b6c3DC97D65f9269,
-        0xE8aE93F16b56FEe7Bf1d222A3B328B11d9d1Ffb0
-    ];
-
     /******************************************************************************************************************************/
     /*** Maple V2 Contracts                                                                                                     ***/
     /******************************************************************************************************************************/
@@ -22,54 +14,54 @@ contract FutureAddresses {
     /******************************************************************************************************************************/
 
     address mavenPermissionedMigrationLoan     = 0x721A55F2972a46042991a946b60B548BeC31a65B;
-    address mavenPermissionedPoolV2            = 0x6CD2b9Cb726c4aeEE17678C94B5b15efF28B5465;
-    address mavenPermissionedPoolManager       = 0x64f1835caaF7579700225028EFD3fE6269ACbBEd;
-    address mavenPermissionedLoanManager       = 0x05CC16452e9dc1026143A3808491d12f9Bf45B11;
-    address mavenPermissionedWithdrawalManager = 0xFE3847457f41D29191b177B6fa662C78f3524068;
-    address mavenPermissionedPoolDelegateCover = 0x4eA0434bB5265e8d13AB4F96bE14B9ED0Ae37983;
+    address mavenPermissionedPoolV2            = 0x00e0C1ea2085e30E5233E98CFA940ca8cbB1b0b7;
+    address mavenPermissionedPoolManager       = 0x24617612DeC91855e126e6330580425F6A262ee9;
+    address mavenPermissionedLoanManager       = 0x6B6491AAa92Ce7e901330D8F91Ec99C2a157EBd7;
+    address mavenPermissionedWithdrawalManager = 0x1B56856eB74bB1AA9e9F1997386dDB28DEf532eE;
+    address mavenPermissionedPoolDelegateCover = 0x9e71Da2edaD3F8053C00b697362A365383e9c518;
 
     /******************************************************************************************************************************/
     /*** Maven 11 - USDC 01                                                                                                     ***/
     /******************************************************************************************************************************/
 
     address mavenUsdcMigrationLoan     = 0x3F542d451344Ea0Cb58323d049033Fd46Ae56Ec3;
-    address mavenUsdcPoolV2            = 0x9e01E88d125189B39b0DD0415166176e76D5d7A0;
-    address mavenUsdcPoolManager       = 0xaC7B0f4367De0A0bAc86D894037aE61dbF45dD0d;
-    address mavenUsdcLoanManager       = 0xBA7f48898b1ac0e1661c033BD08EC09AeDF183BA;
-    address mavenUsdcWithdrawalManager = 0x597fe1acf32294F911C06cD8894A08CAEE763C23;
-    address mavenUsdcPoolDelegateCover = 0xaCE40E3A605A13c55005678F99c3761d9716d0fb;
+    address mavenUsdcPoolV2            = 0xd3cd37a7299B963bbc69592e5Ba933388f70dc88;
+    address mavenUsdcPoolManager       = 0x00d950A41a0d277ed91bF9fD366a5523FEF0371e;
+    address mavenUsdcLoanManager       = 0x74CB3c1938A15e532CC1b465e3B641C2c7e40C2b;
+    address mavenUsdcWithdrawalManager = 0x7ED195a0AE212D265511b0978Af577F59876C9BB;
+    address mavenUsdcPoolDelegateCover = 0x9c74C5147653041239bb31C799c54767D9953f7D;
 
     /******************************************************************************************************************************/
     /*** Maven 11 - WETH                                                                                                        ***/
     /******************************************************************************************************************************/
 
-    address mavenWethMigrationLoan     = 0xF8d7Bcc836439BD8a9207630b6c3DC97D65f9269;
-    address mavenWethPoolV2            = 0x19DbAEF9C6fb471a24F92bc3C189ae8C2ebbC7D8;
-    address mavenWethPoolManager       = 0xa3aBf146158AAa4bd402946fFC68742CdeF22cd8;
-    address mavenWethLoanManager       = 0x821893613DEfE66999Bd8d7fEb56726567dfa8fE;
-    address mavenWethWithdrawalManager = 0x4662b56A004D053306Fa9072B57cAA67C08F697e;
-    address mavenWethPoolDelegateCover = 0x4E62c96Cf48E177556f06938cdf99Ee228B9415F;
+    address mavenWethMigrationLoan     = 0x508b8cDC6e217a9239CcCf390cD1497bfc4a21C4;
+    address mavenWethPoolV2            = 0xFfF9A1CAf78b2e5b0A49355a8637EA78b43fB6c3;
+    address mavenWethPoolManager       = 0x833A5c9Fc016a87419D21B10B64e24082Bd1e49d;
+    address mavenWethLoanManager       = 0x373BDCf21F6a939713d5DE94096ffdb24A406391;
+    address mavenWethWithdrawalManager = 0x1Bb73D6384ae73DA2101a4556a42eaB82803Ef3d;
+    address mavenWethPoolDelegateCover = 0xdfDDE84b117f038785A2B1805B10D5C4d616dA08;
 
     /******************************************************************************************************************************/
     /*** Orthogonal Trading - USDC 01                                                                                           ***/
     /******************************************************************************************************************************/
 
-    address orthogonalMigrationLoan     = 0xE8aE93F16b56FEe7Bf1d222A3B328B11d9d1Ffb0;
-    address orthogonalPoolV2            = 0x516aa6a7ceE5090495B89171e917E4d605D59147;
-    address orthogonalPoolManager       = 0x44923d165a0043265f4Be2644BF8A267F75F05d3;
-    address orthogonalLoanManager       = 0xC8e16BE1b7EAD76bE3B7B10BE45f21A7C30b2453;
-    address orthogonalWithdrawalManager = 0x3753d1F59d6Fb8A1fe94D6200f25e7780d68aa80;
-    address orthogonalPoolDelegateCover = 0xF2C1e6526133C4aC2aAaA4b743dC6F3d2eb0Afb6;
+    address orthogonalMigrationLoan     = 0x8E33448DB74EdA0De5C86e22DA58984867015141;
+    address orthogonalPoolV2            = 0x79400A2c9a5E2431419CaC98Bf46893c86E8bDd7;
+    address orthogonalPoolManager       = 0xE10A065D15A6eCA69bb8A0063Fe57eDdb66999DF;
+    address orthogonalLoanManager       = 0xFdC7541201aA6831A64F96582111cED633fA5078;
+    address orthogonalWithdrawalManager = 0xD8f8BD488ba6DDF2a710f6C357a884fd1706981A;
+    address orthogonalPoolDelegateCover = 0xb9Bae8c63593e51A296857AC4C150bae31a4e2c3;
 
     /******************************************************************************************************************************/
     /*** Icebreaker Finance - USDC                                                                                              ***/
     /******************************************************************************************************************************/
 
     address icebreakerMigrationLoan     = 0xfcAf99650cF70763A3e14bbeE24a565d86F6bD1b;
-    address icebreakerPoolV2            = 0x88C9a4899bE1c81299D876b73978Bf9980F5F6A8;
-    address icebreakerPoolManager       = 0x0bd62656c15fEf2cDc15Df416e6A61c52Bdd38c6;
-    address icebreakerLoanManager       = 0x5d3B3Ed716BA7B89d1851162732F52e119355394;
-    address icebreakerWithdrawalManager = 0x7A7A3E4978D11A639a9F3dE554532c71547B55EF;
-    address icebreakerPoolDelegateCover = 0xa39C4f30532FdD97f581083D35b33C5167bbcEd4;
+    address icebreakerPoolV2            = 0x137F2EA5cfB0fE59408BAb2779E33EE868F1810E;
+    address icebreakerPoolManager       = 0xC0323b64eF95E5698B30fEbD6A54BFD66ca2210E;
+    address icebreakerLoanManager       = 0x7dCA0cd3F1eBAE3640AC4c66688A9d3A184aF822;
+    address icebreakerWithdrawalManager = 0x4ec570457C3954feE01309A30C603ABD51899C77;
+    address icebreakerPoolDelegateCover = 0xA198C1dc00297Ae477F2D42D5a9E1cd4a364191f;
 
 }

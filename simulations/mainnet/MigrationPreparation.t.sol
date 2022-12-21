@@ -53,99 +53,115 @@ contract MigrationPreparationTest is LifecycleBase {
     // 6: Transfer cash into the pool as "compensation"
 
     function test_migrationPreparation() external {
-
         // Pre-Deployment Requirements
-        // setPoolAdminsToMigrationMultisig();  // LMP #1
-        // zeroInvestorFeeAndTreasuryFee();     // LMP #2
-        // prepareAllLoans();                   // LMP #3 (payAndClaimAllUpcomingLoans)
-        // upgradeAllLoansToV301();             // LMP #4
+        if (block.number < 16140823) setPoolAdminsToMigrationMultisig();  // LMP #1 [16140823-16150331]
+        if (block.number < 16144511) zeroInvestorFeeAndTreasuryFee();     // LMP #2 [16144511]
 
-        // NOTE: Skipped as this was already performed on mainnet.
-        // deployProtocol();  // LMP #5
+        // Must be done before `upgradeAllLoansToV302`
+        if (block.number < 16158728) {
+            payAndClaimAllUpcomingLoans();       // LMP #3 [Idempotent]
+            upgradeAllLoansToV301();             // LMP #4 [Idempotent]
+        }
 
-        // NOTE: Skipped as these were already performed on mainnet.
-        // tempGovernorAcceptsV2Governorship();                   // LMP #6
-        // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
-        // setupExistingFactories();                              // LMP #8.1
+        if (block.number < 16126985) deployProtocol();  // LMP #5 [16126985-16127073]
+
+        if (block.number < 16136610) tempGovernorAcceptsV2Governorship();                   // LMP #6 [16136610]
+        if (block.number < 16136630) migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7 [16136630]
 
         // Pre-Kickoff
-        upgradeAllDebtLockersToV400();  // LMP #9.1
+        if (block.number < 16144529) setupExistingFactories();                   // LMP #8.1 [16144529]
+        if (block.number < 16151161) deploy401DebtLockerAndAccountingChecker();  // LMP #8.2 [16151161-16151166]
+        if (block.number < 16155441) setUpDebtLockerFactoryFor401();             // LMP #8.3 [16155441]
+        if (block.number < 16156502) upgradeAllDebtLockersToV400();              // LMP #9.1 [16156502]
+        if (block.number < 16158685) upgradeAllDebtLockersToV401();              // LMP #9.2 [16158685]
 
-        // setUpDebtLockerFactoryFor401();  // LMP #8.2
-
-        upgradeAllDebtLockersToV401();  // LMP #9.2
-
-        claimAllLoans();                // LMP #10
-
-        // int256[][5] memory balances = getStartingFundsAssetBalances();
+        // Must be done before `upgradeAllLoansToV302`
+        if (block.number < 16158728) {
+            claimAllLoans();  // LMP #10  [Idempotent]
+            checkSumOfLoanPrincipalForAllPools();
+        }
 
         // Kickoff
-        upgradeAllLoansToV302();    // LMP #11
-        lockAllPoolV1Deposits();    // LMP #12
-        createAllMigrationLoans();  // LMP #13
+        if (block.number < 16158728) upgradeAllLoansToV302();    // LMP #11 [16158728]
+        if (block.number < 16158757) lockAllPoolV1Deposits();    // LMP #12 [16158757]
+        if (block.number < 16161265) createAllMigrationLoans();  // LMP #13 [16161265]
 
-        // Migration Loan Funding
-        // NOTE: Technically, each loan is funded and their DebtLockers are upgraded per pool before moving onto the next
-        fundAllMigrationLoans();               // LMP #14
-        upgradeAllMigrationLoanDebtLockers();  // LMP #15
+        if (block.number < 16161360) {
+            checkSumOfLoanPrincipalForAllPools();
+            fundMigrationLoansAndUpgradeDebtLockers();  // LMP #15 [16161360-16161660]
+        }
 
-        upgradeAllMigrationLoansToV302();  // LMP #16
+        if (block.number < 16161726) upgradeAllMigrationLoansToV302();  // LMP #16 [16161726]
 
-        pauseV1Protocol();  // LMP #17
+        if (block.number < 16161749) pauseV1Protocol();  // LMP #17 [16161749]
 
-        deployAllPoolV2s();  // LMP #18
+        if (block.number < 16162315) deployAllPoolV2s();  // LMP #18 [16162315-16162589]
+        if (block.number < 16162671) setFees();           // LMP #19 [16162671]
 
-        setFees();  // LMP #19
-
-        setAllPoolsFees();
-
-        addLoansToAllLoanManagers();  // LMP #20
+        if (block.number < 16163591) {
+            checkSumOfLoanPrincipalForAllPools();
+            addLoansToAllLoanManagers();  // LMP #20 [16163591]
+        }
 
         // Prepare for Airdrops
-        activateAllPoolManagers();  // LMP #21
-        openOrAllowOnAllPoolV2s();  // LMP #22
+        if (block.number < 16163643) activateAllPoolManagers();  // LMP #21 [16163643]
+        if (block.number < 16163671) openOrAllowOnAllPoolV2s();  // LMP #22 [16163671-16163755]
 
-        airdropTokensForAllPools();  // LMP #23
-        assertAllPoolAccounting();
+        if (block.number < 16164408) {
+            airdropTokensForAllPools();  // LMP #23 [16164408-16164504]
+            assertAllPoolAccounting();
+        }
 
         uint256[][5] memory poolV2Positions1 = getAllPoolV2Positions();
 
         // Transfer Loans
-        // TODO: Do we really need all these repetitive assertions? Especially that we have validation script now.
-        setAllPendingLenders();         // LMP #24
-        assertAllPoolAccounting();
-        takeAllOwnershipsOfLoans();     // LMP #25
-        assertAllPoolAccounting();
-        upgradeAllLoanManagers();       // LMP #26
-        assertAllPrincipalOuts();
-        assertAllTotalSupplies();
-        assertAllPoolAccounting();
-        setAllCoverParameters();
-        assertAllPoolAccounting();
+        if (block.number < 16164579) setAllPendingLenders();      // LMP #24 [16164579]
 
-        upgradeAllLoansToV400();        // LMP #27
+        if (block.number < 16164620) {
+            assertAllPoolAccounting();
+            takeAllOwnershipsOfLoans();  // LMP #25 [16164620]
+        }
 
-        compareAllLpPositions();
+        if (block.number < 16164645) {
+            assertAllPoolAccounting();
+            upgradeAllLoanManagers();    // LMP #26 [16164645]
+        }
+
+        if (block.number < 16164765) {
+            assertAllPrincipalOuts();
+            assertAllTotalSupplies();
+            assertAllPoolAccounting();
+            upgradeAllLoansToV400();    // LMP #27 [16164765]
+            compareAllLpPositions();
+        }
 
         // Close Migration Loans
-        setGlobalsOfLoanFactoryToV2();  // LMP #28
-        closeAllMigrationLoans();       // LMP #29
+        if (block.number < 16164798) setGlobalsOfLoanFactoryToV2();  // LMP #28 [16164798]
+        if (block.number < 16164991) closeAllMigrationLoans();       // LMP #29 [16164991]
 
         // Prepare PoolV1 Deactivation
-        unlockV1Staking();    // LMP #30
-        unpauseV1Protocol();  // LMP #31
+        if (block.number < 16169377) unlockV1Staking();    // LMP #30 [16169377]
+        if (block.number < 16170052) unpauseV1Protocol();  // LMP #31 [16170052]
 
-        enableFinalPoolDelegates();  // LMP #37
+        if (block.number < 16170102) finalizeFactories();  // LMP #32 [16170102]
 
-        transferAllPoolDelegates();  // LMPs #38-#39
+        if (block.number < 16170144) deactivateAndUnstakeAllPoolV1s();  // LMPs #33-#37 [16170144-16172136]
+
+        if (block.number < 16172812) enableFinalPoolDelegates();  // LMP #38 [16172812]
+
+        if (block.number < 16172867) setAllPendingPoolDelegates();  // LMPs #39 [16172867-16172924]
+        if (block.number < 16176259) acceptAllPoolDelegates();      // LMPs #40 [16176259-TBD]
+
+        setAllMinCoverAmounts();  // Not done yet
 
         // Transfer Governorship of GlobalsV2
-        tempGovernorTransfersV2Governorship();  // LMPs #40
-        governorAcceptsV2Governorship();        // LMPs #41
+        tempGovernorTransfersV2Governorship();  // LMPs #41 [TBD]
+        governorAcceptsV2Governorship();        // LMPs #42 [TBD]
 
-        setLoanDefault400();  // LMPs #42
+        tasksForLoan401();  // LMPs #43-#46 [TBD]
 
-        finalizeProtocol();  // LMPs #43-#46
+        handleCoverProviderEdgeCase();
+        withdrawAllCovers();
 
         // PoolV2 Lifecycle start
         depositAllCovers();
@@ -165,11 +181,7 @@ contract MigrationPreparationTest is LifecycleBase {
 
         uint256[][5] memory poolV2Positions5 = getAllPoolV2Positions();
 
-        console.log("balance of Treasury", IERC20Like(usdc).balanceOf(mapleTreasury));
-
         triggerDefaultOnAllImpairedLoans();
-
-        console.log("balance of Treasury", IERC20Like(usdc).balanceOf(mapleTreasury));
 
         uint256[][5] memory poolV2Positions6 = getAllPoolV2Positions();
 
@@ -335,14 +347,6 @@ contract MigrationPreparationTest is LifecycleBase {
         propUpWithCash(mavenWethPoolV2,         1_000e18);
         propUpWithCash(orthogonalPoolV2,        0);
         propUpWithCash(icebreakerPoolV2,        0);
-    }
-
-    function setAllPoolsFees() internal {
-        setPlatformFees(mavenPermissionedPoolManager, 0.01e6, 0.001e6, 0.001e6);
-        setPlatformFees(mavenUsdcPoolManager,         0.01e6, 0.001e6, 0.001e6);
-        setPlatformFees(mavenWethPoolManager,         0.01e6, 0.001e6, 0.001e6);
-        setPlatformFees(orthogonalPoolManager,        0.01e6, 0.001e6, 0.001e6);
-        setPlatformFees(icebreakerPoolManager,        0.01e6, 0.001e6, 0.001e6);
     }
 
 }

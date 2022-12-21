@@ -41,4 +41,4 @@ addresses:
 	@node scripts/parse-broadcast.js > ./scripts/deploy-addresses-no-name.js
 
 validate:
-	@forge script --rpc-url $(ETH_RPC_URL) -vvv simulations/mainnet/ValidationScripts.s.sol:$(step)
+	@FOUNDRY_PROFILE=mainnet_simulations forge script --rpc-url $(ETH_RPC_URL) -vvv simulations/mainnet/ValidationScripts.s.sol:$(step)

@@ -29,7 +29,6 @@ contract FixedAddresses {
     /*** Final Pool Delegate Multisigs                                                                                          ***/
     /******************************************************************************************************************************/
 
-    // TODO: Determine actual addresses.
     address constant mavenPermissionedFinalPd = 0xab38A4E78a0549f60Df1A78f15f35F03F39f11F4;
     address constant mavenUsdcFinalPd         = 0x8B4aa04E9642b387293cE6fFfA42715a9cd19f3C;
     address constant mavenWethFinalPd         = 0x990d11977378D4610776e6646b2cAAe543Ea4EDA;

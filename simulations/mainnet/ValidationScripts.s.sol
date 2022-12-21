@@ -24,7 +24,8 @@ import {
     IPoolManagerLike,
     IPoolV1Like,
     IPoolV2Like,
-    IStakeLockerLike
+    IStakeLockerLike,
+    IWithdrawalManagerLike
 } from "./Interfaces.sol";
 
 // TODO: Move each validation run() into a properly named function in './simulations/mainnet/Validations', so they can be called individually. Each run() here can call them too.
@@ -32,13 +33,43 @@ import {
 
 contract ValidationBase is SimulationBase {
 
-    uint256 constant loansAddedTimestamp_mainnet  = 1670552693;
-    uint256 constant lastUpdatedTimestamp_mainnet = 1670558420;
+    uint256 constant loansAddedTimestamp_mainnet  = 1670777148;
+    uint256 constant lastUpdatedTimestamp_mainnet = 1670804207;
 
     modifier validationConfig() {
         console.log("Block Number: ", block.number);
         _;
         require(!failed);
+    }
+
+    address[] lps = [
+        0x42d2a126C19577B82AfA6020Bd0D89fc48D8A94C,
+        0x5ba9C24A7092886a31E474A9Ed0B1D672B3f8829,
+        0x9323441091F39BE7F1F9331013eA245b04168e78,
+        0xD321Ee41540822CcA0C136F651DB81C4AF303bEa,
+        0xD56f06ff5FF1beEa43cFFFC227757F1E2Bae6126,
+        0xD8aCA3Fd7ad5bfBb9f82a43E88A36f00a0E680b3
+    ];
+
+}
+
+contract QueryPoolV1Positions is ValidationBase {
+
+    function run() external validationConfig {
+        query(mavenPermissionedPoolV1, lps, "Maven Permissioned Pool V1");
+        query(mavenUsdcPoolV1,         lps, "Maven USDC Pool V1");
+        query(mavenWethPoolV1,         lps, "Maven WETH Pool V1");
+        query(orthogonalPoolV1,        lps, "Orthogonal Pool V1");
+        query(icebreakerPoolV1,        lps, "Icebreaker Pool V1");
+    }
+
+    function query(address poolV1, address[] storage lps, string memory name) internal {
+        console.log("");
+        console.log("Pool V1: ", name);
+
+        for (uint256 i = 0; i < lps.length; ++i) {
+            console.log("LP: %s, LP Position", lps[i], getV1Position(poolV1, lps[i]));
+        }
     }
 
 }
@@ -379,6 +410,35 @@ contract UpgradeDebtLockersToV400 is ValidationBase {
 
 }
 
+contract UpgradeDebtLockersToV401 is ValidationBase {
+
+    function run() external validationConfig {
+        validate(mavenPermissionedPoolV1, mavenPermissionedLoans, 0);
+        validate(mavenUsdcPoolV1,         mavenUsdcLoans,         2);
+        validate(mavenWethPoolV1,         mavenWethLoans,         0);
+        validate(orthogonalPoolV1,        orthogonalLoans,        0);
+        validate(icebreakerPoolV1,        icebreakerLoans,        0);
+    }
+
+    function validate(address poolV1, address[] storage loans, uint256 allowedDiff) internal {
+        uint256 sumPrincipal;
+
+        for (uint256 i; i < loans.length; ++i) {
+
+            address debtLocker = IMapleLoanLike(loans[i]).lender();
+
+            sumPrincipal += IMapleLoanLike(loans[i]).principal();
+
+            assertVersion(401, debtLocker);
+
+            assertEq(IDebtLockerLike(debtLocker).loanMigrator(), migrationHelperProxy);
+        }
+
+        assertWithinDiff(sumPrincipal, IPoolV1Like(poolV1).principalOut(), allowedDiff);
+    }
+
+}
+
 contract ClaimAllLoans is ValidationBase {
 
     function run() external validationConfig {
@@ -390,7 +450,7 @@ contract ClaimAllLoans is ValidationBase {
     }
 
     function validate(address[] storage loans) internal {
-        for (uint256 i; i < loans.length; i++) {
+        for (uint256 i; i < loans.length; ++i) {
             IMapleLoanLike loan = IMapleLoanLike(loans[i]);
 
             assertEq(loan.claimableFunds(), 0);
@@ -509,13 +569,19 @@ contract QueryLiquidityLockers is ValidationBase {
 
 contract QueryMigrationLoans is ValidationBase {
 
-    function run() external view validationConfig {
-        for (uint256 i; i < unorderedMigrationLoans.length; ++i) {
-            console.log("");
-            console.log("address           ", unorderedMigrationLoans[i]);
-            console.log("principalRequested", IMapleLoanLike(unorderedMigrationLoans[i]).principalRequested());
-            console.log("fundsAsset        ", IMapleLoanLike(unorderedMigrationLoans[i]).fundsAsset());
-        }
+    function logOut(address loan) internal {
+        console.log("");
+        console.log("address           ", loan);
+        console.log("principalRequested", IMapleLoanLike(loan).principalRequested());
+        console.log("fundsAsset        ", IMapleLoanLike(loan).fundsAsset());
+    }
+
+    function run() external validationConfig {
+        logOut(mavenPermissionedMigrationLoan);
+        logOut(mavenUsdcMigrationLoan);
+        logOut(mavenWethMigrationLoan);
+        logOut(orthogonalMigrationLoan);
+        logOut(icebreakerMigrationLoan);
     }
 
     function validate(address poolV1, address migrationLoan, uint256 principalRequested) internal {
@@ -535,8 +601,8 @@ contract CreateMigrationLoans is ValidationBase {
     function run() external validationConfig {
         validate(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan, 8_765_965.068493e6);
         validate(mavenUsdcPoolV1,         mavenUsdcMigrationLoan,         1.246150e6);
-        validate(mavenWethPoolV1,         mavenWethMigrationLoan,         1_399.613706431366646518e18);
-        validate(orthogonalPoolV1,        orthogonalMigrationLoan,        17_008_319.288392e6);
+        validate(mavenWethPoolV1,         mavenWethMigrationLoan,         1395.626873080643521370e18);
+        validate(orthogonalPoolV1,        orthogonalMigrationLoan,        16_944_059.896081e6);
         validate(icebreakerPoolV1,        icebreakerMigrationLoan,        5_649_999.999995e6);
     }
 
@@ -585,7 +651,7 @@ contract FundMigrationLoansMavenUsdc is FundMigrationLoans {
 contract FundMigrationLoansMavenWeth is FundMigrationLoans {
 
     function run() external validationConfig {
-        validate(mavenWethPoolV1, mavenWethMigrationLoan, 1399.613706431366646518e18);
+        validate(mavenWethPoolV1, mavenWethMigrationLoan, 1395.626873080643521370e18);
     }
 
 }
@@ -593,7 +659,7 @@ contract FundMigrationLoansMavenWeth is FundMigrationLoans {
 contract FundMigrationLoansOrthogonal is FundMigrationLoans {
 
     function run() external validationConfig {
-        validate(orthogonalPoolV1, orthogonalMigrationLoan, 17_008_319.288392e6);
+        validate(orthogonalPoolV1, orthogonalMigrationLoan, 16_944_059.896081e6);
     }
 
 }
@@ -623,6 +689,39 @@ contract UpgradeMigrationLoansTo302 is ValidationBase {
     }
 
 }
+
+contract QueryMigrationDebtLockers is ValidationBase {
+
+    function run() external validationConfig {
+        console.log("");
+        query(mavenPermissionedMigrationLoan);
+
+        console.log("");
+        console.log("mavenUsdcMigrationLoan");
+        query(mavenUsdcMigrationLoan);
+
+        console.log("");
+        console.log("mavenWethMigrationLoan");
+        query(mavenWethMigrationLoan);
+
+        console.log("");
+        console.log("orthogonalMigrationLoan");
+        query(orthogonalMigrationLoan);
+
+        console.log("");
+        console.log("icebreakerMigrationLoan");
+        query(icebreakerMigrationLoan);
+    }
+
+    function query(address migrationLoan) internal {
+        if (migrationLoan == address(0)) return;
+
+        console.log("loan      ", migrationLoan);
+        console.log("debtLocker", IMapleLoanLike(migrationLoan).lender());
+    }
+
+}
+
 
 contract UpgradeMigrationDebtLockers is ValidationBase {
 
@@ -697,7 +796,7 @@ contract QueryLPsForContracts is ValidationBase {
     }
 
     function query(address[] storage lps) internal {
-        for (uint256 i = 0; i < lps.length; i++) {
+        for (uint256 i = 0; i < lps.length; ++i) {
             if (lps[i].code.length > 0) {
                 console.log(lps[i], lps[i].code.length);
             }
@@ -716,11 +815,6 @@ abstract contract QueryPoolV1ValueBase is ValidationBase {
 
         uint256 cash = fundsAsset.balanceOf(liquidityLocker);
 
-        console.log("cash + principalOut (LHS)");
-        console.log("-------------------------");
-        console.log("cash        ", cash);
-        console.log("principalOut", poolV1_.principalOut());
-
         uint256 totalValue = getPoolV1TotalValue(poolV1);
         uint256 sumValue   = getSumPosition(poolV1, lps);
 
@@ -728,12 +822,7 @@ abstract contract QueryPoolV1ValueBase is ValidationBase {
         console.log("totalSupply + interestSum - poolLosses (RHS)");
         console.log("--------------------------------------------");
         console.log("INITIAL SUPPLY:", totalValue);
-
-        console.log("");
-        console.log("Sanity Check on LP Positions and Dust");
-        console.log("-------------------------------------");
-        console.log("Sum of LP Positions", sumValue);
-        console.log("LP dust", totalValue - sumValue);
+        console.log("--------------------------------------------");
 
         bool dustAcceptable = totalValue - sumValue < lps.length * 2;
         bool zeroCash       = cash == 0;
@@ -741,6 +830,7 @@ abstract contract QueryPoolV1ValueBase is ValidationBase {
         console.log("");
         console.log("Safety checks");
         console.log("-------------------------------------");
+        console.log("LP dust", totalValue - sumValue);
         console.log("Cash zero:      ", zeroCash);
         console.log("Dust acceptable:", dustAcceptable);
         console.log("LHS - RHS:      ", (cash + poolV1_.principalOut()) - totalValue);
@@ -897,6 +987,11 @@ abstract contract DeployPools is ValidationBase {
         uint256 delegateManagementFeeRate;
     }
 
+    struct WithdrawalManagerConfiguration {
+        uint256 cycleDuration;
+        uint256 windowDuration;
+    }
+
     function validatePool(address poolV2, address poolV1, address poolManager_, address asset_) internal {
         // assertEq(hash(poolV2.code), 0);
 
@@ -929,8 +1024,36 @@ abstract contract DeployPools is ValidationBase {
         assertTrue(poolManager_.isLoanManager(poolConfig.loanManager));
         assertEq(poolManager_.loanManagerList(0), poolConfig.loanManager);
 
+        assertVersion(100, poolConfig.loanManager);
+
         // Fixed Value
         assertEq(poolManager_.pendingPoolDelegate(), address(0));
+    }
+
+    function validateWithdrawalManager(
+        address withdrawalManager_,
+        address pool_,
+        address poolManager_,
+        WithdrawalManagerConfiguration memory withdrawalManagerConfig
+    )
+        internal
+    {
+        IWithdrawalManagerLike withdrawalManager = IWithdrawalManagerLike(withdrawalManager_);
+
+        assertEq(withdrawalManager.pool(),        pool_);
+        assertEq(withdrawalManager.poolManager(), poolManager_);
+
+        (
+            uint64 initialCycleId_,
+            uint64 initialCycleTime_,
+            uint64 cycleDuration_,
+            uint64 windowDuration_
+        ) = withdrawalManager.cycleConfigs(0);
+
+        assertEq(initialCycleId_,   1);
+        assertGt(initialCycleTime_, 0);
+        assertEq(cycleDuration_,    withdrawalManagerConfig.cycleDuration);
+        assertEq(windowDuration_,   withdrawalManagerConfig.windowDuration);
     }
 
     function hash(bytes memory code) internal pure returns (bytes32 bytecodeHash) {
@@ -946,7 +1069,7 @@ contract DeployPoolMavenPermissioned is DeployPools {
         validatePool(mavenPermissionedPoolV2, mavenPermissionedPoolV1, address(mavenPermissionedPoolManager), address(usdc));
         validatePoolManager(
             mavenPermissionedPoolManager,
-                PoolConfiguration({
+            PoolConfiguration({
                 poolDelegate:              address(mavenPermissionedTemporaryPd),
                 asset:                     address(usdc),
                 pool:                      address(mavenPermissionedPoolV2),
@@ -954,9 +1077,20 @@ contract DeployPoolMavenPermissioned is DeployPools {
                 poolDelegateCover:         address(mavenPermissionedPoolDelegateCover),
                 withdrawalManager:         address(mavenPermissionedWithdrawalManager),
                 delegateManagementFeeRate: 0.135e6
-        }));
+            })
+        );
 
+        validateWithdrawalManager(
+            mavenPermissionedWithdrawalManager,
+            mavenPermissionedPoolV2,
+            mavenPermissionedPoolManager,
+            WithdrawalManagerConfiguration({
+                cycleDuration:  5 days,
+                windowDuration: 2 days
+            })
+        );
     }
+
 }
 
 contract DeployPoolMavenUsdc is DeployPools {
@@ -966,8 +1100,8 @@ contract DeployPoolMavenUsdc is DeployPools {
         // Maven Usdc Pool
         validatePool(mavenUsdcPoolV2, mavenUsdcPoolV1, address(mavenUsdcPoolManager), address(usdc));
         validatePoolManager(
-                mavenUsdcPoolManager,
-                PoolConfiguration({
+            mavenUsdcPoolManager,
+            PoolConfiguration({
                 poolDelegate:              address(mavenUsdcTemporaryPd),
                 asset:                     address(usdc),
                 pool:                      address(mavenUsdcPoolV2),
@@ -975,7 +1109,18 @@ contract DeployPoolMavenUsdc is DeployPools {
                 poolDelegateCover:         address(mavenUsdcPoolDelegateCover),
                 withdrawalManager:         address(mavenUsdcWithdrawalManager),
                 delegateManagementFeeRate: 0.135e6
-        }));
+            })
+        );
+
+        validateWithdrawalManager(
+            mavenUsdcWithdrawalManager,
+            mavenUsdcPoolV2,
+            mavenUsdcPoolManager,
+            WithdrawalManagerConfiguration({
+                cycleDuration:  5 days,
+                windowDuration: 2 days
+            })
+        );
     }
 
 }
@@ -986,8 +1131,8 @@ contract DeployPoolMavenWeth is DeployPools {
         // Maven Weth Pool
         validatePool(mavenWethPoolV2, mavenWethPoolV1, address(mavenWethPoolManager), address(weth));
         validatePoolManager(
-                mavenWethPoolManager,
-                PoolConfiguration({
+            mavenWethPoolManager,
+            PoolConfiguration({
                 poolDelegate:              address(mavenWethTemporaryPd),
                 asset:                     address(weth),
                 pool:                      address(mavenWethPoolV2),
@@ -995,7 +1140,18 @@ contract DeployPoolMavenWeth is DeployPools {
                 poolDelegateCover:         address(mavenWethPoolDelegateCover),
                 withdrawalManager:         address(mavenWethWithdrawalManager),
                 delegateManagementFeeRate: 0.135e6
-        }));
+            })
+        );
+
+        validateWithdrawalManager(
+            mavenWethWithdrawalManager,
+            mavenWethPoolV2,
+            mavenWethPoolManager,
+            WithdrawalManagerConfiguration({
+                cycleDuration:  5 days,
+                windowDuration: 2 days
+            })
+        );
     }
 
 }
@@ -1007,8 +1163,8 @@ contract DeployPoolOrthogonal is DeployPools {
         // Orthogonal Pool
         validatePool(orthogonalPoolV2, orthogonalPoolV1, address(orthogonalPoolManager), address(usdc));
         validatePoolManager(
-                orthogonalPoolManager,
-                PoolConfiguration({
+            orthogonalPoolManager,
+            PoolConfiguration({
                 poolDelegate:              address(orthogonalTemporaryPd),
                 asset:                     address(usdc),
                 pool:                      address(orthogonalPoolV2),
@@ -1016,7 +1172,18 @@ contract DeployPoolOrthogonal is DeployPools {
                 poolDelegateCover:         address(orthogonalPoolDelegateCover),
                 withdrawalManager:         address(orthogonalWithdrawalManager),
                 delegateManagementFeeRate: 0
-        }));
+            })
+        );
+
+        validateWithdrawalManager(
+            orthogonalWithdrawalManager,
+            orthogonalPoolV2,
+            orthogonalPoolManager,
+            WithdrawalManagerConfiguration({
+                cycleDuration:  1 days,
+                windowDuration: 1 days
+            })
+        );
 
     }
 
@@ -1028,8 +1195,8 @@ contract DeployPoolIcebreaker is DeployPools {
         // Icebreaker
         validatePool(icebreakerPoolV2, icebreakerPoolV1, address(icebreakerPoolManager), address(usdc));
         validatePoolManager(
-                icebreakerPoolManager,
-                PoolConfiguration({
+            icebreakerPoolManager,
+            PoolConfiguration({
                 poolDelegate:              address(icebreakerTemporaryPd),
                 asset:                     address(usdc),
                 pool:                      address(icebreakerPoolV2),
@@ -1037,20 +1204,31 @@ contract DeployPoolIcebreaker is DeployPools {
                 poolDelegateCover:         address(icebreakerPoolDelegateCover),
                 withdrawalManager:         address(icebreakerWithdrawalManager),
                 delegateManagementFeeRate: 0.2e6
-        }));
+            })
+        );
+
+        validateWithdrawalManager(
+            icebreakerWithdrawalManager,
+            icebreakerPoolV2,
+            icebreakerPoolManager,
+            WithdrawalManagerConfiguration({
+                cycleDuration:  5 days,
+                windowDuration: 2 days
+            })
+        );
 
     }
 
 }
 
-contract AssertPoolAccounting is ValidationBase {
+contract AssertPoolAccountingWithMigrationLoans is ValidationBase {
 
     function run() external validationConfig {
-        // mavenPermissionedLoans.push(mavenPermissionedMigrationLoan);
-        // mavenUsdcLoans.push(mavenUsdcMigrationLoan);
-        // mavenWethLoans.push(mavenWethMigrationLoan);
-        // orthogonalLoans.push(orthogonalMigrationLoan);
-        // icebreakerLoans.push(icebreakerMigrationLoan);
+        mavenPermissionedLoans.push(mavenPermissionedMigrationLoan);
+        mavenUsdcLoans.push(mavenUsdcMigrationLoan);
+        mavenWethLoans.push(mavenWethMigrationLoan);
+        orthogonalLoans.push(orthogonalMigrationLoan);
+        icebreakerLoans.push(icebreakerMigrationLoan);
 
         loansAddedTimestamps[mavenPermissionedPoolManager] = loansAddedTimestamp_mainnet;
         loansAddedTimestamps[mavenUsdcPoolManager]         = loansAddedTimestamp_mainnet;
@@ -1153,7 +1331,7 @@ contract PermissionPools is ValidationBase {
 
         assertTrue(!poolManager_.openToPublic(), "pool open to public");
 
-        for (uint256 i = 0; i < lps.length; i++) {
+        for (uint256 i = 0; i < lps.length; ++i) {
             assertTrue(poolManager_.isValidLender(lps[i]));
         }
 
@@ -1192,6 +1370,7 @@ contract Airdrop is ValidationBase {
 
             if (lps[i] == 0xB2acd0214F87d217A2eF148aA4a5ABA71d3F7956) {
                 v2Position = IPoolV2Like(poolV2).balanceOf(0x666B8EbFbF4D5f0CE56962a25635CfF563F13161);
+                console.log("Sherlock position", v2Position);
             }
 
             if (i == 0) {
@@ -1337,16 +1516,41 @@ contract QueryMigrationLoanFees is ValidationBase {
 contract CloseMigrationLoans is ValidationBase {
 
     function run() external validationConfig {
-        validate(mavenPermissionedMigrationLoan);
-        validate(mavenUsdcMigrationLoan);
-        validate(mavenWethMigrationLoan);
-        validate(orthogonalMigrationLoan);
-        validate(icebreakerMigrationLoan);
+        validate(mavenPermissionedPoolV2, mavenPermissionedMigrationLoan);
+        validate(mavenUsdcPoolV2,         mavenUsdcMigrationLoan);
+        validate(mavenWethPoolV2,         mavenWethMigrationLoan);
+        validate(orthogonalPoolV2,        orthogonalMigrationLoan);
+        validate(icebreakerPoolV2,        icebreakerMigrationLoan);
     }
 
-    function validate(address migrationLoan) internal {
+    function validate(address poolV1, address migrationLoan) internal {
         assertEq(IMapleLoanLike(migrationLoan).nextPaymentDueDate(), 0);
         assertEq(IMapleLoanLike(migrationLoan).paymentsRemaining(),  0);
+
+        IERC20Like fundsAsset = IERC20Like(IMapleLoanLike(migrationLoan).fundsAsset());
+
+        assertEq(fundsAsset.balanceOf(migrationLoan), 0);
+        assertEq(fundsAsset.balanceOf(poolV1),        IMapleLoanLike(migrationLoan).principalRequested());
+    }
+
+}
+
+contract AssertPoolAccountingWithoutMigrationLoans is ValidationBase {
+
+    function run() external validationConfig {
+        loansAddedTimestamps[mavenPermissionedPoolManager] = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[mavenUsdcPoolManager]         = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[mavenWethPoolManager]         = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[orthogonalPoolManager]        = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[icebreakerPoolManager]        = loansAddedTimestamp_mainnet;
+
+        lastUpdatedTimestamps[mavenPermissionedPoolManager] = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[mavenUsdcPoolManager]         = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[mavenWethPoolManager]         = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[orthogonalPoolManager]        = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[icebreakerPoolManager]        = lastUpdatedTimestamp_mainnet;
+
+        assertAllPoolAccounting(1200);
     }
 
 }
@@ -1356,8 +1560,8 @@ contract ConfirmPoolV2Cash is ValidationBase {
     function run() external validationConfig {
         validate(mavenPermissionedPoolV2, 8_765_965.068493e6);
         validate(mavenUsdcPoolV2,         1.246150e6);
-        validate(mavenWethPoolV2,         1399.613706431366646518e18);
-        validate(orthogonalPoolV2,        17_008_319.288392e6);
+        validate(mavenWethPoolV2,         1395.626873080643521370e18);
+        validate(orthogonalPoolV2,        16_944_059.896081e6);
         validate(icebreakerPoolV2,        5_649_999.999995e6);
     }
 
@@ -1403,8 +1607,17 @@ contract TransferPoolDelegates is ValidationBase {
 
 }
 
+contract ValidateDefaultVersionsAreSet is SimulationBase {
+
+    function run() external {
+        assertEq(IMapleProxyFactoryLike(loanFactory).defaultVersion(),        400);
+        assertEq(IMapleProxyFactoryLike(loanManagerFactory).defaultVersion(), 200);
+    }
+
+}
+
 // TODO: Update this
-contract DeprecatePools is ValidationBase {
+contract DeactivatePoolV1 is ValidationBase {
 
     function run() external validationConfig {
         validate(mavenPermissionedPoolV1);
@@ -1438,7 +1651,7 @@ contract PriceOraclesSet is ValidationBase {
 
         address asset = pool.liquidityAsset();
 
-        assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).getLatestPrice(asset), 1e8);  // TODO: Is this always the returned value?
+        assertEq(IMapleGlobalsV1Like(mapleGlobalsV1).getLatestPrice(asset), 1);  // TODO: Is this always the returned value?
     }
 
 }
@@ -1527,6 +1740,43 @@ contract UnpauseProtocol is ValidationBase {
 
 }
 
+contract QueryWindowEnds is ValidationBase {
+
+    function run() external validationConfig {
+        ( uint256 windowStart, uint256 windowEnd ) = IWithdrawalManagerLike(mavenPermissionedWithdrawalManager).getWindowAtId(1);
+        console.log("Maven Perm Cycle 1 - start: %s, end: %s", windowStart, windowEnd);
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenPermissionedWithdrawalManager).getWindowAtId(2);
+        console.log("Maven Perm Cycle 2 - start: %s, end: %s", windowStart, windowEnd);
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenPermissionedWithdrawalManager).getWindowAtId(3);
+        console.log("Maven Perm Cycle 3 - start: %s, end: %s", windowStart, windowEnd);
+
+        console.log("");
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenUsdcWithdrawalManager).getWindowAtId(1);
+        console.log("Maven Usdc Cycle 1 - start: %s, end: %s", windowStart, windowEnd);
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenUsdcWithdrawalManager).getWindowAtId(2);
+        console.log("Maven Usdc Cycle 2 - start: %s, end: %s", windowStart, windowEnd);
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenUsdcWithdrawalManager).getWindowAtId(3);
+        console.log("Maven Usdc Cycle 3 - start: %s, end: %s", windowStart, windowEnd);
+
+        console.log("");
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenWethWithdrawalManager).getWindowAtId(1);
+        console.log("Maven Weth Cycle 1 - start: %s, end: %s", windowStart, windowEnd);
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenWethWithdrawalManager).getWindowAtId(2);
+        console.log("Maven Weth Cycle 2 - start: %s, end: %s", windowStart, windowEnd);
+
+        ( windowStart, windowEnd ) = IWithdrawalManagerLike(mavenWethWithdrawalManager).getWindowAtId(3);
+        console.log("Maven Weth Cycle 3 - start: %s, end: %s", windowStart, windowEnd);
+    }
+
+}
+
 // TODO: Add post migration validation
 
 // contract RequestUnstakeValidationScript is SimulationBase {
@@ -1582,9 +1832,23 @@ contract UnpauseProtocol is ValidationBase {
 
 contract SimulateLifecycle is LifecycleBase {
 
+    uint256 constant loansAddedTimestamp_mainnet  = 1670780842;
+    uint256 constant lastUpdatedTimestamp_mainnet = 1670780842;
+
     function run() external {
-        // NOTE: Update step numbers as needed.
-        migrate({ fromStep: 11, toStep: 42 });
+        loansAddedTimestamps[mavenPermissionedPoolManager] = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[mavenUsdcPoolManager]         = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[mavenWethPoolManager]         = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[orthogonalPoolManager]        = loansAddedTimestamp_mainnet;
+        loansAddedTimestamps[icebreakerPoolManager]        = loansAddedTimestamp_mainnet;
+
+        lastUpdatedTimestamps[mavenPermissionedPoolManager] = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[mavenUsdcPoolManager]         = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[mavenWethPoolManager]         = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[orthogonalPoolManager]        = lastUpdatedTimestamp_mainnet;
+        lastUpdatedTimestamps[icebreakerPoolManager]        = lastUpdatedTimestamp_mainnet;
+
+        performEntireMigration();
 
         payOffAllLoanWhenDue();
         exitFromAllPoolsWhenPossible();

@@ -62,7 +62,7 @@ import {
     IStakeLockerLike
 } from "./Interfaces.sol";
 
-// TODO: either treat things as generics (i.e. IMapleProxy.upgrade), or as explicit (i.e. IMapleLoanV400.upgrade)
+// TODO: either treat contracts as generics (i.e. IMapleProxy.upgrade), or as explicit (i.e. IMapleLoanV400.upgrade)
 
 contract SimulationBase is GenericActions, AddressRegistry {
 
@@ -88,105 +88,122 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
     // Entire Migration
     function performEntireMigration() internal {
-
         // Pre-Deployment Requirements
-        setPoolAdminsToMigrationMultisig();  // LMP #1
-        zeroInvestorFeeAndTreasuryFee();     // LMP #2
-        payAndClaimAllUpcomingLoans();       // LMP #3
-        upgradeAllLoansToV301();             // LMP #4
+        if (block.number < 16140823) setPoolAdminsToMigrationMultisig();  // LMP #1 [16140823-16150331]
+        if (block.number < 16144511) zeroInvestorFeeAndTreasuryFee();     // LMP #2 [16144511]
 
-        // NOTE: Skipped as this was already performed on mainnet.
-        // deployProtocol();  // LMP #5
+        // Must be done before `upgradeAllLoansToV302`
+        if (block.number < 16158728) {
+            payAndClaimAllUpcomingLoans();  // LMP #3 [Idempotent]
+            upgradeAllLoansToV301();        // LMP #4 [Idempotent]
+        }
 
-        // NOTE: Skipped as these were already performed on mainnet.
-        // tempGovernorAcceptsV2Governorship();                   // LMP #6
-        // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
-        // setupExistingFactories();                              // LMP #8.1
+        if (block.number < 16126985) deployProtocol();  // LMP #5 [16126985-16127073]
+
+        if (block.number < 16136610) tempGovernorAcceptsV2Governorship();                   // LMP #6 [16136610]
+        if (block.number < 16136630) migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7 [16136630]
 
         // Pre-Kickoff
-        upgradeAllDebtLockersToV400();  // LMP #9.1
+        if (block.number < 16144529) setupExistingFactories();                   // LMP #8.1 [16144529]
+        if (block.number < 16151161) deploy401DebtLockerAndAccountingChecker();  // LMP #8.2 [16151161-16151166]
+        if (block.number < 16155441) setUpDebtLockerFactoryFor401();             // LMP #8.3 [16155441]
+        if (block.number < 16156502) upgradeAllDebtLockersToV400();              // LMP #9.1 [16156502]
+        if (block.number < 16158685) upgradeAllDebtLockersToV401();              // LMP #9.2 [16158685]
 
-        // setUpDebtLockerFactoryFor401();  // LMP #8.2
-
-        upgradeAllDebtLockersToV401();  // LMP #9.2
-
-        claimAllLoans();                // LMP #10
-
-        checkSumOfLoanPrincipalForAllPools();
+        // Must be done before `upgradeAllLoansToV302`
+        if (block.number < 16158728) {
+            claimAllLoans();  // LMP #10  [Idempotent]
+            checkSumOfLoanPrincipalForAllPools();
+        }
 
         // Kickoff
-        upgradeAllLoansToV302();    // LMP #11
-        lockAllPoolV1Deposits();    // LMP #12
-        createAllMigrationLoans();  // LMP #13
+        if (block.number < 16158728) upgradeAllLoansToV302();    // LMP #11 [16158728]
+        if (block.number < 16158757) lockAllPoolV1Deposits();    // LMP #12 [16158757]
+        if (block.number < 16161265) createAllMigrationLoans();  // LMP #13 [16161265]
 
-        checkSumOfLoanPrincipalForAllPools();
+        if (block.number < 16161360) {
+            checkSumOfLoanPrincipalForAllPools();
+            fundMigrationLoansAndUpgradeDebtLockers();  // LMP #15 [16161360-16161660]
+            checkSumOfLoanPrincipalForAllPools();
+        }
 
-        // Migration Loan Funding
-        // NOTE: Technically, each loan is funded and their DebtLockers are upgraded per pool before moving onto the next
-        fundAllMigrationLoans();               // LMP #14
-        upgradeAllMigrationLoanDebtLockers();  // LMP #15
+        if (block.number < 16161726) upgradeAllMigrationLoansToV302();  // LMP #16 [16161726]
 
-        upgradeAllMigrationLoansToV302();  // LMP #16
+        if (block.number < 16161749) pauseV1Protocol();  // LMP #17 [16161749]
 
-        pauseV1Protocol();  // LMP #17
+        if (block.number < 16162315) {
+            deployAllPoolV2s();        // LMP #18 [16162315-16162589]
+            assertAllTotalSupplies();
+        }
 
-        deployAllPoolV2s();  // LMP #18
+        if (block.number < 16162671) setFees();           // LMP #19 [16162671]
 
-        setFees();  // LMP #19
-
-        checkSumOfLoanPrincipalForAllPools();
-
-        addLoansToAllLoanManagers();  // LMP #20
+        if (block.number < 16163591) {
+            addLoansToAllLoanManagers();  // LMP #20 [16163591]
+            assertAllPoolAccounting();
+            assertAllPrincipalOuts();
+        }
 
         // Prepare for Airdrops
-        activateAllPoolManagers();  // LMP #21
-        openOrAllowOnAllPoolV2s();  // LMP #22
+        if (block.number < 16163643) activateAllPoolManagers();  // LMP #21 [16163643]
+        if (block.number < 16163671) openOrAllowOnAllPoolV2s();  // LMP #22 [16163671-16163755]
 
-        airdropTokensForAllPools();  // LMP #23
-        assertAllPoolAccounting();
+        if (block.number < 16164408) {
+            airdropTokensForAllPools();  // LMP #23 [16164408-16164504]
+            assertAllPoolAccounting();
+            compareAllLpPositions();
+        }
 
         // Transfer Loans
-        // TODO: Do we really need all these repetitive assertions? Especially that we have validation script now.
-        setAllPendingLenders();         // LMP #24
-        assertAllPoolAccounting();
-        takeAllOwnershipsOfLoans();     // LMP #25
-        assertAllPoolAccounting();
-        upgradeAllLoanManagers();       // LMP #26
-        assertAllPrincipalOuts();
-        assertAllTotalSupplies();
-        assertAllPoolAccounting();
-        setAllCoverParameters();
-        assertAllPoolAccounting();
-        upgradeAllLoansToV400();        // LMP #27
+        if (block.number < 16164579) setAllPendingLenders();  // LMP #24 [16164579]
 
-        compareAllLpPositions();
+        if (block.number < 16164620) {
+            takeAllOwnershipsOfLoans();  // LMP #25 [16164620]
+            assertAllPoolAccounting();
+        }
+
+        if (block.number < 16164645) {
+            upgradeAllLoanManagers();   // LMP #26 [16164645]
+            assertAllPoolAccounting();
+            assertAllPrincipalOuts();
+        }
+
+        if (block.number < 16164765) {
+            upgradeAllLoansToV400();    // LMP #27 [16164765]
+            assertAllPoolAccounting();
+        }
 
         // Close Migration Loans
-        setGlobalsOfLoanFactoryToV2();  // LMP #28
-        closeAllMigrationLoans();       // LMP #29
+        if (block.number < 16164798) setGlobalsOfLoanFactoryToV2();  // LMP #28 [16164798]
+
+        if (block.number < 16164991) {
+            closeAllMigrationLoans();   // LMP #29 [16164991]}
+            assertAllPoolAccounting();
+            assertAllPrincipalOuts();
+        }
 
         // Prepare PoolV1 Deactivation
-        unlockV1Staking();    // LMP #30
-        unpauseV1Protocol();  // LMP #31
+        if (block.number < 16169377) unlockV1Staking();    // LMP #30 [16169377]
+        if (block.number < 16170052) unpauseV1Protocol();  // LMP #31 [16170052]
 
-        deactivateAndUnstakeAllPoolV1s();  // LMPs #32-#36
+        if (block.number < 16170102) finalizeFactories();  // LMP #32 [16170102]
 
-        enableFinalPoolDelegates();  // LMP #37
+        if (block.number < 16170144) deactivateAndUnstakeAllPoolV1s();  // LMPs #33-#37 [16170144-16172136]
 
-        transferAllPoolDelegates();  // LMPs #38-#39
+        if (block.number < 16172812) enableFinalPoolDelegates();  // LMP #38 [16172812]
+
+        if (block.number < 16172867) setAllPendingPoolDelegates();  // LMPs #39 [16172867-16172924]
+        if (block.number < 16176259) acceptAllPoolDelegates();      // LMPs #40 [16176259-TBD]
+
+        setAllMinCoverAmounts();  // Not done yet
 
         // Transfer Governorship of GlobalsV2
-        tempGovernorTransfersV2Governorship();  // LMPs #40
-        governorAcceptsV2Governorship();        // LMPs #41
+        tempGovernorTransfersV2Governorship();  // LMPs #41 [TBD]
+        governorAcceptsV2Governorship();        // LMPs #42 [TBD]
 
-        setLoanDefault400();  // LMPs #42
+        tasksForLoan401();  // LMPs #43-#46 [TBD]
 
-        finalizeProtocol();  // LMPs #43-#46
-
-        // Dec 8
         handleCoverProviderEdgeCase();
-
-        // Make cover providers withdraw
         withdrawAllCovers();
 
         // PoolV2 Lifecycle start
@@ -200,20 +217,20 @@ contract SimulationBase is GenericActions, AddressRegistry {
         IPoolV1Like(poolV1).setPoolAdmin(poolAdmin, true);
     }
 
-    // Liquidity Migration Procedure #1
+    // Liquidity Migration Procedure #1 [Blocks 16140823-16150331]
     function setPoolAdminsToMigrationMultisig() internal {
-        setPoolV1Admin(mavenPermissionedPoolV1, migrationMultisig);
-        setPoolV1Admin(mavenUsdcPoolV1,         migrationMultisig);
-        setPoolV1Admin(mavenWethPoolV1,         migrationMultisig);
-        setPoolV1Admin(orthogonalPoolV1,        migrationMultisig);
-        setPoolV1Admin(icebreakerPoolV1,        migrationMultisig);
+        setPoolV1Admin(mavenPermissionedPoolV1, migrationMultisig);  // Block 16140823
+        setPoolV1Admin(mavenUsdcPoolV1,         migrationMultisig);  // Block 16140800
+        setPoolV1Admin(mavenWethPoolV1,         migrationMultisig);  // Block 16140807
+        setPoolV1Admin(orthogonalPoolV1,        migrationMultisig);  // Block 16143144
+        setPoolV1Admin(icebreakerPoolV1,        migrationMultisig);  // Block 16150331
     }
 
-    // Liquidity Migration Procedure #2
+    // Liquidity Migration Procedure #2 [Block 16144511]
     function zeroInvestorFeeAndTreasuryFee() internal {
         vm.startPrank(governor);
-        IMapleGlobalsV1Like(mapleGlobalsV1).setInvestorFee(0);
-        IMapleGlobalsV1Like(mapleGlobalsV1).setTreasuryFee(0);
+        IMapleGlobalsV1Like(mapleGlobalsV1).setInvestorFee(0);  // Block 16144511
+        IMapleGlobalsV1Like(mapleGlobalsV1).setTreasuryFee(0);  // Block 16144511
         vm.stopPrank();
     }
 
@@ -267,7 +284,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         checkUnaccountedAmount(loans);
     }
 
-    // Liquidity Migration Procedure #3
+    // Liquidity Migration Procedure #3 [Idempotent]
     function payAndClaimAllUpcomingLoans() internal {
         payAndClaimUpcomingLoans(mavenPermissionedLoans);
         payAndClaimUpcomingLoans(mavenUsdcLoans);
@@ -297,7 +314,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         }
     }
 
-    // Liquidity Migration Procedure #4
+    // Liquidity Migration Procedure #4 [Idempotent]
     function upgradeAllLoansToV301() internal {
         upgradeLoansToV301(mavenPermissionedLoans);
         upgradeLoansToV301(mavenUsdcLoans);
@@ -306,89 +323,91 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeLoansToV301(icebreakerLoans);
     }
 
-    // Liquidity Migration Procedure #5
+    // Liquidity Migration Procedure #5 [Blocks 16126985-16127073]
     function _deployProtocol() internal {
         // Deploy Globals (Set Governor to deployer)
-        address mapleGlobalsV2Implementation = address(new MapleGlobalsV2());
+        address mapleGlobalsV2Implementation = address(new MapleGlobalsV2());  // Block 16126985
 
-        mapleGlobalsV2Proxy = address(new MapleGlobalsNTP(deployer, mapleGlobalsV2Implementation));
+        mapleGlobalsV2Proxy = address(new MapleGlobalsNTP(deployer, mapleGlobalsV2Implementation));  // Block 16126986
 
         // Deploy FeeManager
-        feeManager = address(new MapleLoanFeeManager(mapleGlobalsV2Proxy));
+        feeManager = address(new MapleLoanFeeManager(mapleGlobalsV2Proxy));  // Block 16126987
 
         // Deploy PoolDeployer
-        poolDeployer = address(new PoolDeployer(mapleGlobalsV2Proxy));
+        poolDeployer = address(new PoolDeployer(mapleGlobalsV2Proxy));  // Block 16126989
 
         // Liquidator Factory Deployments and Configuration
-        liquidatorFactory        = address(new LiquidatorFactory(mapleGlobalsV2Proxy));
-        liquidatorImplementation = address(new Liquidator());
-        liquidatorInitializer    = address(new LiquidatorInitializer());
+        liquidatorFactory        = address(new LiquidatorFactory(mapleGlobalsV2Proxy));  // Block 16126990
+        liquidatorImplementation = address(new Liquidator());                            // Block 16126991
+        liquidatorInitializer    = address(new LiquidatorInitializer());                 // Block 16126992
 
-        IMapleProxyFactoryLike(liquidatorFactory).registerImplementation(200, liquidatorImplementation, liquidatorInitializer);
-        IMapleProxyFactoryLike(liquidatorFactory).setDefaultVersion(200);
+        IMapleProxyFactoryLike(liquidatorFactory).registerImplementation(200, liquidatorImplementation, liquidatorInitializer);  // Block 16126993
+        IMapleProxyFactoryLike(liquidatorFactory).setDefaultVersion(200);                                                        // Block 16126994
 
         // Loan Manager Factory Deployments and Configuration
-        loanManagerFactory                  = address(new LoanManagerFactory(mapleGlobalsV2Proxy));
-        loanManagerImplementation           = address(new LoanManager());
-        loanManagerInitializer              = address(new LoanManagerInitializer());
-        transitionLoanManagerImplementation = address(new TransitionLoanManager());
+        loanManagerFactory                  = address(new LoanManagerFactory(mapleGlobalsV2Proxy));  // Block 16126995
+        loanManagerImplementation           = address(new LoanManager());                            // Block 16126996
+        loanManagerInitializer              = address(new LoanManagerInitializer());                 // Block 16126997
+        transitionLoanManagerImplementation = address(new TransitionLoanManager());                  // Block 16126998
 
-        IMapleProxyFactoryLike(loanManagerFactory).registerImplementation(100, transitionLoanManagerImplementation, loanManagerInitializer);
-        IMapleProxyFactoryLike(loanManagerFactory).registerImplementation(200, loanManagerImplementation,           loanManagerInitializer);
-        IMapleProxyFactoryLike(loanManagerFactory).enableUpgradePath(100, 200, address(0));
-        IMapleProxyFactoryLike(loanManagerFactory).setDefaultVersion(100);
+        IMapleProxyFactoryLike(loanManagerFactory).registerImplementation(100, transitionLoanManagerImplementation, loanManagerInitializer);  // Block 16126999
+        IMapleProxyFactoryLike(loanManagerFactory).registerImplementation(200, loanManagerImplementation,           loanManagerInitializer);  // Block 16127000
+        IMapleProxyFactoryLike(loanManagerFactory).enableUpgradePath(100, 200, address(0));                                                   // Block 16127001
+        IMapleProxyFactoryLike(loanManagerFactory).setDefaultVersion(100);                                                                    // Block 16127002
 
         // Pool Manager Factory Deployments and Configuration
-        poolManagerFactory        = address(new PoolManagerFactory(mapleGlobalsV2Proxy));
-        poolManagerImplementation = address(new PoolManager());
-        poolManagerInitializer    = address(new PoolManagerInitializer());
+        poolManagerFactory        = address(new PoolManagerFactory(mapleGlobalsV2Proxy));  // Block 16127003
+        poolManagerImplementation = address(new PoolManager());                            // Block 16127004
+        poolManagerInitializer    = address(new PoolManagerInitializer());                 // Block 16127005
 
-        IMapleProxyFactoryLike(poolManagerFactory).registerImplementation(100, poolManagerImplementation, poolManagerInitializer);
-        IMapleProxyFactoryLike(poolManagerFactory).setDefaultVersion(100);
+        IMapleProxyFactoryLike(poolManagerFactory).registerImplementation(100, poolManagerImplementation, poolManagerInitializer);  // Block 16127006
+        IMapleProxyFactoryLike(poolManagerFactory).setDefaultVersion(100);                                                          // Block 16127007
 
         // Withdrawal Manager Factory Deployments and Configuration
-        withdrawalManagerFactory        = address(new WithdrawalManagerFactory(mapleGlobalsV2Proxy));
-        withdrawalManagerImplementation = address(new WithdrawalManager());
-        withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
+        withdrawalManagerFactory        = address(new WithdrawalManagerFactory(mapleGlobalsV2Proxy));  // Block 16127008
+        withdrawalManagerImplementation = address(new WithdrawalManager());                            // Block 16127009
+        withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());                 // Block 16127010
 
-        IMapleProxyFactoryLike(withdrawalManagerFactory).registerImplementation(100, withdrawalManagerImplementation, withdrawalManagerInitializer);
-        IMapleProxyFactoryLike(withdrawalManagerFactory).setDefaultVersion(100);
+        IMapleProxyFactoryLike(withdrawalManagerFactory).registerImplementation(100, withdrawalManagerImplementation, withdrawalManagerInitializer);  // Block 16127011
+        IMapleProxyFactoryLike(withdrawalManagerFactory).setDefaultVersion(100);                                                                      // Block 16127012
 
         // Loan Factory Deployments
         // NOTE: setup in `setupExistingFactories` by GovernorV1
-        loanV302Implementation = address(new MapleLoanV302());
-        loanV400Initializer    = address(new MapleLoanV400Initializer());
-        loanV400Implementation = address(new MapleLoanV400());
-        loanV400Migrator       = address(new MapleLoanV400Migrator());
+        loanV302Implementation = address(new MapleLoanV302());             // Block 16127013
+        loanV400Initializer    = address(new MapleLoanV400Initializer());  // Block 16127014
+        loanV400Implementation = address(new MapleLoanV400());             // Block 16127015
+        loanV400Migrator       = address(new MapleLoanV400Migrator());     // Block 16127016
 
         // DebtLocker Factory Deployments
         // NOTE: setup in `setupExistingFactories` by GovernorV1
-        debtLockerV400Migrator       = address(new DebtLockerV4Migrator());
-        debtLockerV400Implementation = address(new DebtLockerV4());
+        debtLockerV400Migrator       = address(new DebtLockerV4Migrator());  // Block 16127017
+        debtLockerV400Implementation = address(new DebtLockerV4());          // Block 16127018
 
         // Deploy MigrationHelper, AccountingChecker, and DeactivationOracle
-        accountingChecker  = address(new AccountingChecker(mapleGlobalsV2Proxy));
-        deactivationOracle = address(new DeactivationOracle());
+        accountingChecker  = address(new AccountingChecker(mapleGlobalsV2Proxy));  // Block 16127019, old version
+        deactivationOracle = address(new DeactivationOracle());                    // Block 16127020
 
-        address migrationHelperImplementation = address(new MigrationHelper());
+        address migrationHelperImplementation = address(new MigrationHelper());    // Block 16127021
 
-        migrationHelperProxy = address(new MigrationHelperNTP(deployer, migrationHelperImplementation));
+        migrationHelperProxy = address(new MigrationHelperNTP(deployer, migrationHelperImplementation));  // Block 16127022
 
-        refinancer = address(new Refinancer());
+        refinancer = address(new Refinancer());  // Block 16127023
 
         // Configure MigrationHelper
-        IMigrationHelperLike(migrationHelperProxy).setPendingAdmin(migrationMultisig);
-        IMigrationHelperLike(migrationHelperProxy).setGlobals(mapleGlobalsV2Proxy);
+        IMigrationHelperLike(migrationHelperProxy).setPendingAdmin(migrationMultisig);  // Block 16127024
+        IMigrationHelperLike(migrationHelperProxy).setGlobals(mapleGlobalsV2Proxy);     // Block 16127025
 
         // Configure Globals Addresses
         MapleGlobalsV2 mapleGlobalsV2 = MapleGlobalsV2(mapleGlobalsV2Proxy);
 
-        mapleGlobalsV2.setMapleTreasury(mapleTreasury);
-        mapleGlobalsV2.setSecurityAdmin(securityAdmin);
-        mapleGlobalsV2.setMigrationAdmin(migrationHelperProxy);
+        mapleGlobalsV2.setMapleTreasury(mapleTreasury);          // Block 16127026
+        mapleGlobalsV2.setSecurityAdmin(securityAdmin);          // Block 16127027
+        mapleGlobalsV2.setMigrationAdmin(migrationHelperProxy);  // Block 16127028
 
         // Set Globals Valid Addresses
-        mapleGlobalsV2.setValidPoolDeployer(poolDeployer, true);
+        mapleGlobalsV2.setValidPoolDeployer(poolDeployer, true);  // Block 16127029
+
+        // All setValidBorrower calls are between block 16127030 and 16127051
 
         for (uint256 i; i < mavenPermissionedLoans.length; ++i) {
             mapleGlobalsV2.setValidBorrower(IMapleLoanLike(mavenPermissionedLoans[i]).borrower(), true);
@@ -410,67 +429,60 @@ contract SimulationBase is GenericActions, AddressRegistry {
             mapleGlobalsV2.setValidBorrower(IMapleLoanLike(icebreakerLoans[i]).borrower(), true);
         }
 
-        mapleGlobalsV2.setValidPoolDelegate(mavenPermissionedTemporaryPd, true);
-        mapleGlobalsV2.setValidPoolDelegate(mavenUsdcTemporaryPd,         true);
-        mapleGlobalsV2.setValidPoolDelegate(mavenWethTemporaryPd,         true);
-        mapleGlobalsV2.setValidPoolDelegate(orthogonalTemporaryPd,        true);
-        mapleGlobalsV2.setValidPoolDelegate(icebreakerTemporaryPd,        true);
+        mapleGlobalsV2.setValidPoolDelegate(mavenPermissionedTemporaryPd, true);  // Block 16127052
+        mapleGlobalsV2.setValidPoolDelegate(mavenUsdcTemporaryPd,         true);  // Block 16127053
+        mapleGlobalsV2.setValidPoolDelegate(mavenWethTemporaryPd,         true);  // Block 16127054
+        mapleGlobalsV2.setValidPoolDelegate(orthogonalTemporaryPd,        true);  // Block 16127055
+        mapleGlobalsV2.setValidPoolDelegate(icebreakerTemporaryPd,        true);  // Block 16127056
 
         // NOTE: Not setting wbtc as it is not needed immediately. See `performAdditionalGlobalsSettings`
-        mapleGlobalsV2.setValidPoolAsset(usdc, true);
-        mapleGlobalsV2.setValidPoolAsset(weth, true);
+        mapleGlobalsV2.setValidPoolAsset(usdc, true);  // Block 16127057
+        mapleGlobalsV2.setValidPoolAsset(weth, true);  // Block 16127059
 
         // NOTE: Not setting usdc and weth as it is not needed immediately. See `performAdditionalGlobalsSettings`
-        mapleGlobalsV2.setValidCollateralAsset(weth, true);
-        mapleGlobalsV2.setValidCollateralAsset(wbtc, true);
+        mapleGlobalsV2.setValidCollateralAsset(weth, true);  // Block 16127060
+        mapleGlobalsV2.setValidCollateralAsset(wbtc, true);  // Block 16127061
 
-        mapleGlobalsV2.setValidFactory("LIQUIDATOR",         liquidatorFactory,        true);
-        mapleGlobalsV2.setValidFactory("LOAN",               loanFactory,              true);
-        mapleGlobalsV2.setValidFactory("LOAN_MANAGER",       loanManagerFactory,       true);
-        mapleGlobalsV2.setValidFactory("POOL_MANAGER",       poolManagerFactory,       true);
-        mapleGlobalsV2.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory, true);
+        mapleGlobalsV2.setValidFactory("LIQUIDATOR",         liquidatorFactory,        true);  // Block 16127062
+        mapleGlobalsV2.setValidFactory("LOAN",               loanFactory,              true);  // Block 16127063
+        mapleGlobalsV2.setValidFactory("LOAN_MANAGER",       loanManagerFactory,       true);  // Block 16127064
+        mapleGlobalsV2.setValidFactory("POOL_MANAGER",       poolManagerFactory,       true);  // Block 16127065
+        mapleGlobalsV2.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory, true);  // Block 16127066
 
         // Configure Globals Values
-        mapleGlobalsV2.setBootstrapMint(usdc, 0.100000e6);
-        mapleGlobalsV2.setBootstrapMint(weth, 0.0001e18);
+        mapleGlobalsV2.setBootstrapMint(usdc, 0.100000e6);  // Block 16127067
+        mapleGlobalsV2.setBootstrapMint(weth, 0.0001e18);   // Block 16127068
 
-        mapleGlobalsV2.setDefaultTimelockParameters(1 weeks, 2 days);
+        mapleGlobalsV2.setDefaultTimelockParameters(1 weeks, 2 days);  // Block 16127069
 
-        mapleGlobalsV2.setPriceOracle(usdc, usdUsdOracle);
-        mapleGlobalsV2.setPriceOracle(wbtc, btcUsdOracle);
-        mapleGlobalsV2.setPriceOracle(weth, ethUsdOracle);
+        mapleGlobalsV2.setPriceOracle(usdc, usdUsdOracle);  // Block 16127070
+        mapleGlobalsV2.setPriceOracle(wbtc, btcUsdOracle);  // Block 16127071
+        mapleGlobalsV2.setPriceOracle(weth, ethUsdOracle);  // Block 16127072
 
         // Transfer governor
-        mapleGlobalsV2.setPendingGovernor(tempGovernor);
+        mapleGlobalsV2.setPendingGovernor(tempGovernor);  // Block 16127073
     }
 
-    function _deploy401DebtLockerAndAccountingChecker() internal {
-        debtLockerV401Implementation = address(new DebtLockerV4());
-
-        accountingChecker = address(new AccountingChecker(mapleGlobalsV2Proxy));
-    }
-
-    // Liquidity Migration Procedure #5
+    // Liquidity Migration Procedure #5 [Blocks 16126985-16127073]
     function deployProtocol() internal {
         vm.startPrank(deployer);
         _deployProtocol();
-        _deploy401DebtLockerAndAccountingChecker();
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #6
+    // Liquidity Migration Procedure #6 [Block 16136610]
     function tempGovernorAcceptsV2Governorship() internal {
         vm.prank(tempGovernor);
-        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).acceptGovernor();
+        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).acceptGovernor();  // Block 16136610
     }
 
-    // Liquidity Migration Procedure #7
+    // Liquidity Migration Procedure #7 [Block 16136630]
     function migrationMultisigAcceptsMigrationAdministratorship() internal {
         vm.prank(migrationMultisig);
-        IMigrationHelperLike(migrationHelperProxy).acceptOwner();
+        IMigrationHelperLike(migrationHelperProxy).acceptOwner();  // Block 16136630
     }
 
-    // Liquidity Migration Procedure #8.1
+    // Liquidity Migration Procedure #8.1 [Block 16144529]
     function setupExistingFactories() internal {
         vm.startPrank(governor);
 
@@ -490,13 +502,21 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #8.2
+    // Liquidity Migration Procedure #8.2 [Blocks 16151161-16151166]
+    function deploy401DebtLockerAndAccountingChecker() internal {
+        vm.startPrank(deployer);
+        debtLockerV401Implementation = address(new DebtLockerV4());                          // Block 16151161
+        accountingChecker            = address(new AccountingChecker(mapleGlobalsV2Proxy));  // Block 16151166
+        vm.stopPrank();
+    }
+
+    // Liquidity Migration Procedure #8.3 [Block 16155441]
     function setUpDebtLockerFactoryFor401() internal {
         // Configure Factory
         vm.startPrank(IMapleGlobalsV1Like(mapleGlobalsV1).governor());
 
-        IMapleProxyFactoryLike(debtLockerFactory).registerImplementation(401, debtLockerV401Implementation, address(0));
-        IMapleProxyFactoryLike(debtLockerFactory).enableUpgradePath(400, 401, debtLockerV400Migrator);
+        IMapleProxyFactoryLike(debtLockerFactory).registerImplementation(401, debtLockerV401Implementation, address(0));  // Block 16155441
+        IMapleProxyFactoryLike(debtLockerFactory).enableUpgradePath(400, 401, debtLockerV400Migrator);                    // Block 16155441
 
         vm.stopPrank();
     }
@@ -515,7 +535,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         }
     }
 
-    // Liquidity Migration Procedure #9.1
+    // Liquidity Migration Procedure #9.1 [Done by block 16156502]
     function upgradeAllDebtLockersToV400() internal {
         upgradeDebtLockersToV400(mavenPermissionedLoans);
         upgradeDebtLockersToV400(mavenUsdcLoans);
@@ -524,21 +544,21 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeDebtLockersToV400(icebreakerLoans);
     }
 
-    // Liquidity Migration Procedure #9.2
+    // Liquidity Migration Procedure #9.2 [Block 16158685]
     function upgradeDebtLockersToV401(address[] storage loans) internal {
         for (uint256 i; i < loans.length; ++i) {
             IDebtLockerLike debtLocker = IDebtLockerLike(IDebtLockerLike(loans[i]).lender());
 
             if (IMapleProxyFactoryLike(debtLockerFactory).versionOf(debtLocker.implementation()) == 401) return;
 
-            vm.prank(IMapleGlobalsV1Like(mapleGlobalsV1).globalAdmin());
+            vm.prank(globalAdmin);
             debtLocker.upgrade(401, abi.encode(migrationHelperProxy));
 
             assertVersion(401, address(debtLocker));
         }
     }
 
-    // Liquidity Migration Procedure #9.2
+    // Liquidity Migration Procedure #9.2 [Block 16158685]
     function upgradeAllDebtLockersToV401() internal {
         upgradeDebtLockersToV401(mavenPermissionedLoans);
         upgradeDebtLockersToV401(mavenUsdcLoans);
@@ -584,7 +604,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         claimLoans(icebreakerPoolV1,        icebreakerLoans);
     }
 
-    // Liquidity Migration Procedure #11
+    // Liquidity Migration Procedure #11 [Block 16158728]
     function upgradeLoansToV302(address[] storage loans) internal {
         vm.startPrank(globalAdmin);
 
@@ -599,7 +619,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #11
+    // Liquidity Migration Procedure #11 [Block 16158728]
     function upgradeAllLoansToV302() internal {
         upgradeLoansToV302(mavenPermissionedLoans);
         upgradeLoansToV302(mavenUsdcLoans);
@@ -608,12 +628,12 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeLoansToV302(icebreakerLoans);
     }
 
-    // Liquidity Migration Procedure #12
+    // Liquidity Migration Procedure #12 [Block 16158757]
     function lockPoolV1Deposits(address poolV1) internal {
         setLiquidityCap(poolV1, 0);
     }
 
-    // Liquidity Migration Procedure #12
+    // Liquidity Migration Procedure #12 [Block 16158757]
     function lockAllPoolV1Deposits() internal {
         lockPoolV1Deposits(mavenPermissionedPoolV1);
         lockPoolV1Deposits(mavenUsdcPoolV1);
@@ -622,7 +642,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         lockPoolV1Deposits(icebreakerPoolV1);
     }
 
-    // Liquidity Migration Procedure #13
+    // Liquidity Migration Procedure #13 [Block 16161265]
     function createMigrationLoan(address poolV1, address[] storage loans, uint256 liquidity) internal returns (address migrationLoan) {
         address asset = IPoolV1Like(poolV1).liquidityAsset();
 
@@ -638,7 +658,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         loans.push(migrationLoan);
     }
 
-    // Liquidity Migration Procedure #13
+    // Liquidity Migration Procedure #13 [Block 16161265]
     function createMigrationLoanIfRequired(address poolV1, address[] storage loans) internal returns (address migrationLoan) {
         // Check if a migration loan needs to be funded.
         uint256 availableLiquidity = calculateAvailableLiquidity(poolV1);
@@ -648,34 +668,13 @@ contract SimulationBase is GenericActions, AddressRegistry {
         }
     }
 
-    // Liquidity Migration Procedure #13
+    // Liquidity Migration Procedure #13 [Block 16161265]
     function createAllMigrationLoans() internal {
         mavenPermissionedMigrationLoan = createMigrationLoanIfRequired(mavenPermissionedPoolV1, mavenPermissionedLoans);
         mavenUsdcMigrationLoan         = createMigrationLoanIfRequired(mavenUsdcPoolV1,         mavenUsdcLoans);
         mavenWethMigrationLoan         = createMigrationLoanIfRequired(mavenWethPoolV1,         mavenWethLoans);
         orthogonalMigrationLoan        = createMigrationLoanIfRequired(orthogonalPoolV1,        orthogonalLoans);
         icebreakerMigrationLoan        = createMigrationLoanIfRequired(icebreakerPoolV1,        icebreakerLoans);
-    }
-
-    // Liquidity Migration Procedures #11-#13
-    function kickoffOnPoolV1(address poolV1, address[] storage loans) internal returns (address migrationLoan) {
-        upgradeLoansToV302(loans);  // Liquidity Migration Procedure #11
-
-        lockPoolV1Deposits(poolV1);  // Liquidity Migration Procedure #12
-
-        // Check if a migration loan needs to be funded.
-        uint256 availableLiquidity = calculateAvailableLiquidity(poolV1);
-
-        if (availableLiquidity > 0) {
-            migrationLoan = createMigrationLoan(poolV1, loans, availableLiquidity);  // Liquidity Migration Procedure #13
-        }
-    }
-
-    // Liquidity Migration Procedures #11-#13
-    function kickoffAll() internal {
-        upgradeAllLoansToV302();    // Liquidity Migration Procedure #11
-        lockAllPoolV1Deposits();    // Liquidity Migration Procedure #12
-        createAllMigrationLoans();  // Liquidity Migration Procedure #13
     }
 
     // Liquidity Migration Procedure #14
@@ -700,13 +699,13 @@ contract SimulationBase is GenericActions, AddressRegistry {
         fundMigrationLoan(poolV1, migrationLoan);
     }
 
-    // Liquidity Migration Procedure #14
+    // Liquidity Migration Procedure #14 [Blocks 16161360-16161646]
     function fundAllMigrationLoans() internal {
-        fundMigrationLoanIfNeeded(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan);
-        fundMigrationLoanIfNeeded(mavenUsdcPoolV1,         mavenUsdcMigrationLoan);
-        fundMigrationLoanIfNeeded(mavenWethPoolV1,         mavenWethMigrationLoan);
-        fundMigrationLoanIfNeeded(orthogonalPoolV1,        orthogonalMigrationLoan);
-        fundMigrationLoanIfNeeded(icebreakerPoolV1,        icebreakerMigrationLoan);
+        fundMigrationLoanIfNeeded(icebreakerPoolV1,        icebreakerMigrationLoan);         // Block 16161360
+        fundMigrationLoanIfNeeded(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan);  // Block 16161507
+        fundMigrationLoanIfNeeded(mavenUsdcPoolV1,         mavenUsdcMigrationLoan);          // Block 16161548
+        fundMigrationLoanIfNeeded(mavenWethPoolV1,         mavenWethMigrationLoan);          // Block 16161584
+        fundMigrationLoanIfNeeded(orthogonalPoolV1,        orthogonalMigrationLoan);         // Block 16161646
     }
 
     // Liquidity Migration Procedure #15
@@ -728,16 +727,31 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeDebtLockerToV400(loan);
     }
 
-    // Liquidity Migration Procedure #15
+    // Liquidity Migration Procedure #15 [Blocks 16161406-16161660]
     function upgradeAllMigrationLoanDebtLockers() internal {
-        upgradeDebtLockerToV400IfNeeded(mavenPermissionedMigrationLoan);
-        upgradeDebtLockerToV400IfNeeded(mavenUsdcMigrationLoan);
-        upgradeDebtLockerToV400IfNeeded(mavenWethMigrationLoan);
-        upgradeDebtLockerToV400IfNeeded(orthogonalMigrationLoan);
-        upgradeDebtLockerToV400IfNeeded(icebreakerMigrationLoan);
+        upgradeDebtLockerToV400IfNeeded(icebreakerMigrationLoan);         // Block 16161406
+        upgradeDebtLockerToV400IfNeeded(mavenPermissionedMigrationLoan);  // Block 16161530
+        upgradeDebtLockerToV400IfNeeded(mavenUsdcMigrationLoan);          // Block 16161565
+        upgradeDebtLockerToV400IfNeeded(mavenWethMigrationLoan);          // Block 16161598
+        upgradeDebtLockerToV400IfNeeded(orthogonalMigrationLoan);         // Block 16161660
     }
 
-    // Liquidity Migration Procedure #16
+    // Liquidity Migration Procedure #14-15
+    function fundMigrationLoanAndUpgradeDebtLocker(address poolV1, address migrationLoan) internal {
+        fundMigrationLoanIfNeeded(poolV1, migrationLoan);
+        upgradeDebtLockerToV400IfNeeded(migrationLoan);
+    }
+
+    // Liquidity Migration Procedure #14-15 [Blocks 16161360-16161660]
+    function fundMigrationLoansAndUpgradeDebtLockers() internal {
+        fundMigrationLoanAndUpgradeDebtLocker(icebreakerPoolV1,        icebreakerMigrationLoan);         // Block 16161360-16161406
+        fundMigrationLoanAndUpgradeDebtLocker(mavenPermissionedPoolV1, mavenPermissionedMigrationLoan);  // Block 16161507-16161530
+        fundMigrationLoanAndUpgradeDebtLocker(mavenUsdcPoolV1,         mavenUsdcMigrationLoan);          // Block 16161548-16161565
+        fundMigrationLoanAndUpgradeDebtLocker(mavenWethPoolV1,         mavenWethMigrationLoan);          // Block 16161584-16161598
+        fundMigrationLoanAndUpgradeDebtLocker(orthogonalPoolV1,        orthogonalMigrationLoan);         // Block 16161646-16161660
+    }
+
+    // Liquidity Migration Procedure #16 [Block 16161726]
     function upgradeLoanToV302(address loan) internal {
         vm.prank(globalAdmin);
         IMapleLoanLike(loan).upgrade(302, new bytes(0));
@@ -745,14 +759,14 @@ contract SimulationBase is GenericActions, AddressRegistry {
         assertVersion(302, loan);
     }
 
-    // Liquidity Migration Procedure #16
+    // Liquidity Migration Procedure #16 [Block 16161726]
     function upgradeLoanToV302IfNeeded(address loan) internal {
         if (loan == address(0)) return;
 
         upgradeLoanToV302(loan);
     }
 
-    // Liquidity Migration Procedure #16
+    // Liquidity Migration Procedure #16 [Block 16161726]
     function upgradeAllMigrationLoansToV302() internal {
         upgradeLoanToV302IfNeeded(mavenPermissionedMigrationLoan);
         upgradeLoanToV302IfNeeded(mavenUsdcMigrationLoan);
@@ -761,10 +775,10 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeLoanToV302IfNeeded(icebreakerMigrationLoan);
     }
 
-    // Liquidity Migration Procedure #17
+    // Liquidity Migration Procedure #17 [Block 16161749]
     function pauseV1Protocol() internal {
         vm.prank(globalAdmin);
-        IMapleGlobalsV1Like(mapleGlobalsV1).setProtocolPause(true);
+        IMapleGlobalsV1Like(mapleGlobalsV1).setProtocolPause(true);  // Block 16161749
     }
 
     // Liquidity Migration Procedure #18
@@ -805,13 +819,13 @@ contract SimulationBase is GenericActions, AddressRegistry {
         );
     }
 
-    // Liquidity Migration Procedure #18
+    // Liquidity Migration Procedure #18 [Blocks 16162315-16162589]
     function deployAllPoolV2s() internal {
-        mavenPermissionedPoolManager = deployPoolV2(mavenPermissionedTemporaryPd, mavenPermissionedPoolV1);
-        mavenUsdcPoolManager         = deployPoolV2(mavenUsdcTemporaryPd,         mavenUsdcPoolV1);
-        mavenWethPoolManager         = deployPoolV2(mavenWethTemporaryPd,         mavenWethPoolV1);
-        orthogonalPoolManager        = deployPoolV2(orthogonalTemporaryPd,        orthogonalPoolV1);
-        icebreakerPoolManager        = deployPoolV2(icebreakerTemporaryPd,        icebreakerPoolV1);
+        mavenPermissionedPoolManager = deployPoolV2(mavenPermissionedTemporaryPd, mavenPermissionedPoolV1); // Block 16162315
+        mavenUsdcPoolManager         = deployPoolV2(mavenUsdcTemporaryPd,         mavenUsdcPoolV1);         // Block 16162536
+        mavenWethPoolManager         = deployPoolV2(mavenWethTemporaryPd,         mavenWethPoolV1);         // Block 16162554
+        orthogonalPoolManager        = deployPoolV2(orthogonalTemporaryPd,        orthogonalPoolV1);        // Block 16162570
+        icebreakerPoolManager        = deployPoolV2(icebreakerTemporaryPd,        icebreakerPoolV1);        // Block 16162589
 
         mavenPermissionedPoolV2 = IPoolManagerLike(mavenPermissionedPoolManager).pool();
         mavenUsdcPoolV2         = IPoolManagerLike(mavenUsdcPoolManager).pool();
@@ -820,7 +834,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         icebreakerPoolV2        = IPoolManagerLike(icebreakerPoolManager).pool();
     }
 
-    // Liquidity Migration Procedure #19
+    // Liquidity Migration Procedure #19 [Block 16162671]
     function setFees() internal {
         IMapleGlobalsV2Like globalsV2 = IMapleGlobalsV2Like(mapleGlobalsV2Proxy);
 
@@ -865,7 +879,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         loansAddedTimestamps[poolManager] = lastUpdatedTimestamps[poolManager] = block.timestamp;
     }
 
-    // Liquidity Migration Procedure #20
+    // Liquidity Migration Procedure #20 [Block 16163591]
     function addLoansToAllLoanManagers() internal {
         addLoansToLoanManager(mavenPermissionedPoolManager, mavenPermissionedPoolV1, mavenPermissionedLoans, 0);
         addLoansToLoanManager(mavenUsdcPoolManager,         mavenUsdcPoolV1,         mavenUsdcLoans,         2);
@@ -874,13 +888,13 @@ contract SimulationBase is GenericActions, AddressRegistry {
         addLoansToLoanManager(icebreakerPoolManager,        icebreakerPoolV1,        icebreakerLoans,        0);
     }
 
-    // Liquidity Migration Procedure #21
+    // Liquidity Migration Procedure #21 [Block 16163643]
     function activatePoolManager(address poolManager) internal {
         vm.prank(tempGovernor);
         IMapleGlobalsV2Like(mapleGlobalsV2Proxy).activatePoolManager(poolManager);
     }
 
-    // Liquidity Migration Procedure #21
+    // Liquidity Migration Procedure #21 [Block 16163643]
     function activateAllPoolManagers() internal {
         activatePoolManager(mavenPermissionedPoolManager);
         activatePoolManager(mavenUsdcPoolManager);
@@ -898,13 +912,13 @@ contract SimulationBase is GenericActions, AddressRegistry {
         allowLender(poolManager, IPoolManagerLike(poolManager).withdrawalManager());
     }
 
-    // Liquidity Migration Procedure #22
+    // Liquidity Migration Procedure #22 [Blocks 16163671-16163755]
     function openOrAllowOnAllPoolV2s() internal {
-        allowLendersAndWithdrawalManager(mavenPermissionedPoolManager, mavenPermissionedLps);
-        openPool(mavenUsdcPoolManager);
-        openPool(mavenWethPoolManager);
-        openPool(orthogonalPoolManager);
-        allowLendersAndWithdrawalManager(icebreakerPoolManager, icebreakerLps);
+        allowLendersAndWithdrawalManager(mavenPermissionedPoolManager, mavenPermissionedLps); // Block 16163671
+        allowLendersAndWithdrawalManager(icebreakerPoolManager, icebreakerLps);               // Block 16163692
+        openPool(mavenUsdcPoolManager);                                                       // Block 16163715
+        openPool(mavenWethPoolManager);                                                       // Block 16163736
+        openPool(orthogonalPoolManager);                                                      // Block 16163755
     }
 
     // Liquidity Migration Procedure #23
@@ -914,23 +928,23 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #23
+    // Liquidity Migration Procedure #23 [BLocks 16164408-16164504]
     function airdropTokensForAllPools() internal {
-        airdropTokens(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLps);
-        airdropTokens(mavenUsdcPoolV1,         mavenUsdcPoolManager,         mavenUsdcLps);
-        airdropTokens(mavenWethPoolV1,         mavenWethPoolManager,         mavenWethLps);
-        airdropTokens(orthogonalPoolV1,        orthogonalPoolManager,        orthogonalLps);
-        airdropTokens(icebreakerPoolV1,        icebreakerPoolManager,        icebreakerLps);
+        airdropTokens(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLps);  // Block 16164408
+        airdropTokens(mavenUsdcPoolV1,         mavenUsdcPoolManager,         mavenUsdcLps);          // Block 16164408
+        airdropTokens(mavenWethPoolV1,         mavenWethPoolManager,         mavenWethLps);          // Block 16164408
+        airdropTokens(orthogonalPoolV1,        orthogonalPoolManager,        orthogonalLps);         // Block 16164504
+        airdropTokens(icebreakerPoolV1,        icebreakerPoolManager,        icebreakerLps);         // Block 16164504
     }
 
-    // Liquidity Migration Procedure #24
+    // Liquidity Migration Procedure #24 [Block 16164579]
     function setPendingLenders(address poolV1, address poolManager, address[] storage loans, uint256 allowedDiff) internal {
         vm.startPrank(migrationMultisig);
         IMigrationHelperLike(migrationHelperProxy).setPendingLenders(poolV1, poolManager, loanFactory, loans, allowedDiff);
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #24
+    // Liquidity Migration Procedure #24 [Block 16164579]
     function setAllPendingLenders() internal {
         setPendingLenders(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLoans, 0);
         setPendingLenders(mavenUsdcPoolV1,         mavenUsdcPoolManager,         mavenUsdcLoans,         2);
@@ -939,7 +953,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         setPendingLenders(icebreakerPoolV1,        icebreakerPoolManager,        icebreakerLoans,        0);
     }
 
-    // Liquidity Migration Procedure #25
+    // Liquidity Migration Procedure #25 [Block 16164620]
     function takeOwnershipOfLoans(address poolV1, address poolManager, address[] storage loans, uint256 allowedDiff) internal {
         vm.startPrank(migrationMultisig);
 
@@ -954,7 +968,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #25
+    // Liquidity Migration Procedure #25 [Block 16164620]
     function takeAllOwnershipsOfLoans() internal {
         takeOwnershipOfLoans(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedLoans, 0);
         takeOwnershipOfLoans(mavenUsdcPoolV1,         mavenUsdcPoolManager,         mavenUsdcLoans,         2);
@@ -963,14 +977,14 @@ contract SimulationBase is GenericActions, AddressRegistry {
         takeOwnershipOfLoans(icebreakerPoolV1,        icebreakerPoolManager,        icebreakerLoans,        0);
     }
 
-    // Liquidity Migration Procedure #26
+    // Liquidity Migration Procedure #26 [Block 16164645]
     function upgradeLoanManager(address transitionLoanManager) internal {
         vm.startPrank(migrationMultisig);
         IMigrationHelperLike(migrationHelperProxy).upgradeLoanManager(transitionLoanManager, 200);
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #26
+    // Liquidity Migration Procedure #26 [Block 16164645]
     function upgradeAllLoanManagers() internal {
         upgradeLoanManager(IPoolManagerLike(mavenPermissionedPoolManager).loanManagerList(0));
         upgradeLoanManager(IPoolManagerLike(mavenUsdcPoolManager).loanManagerList(0));
@@ -979,7 +993,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeLoanManager(IPoolManagerLike(icebreakerPoolManager).loanManagerList(0));
     }
 
-    // Liquidity Migration Procedure #27
+    // Liquidity Migration Procedure #27 [Block 16164765]
     function upgradeLoansToV400(address[] storage loans) internal {
         vm.startPrank(globalAdmin);
 
@@ -992,7 +1006,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #27
+    // Liquidity Migration Procedure #27 [Block 16164765]
     function upgradeAllLoansToV400() internal {
         upgradeLoansToV400(mavenPermissionedLoans);
         upgradeLoansToV400(mavenUsdcLoans);
@@ -1001,24 +1015,24 @@ contract SimulationBase is GenericActions, AddressRegistry {
         upgradeLoansToV400(icebreakerLoans);
     }
 
-    // Liquidity Migration Procedure #28
+    // Liquidity Migration Procedure #28 [Block 16164798]
     function setGlobalsOfLoanFactoryToV2() internal {
         setGlobalsOfFactory(loanFactory, mapleGlobalsV2Proxy);
     }
 
-    // Liquidity Migration Procedure #29 [TODO: Maybe use generic action]
+    // Liquidity Migration Procedure #29 [Block 16164991]
     function closeMigrationLoan(address migrationLoan, address[] storage loans) internal {
         closeLoan(migrationLoan);
 
         uint256 i;
-        while (loans[i] != address(migrationLoan)) i++;
+        while (loans[i] != address(migrationLoan)) ++i;
 
         // Move last element to index of removed loan manager and pop last element.
         loans[i] = loans[loans.length - 1];
         loans.pop();
     }
 
-    // Liquidity Migration Procedure #29
+    // Liquidity Migration Procedure #29 [Block 16164991]
     function closeMigrationLoanIfNeeded(address poolV1, address poolManager, address migrationLoan, address[] storage loans) internal {
         assertPoolAccounting(poolManager, loans);
 
@@ -1030,7 +1044,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         assertPoolAccounting(poolManager, loans);
     }
 
-    // Liquidity Migration Procedure #29
+    // Liquidity Migration Procedure #29 [Block 16164991]
     function closeAllMigrationLoans() internal {
         closeMigrationLoanIfNeeded(mavenPermissionedPoolV1, mavenPermissionedPoolManager, mavenPermissionedMigrationLoan, mavenPermissionedLoans);
         closeMigrationLoanIfNeeded(mavenUsdcPoolV1,         mavenUsdcPoolManager,         mavenUsdcMigrationLoan,         mavenUsdcLoans);
@@ -1039,7 +1053,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         closeMigrationLoanIfNeeded(icebreakerPoolV1,        icebreakerPoolManager,        icebreakerMigrationLoan,        icebreakerLoans);
     }
 
-    // Liquidity Migration Procedure #30
+    // Liquidity Migration Procedure #30 [Block 16169377]
     function unlockV1Staking() internal {
         vm.startPrank(governor);
         IMapleGlobalsV1Like(mapleGlobalsV1).setPriceOracle(usdc, deactivationOracle);
@@ -1048,19 +1062,27 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedure #31
+    // Liquidity Migration Procedure #31 [Block 16170052]
     function unpauseV1Protocol() internal {
         vm.prank(globalAdmin);
         IMapleGlobalsV1Like(mapleGlobalsV1).setProtocolPause(false);
     }
 
-    // Liquidity Migration Procedure #32
+    // Liquidity Migration Procedure #32 [Block 16170102]
+    function finalizeFactories() internal {
+        vm.startPrank(tempGovernor);
+        IMapleProxyFactoryLike(loanFactory).setDefaultVersion(400);
+        IMapleProxyFactoryLike(loanManagerFactory).setDefaultVersion(200);
+        vm.stopPrank();
+    }
+
+    // Liquidity Migration Procedure #33
     function deactivatePoolV1(address poolV1) internal {
         vm.prank(IPoolV1Like(poolV1).poolDelegate());
         IPoolV1Like(poolV1).deactivate();
     }
 
-    // Liquidity Migration Procedure #33
+    // Liquidity Migration Procedure #34
     function zeroLockupPeriod(address poolV1) internal {
         IStakeLockerLike stakeLocker = IStakeLockerLike(IPoolV1Like(poolV1).stakeLocker());
 
@@ -1068,7 +1090,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         stakeLocker.setLockupPeriod(0);
     }
 
-    // Liquidity Migration Procedure #34
+    // Liquidity Migration Procedure #35
     function requestUnstake(address poolV1) internal {
         IStakeLockerLike stakeLocker = IStakeLockerLike(IPoolV1Like(poolV1).stakeLocker());
 
@@ -1076,7 +1098,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         stakeLocker.intendToUnstake();
     }
 
-    // Liquidity Migration Procedure #35
+    // Liquidity Migration Procedure #36
     function exitRewards(address poolV1, address rewards) internal {
         address poolDelegate = IPoolV1Like(poolV1).poolDelegate();
 
@@ -1091,7 +1113,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
         IMplRewardsLike(rewards).exit();
     }
 
-    // Liquidity Migration Procedure #36
+    // Liquidity Migration Procedure #37
     function unstakeDelegateCover(address poolV1, uint256 delegateBalance) internal {
         address          poolDelegate = IPoolV1Like(poolV1).poolDelegate();
         IStakeLockerLike stakeLocker  = IStakeLockerLike(IPoolV1Like(poolV1).stakeLocker());
@@ -1114,10 +1136,10 @@ contract SimulationBase is GenericActions, AddressRegistry {
         assertEq(stakeLocker.balanceOf(poolDelegate), 0);  // All the delegate stake was withdrawn
     }
 
-    // Liquidity Migration Procedures #32-#36
+    // Liquidity Migration Procedures #33-#37
     function deactivateAndUnstake(address poolV1, address rewards, uint256 delegateBalance) internal {
-        deactivatePoolV1(poolV1);  // Liquidity Migration Procedure #32
-        zeroLockupPeriod(poolV1);  // Liquidity Migration Procedure #33
+        deactivatePoolV1(poolV1);  // Liquidity Migration Procedure #33
+        zeroLockupPeriod(poolV1);  // Liquidity Migration Procedure #34
 
         uint256 balance =
             IStakeLockerLike(
@@ -1131,25 +1153,25 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
         if (delegateBalance == 0) return;
 
-        requestUnstake(poolV1);  // Liquidity Migration Procedure #34
+        requestUnstake(poolV1);  // Liquidity Migration Procedure #35
 
         if (address(rewards) != address(0)) {
-            exitRewards(poolV1, rewards);  // Liquidity Migration Procedure #35
+            exitRewards(poolV1, rewards);  // Liquidity Migration Procedure #36
         }
 
-        unstakeDelegateCover(poolV1, delegateBalance);  // Liquidity Migration Procedure #36
+        unstakeDelegateCover(poolV1, delegateBalance);  // Liquidity Migration Procedure #37
     }
 
-    // Liquidity Migration Procedures #32-#36
+    // Liquidity Migration Procedures #33-#37 [Blocks 16170144-16172136]
     function deactivateAndUnstakeAllPoolV1s() internal {
-        deactivateAndUnstake(mavenWethPoolV1,         mavenWethRewards,         125_049.87499e18);
-        deactivateAndUnstake(mavenUsdcPoolV1,         mavenUsdcRewards,         153.022e18);
-        deactivateAndUnstake(mavenPermissionedPoolV1, mavenPermissionedRewards, 16.319926286804447168e18);
-        deactivateAndUnstake(orthogonalPoolV1,        orthogonalRewards,        175.122243323160822654e18);
-        deactivateAndUnstake(icebreakerPoolV1,        icebreakerRewards,        104.254119288711119987e18);
+        deactivateAndUnstake(icebreakerPoolV1,        icebreakerRewards,        104.254119288711119987e18);  // Blocks 16170144-16172136
+        deactivateAndUnstake(mavenUsdcPoolV1,         mavenUsdcRewards,         153.022e18);                 // Blocks 16170942-16170960
+        deactivateAndUnstake(orthogonalPoolV1,        orthogonalRewards,        175.122243323160822654e18);  // Blocks 16170969-16170170
+        deactivateAndUnstake(mavenPermissionedPoolV1, mavenPermissionedRewards, 16.319926286804447168e18);   // Blocks 16170996-16171015
+        deactivateAndUnstake(mavenWethPoolV1,         mavenWethRewards,         125_049.87499e18);           // Blocks 16172104-16170981
     }
 
-    // Liquidity Migration Procedures #37
+    // Liquidity Migration Procedures #38 [Block 16172812]
     function enableFinalPoolDelegates() internal {
         IMapleGlobalsV2Like mapleGlobalsV2 = IMapleGlobalsV2Like(mapleGlobalsV2Proxy);
 
@@ -1164,37 +1186,34 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    // Liquidity Migration Procedures #38-#39
-    function transferPoolDelegate(address poolManager, address newDelegate_) internal {
-        setPendingPoolDelegate(poolManager, newDelegate_);  // Liquidity Migration Procedure #38
-        acceptPoolDelegate(poolManager);                    // Liquidity Migration Procedure #39
+    // Liquidity Migration Procedures #39 [Blocks 16172867-16172924]
+    function setAllPendingPoolDelegates() internal {
+        setPendingPoolDelegate(mavenPermissionedPoolManager, mavenPermissionedFinalPd);  // 16172867
+        setPendingPoolDelegate(mavenUsdcPoolManager,         mavenUsdcFinalPd);          // 16172897
+        setPendingPoolDelegate(mavenWethPoolManager,         mavenWethFinalPd);          // 16172906
+        setPendingPoolDelegate(orthogonalPoolManager,        orthogonalFinalPd);         // 16172916
+        setPendingPoolDelegate(icebreakerPoolManager,        icebreakerFinalPd);         // 16172924
     }
 
-    // Liquidity Migration Procedures #38-#39
-    function transferAllPoolDelegates() internal {
-        transferPoolDelegate(mavenPermissionedPoolManager, mavenPermissionedFinalPd);
-        transferPoolDelegate(mavenUsdcPoolManager,         mavenUsdcFinalPd);
-        transferPoolDelegate(mavenWethPoolManager,         mavenWethFinalPd);
-        transferPoolDelegate(orthogonalPoolManager,        orthogonalFinalPd);
-        transferPoolDelegate(icebreakerPoolManager,        icebreakerFinalPd);
+    // Liquidity Migration Procedures #40 [Blocks 16176259-TBD]
+    function acceptAllPoolDelegates() internal {
+        acceptPoolDelegate(mavenPermissionedPoolManager);  // 16176259
+        acceptPoolDelegate(mavenUsdcPoolManager);          // 16176277
+        acceptPoolDelegate(mavenWethPoolManager);          // 16176304
+        acceptPoolDelegate(orthogonalPoolManager);         // TBD
+        acceptPoolDelegate(icebreakerPoolManager);         // TBD
     }
 
-    // Liquidity Migration Procedures #40
+    // Liquidity Migration Procedures #41 [Block TBD]
     function tempGovernorTransfersV2Governorship() internal {
         vm.prank(tempGovernor);
         IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setPendingGovernor(governor);
     }
 
-    // Liquidity Migration Procedures #41
+    // Liquidity Migration Procedures #42
     function governorAcceptsV2Governorship() internal {
         vm.prank(governor);
         IMapleGlobalsV2Like(mapleGlobalsV2Proxy).acceptGovernor();
-    }
-
-    // Liquidity Migration Procedure #42
-    function setLoanDefault400() internal {
-        vm.prank(governor);
-        IMapleProxyFactoryLike(loanFactory).setDefaultVersion(400);
     }
 
     // Liquidity Migration Procedure #43
@@ -1234,21 +1253,17 @@ contract SimulationBase is GenericActions, AddressRegistry {
     }
 
     // Liquidity Migration Procedure #46
-    function finalizeFactories() internal {
-        vm.startPrank(governor);
-
+    function setLoanDefaultTo401() internal {
+        vm.prank(governor);
         IMapleProxyFactoryLike(loanFactory).setDefaultVersion(401);
-        IMapleProxyFactoryLike(loanManagerFactory).setDefaultVersion(200);
-
-        vm.stopPrank();
     }
 
-    // Liquidity Migration Procedures #43-#46
-    function finalizeProtocol() internal {
+    // Liquidity Migration Procedures #43-#46 [TBD]
+    function tasksForLoan401() internal {
         deployLoan401();           // Liquidity Migration Procedure #43
         setupLoanFactoryFor401();  // Liquidity Migration Procedure #44
         upgradeAllLoansToV401();   // Liquidity Migration Procedure #45
-        finalizeFactories();       // Liquidity Migration Procedure #46
+        setLoanDefaultTo401();     // Liquidity Migration Procedure #46
     }
 
     // TODO: remove temporary PDs via setValidPoolDelegate on globalsV2
@@ -1280,22 +1295,18 @@ contract SimulationBase is GenericActions, AddressRegistry {
         vm.stopPrank();
     }
 
-    function setCoverParameters(address poolManager, address poolV1, uint256 coverAmount) internal {
+    function setMinCoverAmount(address poolManager, address poolV1, uint256 coverAmount) internal {
         // Configure the min cover amount in globals
-        vm.startPrank(tempGovernor);
-
+        vm.prank(tempGovernor);
         IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMinCoverAmount(poolManager, coverAmount);
-        IMapleGlobalsV2Like(mapleGlobalsV2Proxy).setMaxCoverLiquidationPercent(poolManager, 0.5e6);
-
-        vm.stopPrank();
     }
 
-    function setAllCoverParameters() internal {
-        setCoverParameters(mavenPermissionedPoolManager, mavenPermissionedPoolV1, 1_750_000e6);
-        setCoverParameters(mavenUsdcPoolManager,         mavenUsdcPoolV1,         1_000_000e6);
-        setCoverParameters(mavenWethPoolManager,         mavenWethPoolV1,         750e18);
-        setCoverParameters(orthogonalPoolManager,        orthogonalPoolV1,        2_500_000e6);
-        setCoverParameters(icebreakerPoolManager,        icebreakerPoolV1,        500_000e6);
+    function setAllMinCoverAmounts() internal {
+        setMinCoverAmount(mavenPermissionedPoolManager, mavenPermissionedPoolV1, 1_750_000e6);
+        setMinCoverAmount(mavenUsdcPoolManager,         mavenUsdcPoolV1,         1_000_000e6);
+        setMinCoverAmount(mavenWethPoolManager,         mavenWethPoolV1,         750e18);
+        setMinCoverAmount(orthogonalPoolManager,        orthogonalPoolV1,        2_500_000e6);
+        setMinCoverAmount(icebreakerPoolManager,        icebreakerPoolV1,        500_000e6);
     }
 
 
@@ -1412,7 +1423,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
         assertLoansBelongToPool(icebreakerPoolV1,        icebreakerLoans);
     }
 
-    // TODO: This could be refactored to be a more useful function, taking in an expected difference as parameter for each variable.
     function assertPoolMatchesSnapshot(address poolV1) internal {
         PoolState storage poolState = poolStateSnapshot[poolV1];
 
@@ -1450,8 +1460,8 @@ contract SimulationBase is GenericActions, AddressRegistry {
                 uint256 actualDomainEnd_
             ) = AccountingChecker(accountingChecker).checkPoolAccounting(poolManager, loans, loansAddedTimestamp, lastUpdatedTimestamp);
 
-            // console.log("hour", i);
-            // console.log("block.timestamp", block.timestamp);
+            // console.log("hour               ", i);
+            // console.log("block.timestamp    ", block.timestamp);
             // console.log("expectedTotalAssets", expectedTotalAssets);
             // console.log("returnedTotalAssets", returnedTotalAssets);
             // console.log("expectedDomainEnd_ ", expectedDomainEnd_);
@@ -1468,7 +1478,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
     }
 
     function assertPoolAccounting(address poolManager, address[] storage loans) internal {
-        assertPoolAccounting(poolManager, loans, 2);
+        assertPoolAccounting(poolManager, loans, 120);
     }
 
     function assertAllPoolAccounting() internal {
@@ -1480,8 +1490,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
     }
 
     function assertAllPoolAccounting(uint256 hoursToWarp) internal {
-        accountingChecker = address(new AccountingChecker(mapleGlobalsV2Proxy));
-
         assertPoolAccounting(mavenPermissionedPoolManager, mavenPermissionedLoans, hoursToWarp);
         assertPoolAccounting(mavenUsdcPoolManager,         mavenUsdcLoans,         hoursToWarp);
         assertPoolAccounting(mavenWethPoolManager,         mavenWethLoans,         hoursToWarp);
@@ -1695,18 +1703,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
         vm.prank(MapleGlobalsV2(factory_.mapleGlobals()).governor());
         factory_.setGlobals(globals);
-    }
-
-    function setPlatformFees(address poolManager_, uint256 managementFeeRate_, uint256 originationFeeRate_, uint256 serviceFeeRate_) internal {
-        MapleGlobalsV2 globals = MapleGlobalsV2(mapleGlobalsV2Proxy);
-
-        vm.startPrank(globals.governor());
-
-        globals.setPlatformManagementFeeRate(poolManager_,  managementFeeRate_);
-        globals.setPlatformOriginationFeeRate(poolManager_, originationFeeRate_);
-        globals.setPlatformServiceFeeRate(poolManager_,     serviceFeeRate_);
-
-        vm.stopPrank();
     }
 
     function snapshotPoolState(address poolV1) internal {

@@ -317,7 +317,6 @@ contract RollbackFromTransferredOwnershipOsLoansTests is RollbackBase {
 }
 
 // Rollback LMP #26
-// TODO: Test rolling back further to return the loans to the original pools.
 contract RollbackFromV200LoanManagersTests is RollbackBase {
 
     function setUp() public {
@@ -334,7 +333,6 @@ contract RollbackFromV200LoanManagersTests is RollbackBase {
 }
 
 // Rollback LMP #27
-// TODO: Test rolling back further to return the loans to the original pools.
 contract RollbackFromV400LoansTests is RollbackBase {
 
     function setUp() public {

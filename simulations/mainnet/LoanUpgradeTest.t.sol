@@ -39,18 +39,11 @@ contract LoanUpgradeTest is SimulationBase {
 
     function test_loanUpgrade() external {
 
-        // Pre-Deployment Requirements
-        // setPoolAdminsToMigrationMultisig();  // LMP #1
-        // zeroInvestorFeeAndTreasuryFee();     // LMP #2
-        // payAndClaimAllUpcomingLoans();       // LMP #3
-
         snapshotLoanState300(mavenWethLoans);
         snapshotLoanState300(mavenUsdcLoans);
         snapshotLoanState300(mavenPermissionedLoans);
         snapshotLoanState300(orthogonalLoans);
         snapshotLoanState300(icebreakerLoans);
-
-        // upgradeAllLoansToV301();  // LMP #4
 
         assertAllLoans(mavenWethLoans,         301);
         assertAllLoans(mavenUsdcLoans,         301);
@@ -58,87 +51,9 @@ contract LoanUpgradeTest is SimulationBase {
         assertAllLoans(orthogonalLoans,        301);
         assertAllLoans(icebreakerLoans,        301);
 
-        // NOTE: The following step is skipped as it was already performed on mainnet.
-        // deployProtocol();  // LMP #5
-
-        // NOTE: The following steps are skipped as they were already performed on mainnet.
-        // tempGovernorAcceptsV2Governorship();                   // LMP #6
-        // migrationMultisigAcceptsMigrationAdministratorship();  // LMP #7
-        // setupExistingFactories();  // LMP #8.1
-
         upgradeAllDebtLockersToV400();  // LMP #9.1
 
-        // setUpDebtLockerFactoryFor401();  // LMP #8.2
-
         upgradeAllDebtLockersToV401();  // LMP #9.2
-
-        // claimAllLoans();                // LMP #10
-
-        upgradeAllLoansToV302();        // LMP #11
-        lockAllPoolV1Deposits();        // LMP #12
-        createAllMigrationLoans();      // LMP #13
-
-        // Migration Loan Funding
-        // NOTE: Technically, each loan is funded and their DebtLockers are upgraded per pool before moving onto the next
-        fundAllMigrationLoans();               // LMP #14
-        upgradeAllMigrationLoanDebtLockers();  // LMP #15
-
-        upgradeAllMigrationLoansToV302();  // LMP #16
-
-        pauseV1Protocol();  // LMP #17
-
-        deployAllPoolV2s();  // LMP #18
-
-        setFees();  // LMP #19
-
-        addLoansToAllLoanManagers();  // LMP #20
-
-        // Prepare for Airdrops
-        activateAllPoolManagers();  // LMP #21
-        openOrAllowOnAllPoolV2s();  // LMP #22
-
-        airdropTokensForAllPools();  // LMP #23
-        assertAllPoolAccounting();
-
-        // Transfer Loans
-        // TODO: Do we really need all these repetitive assertions? Especially that we have validation script now.
-        setAllPendingLenders();      // LMP #24
-        assertAllPoolAccounting();
-        takeAllOwnershipsOfLoans();  // LMP #25
-        assertAllPoolAccounting();
-        upgradeAllLoanManagers();    // LMP #26
-        assertAllPrincipalOuts();
-        assertAllTotalSupplies();
-        assertAllPoolAccounting();
-        setAllCoverParameters();
-        assertAllPoolAccounting();
-        upgradeAllLoansToV400();        // LMP #27
-
-        // Close Migration Loans
-        setGlobalsOfLoanFactoryToV2();  // LMP #28
-        closeAllMigrationLoans();       // LMP #29
-
-        assertAllLoans(mavenWethLoans,         400);
-        assertAllLoans(mavenUsdcLoans,         400);
-        assertAllLoans(mavenPermissionedLoans, 400);
-        assertAllLoans(orthogonalLoans,        400);
-        assertAllLoans(icebreakerLoans,        400);
-
-        tempGovernorTransfersV2Governorship();  // LMP #40
-
-        governorAcceptsV2Governorship();  // LMP #41
-
-        deployLoan401();  // LMP #43
-
-        setupLoanFactoryFor401();  // LMP #44
-
-        upgradeAllLoansToV401();  // LMP #45
-
-        assertAllLoans(mavenWethLoans,         401);
-        assertAllLoans(mavenUsdcLoans,         401);
-        assertAllLoans(mavenPermissionedLoans, 401);
-        assertAllLoans(orthogonalLoans,        401);
-        assertAllLoans(icebreakerLoans,        401);
     }
 
     function assertAllLoans(address[] memory loans, uint256 version) internal {
@@ -210,7 +125,7 @@ contract LoanUpgradeTest is SimulationBase {
     }
 
     function snapshotLoanState300(address[] storage loans) internal {
-        for (uint256 i = 0; i < loans.length; i++) {
+        for (uint256 i = 0; i < loans.length; ++i) {
             IMapleLoanLike loan = IMapleLoanLike(loans[i]);
 
             // Not possible to initialize at once due to stack limit.

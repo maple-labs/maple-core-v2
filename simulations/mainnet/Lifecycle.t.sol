@@ -8,7 +8,7 @@ import { LifecycleBase } from "./LifecycleBase.sol";
 contract Lifecycle is LifecycleBase {
 
     function setUp() external {
-        migrate(9, 41);
+        performEntireMigration();
     }
 
     function test_simpleLifecycle() external {
@@ -16,8 +16,6 @@ contract Lifecycle is LifecycleBase {
         exitFromAllPoolsWhenPossible();
         withdrawAllPoolCoverFromAllPools();
     }
-
-
 
     // function test_complexLifecycle(uint256 seed) external {
     //     performComplexLifecycle(mavenPermissionedPoolManager, mavenPermissionedLoans, mavenPermissionedLps, seed);

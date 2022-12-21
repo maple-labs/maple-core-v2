@@ -470,3 +470,15 @@ interface IStakeLockerLike is IERC20Like {
     function unstakeCooldown(address owner) external view returns (uint256 unstakeCooldown);
 
 }
+
+interface IWithdrawalManagerLike {
+
+    function cycleConfigs(uint256 configId) external returns (uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration);
+
+    function getWindowAtId(uint256 cycleId) external view returns (uint256 windowStart, uint256 windowEnd);
+
+    function pool() external view returns (address pool);
+
+    function poolManager() external view returns (address poolManager);
+
+}
