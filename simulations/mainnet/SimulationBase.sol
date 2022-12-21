@@ -921,10 +921,21 @@ contract SimulationBase is GenericActions, AddressRegistry {
         openPool(orthogonalPoolManager);                                                      // Block 16163755
     }
 
+    function replaceSherlockAddress(address[] storage lps) internal returns (address[] memory lps2) {
+        lps2 = new address[](lps.length);
+        
+        for (uint256 i = 0; i < lps.length; i++) {
+            lps2[i] = lps[i]; 
+            if (lps[i] == 0xB2acd0214F87d217A2eF148aA4a5ABA71d3F7956) {
+                lps2[i] = 0x666B8EbFbF4D5f0CE56962a25635CfF563F13161;
+            }
+        }
+    }
+
     // Liquidity Migration Procedure #23
     function airdropTokens(address poolV1, address poolManager, address[] storage lps) internal {
         vm.startPrank(migrationMultisig);
-        IMigrationHelperLike(migrationHelperProxy).airdropTokens(poolV1, poolManager, lps, lps, lps.length * 2);
+        IMigrationHelperLike(migrationHelperProxy).airdropTokens(poolV1, poolManager, lps, replaceSherlockAddress(lps), lps.length * 2);
         vm.stopPrank();
     }
 
@@ -1567,7 +1578,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
         for (uint256 i; i < lps.length; ++i) {
             uint256 v1Position = getV1Position(poolV1, lps[i]);
-            uint256 v2Position = IPoolV2Like(poolV2).balanceOf(lps[i]);
+            uint256 v2Position = IPoolV2Like(poolV2).balanceOf(lps[i] == 0xB2acd0214F87d217A2eF148aA4a5ABA71d3F7956 ? 0x666B8EbFbF4D5f0CE56962a25635CfF563F13161 : lps[i]);
 
             if (i == 0) {
                 v1Position += poolV1TotalValue > sumPosition ? poolV1TotalValue - sumPosition : 0;
