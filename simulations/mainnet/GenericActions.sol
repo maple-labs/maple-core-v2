@@ -5,8 +5,8 @@ import { TestUtils, console } from "../../modules/contract-test-utils/contracts/
 
 import { IERC20 }               from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 import { IMapleGlobals }        from "../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
-import { IMapleLoan }           from "../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFeeManager } from "../../modules/loan-v401/contracts/interfaces/IMapleLoanFeeManager.sol";
+import { IMapleLoan }           from "../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFeeManager } from "../../modules/loan-v400/contracts/interfaces/IMapleLoanFeeManager.sol";
 import { IPool }                from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
 import { IPoolManager }         from "../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
 

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+
+import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
-
-import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
-
-import { Refinancer }        from "../../modules/loan-v401/contracts/Refinancer.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 import { BaseInvariants }                           from "../invariants/BaseInvariants.t.sol";
 import { LoanHandlerWithImpairment } from "../invariants/actors/LoanHandlerWithImpairment.sol";

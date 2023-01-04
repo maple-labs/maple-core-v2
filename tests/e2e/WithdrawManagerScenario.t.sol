@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+
+import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
+
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
-
-import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
-
-import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
-import { Refinancer }        from "../../modules/loan-v401/contracts/Refinancer.sol";
 
 // TODO: Add Pool Delegate cover for liquidation related test cases
 

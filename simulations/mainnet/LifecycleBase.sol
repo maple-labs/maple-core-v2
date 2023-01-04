@@ -5,10 +5,10 @@ import { CSVWriter }        from "../../modules/contract-test-utils/contracts/cs
 import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IERC20 }               from "../../modules/erc20/contracts/interfaces/IERC20.sol";
-import { IMapleLoan }           from "../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoan }           from "../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
 import { IPool }                from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
 import { IPoolManager }         from "../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
-import { IRefinancer }          from "../../modules/loan-v401/contracts/interfaces/IRefinancer.sol";
+import { IRefinancer }          from "../../modules/loan-v400/contracts/interfaces/IRefinancer.sol";
 import { IWithdrawalManager }   from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
 import {

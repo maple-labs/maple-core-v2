@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console }       from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+
 import { IMapleProxyFactory }     from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 import { INonTransparentProxy }   from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 import { INonTransparentProxied } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 
-import { MapleLoan as Loan } from "../../modules/loan-v401/contracts/MapleLoan.sol";
 import { MapleGlobals }      from "../../modules/globals-v2/contracts/MapleGlobals.sol";
+import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
 import { LoanManager }       from "../../modules/pool-v2/contracts/LoanManager.sol";
 import { Liquidator }        from "../../modules/liquidations/contracts/Liquidator.sol";
 import { PoolManager }       from "../../modules/pool-v2/contracts/PoolManager.sol";
@@ -18,7 +19,7 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 contract GlobalsUpgradeTests is TestBase {
 
     address newImplementation = address(new MapleGlobals());
-    
+
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
 
@@ -215,7 +216,7 @@ contract LoanManagerUpgradeTests is TestBase {
         vm.prank(governor);
         loanManager.upgrade(2, upgradeCallData);
     }
-    
+
 }
 
 contract LiquidationUpgradeTests is TestBase {

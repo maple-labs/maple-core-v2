@@ -1573,24 +1573,6 @@ contract ConfirmPoolV2Cash is ValidationBase {
 
 }
 
-contract UpgradeLoansToV401 is ValidationBase {
-
-    function run() external validationConfig {
-        validate(mavenPermissionedLoans);
-        validate(mavenUsdcLoans);
-        validate(mavenWethLoans);
-        validate(orthogonalLoans);
-        validate(icebreakerLoans);
-    }
-
-    function validate(address[] storage loans) internal {
-        for (uint256 i; i < loans.length; ++i) {
-            assertVersion(401, loans[i]);
-        }
-    }
-
-}
-
 contract TransferPoolDelegates is ValidationBase {
 
     function run() external validationConfig {

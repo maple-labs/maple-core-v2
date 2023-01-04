@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
-
-import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
-
+import { Address }            from "../../modules/contract-test-utils/contracts/test.sol";
 import { MockERC20 as Asset } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
+import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
 contract BootstrapTestBase is TestBaseWithAssertions {
 

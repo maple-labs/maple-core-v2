@@ -44,8 +44,3 @@
 	path = modules/loan-v400
 	url = git@github.com:maple-labs/loan.git
 	ignore = dirty
-[submodule "modules/loan-v401"]
-	path = modules/loan-v401
-	url = git@github.com:maple-labs/loan.git
-	branch = V4.01
-	ignore = dirty

@@ -24,7 +24,6 @@ echo "$SSH_KEY_LOAN" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/loan-v301
 git submodule update --init --recursive modules/loan-v302
 git submodule update --init --recursive modules/loan-v400
-git submodule update --init --recursive modules/loan-v401
 
 echo "$SSH_KEY_MIGRATION_HELPERS" > $HOME/.ssh/id_rsa
 git submodule update --init modules/migration-helpers

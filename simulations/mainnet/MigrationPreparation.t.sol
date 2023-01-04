@@ -158,8 +158,6 @@ contract MigrationPreparationTest is LifecycleBase {
         tempGovernorTransfersV2Governorship();  // LMPs #41 [TBD]
         governorAcceptsV2Governorship();        // LMPs #42 [TBD]
 
-        tasksForLoan401();  // LMPs #43-#46 [TBD]
-
         handleCoverProviderEdgeCase();
         withdrawAllCovers();
 

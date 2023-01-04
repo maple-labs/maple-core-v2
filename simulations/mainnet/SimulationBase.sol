@@ -19,7 +19,6 @@ import { MapleLoanFeeManager }                              from "../../modules/
 import { MapleLoanInitializer as MapleLoanV400Initializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
 import { MapleLoanV4Migrator as MapleLoanV400Migrator }     from "../../modules/loan-v400/contracts/MapleLoanV4Migrator.sol";
 import { Refinancer }                                       from "../../modules/loan-v400/contracts/Refinancer.sol";
-import { MapleLoan as MapleLoanV401 }                       from "../../modules/loan-v401/contracts/MapleLoan.sol";
 
 import { AccountingChecker }                         from "../../modules/migration-helpers/contracts/checkers/AccountingChecker.sol";
 import { DeactivationOracle }                        from "../../modules/migration-helpers/contracts/DeactivationOracle.sol";
@@ -200,8 +199,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
         // Transfer Governorship of GlobalsV2
         tempGovernorTransfersV2Governorship();  // LMPs #41 [TBD]
         governorAcceptsV2Governorship();        // LMPs #42 [TBD]
-
-        tasksForLoan401();  // LMPs #43-#46 [TBD]
 
         handleCoverProviderEdgeCase();
         withdrawAllCovers();
@@ -923,9 +920,9 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
     function replaceSherlockAddress(address[] storage lps) internal returns (address[] memory lps2) {
         lps2 = new address[](lps.length);
-        
+
         for (uint256 i = 0; i < lps.length; i++) {
-            lps2[i] = lps[i]; 
+            lps2[i] = lps[i];
             if (lps[i] == 0xB2acd0214F87d217A2eF148aA4a5ABA71d3F7956) {
                 lps2[i] = 0x666B8EbFbF4D5f0CE56962a25635CfF563F13161;
             }
@@ -1225,56 +1222,6 @@ contract SimulationBase is GenericActions, AddressRegistry {
     function governorAcceptsV2Governorship() internal {
         vm.prank(governor);
         IMapleGlobalsV2Like(mapleGlobalsV2Proxy).acceptGovernor();
-    }
-
-    // Liquidity Migration Procedure #43
-    function deployLoan401() internal {
-        vm.prank(deployer);
-        loanV401Implementation = address(new MapleLoanV401());
-    }
-
-    // Liquidity Migration Procedure #44
-    function setupLoanFactoryFor401() internal {
-        vm.startPrank(governor);
-        IMapleProxyFactoryLike(loanFactory).registerImplementation(401, loanV401Implementation, loanV400Initializer);
-        IMapleProxyFactoryLike(loanFactory).enableUpgradePath(400, 401, address(0));
-        vm.stopPrank();
-    }
-
-    // Liquidity Migration Procedure #45
-    function upgradeLoansToV401(address[] storage loans) internal {
-        vm.startPrank(securityAdmin);
-
-        for (uint256 i; i < loans.length; ++i) {
-            address loan = loans[i];
-            IMapleLoanLike(loan).upgrade(401, "");
-            assertVersion(401, loan);
-        }
-
-        vm.stopPrank();
-    }
-
-    // Liquidity Migration Procedure #45
-    function upgradeAllLoansToV401() internal {
-        upgradeLoansToV401(mavenPermissionedLoans);
-        upgradeLoansToV401(mavenUsdcLoans);
-        upgradeLoansToV401(mavenWethLoans);
-        upgradeLoansToV401(orthogonalLoans);
-        upgradeLoansToV401(icebreakerLoans);
-    }
-
-    // Liquidity Migration Procedure #46
-    function setLoanDefaultTo401() internal {
-        vm.prank(governor);
-        IMapleProxyFactoryLike(loanFactory).setDefaultVersion(401);
-    }
-
-    // Liquidity Migration Procedures #43-#46 [TBD]
-    function tasksForLoan401() internal {
-        deployLoan401();           // Liquidity Migration Procedure #43
-        setupLoanFactoryFor401();  // Liquidity Migration Procedure #44
-        upgradeAllLoansToV401();   // Liquidity Migration Procedure #45
-        setLoanDefaultTo401();     // Liquidity Migration Procedure #46
     }
 
     // TODO: remove temporary PDs via setValidPoolDelegate on globalsV2

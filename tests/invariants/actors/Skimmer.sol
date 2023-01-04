@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleLoan } from "../../../modules/loan-v401/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoan } from "../../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
 
 contract SkimmerBase {
 

@@ -12,10 +12,10 @@ import { Liquidator            } from "../../modules/liquidations/contracts/Liqu
 import { LiquidatorFactory     } from "../../modules/liquidations/contracts/LiquidatorFactory.sol";
 import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan as Loan                       } from "../../modules/loan-v401/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory         } from "../../modules/loan-v401/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as FeeManager       } from "../../modules/loan-v401/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v401/contracts/MapleLoanInitializer.sol";
+import { MapleLoan as Loan                       } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoanFactory as LoanFactory         } from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager as FeeManager       } from "../../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
 
 import { LoanManager             } from "../../modules/pool-v2/contracts/LoanManager.sol";
 import { Pool                    } from "../../modules/pool-v2/contracts/Pool.sol";

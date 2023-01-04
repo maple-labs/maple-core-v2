@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestBase } from "../../contracts/utilities/TestBase.sol";
-
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan                       } from "../../modules/loan-v401/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory         } from "../../modules/loan-v401/contracts/MapleLoanFactory.sol";
-import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v401/contracts/MapleLoanInitializer.sol";
+import { MapleLoan as Loan                       } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoanFactory as LoanFactory         } from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
+import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
+
+import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract ValidCollateralTests is TestBase {
 

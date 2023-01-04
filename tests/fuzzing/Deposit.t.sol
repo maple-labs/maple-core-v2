@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { console } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { FuzzBase } from "../../contracts/utilities/FuzzBase.sol";
 
 contract DepositFuzzTests is FuzzBase {

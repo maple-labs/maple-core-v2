@@ -58,8 +58,8 @@ contract LoanUpgradeTest is SimulationBase {
 
     function assertAllLoans(address[] memory loans, uint256 version) internal {
         for (uint256 i; i < loans.length; ++i) {
-            if (version == 301)                   assertLoanState301(loans[i]);
-            if (version == 401 || version == 400) assertLoanState401(loans[i]);
+            if (version == 301) assertLoanState301(loans[i]);
+            if (version == 400) assertLoanState400(loans[i]);
         }
     }
 
@@ -94,8 +94,8 @@ contract LoanUpgradeTest is SimulationBase {
         assertEq(loan_.treasuryFee(),         loanSnapshot._treasuryFee);
     }
 
-    // The lender has changed in V4.01, and a few storage slots were deprecated.
-    function assertLoanState401(address loan) internal {
+    // The lender has changed in V4.00, and a few storage slots were deprecated.
+    function assertLoanState400(address loan) internal {
         Loan3Storage storage loanSnapshot = loan3Storage[loan];
 
         IMapleLoanLike loan_ = IMapleLoanLike(loan);

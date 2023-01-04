@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
-
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
 import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan as Loan }    from "../../modules/loan-v401/contracts/MapleLoan.sol";
-import { MapleLoanInitializer } from "../../modules/loan-v401/contracts/MapleLoanInitializer.sol";
+import { MapleLoan as Loan }    from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
 
 import { ILoanManagerInitializer } from "../../modules/pool-v2/contracts/interfaces/ILoanManagerInitializer.sol";
 import { IMapleProxyFactory }      from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
@@ -17,6 +15,7 @@ import { IPoolManagerInitializer } from "../../modules/pool-v2/contracts/interfa
 
 import { IWithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManagerInitializer.sol";
 
+import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
 contract PauseTests is TestBaseWithAssertions {
 
