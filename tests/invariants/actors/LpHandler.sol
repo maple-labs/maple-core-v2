@@ -13,11 +13,11 @@ import { ITest } from "../interfaces/ITest.sol";
 
 contract LpHandler is TestUtils {
 
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
     /*** State Variables                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
 
-    address currentLp;
+    address internal currentLp;
 
     address[] public holders;
     address[] public lps;
@@ -28,14 +28,14 @@ contract LpHandler is TestUtils {
 
     mapping(bytes32 => uint256) public numberOfCalls;
 
-    MockERC20         fundsAsset;
-    IPool             pool;
-    ITest             testContract;
-    WithdrawalManager withdrawalManager;
+    MockERC20         internal fundsAsset;
+    IPool             internal pool;
+    ITest             internal testContract;
+    WithdrawalManager internal withdrawalManager;
 
-    /******************************************************************************************************************************/
-    /*** Constructor                                                                                                            ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Constructor                                                                                                                    ***/
+    /**************************************************************************************************************************************/
 
     constructor (address pool_, address testContract_, uint256 numLps_) {
         pool              = IPool(pool_);
@@ -47,7 +47,7 @@ contract LpHandler is TestUtils {
         numLps     = numLps_;
         numHolders = numLps + 1;  // Include withdrawal manager
 
-        for (uint256 i = 0; i < numLps_; i++) {
+        for (uint256 i; i < numLps_; ++i) {
             address lp = address(new Address());
             lps.push(lp);
             holders.push(lp);
@@ -56,9 +56,9 @@ contract LpHandler is TestUtils {
         holders.push(address(withdrawalManager));
     }
 
-    /******************************************************************************************************************************/
-    /*** Modifiers                                                                                                              ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Modifiers                                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     modifier useTimestamps {
         vm.warp(testContract.currentTimestamp());
@@ -73,9 +73,9 @@ contract LpHandler is TestUtils {
         vm.stopPrank();
     }
 
-    /******************************************************************************************************************************/
-    /*** Pool Functions                                                                                                         ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Functions                                                                                                                 ***/
+    /**************************************************************************************************************************************/
 
     function deposit(uint256 assets_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 shares_) {
         numCalls++;
@@ -86,7 +86,7 @@ contract LpHandler is TestUtils {
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
 
-        pool.deposit(assets_, currentLp);  // TODO: Fuzz receiver
+        shares_ = pool.deposit(assets_, currentLp);  // TODO: Fuzz receiver
     }
 
     // function depositWithPermit(uint256 assets_, address receiver_, uint256 deadline_, uint256 ownerSk_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 shares_) {
@@ -109,12 +109,12 @@ contract LpHandler is TestUtils {
 
         shares_ = constrictToRange(shares_, 1, 1e29);
 
-        uint256 assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
+        assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
 
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
 
-        return pool.mint(shares_, currentLp);  // TODO: Fuzz receiver
+        assets_ = pool.mint(shares_, currentLp);  // TODO: Fuzz receiver
     }
 
     // function mintWithPermit(uint256 shares_, address receiver_, uint256 maxAssets_, uint256 deadline_, uint8 v_, bytes32 r_, bytes32 s_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
@@ -136,7 +136,7 @@ contract LpHandler is TestUtils {
 
         vm.warp(constrictToRange(warpSeed_, windowStart_, windowEnd_));
 
-        return pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);  // TODO: Fuzz owner and receiver
+        assets_ = pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);  // TODO: Fuzz owner and receiver
     }
 
     // TODO: Add WM interface
@@ -154,7 +154,7 @@ contract LpHandler is TestUtils {
 
         vm.warp(constrictToRange(warpSeed_, windowStart_, windowStart_ + 1 days));
 
-        return pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);  // TODO: Fuzz owner and receiver
+        assets_ = pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);  // TODO: Fuzz owner and receiver
     }
 
     // function requestWithdraw(uint256 assets_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 escrowShares_) {
@@ -163,7 +163,7 @@ contract LpHandler is TestUtils {
 
     //     assets_ = constrictToRange(assets_, 1, pool.balanceOfAssets(currentLp));
 
-    //     return pool.requestWithdraw(assets_, currentLp); // TODO: Add fuzzing for users
+    //     return pool.requestWithdraw(assets_, currentLp);  // TODO: Add fuzzing for users
     // }
 
     function requestRedeem(uint256 shares_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 escrowShares_) {
@@ -174,7 +174,7 @@ contract LpHandler is TestUtils {
 
         shares_ = constrictToRange(shares_, 1, pool.balanceOf(currentLp));
 
-        return pool.requestRedeem(shares_, currentLp); // TODO: Add fuzzing for users
+        escrowShares_ = pool.requestRedeem(shares_, currentLp);  // TODO: Add fuzzing for users
     }
 
     // function withdraw(uint256 assets_, address receiver_, address owner_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 shares_) {
@@ -186,9 +186,9 @@ contract LpHandler is TestUtils {
     //     return pool.withdraw(assets_, receiver_, owner_);
     // }
 
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
     /*** ERC-20 Functions                                                                                                       ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
 
     // function approve(address spender_, uint256 amount_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
     //     numCalls++;
@@ -212,7 +212,7 @@ contract LpHandler is TestUtils {
     //     return pool.increaseAllowance(spender_, addedAmount_);
     // }
 
-    // function permit(address owner_, address spender_, uint amount_, uint deadline_, uint8 v_, bytes32 r_, bytes32 s_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) {
+    // function permit(address owner_, address spender_, uint256 amount_, uint256 deadline_, uint8 v_, bytes32 r_, bytes32 s_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) {
     //     pool.permit(owner_, spender_, amount_, deadline_, v_, r_, s_);
     // }
 
@@ -226,7 +226,7 @@ contract LpHandler is TestUtils {
 
         address recipient_ = lps[constrictToRange(recipientIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
 
-        return pool.transfer(recipient_, amount_);
+        success_ = pool.transfer(recipient_, amount_);
     }
 
     // function transferFrom(address owner_, address recipient_, uint256 amount_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {

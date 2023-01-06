@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan                       } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory         } from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
+import { MapleLoan as Loan }                       from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoanFactory as LoanFactory }         from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
 import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
 
 import { TestBase } from "../../contracts/utilities/TestBase.sol";

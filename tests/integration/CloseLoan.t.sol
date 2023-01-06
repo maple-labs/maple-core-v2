@@ -8,10 +8,10 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract CloseLoanTests is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public override {
         super.setUp();

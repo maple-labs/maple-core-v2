@@ -7,7 +7,7 @@ import { Logger } from "./Logger.sol";
 
 contract LoanManagerLogger is Logger {
 
-    ILoanManagerLike loanManager;
+    ILoanManagerLike internal loanManager;
 
     constructor(ILoanManagerLike loanManager_, string memory filepath_) Logger(filepath_) {
         loanManager = loanManager_;

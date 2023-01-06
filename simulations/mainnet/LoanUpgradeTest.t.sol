@@ -125,7 +125,7 @@ contract LoanUpgradeTest is SimulationBase {
     }
 
     function snapshotLoanState300(address[] storage loans) internal {
-        for (uint256 i = 0; i < loans.length; ++i) {
+        for (uint256 i; i < loans.length; ++i) {
             IMapleLoanLike loan = IMapleLoanLike(loans[i]);
 
             // Not possible to initialize at once due to stack limit.

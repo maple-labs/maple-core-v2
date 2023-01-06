@@ -4,12 +4,13 @@ pragma solidity 0.8.7;
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IMapleProxyFactory } from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
 import { ILoanManager } from "../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
-import { IPool        } from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
+import { IPool }        from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
 import { IPoolManager } from "../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
 
-import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
+import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 

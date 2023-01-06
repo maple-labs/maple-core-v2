@@ -7,7 +7,7 @@ import { Logger } from "./Logger.sol";
 
 contract GlobalsLogger is Logger {
 
-    IGlobalsLike globals;
+    IGlobalsLike internal globals;
 
     constructor(IGlobalsLike globals_, string memory filepath_) Logger(filepath_) {
         globals = globals_;

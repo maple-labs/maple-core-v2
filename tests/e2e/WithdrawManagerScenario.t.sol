@@ -12,14 +12,14 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
-    address borrower;
-    address lp1;
-    address lp2;
-    address lp3;
+    address internal borrower;
+    address internal lp1;
+    address internal lp2;
+    address internal lp3;
 
-    address[] lps;
+    address[] internal lps;
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -30,7 +30,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         lp3      = address(new Address());
 
         // Setup 50 random Addresses for LPs
-        for (uint256 i = 0; i < 50; i++) {
+        for (uint256 i; i < 50; ++i) {
             lps.push(address(new Address()));
         }
 
@@ -60,7 +60,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -258,7 +258,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -465,7 +465,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -641,9 +641,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Liquidity in pool: 500_000e6
         // Accrued Interest: 1_244.159100e6
         // Proportion LP2 entitled to: 500_000e6 / (1_500_000e6 + 1_244.159100e6) = ~0.33
-        // Shares remaining after pro rata burn: 1_000_000e6 - (1_000_000e6 * (500_000e6 / (1_500_000e6 + 1_244.159100e6))) = 666_942.917333e6
+        // Shares remaining after pro rata burn:
+        //   1_000_000e6 - (1_000_000e6 * (500_000e6 / (1_500_000e6 + 1_244.159100e6))) = 666_942.917333e6
 
-        uint256 lp2RemainingShares = 1_000_000e6 - (uint256(1_000_000e6) * (500_000e6 * 1e18 / (uint256(1_500_000e6) + loanInterestAccrued)) / 1e18);
+        uint256 lp2RemainingShares =
+            1_000_000e6 - (uint256(1_000_000e6) * (500_000e6 * 1e18 / (uint256(1_500_000e6) + loanInterestAccrued)) / 1e18);
 
         assertWithinDiff(lp2RemainingShares, 666_942.917333e6, 1);
 
@@ -665,7 +667,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             totalSupply:        666_942.917334e6,
             totalAssets:        1_000_000e6 + loanInterestAccrued + 1,
             unrealizedLosses:   0,
-            availableLiquidity: 1  // NOTE: Dust due to rounding above
+            availableLiquidity: 1                                       // NOTE: Dust due to rounding above
         });
     }
 
@@ -687,7 +689,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -918,13 +920,14 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Collateral of 100 eth priced at 1500 usd
         // Collateral liquidated to fundAsset: 150_000e6
         // Platform management fees not pro rata: 0.08e6 * 2592e6 (gross installment interest) = 207.36e6
-        // Platform management fees pro rata: 207.36e6 ~ (15 days / 30 days) = 103.68e6 (If no late interest then just pro rata based on payment)
+        // Platform management fees pro rata:
+        //   207.36e6 ~ (15 days / 30 days) = 103.68e6 (If no late interest then just pro rata based on payment)
         // Platform service fees: 0.31536 * 1_000_000 * ( 30 / 365 days )= 25_920e6
         // Platform fees from liquidation: 25_920e6 + 103.68e6 = 26_023.68e6
         // Funds added to pool from liquidation: 150_000e6 - 26_023.68e6 = 123_976.32e6
 
         uint256 grossInterestPerInstallment = (1_000_000e6 * 0.031536e18 / 1e18) * (30 days / 365 days);
-        uint256 platformManagementFee       = (2592e6 * 0.08e6 / 1e6) * (15 days / 30 days);  // Loan impaired 15 days in
+        uint256 platformManagementFee       = (2592e6 * 0.08e6 / 1e6) * (15 days / 30 days);              // Loan impaired 15 days in
         uint256 platformServiceFee          = (0.31536e6 * 1_000_000e6 / 1e6) * (30 days / 365 days);
         uint256 platformFeesFromLiquidation = platformManagementFee + platformServiceFee;
         uint256 fundsAssetFromLiquidation   = 100 * 1_500e6;
@@ -1010,7 +1013,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -1202,7 +1205,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
     function test_scenario_multipleUsers_impairLoanAndRedeem_repayLoanAndRedeem() external {
         // Deposit liquidity from 50 LPs
-        for (uint256 i = 0; i < 50; i++) {
+        for (uint256 i; i < 50; ++i) {
             depositLiquidity(lps[i], 1_000_000e6);
             assertEq(pool.balanceOf(lps[i]), 1_000_000e6);
         }
@@ -1215,7 +1218,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 25_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 25_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -1239,7 +1242,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 totalLpTokenAmount;
 
         // All LPs request to redeem
-        for (uint256 i = 0; i < 50; i++) {
+        for (uint256 i; i < 50; ++i) {
             uint256 lpTokenAmount = pool.balanceOf(lps[i]);
 
             assertWithdrawalManagerState({
@@ -1309,7 +1312,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 totalAssetRedemptionsFirst30Lps;
 
         // Redeem 30 LPs
-        for (uint256 i = 0; i < 30; i++) {
+        for (uint256 i; i < 30; ++i) {
             uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
 
             totalLpTokenAmount -= userLockedShares;
@@ -1376,7 +1379,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.totalAssets() * 1e6 / pool.totalSupply() * 1e6, 1_806_250e6);
 
         // Redeem the remaining LPs
-        for (uint256 i = 30; i < 50; i++) {
+        for (uint256 i = 30; i < 50; ++i) {
             uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
 
             totalLpTokenAmount -= userLockedShares;
@@ -1517,7 +1520,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18 ;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 

@@ -6,82 +6,82 @@ import { Address, TestUtils } from "../../modules/contract-test-utils/contracts/
 import { MockERC20 as Asset } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
 import { MapleGlobals as Globals } from "../../modules/globals-v2/contracts/MapleGlobals.sol";
-import { NonTransparentProxy     } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { NonTransparentProxy }     from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { Liquidator            } from "../../modules/liquidations/contracts/Liquidator.sol";
-import { LiquidatorFactory     } from "../../modules/liquidations/contracts/LiquidatorFactory.sol";
+import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
+import { LiquidatorFactory }     from "../../modules/liquidations/contracts/LiquidatorFactory.sol";
 import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan as Loan                       } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory         } from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as FeeManager       } from "../../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
+import { MapleLoan as Loan }                       from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { MapleLoanFactory as LoanFactory }         from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager as FeeManager }       from "../../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
 import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
 
-import { LoanManager             } from "../../modules/pool-v2/contracts/LoanManager.sol";
-import { Pool                    } from "../../modules/pool-v2/contracts/Pool.sol";
-import { PoolDelegateCover       } from "../../modules/pool-v2/contracts/PoolDelegateCover.sol";
-import { PoolDeployer            } from "../../modules/pool-v2/contracts/PoolDeployer.sol";
-import { PoolManager             } from "../../modules/pool-v2/contracts/PoolManager.sol";
-import { LoanManagerFactory      } from "../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
-import { LoanManagerInitializer  } from "../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
-import { PoolManagerFactory      } from "../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
-import { PoolManagerInitializer  } from "../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
+import { LoanManager }             from "../../modules/pool-v2/contracts/LoanManager.sol";
+import { Pool }                    from "../../modules/pool-v2/contracts/Pool.sol";
+import { PoolDelegateCover }       from "../../modules/pool-v2/contracts/PoolDelegateCover.sol";
+import { PoolDeployer }            from "../../modules/pool-v2/contracts/PoolDeployer.sol";
+import { PoolManager }             from "../../modules/pool-v2/contracts/PoolManager.sol";
+import { LoanManagerFactory }      from "../../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
+import { LoanManagerInitializer }  from "../../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
+import { PoolManagerFactory }      from "../../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
+import { PoolManagerInitializer }  from "../../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
 import { MockLiquidationStrategy } from "../../modules/pool-v2/tests/mocks/Mocks.sol";
 
-import { WithdrawalManager            } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-import { WithdrawalManagerFactory     } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
+import { WithdrawalManager }            from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import { WithdrawalManagerFactory }     from "../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
 import { WithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
 contract TestBase is TestUtils {
 
-    uint256 constant MAX_TOKEN_AMOUNT = 1e29;
+    uint256 internal constant MAX_TOKEN_AMOUNT = 1e29;
 
-    uint256 constant ONE_DAY   = 1 days;
-    uint256 constant ONE_MONTH = ONE_YEAR / 12;
-    uint256 constant ONE_YEAR  = 365 days;
+    uint256 internal constant ONE_DAY   = 1 days;
+    uint256 internal constant ONE_MONTH = ONE_YEAR / 12;
+    uint256 internal constant ONE_YEAR  = 365 days;
 
-    address governor;
-    address poolDelegate;
-    address treasury;
-    address migrationAdmin;
+    address internal governor;
+    address internal poolDelegate;
+    address internal treasury;
+    address internal migrationAdmin;
 
-    address liquidatorFactory;
-    address loanFactory;
-    address loanManagerFactory;
-    address poolManagerFactory;
-    address withdrawalManagerFactory;
+    address internal liquidatorFactory;
+    address internal loanFactory;
+    address internal loanManagerFactory;
+    address internal poolManagerFactory;
+    address internal withdrawalManagerFactory;
 
-    address liquidatorImplementation;
-    address loanImplementation;
-    address loanManagerImplementation;
-    address poolManagerImplementation;
-    address withdrawalManagerImplementation;
+    address internal liquidatorImplementation;
+    address internal loanImplementation;
+    address internal loanManagerImplementation;
+    address internal poolManagerImplementation;
+    address internal withdrawalManagerImplementation;
 
-    address liquidatorInitializer;
-    address loanInitializer;
-    address loanManagerInitializer;
-    address poolManagerInitializer;
-    address withdrawalManagerInitializer;
+    address internal liquidatorInitializer;
+    address internal loanInitializer;
+    address internal loanManagerInitializer;
+    address internal poolManagerInitializer;
+    address internal withdrawalManagerInitializer;
 
-    uint256 nextDelegateOriginationFee;
-    uint256 nextDelegateServiceFee;
+    uint256 internal nextDelegateOriginationFee;
+    uint256 internal nextDelegateServiceFee;
 
-    uint256 start;
+    uint256 internal start;
 
-    // Helper Mapping to assert differenes in balace
-    mapping(address => uint256) partialAssetBalances;
+    // Helper mapping to assert differences in balance
+    mapping(address => uint256) internal partialAssetBalances;
 
-    Asset        collateralAsset;
-    Asset        fundsAsset;
-    Globals      globals;
-    PoolDeployer deployer;
+    Asset        internal collateralAsset;
+    Asset        internal fundsAsset;
+    Globals      internal globals;
+    PoolDeployer internal deployer;
 
-    FeeManager        feeManager;
-    LoanManager       loanManager;
-    Pool              pool;
-    PoolDelegateCover poolCover;
-    PoolManager       poolManager;
-    WithdrawalManager withdrawalManager;
+    FeeManager        internal feeManager;
+    LoanManager       internal loanManager;
+    Pool              internal pool;
+    PoolDelegateCover internal poolCover;
+    PoolManager       internal poolManager;
+    WithdrawalManager internal withdrawalManager;
 
     function setUp() public virtual {
         _createAccounts();
@@ -94,15 +94,15 @@ contract TestBase is TestUtils {
         start = block.timestamp;
     }
 
-    /********************************/
-    /*** Initialization Functions ***/
-    /********************************/
+    /**************************************************************************************************************************************/
+    /*** Initialization Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
 
     function _createAccounts() internal {
         governor       = address(new Address());
+        migrationAdmin = address(new Address());
         poolDelegate   = address(new Address());
         treasury       = address(new Address());
-        migrationAdmin = address(new Address());
     }
 
     function _createAssets() internal {
@@ -128,6 +128,8 @@ contract TestBase is TestUtils {
         loanManagerInitializer       = address(new LoanManagerInitializer());
         poolManagerInitializer       = address(new PoolManagerInitializer());
         withdrawalManagerInitializer = address(new WithdrawalManagerInitializer());
+
+        feeManager = new FeeManager(address(globals));
 
         vm.startPrank(governor);
 
@@ -190,7 +192,6 @@ contract TestBase is TestUtils {
         withdrawalManager = WithdrawalManager(withdrawalManager_);
         pool              = Pool(poolManager.pool());
         poolCover         = PoolDelegateCover(poolManager.poolDelegateCover());
-        feeManager        = new FeeManager(address(globals));
     }
 
     function _configurePool() internal {
@@ -210,9 +211,9 @@ contract TestBase is TestUtils {
         poolManager.setOpenToPublic();
     }
 
-    /***********************/
-    /*** Setup Functions ***/
-    /***********************/
+    /**************************************************************************************************************************************/
+    /*** Setup Functions                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
     /**
      *  @param borrower    The address of the borrower.
@@ -235,7 +236,9 @@ contract TestBase is TestUtils {
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates
-    ) internal returns (Loan loan) {
+    )
+        internal returns (Loan loan)
+    {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
@@ -276,9 +279,9 @@ contract TestBase is TestUtils {
         vm.stopPrank();
     }
 
-    function encodeWithSignatureAndUint(string memory signature_, uint256 arg_) internal pure returns (bytes[] memory calls) {
+    function encodeWithSignatureAndUint(string memory signature, uint256 arg) internal pure returns (bytes[] memory calls) {
         calls    = new bytes[](1);
-        calls[0] = abi.encodeWithSignature(signature_, arg_);
+        calls[0] = abi.encodeWithSignature(signature, arg);
     }
 
     function fundAndDrawdownLoan(
@@ -321,9 +324,9 @@ contract TestBase is TestUtils {
     }
 
     function closeLoan(Loan loan) internal {
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = loan.getClosingPaymentBreakdown();
+        ( uint256 principal, uint256 interest, uint256 fees ) = loan.getClosingPaymentBreakdown();
 
-        uint256 payment = principal_ + interest_ + fees_;
+        uint256 payment = principal + interest + fees;
 
         // Mint to loan
         fundsAsset.mint(address(loan), payment);

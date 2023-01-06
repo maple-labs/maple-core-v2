@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, InvariantTest } from "../../modules/contract-test-utils/contracts/test.sol";
-import { IMapleLoan }                      from "../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFeeManager }            from "../../modules/loan-v400/contracts/interfaces/IMapleLoanFeeManager.sol";
+import { InvariantTest }        from "../../modules/contract-test-utils/contracts/test.sol";
+import { IMapleLoan }           from "../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFeeManager } from "../../modules/loan-v400/contracts/interfaces/IMapleLoanFeeManager.sol";
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
@@ -12,33 +12,33 @@ import { LpHandler }   from "./actors/LpHandler.sol";
 
 contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
     /*** State Variables                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
 
-    LoanHandler loanHandler;
-    LpHandler   lpHandler;
+    LoanHandler internal loanHandler;
+    LpHandler   internal lpHandler;
 
-    uint256 setTimestamps;
+    uint256 internal setTimestamps;
 
     address[] public borrowers;
 
-    uint256[] timestamps;
+    uint256[] internal timestamps;
 
     uint256 public currentTimestamp;
 
-    /******************************************************************************************************************************/
-    /*** Modifiers                                                                                                              ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Modifiers                                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     modifier useCurrentTimestamp {
         vm.warp(currentTimestamp);
         _;
     }
 
-    /******************************************************************************************************************************/
-    /*** Invariant Tests                                                                                                        ***/
-    /*******************************************************************************************************************************
+    /**************************************************************************************************************************************/
+    /*** Invariant Tests                                                                                                                ***/
+    /**************************************************************************************************************************************.
      * Loan
         * Invariant A: collateral balance >= _collateral`
         * Invariant B: fundsAsset >= _drawableFunds`
@@ -113,11 +113,11 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         * domainEnd   == paymentWithEarliestDueDate
         * issuanceRate > 0
 
-    *******************************************************************************************************************************/
+    ***************************************************************************************************************************************/
 
-    /******************************************************************************************************************************/
-    /*** Loan Invariants                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Loan Invariants                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
     function assert_loan_invariant_A(address loan) internal {
         assertGe(collateralAsset.balanceOf(loan), IMapleLoan(loan).collateral(), "Loan Invariant A");
@@ -155,9 +155,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         // );
     }
 
-    /******************************************************************************************************************************/
-    /*** Loan Manager Invariants                                                                                                ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Loan Manager Invariants                                                                                                        ***/
+    /**************************************************************************************************************************************/
 
     function assert_loanManager_invariant_A() internal {
         assertLe(loanManager.domainStart(), loanManager.domainEnd(), "LoanManager Invariant A");
@@ -268,9 +268,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         assertLe(startDate, IMapleLoan(loan).nextPaymentDueDate() - IMapleLoan(loan).paymentInterval(), "LoanManager Invariant N");
     }
 
-    /******************************************************************************************************************************/
-    /*** Pool Invariants                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Invariants                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
     function assert_pool_invariant_A() internal {
         assertGe(pool.totalAssets(), fundsAsset.balanceOf(address(pool)), "Pool Invariant A");
@@ -326,9 +326,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         }
     }
 
-    /******************************************************************************************************************************/
-    /*** Pool Manager Functions                                                                                                 ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Manager Functions                                                                                                         ***/
+    /**************************************************************************************************************************************/
 
     function assert_poolManager_invariant_A() internal {
         uint256 expectedTotalAssets = loanHandler.sum_loan_principal() + getAllOutstandingInterest() + fundsAsset.balanceOf(address(pool));
@@ -345,9 +345,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         assertTrue(poolManager.unrealizedLosses() <= poolManager.totalAssets(), "PoolManager Invariant B");
     }
 
-    /******************************************************************************************************************************/
-    /*** Withdrawal Manager Invariants                                                                                          ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Withdrawal Manager Invariants                                                                                                  ***/
+    /**************************************************************************************************************************************/
 
     function assert_withdrawalManager_invariant_A(uint256 sumLockedShares) internal {
         assertEq(pool.balanceOf(address(withdrawalManager)), sumLockedShares, "WithdrawalManager Invariant A1");
@@ -408,7 +408,8 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_withdrawalManager_invariant_K(address lp, uint256 assets) internal {
-        uint256 lpRequestedLiquidity = withdrawalManager.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
+        uint256 lpRequestedLiquidity =
+            withdrawalManager.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
 
         assertLe(assets, lpRequestedLiquidity, "WithdrawalManager Invariant K");
     }
@@ -439,17 +440,24 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         ( uint256 windowStart, uint256 windowEnd ) = withdrawalManager.getWindowAtId(currentCycle);
 
         if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
-            assertLe(withdrawalManager.lockedLiquidity(), withdrawalManager.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(), "WithdrawalManager Invariant N1");
+            assertLe(
+                withdrawalManager.lockedLiquidity(),
+                withdrawalManager.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(),
+                "WithdrawalManager Invariant N1"
+            );
         } else {
             assertEq(withdrawalManager.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
         }
     }
 
-    /******************************************************************************************************************************/
-    /*** Internal Helpers Functions                                                                                             ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Internal Helpers Functions                                                                                                     ***/
+    /**************************************************************************************************************************************/
 
-    function _getCurrentOutstandingInterest(address loan_, uint256 earliestPaymentDueDate) internal view returns (uint256 interestAccrued_) {
+    function _getCurrentOutstandingInterest(address loan_, uint256 earliestPaymentDueDate)
+        internal view
+        returns (uint256 interestAccrued_)
+    {
         IMapleLoan loan = IMapleLoan(loan_);
 
         if (loan.nextPaymentDueDate() == 0) return 0;
@@ -465,7 +473,10 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         uint256 paymentTimestamp = loanHandler.paymentTimestamp(loan_);
 
         // TODO: This will break with globals
-        uint256 netInterest = interestArray[0] * (1e6 - globals.platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate()) / 1e6;
+        uint256 netInterest =
+            interestArray[0] *
+            (1e6 - globals.platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate())
+            / 1e6;
 
         uint256 startDate = paymentTimestamp == 0 ? fundingTime : min(paymentTimestamp, loan.nextPaymentDueDate() - loan.paymentInterval());
 
@@ -474,7 +485,8 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         interestAccrued_ =
             endDate < startDate
                 ? netInterest
-                : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());  // Use longer if early payment made
+                // Use longer if early payment made
+                : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());
     }
 
     function _getNetInterest(uint256 interest_, uint256 feeRate_) internal pure returns (uint256 netInterest_) {
@@ -528,9 +540,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         minimum_ = a_ < b_ ? a_ : b_;
     }
 
-    /******************************************************************************************************************************/
-    /*** External Setter Functions                                                                                              ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** External Setter Functions                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     function setCurrentTimestamp(uint256 currentTimestamp_) external {
         timestamps.push(currentTimestamp_);
@@ -538,12 +550,12 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         currentTimestamp = currentTimestamp_;
     }
 
-    /******************************************************************************************************************************/
-    /*** Public View Functions                                                                                                  ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Public View Functions                                                                                                          ***/
+    /**************************************************************************************************************************************/
 
     function getAllOutstandingInterest() public returns (uint256 sumOutstandingInterest_) {
-        for (uint256 i = 0; i < loanHandler.numLoans(); i++) {
+        for (uint256 i; i < loanHandler.numLoans(); ++i) {
 
             assertTrue(loanHandler.earliestPaymentDueDate() == loanManager.domainEnd());
 
@@ -552,7 +564,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function getSumIssuanceRates() public view returns (uint256 sumIssuanceRate_) {
-        for (uint256 i = 0; i < loanHandler.numLoans(); i++) {
+        for (uint256 i; i < loanHandler.numLoans(); ++i) {
             address loan_ = loanHandler.activeLoans(i);
             ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(loan_));
             sumIssuanceRate_ += issuanceRate;

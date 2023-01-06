@@ -16,7 +16,7 @@ Submodules imported:
 - [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
 - [`maple-labs/debt-locker` (for V1 Migration testing)](https://github.com/maple-labs/debt-locker)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
-- [`maple-labs/globals`](https://github.com/maple-labs/globals)
+- [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
 - [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
 - [`maple-labs/loan`](https://github.com/maple-labs/loan)
 - [`maple-labs/migration-helpers`](https://github.com/maple-labs/migration-helpers)

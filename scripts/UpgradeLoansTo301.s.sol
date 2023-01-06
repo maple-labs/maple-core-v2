@@ -11,10 +11,11 @@ contract UpgradeLoansTo301 is SimulationBase {
     address[] LoansThatRequireManualMigration;
 
     function run() external {
-        upgradeLoansTo301(mavenUsdcLoans);
         upgradeLoansTo301(mavenPermissionedLoans);
+        upgradeLoansTo301(mavenUsdcLoans);
         upgradeLoansTo301(mavenWethLoans);
         upgradeLoansTo301(orthogonalLoans);
+        upgradeLoansTo301(icebreakerLoans);
     }
 
     function upgradeLoansTo301(address[] storage loans) internal {

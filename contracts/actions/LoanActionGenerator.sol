@@ -3,21 +3,21 @@ pragma solidity 0.8.7;
 
 import { TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { CloseLoanAction                   } from "../../contracts/actions/CloseLoanAction.sol";
-import { DrawdownLoanAction                } from "../../contracts/actions/DrawdownLoanAction.sol";
-import { FinishCollateralLiquidationAction } from "../../contracts/actions/FinishCollateralLiquidationAction.sol";
-import { FundLoanAction                    } from "../../contracts/actions/FundLoanAction.sol";
-import { ImpairLoanAction                  } from "../../contracts/actions/ImpairLoanAction.sol";
-import { LiquidationAction                 } from "../../contracts/actions/LiquidationAction.sol";
-import { MakePaymentAction                 } from "../../contracts/actions/MakePaymentAction.sol";
-import { RefinanceAction                   } from "../../contracts/actions/RefinanceAction.sol";
-import { TriggerDefaultAction              } from "../../contracts/actions/TriggerDefaultAction.sol";
-
-import { IAction          } from "../interfaces/IAction.sol";
+import { IAction }          from "../interfaces/IAction.sol";
 import { IActionGenerator } from "../interfaces/IActionGenerator.sol";
-import { ILoanLike        } from "../interfaces/Interfaces.sol";
+import { ILoanLike }        from "../interfaces/Interfaces.sol";
 
 import { LoanScenario } from "../LoanScenario.sol";
+
+import { CloseLoanAction }                   from "./CloseLoanAction.sol";
+import { DrawdownLoanAction }                from "./DrawdownLoanAction.sol";
+import { FinishCollateralLiquidationAction } from "./FinishCollateralLiquidationAction.sol";
+import { FundLoanAction }                    from "./FundLoanAction.sol";
+import { ImpairLoanAction }                  from "./ImpairLoanAction.sol";
+import { LiquidationAction }                 from "./LiquidationAction.sol";
+import { MakePaymentAction }                 from "./MakePaymentAction.sol";
+import { RefinanceAction }                   from "./RefinanceAction.sol";
+import { TriggerDefaultAction }              from "./TriggerDefaultAction.sol";
 
 contract LoanActionGenerator is TestUtils, IActionGenerator {
 

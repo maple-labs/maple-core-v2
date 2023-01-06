@@ -38,10 +38,6 @@ import { WithdrawalManager }            from "../../modules/withdrawal-manager/c
 import { WithdrawalManagerFactory }     from "../../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
 import { WithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
-import { AddressRegistry } from "./AddressRegistry.sol";
-
-import { GenericActions } from "./GenericActions.sol";
-
 import {
     IAccountingCheckerLike,
     IDebtLockerLike,
@@ -60,6 +56,9 @@ import {
     IPoolV2Like,
     IStakeLockerLike
 } from "./Interfaces.sol";
+
+import { AddressRegistry } from "./AddressRegistry.sol";
+import { GenericActions }  from "./GenericActions.sol";
 
 // TODO: either treat contracts as generics (i.e. IMapleProxy.upgrade), or as explicit (i.e. IMapleLoanV400.upgrade)
 
@@ -818,11 +817,11 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
     // Liquidity Migration Procedure #18 [Blocks 16162315-16162589]
     function deployAllPoolV2s() internal {
-        mavenPermissionedPoolManager = deployPoolV2(mavenPermissionedTemporaryPd, mavenPermissionedPoolV1); // Block 16162315
-        mavenUsdcPoolManager         = deployPoolV2(mavenUsdcTemporaryPd,         mavenUsdcPoolV1);         // Block 16162536
-        mavenWethPoolManager         = deployPoolV2(mavenWethTemporaryPd,         mavenWethPoolV1);         // Block 16162554
-        orthogonalPoolManager        = deployPoolV2(orthogonalTemporaryPd,        orthogonalPoolV1);        // Block 16162570
-        icebreakerPoolManager        = deployPoolV2(icebreakerTemporaryPd,        icebreakerPoolV1);        // Block 16162589
+        mavenPermissionedPoolManager = deployPoolV2(mavenPermissionedTemporaryPd, mavenPermissionedPoolV1);  // Block 16162315
+        mavenUsdcPoolManager         = deployPoolV2(mavenUsdcTemporaryPd,         mavenUsdcPoolV1);          // Block 16162536
+        mavenWethPoolManager         = deployPoolV2(mavenWethTemporaryPd,         mavenWethPoolV1);          // Block 16162554
+        orthogonalPoolManager        = deployPoolV2(orthogonalTemporaryPd,        orthogonalPoolV1);         // Block 16162570
+        icebreakerPoolManager        = deployPoolV2(icebreakerTemporaryPd,        icebreakerPoolV1);         // Block 16162589
 
         mavenPermissionedPoolV2 = IPoolManagerLike(mavenPermissionedPoolManager).pool();
         mavenUsdcPoolV2         = IPoolManagerLike(mavenUsdcPoolManager).pool();
@@ -911,18 +910,19 @@ contract SimulationBase is GenericActions, AddressRegistry {
 
     // Liquidity Migration Procedure #22 [Blocks 16163671-16163755]
     function openOrAllowOnAllPoolV2s() internal {
-        allowLendersAndWithdrawalManager(mavenPermissionedPoolManager, mavenPermissionedLps); // Block 16163671
-        allowLendersAndWithdrawalManager(icebreakerPoolManager, icebreakerLps);               // Block 16163692
+        allowLendersAndWithdrawalManager(mavenPermissionedPoolManager, mavenPermissionedLps);  // Block 16163671
+        allowLendersAndWithdrawalManager(icebreakerPoolManager, icebreakerLps);                // Block 16163692
         openPool(mavenUsdcPoolManager);                                                       // Block 16163715
-        openPool(mavenWethPoolManager);                                                       // Block 16163736
-        openPool(orthogonalPoolManager);                                                      // Block 16163755
+        openPool(mavenWethPoolManager);                                                        // Block 16163736
+        openPool(orthogonalPoolManager);                                                       // Block 16163755
     }
 
     function replaceSherlockAddress(address[] storage lps) internal returns (address[] memory lps2) {
         lps2 = new address[](lps.length);
 
-        for (uint256 i = 0; i < lps.length; i++) {
+        for (uint256 i; i < lps.length; ++i) {
             lps2[i] = lps[i];
+
             if (lps[i] == 0xB2acd0214F87d217A2eF148aA4a5ABA71d3F7956) {
                 lps2[i] = 0x666B8EbFbF4D5f0CE56962a25635CfF563F13161;
             }
@@ -1311,7 +1311,7 @@ contract SimulationBase is GenericActions, AddressRegistry {
                 uint256 endStakeLockerBPTBalance = bpt.balanceOf(stakeLocker);
                 uint256 endProviderBPTBalance    = bpt.balanceOf(coverProviders[i]);
 
-                assertEq(endProviderBPTBalance - initialProviderBPTBalance, initialStakeLockerBPTBalance - endStakeLockerBPTBalance); // BPTs moved from stake locker to provider
+                assertEq(endProviderBPTBalance - initialProviderBPTBalance, initialStakeLockerBPTBalance - endStakeLockerBPTBalance);  // BPTs moved from stake locker to provider
                 assertEq(stakeLocker_.balanceOf(coverProviders[i]), 0);
             }
         }

@@ -3,17 +3,17 @@ pragma solidity 0.8.7;
 
 import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
 import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { Refinancer        } from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
 contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
-    Loan       loan;
-    Refinancer refinancer;
+    Loan       internal loan;
+    Refinancer internal refinancer;
 
     function setUp() public override {
         super.setUp();
@@ -46,7 +46,6 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
     }
 
     function test_refinance_onLoanPaymentDueDate_changePaymentInterval() external {
-
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -65,8 +64,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         // PoolDelegate and treasury get their own originationFee
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -80,8 +81,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
-            incomingFees:      10_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
+            incomingFees:      10_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 3
@@ -102,7 +103,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       90_000e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start,
             domainEnd:             start + 1_000_000,
@@ -133,8 +134,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  300_000e6,                           // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
-            incomingFees:      10_000e6 + 300e6 + 20_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees of 1st period + 20_000e6 of platform service fees of 2nd period (delegate fees are constant)
+            // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingInterest:  300_000e6,
+            // 10_000e6 of platform service fees + 300e6 of delegate service fees of 1st period
+            // + 20_000e6 of platform service fees of 2nd period (delegate fees are constant)
+            incomingFees:      10_000e6 + 300e6 + 20_000e6 + 300e6,
             refinanceInterest: 100_000e6,
             paymentDueDate:    start + 3_000_000,
             paymentsRemaining: 3
@@ -155,7 +159,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     90_000e6,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start + 1_000_000,
             domainEnd:             start + 3_000_000,
@@ -165,8 +169,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         // During refinance, origination fees are paid again
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        190_258751]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        190_258751]
+        );
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -182,8 +188,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  200_000e6,        // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
-            incomingFees:      20_000e6 + 300e6, // 20_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  200_000e6,          // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingFees:      20_000e6 + 300e6,   // 20_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 5_000_000,
             paymentsRemaining: 2
@@ -204,7 +210,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,     // Principal + accrued interest
+            assetsUnderManagement: 1_000_000e6,        // Principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start + 3_000_000,
             domainEnd:             start + 5_000_000,
@@ -215,12 +221,13 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (20_00e6 flat + 16_000e6)
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [6_600e6,      54_000e6]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [6_600e6,      54_000e6]
+        );
     }
 
     function test_refinance_onLoanPaymentDueDate_increasePrincipal() external {
-
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -239,8 +246,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         // PoolDelegate and treasury get their own originationFee
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -254,8 +263,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
-            incomingFees:      10_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
+            incomingFees:      10_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 3
@@ -276,7 +285,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       90_000e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start,
             domainEnd:             start + 1_000_000,
@@ -295,7 +304,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.startPrank(borrower);
         loan.proposeNewTerms(address(refinancer), block.timestamp + 1, calls);
-        fundsAsset.mint(address(borrower), 20_000e6); // Amount for origination fees
+        fundsAsset.mint(address(borrower), 20_000e6);  // Amount for origination fees
         fundsAsset.approve(address(loan), 20_000e6);
         loan.returnFunds(20_000e6);
         vm.stopPrank();
@@ -309,7 +318,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  300_000e6,                           // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingInterest:  300_000e6,                            // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
             incomingFees:      10_000e6 + 20_000e6 + 300e6 + 300e6,
             refinanceInterest: 100_000e6,
             paymentDueDate:    start + 2_000_000,
@@ -331,7 +340,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     90_000e6,
             principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 2_090_000e6,        // principal + accrued interest
             issuanceRate:          0.18e6 * 1e30,
             domainStart:           start + 1_000_000,
             domainEnd:             start + 2_000_000,
@@ -341,8 +350,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
         // During refinance, origination fees are paid again
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        190_258751]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        190_258751]
+        );
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -358,8 +369,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  200_000e6,        // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
-            incomingFees:      20_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  200_000e6,          // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingFees:      20_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 3_000_000,
             paymentsRemaining: 2
@@ -380,7 +391,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_000_000e6,     // principal + accrued interest
+            assetsUnderManagement: 2_000_000e6,        // principal + accrued interest
             issuanceRate:          0.18e6 * 1e30,
             domainStart:           start + 2_000_000,
             domainEnd:             start + 3_000_000,
@@ -391,12 +402,13 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (20_00e6 flat + 16_000e6)
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [6_600e6,      54_000e6]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [6_600e6,      54_000e6]
+        );
     }
 
     function test_refinance_onLoanPaymentDueDate_changeInterestRate() external {
-
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -415,8 +427,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         // PoolDelegate and treasury get their own originationFee
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -430,8 +444,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
-            incomingFees:      10_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
+            incomingFees:      10_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 3
@@ -452,7 +466,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       90_000e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start,
             domainEnd:             start + 1_000_000,
@@ -483,8 +497,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  300_000e6,              // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
-            incomingFees:      (10_000e6 + 300e6) * 2, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  300_000e6,               // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingFees:      (10_000e6 + 300e6) * 2,  // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 100_000e6,
             paymentDueDate:    start + 2_000_000,
             paymentsRemaining: 3
@@ -505,7 +519,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     90_000e6,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.18e6 * 1e30,
             domainStart:           start + 1_000_000,
             domainEnd:             start + 2_000_000,
@@ -514,8 +528,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -531,8 +547,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  200_000e6,        // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
-            incomingFees:      10_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  200_000e6,          // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingFees:      10_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 3_000_000,
             paymentsRemaining: 2
@@ -553,7 +569,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_000_000e6,        // principal + accrued interest
             issuanceRate:          0.18e6 * 1e30,
             domainStart:           start + 2_000_000,
             domainEnd:             start + 3_000_000,
@@ -564,12 +580,13 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (10_00e6 flat + 16_000e6)
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [6_600e6,      44_000e6]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [6_600e6,      44_000e6]
+        );
     }
 
     function test_refinance_onLoanPaymentDueDate_changeToAmortized() external {
-
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -588,8 +605,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         // PoolDelegate and treasury get their own originationFee
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -603,8 +622,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  100_000e6,        // 0.1 * 1_000_000 = 100_000
-            incomingFees:      10_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
+            incomingFees:      10_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 3
@@ -625,7 +644,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       90_000e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start,
             domainEnd:             start + 1_000_000,
@@ -656,8 +675,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 302_114_803625,
-            incomingInterest:  200_000e6,              // 100_000e6 from second payment period + 100_000e6 from first period (refinanced)
-            incomingFees:      (10_000e6 + 300e6) * 2, // 2 full periods of fees
+            incomingInterest:  200_000e6,               // 100_000e6 from second payment period + 100_000e6 from first period (refinanced)
+            incomingFees:      (10_000e6 + 300e6) * 2,  // 2 full periods of fees
             refinanceInterest: 100_000e6,
             paymentDueDate:    start + 2_000_000,
             paymentsRemaining: 3
@@ -678,7 +697,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     90_000e6,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start + 1_000_000,
             domainEnd:             start + 2_000_000,
@@ -687,8 +706,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -726,7 +747,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          697_885_196375,
-            assetsUnderManagement: 697_885_196375,     // principal + accrued interest
+            assetsUnderManagement: 697_885_196375,           // principal + accrued interest
             issuanceRate:          0.062809667673e6 * 1e30,
             domainStart:           start + 2_000_000,
             domainEnd:             start + 3_000_000,
@@ -737,12 +758,13 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 2_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + (10_00e6 flat + 8_000e6)
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [4_600e6,      36_000e6]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [4_600e6,      36_000e6]
+        );
     }
 
     function test_refinance_onLateLoan_changePaymentInterval() external {
-
         /**************************/
         /*** Initial Assertions ***/
         /**************************/
@@ -761,8 +783,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         });
 
         // PoolDelegate and treasury get their own originationFee
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        95_129375]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        95_129375]
+        );
 
         /********************************/
         /*** Pre Refinance Assertions ***/
@@ -776,8 +800,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  151_840e6,        // Late interest: 6 days: 86400 * 6 * 0.1e6 = 51_840e6
-            incomingFees:      10_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees
+            incomingInterest:  151_840e6,          // Late interest: 6 days: 86400 * 6 * 0.1e6 = 51_840e6
+            incomingFees:      10_000e6 + 300e6,   // 10_000e6 of platform service fees + 300e6 of delegate service fees
             refinanceInterest: 0,
             paymentDueDate:    start + 1_000_000,
             paymentsRemaining: 3
@@ -798,7 +822,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       90_000e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start,
             domainEnd:             start + 1_000_000,
@@ -823,15 +847,19 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
 
-        assertTotalAssets(2_500_000e6 + 181_656e6); // Principal + interest owed at refinance time (201_840e6 * 0.9 to discount service fees)
+        // Principal + interest owed at refinance time (201_840e6 * 0.9 to discount service fees)
+        assertTotalAssets(2_500_000e6 + 181_656e6);
 
         assertLoanState({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  401_840e6,                           // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6) + refinanced period incoming (200_000e6)
-            incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6, // 10_000e6 of platform service fees + 300e6 of delegate service fees.
-            refinanceInterest: 201_840e6,                           // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
+            // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
+            // + refinanced period incoming (200_000e6)
+            incomingInterest:  401_840e6,
+            incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,  // 10_000e6 of platform service fees + 300e6 of delegate service fees.
+            // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
+            refinanceInterest: 201_840e6,
             paymentDueDate:    start + 3_500_000,
             paymentsRemaining: 3
         });
@@ -851,7 +879,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     181_656e6,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_181_656e6,     // principal + accrued interest
+            assetsUnderManagement: 1_181_656e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start + 1_500_000,
             domainEnd:             start + 3_500_000,
@@ -861,8 +889,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         // During refinance, origination fees are paid again
-        assertAssetBalancesIncrease([poolDelegate, treasury],
-                                    [500e6,        190_258751]);
+        assertAssetBalancesIncrease(
+            [poolDelegate, treasury],
+            [500e6,        190_258751]
+        );
 
         /*******************************/
         /*** Post Payment Assertions ***/
@@ -900,7 +930,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,     // principal + accrued interest
+            assetsUnderManagement: 1_000_000e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start + 3_500_000,
             domainEnd:             start + 5_500_000,
@@ -909,10 +939,14 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 181_656e6);
 
-        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 4_000e6)  + late interest from 1st period (51_840e6 * 0.02 = 1036_800000)
-        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 16_000e6) + late interest from 1st period (51_840e6 * 0.08 = 4147_200000)
-        assertAssetBalancesIncrease([poolDelegate,        treasury],
-                                    [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]);
+        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 4_000e6)
+        //                    + late interest from 1st period (51_840e6 * 0.02 = 1036_800000)
+        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 16_000e6)
+        //                    + late interest from 1st period (51_840e6 * 0.08 = 4147_200000)
+        assertAssetBalancesIncrease(
+            [poolDelegate,        treasury],
+            [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]
+        );
     }
 
     function test_refinance_skimFundAsset() external {
@@ -939,11 +973,11 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
 contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
-    Loan       loan;
-    Refinancer refinancer;
+    Loan       internal loan;
+    Refinancer internal refinancer;
 
     function setUp() public override {
         super.setUp();
@@ -970,7 +1004,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e18), 0, 0, 0]                              // 0.1e6 tokens per second
         });
     }
 
@@ -1057,7 +1091,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6);
     }
 
-    function test_acceptNewTerms_failifNotPoolManager() external {
+    function test_acceptNewTerms_failIfNotPoolManager() external {
         vm.expectRevert("LM:ANT:NOT_ADMIN");
         loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0));
     }

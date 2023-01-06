@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console }       from "../../../modules/contract-test-utils/contracts/test.sol";
 import { IMapleGlobals } from "../../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
 import { IMapleLoan }    from "../../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
 import { ILiquidator }   from "../../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
@@ -10,7 +9,7 @@ import { LoanHandler } from "./LoanHandler.sol";
 
 contract LoanHandlerWithDefaults is LoanHandler {
 
-    address liquidatorFactory;
+    address internal liquidatorFactory;
 
     // Losses value
     uint256 public numDefaults;
@@ -50,7 +49,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
 
         uint256 loanIndex_ = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
 
-        if (loanDefaulted[activeLoans[loanIndex_]]) return; // Loan defaulted
+        if (loanDefaulted[activeLoans[loanIndex_]]) return;  // Loan defaulted
 
         super.makePayment(borrowerIndexSeed_, loanIndexSeed_);
     }
@@ -63,7 +62,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
         uint256 loanIndex_  = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
-        if (loanDefaulted[loanAddress]) return; // Loan already defaulted
+        if (loanDefaulted[loanAddress]) return;  // Loan already defaulted
 
         // Check loan can be defaulted
         uint256 nextPaymentDueDate_ = IMapleLoan(loanAddress).nextPaymentDueDate();
@@ -128,7 +127,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
         vm.prank(poolManager.poolDelegate());
         poolManager.finishCollateralLiquidation(loanAddress);
 
-        sum_loan_principal -= principal_; // Note: principalOut is updated during finishCollateralLiquidation
+        sum_loan_principal -= principal_;  // Note: principalOut is updated during finishCollateralLiquidation
         unrealizedLosses    = poolManager.unrealizedLosses();
 
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();

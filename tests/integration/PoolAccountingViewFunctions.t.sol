@@ -8,8 +8,8 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract BalanceOfAssetsTests is TestBase {
 
-    address lp1;
-    address lp2;
+    address internal lp1;
+    address internal lp2;
 
     function setUp() public override {
         super.setUp();
@@ -76,8 +76,8 @@ contract BalanceOfAssetsTests is TestBase {
 
 contract MaxDepositTests is TestBase {
 
-    address lp1;
-    address lp2;
+    address internal lp1;
+    address internal lp2;
 
     function setUp() public override {
         _createAccounts();
@@ -144,12 +144,13 @@ contract MaxDepositTests is TestBase {
         assertEq(pool.maxDeposit(lp1), availableDeposit);
         assertEq(pool.maxDeposit(lp2), availableDeposit);
     }
+
 }
 
 contract MaxMintTests is TestBase {
 
-    address lp1;
-    address lp2;
+    address internal lp1;
+    address internal lp2;
 
     function setUp() public override {
         _createAccounts();
@@ -267,165 +268,166 @@ contract MaxMintTests is TestBase {
         assertEq(pool.maxMint(lp1), availableDeposit * depositAmount / totalAssets);
         assertEq(pool.maxMint(lp2), availableDeposit * depositAmount / totalAssets);
     }
+
 }
 
 contract MaxRedeemTests is TestBase {
 
-    address lp1;
+    address internal lp;
 
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
+        lp = address(new Address());
     }
 
     function test_maxRedeem_noLockedShares_notInExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(lp), 1_000e6);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp1));
+        assertTrue(!withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxRedeem(lp1), 0);
+        assertEq(pool.maxRedeem(lp), 0);
     }
 
     function test_maxRedeem_lockedShares_notInExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(lp), 1_000e6);
 
-        vm.prank(lp1);
-        pool.requestRedeem(1_000e6, lp1);
+        vm.prank(lp);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks - 1);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp1));
+        assertTrue(!withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxRedeem(lp1), 0);
+        assertEq(pool.maxRedeem(lp), 0);
     }
 
     function test_maxRedeem_lockedShares_inExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(lp), 1_000e6);
 
-        vm.prank(lp1);
-        uint256 shares = pool.requestRedeem(1_000e6, lp1);
+        vm.prank(lp);
+        uint256 shares = pool.requestRedeem(1_000e6, lp);
 
         assertEq(shares, 1_000e6);
-        assertEq(pool.maxRedeem(lp1), 0);
+        assertEq(pool.maxRedeem(lp), 0);
 
         vm.warp(start + 2 weeks);
 
-        assertTrue(withdrawalManager.isInExitWindow(lp1));
+        assertTrue(withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxRedeem(lp1), shares);
+        assertEq(pool.maxRedeem(lp), shares);
     }
 
 }
 
 contract MaxWithdrawTests is TestBase {
 
-    address lp1;
+    address internal lp;
 
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
+        lp = address(new Address());
     }
 
     function test_maxWithdraw_noLockedShares_notInExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(lp), 1_000e6);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp1));
+        assertTrue(!withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxWithdraw(lp1), 0);
+        assertEq(pool.maxWithdraw(lp), 0);
     }
 
     function test_maxWithdraw_lockedShares_notInExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(lp), 1_000e6);
 
-        vm.prank(lp1);
-        pool.requestRedeem(1_000e6, lp1);
+        vm.prank(lp);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks - 1);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp1));
+        assertTrue(!withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxWithdraw(lp1), 0);
+        assertEq(pool.maxWithdraw(lp), 0);
     }
 
     function test_maxWithdraw_lockedShares_inExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(lp), 1_000e6);
 
-        vm.prank(lp1);
-        pool.requestRedeem(1_000e6, lp1);
+        vm.prank(lp);
+        pool.requestRedeem(1_000e6, lp);
 
-        assertEq(pool.maxWithdraw(lp1), 0);
+        assertEq(pool.maxWithdraw(lp), 0);
 
         vm.warp(start + 2 weeks);
 
-        assertTrue(withdrawalManager.isInExitWindow(lp1));
+        assertTrue(withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxWithdraw(lp1), 0);
+        assertEq(pool.maxWithdraw(lp), 0);
     }
 
     function testDeepFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
         assets_ = constrictToRange(assets_, 1, 1_000e6);
 
-        depositLiquidity(lp1, assets_);
+        depositLiquidity(lp, assets_);
 
-        assertEq(pool.balanceOf(lp1), assets_);
+        assertEq(pool.balanceOf(lp), assets_);
 
-        vm.prank(lp1);
-        pool.requestRedeem(assets_, lp1);
+        vm.prank(lp);
+        pool.requestRedeem(assets_, lp);
 
-        assertEq(pool.maxWithdraw(lp1), 0);
+        assertEq(pool.maxWithdraw(lp), 0);
 
         vm.warp(start + 2 weeks);
 
-        assertTrue(withdrawalManager.isInExitWindow(lp1));
+        assertTrue(withdrawalManager.isInExitWindow(lp));
 
-        assertEq(pool.maxWithdraw(lp1), 0);
+        assertEq(pool.maxWithdraw(lp), 0);
     }
 
 }
 
 contract PreviewRedeemTests is TestBase {
 
-    address lp1;
+    address internal lp;
 
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
+        lp = address(new Address());
     }
 
     function test_previewRedeem_invalidShares() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        vm.startPrank(lp1);
-        pool.requestRedeem(1_000e6, lp1);
+        vm.startPrank(lp);
+        pool.requestRedeem(1_000e6, lp);
 
         assertEq(pool.previewRedeem(1), 0);
     }
 
     function test_previewRedeem_noLockedShares_notInExitWindow() external {
-        vm.prank(lp1);
+        vm.prank(lp);
         assertEq(pool.previewRedeem(0), 0);
     }
 
     function test_previewRedeem_lockedShares_notInExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        vm.startPrank(lp1);
-        pool.requestRedeem(1_000e6, lp1);
+        vm.startPrank(lp);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -433,10 +435,10 @@ contract PreviewRedeemTests is TestBase {
     }
 
     function test_previewRedeem_lockedShares_inExitWindow() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        vm.startPrank(lp1);
-        pool.requestRedeem(1_000e6, lp1);
+        vm.startPrank(lp);
+        pool.requestRedeem(1_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -447,40 +449,40 @@ contract PreviewRedeemTests is TestBase {
 
 contract PreviewWithdrawTests is TestBase {
 
-    address lp1;
+    address internal lp;
 
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
+        lp = address(new Address());
     }
 
     function test_previewWithdraw() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        vm.prank(lp1);
+        vm.prank(lp);
         assertEq(pool.previewWithdraw(1_000e6), 0);
     }
 
     function test_previewWithdraw_zeroAssetsWithDeposit() external {
-        depositLiquidity(lp1, 1_000e6);
+        depositLiquidity(lp, 1_000e6);
 
-        vm.prank(lp1);
+        vm.prank(lp);
         assertEq(pool.previewWithdraw(0), 0);
     }
 
     function test_previewWithdraw_zeroAssetsWithoutDeposit() external {
-        vm.prank(lp1);
+        vm.prank(lp);
         assertEq(pool.previewWithdraw(0), 0);
     }
 
     function testDeepFuzz_previewWithdraw_lockedShares_notInExitWindow(uint256 assets_) external {
         assets_ = constrictToRange(assets_, 1, 1_000e6);
 
-        depositLiquidity(lp1, assets_);
+        depositLiquidity(lp, assets_);
 
-        vm.startPrank(lp1);
-        pool.requestRedeem(assets_, lp1);
+        vm.startPrank(lp);
+        pool.requestRedeem(assets_, lp);
 
         vm.warp(start + 2 weeks - 1);
 
@@ -490,10 +492,10 @@ contract PreviewWithdrawTests is TestBase {
     function testDeepFuzz_previewWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
         assets_ = constrictToRange(assets_, 1, 1_000e6);
 
-        depositLiquidity(lp1, assets_);
+        depositLiquidity(lp, assets_);
 
-        vm.startPrank(lp1);
-        pool.requestRedeem(assets_, lp1);
+        vm.startPrank(lp);
+        pool.requestRedeem(assets_, lp);
 
         vm.warp(start + 2 weeks);
 
@@ -501,7 +503,7 @@ contract PreviewWithdrawTests is TestBase {
     }
 
     function testDeepFuzz_previewWithdraw(uint256 assets_) external {
-        vm.prank(lp1);
+        vm.prank(lp);
         assertEq(pool.previewWithdraw(assets_), 0);
     }
 
@@ -509,9 +511,9 @@ contract PreviewWithdrawTests is TestBase {
 
 contract ConvertToAssetsTests is TestBase {
 
-    address lp1;
-    address lp2;
-    address lp3;
+    address internal lp1;
+    address internal lp2;
+    address internal lp3;
 
     function setUp() public override {
         super.setUp();
@@ -553,7 +555,7 @@ contract ConvertToAssetsTests is TestBase {
         vm.prank(address(pool));
         fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
 
-        assertEq(pool.convertToAssets(1),       0);  // Rounds down as expected
+        assertEq(pool.convertToAssets(1),       0);      // Rounds down as expected
         assertEq(pool.convertToAssets(2),       1);
         assertEq(pool.convertToAssets(1_000e6), 500e6);
     }
@@ -562,9 +564,9 @@ contract ConvertToAssetsTests is TestBase {
 
 contract ConvertToSharesTests is TestBase {
 
-    address lp1;
-    address lp2;
-    address lp3;
+    address internal lp1;
+    address internal lp2;
+    address internal lp3;
 
     function setUp() public override {
         super.setUp();
@@ -615,9 +617,9 @@ contract ConvertToSharesTests is TestBase {
 
 contract PreviewDepositTests is TestBase {
 
-    address lp1;
-    address lp2;
-    address lp3;
+    address internal lp1;
+    address internal lp2;
+    address internal lp3;
 
     function setUp() public override {
         super.setUp();
@@ -668,9 +670,9 @@ contract PreviewDepositTests is TestBase {
 
 contract PreviewMintTests is TestBase {
 
-    address lp1;
-    address lp2;
-    address lp3;
+    address internal lp1;
+    address internal lp2;
+    address internal lp3;
 
     function setUp() public override {
         super.setUp();
@@ -721,9 +723,10 @@ contract PreviewMintTests is TestBase {
 
 contract TotalAssetsTests is TestBase {
 
-    address lp1;
-    address borrower;
-    Loan loan;
+    address internal lp1;
+    address internal borrower;
+
+    Loan internal loan;
 
     function setUp() public override {
         super.setUp();

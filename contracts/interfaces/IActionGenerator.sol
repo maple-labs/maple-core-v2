@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IAction }      from "../interfaces/IAction.sol";
+import { IAction } from "../interfaces/IAction.sol";
+
 import { LoanScenario } from "../LoanScenario.sol";
 
 interface IActionGenerator {

@@ -7,7 +7,7 @@ import { LoanManagerHarness } from "./LoanManagerHarness.sol";
 
 contract FuzzBase is TestBase {
 
-    LoanManagerHarness loanManagerHarness;
+    LoanManagerHarness internal loanManagerHarness;
 
     function setUp() public override {
         super.setUp();

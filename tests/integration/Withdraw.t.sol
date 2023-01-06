@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
 import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
 
 import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract RequestWithdrawTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -82,9 +82,9 @@ contract RequestWithdrawTests is TestBase {
 
 contract RequestWithdrawFailureTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -121,9 +121,9 @@ contract RequestWithdrawFailureTests is TestBase {
 
 contract WithdrawFailureTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -277,10 +277,11 @@ contract WithdrawScenarios is TestBase {
         assertEq(assets3, uint256(500_000e6 * 1) / 6);
         assertEq(assets4, uint256(500_000e6 * 2) / 6 + 3);
 
+        // lp3 and lp4 burn less shares than lp2 because of increase in exchange rate.
         assertEq(withdrawalManager.lockedShares(lp1),   500_000e6 -  83_165.009632e6);
         assertEq(withdrawalManager.lockedShares(lp2), 1_000_000e6 - 166_330.019265e6);
-        assertEq(withdrawalManager.lockedShares(lp3),   500_000e6 -  83_133.373369e6);  // Burns less shares than lp1 because of increase in exchange rate.
-        assertEq(withdrawalManager.lockedShares(lp4), 1_000_000e6 - 166_266.746740e6);  // Burns less shares than lp2 because of increase in exchange rate.
+        assertEq(withdrawalManager.lockedShares(lp3),   500_000e6 -  83_133.373369e6);
+        assertEq(withdrawalManager.lockedShares(lp4), 1_000_000e6 - 166_266.746740e6);
     }
 
     function test_withdrawals_cashInjection() external {
@@ -455,7 +456,13 @@ contract WithdrawScenarios is TestBase {
         assertEq(fundsAsset.balanceOf(address(lp3)), 25_000e6);
 
         // Check if loan impairment calculations are correct.
-        ( , uint256 principal, uint256 interest, uint256 lateInterest, uint256 platformFees, ) = loanManager.liquidationInfo(address(loan1));
+        (
+            ,
+            uint256 principal,
+            uint256 interest,
+            uint256 lateInterest,
+            uint256 platformFees,
+        ) = loanManager.liquidationInfo(address(loan1));
 
         assertEq(principal,    1_000_000e6);
         assertEq(interest,     2_054.794520e6 - 1);

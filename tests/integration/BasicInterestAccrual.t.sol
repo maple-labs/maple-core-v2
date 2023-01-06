@@ -8,8 +8,8 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
     function setUp() public override {
         super.setUp();

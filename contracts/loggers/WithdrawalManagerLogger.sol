@@ -7,7 +7,7 @@ import { Logger } from "./Logger.sol";
 
 contract WithdrawalManagerLogger is Logger {
 
-    IWithdrawalManagerLike withdrawalManager;
+    IWithdrawalManagerLike internal withdrawalManager;
 
     constructor(IWithdrawalManagerLike withdrawalManager_, string memory filepath_) Logger(filepath_) {
         withdrawalManager = withdrawalManager_;

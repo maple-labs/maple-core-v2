@@ -3,9 +3,10 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { LoanScenario   }              from "../../contracts/LoanScenario.sol";
 import { ILoanLike, IPoolManagerLike } from "../../contracts/interfaces/Interfaces.sol";
-import { SimulationBase }              from "../../contracts/utilities/SimulationBase.sol";
+
+import { LoanScenario }   from "../../contracts/LoanScenario.sol";
+import { SimulationBase } from "../../contracts/utilities/SimulationBase.sol";
 
 contract BasicSimulation is SimulationBase {
 
@@ -30,7 +31,7 @@ contract BasicSimulation is SimulationBase {
     }
 
     function test_basicSimulation() external {
-        setUpSimulation("basic");
+        setUpSimulation();
         simulation.run();
     }
 

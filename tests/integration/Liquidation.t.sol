@@ -5,18 +5,18 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
-import { Address, console  } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
 import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
 
 contract LoanLiquidationTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address internal borrower = address(new Address());
+    address internal lp       = address(new Address());
 
-    Loan loan;
+    Loan internal loan;
 
-    uint256 platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
-    uint256 platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 internal platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 internal platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
 
     function setUp() public virtual override {
         super.setUp();
@@ -39,9 +39,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
     }
 
-    /*******************/
-    /*** Full Cover ***/
-    /******************/
+    /**************************************************************************************************************************************/
+    /*** Full Cover                                                                                                                     ***/
+    /**************************************************************************************************************************************/
 
     function test_loanDefault_fullCover_withCollateral_noImpairment() external {
         depositCover({ cover: 10_000_000e6 });
@@ -658,9 +658,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
     }
 
-    /*********************/
-    /*** Partial Cover ***/
-    /*********************/
+    /**************************************************************************************************************************************/
+    /*** Partial Cover                                                                                                                  ***/
+    /**************************************************************************************************************************************/
 
     function test_loanDefault_partialCover_withCollateral_noImpairment() external {
         depositCover({ cover: 100_000e6 });
@@ -1273,12 +1273,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
     }
 
-    /****************/
-    /*** No Cover ***/
-    /****************/
+    /**************************************************************************************************************************************/
+    /*** No Cover                                                                                                                       ***/
+    /**************************************************************************************************************************************/
 
     function test_loanDefault_noCover_withCollateral_noImpairment() external {
-
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
             termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
@@ -1454,7 +1453,6 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_noCover_withCollateral_withImpairment() external {
-
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
             termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
@@ -1637,7 +1635,6 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_noCover_noCollateral_noImpairment() external {
-
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
             termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
@@ -1750,7 +1747,6 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_noCover_noCollateral_withImpairment() external {
-
         loan = fundAndDrawdownLoan({
             borrower:         borrower,
             termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
@@ -1882,13 +1878,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
 contract FinishLiquidationFailureTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address internal borrower = address(new Address());
+    address internal lp       = address(new Address());
 
-    Loan loan;
+    Loan internal loan;
 
-    uint256 platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
-    uint256 platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 internal platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 internal platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
 
     function setUp() public virtual override {
         super.setUp();

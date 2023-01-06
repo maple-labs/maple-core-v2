@@ -5,11 +5,12 @@ import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
-// TODO: instead of putting this into its own file, maybe consider putting all tests that manipulate basic LP token functionality (transfer, deposit, redeem, etc) into the same file.
+// TODO: instead of putting this into its own file, maybe consider putting all tests that manipulate basic LP token functionality
+//       (transfer, deposit, redeem, etc) into the same file.
 contract TransferTests is TestBase {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address internal borrower = address(new Address());
+    address internal lp       = address(new Address());
 
     function setUp() public override {
         _createAccounts();
@@ -17,7 +18,8 @@ contract TransferTests is TestBase {
         _createGlobals();
         _createFactories();
         _createAndConfigurePool(1 weeks, 2 days);
-        // NOTE: As opposed to super.setUp(), do not open the pool, as tests need to validate that only valid lenders are allowed to transfer Pool tokens.
+        // NOTE: As opposed to super.setUp(), do not open the pool,
+        // as tests need to validate that only valid lenders are allowed to transfer Pool tokens.
 
         start = block.timestamp;
     }
@@ -40,8 +42,10 @@ contract TransferTests is TestBase {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
         vm.prank(poolDelegate);
         poolManager.setAllowedLender(lp, true);
+
         // LP gets pool tokens.
         uint256 lpShares = depositLiquidity(lp, 1_000e6);
+
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = address(new Address());
         vm.expectRevert("P:T:RECIPIENT_NOT_ALLOWED");
@@ -171,7 +175,7 @@ contract TransferTests is TestBase {
         address recipient = address(new Address());
 
         vm.prank(recipient);
-        vm.expectRevert(ARITHMETIC_ERROR); // ERC20: subtraction underflow in _decreaseAllowance
+        vm.expectRevert(ARITHMETIC_ERROR);  // ERC20: subtraction underflow in _decreaseAllowance
         pool.transferFrom(lp, recipient, lpShares);
     }
 
@@ -186,7 +190,7 @@ contract TransferTests is TestBase {
         pool.approve(recipient, lpShares - 1);
 
         vm.prank(recipient);
-        vm.expectRevert(ARITHMETIC_ERROR); // ERC20: subtraction underflow in _decreaseAllowance
+        vm.expectRevert(ARITHMETIC_ERROR);  // ERC20: subtraction underflow in _decreaseAllowance
         pool.transferFrom(lp, recipient, lpShares);
     }
 

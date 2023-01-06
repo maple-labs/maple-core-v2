@@ -3,9 +3,10 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { LoanScenario   }              from "../../contracts/LoanScenario.sol";
 import { ILoanLike, IPoolManagerLike } from "../../contracts/interfaces/Interfaces.sol";
-import { SimulationBase }              from "../../contracts/utilities/SimulationBase.sol";
+
+import { LoanScenario }   from "../../contracts/LoanScenario.sol";
+import { SimulationBase } from "../../contracts/utilities/SimulationBase.sol";
 
 contract MultiLoanSimulation is SimulationBase {
 
@@ -90,7 +91,7 @@ contract MultiLoanSimulation is SimulationBase {
         scenarios[3].setPaymentOffset(2, -1.12 days);
         scenarios[3].setPaymentOffset(3, -3.88 days);
 
-        setUpSimulation("early-payments");
+        setUpSimulation();
         simulation.run();
     }
 
@@ -108,7 +109,7 @@ contract MultiLoanSimulation is SimulationBase {
         scenarios[3].setPaymentOffset(2, -1.12 days);
         scenarios[3].setPaymentOffset(3,  3.88 days);
 
-        setUpSimulation("various-payments");
+        setUpSimulation();
         simulation.run();
     }
 

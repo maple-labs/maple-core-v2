@@ -7,8 +7,8 @@ import { Logger } from "./Logger.sol";
 
 contract LoanLogger is Logger {
 
-    IERC20Like asset;
-    ILoanLike  loan;
+    IERC20Like internal asset;
+    ILoanLike  internal loan;
 
     constructor(ILoanLike loan_, string memory filepath_) Logger(filepath_) {
         loan  = loan_;

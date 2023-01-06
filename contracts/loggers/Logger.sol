@@ -7,13 +7,14 @@ import { ILogger } from "../interfaces/ILogger.sol";
 
 abstract contract Logger is ILogger, TestUtils {
 
-    string  constant  NULL  = "NULL";
-    uint256 immutable START = block.timestamp;
+    string internal constant NULL = "NULL";
+
+    uint256 internal immutable START = block.timestamp;
 
     string public override filepath;
 
     constructor(string memory filepath_) {
-        filepath  = filepath_;
+        filepath = filepath_;
     }
 
     function _formattedTime() internal view returns (string memory formattedTime_) {

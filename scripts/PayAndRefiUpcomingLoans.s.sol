@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console } from "../modules/contract-test-utils/contracts/test.sol";
-
 import { IDebtLockerLike, IERC20Like, IMapleLoanLike, IPoolV1Like } from "../simulations/mainnet/Interfaces.sol";
 
 import { SimulationBase } from "../simulations/mainnet/SimulationBase.sol";
 
-contract PayAndRefiUpcomingLoans is SimulationBase {
+contract PayAndRefinanceUpcomingLoans is SimulationBase {
 
     // Maven Permissioned loans to
     address constant mavenPermissionedLoan1 = 0x500055809685ecebA5eC55786f65440583954501;

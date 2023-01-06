@@ -5,14 +5,14 @@ import { IMapleLoan } from "../../../modules/loan-v400/contracts/interfaces/IMap
 
 contract SkimmerBase {
 
-    IMapleLoan loan;
+    IMapleLoan internal loan;
 
     constructor (address loan_) {
         loan = IMapleLoan(loan_);
     }
 
     function skim(address token_, address destination_) public virtual returns (uint256 skimmed_) {
-        loan.skim(token_, destination_);
+        skimmed_ = loan.skim(token_, destination_);
     }
 
 }

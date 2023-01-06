@@ -5,8 +5,8 @@ import { console } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { ILoanManager } from "../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
 
-import { SimulationBase } from "./SimulationBase.sol";
 import { LifecycleBase }  from "./LifecycleBase.sol";
+import { SimulationBase } from "./SimulationBase.sol";
 
 import {
     IAccountingCheckerLike,
@@ -67,7 +67,7 @@ contract QueryPoolV1Positions is ValidationBase {
         console.log("");
         console.log("Pool V1: ", name);
 
-        for (uint256 i = 0; i < lps.length; ++i) {
+        for (uint256 i; i < lps.length; ++i) {
             console.log("LP: %s, LP Position", lps[i], getV1Position(poolV1, lps[i]));
         }
     }
@@ -796,7 +796,7 @@ contract QueryLPsForContracts is ValidationBase {
     }
 
     function query(address[] storage lps) internal {
-        for (uint256 i = 0; i < lps.length; ++i) {
+        for (uint256 i; i < lps.length; ++i) {
             if (lps[i].code.length > 0) {
                 console.log(lps[i], lps[i].code.length);
             }
@@ -1331,7 +1331,7 @@ contract PermissionPools is ValidationBase {
 
         assertTrue(!poolManager_.openToPublic(), "pool open to public");
 
-        for (uint256 i = 0; i < lps.length; ++i) {
+        for (uint256 i; i < lps.length; ++i) {
             assertTrue(poolManager_.isValidLender(lps[i]));
         }
 

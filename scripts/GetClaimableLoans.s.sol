@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { console } from "../modules/contract-test-utils/contracts/test.sol";
 
-import { IMapleLoanLike, IPoolLike } from "../simulations/mainnet/Interfaces.sol";
-import { SimulationBase }            from "../simulations/mainnet/SimulationBase.sol";
+import { IMapleLoanLike, IPoolV1Like } from "../simulations/mainnet/Interfaces.sol";
+import { SimulationBase }              from "../simulations/mainnet/SimulationBase.sol";
 
 contract GetClaimableLoans is SimulationBase {
 
@@ -22,11 +22,11 @@ contract GetClaimableLoans is SimulationBase {
         getClaimableLoans(orthogonalPoolV1, orthogonalLoans);
     }
 
-    function getClaimableLoans(IPoolLike poolV1, IMapleLoanLike[] storage loans) internal {
-        address poolDelegate = poolV1.poolDelegate();
+    function getClaimableLoans(address poolV1, address[] storage loans) internal {
+        address poolDelegate = IPoolV1Like(poolV1).poolDelegate();
 
         for (uint256 i; i < loans.length; ++i) {
-            IMapleLoanLike loan = loans[i];
+            IMapleLoanLike loan = IMapleLoanLike(loans[i]);
 
             if (loan.claimableFunds() == 0) continue;
 

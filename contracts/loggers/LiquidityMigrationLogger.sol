@@ -3,7 +3,6 @@ pragma solidity 0.8.7;
 
 import {
     IERC20Like,
-    ILoanLike,
     ILoanManagerLike,
     IPoolLike,
     IPoolManagerLike
@@ -13,9 +12,9 @@ import { Logger } from "./Logger.sol";
 
 contract LiquidityMigrationLogger is Logger {
 
-    IERC20Like       fundsAsset;
-    ILoanManagerLike loanManager;
-    IPoolLike        pool;
+    IERC20Like       internal fundsAsset;
+    ILoanManagerLike internal loanManager;
+    IPoolLike        internal pool;
 
     constructor(IPoolManagerLike poolManager_, string memory filepath_) Logger(filepath_) {
         fundsAsset  = IERC20Like(poolManager_.asset());

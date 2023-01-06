@@ -6,17 +6,17 @@ import { IPoolManager }  from "../../../modules/pool-v2/contracts/interfaces/IPo
 
 contract GovernorBase {
 
-    IMapleGlobals globals;
-    IPoolManager  poolManager;
+    IMapleGlobals internal globals;
+    IPoolManager  internal poolManager;
 
     constructor (address globals_, address poolManager_) {
         globals     = IMapleGlobals(globals_);
         poolManager = IPoolManager(poolManager_);
     }
 
-    /******************************************************************************************************************************/
-    /*** Globals Functions                                                                                                      ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Globals Functions                                                                                                              ***/
+    /**************************************************************************************************************************************/
 
     function activatePoolManager(address poolManager_) public virtual {
         globals.activatePoolManager(poolManager_);
@@ -94,7 +94,14 @@ contract GovernorBase {
         globals.setTimelockWindow(contract_, functionId_, delay_, duration_);
     }
 
-    function setTimelockWindows(address contract_, bytes32[] calldata functionIds_, uint128[] calldata delays_, uint128[] calldata durations_) public virtual {
+    function setTimelockWindows(
+        address contract_,
+        bytes32[] calldata functionIds_,
+        uint128[] calldata delays_,
+        uint128[] calldata durations_
+    )
+        public virtual
+    {
         globals.setTimelockWindows(contract_, functionIds_, delays_, durations_);
     }
 
@@ -114,9 +121,9 @@ contract GovernorBase {
         globals.unscheduleCall(caller_, contract_, functionId_, callData_);
     }
 
-    /******************************************************************************************************************************/
-    /*** PoolManager Functions                                                                                                  ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** PoolManager Functions                                                                                                          ***/
+    /**************************************************************************************************************************************/
 
     function finishCollateralLiquidation(address loan_) public virtual {
         poolManager.finishCollateralLiquidation(loan_);
@@ -145,6 +152,5 @@ contract GovernorBase {
     function upgrade(uint256 version_, bytes calldata arguments_) public virtual {
         poolManager.upgrade(version_, arguments_);
     }
-
 
 }

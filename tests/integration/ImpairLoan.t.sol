@@ -10,10 +10,10 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract ImpairLoanFailureTests is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -73,10 +73,10 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
 
 contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -305,7 +305,6 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
     }
 
     function test_impairLoan_thenCancel() external {
-
         /**********************************************/
         /*** Remove the loan impairment a day later ***/
         /**********************************************/
@@ -459,7 +458,6 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
     }
 
     function test_impairLoan_thenRepay() external {
-
         /******************************************************/
         /*** Make a payment a day after the loan impairment ***/
         /******************************************************/
@@ -588,19 +586,19 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
 contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
-    address borrower;
-    address lp;
+    address internal borrower;
+    address internal lp;
 
-    Loan       loan;
-    Refinancer refinancer;
+    Loan       internal loan;
+    Refinancer internal refinancer;
 
     // Principal * 1 month in seconds * annual interest rate * 0.9 to discount fees / 365 days / 1e18 rate precision / 1e6 (0.9) precision.
-    uint256 constant GROSS_MONTHLY_INTEREST      = 1_000_000e6 * ONE_MONTH * 0.075e18 / 365 days / 1e18;
-    uint256 constant MONTHLY_INTEREST            = GROSS_MONTHLY_INTEREST * 0.9e6 / 1e6;
-    uint256 constant GROSS_MONTHLY_LATE_INTEREST = 1_000_000e6 * ONE_MONTH * 0.085e18 / 365 days / 1e18;
-    uint256 constant MONTHLY_LATE_INTEREST       = GROSS_MONTHLY_LATE_INTEREST * 0.9e6 / 1e6;
+    uint256 internal constant GROSS_MONTHLY_INTEREST      = 1_000_000e6 * ONE_MONTH * 0.075e18 / 365 days / 1e18;
+    uint256 internal constant MONTHLY_INTEREST            = GROSS_MONTHLY_INTEREST * 0.9e6 / 1e6;
+    uint256 internal constant GROSS_MONTHLY_LATE_INTEREST = 1_000_000e6 * ONE_MONTH * 0.085e18 / 365 days / 1e18;
+    uint256 internal constant MONTHLY_LATE_INTEREST       = GROSS_MONTHLY_LATE_INTEREST * 0.9e6 / 1e6;
 
-    uint256 platformServiceFee = uint256(1_000_000e6) * 0.0066e6 * ONE_MONTH / 365 days / 1e6;
+    uint256 internal platformServiceFee = uint256(1_000_000e6) * 0.0066e6 * ONE_MONTH / 365 days / 1e6;
 
     function setUp() public override {
         super.setUp();
@@ -652,7 +650,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.impairLoan(address(loan));
 
-        uint256 periodInterest = MONTHLY_INTEREST * 5 days / ONE_MONTH; // 5 days worth of interest
+        uint256 periodInterest = MONTHLY_INTEREST * 5 days / ONE_MONTH;  // 5 days worth of interest
 
         assertLoanState({
             loan:              loan,
@@ -678,7 +676,9 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             principal:           1_000_000e6,
             interest:            periodInterest,
             lateInterest:        0,
-            platformFees:        platformServiceFee + GROSS_MONTHLY_INTEREST * (5 days) / ONE_MONTH * 0.08e6 / 1e6, // During an impairment, platform service fees are paid in full + the time adjust platformManagementFees on top of gross interest
+            // During an impairment, platform service fees are paid in full
+            // + the time adjust platformManagementFees on top of gross interest
+            platformFees:        platformServiceFee + GROSS_MONTHLY_INTEREST * (5 days) / ONE_MONTH * 0.08e6 / 1e6,
             liquidatorExists:    false,
             triggeredByGovernor: false
         });
@@ -695,7 +695,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
-            totalAssets:      1_000_000e6 + periodInterest + 500_000e6 + 5_625e6, // Period interest + previous payment cycle interest
+            totalAssets:      1_000_000e6 + periodInterest + 500_000e6 + 5_625e6,  // Period interest + previous payment cycle interest
             unrealizedLosses: 1_000_000e6 + periodInterest
         });
 
@@ -863,7 +863,8 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             principal:           1_000_000e6,
             interest:            MONTHLY_INTEREST - 1,
             lateInterest:        MONTHLY_LATE_INTEREST * 1 days / ONE_MONTH - 1,
-            platformFees:        platformServiceFee + (GROSS_MONTHLY_INTEREST + GROSS_MONTHLY_LATE_INTEREST * 1 days / ONE_MONTH) * 0.08e6 / 1e6,
+            platformFees:        platformServiceFee +
+                                 (GROSS_MONTHLY_INTEREST + GROSS_MONTHLY_LATE_INTEREST * 1 days / ONE_MONTH) * 0.08e6 / 1e6,
             liquidatorExists:    false,
             triggeredByGovernor: false
         });
@@ -889,7 +890,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
 
-        vm.warp(start + 2 * ONE_MONTH + 3 days); // Warp two more days.
+        vm.warp(start + 2 * ONE_MONTH + 3 days);  // Warp two more days.
 
         // Revert a late impairment fails
         vm.prank(governor);

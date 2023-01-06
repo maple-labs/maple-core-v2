@@ -7,7 +7,7 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract TransferPoolOwnershipTests is TestBaseWithAssertions {
 
-    address newPoolDelegate = address(new Address());
+    address internal newPoolDelegate = address(new Address());
 
     function test_setPendingPoolDelegate_notPD() external {
         vm.expectRevert("PM:SPA:NOT_PD");

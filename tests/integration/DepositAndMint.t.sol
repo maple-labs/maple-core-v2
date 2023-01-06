@@ -8,7 +8,7 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract EnterBase is TestBase {
 
-    address lp;
+    address internal lp;
 
     function setUp() public virtual override {
         _createAccounts();
@@ -21,13 +21,27 @@ contract EnterBase is TestBase {
         start = block.timestamp;
     }
 
-    function _getValidPermitSignature(address asset_, address owner_, address spender_, uint256 value_, uint256 nonce_, uint256 deadline_, uint256 ownerSk_) internal returns (uint8 v_, bytes32 r_, bytes32 s_) {
-        return vm.sign(ownerSk_, _getDigest(asset_, owner_, spender_, value_, nonce_, deadline_));
+    function _getValidPermitSignature(
+        address asset_,
+        address owner_,
+        address spender_,
+        uint256 value_,
+        uint256 nonce_,
+        uint256 deadline_,
+        uint256 ownerSk_
+    )
+        internal
+        returns (uint8 v_, bytes32 r_, bytes32 s_)
+    {
+        ( v_, r_, s_ ) = vm.sign(ownerSk_, _getDigest(asset_, owner_, spender_, value_, nonce_, deadline_));
     }
 
     // Returns an ERC-2612 `permit` digest for the `owner` to sign
-    function _getDigest(address asset_, address owner_, address spender_, uint256 value_, uint256 nonce_, uint256 deadline_) private view returns (bytes32 digest_) {
-        return keccak256(
+    function _getDigest(address asset_, address owner_, address spender_, uint256 value_, uint256 nonce_, uint256 deadline_)
+        private view
+        returns (bytes32 digest_)
+    {
+        digest_ = keccak256(
             abi.encodePacked(
                 '\x19\x01',
                 Asset(asset_).DOMAIN_SEPARATOR(),
@@ -230,9 +244,9 @@ contract DepositTest is EnterBase {
 
 contract DepositWithPermitTests is EnterBase {
 
-    uint256 deadline = 5_000_000_000;
-    uint256 lpPK     = 1;
-    uint256 nonce;
+    uint256 internal deadline = 5_000_000_000;
+    uint256 internal lpPK     = 1;
+    uint256 internal nonce;
 
     function setUp() public override {
         super.setUp();
@@ -260,7 +274,11 @@ contract DepositWithPermitTests is EnterBase {
         assertEq(poolManager.totalAssets(), 0);
 
         vm.startPrank(lp);
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), 1_000_000e6, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), 1_000_000e6, nonce, deadline, lpPK);
 
         uint256 shares = pool.depositWithPermit(1_000_000e6, lp, deadline, v, r, s);
 
@@ -295,7 +313,11 @@ contract DepositWithPermitTests is EnterBase {
         assertEq(poolManager.totalAssets(), 0);
 
         vm.startPrank(lp);
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), depositAmount, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), depositAmount, nonce, deadline, lpPK);
 
         uint256 shares = pool.depositWithPermit(depositAmount, lp, deadline, v, r, s);
 
@@ -481,9 +503,9 @@ contract DepositFailureTests is EnterBase {
 
 contract DepositWithPermitFailureTests is EnterBase {
 
-    uint256 deadline = 5_000_000_000;
-    uint256 lpSk     = 1;
-    uint256 nonce;
+    uint256 internal deadline = 5_000_000_000;
+    uint256 internal lpSk     = 1;
+    uint256 internal nonce;
 
     function setUp() public virtual override {
         super.setUp();
@@ -507,7 +529,11 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         vm.startPrank(lp);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
         pool.depositWithPermit(liquidity, lp, deadline, v, r, s);
@@ -531,7 +557,11 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         vm.startPrank(lp);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("P:DWP:NOT_ACTIVE");
         pool.depositWithPermit(liquidity, lp, deadline, v, r, s);
@@ -555,7 +585,11 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         vm.startPrank(lp);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("P:DWP:LENDER_NOT_ALLOWED");
         pool.depositWithPermit(liquidity, lp, deadline, v, r, s);
@@ -579,7 +613,11 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         vm.startPrank(lp);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("P:DWP:LENDER_NOT_ALLOWED");
         pool.depositWithPermit(liquidity, lp, deadline, v, r, s);
@@ -640,7 +678,11 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         vm.startPrank(lp);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity - 1, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity - 1, nonce, deadline, lpSk);
 
         vm.expectRevert("ERC20:P:INVALID_SIGNATURE");
         pool.depositWithPermit(liquidity, lp, deadline, v, r, s);
@@ -837,7 +879,8 @@ contract MintTest is EnterBase {
             assertWithinDiff(assets,                                           assetAmount,                    1);
             assertWithinDiff(pool.totalSupply(),                               calculatedShares + 1_000_000e6, 1);
             assertWithinDiff(pool.balanceOf(address(lp)),                      calculatedShares,               0);
-            assertWithinDiff(fundsAsset.balanceOf(address(pool)),              assetAmount,                    1);  // Assets from initial depositor are on the loan
+            // Assets from initial depositor are in the loan
+            assertWithinDiff(fundsAsset.balanceOf(address(pool)),              assetAmount,                    1);
             assertWithinDiff(fundsAsset.balanceOf(address(lp)),                0,                              1);
             assertWithinDiff(fundsAsset.allowance(address(lp), address(pool)), 0,                              1);
         }
@@ -847,9 +890,9 @@ contract MintTest is EnterBase {
 
 contract MintWithPermitTests is EnterBase {
 
-    uint256 deadline = 5_000_000_000;
-    uint256 lpPK     = 1;
-    uint256 nonce;
+    uint256 internal deadline = 5_000_000_000;
+    uint256 internal lpPK     = 1;
+    uint256 internal nonce;
 
     function setUp() public override {
         super.setUp();
@@ -877,7 +920,11 @@ contract MintWithPermitTests is EnterBase {
         assertEq(poolManager.totalAssets(), 0);
 
         vm.startPrank(lp);
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), 1_000_000e6, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), 1_000_000e6, nonce, deadline, lpPK);
 
         uint256 shares = pool.mintWithPermit(1_000_000e6, lp, 1_000_000e6, deadline, v, r, s);
 
@@ -893,8 +940,8 @@ contract MintWithPermitTests is EnterBase {
 
     function testDeepFuzz_mintWithPermit_singleUser(uint256 mintAmount) public {
         vm.assume(mintAmount > 0);
-        vm.assume(mintAmount <= type(uint256).max - 1); // With max uint256, the assertion of allowance after deposit fails because in the token is treated as infinite allowance.
-
+        // With max uint256, the assertion of allowance after deposit fails because in the token is treated as infinite allowance.
+        vm.assume(mintAmount <= type(uint256).max - 1);
 
         // Mint asset to LP
         fundsAsset.mint(address(lp), mintAmount);
@@ -913,7 +960,11 @@ contract MintWithPermitTests is EnterBase {
         assertEq(poolManager.totalAssets(), 0);
 
         vm.startPrank(lp);
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), mintAmount, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), mintAmount, nonce, deadline, lpPK);
 
         uint256 shares = pool.mintWithPermit(mintAmount, lp, mintAmount, deadline, v, r, s);
 
@@ -1120,9 +1171,9 @@ contract MintFailureTests is EnterBase {
 
 contract MintWithPermitFailureTests is EnterBase {
 
-    uint256 deadline = 5_000_000_000;
-    uint256 lpSk     = 1;
-    uint256 nonce;
+    uint256 internal deadline = 5_000_000_000;
+    uint256 internal lpSk     = 1;
+    uint256 internal nonce;
 
     function setUp() public virtual override {
         super.setUp();
@@ -1146,7 +1197,11 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
         pool.mintWithPermit(shares, lp, liquidity, deadline, v, r, s);
@@ -1172,7 +1227,11 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("P:MWP:NOT_ACTIVE");
         pool.mintWithPermit(shares, lp, liquidity, deadline, v, r, s);
@@ -1198,7 +1257,11 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("P:MWP:LENDER_NOT_ALLOWED");
         pool.mintWithPermit(shares, lp, liquidity, deadline, v, r, s);
@@ -1224,7 +1287,11 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         vm.expectRevert("P:MWP:LENDER_NOT_ALLOWED");
         pool.mintWithPermit(shares, lp, liquidity, deadline, v, r, s);
@@ -1262,7 +1329,11 @@ contract MintWithPermitFailureTests is EnterBase {
         uint256 initialMintAmount = shares * 4 / 10;
         uint256 nextMintAmount    = shares - initialMintAmount;
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity, nonce, deadline, lpSk);
 
         pool.mintWithPermit(initialMintAmount, lp, liquidity, deadline, v, r, s);
         nonce += 1;
@@ -1297,7 +1368,11 @@ contract MintWithPermitFailureTests is EnterBase {
         uint256 shares = pool.previewDeposit(liquidity);
         uint256 assets = pool.previewMint(shares);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), assets - 1, nonce, deadline, lpSk);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), assets - 1, nonce, deadline, lpSk);
 
         vm.expectRevert("P:MWP:INSUFFICIENT_PERMIT");
         pool.mintWithPermit(shares, lp, assets - 1, deadline, v, r, s);

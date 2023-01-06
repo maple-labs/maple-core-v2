@@ -7,7 +7,7 @@ import { Logger } from "./Logger.sol";
 
 contract FeeManagerLogger is Logger {
 
-    IFeeManagerLike feeManager;
+    IFeeManagerLike internal feeManager;
 
     constructor(IFeeManagerLike feeManager_, string memory filepath_) Logger(filepath_) {
         feeManager = feeManager_;

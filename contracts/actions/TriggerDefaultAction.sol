@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanLike, IPoolLike, IPoolManagerLike } from "../interfaces/Interfaces.sol";
+import { IPoolManagerLike } from "../interfaces/Interfaces.sol";
 
 import { Action } from "./Action.sol";
 

@@ -19,13 +19,13 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract PauseTests is TestBaseWithAssertions {
 
-    address borrower          = address(new Address());
-    address pausePoolDelegate = address(new Address());
+    address internal borrower          = address(new Address());
+    address internal pausePoolDelegate = address(new Address());
 
-    bytes[] data;
+    bytes[] internal data;
 
-    Liquidator liquidator;
-    Loan       loan;
+    Liquidator internal liquidator;
+    Loan       internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -99,13 +99,18 @@ contract PauseTests is TestBaseWithAssertions {
     // TODO: Check if anything should be uncommented.
     function test_pauseProtocol() external {
 
-        /******************************************************************************************************************************/
-        /*** Initializations                                                                                                        ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Initializations                                                                                                            ***/
+        /**********************************************************************************************************************************/
 
         // Pool Manager
-        bytes32 salt_ = keccak256(abi.encode(pausePoolDelegate));
-        bytes memory arguments = IPoolManagerInitializer(poolManagerInitializer).encodeArguments(pausePoolDelegate, address(fundsAsset), 0, "Maple Pool", "MP");
+        bytes memory arguments = IPoolManagerInitializer(poolManagerInitializer).encodeArguments(
+            pausePoolDelegate,
+            address(fundsAsset),
+            0,
+            "Maple Pool",
+            "MP"
+        );
 
         // vm.prank(address(deployer));
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
@@ -126,15 +131,19 @@ contract PauseTests is TestBaseWithAssertions {
         // IMapleProxyFactory(withdrawalManagerFactory).createInstance(arguments, salt_);
 
         // Liquidator
-        arguments = LiquidatorInitializer(liquidatorInitializer).encodeArguments(address(loanManager), address(collateralAsset), address(fundsAsset));
+        arguments = LiquidatorInitializer(liquidatorInitializer).encodeArguments(
+            address(loanManager),
+            address(collateralAsset),
+            address(fundsAsset)
+        );
 
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
         // vm.prank(address(loanManager));
         // IMapleProxyFactory(liquidatorFactory).createInstance(arguments, salt_);
 
-        /******************************************************************************************************************************/
-        /*** Liquidator                                                                                                             ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Liquidator                                                                                                                 ***/
+        /**********************************************************************************************************************************/
 
         vm.prank(governor);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
@@ -144,9 +153,9 @@ contract PauseTests is TestBaseWithAssertions {
         liquidator.liquidatePortion(0, 0, "");
 
 
-        /******************************************************************************************************************************/
-        /*** Loan                                                                                                                   ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Loan                                                                                                                       ***/
+        /**********************************************************************************************************************************/
 
         vm.prank(governor);
         vm.expectRevert("L:PROTOCOL_PAUSED");
@@ -188,17 +197,17 @@ contract PauseTests is TestBaseWithAssertions {
         vm.expectRevert("L:PROTOCOL_PAUSED");
         loan.skim(address(0), address(0));
 
-        /******************************************************************************************************************************/
-        /*** Loan Manager                                                                                                           ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Loan Manager                                                                                                               ***/
+        /**********************************************************************************************************************************/
 
         // vm.prank(governor);
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
         // loanManager.upgrade(2, "");
 
-        /******************************************************************************************************************************/
-        /*** Pool                                                                                                                   ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Pool                                                                                                                       ***/
+        /**********************************************************************************************************************************/
 
         vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
         pool.deposit(0, address(0));
@@ -233,9 +242,9 @@ contract PauseTests is TestBaseWithAssertions {
         vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
         pool.withdraw(0, address(0), address(0));
 
-        /******************************************************************************************************************************/
-        /*** Pool Manager                                                                                                           ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Pool Manager                                                                                                               ***/
+        /**********************************************************************************************************************************/
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.acceptNewTerms(address(0), address(0), 0, data, 0);
@@ -310,9 +319,9 @@ contract PauseTests is TestBaseWithAssertions {
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.withdrawCover(0, address(0));
 
-        /******************************************************************************************************************************/
-        /*** Withdrawal Manager                                                                                                     ***/
-        /******************************************************************************************************************************/
+        /**********************************************************************************************************************************/
+        /*** Withdrawal Manager                                                                                                         ***/
+        /**********************************************************************************************************************************/
 
         vm.prank(governor);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");

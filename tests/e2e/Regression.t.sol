@@ -3,22 +3,22 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
 import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
-import { BaseInvariants }                           from "../invariants/BaseInvariants.t.sol";
+import { BaseInvariants }            from "../invariants/BaseInvariants.t.sol";
 import { LoanHandlerWithImpairment } from "../invariants/actors/LoanHandlerWithImpairment.sol";
-import { LpHandler }                                from "../invariants/actors/LpHandler.sol";
+import { LpHandler }                 from "../invariants/actors/LpHandler.sol";
 
 contract RegressionTest is BaseInvariants {
 
-    uint256 constant public NUM_BORROWERS = 5;
-    uint256 constant public NUM_LPS       = 10;
-    uint256 constant public MAX_NUM_LOANS = 50;
+    uint256 internal constant NUM_BORROWERS = 5;
+    uint256 internal constant NUM_LPS       = 10;
+    uint256 internal constant MAX_NUM_LOANS = 50;
 
-    LoanHandlerWithImpairment loanHandlerWithImpairment;
+    LoanHandlerWithImpairment internal loanHandlerWithImpairment;
 
     function setUp() public override {
         super.setUp();
@@ -26,8 +26,8 @@ contract RegressionTest is BaseInvariants {
         currentTimestamp = block.timestamp;
 
         setupFees({
-            delegateOriginationFee:     500e6,  // TODO: Remove as not used
-            delegateServiceFee:         300e6,  // TODO: Remove as not used
+            delegateOriginationFee:     500e6,    // TODO: Remove as not used
+            delegateServiceFee:         300e6,    // TODO: Remove as not used
             delegateManagementFeeRate:  0.02e6,
             platformOriginationFeeRate: 0.001e6,
             platformServiceFeeRate:     0.005e6,  // 10k after 1m seconds
@@ -48,7 +48,6 @@ contract RegressionTest is BaseInvariants {
         });
 
         lpHandler = new LpHandler(address(pool), address(this), NUM_LPS);
-
     }
 
     function test_regression_invariantUnderflow_1() external {

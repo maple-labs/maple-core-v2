@@ -8,7 +8,7 @@ contract LoanManagerHarness is LoanManager {
     function __setAccountedInterest(uint256 accountedInterest_) external {
         accountedInterest = uint112(accountedInterest_);
     }
-    
+
     function __setPrincipalOut(uint256 principalOut_) external {
         principalOut = uint128(principalOut_);
     }

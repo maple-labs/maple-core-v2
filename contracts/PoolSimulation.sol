@@ -10,7 +10,7 @@ import { ActionHandler } from "./ActionHandler.sol";
 
 contract PoolSimulation is ActionHandler, CSVWriter {
 
-    ILogger[] loggers;  // List of loggers used to output the state of the simulation during each snapshot and after each action.
+    ILogger[] internal loggers;  // List of loggers used to output the state of the simulation during each snapshot and after each action.
 
     function record(ILogger logger_) external {
         loggers.push(logger_);
@@ -83,7 +83,7 @@ contract PoolSimulation is ActionHandler, CSVWriter {
     }
 
     function _log(string memory notes_) internal {
-        for (uint i = 0; i < loggers.length; ++i) {
+        for (uint256 i; i < loggers.length; ++i) {
             addRow(loggers[i].filepath(), loggers[i].output(notes_));
         }
     }
@@ -93,7 +93,7 @@ contract PoolSimulation is ActionHandler, CSVWriter {
             makeDir(loggers[0].filepath());
         }
 
-        for (uint i = 0; i < loggers.length; ++i) {
+        for (uint256 i; i < loggers.length; ++i) {
             writeFile(loggers[i].filepath());
         }
     }

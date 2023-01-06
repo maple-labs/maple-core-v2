@@ -6,18 +6,18 @@ import { FuzzBase } from "../../contracts/utilities/FuzzBase.sol";
 contract RedeemFuzzTests is FuzzBase {
 
     // Avoid stack too deep in tests
-    address caller;
-    address owner;
-    address receiver;
+    address internal caller;
+    address internal owner;
+    address internal receiver;
 
-    uint256 totalSupply;
-    uint256 totalAssets;
-    uint256 unrealizedLosses;
-    uint256 ownerShares;
-    uint256 sharesToRedeem;
-    uint256 receiverAssets;
-    uint256 availableAssets;
-    uint256 withdrawalDelay;
+    uint256 internal totalSupply;
+    uint256 internal totalAssets;
+    uint256 internal unrealizedLosses;
+    uint256 internal ownerShares;
+    uint256 internal sharesToRedeem;
+    uint256 internal receiverAssets;
+    uint256 internal availableAssets;
+    uint256 internal withdrawalDelay;
 
     function testDeepFuzz_redeem_all(address[3] memory addresses, uint256[8] memory amounts) external {
         caller   = addresses[0];
@@ -119,6 +119,5 @@ contract RedeemFuzzTests is FuzzBase {
         assertEq(withdrawalManager.lockedShares(owner), sharesToRedeem - redeemableShares);
         assertEq(withdrawalManager.exitCycleId(owner),  redeemableShares < sharesToRedeem ? 4 : 0);
     }
-
 
 }

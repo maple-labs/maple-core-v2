@@ -8,10 +8,10 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract BootstrapTestBase is TestBaseWithAssertions {
 
-    uint256 constant BOOTSTRAP_MINT_AMOUNT = 1e5;
+    uint256 internal constant BOOTSTRAP_MINT_AMOUNT = 1e5;
 
-    address lp;
-    address lp2;
+    address internal lp1;
+    address internal lp2;
 
     function setUp() public virtual override {
         _createAccounts();
@@ -25,7 +25,7 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         _createAndConfigurePool(1 weeks, 2 days);
         _openPool();
 
-        lp  = address(new Address());
+        lp1 = address(new Address());
         lp2 = address(new Address());
 
         assertEq(pool.BOOTSTRAP_MINT(), 1e5);
@@ -40,13 +40,27 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         vm.stopPrank();
     }
 
-    function _getValidPermitSignature(address asset_, address owner_, address spender_, uint256 value_, uint256 nonce_, uint256 deadline_, uint256 ownerSk_) internal returns (uint8 v_, bytes32 r_, bytes32 s_) {
-        return vm.sign(ownerSk_, _getDigest(asset_, owner_, spender_, value_, nonce_, deadline_));
+    function _getValidPermitSignature(
+        address asset_,
+        address owner_,
+        address spender_,
+        uint256 value_,
+        uint256 nonce_,
+        uint256 deadline_,
+        uint256 ownerSk_
+    )
+        internal
+        returns (uint8 v_, bytes32 r_, bytes32 s_)
+    {
+        ( v_, r_, s_ ) = vm.sign(ownerSk_, _getDigest(asset_, owner_, spender_, value_, nonce_, deadline_));
     }
 
     // Returns an ERC-2612 `permit` digest for the `owner` to sign
-    function _getDigest(address asset_, address owner_, address spender_, uint256 value_, uint256 nonce_, uint256 deadline_) private view returns (bytes32 digest_) {
-        return keccak256(
+    function _getDigest(address asset_, address owner_, address spender_, uint256 value_, uint256 nonce_, uint256 deadline_)
+        private view
+        returns (bytes32 digest_)
+    {
+        digest_ = keccak256(
             abi.encodePacked(
                 '\x19\x01',
                 Asset(asset_).DOMAIN_SEPARATOR(),
@@ -60,29 +74,29 @@ contract BootstrapTestBase is TestBaseWithAssertions {
 contract BootstrapDepositTests is BootstrapTestBase {
 
     function test_deposit_ltBootstrapMintAmount() external {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT - 1);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        vm.startPrank(lp);
+        vm.startPrank(lp1);
         fundsAsset.approve(address(pool), BOOTSTRAP_MINT_AMOUNT - 1);
 
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.deposit(BOOTSTRAP_MINT_AMOUNT - 1, lp);
+        pool.deposit(BOOTSTRAP_MINT_AMOUNT - 1, lp1);
     }
 
     function testFuzz_deposit_ltBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        fundsAsset.mint(lp, amount_);
+        fundsAsset.mint(lp1, amount_);
 
-        vm.startPrank(lp);
+        vm.startPrank(lp1);
         fundsAsset.approve(address(pool), amount_);
 
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.deposit(amount_, lp);
+        pool.deposit(amount_, lp1);
     }
 
     function test_deposit_exactBootstrapMintAmount() public {
-        depositLiquidity(lp, BOOTSTRAP_MINT_AMOUNT);
+        depositLiquidity(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -91,11 +105,11 @@ contract BootstrapDepositTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
     }
 
     function test_deposit_gtBootstrapMintAmount() public {
-        depositLiquidity(lp, BOOTSTRAP_MINT_AMOUNT + 1);
+        depositLiquidity(lp1, BOOTSTRAP_MINT_AMOUNT + 1);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
@@ -104,13 +118,13 @@ contract BootstrapDepositTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT + 1
         });
 
-        assertEq(pool.balanceOf(lp), 1);
+        assertEq(pool.balanceOf(lp1), 1);
     }
 
     function testFuzz_deposit_gtBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
-        depositLiquidity(lp, amount_);
+        depositLiquidity(lp1, amount_);
 
         assertPoolState({
             totalSupply:        amount_,
@@ -119,11 +133,11 @@ contract BootstrapDepositTests is BootstrapTestBase {
             availableLiquidity: amount_
         });
 
-        assertEq(pool.balanceOf(lp), amount_ - BOOTSTRAP_MINT_AMOUNT);
+        assertEq(pool.balanceOf(lp1), amount_ - BOOTSTRAP_MINT_AMOUNT);
     }
 
     function test_deposit_secondDepositorGetsCorrectShares() external {
-        depositLiquidity(lp, BOOTSTRAP_MINT_AMOUNT);
+        depositLiquidity(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -132,7 +146,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         depositLiquidity(lp2, 10_000e6);
 
@@ -149,7 +163,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
     function testFuzz_deposit_secondDepositorGetsCorrectShares(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, 1_000_000e6);
 
-        depositLiquidity(lp, BOOTSTRAP_MINT_AMOUNT);
+        depositLiquidity(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -158,7 +172,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         depositLiquidity(lp2, amount_);
 
@@ -176,45 +190,57 @@ contract BootstrapDepositTests is BootstrapTestBase {
 
 contract BootstrapDepositWithPermitTests is BootstrapTestBase {
 
-    uint256 deadline = 5_000_000_000;
-    uint256 lpPK     = 1;
-    uint256 lp2PK    = 2;
-    uint256 nonce;
+    uint256 internal deadline = 5_000_000_000;
+    uint256 internal lp1PK    = 1;
+    uint256 internal lp2PK    = 2;
+    uint256 internal nonce;
 
     function setUp() override public {
         super.setUp();
 
-        lp  = vm.addr(lpPK);
+        lp1 = vm.addr(lp1PK);
         lp2 = vm.addr(lp2PK);
     }
 
     function test_depositWithPermit_ltBootstrapMintAmount() external {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT - 1);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
+        vm.prank(lp1);
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT - 1, lp, deadline, v, r, s);
+        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT - 1, lp1, deadline, v, r, s);
     }
 
     function testFuzz_depositWithPermit_ltBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), amount_, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
+        vm.prank(lp1);
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.depositWithPermit(amount_, lp, deadline, v, r, s);
+        pool.depositWithPermit(amount_, lp1, deadline, v, r, s);
     }
 
     function test_depositWithPermit_exactBootstrapMintAmount() public {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT, lp, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT, lp1, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -223,16 +249,20 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
     }
 
     function test_depositWithPermit_gtBootstrapMintAmount() public {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT + 1);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT + 1);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT + 1, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT + 1, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT + 1, lp, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT + 1, lp1, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
@@ -241,18 +271,22 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT + 1
         });
 
-        assertEq(pool.balanceOf(lp), 1);
+        assertEq(pool.balanceOf(lp1), 1);
     }
 
     function testFuzz_depositWithPermit_gtBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
-        fundsAsset.mint(lp, amount_);
+        fundsAsset.mint(lp1, amount_);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), amount_, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.depositWithPermit(amount_, lp, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.depositWithPermit(amount_, lp1, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        amount_,
@@ -261,16 +295,20 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
             availableLiquidity: amount_
         });
 
-        assertEq(pool.balanceOf(lp), amount_ - BOOTSTRAP_MINT_AMOUNT);
+        assertEq(pool.balanceOf(lp1), amount_ - BOOTSTRAP_MINT_AMOUNT);
     }
 
     function test_depositWithPermit_secondDepositorGetsCorrectShares() external {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT, lp, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT, lp1, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -279,7 +317,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         fundsAsset.mint(lp2, 10_000e6);
 
@@ -301,12 +339,16 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
     function testFuzz_depositWithPermit_secondDepositorGetsCorrectShares(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, 1_000_000e6);
 
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT, lp, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT, lp1, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -315,7 +357,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         fundsAsset.mint(lp2, amount_);
 
@@ -339,29 +381,29 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
 contract BootstrapMintTests is BootstrapTestBase {
 
     function test_mint_ltBootstrapMintAmount() external {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT - 1);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        vm.startPrank(lp);
+        vm.startPrank(lp1);
         fundsAsset.approve(address(pool), BOOTSTRAP_MINT_AMOUNT - 1);
 
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.mint(BOOTSTRAP_MINT_AMOUNT - 1, lp);
+        pool.mint(BOOTSTRAP_MINT_AMOUNT - 1, lp1);
     }
 
     function testFuzz_mint_ltBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        fundsAsset.mint(lp, amount_);
+        fundsAsset.mint(lp1, amount_);
 
-        vm.startPrank(lp);
+        vm.startPrank(lp1);
         fundsAsset.approve(address(pool), amount_);
 
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.mint(amount_, lp);
+        pool.mint(amount_, lp1);
     }
 
     function test_mint_exactBootstrapMintAmount() public {
-        mintPoolShares(lp, BOOTSTRAP_MINT_AMOUNT);
+        mintPoolShares(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -370,11 +412,11 @@ contract BootstrapMintTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
     }
 
     function test_mint_gtBootstrapMintAmount() public {
-        mintPoolShares(lp, BOOTSTRAP_MINT_AMOUNT + 1);
+        mintPoolShares(lp1, BOOTSTRAP_MINT_AMOUNT + 1);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
@@ -383,13 +425,13 @@ contract BootstrapMintTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT + 1
         });
 
-        assertEq(pool.balanceOf(lp), 1);
+        assertEq(pool.balanceOf(lp1), 1);
     }
 
     function testFuzz_mint_gtBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
-        mintPoolShares(lp, amount_);
+        mintPoolShares(lp1, amount_);
 
         assertPoolState({
             totalSupply:        amount_,
@@ -398,11 +440,11 @@ contract BootstrapMintTests is BootstrapTestBase {
             availableLiquidity: amount_
         });
 
-        assertEq(pool.balanceOf(lp), amount_ - BOOTSTRAP_MINT_AMOUNT);
+        assertEq(pool.balanceOf(lp1), amount_ - BOOTSTRAP_MINT_AMOUNT);
     }
 
     function test_mint_secondDepositorGetsCorrectShares() external {
-        mintPoolShares(lp, BOOTSTRAP_MINT_AMOUNT);
+        mintPoolShares(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -411,7 +453,7 @@ contract BootstrapMintTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         mintPoolShares(lp2, 10_000e6);
 
@@ -428,7 +470,7 @@ contract BootstrapMintTests is BootstrapTestBase {
     function testFuzz_mint_secondDepositorGetsCorrectShares(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, 1_000_000e6);
 
-        mintPoolShares(lp, BOOTSTRAP_MINT_AMOUNT);
+        mintPoolShares(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -437,7 +479,7 @@ contract BootstrapMintTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         mintPoolShares(lp2, amount_);
 
@@ -455,45 +497,57 @@ contract BootstrapMintTests is BootstrapTestBase {
 
 contract BootstrapMintWithPermitTests is BootstrapTestBase {
 
-    uint256 deadline = 5_000_000_000;
-    uint256 lpPK     = 1;
-    uint256 lp2PK    = 2;
-    uint256 nonce;
+    uint256 internal deadline = 5_000_000_000;
+    uint256 internal lp1PK    = 1;
+    uint256 internal lp2PK    = 2;
+    uint256 internal nonce;
 
     function setUp() override public {
         super.setUp();
 
-        lp  = vm.addr(lpPK);
+        lp1  = vm.addr(lp1PK);
         lp2 = vm.addr(lp2PK);
     }
 
     function test_mintWithPermit_ltBootstrapMintAmount() external {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT - 1);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
+        vm.prank(lp1);
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT - 1, lp, BOOTSTRAP_MINT_AMOUNT - 1, deadline, v, r, s);
+        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT - 1, lp1, BOOTSTRAP_MINT_AMOUNT - 1, deadline, v, r, s);
     }
 
     function testFuzz_mintWithPermit_ltBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), amount_, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
+        vm.prank(lp1);
         vm.expectRevert(ARITHMETIC_ERROR);
-        pool.mintWithPermit(amount_, lp, amount_, deadline, v, r, s);
+        pool.mintWithPermit(amount_, lp1, amount_, deadline, v, r, s);
     }
 
     function test_mintWithPermit_exactBootstrapMintAmount() public {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT, lp, BOOTSTRAP_MINT_AMOUNT, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT, lp1, BOOTSTRAP_MINT_AMOUNT, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -502,16 +556,20 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
     }
 
     function test_mintWithPermit_gtBootstrapMintAmount() public {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT + 1);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT + 1);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT + 1, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT + 1, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT + 1, lp, BOOTSTRAP_MINT_AMOUNT + 1, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT + 1, lp1, BOOTSTRAP_MINT_AMOUNT + 1, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
@@ -520,18 +578,22 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT + 1
         });
 
-        assertEq(pool.balanceOf(lp), 1);
+        assertEq(pool.balanceOf(lp1), 1);
     }
 
     function testFuzz_mintWithPermit_gtBootstrapMintAmount(uint256 amount_) external {
         amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
-        fundsAsset.mint(lp, amount_);
+        fundsAsset.mint(lp1, amount_);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), amount_, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.mintWithPermit(amount_, lp, amount_, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.mintWithPermit(amount_, lp1, amount_, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        amount_,
@@ -540,16 +602,20 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
             availableLiquidity: amount_
         });
 
-        assertEq(pool.balanceOf(lp), amount_ - BOOTSTRAP_MINT_AMOUNT);
+        assertEq(pool.balanceOf(lp1), amount_ - BOOTSTRAP_MINT_AMOUNT);
     }
 
     function test_mintWithPermit_secondDepositorGetsCorrectShares() external {
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT, lp, BOOTSTRAP_MINT_AMOUNT, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT, lp1, BOOTSTRAP_MINT_AMOUNT, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -558,7 +624,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         fundsAsset.mint(lp2, 10_000e6);
 
@@ -580,12 +646,16 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
     function testFuzz_mintWithPermit_secondDepositorGetsCorrectShares(uint256 amount_) external {
         amount_ = constrictToRange(amount_, 1, 1_000_000e6);
 
-        fundsAsset.mint(lp, BOOTSTRAP_MINT_AMOUNT);
+        fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lpPK);
+        (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT, nonce, deadline, lp1PK);
 
-        vm.prank(lp);
-        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT, lp, BOOTSTRAP_MINT_AMOUNT, deadline, v, r, s);
+        vm.prank(lp1);
+        pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT, lp1, BOOTSTRAP_MINT_AMOUNT, deadline, v, r, s);
 
         assertPoolState({
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
@@ -594,7 +664,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
             availableLiquidity: BOOTSTRAP_MINT_AMOUNT
         });
 
-        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         fundsAsset.mint(lp2, amount_);
 

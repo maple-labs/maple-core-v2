@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console } from "../../modules/contract-test-utils/contracts/test.sol";
-
-import { LifecycleBase } from "./LifecycleBase.sol";
-
 import {
     IDebtLockerLike,
     IERC20Like,
@@ -15,6 +11,8 @@ import {
     IPoolV1Like,
     IPoolV2Like
 } from "./Interfaces.sol";
+
+import { LifecycleBase } from "./LifecycleBase.sol";
 
 contract MigrationPreparationTest is LifecycleBase {
 

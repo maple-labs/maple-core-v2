@@ -7,7 +7,7 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract SetMinRatioTests is TestBase {
 
-    address COLLATERAL_ASSET  = address(new Address());
+    address internal COLLATERAL_ASSET = address(new Address());
 
     function test_setMinRatio_notAuthorized() external {
         vm.expectRevert("PM:SMR:NOT_AUTHORIZED");
@@ -45,7 +45,7 @@ contract SetMinRatioTests is TestBase {
 
 contract SetSlippageTests is TestBase {
 
-    address COLLATERAL_ASSET  = address(new Address());
+    address internal COLLATERAL_ASSET = address(new Address());
 
     function test_setAllowedSlippage_notAuthorized() external {
         vm.expectRevert("PM:SAS:NOT_AUTHORIZED");

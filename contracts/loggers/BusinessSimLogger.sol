@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IERC20Like,
-    ILoanLike,
-    ILoanManagerLike,
-    IPoolManagerLike
-} from "../interfaces/Interfaces.sol";
+import { IERC20Like, ILoanManagerLike, IPoolManagerLike } from "../interfaces/Interfaces.sol";
 
 import { Logger } from "./Logger.sol";
 
 contract BusinessSimLogger is Logger {
 
-    address poolDelegate;
-    address treasury;
+    address internal poolDelegate;
+    address internal treasury;
 
-    IERC20Like       asset;
-    ILoanManagerLike loanManager;
-    IPoolManagerLike poolManager;
+    IERC20Like       internal asset;
+    ILoanManagerLike internal loanManager;
+    IPoolManagerLike internal poolManager;
 
     constructor(
         address loanManager_,

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
-
+import { Address }    from "../../modules/contract-test-utils/contracts/test.sol";
 import { Refinancer } from "../../modules/loan-v400/contracts/Refinancer.sol";
 
 import { LoanScenario }   from "../../contracts/LoanScenario.sol";
@@ -105,7 +104,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -125,7 +124,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-1";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -147,7 +146,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-2";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -171,7 +170,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-3";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -193,7 +192,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-4";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -215,7 +214,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-5";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -234,7 +233,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-6";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();
@@ -252,7 +251,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
         string memory fileName = "business-sim-multi-loan-7";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
 
         setUpBusinessLogger(fileName);
         simulation.run();

@@ -1,55 +1,39 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address   } from "../../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { DepositCoverAction     } from "../actions/DepositCoverAction.sol";
+import { ILoanLike, ILoanManagerLike, IPoolLike, IPoolManagerLike } from "../interfaces/Interfaces.sol";
+
 import { DepositLiquidityAction } from "../actions/DepositLiquidityAction.sol";
-import { LoanActionGenerator    } from "../actions/LoanActionGenerator.sol";
+import { LoanActionGenerator }    from "../actions/LoanActionGenerator.sol";
 
-import { IActionGenerator } from "../interfaces/IActionGenerator.sol";
-import {
-    IERC20Like,
-    IGlobalsLike,
-    ILoanLike,
-    ILoanManagerLike,
-    IPoolLike,
-    IPoolManagerLike,
-    IWithdrawalManagerLike
-} from "../interfaces/Interfaces.sol";
+import { BusinessSimLogger } from "../loggers/BusinessSimLogger.sol";
+import { LoanLogger }        from "../loggers/LoanLogger.sol";
+import { LoanManagerLogger } from "../loggers/LoanManagerLogger.sol";
+import { PoolLogger }        from "../loggers/PoolLogger.sol";
+import { PoolManagerLogger } from "../loggers/PoolManagerLogger.sol";
 
-import { BalanceLogger           } from "../loggers/BalanceLogger.sol";
-import { BusinessSimLogger       } from "../loggers/BusinessSimLogger.sol";
-import { GlobalsLogger           } from "../loggers/GlobalsLogger.sol";
-import { LoanLogger              } from "../loggers/LoanLogger.sol";
-import { LoanManagerLogger       } from "../loggers/LoanManagerLogger.sol";
-import { PoolLogger              } from "../loggers/PoolLogger.sol";
-import { PoolManagerLogger       } from "../loggers/PoolManagerLogger.sol";
-import { WithdrawalManagerLogger } from "../loggers/WithdrawalManagerLogger.sol";
-
-import { LoanScenario   } from "../LoanScenario.sol";
+import { LoanScenario }   from "../LoanScenario.sol";
 import { PoolSimulation } from "../PoolSimulation.sol";
 
 import { TestBase } from "./TestBase.sol";
 
 contract SimulationBase is TestBase {
 
-    uint256 initialCover;
-    uint256 initialLiquidity;
+    uint256 internal initialCover;
+    uint256 internal initialLiquidity;
 
-    PoolSimulation simulation;
+    PoolSimulation internal simulation;
 
-    LoanScenario[] scenarios;
+    LoanScenario[] internal scenarios;
 
     function setUp() public virtual override {
         super.setUp();
     }
 
-    function setUpSimulation(string memory filepath_) public {
-        IPoolLike        pool_        = IPoolLike(address(pool));
+    function setUpSimulation() public {
         IPoolManagerLike poolManager_ = IPoolManagerLike(address(poolManager));
-        ILoanManagerLike loanManager_ = ILoanManagerLike(address(loanManager));
 
         // Create the simulation.
         simulation = new PoolSimulation();
@@ -61,13 +45,13 @@ contract SimulationBase is TestBase {
             timestamp_:   block.timestamp,
             description_: "Deposit assets into the pool",
             poolManager_: poolManager_,
-            lp_:          address(new Address()),  // TODO: Replace Address with randomly generated EOA.
+            lp_:          address(new Address()),          // TODO: Replace Address with randomly generated EOA.
             amount_:      initialLiquidity
         }));
 
         // Generate all the actions based on the loan scenarios.
         LoanActionGenerator generator_ = new LoanActionGenerator();
-        for (uint i_; i_ < scenarios.length; i_++) {
+        for (uint256 i_; i_ < scenarios.length; i_++) {
             simulation.add(generator_.generateActions(scenarios[i_]));
         }
     }

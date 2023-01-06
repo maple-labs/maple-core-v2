@@ -8,12 +8,12 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract UnrealizedLossesTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp1      = address(new Address());
-    address lp2      = address(new Address());
-    address lp3      = address(new Address());
+    address internal borrower = address(new Address());
+    address internal lp1      = address(new Address());
+    address internal lp2      = address(new Address());
+    address internal lp3      = address(new Address());
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -48,7 +48,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertLiquidationInfo({
             loan:                loan,
             principal:           4_000_000e6,
-            interest:            3_600e6,    // 1_000_000s of 0.36e6 IR
+            interest:            3_600e6,        // 1_000_000s of 0.36e6 IR
             lateInterest:        0,
             platformFees:        1157.138508e6,
             liquidatorExists:    false,
@@ -92,7 +92,8 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         vm.prank(lp1);
         uint256 withdrawnAssets = pool.redeem(1_500_000e6, lp1, lp1);
 
-        assertEq(withdrawnAssets, 900_000e6); // total assets (10_003_600e6) - unrealized losses (4_003_600e6) = 6_000_000e6 * lp1 pool share (0.15) = 900_000e6
+        // Total assets (10_003_600e6) - unrealized losses (4_003_600e6) = 6_000_000e6 * lp1 pool share (0.15) = 900_000e6
+        assertEq(withdrawnAssets, 900_000e6);
 
         assertEq(pool.balanceOf(address(withdrawalManager)), 0);
         assertEq(pool.balanceOf(address(lp1)),               0);
@@ -117,7 +118,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertLiquidationInfo({
             loan:                loan,
             principal:           4_000_000e6,
-            interest:            3_600e6,    // 1_000_000s of 0.36e6 IR
+            interest:            3_600e6,        // 1_000_000s of 0.36e6 IR
             lateInterest:        0,
             platformFees:        1157.138508e6,
             liquidatorExists:    false,
@@ -161,7 +162,8 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         vm.prank(lp1);
         uint256 withdrawnAssets = pool.redeem(1_500_000e6, lp1, lp1);
 
-        // Total assets (10_008_280e6) - unrealized losses (4_003_600e6) = 6_004_680e6 * lp1 pool share (0.15) = 900_702e6. But since there's not enough liquidity, lp1 gets 800_000e6
+        // Total assets (10_008_280e6) - unrealized losses (4_003_600e6) = 6_004_680e6 * lp1 pool share (0.15) = 900_702e6.
+        // But since there's not enough liquidity, lp1 gets 800_000e6
         // Total Requested:  900_702e6
         // Total Available:  800_000e6
         // Total Shares:     1_500_000e6 * 800_000e6 / 900_702e6 = 1_332_294.143901 shares
@@ -171,8 +173,8 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(address(withdrawalManager)), 1_500_000e6 - (1_500_000e6 * uint256(800_000e6) / 900_702e6));
         assertEq(pool.balanceOf(address(withdrawalManager)), 167_705.856099e6);
         assertEq(pool.balanceOf(address(lp1)),               0);
-        assertEq(fundsAsset.balanceOf(address(pool)),        1);             // Rounding error
-        assertEq(fundsAsset.balanceOf(address(lp1)),         800_000e6 - 1); // Rounding error
+        assertEq(fundsAsset.balanceOf(address(pool)),        1);              // Rounding error
+        assertEq(fundsAsset.balanceOf(address(lp1)),         800_000e6 - 1);  // Rounding error
     }
 
     function test_unrealizedLosses_depositWithUL() external {
@@ -184,7 +186,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertLiquidationInfo({
             loan:                loan,
             principal:           4_000_000e6,
-            interest:            3_600e6,    // 1_000_000s of 0.36e6 IR
+            interest:            3_600e6,        // 1_000_000s of 0.36e6 IR
             lateInterest:        0,
             platformFees:        1157.138508e6,
             liquidatorExists:    false,
@@ -211,7 +213,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         uint256 exitShares      = pool.convertToExitShares(2_000_000e6);
         uint256 depositedShares = depositLiquidity(lp4, 2_000_000e6);
 
-        assertEq(exitShares, (2_000_000e6 * 10_000_000e6 / uint256(6_000_000e6)) + 1);  // totalSupply / (totalAssets - unrealizedLosses) + 1
+        assertEq(exitShares, (2_000_000e6 * 10_000_000e6 / uint256(6_000_000e6)) + 1);    // totalSupply / (totalAssets - unrealizedLosses) + 1
         assertEq(exitShares, 3_333_333.333334e6);
 
         assertEq(depositedShares, (2_000_000e6 * 10_000_000e6 / uint256(10_003_600e6)));  // totalSupply / totalAssets (rounding not necessary)

@@ -9,9 +9,9 @@ import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
 
 contract PoolViewFunctionsFuzzTests is TestBase {
 
-    address user;
+    address internal user;
 
-    LoanManagerHarness loanManagerHarness;
+    LoanManagerHarness internal loanManagerHarness;
 
     function setUp() public override {
         super.setUp();
@@ -43,43 +43,57 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(poolManager.unrealizedLosses(), pool.unrealizedLosses());
     }
 
-    function testFuzz_convertToAssets_whenTotalSupplyIsZero(uint256 sharesAmount) external {
-        sharesAmount = constrictToRange(sharesAmount, 0, 1e29);
+    function testFuzz_convertToAssets_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
+        sharesAmount_ = constrictToRange(sharesAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),                 0);
-        assertEq(pool.convertToAssets(sharesAmount), sharesAmount);
+        assertEq(pool.convertToAssets(sharesAmount_), sharesAmount_);
     }
 
-    function testFuzz_convertToAssets_whenTotalSupplyExists(uint256 sharesAmount, uint256 amountToDeposit, uint256 principalOut_, uint256 accountedInterest_) external {
-        sharesAmount       = constrictToRange(sharesAmount,       0, 1e29);
-        amountToDeposit    = constrictToRange(amountToDeposit,    1, 1e29);
+    function testFuzz_convertToAssets_whenTotalSupplyExists(
+        uint256 sharesAmount_,
+        uint256 amountToDeposit_,
+        uint256 principalOut_,
+        uint256 accountedInterest_
+    )
+        external
+    {
+        sharesAmount_      = constrictToRange(sharesAmount_,      0, 1e29);
+        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
         principalOut_      = constrictToRange(principalOut_,      1, 1e29);
         accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit);
+        _mintToUserAndDepositToPool(user, amountToDeposit_);
 
         // Check totalSupply increased
-        assertEq(pool.totalSupply(), amountToDeposit);
+        assertEq(pool.totalSupply(), amountToDeposit_);
 
-        uint256 assetsAmount = pool.convertToAssets(sharesAmount);
+        uint256 assetsAmount = pool.convertToAssets(sharesAmount_);
 
         // Calculate the expected amount
-        assertEq(assetsAmount, (sharesAmount * pool.totalAssets()) / pool.totalSupply());
+        assertEq(assetsAmount, (sharesAmount_ * pool.totalAssets()) / pool.totalSupply());
     }
 
-    function testFuzz_convertToShares_whenTotalSupplyIsZero(uint256 assetAmount) external {
-        assetAmount = constrictToRange(assetAmount, 0, 1e29);
+    function testFuzz_convertToShares_whenTotalSupplyIsZero(uint256 assetAmount_) external {
+        assetAmount_ = constrictToRange(assetAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),                0);
-        assertEq(pool.convertToShares(assetAmount), assetAmount);
+        assertEq(pool.convertToShares(assetAmount_), assetAmount_);
     }
 
-    function testFuzz_convertToShares_whenTotalSupplyExists(uint256 assetAmount, uint256 amountToDeposit, uint256 principalOut_, uint256 accountedInterest_) external {
-        assetAmount        = constrictToRange(assetAmount,        0, 1e29);
-        amountToDeposit    = constrictToRange(amountToDeposit,    1, 1e29);
+    function testFuzz_convertToShares_whenTotalSupplyExists(
+        uint256 assetAmount_,
+        uint256 amountToDeposit_,
+        uint256 principalOut_,
+        uint256 accountedInterest_
+    )
+        external
+    {
+        assetAmount_       = constrictToRange(assetAmount_,       0, 1e29);
+        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
         principalOut_      = constrictToRange(principalOut_,      1, 1e29);
         accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
 
@@ -87,83 +101,101 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
 
-        _mintToUserAndDepositToPool(user, amountToDeposit);
+        _mintToUserAndDepositToPool(user, amountToDeposit_);
 
         // Check totalSupply increased
-        assertEq(pool.totalSupply(), amountToDeposit);
+        assertEq(pool.totalSupply(), amountToDeposit_);
 
-        uint256 sharesAmount = pool.convertToShares(assetAmount);
+        uint256 sharesAmount = pool.convertToShares(assetAmount_);
 
         // Calculate the expected amount
-        assertEq(sharesAmount, (assetAmount * pool.totalSupply()) / pool.totalAssets());
+        assertEq(sharesAmount, (assetAmount_ * pool.totalSupply()) / pool.totalAssets());
     }
 
-    function testFuzz_convertToExitShares(uint256 assetAmount, uint256 amountToDeposit, uint256 principalOut_, uint256 accountedInterest_, uint256 unrealizedLosses_) external {
-        assetAmount        = constrictToRange(assetAmount,        0, 1e29);
-        amountToDeposit    = constrictToRange(amountToDeposit,    1, 1e29);
+    function testFuzz_convertToExitShares(
+        uint256 assetAmount_,
+        uint256 amountToDeposit_,
+        uint256 principalOut_,
+        uint256 accountedInterest_,
+        uint256 unrealizedLosses_
+    )
+        external
+    {
+        assetAmount_       = constrictToRange(assetAmount_,       0, 1e29);
+        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
         principalOut_      = constrictToRange(principalOut_,      1, 1e29);
         accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
-        unrealizedLosses_  = constrictToRange(unrealizedLosses_,  1, amountToDeposit);
+        unrealizedLosses_  = constrictToRange(unrealizedLosses_,  1, amountToDeposit_);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
         loanManagerHarness.__setUnrealizedLosses(unrealizedLosses_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit);
+        _mintToUserAndDepositToPool(user, amountToDeposit_);
 
         // Check totalSupply increased
-        assertEq(pool.totalSupply(), amountToDeposit);
+        assertEq(pool.totalSupply(), amountToDeposit_);
 
-        assertEq(pool.convertToExitShares(assetAmount), _divRoundUp(assetAmount * pool.totalSupply(), pool.totalAssets() - pool.unrealizedLosses()));
+        assertEq(
+            pool.convertToExitShares(assetAmount_),
+            _divRoundUp(assetAmount_ * pool.totalSupply(), pool.totalAssets() - pool.unrealizedLosses())
+        );
     }
 
-    function testFuzz_previewDeposit_whenTotalSupplyIsZero(uint256 assetAmount) external {
-        assetAmount = constrictToRange(assetAmount, 0, 1e29);
+    function testFuzz_previewDeposit_whenTotalSupplyIsZero(uint256 assetAmount_) external {
+        assetAmount_ = constrictToRange(assetAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),               0);
-        assertEq(pool.previewDeposit(assetAmount), assetAmount);
+        assertEq(pool.previewDeposit(assetAmount_), assetAmount_);
     }
 
-    function testFuzz_previewDeposit_whenTotalSupplyExists(uint256 assetAmount, uint256 amountToDeposit) external {
-        assetAmount     = constrictToRange(assetAmount,     0, 1e29);
-        amountToDeposit = constrictToRange(amountToDeposit, 1, 1e29);
+    function testFuzz_previewDeposit_whenTotalSupplyExists(uint256 assetAmount_, uint256 amountToDeposit_) external {
+        assetAmount_     = constrictToRange(assetAmount_,     0, 1e29);
+        amountToDeposit_ = constrictToRange(amountToDeposit_, 1, 1e29);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit);
+        _mintToUserAndDepositToPool(user, amountToDeposit_);
 
         // Check totalSupply increased
-        assertEq(pool.totalSupply(), amountToDeposit);
+        assertEq(pool.totalSupply(), amountToDeposit_);
 
-        uint256 sharesAmount = pool.previewDeposit(assetAmount);
+        uint256 sharesAmount = pool.previewDeposit(assetAmount_);
 
         // Calculate the expected amount
-        assertEq(sharesAmount, (assetAmount * pool.totalSupply()) / pool.totalAssets());
+        assertEq(sharesAmount, (assetAmount_ * pool.totalSupply()) / pool.totalAssets());
     }
 
-    function testFuzz_previewMint_whenTotalSupplyIsZero(uint256 sharesAmount) external {
-        sharesAmount = constrictToRange(sharesAmount, 0, 1e29);
+    function testFuzz_previewMint_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
+        sharesAmount_ = constrictToRange(sharesAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),             0);
-        assertEq(pool.previewMint(sharesAmount), sharesAmount);
+        assertEq(pool.previewMint(sharesAmount_), sharesAmount_);
     }
 
-    function testFuzz_previewMint_whenTotalSupplyExists(uint256 sharesAmount, uint256 amountToDeposit, uint256 principalOut_, uint256 accountedInterest_) external {
-        sharesAmount       = constrictToRange(sharesAmount,       0, 1e29);
-        amountToDeposit    = constrictToRange(amountToDeposit,    1, 1e29);
+    function testFuzz_previewMint_whenTotalSupplyExists(
+        uint256 sharesAmount_,
+        uint256 amountToDeposit_,
+        uint256 principalOut_,
+        uint256 accountedInterest_
+    )
+        external
+    {
+        sharesAmount_      = constrictToRange(sharesAmount_,      0, 1e29);
+        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
         principalOut_      = constrictToRange(principalOut_,      1, 1e29);
         accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit);
+        _mintToUserAndDepositToPool(user, amountToDeposit_);
 
         // Check totalSupply increased
-        assertEq(pool.totalSupply(), amountToDeposit);
+        assertEq(pool.totalSupply(), amountToDeposit_);
 
-        uint256 assetsAmount = pool.previewMint(sharesAmount);
+        uint256 assetsAmount = pool.previewMint(sharesAmount_);
 
         // Calculate the expected amount
-        assertEq(assetsAmount, _divRoundUp(sharesAmount * pool.totalAssets(), pool.totalSupply()));
+        assertEq(assetsAmount, _divRoundUp(sharesAmount_ * pool.totalAssets(), pool.totalSupply()));
     }
 
     function _mintToUserAndDepositToPool(address user_, uint256 amountToDeposit_) internal {

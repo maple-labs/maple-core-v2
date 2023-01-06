@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
 import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
 
@@ -193,7 +193,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         vm.warp(start + 2_400_000);
 
-        // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 800_00s of loan2 at 0.15 IR + 200_000s of loan3 at 0.36 IR
+        // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR
+        // + 800_00s of loan2 at 0.15 IR + 200_000s of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 120_000e6 + 72_000e6);
 
         closeLoan(loan2);
@@ -203,7 +204,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertLoanManager({
             accruedInterest:       0,
-            accountedInterest:     72_000e6 + 90_000e6, // 72_000e6 from 200_000s of loan3 and 90_000e6 from loan1
+            accountedInterest:     72_000e6 + 90_000e6,  // 72_000e6 from 200_000s of loan3 and 90_000e6 from loan1
             principalOut:          5_000_000e6,
             assetsUnderManagement: 5_162_000e6,
             issuanceRate:          0.36e6 * 1e30,
@@ -231,7 +232,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertLoanManager({
             accruedInterest:       0,
-            accountedInterest:     90_000e6, // 90_000e6 from loan1
+            accountedInterest:     90_000e6,           // 90_000e6 from loan1
             principalOut:          5_000_000e6,
             assetsUnderManagement: 5_090_000e6,
             issuanceRate:          0.30e6 * 1e30,
@@ -246,7 +247,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         vm.warp(start + 3_100_000);
 
-        // Deposits + 90_000s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 Principal + 1_000_000 of loan3 at 0.36 IR + 100_000s of loan3 at 0.30
+        // Deposits + 90_000s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 Principal
+        // + 1_000_000 of loan3 at 0.36 IR + 100_000s of loan3 at 0.30
         uint256 totalAssets =  4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 360_000e6 + 30_000e6;
         assertTotalAssets(totalAssets);
 
@@ -261,7 +263,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             assertEq(fundsAsset.balanceOf(address(pool)),                                       7_558_000e6);
 
             // Requested shares * available liquidity / (total cycle shares * total assets / totalSupply)
-            uint256 redeemableShares1 = 4_000_000e6 * 7_558_000e6  / ((4_000_000e6 + 5_893_909.626719e6) * totalAssets / 11_803_930.790178e6);
+            uint256 redeemableShares1 =
+                4_000_000e6 * 7_558_000e6 / ((4_000_000e6 + 5_893_909.626719e6) * totalAssets / 11_803_930.790178e6);
             assertEq(redeemableShares1, 2_844_951.367431e6);
 
             vm.prank(lp1);
@@ -272,7 +275,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         }
 
         // Remove withdrawn assets from total assets
-        totalAssets = (4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 360_000e6 + 30_000e6) - 3_055_617.156473e6;
+        totalAssets =
+            (4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 360_000e6 + 30_000e6) - 3_055_617.156473e6;
         assertTotalAssets(totalAssets);
 
         {
@@ -306,7 +310,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertLoanManager({
             accruedInterest:       0,
-            accountedInterest:     90_000e6, // 90_000e6 from loan1
+            accountedInterest:     90_000e6,           // 90_000e6 from loan1
             principalOut:          1_000_000e6,
             assetsUnderManagement: 1_090_000e6,
             issuanceRate:          0,
@@ -354,7 +358,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             assertEq(redeemableShares1, 938_352.761743e6);
 
             vm.prank(lp1);
-            uint256 assets1 = pool.redeem(1_155_048.632569e6, lp1, lp1); // Original lp1 shares - lp1 shares previously withdrawn
+            uint256 assets1 = pool.redeem(1_155_048.632569e6, lp1, lp1);  // Original lp1 shares - lp1 shares previously withdrawn
 
             assertEq(assets1, (redeemableShares1 * totalAssets / 3_215_321.131417e6));
             assertEq(assets1, 1_143_658.602239e6);
@@ -372,7 +376,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             uint256 redeemableShares2 = 1701938.063706e6 * 1_685_155.111355e6 / (1_701_938.063706e6 * totalAssets / 2_276_968.369674e6);
 
             vm.prank(lp2);
-            uint256 assets2 = pool.redeem(1701938.063706e6, lp2, lp2); // Original lp2 shares - lp2 shares previously withdrawn
+            uint256 assets2 = pool.redeem(1701938.063706e6, lp2, lp2);  // Original lp2 shares - lp2 shares previously withdrawn
 
             assertEq(assets2, (totalAssets * redeemableShares2 / 2_276_968.369674e6));
             assertEq(assets2, 1_685_155.111355e6);
@@ -387,13 +391,12 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertEq(pool.totalSupply(), 894_326.775750e6);
 
-        // Since the loan1 was never finalized, LPS still have a balance greater than 0, but are locked in the withdrawal manager until they remove.
+        // Since the loan1 was never finalized, LPS still have a balance greater than 0,
+        // but are locked in the withdrawal manager until they remove.
         assertEq(pool.balanceOf(address(withdrawalManager)), 894_326.775750e6);  // All funds are in WM
         assertEq(withdrawalManager.lockedShares(lp1),        216_695.870826e6);
         assertEq(withdrawalManager.lockedShares(lp2),        319_296.469782e6);
         assertEq(withdrawalManager.lockedShares(lp3),        358_334.435142e6);
-
-
     }
 
     // Test 12
@@ -452,7 +455,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6 + 72_000_000_000_000_000e6);
 
-        // Although the values here don't revert, if they were a bit higher, they would in the `getNextPaymentBreakdown` function
+        // Although the values here don't revert, if they were a bit higher, they would in the `getNextPaymentBreakdown` function.
         // Currently, the way out of the situation would be to either:
         // 1. Refinance using a custom refinancer that can manually alter the storage of the interest rate.
         // 2. Close the loan, paying only the closing interest.
@@ -460,7 +463,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         closeLoan(loan1);
 
         // TotalAssets went down due to the loan closure.
-        assertTotalAssets(4_000_000e6 + 90_000e6); // 1% of 1_000_000e6, removing management fees
+        assertTotalAssets(4_000_000e6 + 90_000e6);  // 1% of 1_000_000e6, removing management fees
 
         // Loan Manager should be in a coherent state
         assertLoanManager({
@@ -578,7 +581,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         makePayment(loan1);
 
-        assertTotalAssets(4_000_000e6 + 9_000e6); // 1 day worth of late interest
+        assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
         assertLoanManager({
             accruedInterest:       0,
@@ -617,7 +620,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         makePayment(loan1);
 
-        assertTotalAssets(4_000_000e6 + 9_000e6); // 1 day worth of late interest
+        assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
         assertLoanManager({
             accruedInterest:       0,
@@ -768,7 +771,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         vm.prank(lp1);
-        pool.requestRedeem(2_000_000e6, lp1); // Request half of the shares
+        pool.requestRedeem(2_000_000e6, lp1);  // Request half of the shares
 
         vm.prank(poolDelegate);
         poolManager.setWithdrawalManager(address(0));
@@ -953,7 +956,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             issuanceRate:          0,
             domainStart:           start + 75 days,
             domainEnd:             start + 75 days,
-            unrealizedLosses:      1_000_000e6 + (dailyLoanInterest * 70)  // Note: 10 days from refinance interest and 60 days from accrued interest after refinance
+            // Note: 10 days from refinance interest and 60 days from accrued interest after refinance
+            unrealizedLosses:      1_000_000e6 + (dailyLoanInterest * 70)
         });
 
         assertPaymentInfo({
@@ -967,7 +971,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;  // NOTE: 10 days from refinance interest and 60 days from payment interval
+        // NOTE: 10 days from refinance interest and 60 days from payment interval
+        platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
 
         uint256 platformManagementFee = dailyLoanInterestGross * 75 * 0.08e6 / 1e6;
 
@@ -1103,7 +1108,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6 + grossRefinanceInterest,
-            incomingFees:      25_000e6 + 750e6 + 20_000e6 + 300e6,  // 2_500_000s of platform fees + 2_500_000s of delegate service fees + service fees for period after refinance
+            // 2_500_000s of platform fees + 2_500_000s of delegate service fees + service fees for period after refinance
+            incomingFees:      25_000e6 + 750e6 + 20_000e6 + 300e6,
             refinanceInterest: grossRefinanceInterest,
             paymentDueDate:    start + 4_500_000,
             paymentsRemaining: 3
@@ -1285,8 +1291,10 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            incomingInterest:  grossRefinanceInterest + 200_000e6 + 2 days * 0.11e6,  // Refinance interest + installment + late interest
-            incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,                   // 10_000e6 of platform service fees + 300e6 of delegate service fees.
+            // Refinance interest + installment + late interest
+            incomingInterest:  grossRefinanceInterest + 200_000e6 + 2 days * 0.11e6,
+            // 10_000e6 of platform service fees + 300e6 of delegate service fees.
+            incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,
             refinanceInterest: grossRefinanceInterest,
             paymentDueDate:    start + 3_500_000,
             paymentsRemaining: 3
@@ -1317,7 +1325,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.triggerDefault(address(loan1), liquidatorFactory);
 
-        assertTotalAssets(1_500_000e6); // Only the amount in the pool
+        assertTotalAssets(1_500_000e6);  // Only the amount in the pool
 
         assertPaymentInfo({
             loan:                loan1,
@@ -1350,7 +1358,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(400_000_000e6);
 
-        for (uint256 i = 0; i < 150; i++) {
+        for (uint256 i; i < 150; ++i) {
             fundAndDrawdownLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
@@ -1370,7 +1378,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             accountedInterest:     0,
             principalOut:          150_000_000e6,
             assetsUnderManagement: 150_000_000e6 + 150 * 90_000e6,
-            issuanceRate:          150 * 0.09e6 * 1e30,               // All loans are late
+            issuanceRate:          150 * 0.09e6 * 1e30,             // All loans are late
             domainStart:           start,
             domainEnd:             start + 1_000_000,
             unrealizedLosses:      0
@@ -1388,7 +1396,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             accountedInterest:     150 * 90_000e6,
             principalOut:          150_000_000e6,
             assetsUnderManagement: 150_000_000e6 + 150 * 90_000e6,
-            issuanceRate:          0,               // All loans are late
+            issuanceRate:          0,                               // All loans are late
             domainStart:           start + 2_000_000,
             domainEnd:             start + 2_000_000,
             unrealizedLosses:      0

@@ -6,10 +6,10 @@ import { FuzzBase } from "../../contracts/utilities/FuzzBase.sol";
 contract DepositFuzzTests is FuzzBase {
 
     // Avoid stack too deep in tests
-    uint256 convertedAssets;
-    uint256 convertedShares;
-    uint256 convertedExitAssets;
-    uint256 convertedExitShares;
+    uint256 internal convertedAssets;
+    uint256 internal convertedShares;
+    uint256 internal convertedExitAssets;
+    uint256 internal convertedExitShares;
 
     function testDeepFuzz_deposit_all(
         address depositor,

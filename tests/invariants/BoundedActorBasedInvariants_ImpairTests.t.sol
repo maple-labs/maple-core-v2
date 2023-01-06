@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, InvariantTest } from "../../modules/contract-test-utils/contracts/test.sol";
-import { IMapleLoan }                      from "../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFeeManager }            from "../../modules/loan-v400/contracts/interfaces/IMapleLoanFeeManager.sol";
-
-import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAssertions.sol";
-
 import { LoanHandlerWithImpairment } from "./actors/LoanHandlerWithImpairment.sol";
 import { LpHandler }               from "./actors/LpHandler.sol";
 
@@ -14,17 +8,17 @@ import { BaseInvariants } from "./BaseInvariants.t.sol";
 
 contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
 
-    /******************************************************************************************************************************/
-    /*** State Variables                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** State Variables                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
-    uint256 constant public NUM_BORROWERS = 5;
-    uint256 constant public NUM_LPS       = 10;
-    uint256 constant public MAX_NUM_LOANS = 20;
+    uint256 internal constant NUM_BORROWERS = 5;
+    uint256 internal constant NUM_LPS       = 10;
+    uint256 internal constant MAX_NUM_LOANS = 20;
 
-    /******************************************************************************************************************************/
-    /*** Setup Function                                                                                                         ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Setup Function                                                                                                                 ***/
+    /**************************************************************************************************************************************/
 
     function setUp() public override {
         super.setUp();
@@ -54,9 +48,9 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
         targetSender(address(0xdeed));
     }
 
-    /******************************************************************************************************************************/
-    /*** Invariants Removed                                                                                                     ***/
-    /*******************************************************************************************************************************
+    /**************************************************************************************************************************************/
+    /*** Invariants Removed                                                                                                             ***/
+    /***************************************************************************************************************************************
 
      * Loan Manager
         * Invariant G: unrealizedLosses == 0
@@ -71,11 +65,11 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
         * Invariant H: convertToExitShares == convertToShares
             NOTE: Not applicable as unrealized losses changes exchange rate
 
-    *******************************************************************************************************************************/
+    ***************************************************************************************************************************************/
 
-    /******************************************************************************************************************************/
-    /*** Loan Iteration Invariants (Loan and LoanManager)                                                                       ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
+    /**************************************************************************************************************************************/
 
     function invariant_loan_A_B_loanManager_L_M_N() external useCurrentTimestamp {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
@@ -91,9 +85,9 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
         }
     }
 
-    /******************************************************************************************************************************/
-    /*** Loan Manager Non-Iterative Invariants                                                                                  ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Loan Manager Non-Iterative Invariants                                                                                          ***/
+    /**************************************************************************************************************************************/
 
     function invariant_loanManager_A() external useCurrentTimestamp { assert_loanManager_invariant_A(); }
     function invariant_loanManager_B() external useCurrentTimestamp { assert_loanManager_invariant_B(); }
@@ -106,9 +100,9 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
     function invariant_loanManager_J() external useCurrentTimestamp { assert_loanManager_invariant_J(); }
     function invariant_loanManager_K() external useCurrentTimestamp { assert_loanManager_invariant_K(); }
 
-    /******************************************************************************************************************************/
-    /*** Pool Invariants                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Invariants                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
     function invariant_pool_A() external useCurrentTimestamp { assert_pool_invariant_A(); }
     function invariant_pool_D() external useCurrentTimestamp { assert_pool_invariant_D(); }
@@ -133,9 +127,9 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
         assert_pool_invariant_G(sumBalanceOf);
     }
 
-    /******************************************************************************************************************************/
-    /*** Pool Manager Invariants                                                                                                ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Manager Invariants                                                                                                        ***/
+    /**************************************************************************************************************************************/
 
     function invariant_poolManager_A() external useCurrentTimestamp {
         assert_poolManager_invariant_A();
@@ -145,9 +139,9 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
         assert_poolManager_invariant_B();
     }
 
-    /******************************************************************************************************************************/
-    /*** Withdrawal Manager Invariants                                                                                          ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Withdrawal Manager Invariants                                                                                                  ***/
+    /**************************************************************************************************************************************/
 
     function invariant_withdrawalManager_A_F_G_H_I_J_K_L() external useCurrentTimestamp {
         if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
@@ -159,9 +153,15 @@ contract BoundedActorBasedInvariants_ImpairTests is BaseInvariants {
 
             sumLockedShares += withdrawalManager.lockedShares(lp);
 
-            uint256 totalRequestedLiquidity = withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
+            uint256 totalRequestedLiquidity =
+                withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * (pool.totalAssets() - pool.unrealizedLosses()) /
+                pool.totalSupply();
 
-            ( uint256 shares, uint256 assets, bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
+            (
+                uint256 shares,
+                uint256 assets,
+                bool partialLiquidity
+            ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
 
             assert_withdrawalManager_invariant_F(shares);
             assert_withdrawalManager_invariant_G(lp, shares);

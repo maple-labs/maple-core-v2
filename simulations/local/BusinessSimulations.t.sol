@@ -3,9 +3,10 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { LoanScenario   }              from "../../contracts/LoanScenario.sol";
 import { ILoanLike, IPoolManagerLike } from "../../contracts/interfaces/Interfaces.sol";
-import { SimulationBase }              from "../../contracts/utilities/SimulationBase.sol";
+
+import { LoanScenario }   from "../../contracts/LoanScenario.sol";
+import { SimulationBase } from "../../contracts/utilities/SimulationBase.sol";
 
 contract BusinessSimulations is SimulationBase {
 
@@ -48,7 +49,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-payment-sim-1";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -60,7 +61,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-payment-sim-2";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -78,7 +79,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-full-cover-no-collat-no-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -92,7 +93,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-partial-cover-no-collat-no-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -104,7 +105,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-no-cover-no-collat-no-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -122,7 +123,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-full-cover-partial-collat-no-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -136,7 +137,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-partial-cover-partial-collat-no-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -148,7 +149,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-no-cover-partial-collat-no-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -167,7 +168,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-full-cover-no-collat-early-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -182,7 +183,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-partial-cover-no-collat-early-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -195,7 +196,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-no-cover-no-collat-early-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -214,7 +215,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-full-cover-partial-collat-early-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -229,7 +230,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-partial-cover-partial-collat-early-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -242,7 +243,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-no-cover-partial-collat-early-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -262,7 +263,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-full-cover-no-collat-late-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -277,7 +278,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-partial-cover-no-collat-late-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -290,7 +291,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-no-cover-no-collat-late-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -310,7 +311,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-full-cover-partial-collat-late-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -325,7 +326,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-partial-cover-partial-collat-late-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }
@@ -338,7 +339,7 @@ contract BusinessSimulations is SimulationBase {
 
         string memory fileName = "business-default-no-cover-partial-collat-late-impair";
 
-        setUpSimulation(fileName);
+        setUpSimulation();
         setUpBusinessLogger(fileName);
         simulation.run();
     }

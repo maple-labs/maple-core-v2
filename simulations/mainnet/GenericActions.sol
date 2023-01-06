@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestUtils, console } from "../../modules/contract-test-utils/contracts/test.sol";
+import { TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IERC20 }               from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 import { IMapleGlobals }        from "../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
@@ -24,9 +24,9 @@ contract GenericActions is TestUtils {
     address internal WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
     address internal USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
 
-    /******************************************************************************************************************************/
-    /*** Helpers                                                                                                                ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Helpers                                                                                                                        ***/
+    /**************************************************************************************************************************************/
 
     function erc20_transfer(address asset_, address account_, address destination_, uint256 amount_) internal {
         vm.startPrank(account_);
@@ -58,9 +58,9 @@ contract GenericActions is TestUtils {
         return principal_ <= drawableFunds_ ? uint256(0) : (collateralRequired_ * (principal_ - drawableFunds_) + principalRequested_ - 1) / principalRequested_;
     }
 
-    /******************************************************************************************************************************/
-    /*** Borrow Functions                                                                                                       ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Borrow Functions                                                                                                               ***/
+    /**************************************************************************************************************************************/
 
     function closeLoan(address loan_) internal {
         ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IMapleLoan(loan_).getClosingPaymentBreakdown();
@@ -173,9 +173,9 @@ contract GenericActions is TestUtils {
         vm.stopPrank();
     }
 
-    /******************************************************************************************************************************/
-    /*** Liquidity Provider Functions                                                                                           ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Liquidity Provider Functions                                                                                                   ***/
+    /**************************************************************************************************************************************/
 
     function depositLiquidity(address pool_, address account_, uint256 amount_) internal {
         address poolManager_ = IPool(pool_).manager();
@@ -208,9 +208,9 @@ contract GenericActions is TestUtils {
         vm.stopPrank();
     }
 
-    /******************************************************************************************************************************/
-    /*** Pool Delegate Functions                                                                                                ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Delegate Functions                                                                                                        ***/
+    /**************************************************************************************************************************************/
 
     function acceptRefinance(address poolManager_, address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_, uint256 principalIncrease_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();

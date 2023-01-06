@@ -8,7 +8,7 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract RemoveLoanImpairmentFailureTests is TestBase {
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public virtual override {
         super.setUp();

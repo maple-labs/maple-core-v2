@@ -8,9 +8,9 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract RequestRedeemTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -220,9 +220,9 @@ contract RequestRedeemTests is TestBase {
 
 contract RedeemTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -588,14 +588,16 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares3, 2_512_437_810944);
 
-        assertEq(withdrawalManager.lockedShares(lp3),   remainingShares3);  // AVR = 2.5m / (5m * 1.005) (SAME) => 4m * (1 - AVR) = 2_009_950_248760
+        // AVR = 2.5m / (5m * 1.005) (SAME) => 4m * (1 - AVR) = 2_009_950_248760
+        assertEq(withdrawalManager.lockedShares(lp3),   remainingShares3);
         assertEq(withdrawalManager.totalCycleShares(3), 0);
         assertEq(withdrawalManager.totalCycleShares(4), remainingShares1 + remainingShares2 + remainingShares3);
 
         assertEq(pool.balanceOf(wm), remainingShares1 + remainingShares2 + remainingShares3);
-        assertEq(pool.balanceOf(wm), 5_024_875_621890);  // Available liquidity ratio: 5m / (10m * 1.01) = 0.495049505 => 5m * (1 - 0.495049505) = remaining shares
+        // Available liquidity ratio: 5m / (10m * 1.01) = 0.495049505 => 5m * (1 - 0.495049505) = remaining shares
+        assertEq(pool.balanceOf(wm), 5_024_875_621890);
 
-        assertEq(fundsAsset.balanceOf(lp1), 500_000e6 - 1);  // Rounding error
+        assertEq(fundsAsset.balanceOf(lp1), 500_000e6 - 1);    // Rounding error
         assertEq(fundsAsset.balanceOf(lp2), 2_000_000e6);
         assertEq(fundsAsset.balanceOf(lp3), 2_500_000e6 + 1);  // Rounding error
     }
@@ -730,7 +732,8 @@ contract MultiUserRedeemTests is TestBase {
 
         vm.warp(start + ONE_MONTH * 101 / 100);  // Warp another 1% through the interval
 
-        assertEq(pool.totalAssets(), 10_050_000e6 - 1 - withdrawnAssets1 + 500e6); // previous TA  - 1 - 499_999_999999 + interest accrued in 1% of interval
+        // previous TA  - 1 - 499_999_999999 + interest accrued in 1% of interval
+        assertEq(pool.totalAssets(), 10_050_000e6 - 1 - withdrawnAssets1 + 500e6);
         assertEq(pool.totalAssets(), 9_550_500e6);
 
         uint256 withdrawnAssets2 = redeem(lp2, 4_000_000e6);
@@ -753,7 +756,7 @@ contract MultiUserRedeemTests is TestBase {
 
         vm.warp(start + ONE_MONTH * 102 / 100);  // Warp another 1% through the interval
 
-        assertEq(pool.totalAssets(), 7_550_500e6 + 1 + 500e6); // 500e6 more accrued from interval
+        assertEq(pool.totalAssets(), 7_550_500e6 + 1 + 500e6);  // 500e6 more accrued from interval
 
         uint256 withdrawnAssets3 = redeem(lp3, 5_000_000e6);
         assertEq(withdrawnAssets3, 2_500_000e6 + 1);
@@ -761,7 +764,8 @@ contract MultiUserRedeemTests is TestBase {
         // Exchange rate: TotalAssets / TotalShares = 7551000000001 / 7512541996578 = (~ 1.0051)
         // Total requested shares: 5m * exchange rate = 5_025_595_865847
         // AVR = 2.5m / (5m * 1.0051) => 4m * (1 - AVR) = 2_512_732_751761
-        uint256 remainingShares3 = 5_000_000e6 - uint256(5_000_000e6) * (5_000_000e6 - withdrawnAssets1 - withdrawnAssets2) / 5_025_595_865847;
+        uint256 remainingShares3 =
+            5_000_000e6 - uint256(5_000_000e6) * (5_000_000e6 - withdrawnAssets1 - withdrawnAssets2) / 5_025_595_865847;
 
         assertEq(remainingShares3, 2_512_732_751761);  // Higher than 2_512_437_810944 from same exchange rate test
 
@@ -783,9 +787,9 @@ contract MultiUserRedeemTests is TestBase {
 
 contract RequestRedeemFailureTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -831,9 +835,9 @@ contract RequestRedeemFailureTests is TestBase {
 
 contract RedeemFailureTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -1020,8 +1024,12 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
 
         // When there's enough liquidity to redeem
-        uint256 shouldRedeemSC         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
-        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 1_000_000e6)                           / (3_000_000e6 * uint256(2));
+        uint256 shouldRedeemSC =
+            ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) /
+            pool.totalSupply();
+
+        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 1_000_000e6) / (3_000_000e6 * uint256(2));
+
         assertEq(shouldRedeemSC, shouldRedeemCalculated);
         assertEq(shouldRedeemSC, 666_666.666666e6);
 
@@ -1104,18 +1112,28 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
 
         // When there's enough liquidity to redeem
-        uint256 shouldRedeemSC         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
-        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * (1_000_000e6 + 2_000_000e6))           / (3_000_000e6 * uint256(2));
-        assertEq(shouldRedeemSC, shouldRedeemCalculated);
-        assertEq(shouldRedeemSC, 2_000_000e6); // 1:2/3 exchange rate, no rounding error
+        uint256 shouldRedeemSC =
+            ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
 
-        uint256 shouldRedeemSCLP1         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
-        uint256 shouldRedeemCalculatedLP1 = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 1_000_000e6)                         / (3_000_000e6 * uint256(2));
+        uint256 shouldRedeemCalculated =
+            (((3_000_000e6 * uint256(2)) - 2_000_000e6) * (1_000_000e6 + 2_000_000e6)) / (3_000_000e6 * uint256(2));
+
+        assertEq(shouldRedeemSC, shouldRedeemCalculated);
+        assertEq(shouldRedeemSC, 2_000_000e6);  // 1:2/3 exchange rate, no rounding error
+
+        uint256 shouldRedeemSCLP1 =
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
+
+        uint256 shouldRedeemCalculatedLP1 = (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 1_000_000e6) / (3_000_000e6 * uint256(2));
+
         assertEq(shouldRedeemSCLP1, shouldRedeemCalculatedLP1);
         assertEq(shouldRedeemSCLP1, 666_666.666666e6);
 
-        uint256 shouldRedeemSCLP2         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp2)) / pool.totalSupply();
-        uint256 shouldRedeemCalculatedLP2 = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 2_000_000e6)                         / (3_000_000e6 * uint256(2));
+        uint256 shouldRedeemSCLP2 =
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp2)) / pool.totalSupply();
+
+        uint256 shouldRedeemCalculatedLP2 = (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 2_000_000e6) / (3_000_000e6 * uint256(2));
+
         assertEq(shouldRedeemSCLP2, shouldRedeemCalculatedLP2);
         assertEq(shouldRedeemSCLP2, 1_333_333.333333e6);
 
@@ -1149,7 +1167,7 @@ contract RedeemIntegrationTests is TestBase {
         // Check the totalSupply and totalAssets
         // Pool liquidity minus locked by lp1 and locked by lp2
         assertEq(pool.totalSupply(), (3_000_000e6 * 2) - (1_000_000e6 + 2_000_000e6));
-        // Pool liquidity minus redeeemed by lp1 and redeemed by lp2
+        // Pool liquidity minus redeemed by lp1 and redeemed by lp2
         assertEq(pool.totalAssets(), (3_000_000e6 * 2) - (redeemedLP1 + redeemedLP2));
         assertEq(pool.totalAssets(), 4_000_000.000001e6);  // Rounding
 
@@ -1212,13 +1230,21 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
 
         // When there's enough liquidity to redeem
-        uint256 shouldRedeemSC         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
-        uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * (1_000_000e6 + 2_000_000e6))           / (3_000_000e6 * uint256(2));
+        uint256 shouldRedeemSC =
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
+
+        uint256 shouldRedeemCalculated =
+            (((3_000_000e6 * uint256(2)) - 2_000_000e6) * (1_000_000e6 + 2_000_000e6)) / (3_000_000e6 * uint256(2));
+
         assertEq(shouldRedeemSC, shouldRedeemCalculated);
         assertEq(shouldRedeemSC, 2_000_000e6);
 
-        uint256 shouldRedeemSCLP1         = ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
-        uint256 shouldRedeemCalculatedLP1 = (((3_000_000e6 * uint256(2)) - 2_000_000e6)                    * 1_000_000e6)                         / (3_000_000e6 * uint256(2));
+        uint256 shouldRedeemSCLP1 =
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
+
+        uint256 shouldRedeemCalculatedLP1 =
+            (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 1_000_000e6) / (3_000_000e6 * uint256(2));
+
         assertEq(shouldRedeemSCLP1, shouldRedeemCalculatedLP1);
         assertEq(shouldRedeemSCLP1, 666_666.666666e6);
 

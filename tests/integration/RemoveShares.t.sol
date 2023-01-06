@@ -7,9 +7,9 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract RemoveSharesTests is TestBase {
 
-    address borrower;
-    address lp;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();
@@ -163,10 +163,9 @@ contract RemoveSharesTests is TestBase {
 
 contract RemoveSharesFailureTests is TestBase {
 
-    address borrower;
-    address lp;
-    address lp2;
-    address wm;
+    address internal borrower;
+    address internal lp;
+    address internal wm;
 
     function setUp() public override {
         super.setUp();

@@ -8,7 +8,7 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract LoanManagerGetterTests is TestBase {
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public override {
         super.setUp();

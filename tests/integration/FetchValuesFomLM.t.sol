@@ -19,7 +19,7 @@ contract LoanManagerAddressGetterTests is TestBase {
 
 contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -61,7 +61,6 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
 
         assertTrue(!loanManager.isLiquidationActive(address(loan)));
     }
-
 
     /// @TODO: Add test_isLiquidationActive_afterLiquidation
 

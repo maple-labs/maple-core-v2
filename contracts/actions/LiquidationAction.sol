@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { IERC20Like, ILoanLike, ILoanManagerLike } from "../interfaces/Interfaces.sol";
 
 import { Action } from "./Action.sol";

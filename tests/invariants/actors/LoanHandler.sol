@@ -1,35 +1,35 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, TestUtils } from "../../../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 }                   from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
-import { IMapleGlobals }               from "../../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
-import { MapleLoanInitializer }        from "../../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
-import { IMapleLoan }                  from "../../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFactory }           from "../../../modules/loan-v400/contracts/interfaces/IMapleLoanFactory.sol";
-import { ILoanManager }                from "../../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
-import { IPool }                       from "../../../modules/pool-v2/contracts/interfaces/IPool.sol";
-import { IPoolManager }                from "../../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
-import { IWithdrawalManager }          from "../../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
+import { Address, TestUtils }   from "../../../modules/contract-test-utils/contracts/test.sol";
+import { MockERC20 }            from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { IMapleGlobals }        from "../../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
+import { MapleLoanInitializer } from "../../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
+import { IMapleLoan }           from "../../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFactory }    from "../../../modules/loan-v400/contracts/interfaces/IMapleLoanFactory.sol";
+import { ILoanManager }         from "../../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
+import { IPool }                from "../../../modules/pool-v2/contracts/interfaces/IPool.sol";
+import { IPoolManager }         from "../../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
+import { IWithdrawalManager }   from "../../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
 import { ITest } from "../interfaces/ITest.sol";
 
 contract LoanHandler is TestUtils {
 
-    /******************************************************************************************************************************/
-    /*** State Variables                                                                                                        ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** State Variables                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
     // Actors
-    address poolDelegate;
+    address internal poolDelegate;
 
-    address[] borrowers;
+    address[] internal borrowers;
 
     // Contract addresses
-    address feeManager;
-    address globals;
-    address governor;
-    address loanFactory;
+    address internal feeManager;
+    address internal globals;
+    address internal governor;
+    address internal loanFactory;
 
     // Debugging
     uint256 public numBorrowers;
@@ -42,17 +42,17 @@ contract LoanHandler is TestUtils {
     mapping(bytes32 => uint256) public numberOfCalls;
 
     // Contract instances
-    MockERC20 collateralAsset;
-    MockERC20 fundsAsset;
+    MockERC20 internal collateralAsset;
+    MockERC20 internal fundsAsset;
 
-    ILoanManager loanManager;
-    IPool        pool;
-    IPoolManager poolManager;
-    ITest        testContract;
+    ILoanManager internal loanManager;
+    IPool        internal pool;
+    IPoolManager internal poolManager;
+    ITest        internal testContract;
 
-    /******************************************************************************************************************************/
-    /*** State Variables for Invariant Assertions                                                                               ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** State Variables for Invariant Assertions                                                                                       ***/
+    /**************************************************************************************************************************************/
 
     // Contract references
     address[] public activeLoans;
@@ -62,7 +62,7 @@ contract LoanHandler is TestUtils {
     uint256 public sum_loanManager_paymentIssuanceRate;
 
     // Max values
-    uint256 maxLoans;
+    uint256 public maxLoans;
 
     // Loan info
     uint256 public earliestPaymentDueDate;
@@ -71,9 +71,9 @@ contract LoanHandler is TestUtils {
     mapping (address => uint256) public lateIntervalInterest;
     mapping (address => uint256) public paymentTimestamp;
 
-    /******************************************************************************************************************************/
-    /*** Constructor                                                                                                            ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Constructor                                                                                                                    ***/
+    /**************************************************************************************************************************************/
 
     constructor (
         address collateralAsset_,
@@ -103,7 +103,7 @@ contract LoanHandler is TestUtils {
 
         earliestPaymentDueDate = testContract.currentTimestamp();
 
-        for (uint256 i = 0; i < numBorrowers_; i++) {
+        for (uint256 i; i < numBorrowers_; ++i) {
             address borrower = address(new Address());
             vm.prank(governor);
             IMapleGlobals(globals).setValidBorrower(borrower, true);
@@ -114,9 +114,9 @@ contract LoanHandler is TestUtils {
         maxLoans     = maxLoans_;
     }
 
-    /******************************************************************************************************************************/
-    /*** Modifiers                                                                                                              ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Modifiers                                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     modifier useTimestamps() {
         vm.warp(testContract.currentTimestamp());
@@ -124,9 +124,9 @@ contract LoanHandler is TestUtils {
         testContract.setCurrentTimestamp(block.timestamp);
     }
 
-    /******************************************************************************************************************************/
-    /*** Pool Functions                                                                                                         ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Pool Functions                                                                                                                 ***/
+    /**************************************************************************************************************************************/
 
     function createLoanAndFund(
         uint256 borrowerIndexSeed_,
@@ -184,8 +184,6 @@ contract LoanHandler is TestUtils {
 
         fundingTime[loan_] = block.timestamp;
 
-        uint256 nextPaymentDueDate_ = IMapleLoan(loan_).nextPaymentDueDate();
-
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
 
         if (paymentWithEarliestDueDate != 0) {
@@ -240,8 +238,6 @@ contract LoanHandler is TestUtils {
 
         vm.stopPrank();
 
-        uint256 nextPaymentDueDate_ = loan_.nextPaymentDueDate();
-
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
 
         if (paymentWithEarliestDueDate != 0) {
@@ -267,8 +263,6 @@ contract LoanHandler is TestUtils {
         paymentTimestamp[address(loan_)] = block.timestamp;
 
         ( , interest_, ) = loan_.getNextPaymentBreakdown();
-
-        uint256 netInterest = interest_ * (1e6 - IMapleGlobals(globals).platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate()) / 1e6;
 
         ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
 

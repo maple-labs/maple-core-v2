@@ -7,7 +7,7 @@ import { Logger } from "./Logger.sol";
 
 contract PoolManagerLogger is Logger {
 
-    IPoolManagerLike poolManager;
+    IPoolManagerLike internal poolManager;
 
     constructor(IPoolManagerLike poolManager_, string memory filepath_) Logger(filepath_) {
         poolManager = poolManager_;

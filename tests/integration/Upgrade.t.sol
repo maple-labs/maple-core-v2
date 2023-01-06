@@ -18,7 +18,7 @@ import { TestBase } from "../../contracts/utilities/TestBase.sol";
 
 contract GlobalsUpgradeTests is TestBase {
 
-    address newImplementation = address(new MapleGlobals());
+    address internal newImplementation = address(new MapleGlobals());
 
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
@@ -45,8 +45,9 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract LoanManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new LoanManager());
-    bytes upgradeCallData     = new bytes(0);
+    address internal newImplementation = address(new LoanManager());
+
+    bytes internal upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
@@ -221,14 +222,14 @@ contract LoanManagerUpgradeTests is TestBase {
 
 contract LiquidationUpgradeTests is TestBase {
 
-    address newImplementation = address(new LoanManager());
-    address borrower          = address(new Address());
-    address lp                = address(new Address());
+    address internal borrower          = address(new Address());
+    address internal lp                = address(new Address());
+    address internal newImplementation = address(new LoanManager());
 
-    bytes upgradeCallData = new bytes(0);
+    bytes internal upgradeCallData = new bytes(0);
 
-    Loan       loan;
-    Liquidator liquidator;
+    Liquidator internal liquidator;
+    Loan       internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -437,8 +438,9 @@ contract LiquidationUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new PoolManager());
-    bytes upgradeCallData     = new bytes(0);
+    address internal newImplementation = address(new PoolManager());
+
+    bytes internal upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
@@ -612,8 +614,9 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new WithdrawalManager());
-    bytes upgradeCallData     = new bytes(0);
+    address internal newImplementation = address(new WithdrawalManager());
+
+    bytes internal upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
@@ -788,7 +791,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
 contract UnscheduleCallTests is TestBase {
 
-    bytes upgradeCallData = new bytes(0);
+    bytes internal upgradeCallData = new bytes(0);
 
     function test_unscheduleCall_governor() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);

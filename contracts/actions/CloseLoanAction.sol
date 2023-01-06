@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IERC20Like,
-    ILoanLike,
-    ILoanManagerLike,
-    IPoolLike,
-    IPoolManagerLike
-} from "../interfaces/Interfaces.sol";  // TODO: Import all real interfaces using central file.
+import { IERC20Like, ILoanLike } from "../interfaces/Interfaces.sol";  // TODO: Import all real interfaces using central file.
 
 import { Action } from "./Action.sol";
 

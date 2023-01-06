@@ -34,7 +34,7 @@ contract Playground is SimulationBase {
 
         // uint256 sum;
 
-        // for (uint256 i; i < orthogonalLoans.length; i++) {
+        // for (uint256 i; i < orthogonalLoans.length; ++i) {
         //     sum += orthogonalLoans[i].principal();
         // }
 

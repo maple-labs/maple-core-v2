@@ -8,7 +8,7 @@ import { TestBaseWithAssertions } from "../../contracts/utilities/TestBaseWithAs
 
 contract TriggerDefaultFailureTests is TestBaseWithAssertions {
 
-    Loan loan;
+    Loan internal loan;
 
     function setUp() public virtual override {
         super.setUp();
