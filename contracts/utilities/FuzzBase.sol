@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestBase } from "../../contracts/utilities/TestBase.sol";
-
 import { LoanManagerHarness } from "./LoanManagerHarness.sol";
+import { TestBase }           from "./TestBase.sol";
 
 contract FuzzBase is TestBase {
 

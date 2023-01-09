@@ -15,12 +15,7 @@ echo Using profile: $FOUNDRY_PROFILE
 
 if [ -z "$test" ];
 then
-    if [ -z "$directory" ];
-    then
-        forge test --ffi --no-match-path "contracts/invariants/*";
-    else
-        forge test --ffi --match-path "contracts/$directory/*.t.sol";
-    fi
+    forge test --ffi --fork-url "$ETH_RPC_URL" --no-match-test "invariant" --match-path "contracts/$directory/*.t.sol";
 else
-    forge test --ffi --match "$test";
+    forge test --ffi --fork-url "$ETH_RPC_URL" --match "$test";
 fi

@@ -1,6 +1,6 @@
 [profile.default]
 contracts       = 'contracts'             # The source directory
-test            = 'tests'                 # The test directory
+test            = 'contracts'             # The test directory
 libs            = ['modules']             # A list of library directories
 solc_version    = '0.8.7'                 # Override for the solc version (setting this ignores `auto_detect_solc`)
 optimizer       = false                   # Enable or disable the solc optimizer
@@ -22,26 +22,29 @@ call_override  = false  # Override calls
 fail_on_revert = true   # Fail the test if the contract reverts
 
 [profile.mainnet_simulations]
-test                = 'simulations/mainnet'  # The test directory
+test                = 'mainnet-simulations'  # The test directory
 block_number        = 16156537               # Block number for tests
 fork_block_number   = 16156537
 rpc_storage_caching = { chains = ["mainnet"], endpoints = "all" }
 
 [profile.local_simulations]
-test = 'simulations/local'  # The test directory
+test = 'local-simulations'  # The test directory
 
 [profile.shallow.fuzz]
 runs = 20
 
 [profile.deep.invariant]
+optimizer      = true
 runs           = 10    # The number of calls to make in the invariant tests
 depth          = 100   # The number of times to run the invariant tests
 call_override  = false # Override calls
 fail_on_revert = true  # Fail the test if the contract reverts
 
 [profile.super_deep.fuzz]
-runs = 50_000
+optimizer = true
+runs      = 50_000
 
 [profile.super_deep.invariant]
-runs  = 200  # The number of calls to make in the invariant tests
-depth = 250  # The number of times to run the invariant tests
+optimizer = true
+runs      = 200  # The number of calls to make in the invariant tests
+depth     = 250  # The number of times to run the invariant tests
