@@ -17,9 +17,9 @@ if [ -z "$test" ];
 then
     if [ -z "$directory" ];
     then
-        forge test --ffi --no-match-path "contracts/invariants/*";
+        forge test --ffi --match-path "contracts/tests/*";
     else
-        forge test --ffi --match-path "contracts/$directory/*.t.sol";
+        forge test --ffi --match-path "contracts/tests/$directory/*.t.sol";
     fi
 else
     forge test --ffi --match "$test";

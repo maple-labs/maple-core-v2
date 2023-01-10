@@ -13,6 +13,9 @@ profile ?=default
 build:
 	@scripts/build.sh -p $(profile)
 
+test:
+	forge test --match-path "contracts/tests/*"
+
 e2e:
 	@scripts/test.sh -d e2e -p $(profile)
 

@@ -35,12 +35,36 @@ cd maple-core-v2
 forge install
 ```
 
-## Running Tests
+## Commands
+To make it easier to perform some tasks within the repo, a few commands are available through a makefile:
 
-- To run all tests: `forge test`
-- To run specific tests: `forge test --match <test_name>`
+### Build Commands
 
-`./scripts/test.sh` is used to enable Foundry profile usage with the `-p` flag. Profiles are used to specify the number of fuzz runs.
+| Command | Action |
+|---|---|
+| `make build`       | Compile all contracts in the repo, including submodules. |
+| `make clean`       | Delete cached files. |
+
+### Test Commands
+
+| Command | Description |
+|---|---|
+| `make test`        | Run all tests located in `contracts/tests/`. |
+| `make e2e`         | Run all end-to-end tests. |
+| `make fuzz`        | Run all fuzz tests. |
+| `make integration` | Run all integration tests (Must have `ETH_RPC_URL` configured to mainnet). |
+| `make invariant`   | Run the invariant tests. |
+
+Specific tests can be run using `forge test` conventions, specified in more detail in the Foundry [Book](https://book.getfoundry.sh/reference/forge/forge-test#test-options).
+
+### Simulation Commands
+
+For the following commands, a `$ETH_RPC_URL` environment value needs to be configured with a valid rpc url.
+
+| Command | Description |
+|---|---|
+| `make mainnet-sim` | Run the simulations against mainnet |
+| `make local-sim`   | Run the local protocol simulations. |
 
 ## Audit Reports
 

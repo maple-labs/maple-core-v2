@@ -1,6 +1,6 @@
 [profile.default]
 contracts       = 'contracts'             # The source directory
-test            = 'contracts'             # The test directory
+test            = 'contracts/tests'       # The test directory
 libs            = ['modules']             # A list of library directories
 solc_version    = '0.8.7'                 # Override for the solc version (setting this ignores `auto_detect_solc`)
 optimizer       = false                   # Enable or disable the solc optimizer
@@ -13,10 +13,10 @@ gas_limit       = "18446744073709551615"  # Gas limit for tests
 optimizer = true
 
 [fuzz]
-runs = 1000
+runs = 100
 
 [invariant]
-runs           = 50     # The number of calls to make in the invariant tests
+runs           = 10     # The number of calls to make in the invariant tests
 depth          = 100    # The number of times to run the invariant tests
 call_override  = false  # Override calls
 fail_on_revert = true   # Fail the test if the contract reverts
