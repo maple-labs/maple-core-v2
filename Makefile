@@ -11,31 +11,28 @@ update:
 profile ?=default
 
 build:
-	@scripts/build.sh -p $(profile)
+	@FOUNDRY_PROFILE=production forge build
 
 test:
-	forge test --match-path "contracts/tests/*"
+	forge test
 
 e2e:
-	@scripts/test.sh -d e2e -p $(profile)
+	./test.sh -d tests/e2e -p $(profile)
 
 fuzz:
-	@scripts/test.sh -d fuzz -p $(profile)
-
-fuzzing:
-	@scripts/test.sh -d fuzzing -p $(profile)
+	./test.sh -d tests/fuzz -p $(profile)
 
 integration:
-	@scripts/test.sh -d integration -p $(profile)
+	./test.sh -d tests/integration -p $(profile)
 
 invariant:
-	@scripts/test.sh -d invariants -p $(profile)
+	./test.sh -d tests/invariants -p $(profile)
 
 local-sim:
-	@scripts/test.sh -d local-simulations -p local_simulations
+	./test.sh -d simulations/local -p local_simulations
 
 mainnet-sim:
-	@scripts/simulate.sh -d mainnet-simulations -p mainnet_simulations
+	./simulate.sh -d simulations/mainnet -p mainnet_simulations
 
 # Forge scripting
 

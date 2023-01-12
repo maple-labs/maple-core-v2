@@ -26,8 +26,8 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
@@ -55,8 +55,8 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
@@ -84,13 +84,13 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./scripts/test.sh -p super_deep -t testDeepFuzz_
+        run: ./test.sh -p super_deep -t testDeepFuzz_
 
   shallow_fuzz_tests:
     runs-on: ubuntu-latest
@@ -113,13 +113,13 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./scripts/test.sh -p deep -t testShallowFuzz_
+        run: ./test.sh -p deep -t testShallowFuzz_
 
   invariant_tests:
     runs-on: ubuntu-latest
@@ -142,8 +142,8 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
@@ -171,8 +171,8 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
@@ -200,8 +200,8 @@ jobs:
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
         run: |
-          chmod +x ./scripts/setup-ci.sh
-          ./scripts/setup-ci.sh
+          chmod +x ./setup-ci.sh
+          ./setup-ci.sh
 
       - name: Run Forge tests
         env:
