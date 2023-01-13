@@ -2,45 +2,35 @@
 	path = modules/contract-test-utils
 	url = git@github.com:maple-labs/contract-test-utils.git
 	ignore = dirty
-[submodule "modules/withdrawal-manager"]
-	path = modules/withdrawal-manager
-	url = git@github.com:maple-labs/withdrawal-manager.git
-	ignore = dirty
 [submodule "modules/debt-locker-v4"]
 	path = modules/debt-locker-v4
 	url = git@github.com:maple-labs/debt-locker.git
-	ignore = dirty
-[submodule "modules/globals-v2"]
-	path = modules/globals-v2
-	url = git@github.com:maple-labs/globals-v2.git
 	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
 	ignore = dirty
-[submodule "modules/migration-helpers"]
-	path = modules/migration-helpers
-	url = git@github.com:maple-labs/migration-helpers
-	ignore = dirty
-[submodule "modules/pool-v2"]
-	path = modules/pool-v2
-	url = git@github.com:maple-labs/pool-v2.git
-	ignore = dirty
-[submodule "modules/liquidations"]
-	path = modules/liquidations
-	url = git@github.com:maple-labs/liquidations.git
-	ignore = dirty
-[submodule "modules/loan-v301"]
-	path = modules/loan-v301
-	url = git@github.com:maple-labs/loan.git
-	branch = v3.01
-	ignore = dirty
-[submodule "modules/loan-v302"]
-	path = modules/loan-v302
-	url = git@github.com:maple-labs/loan.git
-	branch = v3.01
-	ignore = dirty
 [submodule "modules/loan-v400"]
 	path = modules/loan-v400
-	url = git@github.com:maple-labs/loan.git
-	ignore = dirty
+	url = git@github.com:maple-labs/loan-private.git
+[submodule "modules/loan-v302"]
+	path = modules/loan-v302
+	url = git@github.com:maple-labs/loan-private.git
+[submodule "modules/loan-v301"]
+	path = modules/loan-v301
+	url = git@github.com:maple-labs/loan-private.git
+[submodule "modules/liquidations"]
+	path = modules/liquidations
+	url = git@github.com:maple-labs/liquidations-private.git
+[submodule "modules/pool-v2"]
+	path = modules/pool-v2
+	url = git@github.com:maple-labs/pool-v2-private.git
+[submodule "modules/withdrawal-manager"]
+	path = modules/withdrawal-manager
+	url = git@github.com:maple-labs/withdrawal-manager-private.git
+[submodule "modules/globals-v2"]
+	path = modules/globals-v2
+	url = git@github.com:maple-labs/globals-v2-private.git
+[submodule "modules/migration-helpers"]
+	path = modules/migration-helpers
+	url = git@github.com:maple-labs/migration-helpers-private.git
