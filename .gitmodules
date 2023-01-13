@@ -2,17 +2,9 @@
 	path = modules/contract-test-utils
 	url = git@github.com:maple-labs/contract-test-utils.git
 	ignore = dirty
-[submodule "modules/withdrawal-manager"]
-	path = modules/withdrawal-manager
-	url = git@github.com:maple-labs/withdrawal-manager.git
-	ignore = dirty
 [submodule "modules/debt-locker-v4"]
 	path = modules/debt-locker-v4
 	url = git@github.com:maple-labs/debt-locker.git
-	ignore = dirty
-[submodule "modules/globals-v2"]
-	path = modules/globals-v2
-	url = git@github.com:maple-labs/globals-v2.git
 	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
@@ -43,4 +35,3 @@
 [submodule "modules/loan-v400"]
 	path = modules/loan-v400
 	url = git@github.com:maple-labs/loan.git
-	ignore = dirty
