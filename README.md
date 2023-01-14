@@ -32,8 +32,8 @@ Versions of dependencies can be checked with `git submodule status`.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/maple-core-v2.git
-cd maple-core-v2
+git clone git@github.com:maple-labs/maple-core-v2-private.git
+cd maple-core-v2-private
 forge install
 ```
 
