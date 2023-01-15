@@ -16,9 +16,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
@@ -36,9 +34,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
@@ -56,9 +52,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
@@ -76,9 +70,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
@@ -96,9 +88,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
@@ -116,9 +106,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
@@ -136,9 +124,7 @@ jobs:
           version: nightly
 
       - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: forge install
 
       - name: Run Forge tests
         env:
