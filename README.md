@@ -15,8 +15,8 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 ## Submodules
 
 Submodules imported:
-- [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
-- [`maple-labs/debt-locker` (for V1 Migration testing)](https://github.com/maple-labs/debt-locker)
+- [`maple-labs/contract-test-utils`](https://github.com/maple-labs/contract-test-utils)  (for testing)
+- [`maple-labs/debt-locker`](https://github.com/maple-labs/debt-locker) (for v1 migration testing)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
 - [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
 - [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
@@ -44,14 +44,14 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 | Command | Action |
 |---|---|
-| `make build`       | Compile all contracts in the repo, including submodules. |
-| `make clean`       | Delete cached files. |
+| `make build` | Compile all contracts in the repo, including submodules. |
+| `make clean` | Delete cached files. |
 
 ### Test Commands
 
 | Command | Description |
 |---|---|
-| `make test`        | Run all tests located in `contracts/tests/`. |
+| `make test`        | Run all tests located in `contracts/tests/` (Must have `ETH_RPC_URL` configured to mainnet). |
 | `make e2e`         | Run all end-to-end tests. |
 | `make fuzz`        | Run all fuzz tests. |
 | `make integration` | Run all integration tests (Must have `ETH_RPC_URL` configured to mainnet). |
