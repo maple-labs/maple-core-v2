@@ -13,6 +13,7 @@
 [submodule "modules/globals-v2"]
 	path = modules/globals-v2
 	url = git@github.com:maple-labs/globals-v2.git
+	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
