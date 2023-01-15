@@ -15,7 +15,7 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 ## Submodules
 
 Submodules imported:
-- [`maple-labs/contract-test-utils`](https://github.com/maple-labs/contract-test-utils)  (for testing)
+- [`maple-labs/contract-test-utils`](https://github.com/maple-labs/contract-test-utils) (for testing)
 - [`maple-labs/debt-locker`](https://github.com/maple-labs/debt-locker) (for v1 migration testing)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
 - [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
