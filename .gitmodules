@@ -14,9 +14,11 @@
 	path = modules/loan-v400
 	url = git@github.com:maple-labs/loan.git
 [submodule "modules/loan-v302"]
+	branch = v3.02
 	path = modules/loan-v302
 	url = git@github.com:maple-labs/loan.git
 [submodule "modules/loan-v301"]
+	branch = v3.01
 	path = modules/loan-v301
 	url = git@github.com:maple-labs/loan.git
 [submodule "modules/liquidations"]
