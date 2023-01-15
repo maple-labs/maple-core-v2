@@ -15,19 +15,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -44,19 +35,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -73,19 +55,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -102,19 +75,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -131,19 +95,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -160,19 +115,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -189,19 +135,10 @@ jobs:
         with:
           version: nightly
 
-      - name: Checkout submodules
-        env:
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-        shell: bash
+      - name: Install submodules
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
