@@ -1,7 +1,9 @@
 # Maple V2 Core
 
+![Foundry CI](https://github.com/maple-labs/maple-core-v2/actions/workflows/forge.yaml/badge.svg)
+[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/maple-for-developers/protocol-overview)
 [![Foundry][foundry-badge]][foundry]
-![Foundry CI](https://github.com/maple-labs/maple-v2-core/actions/workflows/forge.yaml/badge.svg)
+[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2/blob/main/LICENSE)
 
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
@@ -13,8 +15,8 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 ## Submodules
 
 Submodules imported:
-- [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
-- [`maple-labs/debt-locker` (for V1 Migration testing)](https://github.com/maple-labs/debt-locker)
+- [`maple-labs/contract-test-utils`](https://github.com/maple-labs/contract-test-utils) (for testing)
+- [`maple-labs/debt-locker`](https://github.com/maple-labs/debt-locker) (for v1 migration testing)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
 - [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
 - [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
@@ -42,14 +44,14 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 | Command | Action |
 |---|---|
-| `make build`       | Compile all contracts in the repo, including submodules. |
-| `make clean`       | Delete cached files. |
+| `make build` | Compile all contracts in the repo, including submodules. |
+| `make clean` | Delete cached files. |
 
 ### Test Commands
 
 | Command | Description |
 |---|---|
-| `make test`        | Run all tests located in `contracts/tests/`. |
+| `make test`        | Run all tests located in `contracts/tests/` (Must have `ETH_RPC_URL` configured to mainnet). |
 | `make e2e`         | Run all end-to-end tests. |
 | `make fuzz`        | Run all fuzz tests. |
 | `make integration` | Run all integration tests (Must have `ETH_RPC_URL` configured to mainnet). |
@@ -81,8 +83,6 @@ For all information related to the ongoing bug bounty for these contracts run by
 ## About Maple
 
 [Maple Finance](https://maple.finance/) is a decentralized corporate credit market. Maple provides capital to institutional borrowers through globally accessible fixed-income yield opportunities.
-
-For all technical documentation related to the Maple V2 protocol, please refer to the GitHub [wiki](https://github.com/maple-labs/maple-core-v2/wiki).
 
 ---
 
