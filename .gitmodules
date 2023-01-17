@@ -5,12 +5,13 @@
 [submodule "modules/withdrawal-manager"]
 	path = modules/withdrawal-manager
 	url = git@github.com:maple-labs/withdrawal-manager.git
-[submodule "modules/globals-v2"]
-	path = modules/globals-v2
-	url = git@github.com:maple-labs/globals-v2.git
 [submodule "modules/debt-locker-v4"]
 	path = modules/debt-locker-v4
 	url = git@github.com:maple-labs/debt-locker.git
+	ignore = dirty
+[submodule "modules/globals-v2"]
+	path = modules/globals-v2
+	url = git@github.com:maple-labs/globals-v2.git
 	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
