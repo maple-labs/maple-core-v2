@@ -10,3 +10,27 @@
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
 	ignore = dirty
+[submodule "modules/loan-v400"]
+	path = modules/loan-v400
+	url = git@github.com:maple-labs/loan.git
+[submodule "modules/loan-v302"]
+	path = modules/loan-v302
+	url = git@github.com:maple-labs/loan.git
+[submodule "modules/loan-v301"]
+	path = modules/loan-v301
+	url = git@github.com:maple-labs/loan.git
+[submodule "modules/liquidations"]
+	path = modules/liquidations
+	url = git@github.com:maple-labs/liquidations.git
+[submodule "modules/pool-v2"]
+	path = modules/pool-v2
+	url = git@github.com:maple-labs/pool-v2.git
+[submodule "modules/withdrawal-manager"]
+	path = modules/withdrawal-manager
+	url = git@github.com:maple-labs/withdrawal-manager.git
+[submodule "modules/globals-v2"]
+	path = modules/globals-v2
+	url = git@github.com:maple-labs/globals-v2.git
+[submodule "modules/migration-helpers"]
+	path = modules/migration-helpers
+	url = git@github.com:maple-labs/migration-helpers.git
