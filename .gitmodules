@@ -5,6 +5,7 @@
 [submodule "modules/withdrawal-manager"]
 	path = modules/withdrawal-manager
 	url = git@github.com:maple-labs/withdrawal-manager.git
+	ignore = dirty
 [submodule "modules/debt-locker-v4"]
 	path = modules/debt-locker-v4
 	url = git@github.com:maple-labs/debt-locker.git
