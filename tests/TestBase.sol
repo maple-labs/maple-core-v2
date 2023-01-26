@@ -248,6 +248,7 @@ contract TestBase is ProtocolActions {
         loan = Loan(LoanFactory(loanFactory).createInstance({
             arguments_: new LoanInitializer().encodeArguments({
                 borrower_:    borrower,
+                lender_:      address(loanManager),
                 feeManager_:  address(feeManager),
                 assets_:      [address(collateralAsset), address(fundsAsset)],
                 termDetails_: termDetails,

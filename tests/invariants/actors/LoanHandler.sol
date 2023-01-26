@@ -148,7 +148,7 @@ contract LoanHandler is TestUtils {
         termDetails_[1] = constrictToRange(termDetails_[1], 1 days, 730 days);  // Payment interval
         termDetails_[2] = constrictToRange(termDetails_[2], 1,      30);        // Number of payments
 
-        amounts_[0] = constrictToRange(amounts_[0], 0,        1e29);         // Collateral required
+        amounts_[0] = constrictToRange(amounts_[0], 0,        1e29);         // Collateral required is zero as we don't drawdown
         amounts_[1] = constrictToRange(amounts_[1], 10_000e6, 1e29);         // Principal requested
         amounts_[2] = constrictToRange(amounts_[2], 0,        amounts_[1]);  // Ending principal
 
@@ -170,6 +170,7 @@ contract LoanHandler is TestUtils {
         address loan_ = IMapleLoanFactory(loanFactory).createInstance({
             arguments_: new MapleLoanInitializer().encodeArguments({
                 borrower_:    borrower_,
+                lender_:      address(loanManager),
                 feeManager_:  feeManager,
                 assets_:      [address(collateralAsset), address(fundsAsset)],
                 termDetails_: termDetails_,
@@ -179,6 +180,12 @@ contract LoanHandler is TestUtils {
             }),
             salt_: "SALT"
         });
+        vm.stopPrank();
+
+        vm.startPrank(borrower_);
+        collateralAsset.mint(borrower_, amounts_[0]);
+        collateralAsset.approve(loan_, amounts_[0]);
+        IMapleLoan(loan_).postCollateral(amounts_[0]);
         vm.stopPrank();
 
         vm.startPrank(poolManager.poolDelegate());

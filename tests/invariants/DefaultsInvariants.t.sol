@@ -53,9 +53,15 @@ contract DefaultsInvariants is BaseInvariants {
     /*** Invariants Removed                                                                                                             ***/
     /***************************************************************************************************************************************
 
+    * Loan Manager
+        * Invariant G: unrealizedLosses == 0
+            NOTE: triggerDefault() with collateral that needs liquidating then unrealizedLosses will be > 0
+
     * Pool
         * Invariant C: totalAssets >= totalSupply (in non-liquidating scenario)
         * Invariant F: balanceOfAssets[user] >= balanceOf[user]
+        * Invariant H: convertToExitShares == convertToShares
+            NOTE: triggerDefault() with collateral that needs liquidating then unrealizedLosses will be > 0 hence a different exchange rate
 
     ***************************************************************************************************************************************/
 
@@ -97,7 +103,6 @@ contract DefaultsInvariants is BaseInvariants {
     function invariant_loanManager_D() external useCurrentTimestamp { assert_loanManager_invariant_D(); }
     function invariant_loanManager_E() external useCurrentTimestamp { assert_loanManager_invariant_E(); }
     function invariant_loanManager_F() external useCurrentTimestamp { assert_loanManager_invariant_F(); }
-    function invariant_loanManager_G() external useCurrentTimestamp { assert_loanManager_invariant_G(); }
     function invariant_loanManager_H() external useCurrentTimestamp { assert_loanManager_invariant_H(); }
     function invariant_loanManager_I() external useCurrentTimestamp { assert_loanManager_invariant_I(); }
     function invariant_loanManager_J() external useCurrentTimestamp { assert_loanManager_invariant_J(); }
@@ -110,7 +115,6 @@ contract DefaultsInvariants is BaseInvariants {
     function invariant_pool_A() external useCurrentTimestamp { assert_pool_invariant_A(); }
     function invariant_pool_D() external useCurrentTimestamp { assert_pool_invariant_D(); }
     function invariant_pool_E() external useCurrentTimestamp { assert_pool_invariant_E(); }
-    function invariant_pool_H() external useCurrentTimestamp { assert_pool_invariant_H(); }
     function invariant_pool_I() external useCurrentTimestamp { assert_pool_invariant_I(); }
     function invariant_pool_J() external useCurrentTimestamp { assert_pool_invariant_J(); }
     function invariant_pool_K() external useCurrentTimestamp { assert_pool_invariant_K(); }

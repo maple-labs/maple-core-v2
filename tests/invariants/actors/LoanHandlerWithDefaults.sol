@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { Address }   from "../../../modules/contract-test-utils/contracts/test.sol";
+
 import { IMapleGlobals, IMapleLoan, ILiquidator } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { LoanHandler } from "./LoanHandler.sol";
@@ -117,10 +119,14 @@ contract LoanHandlerWithDefaults is LoanHandler {
         uint256 collateralAmount_ = collateralAsset.balanceOf(liquidator_);
         uint256 expectedAmount_   = ILiquidator(liquidator_).getExpectedAmount(collateralAmount_);
 
-        // Mint fund asset to liquidator to mock strategy
-        fundsAsset.mint(liquidator_, expectedAmount_);
+        address externalLiquidator = address(new Address());
 
+        // Mint fund asset to external liquidator and liquidate collateral
+        vm.startPrank(externalLiquidator);
+        fundsAsset.mint(externalLiquidator, expectedAmount_);
+        fundsAsset.approve(liquidator_, expectedAmount_);
         ILiquidator(liquidator_).liquidatePortion(collateralAmount_, expectedAmount_, bytes(""));
+        vm.stopPrank();
 
         vm.prank(poolManager.poolDelegate());
         poolManager.finishCollateralLiquidation(loanAddress);

@@ -22,6 +22,7 @@ contract ValidCollateralTests is TestBase {
 
         bytes memory arguments = new LoanInitializer().encodeArguments({
             borrower_:    borrower,
+            lender_:      address(loanManager),
             feeManager_:  address(feeManager),
             assets_:      [address(collateralAsset), address(fundsAsset)],
             termDetails_: [uint256(5_000), uint256(1_000_000), uint256(3)],

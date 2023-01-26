@@ -1094,11 +1094,11 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         poolManager.acceptNewTerms(address(loan1), address(refinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
-        uint256 grossRefinanceInterest = 250_000e6 + 18 days * 0.11e6;
+        uint256 grossRefinanceInterest = 100_000e6 + 18 days * 0.11e6;
         uint256 netRefinanceInterest   = grossRefinanceInterest * 0.9e6 / 1e6;
 
-        assertEq(grossRefinanceInterest, 421_072e6);
-        assertEq(netRefinanceInterest,   378_964.8e6);
+        assertEq(grossRefinanceInterest, 271_072e6);
+        assertEq(netRefinanceInterest,   243_964.8e6);
 
         // Principal + 225_000e6 (period from start to refinance) + late interest(18 * 86400 * 0.099)
         assertTotalAssets(2_500_000e6 + netRefinanceInterest);
@@ -1239,11 +1239,11 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         poolManager.acceptNewTerms(address(loan1), address(refinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
-        uint256 grossRefinanceInterest = 150_000e6 + 6 days * 0.11e6;
+        uint256 grossRefinanceInterest = 100_000e6 + 6 days * 0.11e6;
         uint256 netRefinanceInterest   = grossRefinanceInterest * 0.9e6 / 1e6;
 
-        assertEq(grossRefinanceInterest, 207_024e6);
-        assertEq(netRefinanceInterest,   186_321.6e6);
+        assertEq(grossRefinanceInterest, 157_024e6);
+        assertEq(netRefinanceInterest,   141_321.6e6);
 
         // Principal + 135_000e6 (period from start to refinance) + late interest(6 * 86400 * 0.09)
         assertTotalAssets(2_500_000e6 + netRefinanceInterest);

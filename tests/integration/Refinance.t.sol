@@ -847,19 +847,18 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
 
-        // Principal + interest owed at refinance time (201_840e6 * 0.9 to discount service fees)
-        assertTotalAssets(2_500_000e6 + 181_656e6);
+        // Principal + interest owed at refinance time (151_840e6 * 0.9 to discount service fees)
+        assertTotalAssets(2_500_000e6 + 136_656e6);
 
         assertLoanState({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
-            // + refinanced period incoming (200_000e6)
-            incomingInterest:  401_840e6,
+            // first period (100_000e6) + late fees for first period (151_840e6)  + refinanced period incoming (200_000e6)
+            incomingInterest:  351_840e6,
             incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,  // 10_000e6 of platform service fees + 300e6 of delegate service fees.
             // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
-            refinanceInterest: 201_840e6,
+            refinanceInterest: 151_840e6,
             paymentDueDate:    start + 3_500_000,
             paymentsRemaining: 3
         });
@@ -867,7 +866,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
-            refinanceInterest:   181_656e6,
+            refinanceInterest:   136_656e6,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 1_500_000,
             paymentDueDate:      start + 3_500_000,
@@ -877,9 +876,9 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertLoanManager({
             accruedInterest:       0,
-            accountedInterest:     181_656e6,
+            accountedInterest:     136_656e6,
             principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_181_656e6,        // principal + accrued interest
+            assetsUnderManagement: 1_136_656e6,        // principal + accrued interest
             issuanceRate:          0.09e6 * 1e30,
             domainStart:           start + 1_500_000,
             domainEnd:             start + 3_500_000,
@@ -902,7 +901,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 181_656e6 + 180_000e6);
+        assertTotalAssets(2_500_000e6 + 136_656e6 + 180_000e6);
 
         assertLoanState({
             loan:              loan,
@@ -937,15 +936,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 181_656e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 136_656e6);
 
-        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 4_000e6)
+        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 3_000e6)
         //                    + late interest from 1st period (51_840e6 * 0.02 = 1036_800000)
-        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 16_000e6)
+        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 12_000e6)
         //                    + late interest from 1st period (51_840e6 * 0.08 = 4147_200000)
         assertAssetBalancesIncrease(
             [poolDelegate,        treasury],
-            [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]
+            [6_750e6 + 1_036.8e6, 59_000e6 + 4_147.2e6]
         );
     }
 

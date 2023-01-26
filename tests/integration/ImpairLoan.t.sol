@@ -726,10 +726,8 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         // Refinance interest is:
         // 1. A full installment
         // 2. Late interest
-        // 3. 5 days of interest accrued into the next interval.
         uint256 expectedRefinanceInterest =
             GROSS_MONTHLY_INTEREST +
-            GROSS_MONTHLY_INTEREST * 5 days / ONE_MONTH +
             GROSS_MONTHLY_LATE_INTEREST * 5 days / ONE_MONTH;
 
         uint256 expectedNetRefinanceInterest = expectedRefinanceInterest * 0.9e6 / 1e6;
@@ -826,7 +824,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         assertAssetBalances(
             [address(borrower),  address(pool),             address(poolCover), address(poolDelegate),   address(treasury)],
-            [uint256(999_250e6), uint256(518_847.602740e6), uint256(100_000e6), uint256(2_289.041095e6), uint256(3_832.420089e6)]
+            [uint256(999_250e6), uint256(517_922.945206e6), uint256(100_000e6), uint256(2_268.493150e6), uint256(3_750.228308e6)]
         );
     }
 
@@ -915,7 +913,6 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         uint256 expectedRefinanceInterest =
             GROSS_MONTHLY_INTEREST +
-            GROSS_MONTHLY_INTEREST * 3 days / ONE_MONTH +
             GROSS_MONTHLY_LATE_INTEREST * 3 days / ONE_MONTH;
 
         uint256 expectedNetRefinanceInterest = expectedRefinanceInterest * 0.9e6 / 1e6;

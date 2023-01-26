@@ -460,7 +460,10 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     {
         IMapleLoan loan = IMapleLoan(loan_);
 
-        if (loan.nextPaymentDueDate() == 0) return 0;
+        if (loan.nextPaymentDueDate() == 0) {
+            ( , , uint256 liquidationInterest , , , ) = loanManager.liquidationInfo(loan_);
+            return liquidationInterest;
+        }
 
         if (loan.isImpaired()) {
             ( , , uint256 regularInterest , , , ) = loanManager.liquidationInfo(loan_);

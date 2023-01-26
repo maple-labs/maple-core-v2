@@ -223,7 +223,7 @@ contract FundTests is TestBaseWithAssertions {
         assertEq(feeManager.platformServiceFee(address(loan1)), 0);
 
         assertEq(loan1.drawableFunds(),      0);
-        assertEq(loan1.lender(),             address(0));
+        assertEq(loan1.lender(),             address(loanManager));
         assertEq(loan1.nextPaymentDueDate(), 0);
         assertEq(loan1.principal(),          0);
 
@@ -331,7 +331,7 @@ contract FundTests is TestBaseWithAssertions {
         assertEq(feeManager.platformServiceFee(address(loan1)), 0);
 
         assertEq(loan1.drawableFunds(),      0);
-        assertEq(loan1.lender(),             address(0));
+        assertEq(loan1.lender(),             address(loanManager));
         assertEq(loan1.nextPaymentDueDate(), 0);
         assertEq(loan1.principal(),          0);
 
