@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { FuzzBase } from "./FuzzBase.sol";
 
-import { console } from "../../modules/contract-test-utils/contracts/test.sol";
-
 contract MintFuzzTests is FuzzBase {
 
     // Avoid stack too deep in tests

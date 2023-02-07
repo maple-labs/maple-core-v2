@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 import { TestBase } from "../TestBase.sol";
 
@@ -296,7 +296,7 @@ contract WithdrawScenarios is TestBase {
         depositLiquidity(address(lp2), 2_500_000e6);
 
         // Fund three loans.
-        Loan bigLoan = fundAndDrawdownLoan({
+        MapleLoan bigLoan = fundAndDrawdownLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(15 days), uint256(1)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -333,7 +333,7 @@ contract WithdrawScenarios is TestBase {
         assertEq(withdrawalManager.lockedShares(address(lp1)), 1_500_000e6 - redeemableShares);
         assertEq(withdrawalManager.exitCycleId(address(lp1)),  4);
 
-        Loan loan = createLoan({
+        MapleLoan loan = createLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(300_000e6), uint256(300_000e6)],
@@ -379,21 +379,21 @@ contract WithdrawScenarios is TestBase {
         depositLiquidity(address(lp4), 1_000_000e6);
 
         // Fund three loans.
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
         });
 
-        Loan loan2 = fundAndDrawdownLoan({
+        MapleLoan loan2 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)]
         });
 
-        Loan loan3 = fundAndDrawdownLoan({
+        MapleLoan loan3 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],

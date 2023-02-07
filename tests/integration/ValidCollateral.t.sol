@@ -3,9 +3,9 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan }                       from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory }         from "../../modules/loan-v400/contracts/MapleLoanFactory.sol";
-import { MapleLoanInitializer as LoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
+import { MapleLoan }            from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory }     from "../../modules/loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanInitializer } from "../../modules/loan/contracts/MapleLoanInitializer.sol";
 
 import { TestBase } from "../TestBase.sol";
 
@@ -20,7 +20,7 @@ contract ValidCollateralTests is TestBase {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        bytes memory arguments = new LoanInitializer().encodeArguments({
+        bytes memory arguments = new MapleLoanInitializer().encodeArguments({
             borrower_:    borrower,
             lender_:      address(loanManager),
             feeManager_:  address(feeManager),
@@ -32,7 +32,7 @@ contract ValidCollateralTests is TestBase {
         });
 
         vm.expectRevert("MPF:CI:FAILED");
-        Loan(LoanFactory(loanFactory).createInstance({
+        MapleLoan(MapleLoanFactory(loanFactory).createInstance({
             arguments_: arguments,
             salt_: "SALT"
         }));
@@ -40,7 +40,7 @@ contract ValidCollateralTests is TestBase {
         vm.prank(governor);
         globals.setValidCollateralAsset(address(collateralAsset), true);
 
-        Loan(LoanFactory(loanFactory).createInstance({
+        MapleLoan(MapleLoanFactory(loanFactory).createInstance({
             arguments_: arguments,
             salt_: "SALT"
         }));

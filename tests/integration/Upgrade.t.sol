@@ -3,14 +3,18 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { IMapleProxyFactory, INonTransparentProxy, INonTransparentProxied } from "../../contracts/interfaces/Interfaces.sol";
+import { MapleGlobals } from "../../modules/globals/contracts/MapleGlobals.sol";
 
-import { MapleGlobals }      from "../../modules/globals-v2/contracts/MapleGlobals.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { LoanManager }       from "../../modules/pool-v2/contracts/LoanManager.sol";
-import { Liquidator }        from "../../modules/liquidations/contracts/Liquidator.sol";
-import { PoolManager }       from "../../modules/pool-v2/contracts/PoolManager.sol";
+import { Liquidator } from "../../modules/liquidations/contracts/Liquidator.sol";
+
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
+
+import { LoanManager } from "../../modules/pool/contracts/LoanManager.sol";
+import { PoolManager } from "../../modules/pool/contracts/PoolManager.sol";
+
 import { WithdrawalManager } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+
+import { IMapleProxyFactory, INonTransparentProxy, INonTransparentProxied } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../TestBase.sol";
 
@@ -227,7 +231,7 @@ contract LiquidationUpgradeTests is TestBase {
     bytes internal upgradeCallData = new bytes(0);
 
     Liquidator internal liquidator;
-    Loan       internal loan;
+    MapleLoan  internal loan;
 
     function setUp() public override {
         super.setUp();

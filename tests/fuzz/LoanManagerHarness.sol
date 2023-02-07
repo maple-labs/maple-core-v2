@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { LoanManager } from "../../modules/pool-v2/contracts/LoanManager.sol";
+import { LoanManager } from "../../modules/pool/contracts/LoanManager.sol";
 
 contract LoanManagerHarness is LoanManager {
 

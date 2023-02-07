@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { MapleLoan }  from "../../modules/loan/contracts/MapleLoan.sol";
+import { Refinancer } from "../../modules/loan/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -36,7 +36,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -91,7 +91,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         address borrower2 = address(new Address());
 
-        Loan loan2 = fundAndDrawdownLoan({
+        MapleLoan loan2 = fundAndDrawdownLoan({
             borrower:    borrower2,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
@@ -161,7 +161,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 600_00s of loan2 at 0.15 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 90_000e6);
 
-        Loan loan3 = fundAndDrawdownLoan({
+        MapleLoan loan3 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(4_000_000e6), uint256(4_000_000e6)],
@@ -409,7 +409,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -490,7 +490,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -649,7 +649,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -794,7 +794,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
 
         // This loan will be refinanced
-        Loan loan = fundAndDrawdownLoan({
+        MapleLoan loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -1035,7 +1035,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         depositLiquidity(lp1, 2_500_000e6);
 
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -1180,7 +1180,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         depositLiquidity(lp1, 2_500_000e6);
 
-        Loan loan1 = fundAndDrawdownLoan({
+        MapleLoan loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],

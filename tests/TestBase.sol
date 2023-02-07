@@ -3,30 +3,30 @@ pragma solidity 0.8.7;
 
 import { Address, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
 
-import { MockERC20 as Asset } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { MockERC20 } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
-import { MapleGlobals as Globals } from "../modules/globals-v2/contracts/MapleGlobals.sol";
-import { NonTransparentProxy }     from "../modules/globals-v2/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { MapleGlobals }        from "../modules/globals/contracts/MapleGlobals.sol";
+import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
 import { Liquidator }            from "../modules/liquidations/contracts/Liquidator.sol";
 import { LiquidatorFactory }     from "../modules/liquidations/contracts/LiquidatorFactory.sol";
 import { LiquidatorInitializer } from "../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan as Loan }                       from "../modules/loan-v400/contracts/MapleLoan.sol";
-import { MapleLoanFactory as LoanFactory }         from "../modules/loan-v400/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as FeeManager }       from "../modules/loan-v400/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as LoanInitializer } from "../modules/loan-v400/contracts/MapleLoanInitializer.sol";
+import { MapleLoan }            from "../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory }     from "../modules/loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager }  from "../modules/loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer } from "../modules/loan/contracts/MapleLoanInitializer.sol";
 
-import { LoanManager }             from "../modules/pool-v2/contracts/LoanManager.sol";
-import { Pool }                    from "../modules/pool-v2/contracts/Pool.sol";
-import { PoolDelegateCover }       from "../modules/pool-v2/contracts/PoolDelegateCover.sol";
-import { PoolDeployer }            from "../modules/pool-v2/contracts/PoolDeployer.sol";
-import { PoolManager }             from "../modules/pool-v2/contracts/PoolManager.sol";
-import { LoanManagerFactory }      from "../modules/pool-v2/contracts/proxy/LoanManagerFactory.sol";
-import { LoanManagerInitializer }  from "../modules/pool-v2/contracts/proxy/LoanManagerInitializer.sol";
-import { PoolManagerFactory }      from "../modules/pool-v2/contracts/proxy/PoolManagerFactory.sol";
-import { PoolManagerInitializer }  from "../modules/pool-v2/contracts/proxy/PoolManagerInitializer.sol";
-import { MockLiquidationStrategy } from "../modules/pool-v2/tests/mocks/Mocks.sol";
+import { LoanManager }             from "../modules/pool/contracts/LoanManager.sol";
+import { Pool }                    from "../modules/pool/contracts/Pool.sol";
+import { PoolDelegateCover }       from "../modules/pool/contracts/PoolDelegateCover.sol";
+import { PoolDeployer }            from "../modules/pool/contracts/PoolDeployer.sol";
+import { PoolManager }             from "../modules/pool/contracts/PoolManager.sol";
+import { LoanManagerFactory }      from "../modules/pool/contracts/proxy/LoanManagerFactory.sol";
+import { LoanManagerInitializer }  from "../modules/pool/contracts/proxy/LoanManagerInitializer.sol";
+import { PoolManagerFactory }      from "../modules/pool/contracts/proxy/PoolManagerFactory.sol";
+import { PoolManagerInitializer }  from "../modules/pool/contracts/proxy/PoolManagerInitializer.sol";
+import { MockLiquidationStrategy } from "../modules/pool/tests/mocks/Mocks.sol";
 
 import { WithdrawalManager }            from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 import { WithdrawalManagerFactory }     from "../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
@@ -73,17 +73,17 @@ contract TestBase is ProtocolActions {
     // Helper mapping to assert differences in balance
     mapping(address => uint256) internal partialAssetBalances;
 
-    Asset        internal collateralAsset;
-    Asset        internal fundsAsset;
-    Globals      internal globals;
+    MockERC20    internal collateralAsset;
+    MockERC20    internal fundsAsset;
+    MapleGlobals internal globals;
     PoolDeployer internal deployer;
 
-    FeeManager        internal feeManager;
-    LoanManager       internal loanManager;
-    Pool              internal pool;
-    PoolDelegateCover internal poolCover;
-    PoolManager       internal poolManager;
-    WithdrawalManager internal withdrawalManager;
+    MapleLoanFeeManager internal feeManager;
+    LoanManager         internal loanManager;
+    Pool                internal pool;
+    PoolDelegateCover   internal poolCover;
+    PoolManager         internal poolManager;
+    WithdrawalManager   internal withdrawalManager;
 
     function setUp() public virtual {
         _createAccounts();
@@ -108,30 +108,30 @@ contract TestBase is ProtocolActions {
     }
 
     function _createAssets() internal {
-        collateralAsset = new Asset("Wrapper Ether", "WETH", 18);
-        fundsAsset      = new Asset("USD Coin",      "USDC", 6);
+        collateralAsset = new MockERC20("Wrapper Ether", "WETH", 18);
+        fundsAsset      = new MockERC20("USD Coin",      "USDC", 6);
     }
 
     function _createFactories() internal {
         liquidatorFactory        = address(new LiquidatorFactory(address(globals)));
-        loanFactory              = address(new LoanFactory(address(globals)));
+        loanFactory              = address(new MapleLoanFactory(address(globals)));
         loanManagerFactory       = address(new LoanManagerFactory(address(globals)));
         poolManagerFactory       = address(new PoolManagerFactory(address(globals)));
         withdrawalManagerFactory = address(new WithdrawalManagerFactory(address(globals)));
 
         liquidatorImplementation        = address(new Liquidator());
-        loanImplementation              = address(new Loan());
+        loanImplementation              = address(new MapleLoan());
         loanManagerImplementation       = address(new LoanManager());
         poolManagerImplementation       = address(new PoolManager());
         withdrawalManagerImplementation = address(new WithdrawalManager());
 
         liquidatorInitializer        = address(new LiquidatorInitializer());
-        loanInitializer              = address(new LoanInitializer());
+        loanInitializer              = address(new MapleLoanInitializer());
         loanManagerInitializer       = address(new LoanManagerInitializer());
         poolManagerInitializer       = address(new PoolManagerInitializer());
         withdrawalManagerInitializer = address(new WithdrawalManagerInitializer());
 
-        feeManager = new FeeManager(address(globals));
+        feeManager = new MapleLoanFeeManager(address(globals));
 
         vm.startPrank(governor);
 
@@ -144,8 +144,8 @@ contract TestBase is ProtocolActions {
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
 
-        LoanFactory(loanFactory).registerImplementation(1, loanImplementation, loanInitializer);
-        LoanFactory(loanFactory).setDefaultVersion(1);
+        MapleLoanFactory(loanFactory).registerImplementation(1, loanImplementation, loanInitializer);
+        MapleLoanFactory(loanFactory).setDefaultVersion(1);
 
         LoanManagerFactory(loanManagerFactory).registerImplementation(1, loanManagerImplementation, loanManagerInitializer);
         LoanManagerFactory(loanManagerFactory).setDefaultVersion(1);
@@ -160,7 +160,7 @@ contract TestBase is ProtocolActions {
     }
 
     function _createGlobals() internal {
-        globals = Globals(address(new NonTransparentProxy(governor, address(new Globals()))));
+        globals = MapleGlobals(address(new NonTransparentProxy(governor, address(new MapleGlobals()))));
 
         deployer = new PoolDeployer(address(globals));
 
@@ -240,13 +240,13 @@ contract TestBase is ProtocolActions {
         uint256[3] memory amounts,
         uint256[4] memory rates
     )
-        internal returns (Loan loan)
+        internal returns (MapleLoan loan)
     {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        loan = Loan(LoanFactory(loanFactory).createInstance({
-            arguments_: new LoanInitializer().encodeArguments({
+        loan = MapleLoan(MapleLoanFactory(loanFactory).createInstance({
+            arguments_: new MapleLoanInitializer().encodeArguments({
                 borrower_:    borrower,
                 lender_:      address(loanManager),
                 feeManager_:  address(feeManager),
@@ -265,7 +265,7 @@ contract TestBase is ProtocolActions {
         calls[0] = abi.encodeWithSignature(signature, arg);
     }
 
-    function liquidateCollateral(Loan loan) internal {
+    function liquidateCollateral(MapleLoan loan) internal {
         MockLiquidationStrategy mockLiquidationStrategy = new MockLiquidationStrategy(address(loanManager));
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
@@ -300,12 +300,11 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-
     /**************************************************************************************************************************************/
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function defaultLoan(Loan loan) internal {
+    function defaultLoan(MapleLoan loan) internal {
         triggerDefault(address(poolManager), address(loan), address(liquidatorFactory));
     }
 
@@ -323,7 +322,7 @@ contract TestBase is ProtocolActions {
         uint256[3] memory amounts,
         uint256[4] memory rates
     )
-        internal returns (Loan loan)
+        internal returns (MapleLoan loan)
     {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
@@ -335,7 +334,7 @@ contract TestBase is ProtocolActions {
         drawdown(address(loan), loan.drawableFunds());
     }
 
-    function impairLoan(Loan loan) internal {
+    function impairLoan(MapleLoan loan) internal {
         impairLoan(address(poolManager), address(loan));
     }
 

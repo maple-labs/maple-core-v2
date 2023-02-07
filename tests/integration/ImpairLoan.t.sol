@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { MapleLoan }  from "../../modules/loan/contracts/MapleLoan.sol";
+import { Refinancer } from "../../modules/loan/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -13,7 +13,7 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
     address internal borrower;
     address internal lp;
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -76,7 +76,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
     address internal borrower;
     address internal lp;
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -589,7 +589,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
     address internal borrower;
     address internal lp;
 
-    Loan       internal loan;
+    MapleLoan  internal loan;
     Refinancer internal refinancer;
 
     // Principal * 1 month in seconds * annual interest rate * 0.9 to discount fees / 365 days / 1e18 rate precision / 1e6 (0.9) precision.

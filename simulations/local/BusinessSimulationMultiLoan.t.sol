@@ -2,7 +2,7 @@
 pragma solidity 0.8.7;
 
 import { Address }    from "../../modules/contract-test-utils/contracts/test.sol";
-import { Refinancer } from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { Refinancer } from "../../modules/loan/contracts/Refinancer.sol";
 
 import { LoanScenario }   from "../LoanScenario.sol";
 import { SimulationBase } from "../SimulationBase.sol";

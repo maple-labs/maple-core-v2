@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { MapleLoan as Loan }   from "../modules/loan-v400/contracts/MapleLoan.sol";
-import { ILoanManagerStructs } from "../modules/pool-v2/tests/interfaces/ILoanManagerStructs.sol";
+import { ILoanManagerStructs } from "../modules/pool/tests/interfaces/ILoanManagerStructs.sol";
+
+import { MapleLoan } from "../modules/loan/contracts/MapleLoan.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";
 
 contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
-    /*********************************/
-    /*** State Assertion Functions ***/
-    /*********************************/
+    /**************************************************************************************************************************************/
+    /*** State Assertion Functions                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     function assertLoanState(
-        Loan    loan,
+        MapleLoan loan,
         uint256 principal,
         uint256 refinanceInterest,
         uint256 paymentDueDate,
@@ -27,7 +28,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLoanState(
-        Loan    loan,
+        MapleLoan loan,
         uint256 principal,
         uint256 incomingPrincipal,
         uint256 incomingInterest,
@@ -48,14 +49,14 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loan.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
-    function assertLoanInfoWasDeleted(Loan loan) internal {
+    function assertLoanInfoWasDeleted(MapleLoan loan) internal {
         uint256 loanId = loanManager.paymentIdOf(address(loan));
         assertEq(loanId, 0);
     }
 
     // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertPaymentInfo(
-        Loan    loan,
+        MapleLoan loan,
         uint256 incomingNetInterest,
         uint256 refinanceInterest,
         uint256 issuanceRate,
@@ -98,7 +99,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLiquidationInfo(
-        Loan   loan,
+        MapleLoan loan,
         uint256 principal,
         uint256 interest,
         uint256 lateInterest,

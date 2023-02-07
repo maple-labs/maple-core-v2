@@ -16,18 +16,20 @@ import {
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { SimulationBase } from "./SimulationBase.sol";
+import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
-contract LifecycleBase is SimulationBase, CSVWriter {
+import { AddressRegistry } from "./AddressRegistry.sol";
+
+contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
 
     uint256 earliestWithdrawal = 1;
     uint256 latestWithdrawal = 0;
 
     mapping(uint256 => address) internal withdrawalQueue;
 
-    /******************************************************************************************************************************/
-    /*** Lifecycle Helpers                                                                                                      ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Lifecycle Helpers                                                                                                              ***/
+    /**************************************************************************************************************************************/
 
     function getRealAmount(uint256 value_, address poolManager_) internal view returns (uint256 amount_) {
         amount_ = value_ * (10 ** IERC20Like(IPoolManager(poolManager_).asset()).decimals());
@@ -131,21 +133,21 @@ contract LifecycleBase is SimulationBase, CSVWriter {
         }
     }
 
-    function getAllPoolV2Positions() internal view returns (uint256[][5] memory poolV2Positions_) {
-        poolV2Positions_[0] = getPoolV2Positions(mavenPermissionedPoolV2, mavenPermissionedLps);
-        poolV2Positions_[1] = getPoolV2Positions(mavenUsdcPoolV2,         mavenUsdcLps);
-        poolV2Positions_[2] = getPoolV2Positions(mavenWethPoolV2,         mavenWethLps);
-        poolV2Positions_[3] = getPoolV2Positions(orthogonalPoolV2,        orthogonalLps);
-        poolV2Positions_[4] = getPoolV2Positions(icebreakerPoolV2,        icebreakerLps);
+    function getAllPoolPositions() internal view returns (uint256[][5] memory poolPositions_) {
+        poolPositions_[0] = getPoolPositions(mavenPermissionedPool, mavenPermissionedLps);
+        poolPositions_[1] = getPoolPositions(mavenUsdcPool,         mavenUsdcLps);
+        poolPositions_[2] = getPoolPositions(mavenWethPool,         mavenWethLps);
+        poolPositions_[3] = getPoolPositions(orthogonalPool,        orthogonalLps);
+        poolPositions_[4] = getPoolPositions(icebreakerPool,        icebreakerLps);
     }
 
-    function getPoolV2Positions(address poolV2_, address[] storage accounts_) internal view returns (uint256[] memory poolV2Positions_) {
-        poolV2Positions_ = new uint256[](accounts_.length);
+    function getPoolPositions(address pool_, address[] storage accounts_) internal view returns (uint256[] memory poolPositions_) {
+        poolPositions_ = new uint256[](accounts_.length);
 
-        IPool pool = IPool(poolV2_);
+        IPool pool = IPool(pool_);
 
         for (uint256 i; i < accounts_.length; ++i) {
-            poolV2Positions_[i] = pool.convertToExitAssets(pool.balanceOf(accounts_[i]));
+            poolPositions_[i] = pool.convertToExitAssets(pool.balanceOf(accounts_[i]));
         }
     }
 
@@ -217,146 +219,6 @@ contract LifecycleBase is SimulationBase, CSVWriter {
             string(abi.encodePacked(path_, "/icebreaker-lp-balance-changes.csv")),
             icebreakerLps,
             getBalanceChanges(USDC, icebreakerLps, balances[4])
-        );
-    }
-
-    function writeLPData(
-        string memory path_,
-        address poolV1,
-        address[] storage lps_,
-        uint256[] memory redeemedAmounts_,
-        uint256[] memory poolV2Positions1,
-        uint256[] memory poolV2Positions2,
-        uint256[] memory poolV2Positions3,
-        uint256[] memory poolV2Positions4,
-        uint256[] memory poolV2Positions5,
-        uint256[] memory poolV2Positions6,
-        uint256[] memory poolV2Positions7,
-        uint256[] memory poolV2Positions8
-    )
-        internal
-    {
-        string[] memory row = new string[](11);
-        row[0] = "Account";
-        row[1] = "PoolV1 Position Value";
-        row[2] = "Post-Airdrop";
-        row[3] = "Pre-Impair";
-        row[4] = "Post-Impair";
-        row[5] = "One Week Post-Impair";
-        row[6] = "Pre-Default";
-        row[7] = "Post-Default";
-        row[8] = "Post-Cash";
-        row[9] = "Post-Payments";
-        row[10] = "Position Withdrawn";
-
-        initCSV(path_, row);
-
-        for (uint256 i; i < lps_.length; ++i) {
-            row[0] = vm.toString(lps_[i]);
-            row[1] = vm.toString(getV1Position(poolV1, lps_[i]));
-            row[2] = vm.toString(poolV2Positions1[i]);
-            row[3] = vm.toString(poolV2Positions2[i]);
-            row[4] = vm.toString(poolV2Positions3[i]);
-            row[5] = vm.toString(poolV2Positions4[i]);
-            row[6] = vm.toString(poolV2Positions5[i]);
-            row[7] = vm.toString(poolV2Positions6[i]);
-            row[8] = vm.toString(poolV2Positions7[i]);
-            row[9] = vm.toString(poolV2Positions8[i]);
-            row[10] = vm.toString(redeemedAmounts_[i]);
-
-            addRow(path_, row);
-        }
-
-        writeFile(path_);
-    }
-
-    function writeAllLPData(
-        string memory path_,
-        uint256[][5] memory redeemedAmounts,
-        uint256[][5] memory poolV2Positions1,
-        uint256[][5] memory poolV2Positions2,
-        uint256[][5] memory poolV2Positions3,
-        uint256[][5] memory poolV2Positions4,
-        uint256[][5] memory poolV2Positions5,
-        uint256[][5] memory poolV2Positions6,
-        uint256[][5] memory poolV2Positions7,
-        uint256[][5] memory poolV2Positions8
-    ) internal {
-        makeDir(path_);
-
-        writeLPData(
-            string(abi.encodePacked(path_, "/mavenPermissioned-lp-balance-changes.csv")),
-            mavenPermissionedPoolV1,
-            mavenPermissionedLps,
-            redeemedAmounts[0],
-            poolV2Positions1[0],
-            poolV2Positions2[0],
-            poolV2Positions3[0],
-            poolV2Positions4[0],
-            poolV2Positions5[0],
-            poolV2Positions6[0],
-            poolV2Positions7[0],
-            poolV2Positions8[0]
-        );
-
-        writeLPData(
-            string(abi.encodePacked(path_, "/mavenUsdc-lp-balance-changes.csv")),
-            mavenUsdcPoolV1,
-            mavenUsdcLps,
-            redeemedAmounts[1],
-            poolV2Positions1[1],
-            poolV2Positions2[1],
-            poolV2Positions3[1],
-            poolV2Positions4[1],
-            poolV2Positions5[1],
-            poolV2Positions6[1],
-            poolV2Positions7[1],
-            poolV2Positions8[1]
-        );
-
-        writeLPData(
-            string(abi.encodePacked(path_, "/mavenWeth-lp-balance-changes.csv")),
-            mavenWethPoolV1,
-            mavenWethLps,
-            redeemedAmounts[2],
-            poolV2Positions1[2],
-            poolV2Positions2[2],
-            poolV2Positions3[2],
-            poolV2Positions4[2],
-            poolV2Positions5[2],
-            poolV2Positions6[2],
-            poolV2Positions7[2],
-            poolV2Positions8[2]
-        );
-
-        writeLPData(
-            string(abi.encodePacked(path_, "/orthogonal-lp-balance-changes.csv")),
-            orthogonalPoolV1,
-            orthogonalLps,
-            redeemedAmounts[3],
-            poolV2Positions1[3],
-            poolV2Positions2[3],
-            poolV2Positions3[3],
-            poolV2Positions4[3],
-            poolV2Positions5[3],
-            poolV2Positions6[3],
-            poolV2Positions7[3],
-            poolV2Positions8[3]
-        );
-
-        writeLPData(
-            string(abi.encodePacked(path_, "/icebreaker-lp-balance-changes.csv")),
-            icebreakerPoolV1,
-            icebreakerLps,
-            redeemedAmounts[4],
-            poolV2Positions1[4],
-            poolV2Positions2[4],
-            poolV2Positions3[4],
-            poolV2Positions4[4],
-            poolV2Positions5[4],
-            poolV2Positions6[4],
-            poolV2Positions7[4],
-            poolV2Positions8[4]
         );
     }
 
@@ -511,6 +373,71 @@ contract LifecycleBase is SimulationBase, CSVWriter {
         console.log(" --- -------------- --- ");
     }
 
+    function getNextLoanAndPaymentDueDate(address[] storage loans) internal view returns (address loan, uint256 nextPaymentDueDate) {
+        for (uint256 i; i < loans.length; ++i) {
+            uint256 dueDate = IMapleLoan(loans[i]).nextPaymentDueDate();
+
+            if (!isEarlierThan(dueDate, nextPaymentDueDate)) continue;
+
+            loan               = loans[i];
+            nextPaymentDueDate = dueDate;
+        }
+    }
+
+    function isEarlierThan(uint256 timestamp, uint256 threshold) internal pure returns (bool isEarlier) {
+        if (timestamp == 0) return false;
+
+        if (threshold == 0) return true;
+
+        return timestamp < threshold;
+    }
+
+    function getNextLoan() internal view returns (address loan) {
+        uint256 nextPaymentDueDate;
+        address tempLoan;
+        uint256 tempNextPaymentDueDate;
+
+        ( tempLoan, tempNextPaymentDueDate ) = getNextLoanAndPaymentDueDate(icebreakerLoans);
+
+        if (isEarlierThan(tempNextPaymentDueDate, nextPaymentDueDate)) {
+            loan               = tempLoan;
+            nextPaymentDueDate = tempNextPaymentDueDate;
+        }
+
+        ( tempLoan, tempNextPaymentDueDate ) = getNextLoanAndPaymentDueDate(mavenPermissionedLoans);
+
+        if (isEarlierThan(tempNextPaymentDueDate, nextPaymentDueDate)) {
+            loan               = tempLoan;
+            nextPaymentDueDate = tempNextPaymentDueDate;
+        }
+
+        ( tempLoan, tempNextPaymentDueDate ) = getNextLoanAndPaymentDueDate(mavenUsdcLoans);
+
+        if (isEarlierThan(tempNextPaymentDueDate, nextPaymentDueDate)) {
+            loan               = tempLoan;
+            nextPaymentDueDate = tempNextPaymentDueDate;
+        }
+
+        ( tempLoan, tempNextPaymentDueDate ) = getNextLoanAndPaymentDueDate(mavenWethLoans);
+
+        if (isEarlierThan(tempNextPaymentDueDate, nextPaymentDueDate)) {
+            loan               = tempLoan;
+            nextPaymentDueDate = tempNextPaymentDueDate;
+        }
+
+        ( tempLoan, tempNextPaymentDueDate ) = getNextLoanAndPaymentDueDate(orthogonalLoans);
+
+        if (isEarlierThan(tempNextPaymentDueDate, nextPaymentDueDate)) {
+            loan               = tempLoan;
+            nextPaymentDueDate = tempNextPaymentDueDate;
+        }
+
+    }
+
+    function getNextLoan(address[] storage loans) internal view returns (address loan) {
+        ( loan, ) = getNextLoanAndPaymentDueDate(loans);
+    }
+
     function performComplexLifecycle(address poolManager_, address[] storage loans_, address[] storage lps_, uint256 seed_) internal {
         // Divide seed by 2 so we can increment "infinitely".
         seed_ /= 2;
@@ -585,9 +512,9 @@ contract LifecycleBase is SimulationBase, CSVWriter {
         withdrawAllPoolCover(poolManager_);
     }
 
-    /******************************************************************************************************************************/
-    /*** Lifecycle Functions                                                                                                    ***/
-    /******************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Lifecycle Functions                                                                                                            ***/
+    /**************************************************************************************************************************************/
 
     function payOffAllLoanWhenDue() internal {
         address loan;

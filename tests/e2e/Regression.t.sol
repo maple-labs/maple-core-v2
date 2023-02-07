@@ -3,11 +3,6 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
-
-import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
-
 import { BaseInvariants }            from "../invariants/BaseInvariants.t.sol";
 import { LoanHandlerWithImpairment } from "../invariants/actors/LoanHandlerWithImpairment.sol";
 import { LpHandler }                 from "../invariants/actors/LpHandler.sol";

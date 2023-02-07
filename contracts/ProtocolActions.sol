@@ -302,7 +302,6 @@ contract ProtocolActions is TestUtils {
         vm.stopPrank();
     }
 
-    // NOTE: This works for PoolManagers or PoolV1
     function setLiquidityCap(address poolManager_, uint256 amount_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 

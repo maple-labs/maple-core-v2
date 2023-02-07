@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract RemoveLoanImpairmentFailureTests is TestBase {
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public virtual override {
         super.setUp();

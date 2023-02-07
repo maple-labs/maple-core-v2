@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -37,7 +37,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /*** Fund and Drawdown Loan ***/
         /******************************/
 
-        Loan loan = fundAndDrawdownLoan({
+        MapleLoan loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
+import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 import { ILiquidator } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract LoanLiquidationTests is TestBaseWithAssertions {
 
     address internal borrower = address(new Address());
     address internal lp       = address(new Address());
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     uint256 internal platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
     uint256 internal platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
@@ -1881,7 +1881,7 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
     address internal borrower = address(new Address());
     address internal lp       = address(new Address());
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     uint256 internal platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
     uint256 internal platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;

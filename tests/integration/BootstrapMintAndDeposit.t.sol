@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }            from "../../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 as Asset } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
+import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -63,8 +63,8 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         digest_ = keccak256(
             abi.encodePacked(
                 '\x19\x01',
-                Asset(asset_).DOMAIN_SEPARATOR(),
-                keccak256(abi.encode(Asset(asset_).PERMIT_TYPEHASH(), owner_, spender_, value_, nonce_, deadline_))
+                MockERC20(asset_).DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(MockERC20(asset_).PERMIT_TYPEHASH(), owner_, spender_, value_, nonce_, deadline_))
             )
         );
     }

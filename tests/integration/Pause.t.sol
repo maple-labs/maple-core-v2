@@ -6,8 +6,7 @@ import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
 import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan as Loan }    from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { MapleLoanInitializer } from "../../modules/loan-v400/contracts/MapleLoanInitializer.sol";
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 import {
     ILoanManagerInitializer,
@@ -26,7 +25,7 @@ contract PauseTests is TestBaseWithAssertions {
     bytes[] internal data;
 
     Liquidator internal liquidator;
-    Loan       internal loan;
+    MapleLoan  internal loan;
 
     function setUp() public override {
         super.setUp();

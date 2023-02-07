@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { MapleLoan }  from "../../modules/loan/contracts/MapleLoan.sol";
+import { Refinancer } from "../../modules/loan/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -19,7 +19,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
     address[] internal lps;
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public override {
         super.setUp();

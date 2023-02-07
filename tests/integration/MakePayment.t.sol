@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
+import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -11,7 +11,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
     address internal borrower;
     address internal lp;
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -84,7 +84,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
     address internal borrower;
     address internal lp;
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -480,7 +480,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
     address internal borrower;
     address internal lp;
 
-    Loan internal loan;
+    MapleLoan internal loan;
 
     function setUp() public override {
         super.setUp();
@@ -934,8 +934,8 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
     address internal borrower2;
     address internal lp;
 
-    Loan internal loan1;
-    Loan internal loan2;
+    MapleLoan internal loan1;
+    MapleLoan internal loan2;
 
     function setUp() public override {
         super.setUp();
@@ -1694,8 +1694,8 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
     address internal borrower2;
     address internal lp;
 
-    Loan internal loan1;
-    Loan internal loan2;
+    MapleLoan internal loan1;
+    MapleLoan internal loan2;
 
     function setUp() public override {
         super.setUp();
@@ -2144,9 +2144,9 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
     address internal borrower3;
     address internal lp;
 
-    Loan internal loan1;
-    Loan internal loan2;
-    Loan internal loan3;
+    MapleLoan internal loan1;
+    MapleLoan internal loan2;
+    MapleLoan internal loan3;
 
     function setUp() public override {
         super.setUp();

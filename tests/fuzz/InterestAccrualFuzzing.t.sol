@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
 import { IMapleLoan } from "../../contracts/interfaces/Interfaces.sol";
 
