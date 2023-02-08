@@ -6,7 +6,7 @@ import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
 import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
 
 import {
     ILoanManagerInitializer,

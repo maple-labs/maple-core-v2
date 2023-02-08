@@ -3,8 +3,8 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan }  from "../../modules/loan/contracts/MapleLoan.sol";
-import { Refinancer } from "../../modules/loan/contracts/Refinancer.sol";
+import { MapleLoan }  from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Refinancer } from "../../modules/fixed-term-loan/contracts/Refinancer.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 

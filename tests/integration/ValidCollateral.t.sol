@@ -3,9 +3,9 @@ pragma solidity 0.8.7;
 
 import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
 
-import { MapleLoan }            from "../../modules/loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory }     from "../../modules/loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanInitializer } from "../../modules/loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoan }            from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory }     from "../../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanInitializer } from "../../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
 
 import { TestBase } from "../TestBase.sol";
 

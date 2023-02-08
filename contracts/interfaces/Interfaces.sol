@@ -9,15 +9,17 @@ import { INonTransparentProxy }   from "../../modules/globals/modules/non-transp
 
 import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
-import { IMapleLoan }           from "../../modules/loan/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFactory }    from "../../modules/loan/contracts/interfaces/IMapleLoanFactory.sol";
-import { IMapleLoanFeeManager } from "../../modules/loan/contracts/interfaces/IMapleLoanFeeManager.sol";
-import { IRefinancer }          from "../../modules/loan/contracts/interfaces/IRefinancer.sol";
+import { IMapleLoan }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFactory }    from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFactory.sol";
+import { IMapleLoanFeeManager } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
+import { IRefinancer }          from "../../modules/fixed-term-loan/contracts/interfaces/IRefinancer.sol";
 
-import { ILoanManager }            from "../../modules/pool/contracts/interfaces/ILoanManager.sol";
-import { ILoanManagerInitializer } from "../../modules/pool/contracts/interfaces/ILoanManagerInitializer.sol";
-import { IMapleProxied }           from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
-import { IMapleProxyFactory }      from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { ILoanManager }            from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerInitializer } from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManagerInitializer.sol";
+
+import { IMapleProxied }      from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
+import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+
 import { IPool }                   from "../../modules/pool/contracts/interfaces/IPool.sol";
 import { IPoolDeployer }           from "../../modules/pool/contracts/interfaces/IPoolDeployer.sol";
 import { IPoolManager }            from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
@@ -55,5 +57,13 @@ interface IERC20Like {
 interface IHasGLobalsLike {
 
     function globals() external view returns (address globals);
+
+}
+
+interface ILiquidatorLike {
+
+    function getExpectedAmount(uint256 swapAmount_) external view returns (uint256 expectedAmount_);
+
+    function liquidatePortion(uint256 swapAmount_, uint256 maxReturnAmount_, bytes calldata data_) external;
 
 }

@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { Address, TestUtils }   from "../../../modules/contract-test-utils/contracts/test.sol";
 import { MockERC20 }            from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
-import { MapleLoanInitializer } from "../../../modules/loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoanInitializer } from "../../../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
 
 import {
     IMapleGlobals,

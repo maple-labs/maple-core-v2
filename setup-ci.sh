@@ -4,14 +4,17 @@ chmod 600 $HOME/.ssh/id_rsa
 
 git config --global url."git@github.com:".insteadOf "https://github.com/"
 
+echo "$SSH_KEY_FIXED_TERM_LOAN" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/fixed-term-loan
+
+echo "$SSH_KEY_FIXED_TERM_LOAN_MANAGER" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/fixed-term-loan-manager
+
 echo "$SSH_KEY_GLOBALS_V2" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/globals
 
 echo "$SSH_KEY_LIQUIDATIONS" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/liquidations
-
-echo "$SSH_KEY_LOAN" > $HOME/.ssh/id_rsa
-git submodule update --init --recursive modules/loan
 
 echo "$SSH_KEY_POOL_V2" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/pool

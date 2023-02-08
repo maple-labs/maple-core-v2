@@ -12,27 +12,28 @@ import { Liquidator }            from "../modules/liquidations/contracts/Liquida
 import { LiquidatorFactory }     from "../modules/liquidations/contracts/LiquidatorFactory.sol";
 import { LiquidatorInitializer } from "../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleLoan }            from "../modules/loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory }     from "../modules/loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager }  from "../modules/loan/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer } from "../modules/loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoan }            from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory }     from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager }  from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer } from "../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
 
-import { LoanManager }             from "../modules/pool/contracts/LoanManager.sol";
+import { LoanManager }             from "../modules/fixed-term-loan-manager/contracts/LoanManager.sol";
+import { LoanManagerFactory }      from "../modules/fixed-term-loan-manager/contracts/proxy/LoanManagerFactory.sol";
+import { LoanManagerInitializer }  from "../modules/fixed-term-loan-manager/contracts/proxy/LoanManagerInitializer.sol";
+
 import { Pool }                    from "../modules/pool/contracts/Pool.sol";
 import { PoolDelegateCover }       from "../modules/pool/contracts/PoolDelegateCover.sol";
 import { PoolDeployer }            from "../modules/pool/contracts/PoolDeployer.sol";
 import { PoolManager }             from "../modules/pool/contracts/PoolManager.sol";
-import { LoanManagerFactory }      from "../modules/pool/contracts/proxy/LoanManagerFactory.sol";
-import { LoanManagerInitializer }  from "../modules/pool/contracts/proxy/LoanManagerInitializer.sol";
 import { PoolManagerFactory }      from "../modules/pool/contracts/proxy/PoolManagerFactory.sol";
 import { PoolManagerInitializer }  from "../modules/pool/contracts/proxy/PoolManagerInitializer.sol";
-import { MockLiquidationStrategy } from "../modules/pool/tests/mocks/Mocks.sol";
-
 import { WithdrawalManager }            from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
 import { WithdrawalManagerFactory }     from "../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
 import { WithdrawalManagerInitializer } from "../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
+
+import { MockLiquidationStrategy } from "./mocks/Mocks.sol";
 
 contract TestBase is ProtocolActions {
 
@@ -266,7 +267,7 @@ contract TestBase is ProtocolActions {
     }
 
     function liquidateCollateral(MapleLoan loan) internal {
-        MockLiquidationStrategy mockLiquidationStrategy = new MockLiquidationStrategy(address(loanManager));
+        MockLiquidationStrategy mockLiquidationStrategy = new MockLiquidationStrategy();
 
         ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
 

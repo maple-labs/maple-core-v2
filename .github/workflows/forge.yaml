@@ -17,7 +17,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
@@ -44,7 +45,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
@@ -71,7 +73,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
@@ -98,7 +101,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
@@ -125,7 +129,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
@@ -152,7 +157,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
@@ -179,7 +185,8 @@ jobs:
         env:
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_LOAN: ${{secrets.SSH_KEY_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}

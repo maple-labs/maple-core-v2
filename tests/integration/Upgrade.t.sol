@@ -7,9 +7,10 @@ import { MapleGlobals } from "../../modules/globals/contracts/MapleGlobals.sol";
 
 import { Liquidator } from "../../modules/liquidations/contracts/Liquidator.sol";
 
-import { MapleLoan } from "../../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
 
-import { LoanManager } from "../../modules/pool/contracts/LoanManager.sol";
+import { LoanManager } from "../../modules/fixed-term-loan-manager/contracts/LoanManager.sol";
+
 import { PoolManager } from "../../modules/pool/contracts/PoolManager.sol";
 
 import { WithdrawalManager } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";

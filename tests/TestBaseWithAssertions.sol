@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanManagerStructs } from "../modules/pool/tests/interfaces/ILoanManagerStructs.sol";
+import { ILoanManagerStructs } from "../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
 
-import { MapleLoan } from "../modules/loan/contracts/MapleLoan.sol";
+import { MapleLoan } from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";

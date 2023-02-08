@@ -6,6 +6,14 @@
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
 	ignore = dirty
+[submodule "modules/fixed-term-loan"]
+	path = modules/fixed-term-loan
+	url = git@github.com:maple-labs/fixed-term-loan-private.git
+	ignore = dirty
+[submodule "modules/fixed-term-loan-manager"]
+	path = modules/fixed-term-loan-manager
+	url = git@github.com:maple-labs/fixed-term-loan-manager-private.git
+	ignore = dirty
 [submodule "modules/globals"]
 	path = modules/globals
 	url = git@github.com:maple-labs/globals-v2-private.git
@@ -13,9 +21,6 @@
 [submodule "modules/liquidations"]
 	path = modules/liquidations
 	url = git@github.com:maple-labs/liquidations-private.git
-[submodule "modules/loan"]
-	path = modules/loan
-	url = git@github.com:maple-labs/loan-private.git
 	ignore = dirty
 [submodule "modules/pool"]
 	path = modules/pool
