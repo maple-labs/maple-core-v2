@@ -67,7 +67,7 @@ contract BasicInvariants is BaseInvariants {
             address loan = loanHandler.activeLoans(i);
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
-            assert_loan_invariant_C(loan);
+            assert_loan_invariant_C(loan, loanHandler.platformOriginationFee(loan));
 
             (
                 ,

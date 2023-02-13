@@ -77,7 +77,7 @@ contract ImpairInvariants is BaseInvariants {
 
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
-            assert_loan_invariant_C(loan);
+            assert_loan_invariant_C(loan, loanHandler.platformOriginationFee(loan));
 
             ( , , , , , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 

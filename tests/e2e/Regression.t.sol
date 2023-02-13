@@ -160,7 +160,7 @@ contract RegressionTest is BaseInvariants {
 
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
-            assert_loan_invariant_C(loan);
+            assert_loan_invariant_C(loan, loanHandlerWithImpairment.platformOriginationFee(loan));
 
             ( , , uint256 startDate, uint256 paymentDueDate, , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 
@@ -263,7 +263,7 @@ contract RegressionTest is BaseInvariants {
 
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
-            assert_loan_invariant_C(loan);
+            assert_loan_invariant_C(loan, loanHandlerWithImpairment.platformOriginationFee(loan));
 
             ( , , uint256 startDate, uint256 paymentDueDate, , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 

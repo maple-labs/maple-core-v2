@@ -127,32 +127,28 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         assertGe(fundsAsset.balanceOf(loan), IMapleLoan(loan).drawableFunds(), "Loan Invariant B");
     }
 
-    // NOTE: Commented out as `makePayment` does not include a `_isCollateralMaintained` check. This will be added in a subsequent loan release.
-    // TODO: Add `_isCollateralMaintained` to loan v4.0.2 (consider adding to v4.0.1)
-    function assert_loan_invariant_C(address loan_) internal {
-        // IMapleLoan           loan       = IMapleLoan(loan_);
-        // IMapleLoanFeeManager feeManager = IMapleLoanFeeManager(loan.feeManager());
+    function assert_loan_invariant_C(address loan_, uint256 platformOriginationFee_) internal {
+        IMapleLoan           loan       = IMapleLoan(loan_);
+        IMapleLoanFeeManager feeManager = IMapleLoanFeeManager(loan.feeManager());
 
-        // console.log("loan.paymentsRemaining()", loan.paymentsRemaining());
+        // The loan is matured or repossessed, the invariant will underflow because delegateOriginationFee > 0
+        if (loan.nextPaymentDueDate() == 0) return;
 
-        // // The loan is matured or repossessed, the invariant will underflow because delegateOriginationFee > 0
-        // if (loan.nextPaymentDueDate() == 0) return;
+        // If the drawableFunds is greater than the current principal, no collateral is required.
+        if (loan.drawableFunds() >= loan.principal()) return;
 
-        // // If the drawableFunds is greater than the current principal, no collateral is required.
-        // if (loan.drawableFunds() > loan.principal()) return;
+        uint256 delegateOriginationFee = feeManager.delegateOriginationFee(address(loan));
 
-        // uint256 platformOriginationFee = feeManager.getPlatformOriginationFee(address(loan), loan.principalRequested());
+        uint256 fundedAmount = loan.principalRequested() - delegateOriginationFee - platformOriginationFee_;
 
-        // uint256 fundedAmount = loan.principalRequested() - (feeManager.delegateOriginationFee(address(loan)) + platformOriginationFee);
+        // If drawableFunds exactly equals the funded amount, assume funds haven't been drawn down.
+        if (loan.drawableFunds() == fundedAmount) return;
 
-        // // If drawableFunds exactly equals the funded amount, assume funds haven't been drawn down.
-        // if (loan.drawableFunds() == fundedAmount) return;
-
-        // assertGe(
-        //     loan.collateral(),
-        //     loan.collateralRequired() * ((loan.principal() - loan.drawableFunds()) + loan.principalRequested() - 1) / loan.principalRequested(),
-        //     "Loan Invariant C"
-        // );
+        assertGe(
+            loan.collateral(),
+            (loan.collateralRequired() * (loan.principal() - loan.drawableFunds()) + loan.principalRequested() - 1) / loan.principalRequested(),
+            "Loan Invariant C"
+        );
     }
 
     /**************************************************************************************************************************************/

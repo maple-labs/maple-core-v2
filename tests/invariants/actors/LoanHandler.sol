@@ -9,6 +9,7 @@ import {
     IMapleGlobals,
     IMapleLoan,
     IMapleLoanFactory,
+    IMapleLoanFeeManager,
     ILoanManager,
     IPool,
     IPoolManager,
@@ -73,6 +74,7 @@ contract LoanHandler is TestUtils {
     mapping (address => uint256) public fundingTime;
     mapping (address => uint256) public lateIntervalInterest;
     mapping (address => uint256) public paymentTimestamp;
+    mapping (address => uint256) public platformOriginationFee;
 
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
@@ -193,6 +195,9 @@ contract LoanHandler is TestUtils {
         vm.stopPrank();
 
         fundingTime[loan_] = block.timestamp;
+
+        platformOriginationFee[loan_] =
+            IMapleLoanFeeManager(feeManager).getPlatformOriginationFee(address(loan_), IMapleLoan(loan_).principalRequested());
 
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
 

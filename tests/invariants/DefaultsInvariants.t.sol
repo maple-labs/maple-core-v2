@@ -75,7 +75,7 @@ contract DefaultsInvariants is BaseInvariants {
 
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
-            assert_loan_invariant_C(loan);
+            assert_loan_invariant_C(loan, loanHandler.platformOriginationFee(loan));
 
             (
                 ,
