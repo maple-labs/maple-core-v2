@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { LoanManager } from "../../modules/fixed-term-loan-manager/contracts/LoanManager.sol";
+import { FixedTermLoanManager } from "../../../contracts/Contracts.sol";
 
-contract LoanManagerHarness is LoanManager {
+contract FixedTermLoanManagerHarness is FixedTermLoanManager {
 
     function __setAccountedInterest(uint256 accountedInterest_) external {
         accountedInterest = uint112(accountedInterest_);

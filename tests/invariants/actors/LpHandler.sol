@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, TestUtils } from "../../../modules/contract-test-utils/contracts/test.sol";
-
-import { MockERC20 }         from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
-import { WithdrawalManager } from "../../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-
-import { IPool, IPoolManager, ILoanManager } from "../../../contracts/interfaces/Interfaces.sol";
+import { IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ITest } from "../interfaces/ITest.sol";
+
+// TODO: MockERC20 is not needed if protocol actions are used which handle minting.
+import { Address, TestUtils, MockERC20 } from "../../../contracts/Contracts.sol";
 
 contract LpHandler is TestUtils {
 
@@ -16,7 +14,7 @@ contract LpHandler is TestUtils {
     /*** State Variables                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    address internal currentLp;
+    address currentLp;
 
     address[] public holders;
     address[] public lps;
@@ -27,10 +25,10 @@ contract LpHandler is TestUtils {
 
     mapping(bytes32 => uint256) public numberOfCalls;
 
-    MockERC20         internal fundsAsset;
-    IPool             internal pool;
-    ITest             internal testContract;
-    WithdrawalManager internal withdrawalManager;
+    MockERC20          fundsAsset;
+    IPool              pool;
+    ITest              testContract;
+    IWithdrawalManager withdrawalManager;
 
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
@@ -39,7 +37,7 @@ contract LpHandler is TestUtils {
     constructor (address pool_, address testContract_, uint256 numLps_) {
         pool              = IPool(pool_);
         testContract      = ITest(testContract_);
-        withdrawalManager = WithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
+        withdrawalManager = IWithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
 
         fundsAsset = MockERC20(pool.asset());
 

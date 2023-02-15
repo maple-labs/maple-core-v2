@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { BaseInvariants }            from "../invariants/BaseInvariants.t.sol";
 import { LoanHandlerWithImpairment } from "../invariants/actors/LoanHandlerWithImpairment.sol";
 import { LpHandler }                 from "../invariants/actors/LpHandler.sol";
 
 contract RegressionTest is BaseInvariants {
 
-    uint256 internal constant NUM_BORROWERS = 5;
-    uint256 internal constant NUM_LPS       = 10;
-    uint256 internal constant MAX_NUM_LOANS = 50;
+    uint256 constant NUM_BORROWERS = 5;
+    uint256 constant NUM_LPS       = 10;
+    uint256 constant MAX_NUM_LOANS = 50;
 
-    LoanHandlerWithImpairment internal loanHandlerWithImpairment;
+    LoanHandlerWithImpairment loanHandlerWithImpairment;
 
     function setUp() public override {
         super.setUp();

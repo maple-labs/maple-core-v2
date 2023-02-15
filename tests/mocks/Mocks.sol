@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+// TODO: MockERC20 should be replaced with mintable-burnable-erc0-interface.
+import { MockERC20 } from "../../contracts/Contracts.sol";
 
 import { ILiquidatorLike } from "../../contracts/interfaces/Interfaces.sol";
 

@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }    from "../../modules/contract-test-utils/contracts/test.sol";
-import { Refinancer } from "../../modules/fixed-term-loan/contracts/Refinancer.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { LoanScenario }   from "../LoanScenario.sol";
 import { SimulationBase } from "../SimulationBase.sol";
 
 contract BusinessSimulationsMultiLoan is SimulationBase {
-
-    address refinancer = address(new Refinancer());
 
     function setUp() public override {
         super.setUp();
@@ -23,12 +20,12 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
     function _createSimulationLoan(uint256 startingPrincipal, uint256 endingPrincipal, uint256 collateral, string memory loanName) internal {
         scenarios.push(new LoanScenario({
-            loan_: address(createLoan({
+            loan_: createLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(0), uint256(30 days), uint256(6)],
                 amounts:     [uint256(collateral), uint256(startingPrincipal), uint256(endingPrincipal)],
                 rates:       [uint256(0.15e18), uint256(0), uint256(0), uint256(0)]
-            })),
+            }),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start,
@@ -57,7 +54,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[1].setPaymentOffset(2, -10 days);
 
         bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
-        scenarios[1].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+        scenarios[1].setRefinance(address(refinancer), 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
 
         scenarios[1].setLoanImpairment(5, -4 days);
 
@@ -66,7 +63,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[2].setPaymentOffset(2, -10 days);
 
         data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
-        scenarios[2].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+        scenarios[2].setRefinance(address(refinancer), 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
 
         scenarios[2].setLoanImpairment(5, -4 days);
 
@@ -86,7 +83,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[4].setPaymentOffset(2, 5 days);
 
         data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
-        scenarios[4].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+        scenarios[4].setRefinance(address(refinancer), 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
 
         scenarios[4].setClosingPayment(4);
 
@@ -100,7 +97,6 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[6].setPaymentOffset(1, -15 days);
         scenarios[6].setPaymentOffset(2,  32 days);
         scenarios[6].setPaymentOffset(3,   2 days);
-
 
         string memory fileName = "business-sim-multi-loan";
 
@@ -140,7 +136,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[0].setPaymentOffset(2, -10 days);
 
         bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
-        scenarios[0].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+        scenarios[0].setRefinance(address(refinancer), 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
 
         scenarios[0].setLoanImpairment(5, -4 days);
 
@@ -162,7 +158,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[0].setPaymentOffset(2, -10 days);
 
         bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
-        scenarios[0].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+        scenarios[0].setRefinance(address(refinancer), 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
 
         scenarios[0].setLoanImpairment(5, -4 days);
 
@@ -208,7 +204,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
         scenarios[0].setPaymentOffset(2, 5 days);
 
         bytes[] memory data_ = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 30 days);
-        scenarios[0].setRefinance(refinancer, 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
+        scenarios[0].setRefinance(address(refinancer), 3, 0, 0, 0, data_);  // Note: No offset as refinance on payment day 90
 
         scenarios[0].setClosingPayment(4);
 

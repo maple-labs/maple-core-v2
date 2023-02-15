@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
+
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract RemoveLoanImpairmentFailureTests is TestBase {
 
-    MapleLoan internal loan;
+    address loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -37,46 +38,46 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
 
     function test_removeLoanImpairment_notAuthorized() external {
         vm.expectRevert("PM:RLI:NOT_AUTHORIZED");
-        poolManager.removeLoanImpairment(address(loan));
+        poolManager.removeLoanImpairment(loan);
     }
 
     function test_removeLoanImpairment_notPoolManager() external {
         vm.expectRevert("LM:RLI:NOT_PM");
-        loanManager.removeLoanImpairment(address(loan), false);
+        loanManager.removeLoanImpairment(loan, false);
     }
 
     function test_removeLoanImpairment_notGovernor() external {
         vm.prank(address(governor));
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         vm.prank(address(poolDelegate));
         vm.expectRevert("LM:RLI:NO_AUTH");
-        poolManager.removeLoanImpairment(address(loan));
+        poolManager.removeLoanImpairment(loan);
     }
 
     function test_removeLoanImpairment_notLender() external {
         vm.expectRevert("ML:RLI:NOT_LENDER");
-        loan.removeLoanImpairment();
+        IFixedTermLoan(loan).removeLoanImpairment();
     }
 
     function test_removeLoanImpairment_notImpaired() external {
         vm.prank(address(poolDelegate));
         vm.expectRevert("LM:RLI:PAST_DATE");
-        poolManager.removeLoanImpairment(address(loan));
+        poolManager.removeLoanImpairment(loan);
     }
 
     function test_removeLoanImpairment_pastDate() external {
         vm.prank(address(poolDelegate));
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         vm.warp(start + 30 days + 1);
         vm.prank(address(poolDelegate));
         vm.expectRevert("LM:RLI:PAST_DATE");
-        poolManager.removeLoanImpairment(address(loan));
+        poolManager.removeLoanImpairment(loan);
 
         vm.warp(start + 30 days);
         vm.prank(address(poolDelegate));
-        poolManager.removeLoanImpairment(address(loan));
+        poolManager.removeLoanImpairment(loan);
     }
 
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console } from "../modules/contract-test-utils/contracts/log.sol";
+import { console } from "../contracts/Contracts.sol";
 
 import { TestBase } from "./TestBase.sol";
 

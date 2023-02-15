@@ -12,9 +12,9 @@ contract BasicInvariants is BaseInvariants {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    uint256 internal constant NUM_BORROWERS = 5;
-    uint256 internal constant NUM_LPS       = 10;
-    uint256 internal constant MAX_NUM_LOANS = 50;
+    uint256 constant NUM_BORROWERS = 5;
+    uint256 constant NUM_LPS       = 10;
+    uint256 constant MAX_NUM_LOANS = 50;
 
     /**************************************************************************************************************************************/
     /*** Setup Function                                                                                                                 ***/

@@ -1,31 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IProxyFactoryLike, ILiquidator, IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Liquidator }            from "../../modules/liquidations/contracts/Liquidator.sol";
-import { LiquidatorInitializer } from "../../modules/liquidations/contracts/LiquidatorInitializer.sol";
-
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
-
-import {
-    ILoanManagerInitializer,
-    IMapleProxyFactory,
-    IPoolManagerInitializer,
-    IWithdrawalManagerInitializer
-} from "../../contracts/interfaces/Interfaces.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract PauseTests is TestBaseWithAssertions {
 
-    address internal borrower          = address(new Address());
-    address internal pausePoolDelegate = address(new Address());
+    address borrower          = address(new Address());
+    address pausePoolDelegate = address(new Address());
 
-    bytes[] internal data;
+    address loan;
 
-    Liquidator internal liquidator;
-    MapleLoan  internal loan;
+    bytes[] data;
+
+    ILiquidator liquidator;
 
     function setUp() public override {
         super.setUp();
@@ -40,20 +31,20 @@ contract PauseTests is TestBaseWithAssertions {
         // Register implementation and upgrade paths
         vm.startPrank(governor);
 
-        IMapleProxyFactory(liquidatorFactory).registerImplementation(2, liquidatorImplementationForUpgrade, address(0));
-        IMapleProxyFactory(liquidatorFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(liquidatorFactory).registerImplementation(2, liquidatorImplementationForUpgrade, address(0));
+        IProxyFactoryLike(liquidatorFactory).enableUpgradePath(1, 2, address(0));
 
-        IMapleProxyFactory(loanFactory).registerImplementation(2, loanImplementationForUpgrade, address(0));
-        IMapleProxyFactory(loanFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(loanFactory).registerImplementation(2, loanImplementationForUpgrade, address(0));
+        IProxyFactoryLike(loanFactory).enableUpgradePath(1, 2, address(0));
 
-        IMapleProxyFactory(loanManagerFactory).registerImplementation(2, loanManagerImplementationForUpgrade, address(0));
-        IMapleProxyFactory(loanManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(loanManagerFactory).registerImplementation(2, loanManagerImplementationForUpgrade, address(0));
+        IProxyFactoryLike(loanManagerFactory).enableUpgradePath(1, 2, address(0));
 
-        IMapleProxyFactory(poolManagerFactory).registerImplementation(2, poolManagerImplementationForUpgrade, address(0));
-        IMapleProxyFactory(poolManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(poolManagerFactory).registerImplementation(2, poolManagerImplementationForUpgrade, address(0));
+        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(1, 2, address(0));
 
-        IMapleProxyFactory(withdrawalManagerFactory).registerImplementation(2, withdrawalManagerImplementationForUpgrade, address(0));
-        IMapleProxyFactory(withdrawalManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(withdrawalManagerFactory).registerImplementation(2, withdrawalManagerImplementationForUpgrade, address(0));
+        IProxyFactoryLike(withdrawalManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
 
@@ -85,7 +76,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         ( , , , , , address liquidator_ ) = loanManager.liquidationInfo(address(loan));
 
-        liquidator = Liquidator(liquidator_);
+        liquidator = ILiquidator(liquidator_);
 
         vm.startPrank(governor);
 
@@ -104,7 +95,7 @@ contract PauseTests is TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         // Pool Manager
-        bytes memory arguments = IPoolManagerInitializer(poolManagerInitializer).encodeArguments(
+        bytes memory arguments = abi.encode(
             pausePoolDelegate,
             address(fundsAsset),
             0,
@@ -114,32 +105,32 @@ contract PauseTests is TestBaseWithAssertions {
 
         // vm.prank(address(deployer));
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        // IMapleProxyFactory(poolManagerFactory).createInstance(arguments, salt_);
+        // IProxyFactoryLike(poolManagerFactory).createInstance(arguments, salt_);
 
         // Loan Manager
-        arguments = ILoanManagerInitializer(loanManagerInitializer).encodeArguments(address(pool));
+        arguments = abi.encode(address(pool));
 
         // vm.prank(address(deployer));
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        // IMapleProxyFactory(loanManagerFactory).createInstance(arguments, salt_);
+        // IProxyFactoryLike(loanManagerFactory).createInstance(arguments, salt_);
 
         // Withdrawal Manager
-        arguments = IWithdrawalManagerInitializer(withdrawalManagerInitializer).encodeArguments(address(pool), 1 weeks, 1 days);
+        arguments = abi.encode(address(pool), 1 weeks, 1 days);
 
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
         // vm.prank(address(deployer));
-        // IMapleProxyFactory(withdrawalManagerFactory).createInstance(arguments, salt_);
+        // IProxyFactoryLike(withdrawalManagerFactory).createInstance(arguments, salt_);
 
         // Liquidator
-        arguments = LiquidatorInitializer(liquidatorInitializer).encodeArguments(
-            address(loanManager),
+        arguments = abi.encode(
+            poolManager.loanManagerList(0),
             address(collateralAsset),
             address(fundsAsset)
         );
 
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        // vm.prank(address(loanManager));
-        // IMapleProxyFactory(liquidatorFactory).createInstance(arguments, salt_);
+        // vm.prank(poolManager.loanManagerList(0));
+        // IProxyFactoryLike(liquidatorFactory).createInstance(arguments, salt_);
 
         /**********************************************************************************************************************************/
         /*** Liquidator                                                                                                                 ***/
@@ -159,43 +150,43 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.prank(governor);
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.upgrade(2, "");
+        ILoanLike(loan).upgrade(2, "");
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.acceptBorrower();
+        ILoanLike(loan).acceptBorrower();
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.closeLoan(0);
+        IFixedTermLoan(loan).closeLoan(0);
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.drawdownFunds(0, address(0));
+        IFixedTermLoan(loan).drawdownFunds(0, address(0));
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.makePayment(0);
+        IFixedTermLoan(loan).makePayment(0);
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.postCollateral(0);
+        IFixedTermLoan(loan).postCollateral(0);
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.proposeNewTerms(address(0), 0, data);
+        ILoanLike(loan).proposeNewTerms(address(0), 0, data);
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.removeCollateral(0, address(0));
+        IFixedTermLoan(loan).removeCollateral(0, address(0));
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.returnFunds(0);
+        IFixedTermLoan(loan).returnFunds(0);
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.setPendingBorrower(address(0));
+        ILoanLike(loan).setPendingBorrower(address(0));
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.acceptLender();
+        ILoanLike(loan).acceptLender();
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.rejectNewTerms(address(0), 0, data);
+        ILoanLike(loan).rejectNewTerms(address(0), 0, data);
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
-        loan.skim(address(0), address(0));
+        ILoanLike(loan).skim(address(0), address(0));
 
         /**********************************************************************************************************************************/
         /*** Loan Manager                                                                                                               ***/

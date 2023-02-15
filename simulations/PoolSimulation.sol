@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { CSVWriter } from "../modules/contract-test-utils/contracts/csv.sol";
-
 import { IAction } from "./interfaces/IAction.sol";
 import { ILogger } from "./interfaces/ILogger.sol";
+
+import { CSVWriter } from "../contracts/Contracts.sol";
 
 import { ActionHandler } from "./ActionHandler.sol";
 
 contract PoolSimulation is ActionHandler, CSVWriter {
 
-    ILogger[] internal loggers;  // List of loggers used to output the state of the simulation during each snapshot and after each action.
+    ILogger[] loggers;  // List of loggers used to output the state of the simulation during each snapshot and after each action.
 
     function record(ILogger logger_) external {
         loggers.push(logger_);

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IERC20Like, ILoanManager, IMapleLoan } from "../../contracts/interfaces/Interfaces.sol";
+// TODO: Use ILoanManagerLike if `liquidationInfo` is common (including returns) to all LoanManagers.
+
+import { IERC20Like, IFixedTermLoanManager, IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Action } from "./Action.sol";
 
@@ -27,10 +29,10 @@ contract LiquidationAction is Action {
     }
 
     function act() external override {
-        ( , , , , , address liquidator_ ) = ILoanManager(loanManager).liquidationInfo(loan);
+        ( , , , , , address liquidator_ ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
-        IERC20Like collateralAsset = IERC20Like(IMapleLoan(loan).collateralAsset());
-        IERC20Like fundsAsset      = IERC20Like(IMapleLoan(loan).fundsAsset());
+        IERC20Like collateralAsset = IERC20Like(IFixedTermLoan(loan).collateralAsset());
+        IERC20Like fundsAsset      = IERC20Like(ILoanLike(loan).fundsAsset());
 
         uint256 recoveredAmount =
             collateralAsset.balanceOf(liquidator_)

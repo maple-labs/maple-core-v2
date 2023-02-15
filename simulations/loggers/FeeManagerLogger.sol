@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleLoanFeeManager } from "../../contracts/interfaces/Interfaces.sol";
-
 import { Logger } from "./Logger.sol";
 
 contract FeeManagerLogger is Logger {
 
-    IMapleLoanFeeManager internal feeManager;
+    address feeManager;
 
-    constructor(IMapleLoanFeeManager feeManager_, string memory filepath_) Logger(filepath_) {
+    constructor(address feeManager_, string memory filepath_) Logger(filepath_) {
         feeManager = feeManager_;
     }
 

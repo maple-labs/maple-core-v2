@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanManagerStructs } from "../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
-
-import { MapleLoan } from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { IFixedTermLoan, IFixedTermLoanManagerStructs, ILoanLike } from "../contracts/interfaces/Interfaces.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";
@@ -15,20 +13,20 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     /**************************************************************************************************************************************/
 
     function assertLoanState(
-        MapleLoan loan,
+        address loan,
         uint256 principal,
         uint256 refinanceInterest,
         uint256 paymentDueDate,
         uint256 paymentsRemaining
     ) internal {
-        assertEq(loan.principal(),          principal,         "principal");
-        assertEq(loan.refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(loan.nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(loan.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+        assertEq(IFixedTermLoan(loan).principal(),          principal,         "principal");
+        assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
+        assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
+        assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
     function assertLoanState(
-        MapleLoan loan,
+        address loan,
         uint256 principal,
         uint256 incomingPrincipal,
         uint256 incomingInterest,
@@ -37,26 +35,26 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 paymentDueDate,
         uint256 paymentsRemaining
     ) internal {
-        ( uint256 principalPayment, uint256 interest, uint256 fees ) = loan.getNextPaymentBreakdown();
+        ( uint256 principalPayment, uint256 interest, uint256 fees ) = IFixedTermLoan(loan).getNextPaymentBreakdown();
 
-        assertEq(interest, incomingInterest, "interest");
-        assertEq(fees,     incomingFees,     "fees");
+        assertEq(interest,         incomingInterest,  "interest");
+        assertEq(fees,             incomingFees,      "fees");
         assertEq(principalPayment, incomingPrincipal, "incoming principal");
 
-        assertEq(loan.principal(),          principal,         "principal");
-        assertEq(loan.refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(loan.nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(loan.paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+        assertEq(IFixedTermLoan(loan).principal(),          principal,         "principal");
+        assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
+        assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
+        assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
-    function assertLoanInfoWasDeleted(MapleLoan loan) internal {
-        uint256 loanId = loanManager.paymentIdOf(address(loan));
+    function assertLoanInfoWasDeleted(address loan) internal {
+        uint256 loanId = loanManager.paymentIdOf(loan);
         assertEq(loanId, 0);
     }
 
     // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertPaymentInfo(
-        MapleLoan loan,
+        address loan,
         uint256 incomingNetInterest,
         uint256 refinanceInterest,
         uint256 issuanceRate,
@@ -67,7 +65,8 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     )
         internal
     {
-        ILoanManagerStructs.PaymentInfo memory loanInfo = ILoanManagerStructs(address(loanManager)).payments(loanManager.paymentIdOf(address(loan)));
+        IFixedTermLoanManagerStructs.PaymentInfo memory loanInfo =
+            IFixedTermLoanManagerStructs(ILoanLike(loan).lender()).payments(loanManager.paymentIdOf(loan));
 
         assertEq(loanInfo.incomingNetInterest,       incomingNetInterest, "loanInfo.incomingNetInterest");
         assertEq(loanInfo.refinanceInterest,         refinanceInterest,   "loanInfo.refinanceInterest");
@@ -99,7 +98,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLiquidationInfo(
-        MapleLoan loan,
+        address loan,
         uint256 principal,
         uint256 interest,
         uint256 lateInterest,
@@ -107,7 +106,8 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         bool    liquidatorExists,
         bool    triggeredByGovernor
     ) internal {
-        ILoanManagerStructs.LiquidationInfo memory liquidationInfo = ILoanManagerStructs(address(loanManager)).liquidationInfo(address(loan));
+        IFixedTermLoanManagerStructs.LiquidationInfo memory liquidationInfo =
+            IFixedTermLoanManagerStructs(ILoanLike(loan).lender()).liquidationInfo(loan);
 
         assertEq(liquidationInfo.principal,    principal,    "liquidationInfo.principal");
         assertEq(liquidationInfo.interest,     interest,     "liquidationInfo.interest");

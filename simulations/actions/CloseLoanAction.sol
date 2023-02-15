@@ -14,7 +14,7 @@ contract CloseLoanAction is Action, ProtocolActions {
     }
 
     function act() external override {
-        closeLoan(loan);
+        close(loan);
     }
 
 }

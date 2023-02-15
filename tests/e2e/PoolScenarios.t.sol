@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
 
-import { MapleLoan }  from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
-import { Refinancer } from "../../modules/fixed-term-loan/contracts/Refinancer.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -36,7 +35,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -89,10 +88,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 72_000e6);
 
-        address borrower2 = address(new Address());
-
-        MapleLoan loan2 = fundAndDrawdownLoan({
-            borrower:    borrower2,
+        address loan2 = fundAndDrawdownLoan({
+            borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)]
@@ -126,7 +123,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 200_000s of loan2 at 0.18 IR.
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 90_000e6 + 36_000e6);
 
-        makePayment(address(loan2));
+        makePayment(loan2);
 
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR.s
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 90_000e6 + 180_000e6);
@@ -161,7 +158,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 600_00s of loan2 at 0.15 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 90_000e6);
 
-        MapleLoan loan3 = fundAndDrawdownLoan({
+        address loan3 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(4_000_000e6), uint256(4_000_000e6)],
@@ -197,7 +194,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // + 800_00s of loan2 at 0.15 IR + 200_000s of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 120_000e6 + 72_000e6);
 
-        closeLoan(address(loan2));
+        close(loan2);
 
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 principal + 200_000s of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 72_000e6);
@@ -225,7 +222,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 Principal + 800_000 of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 288_000e6);
 
-        makePayment(address(loan3));
+        makePayment(loan3);
 
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 Principal + 1_000_000 of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 360_000e6);
@@ -302,11 +299,11 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(totalAssets);
 
         // Make 2 loan payments in sequence
-        makePayment(address(loan3));
+        makePayment(loan3);
 
         vm.warp(start + 3_200_000);
 
-        makePayment(address(loan3));
+        makePayment(loan3);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -409,7 +406,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -460,7 +457,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // 1. Refinance using a custom refinancer that can manually alter the storage of the interest rate.
         // 2. Close the loan, paying only the closing interest.
 
-        closeLoan(address(loan1));
+        close(loan1);
 
         // TotalAssets went down due to the loan closure.
         assertTotalAssets(4_000_000e6 + 90_000e6);  // 1% of 1_000_000e6, removing management fees
@@ -490,7 +487,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -537,7 +534,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         assertTotalAssets(4_000_000e6);
 
@@ -579,7 +576,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
@@ -618,7 +615,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         vm.warp(start + 2_900_000);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
@@ -649,7 +646,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
         // This loan will be funded and then never interacted with again.
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -708,7 +705,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan1), address(liquidatorFactory));
+        poolManager.triggerDefault(loan1, address(liquidatorFactory));
 
         // No management fee to recover since interest rate is zero.
         uint256 platformServiceFee    = uint256(1_000_000e6) * 0.31536e6 * 1_000_000 seconds / 1e6 / 365 days;
@@ -794,7 +791,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
 
         // This loan will be refinanced
-        MapleLoan loan = fundAndDrawdownLoan({
+        address loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -859,21 +856,21 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         vm.warp(start + 10 days);
 
+        // TODO: remove scoping if possible
         {
+
+            vm.startPrank(borrower);
+            fundsAsset.mint(borrower, 30_000e6);
+            fundsAsset.approve(address(loan), 30_000e6);
+            IFixedTermLoan(loan).returnFunds(30_000e6);  // Return funds to pay origination fees.
+            vm.stopPrank();
+
             // Refinance Loan and stack too deep
             bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
 
-            Refinancer refinancer = new Refinancer();
+            proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
 
-            vm.startPrank(borrower);
-            loan.proposeNewTerms(address(refinancer), block.timestamp, data);
-            fundsAsset.mint(borrower, 30_000e6);
-            fundsAsset.approve(address(loan), 30_000e6);
-            loan.returnFunds(30_000e6);  // Return funds to pay origination fees.
-            vm.stopPrank();
-
-            vm.prank(poolDelegate);
-            poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp, data, 0);
+            acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
         }
 
         platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
@@ -1031,11 +1028,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         address lp1      = address(new Address());
         address borrower = address(new Address());
 
-        Refinancer refinancer = new Refinancer();
-
         depositLiquidity(lp1, 2_500_000e6);
 
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -1081,17 +1076,17 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-
         vm.startPrank(borrower);
-        loan1.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan1), 10_000e6);
-        loan1.returnFunds(10_000e6);
+        fundsAsset.approve(loan1, 10_000e6);
+        IFixedTermLoan(loan1).returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan1), address(refinancer), block.timestamp + 1, data, 0);
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0, 0);
+
+        acceptRefinance(address(poolManager), loan1, address(refinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
         uint256 grossRefinanceInterest = 100_000e6 + 18 days * 0.11e6;
@@ -1143,7 +1138,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Principal + accountedInterest + accruedInterest up to domainEnd
         assertTotalAssets(2_500_000e6 + netRefinanceInterest + 1_800_000 * 0.09e6);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal + refinanceInterest + installment + 10 days of late interest
         assertTotalAssets(2_500_000e6 + netRefinanceInterest + 180_000e6);
@@ -1176,11 +1171,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         address lp1      = address(new Address());
         address borrower = address(new Address());
 
-        Refinancer refinancer = new Refinancer();
-
         depositLiquidity(lp1, 2_500_000e6);
 
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -1226,17 +1219,17 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-
         vm.startPrank(borrower);
-        loan1.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan1), 10_000e6);
-        loan1.returnFunds(10_000e6);
+        fundsAsset.approve(loan1, 10_000e6);
+        IFixedTermLoan(loan1).returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan1), address(refinancer), block.timestamp + 1, data, 0);
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0, 0);
+
+        acceptRefinance(address(poolManager), loan1, address(refinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
         uint256 grossRefinanceInterest = 100_000e6 + 6 days * 0.11e6;
@@ -1323,7 +1316,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan1), liquidatorFactory);
+        poolManager.triggerDefault(loan1, liquidatorFactory);
 
         assertTotalAssets(1_500_000e6);  // Only the amount in the pool
 

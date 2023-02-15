@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
 
-import { MapleLoan }  from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
-import { Refinancer } from "../../modules/fixed-term-loan/contracts/Refinancer.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -12,14 +11,13 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp1;
-    address internal lp2;
-    address internal lp3;
+    address borrower;
+    address loan;
+    address lp1;
+    address lp2;
+    address lp3;
 
-    address[] internal lps;
-
-    MapleLoan internal loan;
+    address[] lps;
 
     function setUp() public override {
         super.setUp();
@@ -157,7 +155,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Impair the loan
         vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertPoolState({
             totalSupply:        2_000_000e6,
@@ -186,7 +184,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp1), 500_000e6);
 
         // Repay loan in full
-        closeLoan(address(loan));
+        close(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -355,7 +353,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Impair the loan
         vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -398,7 +396,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         vm.warp(start + 2 weeks + 2 days - 2 seconds);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanManager({
             accruedInterest:       0,
@@ -562,7 +560,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Impair the loan
         vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -603,7 +601,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Remove Impairment
         vm.prank(poolDelegate);
-        poolManager.removeLoanImpairment(address(loan));
+        poolManager.removeLoanImpairment(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -810,7 +808,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Impair the loan
         vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -863,7 +861,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         vm.warp(start + 2 weeks + 1 days + 12 hours);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanManager({
             accruedInterest:       0,
@@ -943,7 +941,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 poolBalanceBeforeLiquidation = fundsAsset.balanceOf(address(pool));
 
         vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        poolManager.finishCollateralLiquidation(loan);
 
         uint256 poolBalanceAfterLiquidation           = fundsAsset.balanceOf(address(pool));
         uint256 expectedAssetsReturnedFromLiquidation = 123_976.32e6;
@@ -1106,7 +1104,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Impair the loan
         vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -1147,7 +1145,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp1), 0);
 
         // Repay loan in full
-        closeLoan(address(loan));
+        close(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -1289,7 +1287,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Impair the loan
         vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -1349,7 +1347,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Repay the loan
         vm.warp(start + 2 weeks + 1 days);
 
-        closeLoan(address(loan));
+        close(loan);
 
         assertLoanManager({
             accruedInterest:       0,
@@ -1549,7 +1547,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Make payment to get interest in the pool
-        makePayment(address(loan));
+        makePayment(loan);
 
         // Issuance domain over 60 days due to early payment
         issuanceRate = (dailyLoanInterest * 30) * 1e30 / 60 days;
@@ -1622,20 +1620,18 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             availableLiquidity: 1_500_000e6 + interestInPool - interestWithdrawn
         });
 
+        vm.startPrank(borrower);
+        fundsAsset.mint(borrower, 30_000e6);
+        fundsAsset.approve(loan, 30_000e6);
+        IFixedTermLoan(loan).returnFunds(30_000e6);  // Return funds to pay origination fees.
+        vm.stopPrank();
+
         // Refinance Loan
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
 
-        Refinancer refinancer = new Refinancer();
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        fundsAsset.mint(borrower, 30_000e6);
-        fundsAsset.approve(address(loan), 30_000e6);
-        loan.returnFunds(30_000e6);  // Return funds to pay origination fees.
-        vm.stopPrank();
-
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
         issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
 
@@ -1686,7 +1682,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         vm.warp(start + 2 weeks + 1 days);
 
         // Repay Loan in full
-        closeLoan(address(loan));
+        close(loan);
 
         uint256 loanPrincipal     = 1_000_000e6;
         uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 45_000e6

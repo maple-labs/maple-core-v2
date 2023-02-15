@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { INonTransparentProxied, INonTransparentProxy, IProxyFactoryLike, IProxiedLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { MapleGlobals } from "../../modules/globals/contracts/MapleGlobals.sol";
-
-import { Liquidator } from "../../modules/liquidations/contracts/Liquidator.sol";
-
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
-
-import { LoanManager } from "../../modules/fixed-term-loan-manager/contracts/LoanManager.sol";
-
-import { PoolManager } from "../../modules/pool/contracts/PoolManager.sol";
-
-import { WithdrawalManager } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-
-import { IMapleProxyFactory, INonTransparentProxy, INonTransparentProxied } from "../../contracts/interfaces/Interfaces.sol";
+import {
+    Address,
+    FixedTermLoanManager,
+    Globals,
+    Liquidator,
+    PoolManager,
+    WithdrawalManager
+} from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract GlobalsUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new MapleGlobals());
+    address newImplementation = address(new Globals());
 
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
@@ -48,23 +43,23 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract LoanManagerUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new LoanManager());
+    address newImplementation = address(new FixedTermLoanManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(loanManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(loanManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(loanManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(loanManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
 
     function test_upgradeLoanManager_noTimelock() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -80,7 +75,7 @@ contract LoanManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeLoanManager_delayNotPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -97,7 +92,7 @@ contract LoanManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeLoanManager_durationPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -114,7 +109,7 @@ contract LoanManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeLoanManager_timelockExtended() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
@@ -158,7 +153,7 @@ contract LoanManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeLoanManager_timelockShortened() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
@@ -202,7 +197,7 @@ contract LoanManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeLoanManager_governor_noTimelockNeeded() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -225,22 +220,23 @@ contract LoanManagerUpgradeTests is TestBase {
 
 contract LiquidationUpgradeTests is TestBase {
 
-    address internal borrower          = address(new Address());
-    address internal lp                = address(new Address());
-    address internal newImplementation = address(new LoanManager());
+    address borrower          = address(new Address());
+    address lp                = address(new Address());
+    address newImplementation = address(new FixedTermLoanManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    address loan;
 
-    Liquidator internal liquidator;
-    MapleLoan  internal loan;
+    bytes upgradeCallData = new bytes(0);
+
+    Liquidator liquidator;
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(liquidatorFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(liquidatorFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(liquidatorFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(liquidatorFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
 
@@ -269,9 +265,9 @@ contract LiquidationUpgradeTests is TestBase {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
-        ( , , , , , address liquidatorAddress ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidatorAddress ) = loanManager.liquidationInfo(loan);
 
         liquidator = Liquidator(liquidatorAddress);
 
@@ -441,17 +437,17 @@ contract LiquidationUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new PoolManager());
+    address newImplementation = address(new PoolManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(poolManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(poolManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(poolManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -617,17 +613,17 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new WithdrawalManager());
+    address newImplementation = address(new WithdrawalManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(withdrawalManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(withdrawalManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(withdrawalManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(withdrawalManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -794,10 +790,10 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
 contract UnscheduleCallTests is TestBase {
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function test_unscheduleCall_governor() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         // PD schedules the upgrade call
         vm.prank(poolDelegate);

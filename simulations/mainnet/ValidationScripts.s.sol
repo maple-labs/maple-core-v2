@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console, TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
+import { console, TestUtils } from "../../contracts/Contracts.sol";
 
 import {
     IERC20Like,
-    ILoanManager,
-    IMapleGlobals,
-    IMapleProxyFactory,
-    IPoolManager,
+    IGlobals,
+    ILoanManagerLike,
     IPool,
+    IPoolManager,
+    IProxyFactoryLike,
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -66,9 +66,9 @@ contract QueryLoanManagerState is ValidationBase {
     function validate(address loanManager) internal view {
         if (loanManager == address(0)) return;
 
-        console.log("issuanceRate: ", ILoanManager(loanManager).issuanceRate());
-        console.log("domainStart:  ", ILoanManager(loanManager).domainStart());
-        console.log("domainEnd:    ", ILoanManager(loanManager).domainEnd());
+        console.log("issuanceRate: ", ILoanManagerLike(loanManager).issuanceRate());
+        console.log("domainStart:  ", ILoanManagerLike(loanManager).domainStart());
+        console.log("domainEnd:    ", ILoanManagerLike(loanManager).domainEnd());
     }
 
 }
@@ -158,7 +158,7 @@ contract ConfigurePlatformFees is ValidationBase {
     }
 
     function validate(address poolManager, uint256 managementFeeRate, uint256 serviceFeeRate, uint256 originationFeeRate, uint256 maxLiqPct) internal {
-        IMapleGlobals globals = IMapleGlobals(mapleGlobalsV2Proxy);
+        IGlobals globals = IGlobals(mapleGlobalsV2Proxy);
 
         assertEq(globals.platformManagementFeeRate(poolManager),  managementFeeRate);
         assertEq(globals.platformServiceFeeRate(poolManager),     serviceFeeRate);
@@ -206,8 +206,8 @@ contract PermissionPools is ValidationBase {
 contract ValidateDefaultVersionsAreSet is ValidationBase {
 
     function run() external {
-        assertEq(IMapleProxyFactory(loanFactory).defaultVersion(),        400);
-        assertEq(IMapleProxyFactory(loanManagerFactory).defaultVersion(), 200);
+        assertEq(IProxyFactoryLike(loanFactory).defaultVersion(),        400);
+        assertEq(IProxyFactoryLike(loanManagerFactory).defaultVersion(), 200);
     }
 
 }

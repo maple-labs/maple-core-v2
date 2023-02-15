@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IERC20Like, ILoanManager, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, ILoanManagerLike, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Logger } from "./Logger.sol";
 
 contract BusinessSimLogger is Logger {
 
-    address internal poolDelegate;
-    address internal treasury;
+    address poolDelegate;
+    address treasury;
 
-    IERC20Like   internal asset;
-    ILoanManager internal loanManager;
-    IPoolManager internal poolManager;
+    IERC20Like       asset;
+    ILoanManagerLike loanManager;
+    IPoolManager     poolManager;
 
     constructor(
         address loanManager_,
@@ -26,10 +26,10 @@ contract BusinessSimLogger is Logger {
         poolDelegate = poolDelegate_;
         treasury     = treasury_;
 
+        loanManager = ILoanManagerLike(loanManager_);
         poolManager = IPoolManager(poolManager_);
 
-        asset       = IERC20Like(poolManager.asset());
-        loanManager = ILoanManager(loanManager_);
+        asset = IERC20Like(poolManager.asset());
     }
 
     function headers() external pure override returns (string[] memory headers_) {

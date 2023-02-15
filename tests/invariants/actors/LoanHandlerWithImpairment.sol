@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleGlobals, IMapleLoan, ILiquidator } from "../../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, ILoanLike } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { LoanHandler } from "./LoanHandler.sol";
 
@@ -46,25 +46,25 @@ contract LoanHandlerWithImpairment is LoanHandler {
 
         vm.startPrank(borrower_);
 
-        IMapleLoan loan_ = IMapleLoan(activeLoans[loanIndex_]);
+        address loan_ = activeLoans[loanIndex_];
 
-        uint256 previousPaymentDueDate = loan_.nextPaymentDueDate();
+        uint256 previousPaymentDueDate = IFixedTermLoan(loan_).nextPaymentDueDate();
 
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = loan_.getNextPaymentBreakdown();
+        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IFixedTermLoan(loan_).getNextPaymentBreakdown();
 
         uint256 amount_ = principal_ + interest_ + fees_;
 
         fundsAsset.mint(borrower_, amount_);
-        fundsAsset.approve(address(loan_), amount_);
+        fundsAsset.approve(loan_, amount_);
 
-        if (!loan_.isImpaired()) {
-            ( , , , , , , uint256 issuanceRate_ ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
+        if (!ILoanLike(loan_).isImpaired()) {
+            ( , , , , , , uint256 issuanceRate_ ) = loanManager.payments(loanManager.paymentIdOf(loan_));
             sum_loanManager_paymentIssuanceRate -= issuanceRate_;
         }
 
-        sum_loan_principal -= loan_.principal();
+        sum_loan_principal -= ILoanLike(loan_).principal();
 
-        loan_.makePayment(amount_);
+        IFixedTermLoan(loan_).makePayment(amount_);
 
         numPayments++;
 
@@ -80,7 +80,7 @@ contract LoanHandlerWithImpairment is LoanHandler {
 
         require(earliestPaymentDueDate == loanManager.domainEnd(), "Not equal");
 
-        if (loan_.paymentsRemaining() == 0) {
+        if (IFixedTermLoan(loan_).paymentsRemaining() == 0) {
             activeLoans[loanIndex_] = activeLoans[activeLoans.length - 1];
             activeLoans.pop();
             numLoans--;
@@ -92,15 +92,15 @@ contract LoanHandlerWithImpairment is LoanHandler {
             numLatePayments++;
         }
 
-        paymentTimestamp[address(loan_)] = block.timestamp;
+        paymentTimestamp[loan_] = block.timestamp;
 
-        ( , interest_, ) = loan_.getNextPaymentBreakdown();
+        ( , interest_, ) = IFixedTermLoan(loan_).getNextPaymentBreakdown();
 
         uint256 issuanceRate;
 
-        ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
+        ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(loan_));
 
-        sum_loan_principal                  += loan_.principal();
+        sum_loan_principal                  += ILoanLike(loan_).principal();
         sum_loanManager_paymentIssuanceRate += issuanceRate;
 
         unrealizedLosses = poolManager.unrealizedLosses();

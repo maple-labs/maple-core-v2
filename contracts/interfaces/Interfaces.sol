@@ -3,30 +3,43 @@ pragma solidity 0.8.7;
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
-import { IMapleGlobals }          from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
+import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
 import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
-import { IMapleLoan }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFactory }    from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFactory.sol";
-import { IMapleLoanFeeManager } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
-import { IRefinancer }          from "../../modules/fixed-term-loan/contracts/interfaces/IRefinancer.sol";
+import { IMapleLoan as IMFTL }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFeeManager as IMLFM } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
+import { IRefinancer as IMFTLR }         from "../../modules/fixed-term-loan/contracts/interfaces/IRefinancer.sol";
 
-import { ILoanManager }            from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
-import { ILoanManagerInitializer } from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManagerInitializer.sol";
+import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
 
-import { IMapleProxied }      from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
-import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IPool }        from "../../modules/pool/contracts/interfaces/IPool.sol";
+import { IPoolManager } from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
 
-import { IPool }                   from "../../modules/pool/contracts/interfaces/IPool.sol";
-import { IPoolDeployer }           from "../../modules/pool/contracts/interfaces/IPoolDeployer.sol";
-import { IPoolManager }            from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
-import { IPoolManagerInitializer } from "../../modules/pool/contracts/interfaces/IPoolManagerInitializer.sol";
+import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
-import { IWithdrawalManager }            from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
-import { IWithdrawalManagerInitializer } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManagerInitializer.sol";
+/******************************************************************************************************************************************/
+/*** Re-Exports                                                                                                                     *******/
+/******************************************************************************************************************************************/
+
+interface IFeeManager is IMLFM {}
+
+interface IFixedTermLoan is IMFTL {}
+
+interface IFixedTermLoanManager is IMFTLM {}
+
+interface IFixedTermLoanManagerStructs is IMFTLMS {}
+
+interface IFixedTermRefinancer is IMFTLR {}
+
+interface IGlobals is IMG {}
+
+/******************************************************************************************************************************************/
+/*** Like Interfaces                                                                                                                *******/
+/******************************************************************************************************************************************/
 
 interface IERC20Like {
 
@@ -54,16 +67,105 @@ interface IERC20Like {
 
 }
 
-interface IHasGLobalsLike {
-
-    function globals() external view returns (address globals);
-
-}
-
 interface ILiquidatorLike {
 
     function getExpectedAmount(uint256 swapAmount_) external view returns (uint256 expectedAmount_);
 
     function liquidatePortion(uint256 swapAmount_, uint256 maxReturnAmount_, bytes calldata data_) external;
+
+}
+
+interface IProxiedLike {
+
+    function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
+
+}
+
+interface ILoanLike is IProxiedLike {
+
+    function acceptBorrower() external;
+
+    function acceptLender() external;
+
+    function acceptNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
+        external returns (bytes32 refinanceCommitment_);
+
+    function borrower() external view returns (address borrower_);
+
+    function fundsAsset() external view returns (address fundsAsset_);
+
+    function gracePeriod() external view returns (uint256 gracePeriod_);
+
+    function isImpaired() external view returns (bool isImpaired_);
+
+    function lender() external view returns (address lender_);
+
+    function paymentInterval() external view returns (uint256 paymentInterval_);
+
+    function principal() external view returns (uint256 principal_);
+
+    function proposeNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
+        external returns (bytes32 refinanceCommitment_);
+
+    function rejectNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
+        external returns (bytes32 refinanceCommitment_);
+
+    function setPendingBorrower(address pendingBorrower_) external;
+
+    function skim(address token_, address destination_) external returns (uint256 skimmed_);
+
+}
+
+interface ILoanManagerLike is IProxiedLike {
+
+    function accountedInterest() external view returns (uint112 accountedInterest_);
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
+
+    function domainEnd() external view returns (uint48 domainEnd_);
+
+    function domainStart() external view returns (uint48 domainStart_);
+
+    function fundsAsset() external view returns (address fundsAsset_);
+
+    function getAccruedInterest() external view returns (uint256 accruedInterest_);
+
+    function issuanceRate() external view returns (uint256 issuanceRate_);
+
+    function paymentIdOf(address loan_) external view returns (uint24 paymentId_);
+
+    function payments(uint256 paymentId_) external view returns (
+        uint24  platformManagementFeeRate,
+        uint24  delegateManagementFeeRate,
+        uint48  startDate,
+        uint48  paymentDueDate,
+        uint128 incomingNetInterest,
+        uint128 refinanceInterest,
+        uint256 issuanceRate
+    );
+
+    function paymentWithEarliestDueDate() external view returns (uint24 paymentWithEarliestDueDate_);
+
+    function pool() external view returns (address pool_);
+
+    function poolManager() external view returns (address poolManager_);
+
+    function principalOut() external view returns (uint128 principalOut_);
+
+    function sortedPayments(uint256 paymentId_) external view returns (uint24 previous, uint24 next, uint48 paymentDueDate);
+
+    function unrealizedLosses() external view returns (uint128 unrealizedLosses_);
+
+}
+
+interface IProxyFactoryLike {
+
+    function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
+
+    function defaultVersion() external view returns (uint256 defaultVersion_);
+
+    function enableUpgradePath(uint256 fromVersion_, uint256 toVersion_, address migrator_) external;
+
+    function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
 
 }

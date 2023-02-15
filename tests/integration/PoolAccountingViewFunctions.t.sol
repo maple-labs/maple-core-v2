@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract BalanceOfAssetsTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
+    address lp1;
+    address lp2;
 
     function setUp() public override {
         super.setUp();
@@ -76,8 +75,8 @@ contract BalanceOfAssetsTests is TestBase {
 
 contract MaxDepositTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
+    address lp1;
+    address lp2;
 
     function setUp() public override {
         _createAccounts();
@@ -149,8 +148,8 @@ contract MaxDepositTests is TestBase {
 
 contract MaxMintTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
+    address lp1;
+    address lp2;
 
     function setUp() public override {
         _createAccounts();
@@ -273,7 +272,7 @@ contract MaxMintTests is TestBase {
 
 contract MaxRedeemTests is TestBase {
 
-    address internal lp;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -328,7 +327,7 @@ contract MaxRedeemTests is TestBase {
 
 contract MaxWithdrawTests is TestBase {
 
-    address internal lp;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -401,7 +400,7 @@ contract MaxWithdrawTests is TestBase {
 
 contract PreviewRedeemTests is TestBase {
 
-    address internal lp;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -449,7 +448,7 @@ contract PreviewRedeemTests is TestBase {
 
 contract PreviewWithdrawTests is TestBase {
 
-    address internal lp;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -511,9 +510,9 @@ contract PreviewWithdrawTests is TestBase {
 
 contract ConvertToAssetsTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
-    address internal lp3;
+    address lp1;
+    address lp2;
+    address lp3;
 
     function setUp() public override {
         super.setUp();
@@ -564,9 +563,9 @@ contract ConvertToAssetsTests is TestBase {
 
 contract ConvertToSharesTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
-    address internal lp3;
+    address lp1;
+    address lp2;
+    address lp3;
 
     function setUp() public override {
         super.setUp();
@@ -617,9 +616,9 @@ contract ConvertToSharesTests is TestBase {
 
 contract PreviewDepositTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
-    address internal lp3;
+    address lp1;
+    address lp2;
+    address lp3;
 
     function setUp() public override {
         super.setUp();
@@ -670,9 +669,9 @@ contract PreviewDepositTests is TestBase {
 
 contract PreviewMintTests is TestBase {
 
-    address internal lp1;
-    address internal lp2;
-    address internal lp3;
+    address lp1;
+    address lp2;
+    address lp3;
 
     function setUp() public override {
         super.setUp();
@@ -723,10 +722,9 @@ contract PreviewMintTests is TestBase {
 
 contract TotalAssetsTests is TestBase {
 
-    address internal lp1;
-    address internal borrower;
-
-    MapleLoan internal loan;
+    address borrower;
+    address loan;
+    address lp1;
 
     function setUp() public override {
         super.setUp();
@@ -815,7 +813,7 @@ contract TotalAssetsTests is TestBase {
         /************************/
 
         vm.warp(start + ONE_MONTH);
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +------------+--------+--------+
         // |    POOL    |   PD   |   MT   |

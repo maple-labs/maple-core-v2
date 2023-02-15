@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract LoanManagerGetterTests is TestBase {
 
-    MapleLoan internal loan;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -22,9 +21,11 @@ contract LoanManagerGetterTests is TestBase {
             rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
         });
 
+        address loanManager = poolManager.loanManagerList(0);
+
         vm.startPrank(poolDelegate);
-        poolManager.setMinRatio(address(loanManager), address(collateralAsset), 1e6);
-        poolManager.setAllowedSlippage(address(loanManager), address(collateralAsset), 1e6);
+        poolManager.setMinRatio(loanManager, address(collateralAsset), 1e6);
+        poolManager.setAllowedSlippage(loanManager, address(collateralAsset), 1e6);
         vm.stopPrank();
     }
 
@@ -51,7 +52,7 @@ contract LoanManagerGetterTests is TestBase {
 
     function test_loanManagerGetters_liquidationInformation() external {
         // Returns false when loan has not yet defaulted.
-        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+        assertTrue(!loanManager.isLiquidationActive(loan));
 
         /***********************************************/
         /*** Warp to end of 1nd Payment grace period ***/
@@ -61,10 +62,10 @@ contract LoanManagerGetterTests is TestBase {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
         // Returns true when loan has defaulted.
-        assertTrue(loanManager.isLiquidationActive(address(loan)));
+        assertTrue(loanManager.isLiquidationActive(loan));
 
         assertEq(loanManager.allowedSlippageFor(address(collateralAsset)), 1e6);
         assertEq(loanManager.minRatioFor(address(collateralAsset)),        1e6);
@@ -72,13 +73,13 @@ contract LoanManagerGetterTests is TestBase {
         liquidateCollateral(loan);
 
         vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        poolManager.finishCollateralLiquidation(loan);
 
-        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+        assertTrue(!loanManager.isLiquidationActive(loan));
     }
 
     function test_loanManagerGetters_paymentInformation() external {
-        assertEq(loanManager.paymentIdOf(address(loan)), 1);
+        assertEq(loanManager.paymentIdOf(loan), 1);
 
         (
             uint24  platformManagementFeeRate,

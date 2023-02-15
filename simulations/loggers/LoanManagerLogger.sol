@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanManager } from "../../contracts/interfaces/Interfaces.sol";
+import { ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Logger } from "./Logger.sol";
 
 contract LoanManagerLogger is Logger {
 
-    ILoanManager internal loanManager;
+    ILoanManagerLike loanManager;
 
-    constructor(ILoanManager loanManager_, string memory filepath_) Logger(filepath_) {
-        loanManager = loanManager_;
+    constructor(address loanManager_, string memory filepath_) Logger(filepath_) {
+        loanManager = ILoanManagerLike(loanManager_);
     }
 
     function headers() external pure override returns (string[] memory headers_) {

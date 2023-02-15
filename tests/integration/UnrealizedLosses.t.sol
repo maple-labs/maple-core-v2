@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract UnrealizedLossesTests is TestBaseWithAssertions {
 
-    address internal borrower = address(new Address());
-    address internal lp1      = address(new Address());
-    address internal lp2      = address(new Address());
-    address internal lp3      = address(new Address());
+    address borrower = address(new Address());
+    address lp1      = address(new Address());
+    address lp2      = address(new Address());
+    address lp3      = address(new Address());
 
-    MapleLoan internal loan;
+
+    address loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -43,7 +43,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000);
 
         vm.prank(governor);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -113,7 +113,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000);
 
         vm.prank(governor);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -181,7 +181,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000);
 
         vm.prank(governor);
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         assertLiquidationInfo({
             loan:                loan,

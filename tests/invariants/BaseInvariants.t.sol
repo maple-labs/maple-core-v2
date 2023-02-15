@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { InvariantTest } from "../../modules/contract-test-utils/contracts/test.sol";
+import { ILoanLike, IFeeManager, IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
 
-import { IMapleLoan, IMapleLoanFeeManager } from "../../contracts/interfaces/Interfaces.sol";
+import { InvariantTest } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -16,14 +16,14 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    LoanHandler internal loanHandler;
-    LpHandler   internal lpHandler;
+    LoanHandler loanHandler;
+    LpHandler   lpHandler;
 
-    uint256 internal setTimestamps;
+    uint256 setTimestamps;
 
     address[] public borrowers;
 
-    uint256[] internal timestamps;
+    uint256[] timestamps;
 
     uint256 public currentTimestamp;
 
@@ -120,16 +120,16 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function assert_loan_invariant_A(address loan) internal {
-        assertGe(collateralAsset.balanceOf(loan), IMapleLoan(loan).collateral(), "Loan Invariant A");
+        assertGe(collateralAsset.balanceOf(loan), IFixedTermLoan(loan).collateral(), "Loan Invariant A");
     }
 
     function assert_loan_invariant_B(address loan) internal {
-        assertGe(fundsAsset.balanceOf(loan), IMapleLoan(loan).drawableFunds(), "Loan Invariant B");
+        assertGe(fundsAsset.balanceOf(loan), IFixedTermLoan(loan).drawableFunds(), "Loan Invariant B");
     }
 
     function assert_loan_invariant_C(address loan_, uint256 platformOriginationFee_) internal {
-        IMapleLoan           loan       = IMapleLoan(loan_);
-        IMapleLoanFeeManager feeManager = IMapleLoanFeeManager(loan.feeManager());
+        IFixedTermLoan loan       = IFixedTermLoan(loan_);
+        IFeeManager    feeManager = IFeeManager(loan.feeManager());
 
         // The loan is matured or repossessed, the invariant will underflow because delegateOriginationFee > 0
         if (loan.nextPaymentDueDate() == 0) return;
@@ -146,7 +146,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
         assertGe(
             loan.collateral(),
-            (loan.collateralRequired() * (loan.principal() - loan.drawableFunds()) + loan.principalRequested() - 1) / loan.principalRequested(),
+            (
+                loan.collateralRequired() * (loan.principal() - loan.drawableFunds()) + loan.principalRequested() - 1
+            ) / loan.principalRequested(),
             "Loan Invariant C"
         );
     }
@@ -253,15 +255,19 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         uint256 delegateManagementFeeRate_ = poolManager.delegateManagementFeeRate();
         uint256 managementFeeRate_         = platformManagementFeeRate_ + delegateManagementFeeRate_;
 
-        assertEq(refinanceInterest, _getNetInterest(IMapleLoan(loan).refinanceInterest(), managementFeeRate_), "LoanManager Invariant L");
+        assertEq(
+            refinanceInterest,
+            _getNetInterest(IFixedTermLoan(loan).refinanceInterest(), managementFeeRate_),
+            "LoanManager Invariant L"
+        );
     }
 
     function assert_loanManager_invariant_M(address loan, uint256 paymentDueDate) internal {
-        assertEq(paymentDueDate, IMapleLoan(loan).nextPaymentDueDate(), "LoanManager Invariant M");
+        assertEq(paymentDueDate, IFixedTermLoan(loan).nextPaymentDueDate(), "LoanManager Invariant M");
     }
 
     function assert_loanManager_invariant_N(address loan, uint256 startDate) internal {
-        assertLe(startDate, IMapleLoan(loan).nextPaymentDueDate() - IMapleLoan(loan).paymentInterval(), "LoanManager Invariant N");
+        assertLe(startDate, IFixedTermLoan(loan).nextPaymentDueDate() - ILoanLike(loan).paymentInterval(), "LoanManager Invariant N");
     }
 
     /**************************************************************************************************************************************/
@@ -454,7 +460,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         internal view
         returns (uint256 interestAccrued_)
     {
-        IMapleLoan loan = IMapleLoan(loan_);
+        IFixedTermLoan loan = IFixedTermLoan(loan_);
 
         if (loan.nextPaymentDueDate() == 0) {
             ( , , uint256 liquidationInterest , , , ) = loanManager.liquidationInfo(loan_);
@@ -568,7 +574,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
             ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(loan_));
             sumIssuanceRate_ += issuanceRate;
 
-            if (IMapleLoan(loan_).isImpaired()) {
+            if (ILoanLike(loan_).isImpaired()) {
                 sumIssuanceRate_ -= issuanceRate;  // If the loan is impaired the issuance rate is 0
             }
         }

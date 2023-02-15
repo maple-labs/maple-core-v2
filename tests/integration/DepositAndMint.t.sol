@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+// TODO: Should import an interface instead of the MockERC20 contract.
+import { Address, MockERC20 } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract EnterBase is TestBase {
 
-    address internal lp;
+    address lp;
 
     function setUp() public virtual override {
         _createAccounts();
@@ -244,9 +244,9 @@ contract DepositTest is EnterBase {
 
 contract DepositWithPermitTests is EnterBase {
 
-    uint256 internal deadline = 5_000_000_000;
-    uint256 internal lpPK     = 1;
-    uint256 internal nonce;
+    uint256 deadline = 5_000_000_000;
+    uint256 lpPK     = 1;
+    uint256 nonce;
 
     function setUp() public override {
         super.setUp();
@@ -503,9 +503,9 @@ contract DepositFailureTests is EnterBase {
 
 contract DepositWithPermitFailureTests is EnterBase {
 
-    uint256 internal deadline = 5_000_000_000;
-    uint256 internal lpSk     = 1;
-    uint256 internal nonce;
+    uint256 deadline = 5_000_000_000;
+    uint256 lpSk     = 1;
+    uint256 nonce;
 
     function setUp() public virtual override {
         super.setUp();
@@ -890,9 +890,9 @@ contract MintTest is EnterBase {
 
 contract MintWithPermitTests is EnterBase {
 
-    uint256 internal deadline = 5_000_000_000;
-    uint256 internal lpPK     = 1;
-    uint256 internal nonce;
+    uint256 deadline = 5_000_000_000;
+    uint256 lpPK     = 1;
+    uint256 nonce;
 
     function setUp() public override {
         super.setUp();
@@ -1171,9 +1171,9 @@ contract MintFailureTests is EnterBase {
 
 contract MintWithPermitFailureTests is EnterBase {
 
-    uint256 internal deadline = 5_000_000_000;
-    uint256 internal lpSk     = 1;
-    uint256 internal nonce;
+    uint256 deadline = 5_000_000_000;
+    uint256 lpSk     = 1;
+    uint256 nonce;
 
     function setUp() public virtual override {
         super.setUp();

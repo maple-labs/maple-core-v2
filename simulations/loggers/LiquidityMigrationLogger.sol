@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IERC20Like, ILoanManager, IPool, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, ILoanManagerLike, IPool, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Logger } from "./Logger.sol";
 
 contract LiquidityMigrationLogger is Logger {
 
-    IERC20Like   internal fundsAsset;
-    ILoanManager internal loanManager;
-    IPool        internal pool;
+    IERC20Like       fundsAsset;
+    ILoanManagerLike loanManager;
+    IPool            pool;
 
     constructor(IPoolManager poolManager_, string memory filepath_) Logger(filepath_) {
         fundsAsset  = IERC20Like(poolManager_.asset());
-        loanManager = ILoanManager(poolManager_.loanManagerList(0));
+        loanManager = ILoanManagerLike(poolManager_.loanManagerList(0));
         pool        = IPool(poolManager_.pool());
     }
 
@@ -39,10 +39,10 @@ contract LiquidityMigrationLogger is Logger {
         values_[0] = _formattedTime();
 
         values_[1] = convertUintToSixDecimalString(fundsAsset.balanceOf(address(pool)), 1e6);
+
         values_[2] = convertUintToSixDecimalString(loanManager.principalOut(),          1e6);
         values_[3] = convertUintToSixDecimalString(loanManager.accountedInterest(),     1e6);
         values_[4] = convertUintToSixDecimalString(loanManager.getAccruedInterest(),    1e6);
-
         values_[5] = convertUintToSixDecimalString(loanManager.assetsUnderManagement(), 1e6);
         // TODO: values_[5] = convertUintToSixDecimalString(loanManager.assetsUnderManagement(), 1e6);
 

@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract RequestRedeemTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -220,9 +221,9 @@ contract RequestRedeemTests is TestBase {
 
 contract RedeemTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -787,9 +788,9 @@ contract MultiUserRedeemTests is TestBase {
 
 contract RequestRedeemFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -835,9 +836,9 @@ contract RequestRedeemFailureTests is TestBase {
 
 contract RedeemFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -951,12 +952,11 @@ contract RedeemFailureTests is TestBase {
 
 contract RedeemIntegrationTests is TestBase {
 
-    address private borrower;
-    address private lp1;
-    address private lp2;
-    address private wm;
-
-    MapleLoan loan;
+    address borrower;
+    address loan;
+    address lp1;
+    address lp2;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -996,17 +996,17 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - 2_000_000e6);
 
         // Loan is not impaired
-        assertTrue(!loan.isImpaired());
+        assertTrue(!ILoanLike(loan).isImpaired());
 
         // Request the redeem
         vm.prank(lp1);
         pool.requestRedeem(1_000_000e6, lp1);
 
         vm.prank(address(poolDelegate));
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         // Loan should be impaired
-        assertTrue(loan.isImpaired());
+        assertTrue(ILoanLike(loan).isImpaired());
 
         // Warp to the withdrawal cycle
         vm.warp(start + 2 weeks);
@@ -1021,7 +1021,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6);
 
         // Losses should be the amount of the loan
-        assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
+        assertEq(poolManager.unrealizedLosses(), IFixedTermLoan(loan).principalRequested());
 
         // When there's enough liquidity to redeem
         uint256 shouldRedeemSC =
@@ -1075,7 +1075,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - 2_000_000e6);
 
         // Loan is not impaired
-        assertTrue(!loan.isImpaired());
+        assertTrue(!ILoanLike(loan).isImpaired());
 
         // LP1 Request the redeem
         vm.prank(lp1);
@@ -1086,10 +1086,10 @@ contract RedeemIntegrationTests is TestBase {
         pool.requestRedeem(2_000_000e6, lp2);
 
         vm.prank(address(poolDelegate));
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         // Loan should be impaired
-        assertTrue(loan.isImpaired());
+        assertTrue(ILoanLike(loan).isImpaired());
         vm.stopPrank();
 
         // Warp to the withdrawal cycle
@@ -1109,7 +1109,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
 
         // Losses should be the amount of the loan
-        assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
+        assertEq(poolManager.unrealizedLosses(), IFixedTermLoan(loan).principalRequested());
 
         // When there's enough liquidity to redeem
         uint256 shouldRedeemSC =
@@ -1195,7 +1195,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), (3_000_000e6 * 2) - 2_000_000e6);
 
         // Loan is not impaired
-        assertTrue(!loan.isImpaired());
+        assertTrue(!ILoanLike(loan).isImpaired());
 
         // LP1 Request the redeem
         vm.prank(lp1);
@@ -1206,10 +1206,10 @@ contract RedeemIntegrationTests is TestBase {
         pool.requestRedeem(2_000_000e6, lp2);
 
         vm.prank(address(poolDelegate));
-        poolManager.impairLoan(address(loan));
+        poolManager.impairLoan(loan);
 
         // Loan should be impaired
-        assertTrue(loan.isImpaired());
+        assertTrue(ILoanLike(loan).isImpaired());
         vm.stopPrank();
 
         // Warp to the withdrawal cycle
@@ -1227,7 +1227,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
 
         // Losses should be the amount of the loan
-        assertEq(poolManager.unrealizedLosses(), loan.principalRequested());
+        assertEq(poolManager.unrealizedLosses(), IFixedTermLoan(loan).principalRequested());
 
         // When there's enough liquidity to redeem
         uint256 shouldRedeemSC =
@@ -1264,8 +1264,8 @@ contract RedeemIntegrationTests is TestBase {
 
         // Trigger Default on the loan
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
-        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        assertTrue(!loanManager.isLiquidationActive(loan));
 
         // Check cover was used
         assertEq(fundsAsset.balanceOf(address(poolCover)), 600_000e6);

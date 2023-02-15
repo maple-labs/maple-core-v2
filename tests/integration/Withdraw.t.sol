@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract RequestWithdrawTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -82,9 +81,9 @@ contract RequestWithdrawTests is TestBase {
 
 contract RequestWithdrawFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -121,9 +120,9 @@ contract RequestWithdrawFailureTests is TestBase {
 
 contract WithdrawFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
@@ -296,7 +295,7 @@ contract WithdrawScenarios is TestBase {
         depositLiquidity(address(lp2), 2_500_000e6);
 
         // Fund three loans.
-        MapleLoan bigLoan = fundAndDrawdownLoan({
+        address bigLoan = fundAndDrawdownLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(15 days), uint256(1)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -333,7 +332,7 @@ contract WithdrawScenarios is TestBase {
         assertEq(withdrawalManager.lockedShares(address(lp1)), 1_500_000e6 - redeemableShares);
         assertEq(withdrawalManager.exitCycleId(address(lp1)),  4);
 
-        MapleLoan loan = createLoan({
+        address loan = createLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(300_000e6), uint256(300_000e6)],
@@ -342,14 +341,14 @@ contract WithdrawScenarios is TestBase {
 
         vm.prank(address(poolDelegate));
         vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
-        poolManager.fund(300_000e6, address(loan), address(loanManager));
+        poolManager.fund(300_000e6, loan, address(loanManager));
 
-        makePayment(address(bigLoan));
+        makePayment(bigLoan);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 1_000_000e6 + 4109589.041095e6 - assets1);
 
         vm.prank(address(poolDelegate));
-        poolManager.fund(300_000e6, address(loan), address(loanManager));
+        poolManager.fund(300_000e6, loan, address(loanManager));
 
         ( redeemableShares, , partialLiquidity ) = withdrawalManager.getRedeemableAmounts(2_500_000e6, address(lp2));
 
@@ -379,21 +378,21 @@ contract WithdrawScenarios is TestBase {
         depositLiquidity(address(lp4), 1_000_000e6);
 
         // Fund three loans.
-        MapleLoan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
         });
 
-        MapleLoan loan2 = fundAndDrawdownLoan({
+        address loan2 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)]
         });
 
-        MapleLoan loan3 = fundAndDrawdownLoan({
+        address loan3 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],

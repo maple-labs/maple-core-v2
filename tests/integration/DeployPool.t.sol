@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { ILoanManagerLike, IProxyFactoryLike, IWithdrawalManager, IPool, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { ILoanManager, IMapleProxyFactory, IWithdrawalManager, IPool, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -225,17 +225,17 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failIfCalledPMFactoryDirectly() external {
         vm.expectRevert("PMF:CI:NOT_DEPLOYER");
-        IMapleProxyFactory(poolManagerFactory).createInstance(new bytes(0), "salt");
+        IProxyFactoryLike(poolManagerFactory).createInstance(new bytes(0), "salt");
     }
 
     function test_deployPool_failIfCalledLMFactoryDirectly() external {
         vm.expectRevert("LMF:CI:NOT_DEPLOYER");
-        IMapleProxyFactory(loanManagerFactory).createInstance(new bytes(0), "salt");
+        IProxyFactoryLike(loanManagerFactory).createInstance(new bytes(0), "salt");
     }
 
     function test_deployPool_failIfCalledWMFactoryDirectly() external {
         vm.expectRevert("WMF:CI:NOT_DEPLOYER");
-        IMapleProxyFactory(withdrawalManagerFactory).createInstance(new bytes(0), "salt");
+        IProxyFactoryLike(withdrawalManagerFactory).createInstance(new bytes(0), "salt");
     }
 
     function test_deployPool_successWithZeroMigrationAdmin() external {
@@ -303,7 +303,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         IPoolManager       poolManager       = IPoolManager(poolManager_);
         IPool              pool              = IPool(poolManager.pool());
-        ILoanManager       loanManager       = ILoanManager(loanManager_);
+        ILoanManagerLike   loanManager       = ILoanManagerLike(loanManager_);
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         assertEq(poolManager.poolDelegate(),              poolDelegate);

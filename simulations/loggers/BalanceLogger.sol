@@ -7,9 +7,9 @@ import { Logger } from "./Logger.sol";
 
 contract BalanceLogger is Logger {
 
-    address internal owner;
+    address owner;
 
-    IERC20Like internal asset;
+    IERC20Like asset;
 
     constructor(IERC20Like asset_, address owner_, string memory filepath_) Logger(filepath_) {
         asset = asset_;

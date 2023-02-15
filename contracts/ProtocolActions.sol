@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
-
 import {
     IERC20,
     IERC20Like,
-    IMapleGlobals,
-    IMapleLoan,
-    IMapleLoanFeeManager,
+    IFixedTermLoan,
+    IFeeManager,
+    ILoanLike,
     IPool,
     IPoolManager
 } from "./interfaces/Interfaces.sol";
+
+import { console, TestUtils } from "../contracts/Contracts.sol";
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is TestUtils {
@@ -59,58 +59,58 @@ contract ProtocolActions is TestUtils {
     /*** Borrow Functions                                                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function closeLoan(address loan_) internal {
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IMapleLoan(loan_).getClosingPaymentBreakdown();
+    function close(address loan_) internal {
+        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IFixedTermLoan(loan_).getClosingPaymentBreakdown();
 
-        address borrower_   = IMapleLoan(loan_).borrower();
-        address fundsAsset_ = IMapleLoan(loan_).fundsAsset();
+        address borrower_   = ILoanLike(loan_).borrower();
+        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
         uint256 payment_    = principal_ + interest_ + fees_;
 
         erc20_mint(fundsAsset_, borrower_, payment_);
 
         vm.startPrank(borrower_);
         IERC20(fundsAsset_).approve(loan_, payment_);
-        IMapleLoan(loan_).closeLoan(payment_);
+        IFixedTermLoan(loan_).closeLoan(payment_);
         vm.stopPrank();
     }
 
     function drawdown(address loan_, uint256 amount_) internal {
-        address borrower_           = IMapleLoan(loan_).borrower();
-        address collateralAsset_    = IMapleLoan(loan_).collateralAsset();
-        uint256 collateralRequired_ = IMapleLoan(loan_).getAdditionalCollateralRequiredFor(amount_);
+        address borrower_           = ILoanLike(loan_).borrower();
+        address collateralAsset_    = IFixedTermLoan(loan_).collateralAsset();
+        uint256 collateralRequired_ = IFixedTermLoan(loan_).getAdditionalCollateralRequiredFor(amount_);
 
         erc20_mint(collateralAsset_, borrower_, collateralRequired_);
 
         vm.startPrank(borrower_);
         IERC20(collateralAsset_).approve(loan_, collateralRequired_);
-        IMapleLoan(loan_).drawdownFunds(amount_, borrower_);
+        IFixedTermLoan(loan_).drawdownFunds(amount_, borrower_);
         vm.stopPrank();
     }
 
     function makePayment(address loan_) internal {
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IMapleLoan(loan_).getNextPaymentBreakdown();
+        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = IFixedTermLoan(loan_).getNextPaymentBreakdown();
 
-        address borrower_   = IMapleLoan(loan_).borrower();
-        address fundsAsset_ = IMapleLoan(loan_).fundsAsset();
+        address borrower_   = ILoanLike(loan_).borrower();
+        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
         uint256 payment_    = principal_ + interest_ + fees_;
 
         erc20_mint(fundsAsset_, borrower_, payment_);
 
         vm.startPrank(borrower_);
         IERC20(fundsAsset_).approve(loan_, payment_);
-        IMapleLoan(loan_).makePayment(payment_);
+        IFixedTermLoan(loan_).makePayment(payment_);
         vm.stopPrank();
     }
 
     function postCollateral(address loan_, uint256 amount_) internal {
-        address borrower_        = IMapleLoan(loan_).borrower();
-        address collateralAsset_ = IMapleLoan(loan_).collateralAsset();
+        address borrower_        = ILoanLike(loan_).borrower();
+        address collateralAsset_ = IFixedTermLoan(loan_).collateralAsset();
 
         erc20_mint(collateralAsset_, borrower_, amount_);
 
         vm.startPrank(borrower_);
         IERC20(collateralAsset_).approve(loan_, amount_);
-        IMapleLoan(loan_).postCollateral(amount_);
+        IFixedTermLoan(loan_).postCollateral(amount_);
         vm.stopPrank();
     }
 
@@ -122,61 +122,38 @@ contract ProtocolActions is TestUtils {
         uint256 principalIncrease_,
         uint256 collateralRequiredIncrease_
     ) internal {
-        address borrower_              = IMapleLoan(loan_).borrower();
-        uint256 newPrincipal_          = IMapleLoan(loan_).principal() + principalIncrease_;
-        uint256 newPrincipalRequested_ = IMapleLoan(loan_).principalRequested() + principalIncrease_;
-        uint256 newCollateralRequired_ = IMapleLoan(loan_).collateralRequired() + collateralRequiredIncrease_;
-        uint256 drawableFunds_         = IMapleLoan(loan_).drawableFunds();
-
-        uint256 originationFees_ = IMapleLoanFeeManager(IMapleLoan(loan_).feeManager()).getOriginationFees(loan_, newPrincipalRequested_);
-
-        if (originationFees_ != 0) {                                    // If there are originationFees_
-            if (drawableFunds_ > originationFees_) {                    // and sufficient drawableFunds_ to pay them
-                drawableFunds_ -= originationFees_;                     // then decrement from drawableFunds_ for the collateralRequired_ math
-            } else {
-                returnFunds(loan_, originationFees_ - drawableFunds_);  // else return enough to pay the originationFees_
-                drawableFunds_ = 0;                                     // and zero the drawableFunds_ for the collateralRequired_ math
-            }
-        }
-
-        uint256 requiredCollateral_ =
-            getCollateralRequiredFor(newPrincipal_, drawableFunds_, newPrincipalRequested_, newCollateralRequired_);
-
-        uint256 collateral_ = IMapleLoan(loan_).collateral();
-
-        // If the post-refinance required collateral given the post-refinance drawableFunds, then post collateral.
-        if (requiredCollateral_ > collateral_) postCollateral(loan_, requiredCollateral_ - collateral_);
+        address borrower_ = ILoanLike(loan_).borrower();
 
         vm.startPrank(borrower_);
-        IMapleLoan(loan_).proposeNewTerms(refinancer_, expiry_, refinanceCalls_);
+        ILoanLike(loan_).proposeNewTerms(refinancer_, expiry_, refinanceCalls_);
         vm.stopPrank();
     }
 
     function removeCollateral(address loan_, uint256 amount_) internal {
-        address borrower_   = IMapleLoan(loan_).borrower();
+        address borrower_ = ILoanLike(loan_).borrower();
 
         vm.startPrank(borrower_);
-        IMapleLoan(loan_).removeCollateral(amount_, borrower_);
+        IFixedTermLoan(loan_).removeCollateral(amount_, borrower_);
         vm.stopPrank();
     }
 
     function returnFunds(address loan_, uint256 amount_) internal {
-        address borrower_   = IMapleLoan(loan_).borrower();
-        address fundsAsset_ = IMapleLoan(loan_).fundsAsset();
+        address borrower_   = ILoanLike(loan_).borrower();
+        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
 
         erc20_mint(fundsAsset_, borrower_, amount_);
 
         vm.startPrank(borrower_);
         IERC20(fundsAsset_).approve(loan_, amount_);
-        IMapleLoan(loan_).returnFunds(amount_);
+        IFixedTermLoan(loan_).returnFunds(amount_);
         vm.stopPrank();
     }
 
     function rejectNewTerms(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        address borrower_ = IMapleLoan(loan_).borrower();
+        address borrower_ = ILoanLike(loan_).borrower();
 
         vm.startPrank(borrower_);
-        IMapleLoan(loan_).rejectNewTerms(refinancer_, expiry_, refinanceCalls_);
+        ILoanLike(loan_).rejectNewTerms(refinancer_, expiry_, refinanceCalls_);
         vm.stopPrank();
     }
 
@@ -233,7 +210,7 @@ contract ProtocolActions is TestUtils {
     function fundLoan(address poolManager_, address loan_) internal {
         address poolDelegate_       = IPoolManager(poolManager_).poolDelegate();
         address loanManager_        = IPoolManager(poolManager_).loanManagerList(0);
-        uint256 principalRequested_ = IMapleLoan(loan_).principalRequested();
+        uint256 principalRequested_ = IFixedTermLoan(loan_).principalRequested();
 
         vm.startPrank(poolDelegate_);
         IPoolManager(poolManager_).fund(principalRequested_, loan_, loanManager_);

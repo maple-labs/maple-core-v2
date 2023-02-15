@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleLoan } from "../../../contracts/interfaces/Interfaces.sol";
+import { ILoanLike } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract SkimmerBase {
 
-    IMapleLoan internal loan;
+    ILoanLike loan;
 
     constructor (address loan_) {
-        loan = IMapleLoan(loan_);
+        loan = ILoanLike(loan_);
     }
 
     function skim(address token_, address destination_) public virtual returns (uint256 skimmed_) {

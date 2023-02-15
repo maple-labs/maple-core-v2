@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IERC20Like, IMapleLoan } from "../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Logger } from "./Logger.sol";
 
 contract LoanLogger is Logger {
 
-    IERC20Like internal asset;
-    IMapleLoan internal loan;
+    address loan;
 
-    constructor(IMapleLoan loan_, string memory filepath_) Logger(filepath_) {
+    IERC20Like asset;
+
+    constructor(address loan_, string memory filepath_) Logger(filepath_) {
         loan  = loan_;
-        asset = IERC20Like(loan_.fundsAsset());
+        asset = IERC20Like(ILoanLike(loan).fundsAsset());
     }
 
     function headers() external pure override returns (string[] memory headers_) {
@@ -30,10 +31,10 @@ contract LoanLogger is Logger {
         values_ = new string[](6);
 
         values_[0] = _formattedTime();
-        values_[1] = convertUintToString(asset.balanceOf(address(loan)));
-        values_[2] = convertUintToString(loan.principal());
-        values_[3] = convertUintToString(loan.nextPaymentDueDate());
-        values_[4] = convertUintToString(loan.paymentsRemaining());
+        values_[1] = convertUintToString(asset.balanceOf(loan));
+        values_[2] = convertUintToString(ILoanLike(loan).principal());
+        values_[3] = convertUintToString(IFixedTermLoan(loan).nextPaymentDueDate());
+        values_[4] = convertUintToString(IFixedTermLoan(loan).paymentsRemaining());
         values_[5] = bytes(notes_).length == 0 ? NULL : notes_;
     }
 

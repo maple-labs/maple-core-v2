@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../../modules/contract-test-utils/contracts/test.sol";
+import { IFixedTermLoan, ILiquidator, ILoanLike } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { IMapleGlobals, IMapleLoan, ILiquidator } from "../../../contracts/interfaces/Interfaces.sol";
+import { Address } from "../../../contracts/Contracts.sol";
 
 import { LoanHandler } from "./LoanHandler.sol";
 
 contract LoanHandlerWithDefaults is LoanHandler {
 
-    address internal liquidatorFactory;
+    address liquidatorFactory;
 
     // Losses value
     uint256 public numDefaults;
@@ -65,22 +65,22 @@ contract LoanHandlerWithDefaults is LoanHandler {
         if (loanDefaulted[loanAddress]) return;  // Loan already defaulted
 
         // Check loan can be defaulted
-        uint256 nextPaymentDueDate_ = IMapleLoan(loanAddress).nextPaymentDueDate();
-        uint256 gracePeriod_        = IMapleLoan(loanAddress).gracePeriod();
+        uint256 nextPaymentDueDate_ = IFixedTermLoan(loanAddress).nextPaymentDueDate();
+        uint256 gracePeriod_        = ILoanLike(loanAddress).gracePeriod();
 
         if (block.timestamp <= nextPaymentDueDate_ + gracePeriod_) {
             vm.warp(nextPaymentDueDate_ + gracePeriod_ + 1);
         }
 
         // If loan isn't impaired account for update to issuance rate
-        if (!IMapleLoan(loanAddress).isImpaired()) {
+        if (!ILoanLike(loanAddress).isImpaired()) {
             ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loanAddress)));
             sum_loanManager_paymentIssuanceRate -= issuanceRate;
         }
 
         // Non-liquidating therefore update principal
-        if (IMapleLoan(loanAddress).collateral() == 0 || IMapleLoan(loanAddress).collateralAsset() == address(fundsAsset)) {
-            sum_loan_principal -= IMapleLoan(loanAddress).principal();
+        if (IFixedTermLoan(loanAddress).collateral() == 0 || IFixedTermLoan(loanAddress).collateralAsset() == address(fundsAsset)) {
+            sum_loan_principal -= ILoanLike(loanAddress).principal();
         }
 
         vm.prank(poolManager.poolDelegate());

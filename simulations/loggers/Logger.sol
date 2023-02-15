@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestUtils } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { ILogger } from "../interfaces/ILogger.sol";
+
+import { TestUtils } from "../../contracts/Contracts.sol";
 
 abstract contract Logger is ILogger, TestUtils {
 
-    string internal constant NULL = "NULL";
+    string constant NULL = "NULL";
 
-    uint256 internal immutable START = block.timestamp;
+    uint256 immutable START = block.timestamp;
 
     string public override filepath;
 

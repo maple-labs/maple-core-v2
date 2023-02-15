@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
-import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
+import { FixedTermLoanManagerHarness } from "./utils/FixedTermLoanManagerHarness.sol";
 
 contract PoolViewFunctionsFuzzTests is TestBase {
 
-    address internal user;
+    address user;
 
-    LoanManagerHarness internal loanManagerHarness;
+    FixedTermLoanManagerHarness loanManagerHarness;
 
     function setUp() public override {
         super.setUp();
 
         user = address(new Address());
 
-        loanManagerHarness = new LoanManagerHarness();
+        loanManagerHarness = new FixedTermLoanManagerHarness();
 
         vm.etch(address(loanManager), address(loanManagerHarness).code);
 
-        loanManagerHarness = LoanManagerHarness(address(loanManager));
+        loanManagerHarness = FixedTermLoanManagerHarness(address(loanManager));
     }
 
     function testFuzz_getTotalAssetsFromPM(uint256 principalOut_, uint256 accountedInterest_) external {

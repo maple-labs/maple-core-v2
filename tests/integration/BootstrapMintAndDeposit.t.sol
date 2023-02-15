@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
+// TODO: Should import and interface instead of the MockERC20 contract.
+import { Address, MockERC20 } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract BootstrapTestBase is TestBaseWithAssertions {
 
-    uint256 internal constant BOOTSTRAP_MINT_AMOUNT = 1e5;
+    uint256 constant BOOTSTRAP_MINT_AMOUNT = 1e5;
 
-    address internal lp1;
-    address internal lp2;
+    address lp1;
+    address lp2;
 
     function setUp() public virtual override {
         _createAccounts();
@@ -190,10 +190,10 @@ contract BootstrapDepositTests is BootstrapTestBase {
 
 contract BootstrapDepositWithPermitTests is BootstrapTestBase {
 
-    uint256 internal deadline = 5_000_000_000;
-    uint256 internal lp1PK    = 1;
-    uint256 internal lp2PK    = 2;
-    uint256 internal nonce;
+    uint256 deadline = 5_000_000_000;
+    uint256 lp1PK    = 1;
+    uint256 lp2PK    = 2;
+    uint256 nonce;
 
     function setUp() override public {
         super.setUp();
@@ -497,10 +497,10 @@ contract BootstrapMintTests is BootstrapTestBase {
 
 contract BootstrapMintWithPermitTests is BootstrapTestBase {
 
-    uint256 internal deadline = 5_000_000_000;
-    uint256 internal lp1PK    = 1;
-    uint256 internal lp2PK    = 2;
-    uint256 internal nonce;
+    uint256 deadline = 5_000_000_000;
+    uint256 lp1PK    = 1;
+    uint256 lp2PK    = 2;
+    uint256 nonce;
 
     function setUp() override public {
         super.setUp();

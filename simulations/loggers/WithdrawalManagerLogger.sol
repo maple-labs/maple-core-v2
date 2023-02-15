@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IWithdrawalManager } from "../../contracts/interfaces/Interfaces.sol";
-
 import { Logger } from "./Logger.sol";
 
 contract WithdrawalManagerLogger is Logger {
 
-    IWithdrawalManager internal withdrawalManager;
+    address withdrawalManager;
 
-    constructor(IWithdrawalManager withdrawalManager_, string memory filepath_) Logger(filepath_) {
+    constructor(address withdrawalManager_, string memory filepath_) Logger(filepath_) {
         withdrawalManager = withdrawalManager_;
     }
 

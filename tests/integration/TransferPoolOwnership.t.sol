@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract TransferPoolOwnershipTests is TestBaseWithAssertions {
 
-    address internal newPoolDelegate = address(new Address());
+    address newPoolDelegate = address(new Address());
 
     function test_setPendingPoolDelegate_notPD() external {
         vm.expectRevert("PM:SPA:NOT_PD");

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract TriggerDefaultFailureTests is TestBaseWithAssertions {
 
-    MapleLoan internal loan;
+    address loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -37,19 +36,18 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
 
     function test_triggerDefault_notAuthorized() external {
         vm.expectRevert("PM:TD:NOT_AUTHORIZED");
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
     }
 
     function test_triggerDefault_notFactory() external {
         vm.prank(address(poolDelegate));
         vm.expectRevert("PM:TD:NOT_FACTORY");
-        poolManager.triggerDefault(address(loan), address(1));
+        poolManager.triggerDefault(loan, address(1));
     }
 
     function test_triggerDefault_notPoolManager() external {
-        vm.prank(address(loanManager));
         vm.expectRevert("LM:TD:NOT_PM");
-        loanManager.triggerDefault(address(loan), address(liquidatorFactory));
+        loanManager.triggerDefault(loan, address(liquidatorFactory));
     }
 
 }

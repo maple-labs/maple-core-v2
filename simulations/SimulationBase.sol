@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../modules/contract-test-utils/contracts/test.sol";
+import { IPool, IPoolManager } from "../contracts/interfaces/Interfaces.sol";
 
-import { ILoanManager, IMapleLoan, IPool, IPoolManager } from "../contracts/interfaces/Interfaces.sol";
+import { Address } from "../contracts/Contracts.sol";
 
 import { DepositLiquidityAction } from "./actions/DepositLiquidityAction.sol";
 import { LoanActionGenerator }    from "./actions/LoanActionGenerator.sol";
@@ -21,20 +21,18 @@ import { TestBase } from "../tests/TestBase.sol";
 
 contract SimulationBase is TestBase {
 
-    uint256 internal initialCover;
-    uint256 internal initialLiquidity;
+    uint256 initialCover;
+    uint256 initialLiquidity;
 
-    PoolSimulation internal simulation;
+    PoolSimulation simulation;
 
-    LoanScenario[] internal scenarios;
+    LoanScenario[] scenarios;
 
     function setUp() public virtual override {
         super.setUp();
     }
 
     function setUpSimulation() public {
-        IPoolManager poolManager_ = IPoolManager(address(poolManager));
-
         // Create the simulation.
         simulation = new PoolSimulation();
 
@@ -59,17 +57,19 @@ contract SimulationBase is TestBase {
     function setUpAllLoggers(string memory filepath_) public {
         IPool        pool_        = IPool(address(pool));
         IPoolManager poolManager_ = IPoolManager(address(poolManager));
-        ILoanManager loanManager_ = ILoanManager(address(loanManager));
 
         // Add all loggers here in order to record contract states during the simulation.
-        simulation.record(new PoolLogger(pool_,               string(abi.encodePacked("output/", filepath_, "/pool.csv"))));
-        simulation.record(new PoolManagerLogger(poolManager_, string(abi.encodePacked("output/", filepath_, "/pool-manager.csv"))));
-        simulation.record(new LoanManagerLogger(loanManager_, string(abi.encodePacked("output/", filepath_, "/loan-manager.csv"))));
+        simulation.record(new PoolLogger(pool_,                       string(abi.encodePacked("output/", filepath_, "/pool.csv"))));
+        simulation.record(new PoolManagerLogger(poolManager_,         string(abi.encodePacked("output/", filepath_, "/pool-manager.csv"))));
+        simulation.record(new LoanManagerLogger(address(loanManager), string(abi.encodePacked("output/", filepath_, "/loan-manager.csv"))));
 
         for (uint256 i_; i_ < scenarios.length; i_++) {
-            IMapleLoan loan_    = scenarios[i_].loan();
-            string memory name_ = scenarios[i_].name();
-            simulation.record(new LoanLogger(loan_, string(abi.encodePacked("output/", filepath_, "/", name_, ".csv"))));
+            simulation.record(
+                new LoanLogger(
+                    address(scenarios[i_].loan()),
+                    string(abi.encodePacked("output/", filepath_, "/", scenarios[i_].name(), ".csv"))
+                )
+            );
         }
     }
 

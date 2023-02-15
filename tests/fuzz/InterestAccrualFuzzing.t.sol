@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { IMapleLoan } from "../../contracts/interfaces/Interfaces.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 // NOTE: This test cases make use of simulation files for easier setup.
 import { ILoanAction } from "../../simulations/interfaces/ILoanAction.sol";
@@ -17,17 +17,17 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
+    address borrower;
+    address lp;
 
-    uint256 internal lastUpdated;
+    uint256 lastUpdated;
 
-    LoanScenario[] internal scenarios;
+    LoanScenario[] scenarios;
 
-    mapping(address => uint256) internal lateInterestAmount;
-    mapping(address => uint256) internal scenarioForLoan;
+    mapping(address => uint256) lateInterestAmount;
+    mapping(address => uint256) scenarioForLoan;
 
-    mapping(uint256 => uint256[]) internal paymentTimestamps;  // Scenario ID => Payment timestamps TODO Change to loan address
+    mapping(uint256 => uint256[]) paymentTimestamps;  // Scenario ID => Payment timestamps TODO Change to loan address
 
     function setUp() public override {
         super.setUp();
@@ -52,13 +52,13 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
 
         // 1. Create all loans, with fuzzed terms and fuzzed payment schedules.
         for (uint256 scenario; scenario < numberOfLoans; ++scenario) {
-            IMapleLoan loan = IMapleLoan(_createLoan(hashed(seed_ + scenario)));
+            address loan = _createLoan(hashed(seed_ + scenario));
 
-            scenarioForLoan[address(loan)] = scenario;
+            scenarioForLoan[loan] = scenario;
 
             // Create the loan
             scenarios.push(new LoanScenario({
-                loan_:              address(loan),
+                loan_:              loan,
                 poolManager_:       address(poolManager),
                 liquidatorFactory_: address(liquidatorFactory),
                 fundingTime_:       start + constrictToRange(hashed(seed_ + scenario), 0, 365 days),
@@ -66,10 +66,10 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
             }));
 
             // Set all the payment offsets, saving the timestamps for the test
-            for (uint256 payment = 1; payment <= loan.paymentsRemaining(); ++payment) {
+            for (uint256 payment = 1; payment <= IFixedTermLoan(loan).paymentsRemaining(); ++payment) {
                 // TODO: Do larger range later, investigate limiting negative to paymentInterval
                 int256 paymentOffset = int256(
-                    constrictToRange(hashed(hashed(seed_ + scenario) + payment), 0, loan.paymentInterval() / 2 - 1)
+                    constrictToRange(hashed(hashed(seed_ + scenario) + payment), 0, ILoanLike(loan).paymentInterval() / 2 - 1)
                 );
 
                 paymentOffset = payment & 1 == 0 ? paymentOffset : -paymentOffset;  // 50% chance of negative
@@ -77,7 +77,7 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
                 scenarios[scenario].setPaymentOffset(payment, paymentOffset);
 
                 paymentTimestamps[scenario].push(
-                    uint256(int256(scenarios[scenario].fundingTime() + loan.paymentInterval() * payment) + paymentOffset)
+                    uint256(int256(scenarios[scenario].fundingTime() + ILoanLike(loan).paymentInterval() * payment) + paymentOffset)
                 );
             }
         }
@@ -89,7 +89,7 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
         // 2. Calculate the total amount of liquidity required for all loans.
         for (uint256 i; i < scenarios.length; ++i) {
             add(generator_.generateActions(scenarios[i]));
-            totalLiquidityRequired += scenarios[i].loan().principalRequested();
+            totalLiquidityRequired += IFixedTermLoan(scenarios[i].loan()).principalRequested();
         }
 
         // 3. Deposit into pool.
@@ -104,14 +104,14 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
 
             vm.warp(action.timestamp());
 
-            IMapleLoan loan = action.loan();
+            address loan = action.loan();
 
             uint256 outstandingInterest;
             uint256 earliestPaymentDueDate;
 
             // Calculate the earliest payment in the sorted list naively.
             for (uint256 j; j < scenarios.length; ++j) {
-                uint256 nextPaymentDueDate = scenarios[j].loan().nextPaymentDueDate();
+                uint256 nextPaymentDueDate = IFixedTermLoan(scenarios[j].loan()).nextPaymentDueDate();
 
                 // If the due date is past the last updated timestamp, is earlier than cached and is not 0, cache it.
                 if (
@@ -125,37 +125,37 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
 
             // For each loan, calculate the theoretical interest that should have been accrued and aggregate it.
             for (uint256 j; j < scenarios.length; ++j) {
-                outstandingInterest += getCurrentOutstandingInterest(address(scenarios[j].loan()), earliestPaymentDueDate);
+                outstandingInterest += getCurrentOutstandingInterest(scenarios[j].loan(), earliestPaymentDueDate);
             }
 
             // Assert that the theoretical interest is equal to the actual interest, within a small delta.
             // TODO: Better define acceptable diff, potentially add positive/negative assertion
             assertWithinDiff(loanManager.getAccruedInterest() + loanManager.accountedInterest(), outstandingInterest, actions.length);
 
-            uint256 previousPaymentDueDate = loan.nextPaymentDueDate();
+            uint256 previousPaymentDueDate = IFixedTermLoan(loan).nextPaymentDueDate();
 
-            bool isLate = loan.nextPaymentDueDate() != 0 && action.timestamp() > loan.nextPaymentDueDate();
+            bool isLate = previousPaymentDueDate != 0 && action.timestamp() > previousPaymentDueDate;
 
             action.act();
 
             lastUpdated = block.timestamp;  // Save the last updated timestamp locally.
 
-            if (!isLate || loan.nextPaymentDueDate() == 0) {
-                lateInterestAmount[address(loan)] = 0;
+            if (!isLate || IFixedTermLoan(loan).nextPaymentDueDate() == 0) {
+                lateInterestAmount[loan] = 0;
                 continue;
             }
 
             // If the loan is late, calculate the theoretical interest that should have been accrued into the next interval and save it.
-            ( , uint256[3] memory interestArray, ) = loan.getNextPaymentDetailedBreakdown();
+            ( , uint256[3] memory interestArray, ) = IFixedTermLoan(loan).getNextPaymentDetailedBreakdown();
 
             uint256 netInterest =
                 interestArray[0] *
                 (1e6 - globals.platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate()) / 1e6;
 
-            lateInterestAmount[address(loan)] =
-                action.timestamp() - previousPaymentDueDate > loan.paymentInterval()
+            lateInterestAmount[loan] =
+                action.timestamp() - previousPaymentDueDate > ILoanLike(loan).paymentInterval()
                     ? netInterest
-                    : netInterest * (action.timestamp() - previousPaymentDueDate) / loan.paymentInterval();
+                    : netInterest * (action.timestamp() - previousPaymentDueDate) / ILoanLike(loan).paymentInterval();
 
             assertWithinDiff(loanManager.getAccruedInterest(), 0, 1);
         }
@@ -185,7 +185,7 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
         internal view
         returns (uint256 interestAccrued_)
     {
-        IMapleLoan loan = IMapleLoan(loan_);
+        IFixedTermLoan loan = IFixedTermLoan(loan_);
 
         if (loan.nextPaymentDueDate() == 0) return 0;
 

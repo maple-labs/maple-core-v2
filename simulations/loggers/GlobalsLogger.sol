@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleGlobals } from "../../contracts/interfaces/Interfaces.sol";
+import { IGlobals } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Logger } from "./Logger.sol";
 
 contract GlobalsLogger is Logger {
 
-    IMapleGlobals internal globals;
+    IGlobals globals;
 
-    constructor(IMapleGlobals globals_, string memory filepath_) Logger(filepath_) {
+    constructor(IGlobals globals_, string memory filepath_) Logger(filepath_) {
         globals = globals_;
     }
 

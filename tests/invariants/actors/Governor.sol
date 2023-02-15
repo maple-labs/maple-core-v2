@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleGlobals, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
+import { IGlobals, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract GovernorBase {
 
-    IMapleGlobals internal globals;
-    IPoolManager  internal poolManager;
+    IGlobals     globals;
+    IPoolManager poolManager;
 
     constructor (address globals_, address poolManager_) {
-        globals     = IMapleGlobals(globals_);
+        globals     = IGlobals(globals_);
         poolManager = IPoolManager(poolManager_);
     }
 

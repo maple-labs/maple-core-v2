@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
 
-    MapleLoan internal loan;
+    address loan;
 
     function setUp() public virtual override {
         super.setUp();
@@ -37,13 +36,13 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
 
     function test_finishCollateralLiquidation_notAuthorized() external {
         vm.expectRevert("PM:FCL:NOT_AUTHORIZED");
-        poolManager.finishCollateralLiquidation(address(loan));
+        poolManager.finishCollateralLiquidation(loan);
     }
 
     function test_finishCollateralLiquidation_notPoolManager() external {
         vm.prank(address(1));
         vm.expectRevert("LM:FCL:NOT_PM");
-        loanManager.finishCollateralLiquidation(address(loan));
+        loanManager.finishCollateralLiquidation(loan);
     }
 
     function test_finishCollateralLiquidation_notFinished() external {
@@ -51,11 +50,11 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
         vm.warp(start + 30 days + 5 days + 1);
 
         vm.prank(address(poolDelegate));
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
         vm.prank(address(poolDelegate));
         vm.expectRevert("LM:FCL:LIQ_ACTIVE");
-        poolManager.finishCollateralLiquidation(address(loan));
+        poolManager.finishCollateralLiquidation(loan);
     }
 
 }

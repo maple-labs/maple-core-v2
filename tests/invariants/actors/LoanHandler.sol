@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, TestUtils }   from "../../../modules/contract-test-utils/contracts/test.sol";
-import { MockERC20 }            from "../../../modules/erc20/contracts/test/mocks/MockERC20.sol";
-import { MapleLoanInitializer } from "../../../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
-
 import {
-    IMapleGlobals,
-    IMapleLoan,
-    IMapleLoanFactory,
-    IMapleLoanFeeManager,
-    ILoanManager,
+    IFeeManager,
+    IFixedTermLoan,
+    IFixedTermLoanManager,
+    IGlobals,
     IPool,
     IPoolManager,
+    IProxyFactoryLike,
     IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ITest } from "../interfaces/ITest.sol";
+
+import { Address, TestUtils, MockERC20 } from "../../../contracts/Contracts.sol";
 
 contract LoanHandler is TestUtils {
 
@@ -25,15 +23,15 @@ contract LoanHandler is TestUtils {
     /**************************************************************************************************************************************/
 
     // Actors
-    address internal poolDelegate;
+    address poolDelegate;
 
-    address[] internal borrowers;
+    address[] borrowers;
 
     // Contract addresses
-    address internal feeManager;
-    address internal globals;
-    address internal governor;
-    address internal loanFactory;
+    address feeManager;
+    address globals;
+    address governor;
+    address loanFactory;
 
     // Debugging
     uint256 public numBorrowers;
@@ -46,13 +44,13 @@ contract LoanHandler is TestUtils {
     mapping(bytes32 => uint256) public numberOfCalls;
 
     // Contract instances
-    MockERC20 internal collateralAsset;
-    MockERC20 internal fundsAsset;
+    MockERC20 collateralAsset;
+    MockERC20 fundsAsset;
 
-    ILoanManager internal loanManager;
-    IPool        internal pool;
-    IPoolManager internal poolManager;
-    ITest        internal testContract;
+    IFixedTermLoanManager loanManager;   // Liquidation interfaces prevent this from being ILoanManagerLike. Consider an address.
+    IPool                 pool;
+    IPoolManager          poolManager;
+    ITest                 testContract;
 
     /**************************************************************************************************************************************/
     /*** State Variables for Invariant Assertions                                                                                       ***/
@@ -100,7 +98,7 @@ contract LoanHandler is TestUtils {
         collateralAsset = MockERC20(collateralAsset_);
         fundsAsset      = MockERC20(fundsAsset_);
         poolManager     = IPoolManager(poolManager_);
-        loanManager     = ILoanManager(poolManager.loanManagerList(0));
+        loanManager     = IFixedTermLoanManager(poolManager.loanManagerList(0));
         pool            = IPool(poolManager.pool());
         testContract    = ITest(testContract_);
 
@@ -111,7 +109,7 @@ contract LoanHandler is TestUtils {
         for (uint256 i; i < numBorrowers_; ++i) {
             address borrower = address(new Address());
             vm.prank(governor);
-            IMapleGlobals(globals).setValidBorrower(borrower, true);
+            IGlobals(globals).setValidBorrower(borrower, true);
             borrowers.push(borrower);
         }
 
@@ -169,17 +167,17 @@ contract LoanHandler is TestUtils {
         ) return;
 
         vm.startPrank(borrower_);
-        address loan_ = IMapleLoanFactory(loanFactory).createInstance({
-            arguments_: new MapleLoanInitializer().encodeArguments({
-                borrower_:    borrower_,
-                lender_:      address(loanManager),
-                feeManager_:  feeManager,
-                assets_:      [address(collateralAsset), address(fundsAsset)],
-                termDetails_: termDetails_,
-                amounts_:     amounts_,
-                rates_:       rates_,
-                fees_:        fees_
-            }),
+        address loan_ = IProxyFactoryLike(loanFactory).createInstance({
+            arguments_: abi.encode(
+                borrower_,
+                address(loanManager),
+                feeManager,
+                [address(collateralAsset), address(fundsAsset)],
+                termDetails_,
+                amounts_,
+                rates_,
+                fees_
+            ),
             salt_: "SALT"
         });
         vm.stopPrank();
@@ -187,7 +185,7 @@ contract LoanHandler is TestUtils {
         vm.startPrank(borrower_);
         collateralAsset.mint(borrower_, amounts_[0]);
         collateralAsset.approve(loan_, amounts_[0]);
-        IMapleLoan(loan_).postCollateral(amounts_[0]);
+        IFixedTermLoan(loan_).postCollateral(amounts_[0]);
         vm.stopPrank();
 
         vm.startPrank(poolManager.poolDelegate());
@@ -197,7 +195,7 @@ contract LoanHandler is TestUtils {
         fundingTime[loan_] = block.timestamp;
 
         platformOriginationFee[loan_] =
-            IMapleLoanFeeManager(feeManager).getPlatformOriginationFee(address(loan_), IMapleLoan(loan_).principalRequested());
+            IFeeManager(feeManager).getPlatformOriginationFee(loan_, IFixedTermLoan(loan_).principalRequested());
 
         uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
 
@@ -211,7 +209,7 @@ contract LoanHandler is TestUtils {
 
         ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
 
-        sum_loan_principal                  += IMapleLoan(loan_).principal();
+        sum_loan_principal                  += IFixedTermLoan(loan_).principal();
         sum_loanManager_paymentIssuanceRate += issuanceRate;
 
         activeLoans.push(loan_);
@@ -231,7 +229,7 @@ contract LoanHandler is TestUtils {
 
         vm.startPrank(borrower_);
 
-        IMapleLoan loan_ = IMapleLoan(activeLoans[loanIndex_]);
+        IFixedTermLoan loan_ = IFixedTermLoan(activeLoans[loanIndex_]);
 
         uint256 previousPaymentDueDate = loan_.nextPaymentDueDate();
 

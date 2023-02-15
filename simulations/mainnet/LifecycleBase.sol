@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { CSVWriter }        from "../../modules/contract-test-utils/contracts/csv.sol";
-import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address, console, CSVWriter } from "../../contracts/Contracts.sol";
 
 import {
     IERC20Like,
-    ILoanManager,
-    IMapleGlobals,
-    IMapleLoan,
-    IMapleProxyFactory,
-    IRefinancer,
+    IFixedTermLoan,
+    IGlobals,
+    ILoanManagerLike,
     IPool,
     IPoolManager,
+    IProxyFactoryLike,
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -23,9 +21,9 @@ import { AddressRegistry } from "./AddressRegistry.sol";
 contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
 
     uint256 earliestWithdrawal = 1;
-    uint256 latestWithdrawal = 0;
+    uint256 latestWithdrawal   = 0;
 
-    mapping(uint256 => address) internal withdrawalQueue;
+    mapping(uint256 => address) withdrawalQueue;
 
     /**************************************************************************************************************************************/
     /*** Lifecycle Helpers                                                                                                              ***/
@@ -224,7 +222,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
 
     function performRefinance(address poolManager_, address loan_) internal {
         bytes[] memory refinanceCalls_ = new bytes[](1);
-        refinanceCalls_[0] = abi.encodeWithSelector(IRefinancer.setPaymentsRemaining.selector, IMapleLoan(loan_).paymentsRemaining() + 2);
+        refinanceCalls_[0] = abi.encodeWithSignature("setPaymentsRemaining(uint256)", IFixedTermLoan(loan_).paymentsRemaining() + 2);
 
         proposeRefinance(loan_, refinancer, block.timestamp, refinanceCalls_, 0, 0);
         acceptRefinance(poolManager_, loan_, refinancer, block.timestamp, refinanceCalls_, 0);
@@ -272,7 +270,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         address borrower_ = address(new Address());
 
         vm.startPrank(governor);
-        IMapleGlobals(mapleGlobalsV2Proxy).setValidBorrower(borrower_, true);
+        IGlobals(mapleGlobalsV2Proxy).setValidBorrower(borrower_, true);
         vm.stopPrank();
 
         uint256 principal_ = 3 * getRandomSensibleAmount(poolManager_, seed_++);
@@ -284,7 +282,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         uint256[4] memory rates_       = [uint256(0.05e18), uint256(0.05e18), uint256(0.05e18), uint256(0.05e18)];
         uint256[2] memory fees_        = [getRealAmount(1, poolManager_), getRealAmount(1, poolManager_)];
 
-        address loan_ = IMapleProxyFactory(loanFactory).createInstance(
+        address loan_ = IProxyFactoryLike(loanFactory).createInstance(
             abi.encode(borrower_, feeManager, assets_, termDetails_, amounts_, rates_, fees_),
             bytes32(getRandomNumber(seed_++))
         );
@@ -337,7 +335,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
     }
 
     function liquidateLoan(address poolManager_, address loan_) internal {
-        uint256 lateTime = IMapleLoan(loan_).nextPaymentDueDate() + IMapleLoan(loan_).gracePeriod() + 1 hours;
+        uint256 lateTime = IFixedTermLoan(loan_).nextPaymentDueDate() + IFixedTermLoan(loan_).gracePeriod() + 1 hours;
 
         if (lateTime > block.timestamp) vm.warp(lateTime);
 
@@ -358,7 +356,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
     function _logOutSortedPayments(address poolManager_) internal view {
         console.log(" --- SortedPayments --- ");
 
-        ILoanManager loanManager_ = ILoanManager(IPoolManager(poolManager_).loanManagerList(0));
+        ILoanManagerLike loanManager_ = ILoanManagerLike(IPoolManager(poolManager_).loanManagerList(0));
 
         uint24 paymentId = loanManager_.paymentWithEarliestDueDate();
 
@@ -375,7 +373,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
 
     function getNextLoanAndPaymentDueDate(address[] storage loans) internal view returns (address loan, uint256 nextPaymentDueDate) {
         for (uint256 i; i < loans.length; ++i) {
-            uint256 dueDate = IMapleLoan(loans[i]).nextPaymentDueDate();
+            uint256 dueDate = IFixedTermLoan(loans[i]).nextPaymentDueDate();
 
             if (!isEarlierThan(dueDate, nextPaymentDueDate)) continue;
 
@@ -450,9 +448,9 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         while ((loan = getNextLoan(loans_)) != address(0)) {
             handleWithdrawalQueue(poolManager_);
 
-            if (IMapleLoan(loan).nextPaymentDueDate() > block.timestamp) {
+            if (IFixedTermLoan(loan).nextPaymentDueDate() > block.timestamp) {
                 // Warp to the halfway point between "now" and when the next payment is due
-                vm.warp(block.timestamp + (IMapleLoan(loan).nextPaymentDueDate() - block.timestamp) / 2);
+                vm.warp(block.timestamp + (IFixedTermLoan(loan).nextPaymentDueDate() - block.timestamp) / 2);
             }
 
             // Perform a "random" action
@@ -461,7 +459,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
             if (random < 5) {  // 5% chance loan closes
                 // TODO: maybe any open loan
                 console.log(block.timestamp, "Closing              ", loan);
-                closeLoan(loan);
+                close(loan);
                 continue;  // Since loan is paid
             } else if (random < 10) {  // 5% chance loan refinanced
                 // TODO: maybe any open loan
@@ -496,7 +494,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
             handleWithdrawalQueue(poolManager_);
 
             // Warp to some time (early or late by up to 15 days) of the payment due date.
-            uint256 someTime = IMapleLoan(loan).nextPaymentDueDate() - 15 days + (getRandomNumber(seed_++) % 30 days);
+            uint256 someTime = IFixedTermLoan(loan).nextPaymentDueDate() - 15 days + (getRandomNumber(seed_++) % 30 days);
 
             if (someTime > block.timestamp) vm.warp(someTime);
 
@@ -520,7 +518,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         address loan;
 
         while ((loan = getNextLoan()) != address(0)) {
-            uint256 nextPaymentDueDate = IMapleLoan(loan).nextPaymentDueDate();
+            uint256 nextPaymentDueDate = IFixedTermLoan(loan).nextPaymentDueDate();
 
             if (nextPaymentDueDate > block.timestamp) vm.warp(nextPaymentDueDate);
 
@@ -553,11 +551,11 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
 
     function withdrawAllPoolCoverFromAllPools() internal {
         vm.startPrank(governor);
-        IMapleGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenPermissionedPoolManager, 0);
-        IMapleGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenUsdcPoolManager,         0);
-        IMapleGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenWethPoolManager,         0);
-        IMapleGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(orthogonalPoolManager,        0);
-        IMapleGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(icebreakerPoolManager,        0);
+        IGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenPermissionedPoolManager, 0);
+        IGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenUsdcPoolManager,         0);
+        IGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenWethPoolManager,         0);
+        IGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(orthogonalPoolManager,        0);
+        IGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(icebreakerPoolManager,        0);
         vm.stopPrank();
 
         withdrawAllPoolCover(icebreakerPoolManager);

@@ -5,7 +5,7 @@ import { ILiquidator } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract KeeperBase {
 
-    ILiquidator internal liquidator;
+    ILiquidator liquidator;
 
     constructor (address liquidator_) {
         liquidator = ILiquidator(liquidator_);

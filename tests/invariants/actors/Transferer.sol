@@ -5,7 +5,7 @@ import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract TransfererBase {
 
-    IERC20 internal token;
+    IERC20 token;
 
     constructor (address token_) {
         token = IERC20(token_);

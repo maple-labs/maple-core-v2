@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
@@ -19,7 +18,7 @@ contract LoanManagerAddressGetterTests is TestBase {
 
 contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
 
-    MapleLoan internal loan;
+    address loan;
 
     function setUp() public override {
         super.setUp();
@@ -35,31 +34,31 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
     }
 
     function test_isLiquidationActive_beforeLiquidation() external {
-        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+        assertTrue(!loanManager.isLiquidationActive(loan));
     }
 
     function test_isLiquidationActive_duringLiquidation() external {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+        assertTrue(!loanManager.isLiquidationActive(loan));
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
-        assertTrue(loanManager.isLiquidationActive(address(loan)));
+        assertTrue(loanManager.isLiquidationActive(loan));
     }
 
     function test_isLiquidationActive_afterLiquidation() external {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
-        assertTrue(loanManager.isLiquidationActive(address(loan)));
+        assertTrue(loanManager.isLiquidationActive(loan));
 
         liquidateCollateral(loan);
 
-        assertTrue(!loanManager.isLiquidationActive(address(loan)));
+        assertTrue(!loanManager.isLiquidationActive(loan));
     }
 
     /// @TODO: Add test_isLiquidationActive_afterLiquidation

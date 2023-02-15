@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
+
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract MakePaymentFailureTests is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
-
-    MapleLoan internal loan;
+    address borrower;
+    address loan;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -44,7 +44,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
     }
 
     function test_makePayment_failWithTransferFromFailed() external {
-        (uint256 principalPortion, uint256 interestPortion, uint256 feesPortion) = loan.getNextPaymentBreakdown();
+        (uint256 principalPortion, uint256 interestPortion, uint256 feesPortion) = IFixedTermLoan(loan).getNextPaymentBreakdown();
 
         uint256 fullPayment = principalPortion + interestPortion + feesPortion;
 
@@ -52,23 +52,23 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
         fundsAsset.mint(borrower, fullPayment);
 
         vm.prank(borrower);
-        fundsAsset.approve(address(loan), fullPayment - 1);
+        fundsAsset.approve(loan, fullPayment - 1);
 
         vm.expectRevert("ML:MP:TRANSFER_FROM_FAILED");
-        loan.makePayment(fullPayment);
+        IFixedTermLoan(loan).makePayment(fullPayment);
     }
 
     function test_makePayment_failWithTransferFailed() external {
-        (uint256 principalPortion, uint256 interestPortion, uint256 feesPortion) = loan.getNextPaymentBreakdown();
+        (uint256 principalPortion, uint256 interestPortion, uint256 feesPortion) = IFixedTermLoan(loan).getNextPaymentBreakdown();
 
         // mint to loan, not including fees
-        fundsAsset.mint(address(loan), principalPortion + interestPortion + feesPortion - 1);
+        fundsAsset.mint(loan, principalPortion + interestPortion + feesPortion - 1);
 
         vm.prank(borrower);
         // NOTE: When there's not enough balance, the tx fails in the ERC20 with an underflow
         //       rather than on the ERC20-helper library with the error message.
         vm.expectRevert(ARITHMETIC_ERROR);
-        loan.makePayment(0);
+        IFixedTermLoan(loan).makePayment(0);
     }
 
     // TODO: Should this be called `test_claim_failIfNotLoan`?
@@ -81,10 +81,9 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
 
 contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
-
-    MapleLoan internal loan;
+    address borrower;
+    address loan;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -112,7 +111,6 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:            [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
         });
-
     }
 
     function test_makePayment_onTimePayment_interestOnly() public {
@@ -186,7 +184,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         /*** Post Payment Assertions ***/
         /*******************************/
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
@@ -304,7 +302,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         /*** Post Payment Assertions ***/
         /*******************************/
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
@@ -422,7 +420,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         /*** Post Payment Assertions ***/
         /*******************************/
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         // Principal:                           1_500_000e6
         // interest from period:                90_000e6
@@ -477,10 +475,9 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
 contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
-
-    MapleLoan internal loan;
+    address borrower;
+    address loan;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -596,7 +593,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         /*** Post Payment Assertions ***/
         /*******************************/
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
@@ -734,7 +731,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         /*** Post Payment Assertions ***/
         /*******************************/
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
@@ -872,7 +869,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         /*** Post Payment Assertions ***/
         /*******************************/
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         // (Principal + cash) + interest + late interest + 200k seconds of interest on remaining principal
         assertTotalAssets(2_500_000e6 + 180_000e6 + 46_656e6 + 18_857_142857);
@@ -930,12 +927,11 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
 contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
-    address internal borrower1;
-    address internal borrower2;
-    address internal lp;
-
-    MapleLoan internal loan1;
-    MapleLoan internal loan2;
+    address borrower1;
+    address borrower2;
+    address loan1;
+    address loan2;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -1047,7 +1043,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         /*** Post Loan1 Payment Assertions ***/
         /*************************************/
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6);  // Principal + 1_000_000s of loan1 at 0.09 + 700_000s of loan2 at 0.18e6 IR
 
@@ -1141,7 +1137,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         /*** Post Loan2 Payment Assertions ***/
         /*************************************/
 
-        makePayment(address(loan2));
+        makePayment(loan2);
 
         // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6);
@@ -1194,7 +1190,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         vm.warp(start + 2_000_000);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6);
@@ -1280,7 +1276,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         /*** Post Loan1 Payment Assertions ***/
         /*************************************/
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 36_000e6);  // Principal + 1_000_000s of loan1 at 0.09 + 700_000s of loan2 at 0.18e6 IR
 
@@ -1375,7 +1371,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         /*** Post Loan2 Payment Assertions ***/
         /*************************************/
 
-        makePayment(address(loan2));
+        makePayment(loan2);
 
         // Principal + loan1 payment interest + 800_000s of loan1 at 0.6e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 90_000e6 + 48_000e6 + 180_000e6);
@@ -1428,7 +1424,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         vm.warp(start + 2_000_000);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Asserting this because all tests should be in sync after second loan1 payment
         // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR
@@ -1517,7 +1513,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         /*** Post Loan1 Payment Assertions ***/
         /*************************************/
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal:                           3_500_000e6
         // interest from period:                90_000e6
@@ -1616,7 +1612,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         /*** Post Loan2 Payment Assertions ***/
         /*************************************/
 
-        makePayment(address(loan2));
+        makePayment(loan2);
 
         // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6 + 15_552e6);
@@ -1669,7 +1665,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         vm.warp(start + 2_000_000);
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal + 2_000_000s of loan1 at 0.9e6 + 1_700_000s of loan2 at 0.18e6 IR + late fees
         assertTotalAssets(3_500_000e6 + 180_000e6 + 306_000e6 + 15_552e6);
@@ -1690,12 +1686,12 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
 contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
-    address internal borrower1;
-    address internal borrower2;
-    address internal lp;
+    address borrower1;
+    address borrower2;
+    address lp;
 
-    MapleLoan internal loan1;
-    MapleLoan internal loan2;
+    address loan1;
+    address loan2;
 
     function setUp() public override {
         super.setUp();
@@ -1922,7 +1918,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         /*** Post loan2 1st Payment ***/
         /******************************/
 
-        makePayment(address(loan2));
+        makePayment(loan2);
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6);  // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
 
@@ -1972,7 +1968,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         /*** Make loan1 1st Payment ***/
         /******************************/
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal:                            3_000_000e6
         // Cash:                                 500_000e6
@@ -2028,7 +2024,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         /*** Make loan1 2nd Payment ***/
         /******************************/
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal:                            3_000_000e6
         // Cash:                                 500_000e6
@@ -2087,7 +2083,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         /*** Make loan1 last Payment ***/
         /*******************************/
 
-        makePayment(address(loan1));
+        makePayment(loan1);
 
         // Principal:                            3_000_000e6
         // Cash:                                 500_000e6
@@ -2139,14 +2135,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
 contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
 
-    address internal borrower1;
-    address internal borrower2;
-    address internal borrower3;
-    address internal lp;
+    address borrower1;
+    address borrower2;
+    address borrower3;
+    address lp;
 
-    MapleLoan internal loan1;
-    MapleLoan internal loan2;
-    MapleLoan internal loan3;
+    address loan1;
+    address loan2;
+    address loan3;
 
     function setUp() public override {
         super.setUp();
@@ -2335,7 +2331,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         /*** Loan3 post late Payment ***/
         /*******************************/
 
-        makePayment(address(loan3));
+        makePayment(loan3);
 
         // loan1
         assertLoanState({

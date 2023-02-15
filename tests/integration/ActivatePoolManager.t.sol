@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract ActivatePoolManagerTests is TestBaseWithAssertions {

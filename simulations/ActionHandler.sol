@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
-
 import { IAction } from "./interfaces/IAction.sol";
+
+import { TestUtils } from "../contracts/Contracts.sol";
 
 contract ActionHandler is TestUtils {
 
-    uint256 internal actionIndex;   // Index of the next action that will be performed.
-    uint256 internal endTimestamp;  // Time when the simulation ends (inclusive).
+    uint256 actionIndex;   // Index of the next action that will be performed.
+    uint256 endTimestamp;  // Time when the simulation ends (inclusive).
 
-    IAction[] internal actions;  // Actions that will be performed during the simulation (will be sorted ascending by timestamp).
+    IAction[] actions;  // Actions that will be performed during the simulation (will be sorted ascending by timestamp).
 
     function add(IAction action_) public {
         actions.push(action_);

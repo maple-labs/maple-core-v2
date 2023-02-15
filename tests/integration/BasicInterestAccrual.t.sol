@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }   from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan } from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
+    address borrower;
+    address lp;
 
     function setUp() public override {
         super.setUp();
@@ -37,7 +36,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /*** Fund and Drawdown Loan ***/
         /******************************/
 
-        MapleLoan loan = fundAndDrawdownLoan({
+        address loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -76,7 +75,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /************************/
 
         vm.warp(start + ONE_MONTH);
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +------------+--------+--------+
         // |    POOL    |   PD   |   MT   |
@@ -110,7 +109,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /************************/
 
         vm.warp(start + 2 * ONE_MONTH);
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +------------+--------+--------+
         // |    POOL    |   PD   |   MT   |
@@ -145,7 +144,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         vm.warp(start + 3 * ONE_MONTH);
         fundsAsset.mint(borrower, 1_000e6);  // Borrower makes some some money.
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +--------------+--------+--------+
         // |     POOL     |   PD   |   MT   |

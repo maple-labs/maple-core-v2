@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract SetMinRatioTests is TestBase {
 
-    address internal COLLATERAL_ASSET = address(new Address());
+    address COLLATERAL_ASSET = address(new Address());
 
     function test_setMinRatio_notAuthorized() external {
         vm.expectRevert("PM:SMR:NOT_AUTHORIZED");
@@ -45,7 +45,7 @@ contract SetMinRatioTests is TestBase {
 
 contract SetSlippageTests is TestBase {
 
-    address internal COLLATERAL_ASSET = address(new Address());
+    address COLLATERAL_ASSET = address(new Address());
 
     function test_setAllowedSlippage_notAuthorized() external {
         vm.expectRevert("PM:SAS:NOT_AUTHORIZED");

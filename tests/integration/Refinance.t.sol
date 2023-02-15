@@ -1,27 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { MapleLoan }  from "../../modules/fixed-term-loan/contracts/MapleLoan.sol";
-import { Refinancer } from "../../modules/fixed-term-loan/contracts/Refinancer.sol";
+import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
-
-    MapleLoan  internal loan;
-    Refinancer internal refinancer;
+    address borrower;
+    address loan;
+    address lp;
 
     function setUp() public override {
         super.setUp();
 
-        borrower   = address(new Address());
-        lp         = address(new Address());
-        refinancer = new Refinancer();
+        borrower = address(new Address());
+        lp       = address(new Address());
 
         depositLiquidity({
             lp:        lp,
@@ -117,17 +113,17 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Refinance Assertions ***/
         /****************************/
 
-        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-
         vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
+        fundsAsset.approve(loan, 10_000e6);
+        IFixedTermLoan(loan).returnFunds(10_000e6);  // Return funds to pay origination fees.
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
@@ -181,7 +177,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 3_000_000);
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
@@ -303,15 +299,9 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  1_000_000e6);
         calls[1] = abi.encodeWithSignature("setEndingPrincipal(uint256)", 2_000_000e6);
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, calls);
-        fundsAsset.mint(address(borrower), 20_000e6);  // Amount for origination fees
-        fundsAsset.approve(address(loan), 20_000e6);
-        loan.returnFunds(20_000e6);
-        vm.stopPrank();
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, calls, 1_000_000e6, 0);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, calls, 1_000_000e6);
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, calls, 1_000_000e6);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
@@ -362,7 +352,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 2_000_000);
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
@@ -482,16 +472,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setInterestRate(uint256)", 6.3072e18);  // 2x
 
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+
         vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);
+        fundsAsset.approve(loan, 10_000e6);
+        IFixedTermLoan(loan).returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
-
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
         assertLoanState({
@@ -540,7 +529,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 2_000_000);
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
@@ -660,15 +649,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setEndingPrincipal(uint256)", 0);
 
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+
         vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);
+        fundsAsset.approve(loan, 10_000e6);
+        IFixedTermLoan(loan).returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
@@ -718,7 +707,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 2_000_000);
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
@@ -836,17 +825,17 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Refinance Assertions ***/
         /****************************/
 
-        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-
         vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);
+        fundsAsset.approve(loan, 10_000e6);
+        IFixedTermLoan(loan).returnFunds(10_000e6);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
         // Principal + interest owed at refinance time (151_840e6 * 0.9 to discount service fees)
         assertTotalAssets(2_500_000e6 + 136_656e6);
@@ -900,7 +889,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 3_500_000);
 
-        makePayment(address(loan));
+        makePayment(loan);
 
         assertTotalAssets(2_500_000e6 + 136_656e6 + 180_000e6);
 
@@ -950,21 +939,21 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
     }
 
     function test_refinance_skimFundAsset() external {
-        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-
         vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
         fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
+        fundsAsset.approve(loan, 10_000e6);
+        IFixedTermLoan(loan).returnFunds(10_000e6);  // Return funds to pay origination fees.
         vm.stopPrank();
 
-        fundsAsset.mint(address(loan), 1_000e6);  // Fund asset to skim
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
+
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+
+        fundsAsset.mint(loan, 1_000e6);  // Fund asset to skim
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_501_000e6);
     }
@@ -973,18 +962,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
 contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
-
-    MapleLoan  internal loan;
-    Refinancer internal refinancer;
+    address borrower;
+    address loan;
+    address lp;
 
     function setUp() public override {
         super.setUp();
 
-        borrower   = address(new Address());
-        lp         = address(new Address());
-        refinancer = new Refinancer();
+        borrower = address(new Address());
+        lp       = address(new Address());
 
         depositLiquidity({
             lp:        lp,
@@ -1014,12 +1000,12 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failIfNotPoolDelegate() external {
         vm.expectRevert("PM:VAFL:NOT_PD");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function testFail_acceptNewTerms_failIfNotValidLoanManager() external {
@@ -1036,17 +1022,18 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:VAFL:INVALID_BORROWER");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failIfTotalSupplyIsZero() external {
         uint256 fullBalance = pool.balanceOf(lp);
 
         // Close loan so lp can burn full supply. Impossible scenario because refinance would fail on loan.
-        ( uint256 principal, uint256 interest, uint256 fees ) = loan.getClosingPaymentBreakdown();
+        ( uint256 principal, uint256 interest, uint256 fees ) = IFixedTermLoan(loan).getClosingPaymentBreakdown();
 
-        fundsAsset.mint(address(loan), principal + interest + fees);
-        loan.closeLoan(0);
+        // TODO: use protocol action.
+        fundsAsset.mint(loan, principal + interest + fees);
+        IFixedTermLoan(loan).closeLoan(0);
 
         // Burn the supply
         vm.startPrank(lp);
@@ -1059,7 +1046,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:VAFL:ZERO_SUPPLY");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failIfInsufficientCover() external {
@@ -1070,13 +1057,13 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:VAFL:INSUFFICIENT_COVER");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failWithFailedTransfer() external {
         vm.prank(poolDelegate);
         vm.expectRevert("PM:VAFL:TRANSFER_FAIL");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6 + 1);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6 + 1);
     }
 
     function test_acceptNewTerms_failIfLockedLiquidity() external {
@@ -1088,23 +1075,23 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6);
     }
 
     function test_acceptNewTerms_failIfNotPoolManager() external {
         vm.expectRevert("LM:ANT:NOT_ADMIN");
-        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0));
+        loanManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0));
     }
 
     function test_acceptNewTerms_failIfNotLender() external {
         vm.expectRevert("ML:ANT:NOT_LENDER");
-        loan.acceptNewTerms(address(refinancer), block.timestamp + 1, new bytes[](0));
+        ILoanLike(loan).acceptNewTerms(address(refinancer), block.timestamp + 1, new bytes[](0));
     }
 
     function test_acceptNewTerms_failIfRefinanceMismatch() external {
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:COMMITMENT_MISMATCH");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failWithInvalidRefinancer() external {
@@ -1114,11 +1101,11 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         // Make commitment
         vm.prank(borrower);
-        loan.proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
+        ILoanLike(loan).proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:INVALID_REFINANCER");
-        poolManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
+        poolManager.acceptNewTerms(loan, fakeRefinancer, block.timestamp + 1, data, 0);
     }
 
     function test_acceptNewTerms_failIfDeadlineExpired() external {
@@ -1128,13 +1115,13 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         // Make commitment
         vm.prank(borrower);
-        loan.proposeNewTerms(address(refinancer), deadline, data);
+        ILoanLike(loan).proposeNewTerms(address(refinancer), deadline, data);
 
         vm.warp(deadline + 1);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:EXPIRED_COMMITMENT");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), deadline, data, 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), deadline, data, 0);
     }
 
     function test_acceptNewTerms_failIfRefinanceCallFails() external {
@@ -1144,11 +1131,11 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         // Make commitment
         vm.prank(borrower);
-        loan.proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
+        ILoanLike(loan).proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:FAILED");
-        poolManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
+        poolManager.acceptNewTerms(loan, fakeRefinancer, block.timestamp + 1, data, 0);
     }
 
     function test_acceptNewTerms_failWithInsufficientCollateral() external {
@@ -1156,14 +1143,14 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         // Make commitment
         vm.prank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        ILoanLike(loan).proposeNewTerms(address(refinancer), block.timestamp + 1, data);
 
         // Mint fees to cover origination fees
-        fundsAsset.mint(address(loan), 1_000e6);
+        fundsAsset.mint(loan, 1_000e6);
 
         vm.prank(poolDelegate);
         vm.expectRevert("MLFM:POF:PD_TRANSFER");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, data, 0);
     }
 
     function test_acceptNewTerms_failWithUnexpectedFunds() external {
@@ -1171,15 +1158,15 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         // Make commitment
         vm.prank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        ILoanLike(loan).proposeNewTerms(address(refinancer), block.timestamp + 1, data);
 
         // Mint fees to cover origination fees
-        fundsAsset.mint(address(loan), 1_000e6);
-        loan.returnFunds(0);
+        fundsAsset.mint(loan, 1_000e6);
+        IFixedTermLoan(loan).returnFunds(0);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:UNEXPECTED_FUNDS");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 1);
+        poolManager.acceptNewTerms(loan, address(refinancer), block.timestamp + 1, data, 1);
     }
 
 }

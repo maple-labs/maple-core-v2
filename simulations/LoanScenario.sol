@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
+import { IFixedTermLoan, IPoolManager } from "../contracts/interfaces/Interfaces.sol";
 
-import { ILoanManager, IMapleLoan, IPoolManager } from "../contracts/interfaces/Interfaces.sol";
+import { TestUtils } from "../contracts/Contracts.sol";
 
 contract LoanScenario is TestUtils {
 
     address public liquidatorFactory;
+    address public loan;
+    address public loanManager;
     address public refinancer;
 
     uint256 public closingPayment;
@@ -29,26 +31,33 @@ contract LoanScenario is TestUtils {
     int256[] public paymentOffsets;
     int256[] public refinancerOffset;
 
-    IMapleLoan   public loan;
-    ILoanManager public loanManager;
     IPoolManager public poolManager;
 
     constructor(address loan_, address poolManager_, address liquidatorFactory_, uint256 fundingTime_, string memory name_) {
         liquidatorFactory = liquidatorFactory_;
-        loan              = IMapleLoan(loan_);
+        loan              = loan_;
         poolManager       = IPoolManager(poolManager_);
-        loanManager       = ILoanManager(poolManager.loanManagerList(0));
+        loanManager       = poolManager.loanManagerList(0);
         fundingTime       = fundingTime_;
         name              = name_;
 
         // Increase size of arrays by one to ignore the zero index element.
-        impairmentOffsets = new int256[](loan.paymentsRemaining() + 1);
-        missingPayments   = new bool[](loan.paymentsRemaining() + 1);
-        paymentOffsets    = new int256[](loan.paymentsRemaining() + 1);
-        refinancerOffset  = new int256[](loan.paymentsRemaining() + 1);
+        uint256 arrayLength = IFixedTermLoan(loan_).paymentsRemaining() + 1;
+
+        impairmentOffsets = new int256[](arrayLength);
+        missingPayments   = new bool[](arrayLength);
+        paymentOffsets    = new int256[](arrayLength);
+        refinancerOffset  = new int256[](arrayLength);
     }
 
-    function setLiquidation(uint256 payment_, uint256 liquidationTriggerOffset_, uint256 finishCollateralLiquidationOffset_, uint256 liquidationPrice_) external {
+    function setLiquidation(
+        uint256 payment_,
+        uint256 liquidationTriggerOffset_,
+        uint256 finishCollateralLiquidationOffset_,
+        uint256 liquidationPrice_
+    )
+        external
+    {
         for ( ; payment_ < missingPayments.length; ++payment_) {
             missingPayments[payment_] = true;
         }
@@ -73,7 +82,16 @@ contract LoanScenario is TestUtils {
         paymentOffsets[payment] = offset;
     }
 
-    function setRefinance(address refinancer_, uint256 payment_, int256 refinancerOffset_, uint256 principalIncrease_, uint256 returnFundAmount_, bytes[] memory refinanceCalls_) external {
+    function setRefinance(
+        address refinancer_,
+        uint256 payment_,
+        int256 refinancerOffset_,
+        uint256 principalIncrease_,
+        uint256 returnFundAmount_,
+        bytes[] memory refinanceCalls_
+    )
+        external
+    {
         refinancer        = refinancer_;
         principalIncrease = principalIncrease_;
         returnFundAmount  = returnFundAmount_;

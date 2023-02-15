@@ -5,12 +5,12 @@ import { TestBase } from "../TestBase.sol";
 
 contract GetExpectedAmountTests is TestBase {
 
-    address internal weth           = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address internal wethAggregator = address(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    address weth           = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address wethAggregator = address(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
-    string internal url = vm.envString("ETH_RPC_URL");
+    string url = vm.envString("ETH_RPC_URL");
 
-    uint256 internal blockNumber = 15_588_766;  // WETH price at the time: 1311.75777214e8
+    uint256 blockNumber = 15_588_766;  // WETH price at the time: 1311.75777214e8
 
     function setUp() public virtual override {
         vm.createSelectFork(url, blockNumber);
