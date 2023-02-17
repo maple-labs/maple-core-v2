@@ -15,13 +15,16 @@ contract MultiLoanSimulation is SimulationBase {
         initialCover     = 0;
         initialLiquidity = 100_000_000e6;
 
+        address loanManager = poolManager.loanManagerList(0);
+
         // Add 1st loan.
         scenarios.push(new LoanScenario({
             loan_: address(createLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(30 days), uint256(3)],
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
-                rates:       [uint256(0.12e18), uint256(0.02e18), uint256(0), uint256(0)]
+                rates:       [uint256(0.12e18), uint256(0.02e18), uint256(0), uint256(0)],
+                loanManager: loanManager
             })),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,
@@ -35,7 +38,8 @@ contract MultiLoanSimulation is SimulationBase {
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(10 days), uint256(3)],
                 amounts:     [uint256(0), uint256(20_000_000e6), uint256(20_000_000e6)],
-                rates:       [uint256(0.10e18), uint256(0.02e18), uint256(0), uint256(0)]
+                rates:       [uint256(0.10e18), uint256(0.02e18), uint256(0), uint256(0)],
+                loanManager: loanManager
             })),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,
@@ -49,7 +53,8 @@ contract MultiLoanSimulation is SimulationBase {
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(15 days), uint256(3)],
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
-                rates:       [uint256(0.16e18), uint256(0.02e18), uint256(0), uint256(0)]
+                rates:       [uint256(0.16e18), uint256(0.02e18), uint256(0), uint256(0)],
+                loanManager: loanManager
             })),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,
@@ -63,7 +68,8 @@ contract MultiLoanSimulation is SimulationBase {
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(30 days), uint256(3)],
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
-                rates:       [uint256(0.08e18), uint256(0.02e18), uint256(0), uint256(0)]
+                rates:       [uint256(0.08e18), uint256(0.02e18), uint256(0), uint256(0)],
+                loanManager: loanManager
             })),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,

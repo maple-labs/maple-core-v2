@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console, TestUtils } from "../../contracts/Contracts.sol";
-
 import {
     IERC20Like,
     IGlobals,
@@ -12,6 +10,8 @@ import {
     IProxyFactoryLike,
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
+
+import { console, TestUtils } from "../../contracts/Contracts.sol";
 
 import { AddressRegistry } from "./AddressRegistry.sol";
 

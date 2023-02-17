@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -19,12 +19,9 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
         borrower = address(new Address());
         lp       = address(new Address());
 
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -39,7 +36,8 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), 0, 0, 0]
+            rates:       [uint256(0.075e18), 0, 0, 0],
+            loanManager: poolManager.loanManagerList(0)
         });
     }
 
@@ -49,6 +47,8 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
     }
 
     function test_impairLoan_notPoolManager() external {
+        ILoanManagerLike loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+
         vm.expectRevert("LM:IL:NOT_PM");
         loanManager.impairLoan(loan, false);
     }
@@ -73,20 +73,19 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
     address borrower;
     address loan;
+    address loanManager;
     address lp;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower    = address(new Address());
+        loanManager = poolManager.loanManagerList(0);
+        lp          = address(new Address());
 
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -101,7 +100,8 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), 0, 0, 0]
+            rates:       [uint256(0.075e18), 0, 0, 0],
+            loanManager: loanManager
         });
 
         // Pool liquidity:  1,500,000 - 1,000,000  = 500,000
@@ -130,6 +130,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -171,6 +172,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       5_625e6 - 1,  // -1 due to issuance rate rounding error.
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -222,6 +224,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -280,6 +283,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     uint256(5_625e6 - 1) / 5,  // -1 due to issuance rate rounding error.
             principalOut:          1_000_000e6,
@@ -309,6 +313,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     uint256(5_625e6 - 1) / 5,  // No change, value no longer accruing
             principalOut:          1_000_000e6,
@@ -357,6 +362,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH,
             principalOut:          1_000_000e6,
@@ -386,6 +392,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         uint256 accountedInterest = 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH;  // Accounted at time of loan impairment removal.
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       5_625e6 - accountedInterest - 1,
             accountedInterest:     accountedInterest,
             principalOut:          1_000_000e6,
@@ -433,6 +440,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -492,6 +500,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     uint256(5_625e6) * 12 / 365,  // one day of interest: 5,625 * 12 / 365
             principalOut:          1_000_000e6,
@@ -554,6 +563,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -585,6 +595,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
     address borrower;
     address loan;
+    address loanManager;
     address lp;
 
     // Principal * 1 month in seconds * annual interest rate * 0.9 to discount fees / 365 days / 1e18 rate precision / 1e6 (0.9) precision.
@@ -598,15 +609,13 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower    = address(new Address());
+        loanManager = poolManager.loanManagerList(0);
+        lp          = address(new Address());
 
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -621,7 +630,8 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), 0, 0, 0.01e18]
+            rates:       [uint256(0.075e18), 0, 0, 0.01e18],
+            loanManager: loanManager
         });
 
         /************************************/
@@ -677,6 +687,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     periodInterest,  // -1 due to issuance rate rounding error.
             principalOut:          1_000_000e6,
@@ -703,13 +714,9 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         // Refinance - setting the payment interval will reset the payment due date.
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", ONE_MONTH);
 
-        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
 
-        vm.startPrank(borrower);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(loan, 10_000e6);
-        IFixedTermLoan(loan).returnFunds(10_000e6);  // Return funds to pay origination fees.
-        vm.stopPrank();
+        returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
         acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
@@ -755,6 +762,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     expectedNetRefinanceInterest,  // Accounting gets updated to reflect the resulting refinance interest.
             principalOut:          1_000_000e6,
@@ -800,6 +808,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -861,6 +870,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     MONTHLY_INTEREST - 1,
             principalOut:          1_000_000e6,
@@ -891,13 +901,9 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         // Refinance - setting the payment interval will reset the payment due date.
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", ONE_MONTH);
 
-        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
 
-        vm.startPrank(borrower);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(loan, 10_000e6);
-        IFixedTermLoan(loan).returnFunds(10_000e6);  // Return funds to pay origination fees.
-        vm.stopPrank();
+        returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
         acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
@@ -940,6 +946,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     expectedNetRefinanceInterest,
             principalOut:          1_000_000e6,

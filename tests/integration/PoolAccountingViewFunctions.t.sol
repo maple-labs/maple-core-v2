@@ -18,18 +18,12 @@ contract BalanceOfAssetsTests is TestBase {
     }
 
     function test_balanceOfAssets() external {
-        depositLiquidity({
-            lp:        lp1,
-            liquidity: 1_000e6
-        });
+        depositLiquidity(lp1, 1_000e6);
 
         assertEq(pool.balanceOfAssets(lp1), 1_000e6);
         assertEq(pool.balanceOfAssets(lp2), 0);
 
-        depositLiquidity({
-            lp:        lp2,
-            liquidity: 3_000e6
-        });
+        depositLiquidity(lp2, 3_000e6);
 
         assertEq(pool.balanceOfAssets(lp1), 1_000e6);
         assertEq(pool.balanceOfAssets(lp2), 3_000e6);
@@ -47,18 +41,12 @@ contract BalanceOfAssetsTests is TestBase {
 
         uint256 totalDeposits = depositAmount1 + depositAmount2;
 
-        depositLiquidity({
-            lp:        lp1,
-            liquidity: depositAmount1
-        });
+        depositLiquidity(lp1, depositAmount1);
 
         assertEq(pool.balanceOfAssets(lp1), depositAmount1);
         assertEq(pool.balanceOfAssets(lp2), 0);
 
-        depositLiquidity({
-            lp:        lp2,
-            liquidity: depositAmount2
-        });
+        depositLiquidity(lp2, depositAmount2);
 
         assertEq(pool.balanceOfAssets(lp1), depositAmount1);
         assertEq(pool.balanceOfAssets(lp2), depositAmount2);
@@ -223,10 +211,7 @@ contract MaxMintTests is TestBase {
         poolManager.setOpenToPublic();
         vm.stopPrank();
 
-        depositLiquidity({
-            lp:        lp1,
-            liquidity: 1_000e6
-        });
+        depositLiquidity(lp1, 1_000e6);
 
         assertEq(pool.maxMint(lp1), 9_000e6);
         assertEq(pool.maxMint(lp2), 9_000e6);
@@ -247,11 +232,7 @@ contract MaxMintTests is TestBase {
         poolManager.setOpenToPublic();
         vm.stopPrank();
 
-        // TODO: Change all depositLiquidity calls to use depositLiquidity(lp1, 1_000e6) pattern.
-        depositLiquidity({
-            lp:        lp1,
-            liquidity: depositAmount
-        });
+        depositLiquidity(lp1, depositAmount);
 
         uint256 availableDeposit = liquidityCap > depositAmount ? liquidityCap - depositAmount : 0;
 
@@ -762,7 +743,8 @@ contract TotalAssetsTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 0);  // Funds moved out of pool
@@ -776,7 +758,8 @@ contract TotalAssetsTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool
@@ -802,7 +785,8 @@ contract TotalAssetsTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool

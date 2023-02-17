@@ -118,6 +118,8 @@ interface ILoanLike is IProxiedLike {
 
 interface ILoanManagerLike is IProxiedLike {
 
+    function acceptNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
+
     function accountedInterest() external view returns (uint112 accountedInterest_);
 
     function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
@@ -126,13 +128,25 @@ interface ILoanManagerLike is IProxiedLike {
 
     function domainStart() external view returns (uint48 domainStart_);
 
+    function fund(address loan_) external;
+
     function fundsAsset() external view returns (address fundsAsset_);
 
     function getAccruedInterest() external view returns (uint256 accruedInterest_);
 
+    function globals() external view returns (address globals_);
+
+    function governor() external view returns (address governor_);
+
+    function impairLoan(address loan_, bool isGovernor_) external;
+
     function issuanceRate() external view returns (uint256 issuanceRate_);
 
+    function mapleTreasury() external view returns (address treasury_);
+
     function paymentIdOf(address loan_) external view returns (uint24 paymentId_);
+
+    function paymentCounter() external view returns (uint24 paymentCounter_);
 
     function payments(uint256 paymentId_) external view returns (
         uint24  platformManagementFeeRate,
@@ -148,13 +162,22 @@ interface ILoanManagerLike is IProxiedLike {
 
     function pool() external view returns (address pool_);
 
+    function poolDelegate() external view returns (address poolDelegate_);
+
     function poolManager() external view returns (address poolManager_);
 
     function principalOut() external view returns (uint128 principalOut_);
 
+    function removeLoanImpairment(address loan_, bool isCalledByGovernor_) external;
+
     function sortedPayments(uint256 paymentId_) external view returns (uint24 previous, uint24 next, uint48 paymentDueDate);
 
+    function triggerDefault(address loan_, address liquidatorFactory_)
+        external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
+
     function unrealizedLosses() external view returns (uint128 unrealizedLosses_);
+
+    function updateAccounting() external;
 
 }
 

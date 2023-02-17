@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { IFixedTermLoanManager, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+
 import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
@@ -8,20 +10,22 @@ import { TestBase } from "../TestBase.sol";
 contract LoanManagerGetterTests is TestBase {
 
     address loan;
+    address loanManager;
 
     function setUp() public override {
         super.setUp();
 
         depositLiquidity(address(new Address()), 1_500_000e6);
 
+        loanManager = poolManager.loanManagerList(0);
+
         loan = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
-
-        address loanManager = poolManager.loanManagerList(0);
 
         vm.startPrank(poolDelegate);
         poolManager.setMinRatio(loanManager, address(collateralAsset), 1e6);
@@ -30,29 +34,35 @@ contract LoanManagerGetterTests is TestBase {
     }
 
     function test_loanManagerGetters_addresses() external {
-        assertEq(loanManager.fundsAsset(),    address(fundsAsset));
-        assertEq(loanManager.globals(),       address(globals));
-        assertEq(loanManager.governor(),      address(governor));
-        assertEq(loanManager.mapleTreasury(), address(treasury));
-        assertEq(loanManager.pool(),          address(pool));
-        assertEq(loanManager.poolDelegate(),  address(poolDelegate));
-        assertEq(loanManager.poolManager(),   address(poolManager));
+        ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
+
+        assertEq(loanManager_.fundsAsset(),    address(fundsAsset));
+        assertEq(loanManager_.globals(),       address(globals));
+        assertEq(loanManager_.governor(),      address(governor));
+        assertEq(loanManager_.mapleTreasury(), address(treasury));
+        assertEq(loanManager_.pool(),          address(pool));
+        assertEq(loanManager_.poolDelegate(),  address(poolDelegate));
+        assertEq(loanManager_.poolManager(),   address(poolManager));
     }
 
     function test_loanManagerGetters_uints() external {
-        assertEq(loanManager.accountedInterest(),          0);
-        assertEq(loanManager.domainEnd(),                  start + 1_000_000);
-        assertEq(loanManager.domainStart(),                start);
-        assertEq(loanManager.issuanceRate(),               0.1e6 * 1e30);
-        assertEq(loanManager.paymentCounter(),             1);
-        assertEq(loanManager.paymentWithEarliestDueDate(), 1);
-        assertEq(loanManager.principalOut(),               1_000_000e6);
-        assertEq(loanManager.unrealizedLosses(),           0);
+        ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
+
+        assertEq(loanManager_.accountedInterest(),          0);
+        assertEq(loanManager_.domainEnd(),                  start + 1_000_000);
+        assertEq(loanManager_.domainStart(),                start);
+        assertEq(loanManager_.issuanceRate(),               0.1e6 * 1e30);
+        assertEq(loanManager_.paymentCounter(),             1);
+        assertEq(loanManager_.paymentWithEarliestDueDate(), 1);
+        assertEq(loanManager_.principalOut(),               1_000_000e6);
+        assertEq(loanManager_.unrealizedLosses(),           0);
     }
 
     function test_loanManagerGetters_liquidationInformation() external {
+        IFixedTermLoanManager loanManager_ = IFixedTermLoanManager(loanManager);
+
         // Returns false when loan has not yet defaulted.
-        assertTrue(!loanManager.isLiquidationActive(loan));
+        assertTrue(!loanManager_.isLiquidationActive(loan));
 
         /***********************************************/
         /*** Warp to end of 1nd Payment grace period ***/
@@ -65,21 +75,21 @@ contract LoanManagerGetterTests is TestBase {
         poolManager.triggerDefault(loan, address(liquidatorFactory));
 
         // Returns true when loan has defaulted.
-        assertTrue(loanManager.isLiquidationActive(loan));
+        assertTrue(loanManager_.isLiquidationActive(loan));
 
-        assertEq(loanManager.allowedSlippageFor(address(collateralAsset)), 1e6);
-        assertEq(loanManager.minRatioFor(address(collateralAsset)),        1e6);
+        assertEq(loanManager_.allowedSlippageFor(address(collateralAsset)), 1e6);
+        assertEq(loanManager_.minRatioFor(address(collateralAsset)),        1e6);
 
         liquidateCollateral(loan);
 
         vm.prank(poolDelegate);
         poolManager.finishCollateralLiquidation(loan);
 
-        assertTrue(!loanManager.isLiquidationActive(loan));
+        assertTrue(!loanManager_.isLiquidationActive(loan));
     }
 
     function test_loanManagerGetters_paymentInformation() external {
-        assertEq(loanManager.paymentIdOf(loan), 1);
+        assertEq(ILoanManagerLike(loanManager).paymentIdOf(loan), 1);
 
         (
             uint24  platformManagementFeeRate,
@@ -89,7 +99,7 @@ contract LoanManagerGetterTests is TestBase {
             uint128 incomingNetInterest,
             uint128 refinanceInterest,
             uint256 issuanceRate
-        ) = loanManager.payments(1);
+        ) = ILoanManagerLike(loanManager).payments(1);
 
             assertEq(platformManagementFeeRate, 0);
             assertEq(delegateManagementFeeRate, 0);
@@ -106,10 +116,11 @@ contract LoanManagerGetterTests is TestBase {
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(3_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(250_000e6), uint256(250_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
-        ( uint256 previous, uint256 next, uint256 paymentDueDate) = loanManager.sortedPayments(1);
+        ( uint256 previous, uint256 next, uint256 paymentDueDate) = ILoanManagerLike(loanManager).sortedPayments(1);
 
         assertEq(previous,       0);
         assertEq(next,           2);

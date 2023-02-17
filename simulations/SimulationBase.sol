@@ -59,9 +59,12 @@ contract SimulationBase is TestBase {
         IPoolManager poolManager_ = IPoolManager(address(poolManager));
 
         // Add all loggers here in order to record contract states during the simulation.
-        simulation.record(new PoolLogger(pool_,                       string(abi.encodePacked("output/", filepath_, "/pool.csv"))));
-        simulation.record(new PoolManagerLogger(poolManager_,         string(abi.encodePacked("output/", filepath_, "/pool-manager.csv"))));
-        simulation.record(new LoanManagerLogger(address(loanManager), string(abi.encodePacked("output/", filepath_, "/loan-manager.csv"))));
+        simulation.record(new PoolLogger(pool_,               string(abi.encodePacked("output/", filepath_, "/pool.csv"))));
+        simulation.record(new PoolManagerLogger(poolManager_, string(abi.encodePacked("output/", filepath_, "/pool-manager.csv"))));
+
+        simulation.record(
+            new LoanManagerLogger(poolManager_.loanManagerList(0), string(abi.encodePacked("output/", filepath_, "/loan-manager.csv")))
+        );
 
         for (uint256 i_; i_ < scenarios.length; i_++) {
             simulation.record(
@@ -76,7 +79,7 @@ contract SimulationBase is TestBase {
     function setUpBusinessLogger(string memory filepath_) public {
         // Add all loggers here in order to record contract states during the simulation.
         simulation.record(new BusinessSimLogger({
-            loanManager_:  address(loanManager),
+            loanManager_:  poolManager.loanManagerList(0),
             poolDelegate_: address(poolDelegate),
             poolManager_:  address(poolManager),
             treasury_:     address(treasury),

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -192,7 +192,7 @@ contract RequestRedeemTests is TestBase {
         depositAmount = constrictToRange(depositAmount, 1, 1e30);
         redeemAmount  = constrictToRange(redeemAmount,  1, depositAmount);
 
-        depositLiquidity( lp, depositAmount);
+        depositLiquidity(lp, depositAmount);
 
         vm.startPrank(lp);
 
@@ -412,7 +412,8 @@ contract RedeemTests is TestBase {
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         vm.warp(start + 2 weeks);
@@ -461,10 +462,11 @@ contract RedeemTests is TestBase {
 
         // Fund a loan with all the liquidity
         fundAndDrawdownLoan({
-            borrower:         address(new Address()),
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    address(new Address()),
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         vm.warp(start + 2 weeks);
@@ -503,6 +505,7 @@ contract RedeemTests is TestBase {
 contract MultiUserRedeemTests is TestBase {
 
     address borrower;
+    address loanManager;
     address lp1;
     address lp2;
     address lp3;
@@ -523,7 +526,8 @@ contract MultiUserRedeemTests is TestBase {
         lp2      = address(new Address());
         lp3      = address(new Address());
 
-        wm = address(withdrawalManager);
+        loanManager = poolManager.loanManagerList(0);
+        wm          = address(withdrawalManager);
 
         // NOTE: Available liquidity ratio (AVR) = availableCash / totalRequestedLiquidity
         // Remaining shares = requestedShares * (1 - AVR)
@@ -538,7 +542,8 @@ contract MultiUserRedeemTests is TestBase {
             borrower:    borrower,
             termDetails: [5_000, ONE_MONTH, 3],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],  // Pool will be at 50% liquidity
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         requestRedeem(lp1, 1_000_000e6);
@@ -627,7 +632,8 @@ contract MultiUserRedeemTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), uint256(0)],
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         requestRedeem(lp1,  1_000_000e6);
@@ -692,7 +698,8 @@ contract MultiUserRedeemTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH * 2), uint256(3)],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         requestRedeem(lp1, 1_000_000e6);
@@ -972,7 +979,7 @@ contract RedeemIntegrationTests is TestBase {
         vm.prank(governor);
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
 
-        depositCover({ cover: 1_000_000e6 });
+        depositCover(1_000_000e6);
     }
 
     function _fundAndDrawLoanWithDynamicCollateral(uint256 collateralAmount_) internal {
@@ -980,7 +987,8 @@ contract RedeemIntegrationTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(collateralAmount_), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
     }
 
@@ -1265,7 +1273,7 @@ contract RedeemIntegrationTests is TestBase {
         // Trigger Default on the loan
         vm.prank(poolDelegate);
         poolManager.triggerDefault(loan, address(liquidatorFactory));
-        assertTrue(!loanManager.isLiquidationActive(loan));
+        assertTrue(!IFixedTermLoanManager(poolManager.loanManagerList(0)).isLiquidationActive(loan));
 
         // Check cover was used
         assertEq(fundsAsset.balanceOf(address(poolCover)), 600_000e6);

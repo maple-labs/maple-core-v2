@@ -35,7 +35,8 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(1_000e6), uint256(4_000_000e6), uint256(4_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: poolManager.loanManagerList(0)
         });
     }
 
@@ -107,7 +108,8 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(1_000e6), uint256(5_200_000e6), uint256(4_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         vm.warp(start + 1_000_000);

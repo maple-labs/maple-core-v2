@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { IFixedTermLoanManager, ILoanLike } from "../contracts/interfaces/Interfaces.sol";
+
 import {
     Address,
     FeeManager,
@@ -80,7 +82,6 @@ contract TestBase is ProtocolActions {
     PoolDeployer deployer;
 
     FeeManager           feeManager;
-    FixedTermLoanManager loanManager;
     FixedTermRefinancer  refinancer;
     Pool                 pool;
     PoolDelegateCover    poolCover;
@@ -183,7 +184,7 @@ contract TestBase is ProtocolActions {
 
     function _createPool(uint256 withdrawalCycle, uint256 windowDuration) internal {
         vm.prank(poolDelegate);
-        ( address poolManager_, address loanManager_, address withdrawalManager_ ) = deployer.deployPool({
+        ( address poolManager_, , address withdrawalManager_ ) = deployer.deployPool({
             factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
             initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
@@ -193,7 +194,6 @@ contract TestBase is ProtocolActions {
         });
 
         poolManager       = PoolManager(poolManager_);
-        loanManager       = FixedTermLoanManager(loanManager_);
         withdrawalManager = WithdrawalManager(withdrawalManager_);
         pool              = Pool(poolManager.pool());
         poolCover         = PoolDelegateCover(poolManager.poolDelegateCover());
@@ -241,7 +241,8 @@ contract TestBase is ProtocolActions {
         address borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
-        uint256[4] memory rates
+        uint256[4] memory rates,
+        address loanManager
     )
         internal returns (address loan)
     {
@@ -251,7 +252,7 @@ contract TestBase is ProtocolActions {
         loan = FixedTermLoanFactory(loanFactory).createInstance({
             arguments_: abi.encode(
                 borrower,
-                address(loanManager),
+                loanManager,
                 address(feeManager),
                 [address(collateralAsset), address(fundsAsset)],
                 termDetails,
@@ -271,7 +272,7 @@ contract TestBase is ProtocolActions {
     function liquidateCollateral(address loan) internal {
         MockLiquidationStrategy mockLiquidationStrategy = new MockLiquidationStrategy();
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(ILoanLike(loan).lender()).liquidationInfo(loan);
 
         mockLiquidationStrategy.flashBorrowLiquidation(
             liquidator,
@@ -323,14 +324,15 @@ contract TestBase is ProtocolActions {
         address borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
-        uint256[4] memory rates
+        uint256[4] memory rates,
+        address loanManager
     )
         internal returns (address loan)
     {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        loan = createLoan(borrower, termDetails, amounts, rates);
+        loan = createLoan(borrower, termDetails, amounts, rates, loanManager);
 
         fundLoan(address(poolManager), address(loan));
 

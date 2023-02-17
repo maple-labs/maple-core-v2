@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanManagerLike, IProxyFactoryLike, IWithdrawalManager, IPool, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
+import { ILoanManagerLike, IProxyFactoryLike, IPool, IPoolManager, IWithdrawalManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -303,7 +303,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         IPoolManager       poolManager       = IPoolManager(poolManager_);
         IPool              pool              = IPool(poolManager.pool());
-        ILoanManagerLike   loanManager       = ILoanManagerLike(loanManager_);
+        ILoanManagerLike   loanManager       = ILoanManagerLike(poolManager.loanManagerList(0));
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         assertEq(poolManager.poolDelegate(),              poolDelegate);

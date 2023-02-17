@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, IFixedTermLoanManagerStructs, ILoanLike } from "../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, IFixedTermLoanManagerStructs, ILoanLike, ILoanManagerLike } from "../contracts/interfaces/Interfaces.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";
@@ -48,8 +48,9 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLoanInfoWasDeleted(address loan) internal {
-        uint256 loanId = loanManager.paymentIdOf(loan);
-        assertEq(loanId, 0);
+        ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+
+        assertEq(loanManager.paymentIdOf(loan), 0);
     }
 
     // TODO: Investigate reverting back to tuples to expose changes easier.
@@ -65,6 +66,8 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     )
         internal
     {
+        ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+
         IFixedTermLoanManagerStructs.PaymentInfo memory loanInfo =
             IFixedTermLoanManagerStructs(ILoanLike(loan).lender()).payments(loanManager.paymentIdOf(loan));
 
@@ -78,6 +81,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertLoanManager(
+        address loanManager,
         uint256 accruedInterest,
         uint256 accountedInterest,
         uint256 principalOut,
@@ -87,14 +91,16 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 domainEnd,
         uint256 unrealizedLosses
     ) internal {
-        assertEq(loanManager.getAccruedInterest(),    accruedInterest,       "getAccruedInterest");
-        assertEq(loanManager.accountedInterest(),     accountedInterest,     "accountedInterest");
-        assertEq(loanManager.principalOut(),          principalOut,          "principalOut");
-        assertEq(loanManager.assetsUnderManagement(), assetsUnderManagement, "assetsUnderManagement");
-        assertEq(loanManager.issuanceRate(),          issuanceRate,          "issuanceRate");
-        assertEq(loanManager.domainStart(),           domainStart,           "domainStart");
-        assertEq(loanManager.domainEnd(),             domainEnd,             "domainEnd");
-        assertEq(loanManager.unrealizedLosses(),      unrealizedLosses,      "unrealizedLosses");
+        ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
+
+        assertEq(loanManager_.getAccruedInterest(),    accruedInterest,       "getAccruedInterest");
+        assertEq(loanManager_.accountedInterest(),     accountedInterest,     "accountedInterest");
+        assertEq(loanManager_.principalOut(),          principalOut,          "principalOut");
+        assertEq(loanManager_.assetsUnderManagement(), assetsUnderManagement, "assetsUnderManagement");
+        assertEq(loanManager_.issuanceRate(),          issuanceRate,          "issuanceRate");
+        assertEq(loanManager_.domainStart(),           domainStart,           "domainStart");
+        assertEq(loanManager_.domainEnd(),             domainEnd,             "domainEnd");
+        assertEq(loanManager_.unrealizedLosses(),      unrealizedLosses,      "unrealizedLosses");
     }
 
     function assertLiquidationInfo(

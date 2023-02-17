@@ -98,7 +98,7 @@ contract LoanHandler is TestUtils {
         collateralAsset = MockERC20(collateralAsset_);
         fundsAsset      = MockERC20(fundsAsset_);
         poolManager     = IPoolManager(poolManager_);
-        loanManager     = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager     = IFixedTermLoanManager(poolManager.loanManagerList(0));  // TODO: May need to be constructor arg.
         pool            = IPool(poolManager.pool());
         testContract    = ITest(testContract_);
 

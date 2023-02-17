@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILiquidator } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoanManager, ILiquidator, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -13,6 +13,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     address lp       = address(new Address());
 
     address loan;
+    address loanManager;
 
     uint256 constant platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
     uint256 constant platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
@@ -20,10 +21,9 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        loanManager = poolManager.loanManagerList(0);
+
+        depositLiquidity(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -43,13 +43,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function test_loanDefault_fullCover_withCollateral_noImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -84,6 +85,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -142,6 +144,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     900e6,
             principalOut:          1_000_000e6,
@@ -157,7 +160,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 900e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -193,6 +196,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -218,13 +222,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_fullCover_withCollateral_withImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -274,6 +279,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -326,6 +332,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -341,7 +348,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 540e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -377,6 +384,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -400,13 +408,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_fullCover_noCollateral_noImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -441,6 +450,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -502,6 +512,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(platformFees,    342_903827);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -527,13 +538,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_fullCover_noCollateral_withImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -583,6 +595,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -635,6 +648,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -662,13 +676,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function test_loanDefault_partialCover_withCollateral_noImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -703,6 +718,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -761,6 +777,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     900e6,
             principalOut:          1_000_000e6,
@@ -776,7 +793,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 900e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -812,6 +829,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -837,13 +855,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_partialCover_withCollateral_withImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -893,6 +912,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -945,6 +965,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -960,7 +981,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 540e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -996,6 +1017,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1017,13 +1039,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_partialCover_noCollateral_noImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1058,6 +1081,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -1119,6 +1143,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(platformFees,    342_903827);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1144,13 +1169,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_partialCover_noCollateral_withImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1200,6 +1226,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -1252,6 +1279,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1278,10 +1306,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_withCollateral_noImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1316,6 +1345,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -1376,6 +1406,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     900e6,
             principalOut:          1_000_000e6,
@@ -1391,7 +1422,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 900e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -1427,6 +1458,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1453,10 +1485,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_withCollateral_withImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1506,6 +1539,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -1558,6 +1592,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -1573,7 +1608,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 540e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(loan);
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -1609,6 +1644,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1635,10 +1671,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_noCollateral_noImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1673,6 +1710,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -1724,6 +1762,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1747,10 +1786,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_noCollateral_withImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1800,6 +1840,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
             principalOut:          1_000_000e6,
@@ -1852,6 +1893,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1888,10 +1930,7 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -1905,13 +1944,14 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
 
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         /***********************************************/
@@ -1931,6 +1971,8 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
     }
 
     function test_finishLiquidation_failIfNotPoolManager() external {
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
+
         vm.expectRevert("LM:FCL:NOT_PM");
         loanManager.finishCollateralLiquidation(loan);
     }

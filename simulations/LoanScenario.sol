@@ -34,15 +34,16 @@ contract LoanScenario is TestUtils {
     IPoolManager public poolManager;
 
     constructor(address loan_, address poolManager_, address liquidatorFactory_, uint256 fundingTime_, string memory name_) {
+        fundingTime       = fundingTime_;
         liquidatorFactory = liquidatorFactory_;
         loan              = loan_;
-        poolManager       = IPoolManager(poolManager_);
-        loanManager       = poolManager.loanManagerList(0);
-        fundingTime       = fundingTime_;
         name              = name_;
+        poolManager       = IPoolManager(poolManager_);
+
+        loanManager = poolManager.loanManagerList(0);  // 0th loanManager is fixed term loan manager.
 
         // Increase size of arrays by one to ignore the zero index element.
-        uint256 arrayLength = IFixedTermLoan(loan_).paymentsRemaining() + 1;
+        uint256 arrayLength = IFixedTermLoan(loan_).paymentsRemaining() + 1;  // TODO: This needs to be changed to support open term.
 
         impairmentOffsets = new int256[](arrayLength);
         missingPayments   = new bool[](arrayLength);

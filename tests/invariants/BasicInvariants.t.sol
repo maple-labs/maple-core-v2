@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+
 import { LoanHandler } from "./actors/LoanHandler.sol";
 import { LpHandler }   from "./actors/LpHandler.sol";
 
@@ -64,7 +66,9 @@ contract BasicInvariants is BaseInvariants {
 
     function invariant_loan_A_B_C_loanManager_L_M_N() external useCurrentTimestamp {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
-            address loan = loanHandler.activeLoans(i);
+            address          loan        = loanHandler.activeLoans(i);
+            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
             assert_loan_invariant_C(loan, loanHandler.platformOriginationFee(loan));
@@ -89,17 +93,17 @@ contract BasicInvariants is BaseInvariants {
     /*** Loan Manager Non-Iterative Invariants                                                                                          ***/
     /**************************************************************************************************************************************/
 
-    function invariant_loanManager_A() external useCurrentTimestamp { assert_loanManager_invariant_A(); }
-    function invariant_loanManager_B() external useCurrentTimestamp { assert_loanManager_invariant_B(); }
-    function invariant_loanManager_C() external useCurrentTimestamp { assert_loanManager_invariant_C(); }
-    function invariant_loanManager_D() external useCurrentTimestamp { assert_loanManager_invariant_D(); }
-    function invariant_loanManager_E() external useCurrentTimestamp { assert_loanManager_invariant_E(); }
-    function invariant_loanManager_F() external useCurrentTimestamp { assert_loanManager_invariant_F(); }
-    function invariant_loanManager_G() external useCurrentTimestamp { assert_loanManager_invariant_G(); }
-    function invariant_loanManager_H() external useCurrentTimestamp { assert_loanManager_invariant_H(); }
-    function invariant_loanManager_I() external useCurrentTimestamp { assert_loanManager_invariant_I(); }
-    function invariant_loanManager_J() external useCurrentTimestamp { assert_loanManager_invariant_J(); }
-    function invariant_loanManager_K() external useCurrentTimestamp { assert_loanManager_invariant_K(); }
+    function invariant_loanManager_A() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_A); }
+    function invariant_loanManager_B() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_B); }
+    function invariant_loanManager_C() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_C); }
+    function invariant_loanManager_D() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_D); }
+    function invariant_loanManager_E() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_E); }
+    function invariant_loanManager_F() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_F); }
+    function invariant_loanManager_G() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_G); }
+    function invariant_loanManager_H() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_H); }
+    function invariant_loanManager_I() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_I); }
+    function invariant_loanManager_J() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_J); }
+    function invariant_loanManager_K() external useCurrentTimestamp { forEachLoanManager(assert_loanManager_invariant_K); }
 
     /**************************************************************************************************************************************/
     /*** Pool Invariants                                                                                                                ***/

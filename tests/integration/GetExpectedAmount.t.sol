@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
+
 import { TestBase } from "../TestBase.sol";
 
 contract GetExpectedAmountTests is TestBase {
@@ -12,10 +14,14 @@ contract GetExpectedAmountTests is TestBase {
 
     uint256 blockNumber = 15_588_766;  // WETH price at the time: 1311.75777214e8
 
+    IFixedTermLoanManager loanManager;
+
     function setUp() public virtual override {
         vm.createSelectFork(url, blockNumber);
 
         super.setUp();
+
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
     }
 
     function test_getExpectedAmount_oracleNotSet() external {

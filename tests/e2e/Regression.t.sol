@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+
 import { BaseInvariants }            from "../invariants/BaseInvariants.t.sol";
 import { LoanHandlerWithImpairment } from "../invariants/actors/LoanHandlerWithImpairment.sol";
 import { LpHandler }                 from "../invariants/actors/LpHandler.sol";
@@ -104,6 +106,8 @@ contract RegressionTest is BaseInvariants {
         loanHandlerWithImpairment.warp(2);
         loanHandlerWithImpairment.impairLoan(33112808169);
 
+        ILoanManagerLike loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+
         assertEq(loanManager.unrealizedLosses(),      139450885821902738470407880330);
         assertEq(loanManager.assetsUnderManagement(), 139450885821902738470407880329);
 
@@ -159,6 +163,8 @@ contract RegressionTest is BaseInvariants {
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
             assert_loan_invariant_C(loan, loanHandlerWithImpairment.platformOriginationFee(loan));
+
+            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
 
             ( , , uint256 startDate, uint256 paymentDueDate, , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 
@@ -262,6 +268,8 @@ contract RegressionTest is BaseInvariants {
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);
             assert_loan_invariant_C(loan, loanHandlerWithImpairment.platformOriginationFee(loan));
+
+            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
 
             ( , , uint256 startDate, uint256 paymentDueDate, , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 

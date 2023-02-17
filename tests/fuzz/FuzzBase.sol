@@ -11,10 +11,11 @@ contract FuzzBase is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManagerHarness = new FixedTermLoanManagerHarness();
-        vm.etch(address(loanManager), address(loanManagerHarness).code);
+        address loanManager = poolManager.loanManagerList(0);
 
-        loanManagerHarness = FixedTermLoanManagerHarness(address(loanManager));
+        vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
+
+        loanManagerHarness = FixedTermLoanManagerHarness(loanManager);
     }
 
     function mintAssets(address account, uint256 assets) internal {

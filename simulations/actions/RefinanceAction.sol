@@ -33,7 +33,8 @@ contract RefinanceAction is Action, ProtocolActions {
     }
 
     function act() external override {
-        proposeRefinance(loan, refinancer, block.timestamp + 1, refinanceCalls, principalIncrease, 0);
+        // TODO: `principalIncrease` no longer works in `proposeRefinance` due to inability to pre-compute origination fees.
+        proposeRefinance(loan, refinancer, block.timestamp + 1, refinanceCalls);
         acceptRefinance(poolManager, loan, refinancer, block.timestamp + 1, refinanceCalls, principalIncrease);
     }
 

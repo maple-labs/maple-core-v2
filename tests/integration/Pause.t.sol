@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IProxyFactoryLike, ILiquidator, IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+import {
+    IFixedTermLoan,
+    IFixedTermLoanManager,
+    ILiquidator,
+    ILoanLike,
+    IProxyFactoryLike
+} from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -13,6 +19,7 @@ contract PauseTests is TestBaseWithAssertions {
     address pausePoolDelegate = address(new Address());
 
     address loan;
+    address loanManager;
 
     bytes[] data;
 
@@ -48,10 +55,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.stopPrank();
 
-        depositLiquidity({
-            lp:        address(new Address()),
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(address(new Address()), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -62,19 +66,22 @@ contract PauseTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
+        loanManager = poolManager.loanManagerList(0);
+
         loan = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         vm.warp(start + 1_005_001);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(loan, address(liquidatorFactory));
 
-        ( , , , , , address liquidator_ ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator_ ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         liquidator = ILiquidator(liquidator_);
 
@@ -187,14 +194,6 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.expectRevert("L:PROTOCOL_PAUSED");
         ILoanLike(loan).skim(address(0), address(0));
-
-        /**********************************************************************************************************************************/
-        /*** Loan Manager                                                                                                               ***/
-        /**********************************************************************************************************************************/
-
-        // vm.prank(governor);
-        // vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        // loanManager.upgrade(2, "");
 
         /**********************************************************************************************************************************/
         /*** Pool                                                                                                                       ***/

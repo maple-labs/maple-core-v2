@@ -15,12 +15,13 @@ contract BasicSimulation is SimulationBase {
         initialLiquidity = 1_500_000e6;
 
         scenarios.push(new LoanScenario({
-            loan_: address(createLoan({
+            loan_: createLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(0), uint256(30 days), uint256(3)],
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-                rates:       [uint256(0.01e18), uint256(0), uint256(0), uint256(0)]
-            })),
+                rates:       [uint256(0.01e18), uint256(0), uint256(0), uint256(0)],
+                loanManager: poolManager.loanManagerList(0)
+            }),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,
             fundingTime_:       start,

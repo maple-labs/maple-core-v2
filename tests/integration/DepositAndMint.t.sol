@@ -203,7 +203,8 @@ contract DepositTest is EnterBase {
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         // Constrict time to be within the first loan payment and amount to be within token amounts
@@ -845,7 +846,8 @@ contract MintTest is EnterBase {
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         // Constrict time to be within the first loan payment and amount to be within token amounts

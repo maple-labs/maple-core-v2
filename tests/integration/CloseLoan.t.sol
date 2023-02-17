@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -19,10 +19,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
         borrower = address(new Address());
         lp       = address(new Address());
 
-        depositLiquidity({
-            lp:        lp,
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -34,10 +31,11 @@ contract CloseLoanTests is TestBaseWithAssertions {
         });
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)]
+            borrower:    borrower,
+            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
     }
 
@@ -86,6 +84,8 @@ contract CloseLoanTests is TestBaseWithAssertions {
     }
 
     function test_closeLoan_failIfNotLoan() external {
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+
         vm.expectRevert("LM:C:NOT_LOAN");
         loanManager.claim(0, 10, start, start + 1_000_000);
     }
@@ -114,6 +114,8 @@ contract CloseLoanTests is TestBaseWithAssertions {
         assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), start + 1_000_000 seconds);
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  3);
         assertEq(IFixedTermLoan(loan).principal(),          1_000_000e6);
+
+        ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
 
         assertEq(loanManager.getAccruedInterest(),    90_000e6 / 4);  // A quarter of incoming interest.
         assertEq(loanManager.accountedInterest(),     0);

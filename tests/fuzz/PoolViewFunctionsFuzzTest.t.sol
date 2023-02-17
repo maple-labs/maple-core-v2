@@ -18,11 +18,11 @@ contract PoolViewFunctionsFuzzTests is TestBase {
 
         user = address(new Address());
 
-        loanManagerHarness = new FixedTermLoanManagerHarness();
+        address loanManager = poolManager.loanManagerList(0);
 
-        vm.etch(address(loanManager), address(loanManagerHarness).code);
+        vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
 
-        loanManagerHarness = FixedTermLoanManagerHarness(address(loanManager));
+        loanManagerHarness = FixedTermLoanManagerHarness(loanManager);
     }
 
     function testFuzz_getTotalAssetsFromPM(uint256 principalOut_, uint256 accountedInterest_) external {

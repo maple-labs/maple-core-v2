@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+
 import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
@@ -12,10 +14,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity({
-            lp: address(new Address()),
-            liquidity: 1_500_000e6
-        });
+        depositLiquidity(address(new Address()), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -30,7 +29,8 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: poolManager.loanManagerList(0)
         });
     }
 
@@ -40,6 +40,8 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
     }
 
     function test_finishCollateralLiquidation_notPoolManager() external {
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
+
         vm.prank(address(1));
         vm.expectRevert("LM:FCL:NOT_PM");
         loanManager.finishCollateralLiquidation(loan);

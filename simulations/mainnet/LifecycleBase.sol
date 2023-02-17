@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address, console, CSVWriter } from "../../contracts/Contracts.sol";
-
 import {
     IERC20Like,
     IFixedTermLoan,
@@ -13,6 +11,8 @@ import {
     IProxyFactoryLike,
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
+
+import { Address, console, CSVWriter } from "../../contracts/Contracts.sol";
 
 import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
@@ -224,7 +224,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         bytes[] memory refinanceCalls_ = new bytes[](1);
         refinanceCalls_[0] = abi.encodeWithSignature("setPaymentsRemaining(uint256)", IFixedTermLoan(loan_).paymentsRemaining() + 2);
 
-        proposeRefinance(loan_, refinancer, block.timestamp, refinanceCalls_, 0, 0);
+        proposeRefinance(loan_, refinancer, block.timestamp, refinanceCalls_);
         acceptRefinance(poolManager_, loan_, refinancer, block.timestamp, refinanceCalls_, 0);
     }
 

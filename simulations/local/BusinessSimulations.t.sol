@@ -33,7 +33,8 @@ contract BusinessSimulations is SimulationBase {
                 borrower:    address(new Address()),
                 termDetails: [uint256(0), uint256(30 days), uint256(6)],
                 amounts:     [uint256(collateral), uint256(startingPrincipal), uint256(endingPrincipal)],
-                rates:       [uint256(0.10e18), uint256(0), uint256(0.01e18), uint256(0.05e18)]
+                rates:       [uint256(0.10e18), uint256(0), uint256(0.01e18), uint256(0.05e18)],
+                loanManager: poolManager.loanManagerList(0)
             })),
             poolManager_:       address(poolManager),
             liquidatorFactory_: liquidatorFactory,

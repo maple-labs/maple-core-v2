@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanLike, IFeeManager, IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
+import { IFeeManager, IFixedTermLoan, IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { InvariantTest } from "../../contracts/Contracts.sol";
 
@@ -157,12 +157,12 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     /*** Loan Manager Invariants                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function assert_loanManager_invariant_A() internal {
-        assertLe(loanManager.domainStart(), loanManager.domainEnd(), "LoanManager Invariant A");
+    function assert_loanManager_invariant_A(address loanManager) internal {
+        assertLe(ILoanManagerLike(loanManager).domainStart(), ILoanManagerLike(loanManager).domainEnd(), "LoanManager Invariant A");
     }
 
-    function assert_loanManager_invariant_B() internal {
-        uint256 next = loanManager.paymentWithEarliestDueDate();
+    function assert_loanManager_invariant_B(address loanManager) internal {
+        uint256 next = ILoanManagerLike(loanManager).paymentWithEarliestDueDate();
 
         uint256 previousPaymentDueDate;
         uint256 nextPaymentDueDate;
@@ -170,9 +170,9 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         while (next != 0) {
             uint256 current = next;
 
-            ( , next, ) = loanManager.sortedPayments(current);  // Overwrite `next` in loop
+            ( , next, ) = ILoanManagerLike(loanManager).sortedPayments(current);  // Overwrite `next` in loop
 
-            ( , , nextPaymentDueDate ) = loanManager.sortedPayments(next);  // Get the next payment due date
+            ( , , nextPaymentDueDate ) = ILoanManagerLike(loanManager).sortedPayments(next);  // Get the next payment due date
 
             if (next == 0 && nextPaymentDueDate == 0) break;  // End of list
 
@@ -182,71 +182,69 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         }
     }
 
-    function assert_loanManager_invariant_C() internal {
+    function assert_loanManager_invariant_C(address loanManager) internal {
         vm.warp(currentTimestamp);
 
         uint256 sumOutstandingInterest = getAllOutstandingInterest();
 
         assertWithinDiff(
-            loanManager.accountedInterest() + loanManager.getAccruedInterest(),
+            ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).getAccruedInterest(),
             sumOutstandingInterest,
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,
             "LoanManager Invariant C"
         );
     }
 
-    function assert_loanManager_invariant_D() internal {
-        assertEq(loanManager.principalOut(), loanHandler.sum_loan_principal(), "LoanManager Invariant D");
+    function assert_loanManager_invariant_D(address loanManager) internal {
+        assertEq(ILoanManagerLike(loanManager).principalOut(), loanHandler.sum_loan_principal(), "LoanManager Invariant D");
     }
 
-    function assert_loanManager_invariant_E() internal {
-        assertEq(loanManager.issuanceRate(), getSumIssuanceRates(), "LoanManager Invariant E");
+    function assert_loanManager_invariant_E(address loanManager) internal {
+        assertEq(ILoanManagerLike(loanManager).issuanceRate(), getSumIssuanceRates(), "LoanManager Invariant E");
     }
 
-    function assert_loanManager_invariant_F() internal {
+    function assert_loanManager_invariant_F(address loanManager) internal {
         // NOTE: To account for precision errors for unrealizedLosses(), we add 1 to the AUM
-        uint256 losses   = loanManager.unrealizedLosses();
-        uint256 aum      = loanManager.assetsUnderManagement();
-        uint256 payments = loanHandler.numPayments();
+        uint256 losses   = ILoanManagerLike(loanManager).unrealizedLosses();
+        uint256 aum      = ILoanManagerLike(loanManager).assetsUnderManagement();
 
         if (losses > aum) {
-            assertWithinDiff(losses, aum, payments + 1);
+            assertWithinDiff(losses, aum, loanHandler.numPayments() + 1);
         } else {
             assertLe(losses, aum + 1, "LoanManager Invariant F");
-
         }
     }
 
-    function assert_loanManager_invariant_G() internal {
-        assertEq(loanManager.unrealizedLosses(), 0, "LoanManager Invariant G");
+    function assert_loanManager_invariant_G(address loanManager) internal {
+        assertEq(ILoanManagerLike(loanManager).unrealizedLosses(), 0, "LoanManager Invariant G");
     }
 
-    function assert_loanManager_invariant_H() internal {
+    function assert_loanManager_invariant_H(address loanManager) internal {
         assertWithinDiff(
-            loanManager.assetsUnderManagement(),
+            ILoanManagerLike(loanManager).assetsUnderManagement(),
             getAllOutstandingInterest() + loanHandler.sum_loan_principal(),
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,
             "LoanManager Invariant H"
         );
     }
 
-    function assert_loanManager_invariant_I() internal {
-        assertLe(loanManager.domainStart(), block.timestamp, "LoanManager Invariant I");
+    function assert_loanManager_invariant_I(address loanManager) internal {
+        assertLe(ILoanManagerLike(loanManager).domainStart(), block.timestamp, "LoanManager Invariant I");
     }
 
-    function assert_loanManager_invariant_J() internal {
-        if (loanManager.paymentWithEarliestDueDate() != 0) {
-            assertGt(loanManager.issuanceRate(), 0, "LoanManager Invariant J");
+    function assert_loanManager_invariant_J(address loanManager) internal {
+        if (ILoanManagerLike(loanManager).paymentWithEarliestDueDate() != 0) {
+            assertGt(ILoanManagerLike(loanManager).issuanceRate(), 0, "LoanManager Invariant J");
         }
     }
 
-    function assert_loanManager_invariant_K() internal {
-        uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
+    function assert_loanManager_invariant_K(address loanManager) internal {
+        uint256 paymentWithEarliestDueDate = ILoanManagerLike(loanManager).paymentWithEarliestDueDate();
 
-        ( , , uint256 earliestPaymentDueDate ) = loanManager.sortedPayments(paymentWithEarliestDueDate);
+        ( , , uint256 earliestPaymentDueDate ) = ILoanManagerLike(loanManager).sortedPayments(paymentWithEarliestDueDate);
 
         if (paymentWithEarliestDueDate != 0) {
-            assertEq(loanManager.domainEnd(), earliestPaymentDueDate, "LoanManager Invariant K");
+            assertEq(ILoanManagerLike(loanManager).domainEnd(), earliestPaymentDueDate, "LoanManager Invariant K");
         }
     }
 
@@ -460,7 +458,8 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         internal view
         returns (uint256 interestAccrued_)
     {
-        IFixedTermLoan loan = IFixedTermLoan(loan_);
+        IFixedTermLoan        loan        = IFixedTermLoan(loan_);
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(loan.lender());
 
         if (loan.nextPaymentDueDate() == 0) {
             ( , , uint256 liquidationInterest , , , ) = loanManager.liquidationInfo(loan_);
@@ -528,13 +527,22 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         excludeContract(address(globals));
         excludeContract(address(feeManager));
         excludeContract(address(fundsAsset));
-        excludeContract(address(loanManager));
         excludeContract(address(pool));
         excludeContract(address(poolCover));
         excludeContract(address(poolManager));
         excludeContract(address(withdrawalManager));
 
         excludeContract(globals.implementation());
+    }
+
+    function forEachLoanManager(function (address) assertInvariant) internal {
+        for (uint256 i; ; ++i) {
+            try poolManager.loanManagerList(i) returns (address loanManager) {
+                assertInvariant(loanManager);
+            } catch {
+                return;
+            }
+        }
     }
 
     function max(uint256 a_, uint256 b_) internal pure returns (uint256 maximum_) {
@@ -561,8 +569,10 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
     function getAllOutstandingInterest() public returns (uint256 sumOutstandingInterest_) {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
+            ILoanLike        loan_        = ILoanLike(loanHandler.activeLoans(i));
+            ILoanManagerLike loanManager_ = ILoanManagerLike(loan_.lender());
 
-            assertTrue(loanHandler.earliestPaymentDueDate() == loanManager.domainEnd());
+            assertTrue(loanHandler.earliestPaymentDueDate() == ILoanManagerLike(loanManager_).domainEnd());
 
             sumOutstandingInterest_ += _getCurrentOutstandingInterest(loanHandler.activeLoans(i), loanHandler.earliestPaymentDueDate());
         }
@@ -570,11 +580,14 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
     function getSumIssuanceRates() public view returns (uint256 sumIssuanceRate_) {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
-            address loan_ = loanHandler.activeLoans(i);
-            ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(loan_));
+            ILoanLike        loan_        = ILoanLike(loanHandler.activeLoans(i));
+            ILoanManagerLike loanManager_ = ILoanManagerLike(loan_.lender());
+
+            ( , , , , , , uint256 issuanceRate ) = loanManager_.payments(loanManager_.paymentIdOf(address(loan_)));
+
             sumIssuanceRate_ += issuanceRate;
 
-            if (ILoanLike(loan_).isImpaired()) {
+            if (loan_.isImpaired()) {
                 sumIssuanceRate_ -= issuanceRate;  // If the loan is impaired the issuance rate is 0
             }
         }

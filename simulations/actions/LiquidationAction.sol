@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-// TODO: Use ILoanManagerLike if `liquidationInfo` is common (including returns) to all LoanManagers.
-
-import { IERC20Like, IFixedTermLoanManager, IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, IFixedTermLoan, IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Action } from "./Action.sol";
 

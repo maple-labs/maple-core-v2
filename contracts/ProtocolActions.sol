@@ -114,14 +114,7 @@ contract ProtocolActions is TestUtils {
         vm.stopPrank();
     }
 
-    function proposeRefinance(
-        address loan_,
-        address refinancer_,
-        uint256 expiry_,
-        bytes[] memory refinanceCalls_,
-        uint256 principalIncrease_,
-        uint256 collateralRequiredIncrease_
-    ) internal {
+    function proposeRefinance(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
         address borrower_ = ILoanLike(loan_).borrower();
 
         vm.startPrank(borrower_);

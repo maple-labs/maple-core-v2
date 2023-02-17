@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
-
-import { Address } from "../../contracts/Contracts.sol";
+import { IFixedTermLoan, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 // NOTE: This test cases make use of simulation files for easier setup.
 import { ILoanAction } from "../../simulations/interfaces/ILoanAction.sol";
+
+import { Address } from "../../contracts/Contracts.sol";
 
 import { ActionHandler } from "../../simulations/ActionHandler.sol";
 import { LoanScenario }  from "../../simulations/LoanScenario.sol";
@@ -128,6 +128,8 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
                 outstandingInterest += getCurrentOutstandingInterest(scenarios[j].loan(), earliestPaymentDueDate);
             }
 
+            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+
             // Assert that the theoretical interest is equal to the actual interest, within a small delta.
             // TODO: Better define acceptable diff, potentially add positive/negative assertion
             assertWithinDiff(loanManager.getAccruedInterest() + loanManager.accountedInterest(), outstandingInterest, actions.length);
@@ -173,12 +175,13 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
         nextDelegateOriginationFee = constrictToRange(hashed(seed_ + 7), 0, startingPrincipal / 10);
         nextDelegateServiceFee     = constrictToRange(hashed(seed_ + 8), 0, startingPrincipal / 100);
 
-        return address(createLoan({
+        return createLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(0), paymentInterval, numberOfPayments],
             amounts:     [uint256(0), startingPrincipal, endingPrincipal],
-            rates:       [interestRate, uint256(0), lateFeeRate, lateInterestPremium]
-        }));
+            rates:       [interestRate, uint256(0), lateFeeRate, lateInterestPremium],
+            loanManager: poolManager.loanManagerList(0)
+        });
     }
 
     function getCurrentOutstandingInterest(address loan_, uint256 earliestPaymentDueDate_)

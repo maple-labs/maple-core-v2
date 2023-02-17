@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -34,15 +34,19 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6);
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -92,10 +96,12 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     72_000e6,
             principalOut:          3_000_000e6,
@@ -129,6 +135,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 90_000e6 + 180_000e6);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,
             principalOut:          3_000_000e6,
@@ -162,10 +169,12 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    address(new Address()),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(4_000_000e6), uint256(4_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     180_000e6,  // 90_000e6 from loan1 and 90_000e6 of loan2 at 0.15 IR
             principalOut:          7_000_000e6,
@@ -200,6 +209,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 72_000e6);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     72_000e6 + 90_000e6,  // 72_000e6 from 200_000s of loan3 and 90_000e6 from loan1
             principalOut:          5_000_000e6,
@@ -228,6 +238,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 360_000e6);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,           // 90_000e6 from loan1
             principalOut:          5_000_000e6,
@@ -306,6 +317,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         makePayment(loan3);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,           // 90_000e6 from loan1
             principalOut:          1_000_000e6,
@@ -405,15 +417,19 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6);
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e30), uint256(0.1e18), uint256(0), uint256(0)]
+            rates:       [uint256(3.1536e30), uint256(0.1e18), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -464,6 +480,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // Loan Manager should be in a coherent state
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -486,15 +503,19 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6);
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)]
+            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)],
+            loanManager: loanManager
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -539,6 +560,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6);
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -581,6 +603,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -620,6 +643,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -633,7 +657,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 14
     function test_poolScenario_loanWithZeroInterestRateAndDefaultWithCover() external {
-        depositCover({ cover: 200_000e6 });
+        depositCover(200_000e6);
 
         vm.prank(governor);
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.5e6);
@@ -645,12 +669,15 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6);
         assertEq(pool.balanceOf(lp1), 4_000_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)]
+            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)],
+            loanManager: loanManager
         });
 
         // Burn to reset fee assertions
@@ -658,6 +685,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         fundsAsset.burn(poolDelegate, fundsAsset.balanceOf(poolDelegate));
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -780,7 +808,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
     }
 
     function test_poolScenario_impairLoanWithLatePaymentAndRefinance() external {
-        depositCover({ cover: 200_000e6 });
+        depositCover(200_000e6);
 
         address lp1      = address(new Address());
         address borrower = address(new Address());
@@ -790,12 +818,15 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(1_000_000e6);
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         // This loan will be refinanced
         address loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)]
+            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
@@ -818,6 +849,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -856,22 +888,14 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         vm.warp(start + 10 days);
 
-        // TODO: remove scoping if possible
-        {
+        // Refinance Loan
+        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
 
-            vm.startPrank(borrower);
-            fundsAsset.mint(borrower, 30_000e6);
-            fundsAsset.approve(address(loan), 30_000e6);
-            IFixedTermLoan(loan).returnFunds(30_000e6);  // Return funds to pay origination fees.
-            vm.stopPrank();
+        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
 
-            // Refinance Loan and stack too deep
-            bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
+        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-            proposeRefinance(loan, address(refinancer), block.timestamp + 1, data, 0, 0);
-
-            acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
-        }
+        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
 
         platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
 
@@ -887,6 +911,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 10,
             principalOut:          1_000_000e6,
@@ -917,9 +942,10 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         vm.warp(start + 75 days);
         vm.prank(poolDelegate);
-        loanManager.updateAccounting();
+        ILoanManagerLike(loanManager).updateAccounting();  // TODO: Use `ProtocolActions`. TODO: `loanManager` variable.
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 70,
             principalOut:          1_000_000e6,
@@ -946,6 +972,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         poolManager.impairLoan(address(loan));
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 70,
             principalOut:          1_000_000e6,
@@ -1005,6 +1032,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 5,
             principalOut:          1_000_000e6,
@@ -1030,15 +1058,19 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         depositLiquidity(lp1, 2_500_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)],
+            loanManager: loanManager
         });
 
         // Loan Manager should be in a coherent state
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -1084,7 +1116,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0, 0);
+        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data);
 
         acceptRefinance(address(poolManager), loan1, address(refinancer), block.timestamp + 1, data, 0);
 
@@ -1122,6 +1154,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     netRefinanceInterest,
             principalOut:          1_000_000e6,
@@ -1155,6 +1188,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -1173,15 +1207,19 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         depositLiquidity(lp1, 2_500_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)]
+            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)],
+            loanManager: loanManager
         });
 
         // Loan Manager should be in a coherent state
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          1_000_000e6,
@@ -1227,7 +1265,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0, 0);
+        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data);
 
         acceptRefinance(address(poolManager), loan1, address(refinancer), block.timestamp + 1, data, 0);
 
@@ -1264,6 +1302,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     netRefinanceInterest,
             principalOut:          1_000_000e6,
@@ -1305,6 +1344,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       180_000e6,
             accountedInterest:     netRefinanceInterest,
             principalOut:          1_000_000e6,
@@ -1332,6 +1372,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
             principalOut:          0,
@@ -1351,12 +1392,15 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(400_000_000e6);
 
+        address loanManager = poolManager.loanManagerList(0);
+
         for (uint256 i; i < 150; ++i) {
             fundAndDrawdownLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-                rates:       [uint256(3.1536e18), uint256(0.1e18), uint256(0.01e18), uint256(0.31536e18)]
+                rates:       [uint256(3.1536e18), uint256(0.1e18), uint256(0.01e18), uint256(0.31536e18)],
+                loanManager: loanManager
             });
         }
 
@@ -1367,6 +1411,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // Loan Manager should be in a coherent state
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       150 * 90_000e6,
             accountedInterest:     0,
             principalOut:          150_000_000e6,
@@ -1381,10 +1426,11 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // Advance accounting for all loans
         vm.prank(poolDelegate);
-        loanManager.updateAccounting();
+        ILoanManagerLike(loanManager).updateAccounting();  // TODO: Use `ProtocolActions`.
 
         // Loan Manager should be in a coherent state
         assertLoanManager({
+            loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     150 * 90_000e6,
             principalOut:          150_000_000e6,
