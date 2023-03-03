@@ -535,6 +535,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         excludeContract(globals.implementation());
     }
 
+    // TODO: Figure out best way to support invariant assertions per LM
     function forEachLoanManager(function (address) assertInvariant) internal {
         for (uint256 i; ; ++i) {
             try poolManager.loanManagerList(i) returns (address loanManager) {
@@ -594,5 +595,3 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
 }
-
-

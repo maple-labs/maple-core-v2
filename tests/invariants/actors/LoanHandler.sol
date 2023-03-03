@@ -188,9 +188,8 @@ contract LoanHandler is TestUtils {
         IFixedTermLoan(loan_).postCollateral(amounts_[0]);
         vm.stopPrank();
 
-        vm.startPrank(poolManager.poolDelegate());
-        poolManager.fund(amounts_[1], loan_, address(loanManager));
-        vm.stopPrank();
+        vm.prank(poolManager.poolDelegate());
+        loanManager.fund(loan_, amounts_[1]);
 
         fundingTime[loan_] = block.timestamp;
 
@@ -302,4 +301,3 @@ contract LoanHandler is TestUtils {
     }
 
 }
-

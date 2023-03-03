@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IGlobals, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
+import { IGlobals, ILoanLike, ILoanManagerLike, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract GovernorBase {
 
@@ -129,7 +129,7 @@ contract GovernorBase {
     }
 
     function impairLoan(address loan_) public virtual {
-        poolManager.impairLoan(loan_);
+        ILoanManagerLike(ILoanLike(loan_).lender()).impairLoan(loan_);
     }
 
     function setAllowedSlippage(address loanManager_, address collateralAsset_, uint256 allowedSlippage_) public virtual {
@@ -141,7 +141,7 @@ contract GovernorBase {
     }
 
     function removeLoanImpairment(address loan_) public virtual {
-        poolManager.removeLoanImpairment(loan_);
+        ILoanManagerLike(ILoanLike(loan_).lender()).removeLoanImpairment(loan_);
     }
 
     function triggerDefault(address loan_, address liquidatorFactory_) public virtual {

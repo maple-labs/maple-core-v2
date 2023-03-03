@@ -6,6 +6,7 @@ import {
     IFixedTermLoanManager,
     ILiquidator,
     ILoanLike,
+    ILoanManagerLike,
     IProxyFactoryLike
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -78,8 +79,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_005_001);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         ( , , , , , address liquidator_ ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
@@ -196,6 +196,16 @@ contract PauseTests is TestBaseWithAssertions {
         ILoanLike(loan).skim(address(0), address(0));
 
         /**********************************************************************************************************************************/
+        /*** LoanManager                                                                                                                ***/
+        /**********************************************************************************************************************************/
+
+        vm.expectRevert("LM:IL:PAUSED");
+        ILoanManagerLike(loanManager).impairLoan(address(0));
+
+        vm.expectRevert("LM:RLI:PAUSED");
+        ILoanManagerLike(loanManager).removeLoanImpairment(address(0));
+
+        /**********************************************************************************************************************************/
         /*** Pool                                                                                                                       ***/
         /**********************************************************************************************************************************/
 
@@ -236,14 +246,15 @@ contract PauseTests is TestBaseWithAssertions {
         /*** Pool Manager                                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.acceptNewTerms(address(0), address(0), 0, data, 0);
+        // TODO: Replace `poolManager` with `loanManager`
+        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // poolManager.acceptNewTerms(address(0), address(0), 0, data, 0);
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.acceptPendingPoolDelegate();
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.addLoanManager(address(0));
+        poolManager.addLoanManager(address(0), "");
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.depositCover(0);
@@ -251,20 +262,20 @@ contract PauseTests is TestBaseWithAssertions {
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.finishCollateralLiquidation(address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.fund(0, address(0), address(0));
+        // TODO: Replace `poolManager` with `loanManager`
+        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // poolManager.fund(0, address(0), address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.impairLoan(address(0));
+        // TODO: Replace `poolManager` with `loanManager`
+        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // poolManager.impairLoan(address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.processRedeem(0, address(0), address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.removeLoanImpairment(address(0));
-
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.removeLoanManager(address(0));
+        // TODO: Replace `poolManager` with `loanManager`
+        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // poolManager.removeLoanImpairment(address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.removeShares(0, address(0));

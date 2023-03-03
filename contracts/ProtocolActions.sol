@@ -7,11 +7,12 @@ import {
     IFixedTermLoan,
     IFeeManager,
     ILoanLike,
+    ILoanManagerLike,
     IPool,
     IPoolManager
 } from "./interfaces/Interfaces.sol";
 
-import { console, TestUtils } from "../contracts/Contracts.sol";
+import { TestUtils } from "../contracts/Contracts.sol";
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is TestUtils {
@@ -186,59 +187,67 @@ contract ProtocolActions is TestUtils {
     /**************************************************************************************************************************************/
 
     function acceptRefinance(
-        address poolManager_,
         address loan_,
         address refinancer_,
         uint256 expiry_,
         bytes[] memory refinanceCalls_,
         uint256 principalIncrease_
     ) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+        ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
+
+        address poolDelegate_ = loanManager_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        loanManager_.acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
+    }
+
+    function fundLoan(address loan_) internal {
+        ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
+
+        address poolDelegate_       = loanManager_.poolDelegate();
+        uint256 principalRequested_ = ILoanLike(loan_).principalRequested();
+
+        vm.prank(poolDelegate_);
+        loanManager_.fund(loan_, principalRequested_);
+    }
+
+    function impairLoan(address loan_) internal {
+        ILoanManagerLike loanManager_  = ILoanManagerLike(ILoanLike(loan_).lender());
+
+        address poolDelegate_ = loanManager_.poolDelegate();
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
+        loanManager_.impairLoan(loan_);
         vm.stopPrank();
     }
 
-    function fundLoan(address poolManager_, address loan_) internal {
-        address poolDelegate_       = IPoolManager(poolManager_).poolDelegate();
-        address loanManager_        = IPoolManager(poolManager_).loanManagerList(0);
-        uint256 principalRequested_ = IFixedTermLoan(loan_).principalRequested();
+    function removeLoanImpairment(address loan_) internal {
+        ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
+
+        address poolDelegate_ = loanManager_.poolDelegate();
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).fund(principalRequested_, loan_, loanManager_);
+        loanManager_.removeLoanImpairment(loan_);
         vm.stopPrank();
     }
 
-    function impairLoan(address poolManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+    function finishCollateralLiquidation(address loan_) internal {
+        IPoolManager poolManager_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager());
+
+        address poolDelegate_ = poolManager_.poolDelegate();
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).impairLoan(loan_);
+        poolManager_.finishCollateralLiquidation(loan_);
         vm.stopPrank();
     }
 
-    function removeLoanImpairment(address poolManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+    function triggerDefault(address loan_, address liquidatorFactory_) internal {
+        IPoolManager poolManager_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager());
+
+        address poolDelegate_ = poolManager_.poolDelegate();
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).removeLoanImpairment(loan_);
-        vm.stopPrank();
-    }
-
-    function finishCollateralLiquidation(address poolManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).finishCollateralLiquidation(loan_);
-        vm.stopPrank();
-    }
-
-    function triggerDefault(address poolManager_, address loan_, address liquidatorFactory_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).triggerDefault(loan_, liquidatorFactory_);
+        poolManager_.triggerDefault(loan_, liquidatorFactory_);
         vm.stopPrank();
     }
 

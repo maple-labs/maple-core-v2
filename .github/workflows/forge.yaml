@@ -21,6 +21,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
@@ -49,6 +51,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
@@ -77,6 +81,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
@@ -105,6 +111,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
@@ -133,6 +141,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
@@ -161,6 +171,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash
@@ -189,6 +201,8 @@ jobs:
           SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
           SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
           SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
         shell: bash

@@ -732,8 +732,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(poolDelegate),  0);
         assertEq(fundsAsset.balanceOf(address(pool)), 3_000_000e6);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan1, address(liquidatorFactory));
+        triggerDefault(loan1, address(liquidatorFactory));
 
         // No management fee to recover since interest rate is zero.
         uint256 platformServiceFee    = uint256(1_000_000e6) * 0.31536e6 * 1_000_000 seconds / 1e6 / 365 days;
@@ -895,7 +894,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
 
         platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
 
@@ -968,8 +967,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         // Impair Loan
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(address(loan));
 
         assertLoanManager({
             loanManager:           loanManager,
@@ -1118,7 +1116,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data);
 
-        acceptRefinance(address(poolManager), loan1, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
         uint256 grossRefinanceInterest = 100_000e6 + 18 days * 0.11e6;
@@ -1267,7 +1265,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data);
 
-        acceptRefinance(address(poolManager), loan1, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
         uint256 grossRefinanceInterest = 100_000e6 + 6 days * 0.11e6;
@@ -1355,8 +1353,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan1, liquidatorFactory);
+        triggerDefault(loan1, liquidatorFactory);
 
         assertTotalAssets(1_500_000e6);  // Only the amount in the pool
 

@@ -51,8 +51,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
         // Warp to end of grace period and initiate liquidation.
         vm.warp(start + 30 days + 5 days + 1);
 
-        vm.prank(address(poolDelegate));
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         vm.prank(address(poolDelegate));
         vm.expectRevert("LM:FCL:LIQ_ACTIVE");

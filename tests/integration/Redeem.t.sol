@@ -1010,8 +1010,7 @@ contract RedeemIntegrationTests is TestBase {
         vm.prank(lp1);
         pool.requestRedeem(1_000_000e6, lp1);
 
-        vm.prank(address(poolDelegate));
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         // Loan should be impaired
         assertTrue(ILoanLike(loan).isImpaired());
@@ -1093,8 +1092,7 @@ contract RedeemIntegrationTests is TestBase {
         vm.prank(lp2);
         pool.requestRedeem(2_000_000e6, lp2);
 
-        vm.prank(address(poolDelegate));
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         // Loan should be impaired
         assertTrue(ILoanLike(loan).isImpaired());
@@ -1213,8 +1211,7 @@ contract RedeemIntegrationTests is TestBase {
         vm.prank(lp2);
         pool.requestRedeem(2_000_000e6, lp2);
 
-        vm.prank(address(poolDelegate));
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         // Loan should be impaired
         assertTrue(ILoanLike(loan).isImpaired());
@@ -1271,8 +1268,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(address(poolCover)), 1_000_000e6);
 
         // Trigger Default on the loan
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
         assertTrue(!IFixedTermLoanManager(poolManager.loanManagerList(0)).isLiquidationActive(loan));
 
         // Check cover was used

@@ -35,5 +35,4 @@ contract TransfererBase {
         success_ = token.transferFrom(owner_, recipient_, amount_);
     }
 
-
 }

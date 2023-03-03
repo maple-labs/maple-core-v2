@@ -101,8 +101,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -182,8 +181,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -243,8 +241,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -297,8 +294,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -370,8 +366,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -466,8 +461,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -559,8 +553,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -613,8 +606,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -734,8 +726,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -815,8 +806,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -876,8 +866,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -930,8 +919,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1003,8 +991,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1097,8 +1084,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1190,8 +1176,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -1244,8 +1229,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1361,8 +1345,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1444,8 +1427,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1503,8 +1485,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -1557,8 +1538,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1630,8 +1610,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1726,8 +1705,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1804,8 +1782,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -1858,8 +1835,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
@@ -1961,8 +1937,7 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
         // Since we round up days when it comes to late interest, this payment is 6 days late.
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
     }
 
     function test_finishLiquidation_failIfNotPD() external {

@@ -51,8 +51,7 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
 
         assertTrue(!loanManager.isLiquidationActive(loan));
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertTrue(loanManager.isLiquidationActive(loan));
     }
@@ -60,8 +59,7 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
     function test_isLiquidationActive_afterLiquidation() external {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertTrue(loanManager.isLiquidationActive(loan));
 

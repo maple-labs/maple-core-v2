@@ -8,7 +8,7 @@ contract TriggerDefaultAction is Action, ProtocolActions {
 
     address public liquidatorFactory;
     address public loan;
-    address public poolManager;
+    address public poolManager;  // TODO: Is this still needed?
 
     constructor(
         uint256 timestamp_,
@@ -25,7 +25,7 @@ contract TriggerDefaultAction is Action, ProtocolActions {
     }
 
     function act() external override {
-        triggerDefault(poolManager, loan, liquidatorFactory);
+        triggerDefault(loan, liquidatorFactory);
     }
 
 }

@@ -7,7 +7,7 @@ import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 contract RefinanceAction is Action, ProtocolActions {
 
     address public loan;
-    address public poolManager;
+    address public poolManager;  // TODO: Is this still needed?
     address public refinancer;
 
     uint256 public principalIncrease;
@@ -35,7 +35,7 @@ contract RefinanceAction is Action, ProtocolActions {
     function act() external override {
         // TODO: `principalIncrease` no longer works in `proposeRefinance` due to inability to pre-compute origination fees.
         proposeRefinance(loan, refinancer, block.timestamp + 1, refinanceCalls);
-        acceptRefinance(poolManager, loan, refinancer, block.timestamp + 1, refinanceCalls, principalIncrease);
+        acceptRefinance(loan, refinancer, block.timestamp + 1, refinanceCalls, principalIncrease);
     }
 
 }

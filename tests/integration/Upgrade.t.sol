@@ -274,8 +274,7 @@ contract LiquidationUpgradeTests is TestBase {
         // Since we round up days when it comes to late interest, this payment is 6 days late.
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         ( , , , , , address liquidatorAddress ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 

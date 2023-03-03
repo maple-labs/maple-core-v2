@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoanManager, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -160,12 +160,12 @@ contract WithdrawFailureTests is TestBase {
 
 contract WithdrawScenarios is TestBase {
 
-    address loanManager;
+    IFixedTermLoanManager loanManager;
 
     function setUp() public override {
         super.setUp();
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
         // Remove all fees to make interest calculations easier.
         setupFees({
@@ -199,7 +199,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
@@ -207,7 +207,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(12 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
@@ -215,7 +215,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(15 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
             rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         // Deposit extra liquidity to allow for partial withdrawals.
@@ -237,9 +237,9 @@ contract WithdrawScenarios is TestBase {
         uint256 interest2 = uint256(2_000_000e6) * 0.09e18  * 10 days / 365 days / 1e18;
         uint256 interest3 = uint256(500_000e6)   * 0.081e18 * 10 days / 365 days / 1e18;
 
-        assertEq(ILoanManagerLike(loanManager).domainEnd(),             start + 10 days);
-        assertEq(ILoanManagerLike(loanManager).assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 1);
-        assertEq(ILoanManagerLike(loanManager).assetsUnderManagement(), 3_508_095.890409e6);
+        assertEq(loanManager.domainEnd(),             start + 10 days);
+        assertEq(loanManager.assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 1);
+        assertEq(loanManager.assetsUnderManagement(), 3_508_095.890409e6);
 
         // Perform a withdrawal with the 1st and 2nd LP.
         vm.warp(start + 14 days);
@@ -247,17 +247,17 @@ contract WithdrawScenarios is TestBase {
         uint256 assets2 = redeem(address(lp2), 1_000_000e6);
 
         // Update accounting manually.
-        vm.prank(address(poolDelegate));
-        ILoanManagerLike(loanManager).updateAccounting();
+        vm.prank(poolDelegate);
+        loanManager.updateAccounting();
 
         // Assert loans have accrued interest up to the latest payment.
         interest1 = uint256(1_000_000e6) * 0.075e18 * 10 days / 365 days / 1e18;
         interest2 = uint256(2_000_000e6) * 0.09e18  * 12 days / 365 days / 1e18;  // Account full loan2 amount.
         interest3 = uint256(500_000e6)   * 0.081e18 * 14 days / 365 days / 1e18;  // 14 days of interest on last loan.
 
-        assertEq(ILoanManagerLike(loanManager).domainEnd(),             start + 15 days);
-        assertEq(ILoanManagerLike(loanManager).assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 2);
-        assertEq(ILoanManagerLike(loanManager).assetsUnderManagement(), 3_509_526.027394e6);
+        assertEq(loanManager.domainEnd(),             start + 15 days);
+        assertEq(loanManager.assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 2);
+        assertEq(loanManager.assetsUnderManagement(), 3_509_526.027394e6);
 
         // Perform a withdrawal with the 3rd and 4th LP in the same timestamp to show the atomic change in value after updateAccounting.
         uint256 assets3 = redeem(address(lp3), 500_000e6);
@@ -309,7 +309,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(15 days), uint256(1)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(100e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
@@ -317,7 +317,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
@@ -325,7 +325,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
             rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         // First LP requests a withdrawal.
@@ -349,19 +349,19 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(300_000e6), uint256(300_000e6)],
             rates:       [uint256(0.055e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
-        vm.prank(address(poolDelegate));
-        vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
-        poolManager.fund(300_000e6, loan, loanManager);
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
+        loanManager.fund(address(loan), 300_000e6);
 
         makePayment(bigLoan);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 1_000_000e6 + 4109589.041095e6 - assets1);
 
         vm.prank(address(poolDelegate));
-        poolManager.fund(300_000e6, loan, loanManager);
+        loanManager.fund(address(loan), 300_000e6);
 
         ( redeemableShares, , partialLiquidity ) = withdrawalManager.getRedeemableAmounts(2_500_000e6, address(lp2));
 
@@ -396,7 +396,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         address loan2 = fundAndDrawdownLoan({
@@ -404,7 +404,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         address loan3 = fundAndDrawdownLoan({
@@ -412,7 +412,7 @@ contract WithdrawScenarios is TestBase {
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
             rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
-            loanManager: loanManager
+            loanManager: address(loanManager)
         });
 
         // Request all withdrawals.
@@ -477,7 +477,7 @@ contract WithdrawScenarios is TestBase {
             uint256 interest,
             uint256 lateInterest,
             uint256 platformFees,
-        ) = IFixedTermLoanManager(loanManager).liquidationInfo(address(loan1));
+        ) = loanManager.liquidationInfo(address(loan1));
 
         assertEq(principal,    1_000_000e6);
         assertEq(interest,     2_054.794520e6 - 1);

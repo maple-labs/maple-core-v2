@@ -228,11 +228,6 @@ contract DeployPoolTests is TestBaseWithAssertions {
         IProxyFactoryLike(poolManagerFactory).createInstance(new bytes(0), "salt");
     }
 
-    function test_deployPool_failIfCalledLMFactoryDirectly() external {
-        vm.expectRevert("LMF:CI:NOT_DEPLOYER");
-        IProxyFactoryLike(loanManagerFactory).createInstance(new bytes(0), "salt");
-    }
-
     function test_deployPool_failIfCalledWMFactoryDirectly() external {
         vm.expectRevert("WMF:CI:NOT_DEPLOYER");
         IProxyFactoryLike(withdrawalManagerFactory).createInstance(new bytes(0), "salt");

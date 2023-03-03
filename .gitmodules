@@ -30,3 +30,12 @@
 	path = modules/withdrawal-manager
 	url = git@github.com:maple-labs/withdrawal-manager-private.git
 	ignore = dirty
+[submodule "modules/open-term-loan-manager"]
+	path = modules/open-term-loan-manager
+	url = git@github.com:maple-labs/open-term-loan-manager-private
+[submodule "modules/open-term-loan"]
+	path = modules/open-term-loan
+	url = git@github.com:maple-labs/open-term-loan-private
+[submodule "modules/forge-std"]
+	path = modules/forge-std
+	url = git@github.com:foundry-rs/forge-std

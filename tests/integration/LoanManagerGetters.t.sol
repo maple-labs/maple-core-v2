@@ -71,8 +71,7 @@ contract LoanManagerGetterTests is TestBase {
         // Since we round up days when it comes to late interest, this payment is 6 days late.
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         // Returns true when loan has defaulted.
         assertTrue(loanManager_.isLiquidationActive(loan));
@@ -82,8 +81,7 @@ contract LoanManagerGetterTests is TestBase {
 
         liquidateCollateral(loan);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(loan);
+        finishCollateralLiquidation(loan);
 
         assertTrue(!loanManager_.isLiquidationActive(loan));
     }

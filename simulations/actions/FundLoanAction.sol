@@ -7,7 +7,7 @@ import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 contract FundLoanAction is Action, ProtocolActions {
 
     address public loan;
-    address public poolManager;
+    address public poolManager;  // TODO: Is this still needed?
 
     constructor(
         uint256 timestamp_,
@@ -22,7 +22,7 @@ contract FundLoanAction is Action, ProtocolActions {
     }
 
     function act() external override {
-        fundLoan(poolManager, loan);
+        fundLoan(loan);
     }
 
 }

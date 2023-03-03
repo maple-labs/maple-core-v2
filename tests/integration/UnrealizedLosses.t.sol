@@ -12,7 +12,6 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
     address lp2      = address(new Address());
     address lp3      = address(new Address());
 
-
     address loan;
 
     function setUp() public virtual override {
@@ -43,8 +42,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
     function test_unrealizedLosses_redeemWithUL_fullLiquidity() external {
         vm.warp(start + 1_000_000);
 
-        vm.prank(governor);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -53,7 +51,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             lateInterest:        0,
             platformFees:        1157.138508e6,
             liquidatorExists:    false,
-            triggeredByGovernor: true
+            triggeredByGovernor: false
         });
 
         assertPaymentInfo({
@@ -114,8 +112,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_000_000);
 
-        vm.prank(governor);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -124,7 +121,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             lateInterest:        0,
             platformFees:        1157.138508e6,
             liquidatorExists:    false,
-            triggeredByGovernor: true
+            triggeredByGovernor: false
         });
 
         assertPaymentInfo({
@@ -182,8 +179,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
     function test_unrealizedLosses_depositWithUL() external {
         vm.warp(start + 1_000_000);
 
-        vm.prank(governor);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -192,7 +188,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             lateInterest:        0,
             platformFees:        1157.138508e6,
             liquidatorExists:    false,
-            triggeredByGovernor: true
+            triggeredByGovernor: false
         });
 
         assertPaymentInfo({

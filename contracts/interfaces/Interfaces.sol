@@ -16,6 +16,9 @@ import { IRefinancer as IMFTLR }         from "../../modules/fixed-term-loan/con
 import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
 import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
 
+import { IMapleLoan as IMOTL }    from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
+import { ILoanManager as IMOTLM } from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+
 import { IPool }        from "../../modules/pool/contracts/interfaces/IPool.sol";
 import { IPoolManager } from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
 
@@ -25,17 +28,21 @@ import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/i
 /*** Re-Exports                                                                                                                     *******/
 /******************************************************************************************************************************************/
 
-interface IFeeManager is IMLFM {}
+interface IFeeManager is IMLFM { }
 
-interface IFixedTermLoan is IMFTL {}
+interface IFixedTermLoan is IMFTL { }
 
-interface IFixedTermLoanManager is IMFTLM {}
+interface IFixedTermLoanManager is IMFTLM { }
 
-interface IFixedTermLoanManagerStructs is IMFTLMS {}
+interface IFixedTermLoanManagerStructs is IMFTLMS { }
 
-interface IFixedTermRefinancer is IMFTLR {}
+interface IFixedTermRefinancer is IMFTLR { }
 
-interface IGlobals is IMG {}
+interface IGlobals is IMG { }
+
+interface IOpenTermLoan is IMOTL { }
+
+interface IOpenTermLoanManager is IMOTLM { }
 
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                *******/
@@ -104,6 +111,8 @@ interface ILoanLike is IProxiedLike {
 
     function principal() external view returns (uint256 principal_);
 
+    function principalRequested() external view returns (uint256 principalRequested_);
+
     function proposeNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
         external returns (bytes32 refinanceCommitment_);
 
@@ -118,7 +127,13 @@ interface ILoanLike is IProxiedLike {
 
 interface ILoanManagerLike is IProxiedLike {
 
-    function acceptNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
+    function acceptNewTerms(
+        address loan_,
+        address refinancer_,
+        uint256 deadline_,
+        bytes[] calldata calls_,
+        uint256 principalIncrease_
+    ) external;
 
     function accountedInterest() external view returns (uint112 accountedInterest_);
 
@@ -128,7 +143,7 @@ interface ILoanManagerLike is IProxiedLike {
 
     function domainStart() external view returns (uint48 domainStart_);
 
-    function fund(address loan_) external;
+    function fund(address loan_, uint256 principal) external;
 
     function fundsAsset() external view returns (address fundsAsset_);
 
@@ -138,7 +153,7 @@ interface ILoanManagerLike is IProxiedLike {
 
     function governor() external view returns (address governor_);
 
-    function impairLoan(address loan_, bool isGovernor_) external;
+    function impairLoan(address loan_) external;
 
     function issuanceRate() external view returns (uint256 issuanceRate_);
 
@@ -168,7 +183,7 @@ interface ILoanManagerLike is IProxiedLike {
 
     function principalOut() external view returns (uint128 principalOut_);
 
-    function removeLoanImpairment(address loan_, bool isCalledByGovernor_) external;
+    function removeLoanImpairment(address loan_) external;
 
     function sortedPayments(uint256 paymentId_) external view returns (uint24 previous, uint24 next, uint48 paymentDueDate);
 

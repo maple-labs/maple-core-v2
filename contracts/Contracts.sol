@@ -16,6 +16,15 @@ import { LoanManager as MFTLM }             from "../modules/fixed-term-loan-man
 import { LoanManagerFactory as MFTLMF }     from "../modules/fixed-term-loan-manager/contracts/proxy/LoanManagerFactory.sol";
 import { LoanManagerInitializer as MFTLMI } from "../modules/fixed-term-loan-manager/contracts/proxy/LoanManagerInitializer.sol";
 
+import { MapleLoan as MOTL }             from "../modules/open-term-loan/contracts/MapleLoan.sol";
+import { MapleRefinancer as MOTLR }      from "../modules/open-term-loan/contracts/MapleRefinancer.sol";
+import { MapleLoanFactory as MOTLF }     from "../modules/open-term-loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanInitializer as MOTLI } from "../modules/open-term-loan/contracts/MapleLoanInitializer.sol";
+
+import { LoanManager as MOTLM }             from "../modules/open-term-loan-manager/contracts/LoanManager.sol";
+import { LoanManagerFactory as MOTLMF }     from "../modules/open-term-loan-manager/contracts/LoanManagerFactory.sol";
+import { LoanManagerInitializer as MOTLMI } from "../modules/open-term-loan-manager/contracts/LoanManagerInitializer.sol";
+
 import { Liquidator }            from "../modules/liquidations/contracts/Liquidator.sol";
 import { LiquidatorFactory }     from "../modules/liquidations/contracts/LiquidatorFactory.sol";
 import { LiquidatorInitializer } from "../modules/liquidations/contracts/LiquidatorInitializer.sol";
@@ -35,32 +44,54 @@ import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-
 /*** Re-Exports                                                                                                                     *******/
 /******************************************************************************************************************************************/
 
-contract FixedTermLoan is MFTL {}
+contract FixedTermLoan is MFTL { }
 
 contract FixedTermLoanFactory is MFTLF {
 
-    constructor(address globals_) MFTLF(globals_) {}
+    constructor(address globals_) MFTLF(globals_) { }
 
 }
 
-contract FixedTermLoanInitializer is MFTLI {}
+contract FixedTermLoanInitializer is MFTLI { }
 
 contract FeeManager is MFTLFM {
 
-    constructor(address globals_) MFTLFM(globals_) {}
+    constructor(address globals_) MFTLFM(globals_) { }
 
 }
 
-contract FixedTermLoanManager is MFTLM {}
+contract FixedTermLoanManager is MFTLM { }
 
 contract FixedTermLoanManagerFactory is MFTLMF {
 
-    constructor(address globals_) MFTLMF(globals_) {}
+    constructor(address globals_) MFTLMF(globals_) { }
 
 }
 
-contract FixedTermLoanManagerInitializer is MFTLMI {}
+contract FixedTermLoanManagerInitializer is MFTLMI { }
 
-contract FixedTermRefinancer is MFTLR {}
+contract FixedTermRefinancer is MFTLR { }
 
-contract Globals is MG {}
+contract Globals is MG { }
+
+contract OpenTermLoan is MOTL { }
+
+contract OpenTermLoanFactory is MOTLF {
+
+    constructor(address globals_) MOTLF(globals_) { }
+
+}
+
+contract OpenTermLoanInitializer is MOTLI { }
+
+contract OpenTermLoanManager is MOTLM { }
+
+contract OpenTermLoanManagerFactory is MOTLMF {
+
+    constructor(address globals_) MOTLMF(globals_) { }
+
+}
+
+contract OpenTermLoanManagerInitializer is MOTLMI { }
+
+contract OpenTermRefinancer is MOTLR { }

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import {
+    IFixedTermLoan,
+    IFixedTermLoanManager,
+    ILoanLike,
+    ILoanManagerLike
+} from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
 
@@ -10,8 +15,10 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 contract ImpairLoanFailureTests is TestBaseWithAssertions {
 
     address borrower;
-    address loan;
     address lp;
+
+    IFixedTermLoan        loan;
+    IFixedTermLoanManager loanManager;
 
     function setUp() public virtual override {
         super.setUp();
@@ -32,39 +39,34 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = fundAndDrawdownLoan({
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+
+        loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), 0, 0, 0],
-            loanManager: poolManager.loanManagerList(0)
-        });
+            loanManager: address(loanManager)
+        }));
     }
 
     function test_impairLoan_notAuthorized() external {
-        vm.expectRevert("PM:IL:NOT_AUTHORIZED");
-        poolManager.impairLoan(loan);
-    }
-
-    function test_impairLoan_notPoolManager() external {
-        ILoanManagerLike loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
-
-        vm.expectRevert("LM:IL:NOT_PM");
-        loanManager.impairLoan(loan, false);
+        vm.expectRevert("LM:IL:NO_AUTH");
+        loanManager.impairLoan(address(loan));
     }
 
     function test_impairLoan_notLender() external {
         vm.expectRevert("ML:IL:NOT_LENDER");
-        IFixedTermLoan(loan).impairLoan();
+        loan.impairLoan();
     }
 
     function test_impairLoan_alreadyImpaired() external {
-        vm.prank(address(poolDelegate));
-        poolManager.impairLoan(loan);
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
 
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         vm.expectRevert("LM:IL:IMPAIRED");
-        poolManager.impairLoan(loan);
+        loanManager.impairLoan(address(loan));
     }
 
 }
@@ -250,8 +252,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         /*******************************************************/
 
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5);
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         assertLoanState({
             loan:              loan,
@@ -329,8 +330,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + (5_625e6 / 5 - 1)
         });
 
-        vm.prank(poolDelegate);
-        poolManager.removeLoanImpairment(loan);
+        removeLoanImpairment(loan);
 
         assertLoanState({
             loan:              loan,
@@ -650,8 +650,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
     function test_impairLoan_earlyThenRefinance() external {
         // Warp 5 days into second payment cycle
         vm.warp(start + ONE_MONTH + 5 days);
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         uint256 periodInterest = MONTHLY_INTEREST * 5 days / ONE_MONTH;  // 5 days worth of interest
 
@@ -718,7 +717,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
 
         // Impairment was removed
         assertTrue(!ILoanLike(loan).isImpaired());
@@ -836,8 +835,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         /**********************************/
 
         vm.warp(start + 2 * ONE_MONTH + 1 days);
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(loan);
+        impairLoan(loan);
 
         assertLoanState({
             loan:              loan,
@@ -896,7 +894,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         // Revert a late impairment fails
         vm.prank(governor);
         vm.expectRevert("LM:RLI:PAST_DATE");
-        poolManager.removeLoanImpairment(loan);
+        ILoanManagerLike(loanManager).removeLoanImpairment(loan);
 
         // Refinance - setting the payment interval will reset the payment due date.
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", ONE_MONTH);
@@ -905,7 +903,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(address(poolManager), loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
 
         // Impairment was removed
         assertTrue(!ILoanLike(loan).isImpaired());

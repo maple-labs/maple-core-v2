@@ -123,7 +123,7 @@ contract LoanHandlerWithImpairment is LoanHandler {
         sum_loanManager_paymentIssuanceRate -= issuanceRate;
 
         vm.prank(poolManager.poolDelegate());
-        poolManager.impairLoan(loanAddress);
+        loanManager.impairLoan(loanAddress);
 
         unrealizedLosses       = poolManager.unrealizedLosses();
         earliestPaymentDueDate = block.timestamp;

@@ -220,12 +220,12 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         );
     }
 
-    function performRefinance(address poolManager_, address loan_) internal {
+    function performRefinance(address loan_) internal {
         bytes[] memory refinanceCalls_ = new bytes[](1);
         refinanceCalls_[0] = abi.encodeWithSignature("setPaymentsRemaining(uint256)", IFixedTermLoan(loan_).paymentsRemaining() + 2);
 
         proposeRefinance(loan_, refinancer, block.timestamp, refinanceCalls_);
-        acceptRefinance(poolManager_, loan_, refinancer, block.timestamp, refinanceCalls_, 0);
+        acceptRefinance(loan_, refinancer, block.timestamp, refinanceCalls_, 0);
     }
 
     function increaseDepositor(address poolManager_, address lp_, uint256 amount_) internal {
@@ -303,7 +303,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         // TODO: check hasSufficientCover?
 
         console.log(block.timestamp, "Funding Loan         ", loan_, principal_);
-        fundLoan(poolManager_, loan_);
+        fundLoan(loan_);
         loans_.push(loan_);
     }
 
@@ -340,7 +340,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
         if (lateTime > block.timestamp) vm.warp(lateTime);
 
         console.log(block.timestamp, "Triggering Default   ", loan_);
-        triggerDefault(poolManager_, loan_, liquidatorFactory);
+        triggerDefault(loan_, liquidatorFactory);
     }
 
     function createActionCsv(string memory path_) internal {
@@ -464,7 +464,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
             } else if (random < 10) {  // 5% chance loan refinanced
                 // TODO: maybe any open loan
                 console.log(block.timestamp, "Refinancing          ", loan);
-                performRefinance(poolManager_, loan);
+                performRefinance(loan);
                 continue;  // Since loan is refinanced
             } else if (random < 30) {  // 20% chance new depositor
                 createDepositorRandomly(poolManager_, lps_, seed_++);
@@ -476,7 +476,7 @@ contract LifecycleBase is ProtocolActions, AddressRegistry, CSVWriter {
                 fundNewLoan(poolManager_, loans_, lps_, seed_++);
             } else if (random < 95) {  // 10% chance impairing loan
                 console.log(block.timestamp, "Impairing            ", loan);
-                impairLoan(poolManager_, loan);
+                impairLoan(loan);
             } else if (random < 100) {  // 5% chance liquidating refinanced
                 liquidateLoan(poolManager_, loan);
                 continue;  // Since loan is defaulted
