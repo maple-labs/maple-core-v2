@@ -4,8 +4,6 @@ pragma solidity 0.8.7;
 import { CSVWriter }                                  from "../modules/contract-test-utils/contracts/csv.sol";
 import { Address, console, InvariantTest, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
 
-import { MockERC20 } from "../modules/erc20/contracts/test/mocks/MockERC20.sol";
-
 import { MapleLoan as MFTL }             from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
 import { Refinancer as MFTLR }           from "../modules/fixed-term-loan/contracts/Refinancer.sol";
 import { MapleLoanFactory as MFTLF }     from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
@@ -40,6 +38,8 @@ import { WithdrawalManager } from "../modules/withdrawal-manager/contracts/Withd
 
 import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
+import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
+
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                     *******/
 /******************************************************************************************************************************************/
@@ -73,6 +73,12 @@ contract FixedTermLoanManagerInitializer is MFTLMI { }
 contract FixedTermRefinancer is MFTLR { }
 
 contract Globals is MG { }
+
+contract MockERC20 is ConfigurableMockERC20 {
+
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) ConfigurableMockERC20(name_, symbol_, decimals_) { }
+
+}
 
 contract OpenTermLoan is MOTL { }
 

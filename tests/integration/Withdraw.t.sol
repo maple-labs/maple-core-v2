@@ -354,14 +354,14 @@ contract WithdrawScenarios is TestBase {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
-        loanManager.fund(address(loan), 300_000e6);
+        loanManager.fund(address(loan));
 
         makePayment(bigLoan);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 1_000_000e6 + 4109589.041095e6 - assets1);
 
         vm.prank(address(poolDelegate));
-        loanManager.fund(address(loan), 300_000e6);
+        loanManager.fund(address(loan));
 
         ( redeemableShares, , partialLiquidity ) = withdrawalManager.getRedeemableAmounts(2_500_000e6, address(lp2));
 

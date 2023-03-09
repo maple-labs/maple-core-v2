@@ -143,7 +143,7 @@ interface ILoanManagerLike is IProxiedLike {
 
     function domainStart() external view returns (uint48 domainStart_);
 
-    function fund(address loan_, uint256 principal) external;
+    function fund(address loan_) external;
 
     function fundsAsset() external view returns (address fundsAsset_);
 

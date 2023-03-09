@@ -159,8 +159,8 @@ contract TestBase is ProtocolActions {
         vm.startPrank(governor);
 
         globals.setValidFactory("LIQUIDATOR",         liquidatorFactory,          true);
-        globals.setValidFactory("LOAN",               loanFactory,                true);
-        globals.setValidFactory("LOAN",               openTermLoanFactory,        true);
+        globals.setValidFactory("FT_LOAN",            loanFactory,                true);
+        globals.setValidFactory("OT_LOAN",            openTermLoanFactory,        true);
         globals.setValidFactory("LOAN_MANAGER",       loanManagerFactory,         true);
         globals.setValidFactory("LOAN_MANAGER",       openTermLoanManagerFactory, true);
         globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,         true);

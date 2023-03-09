@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, IFixedTermLoanManagerStructs, ILoanLike, ILoanManagerLike } from "../contracts/interfaces/Interfaces.sol";
+import {
+    IFixedTermLoan,
+    IFixedTermLoanManagerStructs,
+    ILoanLike,
+    ILoanManagerLike,
+    IOpenTermLoan,
+    IOpenTermLoanManager
+} from "../contracts/interfaces/Interfaces.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";
@@ -45,6 +52,26 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
         assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+    }
+
+    function assertLoan(
+        address loan,
+        uint256 dateCalled,
+        uint256 dateFunded,
+        uint256 dateImpaired,
+        uint256 datePaid,
+        uint256 calledPrincipal,
+        uint256 principal
+    ) internal {
+        IOpenTermLoan otl = IOpenTermLoan(loan);
+
+        assertEq(otl.dateCalled(),   dateCalled);
+        assertEq(otl.dateFunded(),   dateFunded);
+        assertEq(otl.dateImpaired(), dateImpaired);
+        assertEq(otl.datePaid(),     datePaid);
+
+        assertEq(otl.calledPrincipal(), calledPrincipal);
+        assertEq(otl.principal(),       principal);
     }
 
     function assertLoanInfoWasDeleted(address loan) internal {
@@ -101,6 +128,60 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanManager_.domainStart(),           domainStart,           "domainStart");
         assertEq(loanManager_.domainEnd(),             domainEnd,             "domainEnd");
         assertEq(loanManager_.unrealizedLosses(),      unrealizedLosses,      "unrealizedLosses");
+    }
+
+    function assertLoanManager(
+        address loanManager,
+        uint256 domainStart,
+        uint256 issuanceRate,
+        uint256 accountedInterest,
+        uint256 principalOut,
+        uint256 unrealizedLosses
+    ) internal {
+        IOpenTermLoanManager otlm = IOpenTermLoanManager(loanManager);
+
+        assertEq(otlm.domainStart(),       domainStart);
+        assertEq(otlm.issuanceRate(),      issuanceRate);
+        assertEq(otlm.accountedInterest(), accountedInterest);
+        assertEq(otlm.principalOut(),      principalOut);
+        assertEq(otlm.unrealizedLosses(),  unrealizedLosses);
+    }
+
+    function assertImpairment(
+        address loan,
+        address loanManager,
+        uint256 impairedDate,
+        bool    impairedByGovernor
+    ) internal {
+        IOpenTermLoanManager otlm = IOpenTermLoanManager(loanManager);
+
+        ( uint40 impairedDate_, bool impairedByGovernor_ ) = otlm.impairmentFor(loan);
+
+        assertEq(impairedDate_, impairedDate);
+        assertTrue(impairedByGovernor_ == impairedByGovernor);
+    }
+
+    function assertPayment(
+        address loan,
+        address loanManager,
+        uint256 startDate,
+        uint256 issuanceRate,
+        uint256 delegateManagementFeeRate,
+        uint256 platformManagementFeeRate
+    ) internal {
+        IOpenTermLoanManager otlm = IOpenTermLoanManager(loanManager);
+
+        (
+            uint24 platformManagementFeeRate_,
+            uint24 delegateManagementFeeRate_,
+            uint40 startDate_,
+            uint168 issuanceRate_
+        ) = otlm.paymentFor(loan);
+
+        assertEq(startDate_,                 startDate);
+        assertEq(issuanceRate_,              issuanceRate);
+        assertEq(delegateManagementFeeRate_, delegateManagementFeeRate);
+        assertEq(platformManagementFeeRate_, platformManagementFeeRate);
     }
 
     function assertLiquidationInfo(

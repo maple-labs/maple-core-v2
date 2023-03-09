@@ -189,7 +189,7 @@ contract LoanHandler is TestUtils {
         vm.stopPrank();
 
         vm.prank(poolManager.poolDelegate());
-        loanManager.fund(loan_, amounts_[1]);
+        loanManager.fund(loan_);
 
         fundingTime[loan_] = block.timestamp;
 

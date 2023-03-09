@@ -9,8 +9,11 @@ import {
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
-    IOpenTermLoanManager
+    IOpenTermLoanManager,
+    IProxyFactoryLike
 } from "../../contracts/interfaces/Interfaces.sol";
+
+import { FakeLoan } from "../mocks/Mocks.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -70,12 +73,12 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        loanManager.fund(address(loan1), uint256(1_500_000e6));
+        loanManager.fund(address(loan1));
     }
 
     function test_fund_failIfNotPoolDelegate() external {
         vm.expectRevert("LM:F:NOT_PD");
-        loanManager.fund(address(loan1), uint256(1_500_000e6));
+        loanManager.fund(address(loan1));
     }
 
     function test_fund_failIfTotalSupplyIsZero() external {
@@ -90,7 +93,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:ZERO_SUPPLY");
-        loanManager.fund(address(loan1), uint256(1_500_000e6));
+        loanManager.fund(address(loan1));
     }
 
     function test_fund_failIfInsufficientCover() external {
@@ -101,13 +104,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:INSUFFICIENT_COVER");
-        loanManager.fund(address(loan1), uint256(1_500_000e6));
-    }
-
-    function test_fund_failIfPrincipalIsGreaterThanAssetBalance() external {
-        vm.prank(poolDelegate);
-        vm.expectRevert("PM:RF:TRANSFER_FAIL");
-        loanManager.fund(address(loan1), uint256(1_500_000e6 + 1));
+        loanManager.fund(address(loan1));
     }
 
     function test_fund_failIfPoolDoesNotApprovePM() external {
@@ -117,7 +114,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:TRANSFER_FAIL");
-        loanManager.fund(address(loan1), uint256(1_000_000e6));
+        loanManager.fund(address(loan1));
     }
 
     function test_fund_failIfAmountGreaterThanLockedLiquidity() external {
@@ -137,7 +134,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
-        loanManager.fund(address(loan), uint256(1_000_000e6));
+        loanManager.fund(address(loan));
 
         vm.prank(lp);
         pool.removeShares(1, lp);  // Remove so exactly 500k is locked.
@@ -145,32 +142,18 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         vm.warp(start + 4 weeks);
 
         vm.prank(poolDelegate);
-        loanManager.fund(address(loan), uint256(1_000_000e6));
+        loanManager.fund(address(loan));
     }
 
     function test_fund_failIfLoanActive() external {
         depositLiquidity(lp, 1_500_000e6);  // Deposit again
 
         vm.prank(poolDelegate);
-        loanManager.fund(address(loan1), uint256(1_500_000e6));
+        loanManager.fund(address(loan1));
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:FL:LOAN_ACTIVE");
-        loanManager.fund(address(loan1), uint256(1_500_000e6));
-    }
-
-    function test_fund_failWithExcessFunds() external {
-        depositLiquidity(lp, 1);  // Deposit again
-
-        vm.prank(poolDelegate);
-        vm.expectRevert("ML:FL:UNEXPECTED_FUNDS");
-        loanManager.fund(address(loan1), uint256(1_500_000e6 + 1));
-    }
-
-    function test_fund_failWithLessFundsThanRequested() external {
-        vm.prank(poolDelegate);
-        vm.expectRevert(ARITHMETIC_ERROR);
-        loanManager.fund(address(loan1), uint256(1_500_000e6 - 1));
+        loanManager.fund(address(loan1));
     }
 
     function test_fund_oneLoan() external {
@@ -435,14 +418,20 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
     address borrower = address(new Address());
+    address lp       = address(new Address());
 
-    uint32 gracePeriod     = 5 days;
-    uint32 noticePeriod    = 5 days;
-    uint32 paymentInterval = 30 days;
+    uint256 gracePeriod     = 5 days;
+    uint256 noticePeriod    = 5 days;
+    uint256 paymentInterval = 30 days;
 
-    uint64 interestRate = 0.1e18;
+    uint256 cover        = 100_000e6;
+    uint256 interestRate = 0.1e18;
+    uint256 principal    = 1_500_000e6;
 
-    uint256 principal = 1_500_000e6;
+    uint256 delegateServiceFeeRate    = 0.03e6;
+    uint256 delegateManagementFeeRate = 0.02e6;
+    uint256 platformServiceFeeRate    = 0.04e6;
+    uint256 platformManagementFeeRate = 0.08e6;
 
     IOpenTermLoan        loan;
     IOpenTermLoanManager loanManager;
@@ -450,75 +439,275 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
+        vm.startPrank(governor);
+        globals.setValidBorrower(borrower, true);
+        globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);
+        globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
             address(loanManager),
             address(fundsAsset),
             principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [0, interestRate, 0, 0]
+            [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
+            [uint64(delegateServiceFeeRate), uint64(interestRate), 0, 0]
         ));
     }
 
-    function test_fund_reentrancy() external {
-        // TODO
+    function test_fund_protocolPause() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_notPoolDelegate() external {
-        // TODO
+        vm.expectRevert("LM:F:NOT_PD");
+        loanManager.fund(address(loan));
     }
 
-    function test_fund_invalidFactory() external {
-        // TODO
+    function test_fund_invalidLoanFactory() external {
+        vm.prank(governor);
+        globals.setValidFactory("OT_LOAN", openTermLoanFactory, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:F:INVALID_LOAN_FACTORY");
+        loanManager.fund(address(loan));
+    }
+
+    function test_fund_invalidLoanInstance() external {
+        FakeLoan fakeLoan = new FakeLoan();
+
+        fakeLoan.__setFactory(address(openTermLoanFactory));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:F:INVALID_LOAN_INSTANCE");
+        loanManager.fund(address(fakeLoan));
+    }
+
+    function test_fund_invalidBorrower() external {
+        vm.prank(governor);
+        globals.setValidBorrower(borrower, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:F:INVALID_BORROWER");
+        loanManager.fund(address(loan));
+    }
+
+    function test_fund_loanNotActive() external {
+        depositLiquidity(address(pool), lp, 2 * principal);
+
+        vm.prank(poolDelegate);
+        loanManager.fund(address(loan));
+
+        vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
+
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:F:LOAN_NOT_ACTIVE");
+        loanManager.fund(address(loan));
+    }
+
+    function test_fund_invalidLoanManagerFactory() external {
+        vm.prank(governor);
+        globals.setValidFactory("LOAN_MANAGER", openTermLoanManagerFactory, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_notLoanManager() external {
-        // TODO
+        vm.prank(address(poolManager));
+        IOpenTermLoanManager fakeLoanManager = IOpenTermLoanManager(
+            IProxyFactoryLike(openTermLoanManagerFactory).createInstance(
+                abi.encode(address(pool)),
+                "SALT"
+            )
+        );
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:NOT_LM");
+        fakeLoanManager.fund(address(loan));
     }
 
     function test_fund_zeroSupply() external {
-        // TODO
+        depositLiquidity(address(pool), lp, principal);
+        requestRedeem(address(pool), lp, pool.balanceOf(lp));
+
+        vm.warp(start + 2 weeks);
+
+        redeem(address(pool), lp, withdrawalManager.lockedShares(lp));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:ZERO_SUPPLY");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_insufficientCover() external {
-        // TODO
+        depositLiquidity(address(pool), lp, principal);
+
+        vm.prank(governor);
+        globals.setMinCoverAmount(address(poolManager), cover);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:INSUFFICIENT_COVER");
+        loanManager.fund(address(loan));
     }
 
-    function test_fund_transferFailed() external {
-        // TODO
+    function test_fund_poolManagerTransferFailure() external {
+        depositLiquidity(address(pool), lp, principal / 2);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:TRANSFER_FAIL");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_lockedLiquidity() external {
-        // TODO
+        depositLiquidity(address(pool), lp, principal);
+
+        requestRedeem(address(pool), lp, pool.balanceOf(lp));
+
+        vm.warp(start + 2 weeks);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
+        loanManager.fund(address(loan));
     }
 
-    function test_fund_approveFailed() external {
-        // TODO
+    function test_fund_loanManagerApproveFailure() external {
+        depositLiquidity(address(pool), lp, principal);
+
+        fundsAsset.__failWhenCalledBy(address(loanManager));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:PFFL:APPROVE_FAILED");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_notLender() external {
-        // TODO
+        vm.expectRevert("ML:F:NOT_LENDER");
+        loan.fund();
     }
 
     function test_fund_loanActive() external {
-        // TODO
+        depositLiquidity(address(pool), lp, 2 * principal);
+
+        vm.prank(poolDelegate);
+        loanManager.fund(address(loan));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:F:LOAN_ACTIVE");
+        loanManager.fund(address(loan));
     }
 
-    function test_fund_loanClosed() external {
-        // TODO
+    // TODO: Unreachable due to the loan manager checking for the same error condition first.
+    // function test_fund_loanClosed() external {
+    //     depositLiquidity(address(pool), lp, 2 * principal);
+    //
+    //     vm.prank(poolDelegate);
+    //     loanManager.fund(address(loan));
+    //
+    //     vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
+    //
+    //     vm.prank(poolDelegate);
+    //     poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+    //
+    //     vm.prank(poolDelegate);
+    //     vm.expectRevert("ML:F:LOAN_CLOSED");
+    //     loanManager.fund(address(loan));
+    // }
+
+    function test_fund_loanTransferFailure() external {
+        depositLiquidity(address(pool), lp, principal);
+
+        fundsAsset.__failWhenCalledBy(address(loan));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:F:TRANSFER_FROM_FAILED");
+        loanManager.fund(address(loan));
     }
 
-    function test_fund_transferFromFailed() external {
-        // TODO
-    }
+    // TODO: Check if this error condition can ever occur.
+    // function test_fund_fundingMismatch() external {
+    //     vm.prank(poolDelegate);
+    //     vm.expectRevert("LM:F:FUNDING_MISMATCH");
+    //     loanManager.fund(address(loan));
+    // }
 
-    function test_fund_oneLoan() external {
-        // TODO
-    }
+    function test_fund_success() external {
+        uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+        uint256 managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
+        uint256 issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
-    function test_fund_twoLoans() external {
-        // TODO
+        depositLiquidity(address(pool), lp, principal);
+
+        assertLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       0,
+            issuanceRate:      0,
+            accountedInterest: 0,
+            principalOut:      0,
+            unrealizedLosses:  0
+        });
+
+        assertPayment({
+            loan:                      address(loan),
+            loanManager:               address(loanManager),
+            startDate:                 0,
+            issuanceRate:              0,
+            delegateManagementFeeRate: 0,
+            platformManagementFeeRate: 0
+        });
+
+        assertLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      0,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+
+        vm.prank(poolDelegate);
+        loanManager.fund(address(loan));
+
+        assertLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       block.timestamp,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            principalOut:      principal,
+            unrealizedLosses:  0
+        });
+
+        assertPayment({
+            loan:                      address(loan),
+            loanManager:               address(loanManager),
+            startDate:                 block.timestamp,
+            issuanceRate:              issuanceRate,
+            delegateManagementFeeRate: delegateManagementFeeRate,
+            platformManagementFeeRate: platformManagementFeeRate
+        });
+
+        assertLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      block.timestamp,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
     }
 
 }

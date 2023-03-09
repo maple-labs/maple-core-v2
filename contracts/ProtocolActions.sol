@@ -204,11 +204,10 @@ contract ProtocolActions is TestUtils {
     function fundLoan(address loan_) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_       = loanManager_.poolDelegate();
-        uint256 principalRequested_ = ILoanLike(loan_).principalRequested();
+        address poolDelegate_ = loanManager_.poolDelegate();
 
         vm.prank(poolDelegate_);
-        loanManager_.fund(loan_, principalRequested_);
+        loanManager_.fund(loan_);
     }
 
     function impairLoan(address loan_) internal {
