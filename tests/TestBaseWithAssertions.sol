@@ -155,6 +155,15 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanInfo.issuanceRate,              issuanceRate,    "loanInfo.issuanceRate");
     }
 
+    function assertOpenTermPaymentInfo(address loan, uint256 startDate, uint256 issuanceRate) internal {
+        IOpenTermLoanManager loanManager = IOpenTermLoanManager(IOpenTermLoan(loan).lender());
+
+        ( , , uint40 startDate_, uint168 issuanceRate_ ) = loanManager.paymentFor(loan);
+
+        assertEq(startDate_,    startDate);
+        assertEq(issuanceRate_, issuanceRate);
+    }
+
     function assertFixedTermLoanManager(
         address loanManager,
         uint256 accruedInterest,
@@ -199,13 +208,12 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
     function assertImpairment(
         address loan,
-        address loanManager,
         uint256 impairedDate,
         bool    impairedByGovernor
     ) internal {
-        IOpenTermLoanManager otlm = IOpenTermLoanManager(loanManager);
+        IOpenTermLoanManager loanManager = IOpenTermLoanManager(IOpenTermLoan(loan).lender());
 
-        ( uint40 impairedDate_, bool impairedByGovernor_ ) = otlm.impairmentFor(loan);
+        ( uint40 impairedDate_, bool impairedByGovernor_ ) = loanManager.impairmentFor(loan);
 
         assertEq(impairedDate_, impairedDate);
         assertTrue(impairedByGovernor_ == impairedByGovernor);

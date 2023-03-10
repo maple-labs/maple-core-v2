@@ -5,7 +5,9 @@ import {
     IFixedTermLoan,
     IFixedTermLoanManager,
     ILoanLike,
-    ILoanManagerLike
+    ILoanManagerLike,
+    IOpenTermLoan,
+    IOpenTermLoanManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { Address } from "../../contracts/Contracts.sol";
@@ -60,6 +62,7 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
         loan.impairLoan();
     }
 
+    // TODO: Check if impairing an impaired loan should be a valid use case.
     function test_impairLoan_alreadyImpaired() external {
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(loan));
@@ -964,6 +967,255 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(1_400e6),      uint256(1_466.666666e6)]
         );
+    }
+
+}
+
+contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
+
+    address borrower = address(new Address());
+    address lp       = address(new Address());
+
+    uint256 constant gracePeriod     = 5 days;
+    uint256 constant noticePeriod    = 5 days;
+    uint256 constant paymentInterval = 30 days;
+
+    uint256 constant principal = 2_500_000e6;
+
+    uint256 constant interestRate        = 0.115e18;  // 11.5%
+    uint256 constant lateFeeRate         = 0.02e18;   // 2%
+    uint256 constant lateInterestPremium = 0.045e18;  // 4.5%
+
+    uint256 constant delegateServiceFeeRate    = 0.03e18;  // 3%
+    uint256 constant delegateManagementFeeRate = 0.02e6;   // 2%
+    uint256 constant platformServiceFeeRate    = 0.043e6;  // 4.3%
+    uint256 constant platformManagementFeeRate = 0.057e6;  // 5.7%
+
+    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+    uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
+    uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
+
+    IOpenTermLoan        loan;
+    IOpenTermLoanManager loanManager;
+
+    function setUp() public override {
+        super.setUp();
+
+        vm.startPrank(governor);
+        globals.setValidBorrower(borrower, true);
+        globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);
+        globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
+        vm.stopPrank();
+
+        vm.prank(poolDelegate);
+        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+
+        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loan = IOpenTermLoan(createOpenTermLoan(
+            address(borrower),
+            address(loanManager),
+            address(fundsAsset),
+            principal,
+            [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
+            [uint64(delegateServiceFeeRate), uint64(interestRate), uint64(lateFeeRate), uint64(lateInterestPremium)]
+        ));
+
+        depositLiquidity(address(pool), lp, principal);
+        fundLoan(address(loan));
+    }
+
+    function test_impairLoan_notAuthorized() external {
+        vm.expectRevert("LM:IL:NO_AUTH");
+        loanManager.impairLoan(address(loan));
+    }
+
+    function test_impairLoan_notLoan() external {
+        vm.expectRevert("LM:AFLI:NOT_LOAN");
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(1));
+    }
+
+    function test_impairLoan_loanInactive() external {
+        vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
+        vm.prank(poolDelegate);
+        poolManager.triggerDefault(address(loan), liquidatorFactory);
+
+        vm.expectRevert("LM:AFLI:NOT_LOAN");
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
+    }
+
+    function test_impairLoan_notLender() external {
+        vm.expectRevert("ML:I:NOT_LENDER");
+        loan.impair();
+    }
+
+    // TODO: Error condition can not be reached since it fails on loan manager.
+    // function test_impairLoan_loanInactive() external {
+    //     vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
+
+    //     vm.prank(poolDelegate);
+    //     poolManager.triggerDefault(address(loan), liquidatorFactory);
+
+    //     vm.expectRevert("ML:I:LOAN_INACTIVE");
+    //     vm.prank(poolDelegate);
+    //     loanManager.impairLoan(address(loan));
+    // }
+
+    function test_impairLoan_alreadyImpaired() external {
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
+
+        vm.expectRevert("ML:I:ALREADY_IMPAIRED");
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
+    }
+
+    function test_impairLoan_governorAcl() external {
+        vm.prank(governor);
+        loanManager.impairLoan(address(loan));
+    }
+
+    function test_impairLoan_early() external {
+        vm.warp(start + paymentInterval / 4);
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            accruedInterest:   issuanceRate * paymentInterval / 4 / 1e27,
+            principalOut:      principal,
+            unrealizedLosses:  0
+        });
+
+        assertImpairment({
+            loan:               address(loan),
+            impairedDate:       0,
+            impairedByGovernor: false
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:         address(loan),
+            startDate:    start,
+            issuanceRate: issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start + paymentInterval / 4,
+            issuanceRate:      0,
+            accountedInterest: issuanceRate * paymentInterval / 4 / 1e27,
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  principal + issuanceRate * paymentInterval / 4 / 1e27
+        });
+
+        assertImpairment({
+            loan:               address(loan),
+            impairedDate:       start + paymentInterval / 4,
+            impairedByGovernor: false
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:         address(loan),
+            startDate:    start,
+            issuanceRate: issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    start + paymentInterval / 4,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+    }
+
+    function test_impairLoan_late() external {
+        vm.warp(start + paymentInterval * 5 / 4);
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            accruedInterest:   issuanceRate * paymentInterval * 5 / 4 / 1e27,
+            principalOut:      principal,
+            unrealizedLosses:  0
+        });
+
+        assertImpairment({
+            loan:               address(loan),
+            impairedDate:       0,
+            impairedByGovernor: false
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:         address(loan),
+            startDate:    start,
+            issuanceRate: issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(loan));
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start + paymentInterval * 5 / 4,
+            issuanceRate:      0,
+            accountedInterest: issuanceRate * paymentInterval * 5 / 4 / 1e27,
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  principal + issuanceRate * paymentInterval * 5 / 4 / 1e27
+        });
+
+        assertImpairment({
+            loan:               address(loan),
+            impairedDate:       start + paymentInterval * 5 / 4,
+            impairedByGovernor: false
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:         address(loan),
+            startDate:    start,
+            issuanceRate: issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    start + paymentInterval * 5 / 4,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
     }
 
 }
