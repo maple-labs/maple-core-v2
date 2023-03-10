@@ -344,7 +344,7 @@ contract WithdrawScenarios is TestBase {
         assertEq(withdrawalManager.lockedShares(address(lp1)), 1_500_000e6 - redeemableShares);
         assertEq(withdrawalManager.exitCycleId(address(lp1)),  4);
 
-        address loan = createLoan({
+        address loan = createFixedTermLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(300_000e6), uint256(300_000e6)],

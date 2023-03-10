@@ -8,6 +8,8 @@ import {
     IFeeManager,
     ILoanLike,
     ILoanManagerLike,
+    IOpenTermLoan,
+    IOpenTermLoanManager,
     IPool,
     IPoolManager
 } from "./interfaces/Interfaces.sol";
@@ -40,7 +42,7 @@ contract ProtocolActions is TestUtils {
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
         // TODO: consider using minters for each token
 
-        if (asset_ == MPL) erc20_transfer(MPL, MPL_SOURCE, account_, amount_);
+        if      (asset_ == MPL)  erc20_transfer(MPL,  MPL_SOURCE,  account_, amount_);
         else if (asset_ == WBTC) erc20_transfer(WBTC, WBTC_SOURCE, account_, amount_);
         else if (asset_ == WETH) erc20_transfer(WETH, WETH_SOURCE, account_, amount_);
         else if (asset_ == USDC) erc20_transfer(USDC, USDC_SOURCE, account_, amount_);
@@ -85,6 +87,36 @@ contract ProtocolActions is TestUtils {
         vm.startPrank(borrower_);
         IERC20(collateralAsset_).approve(loan_, collateralRequired_);
         IFixedTermLoan(loan_).drawdownFunds(amount_, borrower_);
+        vm.stopPrank();
+    }
+
+    // TODO: Use three function structure.
+    function makeOpenTermPayment(address loan_) internal returns (uint256 principal_, uint256 totalInterest_, uint256 totalServiceFees_) {
+        uint256 interest_;
+        uint256 lateInterest_;
+        uint256 delegateServiceFee_;
+        uint256 platformServiceFee_;
+
+        (
+            principal_,
+            interest_,
+            lateInterest_,
+            delegateServiceFee_,
+            platformServiceFee_
+        ) = IOpenTermLoan(loan_).paymentBreakdown(block.timestamp);
+
+        totalInterest_    = interest_ + lateInterest_;
+        totalServiceFees_ = delegateServiceFee_ + platformServiceFee_;
+
+        address borrower_      = IOpenTermLoan(loan_).borrower();
+        address fundsAsset_    = IOpenTermLoan(loan_).fundsAsset();
+        uint256 paymentAmount_ = principal_ + totalInterest_ + totalServiceFees_;
+
+        erc20_mint(fundsAsset_, borrower_, paymentAmount_);
+
+        vm.startPrank(borrower_);
+        IERC20(fundsAsset_).approve(loan_, paymentAmount_);
+        IOpenTermLoan(loan_).makePayment(principal_);
         vm.stopPrank();
     }
 
@@ -185,6 +217,7 @@ contract ProtocolActions is TestUtils {
     /**************************************************************************************************************************************/
     /*** Pool Delegate Functions                                                                                                        ***/
     /**************************************************************************************************************************************/
+    // TODO: Alphabetically order
 
     function acceptRefinance(
         address loan_,
@@ -199,6 +232,13 @@ contract ProtocolActions is TestUtils {
 
         vm.prank(poolDelegate_);
         loanManager_.acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
+    }
+
+    function callLoan(address loanManager_, address loan_, uint256 principal_) internal {
+        address poolDelegate_ = ILoanManagerLike(loanManager_).poolDelegate();
+
+        vm.prank(poolDelegate_);
+        IOpenTermLoanManager(loanManager_).callPrincipal(loan_, principal_);
     }
 
     function fundLoan(address loan_) internal {
@@ -218,6 +258,13 @@ contract ProtocolActions is TestUtils {
         vm.startPrank(poolDelegate_);
         loanManager_.impairLoan(loan_);
         vm.stopPrank();
+    }
+
+    function removeLoanCall(address loanManager_, address loan_) internal {
+        address poolDelegate_ = ILoanManagerLike(loanManager_).poolDelegate();
+
+        vm.prank(poolDelegate_);
+        IOpenTermLoanManager(loanManager_).removeCall(loan_);
     }
 
     function removeLoanImpairment(address loan_) internal {

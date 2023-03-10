@@ -69,7 +69,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  77.76e6);
         assertEq(issuanceRate,       900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -186,7 +186,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Repay loan in full
         close(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -270,7 +270,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  77.76e6);
         assertEq(issuanceRate,       900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -358,7 +358,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         impairLoan(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -401,7 +401,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         triggerDefault(loan, address(liquidatorFactory));
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -480,7 +480,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  77.76e6);
         assertEq(issuanceRate,       900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -568,7 +568,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         impairLoan(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -608,7 +608,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         removeLoanImpairment(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -706,7 +706,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  77.76e6);
         assertEq(issuanceRate,       900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -818,7 +818,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         impairLoan(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -871,7 +871,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         triggerDefault(loan, address(liquidatorFactory));
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -956,7 +956,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         assertEq(poolBalanceAfterLiquidation - poolBalanceBeforeLiquidation, expectedAssetsReturnedFromLiquidation);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1033,7 +1033,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  77.76e6);
         assertEq(issuanceRate,       900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1117,7 +1117,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         impairLoan(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -1159,7 +1159,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Repay loan in full
         close(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1242,7 +1242,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  1944e6);
         assertEq(issuanceRate,       22_500e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1304,7 +1304,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         impairLoan(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     loanInterestAccrued,
@@ -1365,7 +1365,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         close(loan);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1548,7 +1548,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(dailyLoanInterest,  77.76e6);
         assertEq(issuanceRate,       900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1575,7 +1575,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         assertEq(issuanceRate, 450e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1655,7 +1655,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         assertEq(issuanceRate, 900e30);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,

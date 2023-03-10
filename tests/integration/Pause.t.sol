@@ -42,11 +42,11 @@ contract PauseTests is TestBaseWithAssertions {
         IProxyFactoryLike(liquidatorFactory).registerImplementation(2, liquidatorImplementationForUpgrade, address(0));
         IProxyFactoryLike(liquidatorFactory).enableUpgradePath(1, 2, address(0));
 
-        IProxyFactoryLike(loanFactory).registerImplementation(2, loanImplementationForUpgrade, address(0));
-        IProxyFactoryLike(loanFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(2, loanImplementationForUpgrade, address(0));
+        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(1, 2, address(0));
 
-        IProxyFactoryLike(loanManagerFactory).registerImplementation(2, loanManagerImplementationForUpgrade, address(0));
-        IProxyFactoryLike(loanManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(2, loanManagerImplementationForUpgrade, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(1, 2, address(0));
 
         IProxyFactoryLike(poolManagerFactory).registerImplementation(2, poolManagerImplementationForUpgrade, address(0));
         IProxyFactoryLike(poolManagerFactory).enableUpgradePath(1, 2, address(0));
@@ -119,7 +119,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         // vm.prank(address(deployer));
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        // IProxyFactoryLike(loanManagerFactory).createInstance(arguments, salt_);
+        // IProxyFactoryLike(fixedTermLoanManagerFactory).createInstance(arguments, salt_);
 
         // Withdrawal Manager
         arguments = abi.encode(address(pool), 1 weeks, 1 days);

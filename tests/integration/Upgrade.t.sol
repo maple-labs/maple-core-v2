@@ -62,8 +62,8 @@ contract LoanManagerUpgradeTests is TestBase {
 
         vm.startPrank(governor);
 
-        IProxyFactoryLike(loanManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IProxyFactoryLike(loanManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }

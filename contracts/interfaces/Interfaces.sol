@@ -16,8 +16,10 @@ import { IRefinancer as IMFTLR }         from "../../modules/fixed-term-loan/con
 import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
 import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
 
-import { IMapleLoan as IMOTL }    from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
-import { ILoanManager as IMOTLM } from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
+
+import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
 import { IPool }        from "../../modules/pool/contracts/interfaces/IPool.sol";
 import { IPoolManager } from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
@@ -25,7 +27,7 @@ import { IPoolManager } from "../../modules/pool/contracts/interfaces/IPoolManag
 import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
 /******************************************************************************************************************************************/
-/*** Re-Exports                                                                                                                     *******/
+/*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
 
 interface IFeeManager is IMLFM { }
@@ -44,8 +46,10 @@ interface IOpenTermLoan is IMOTL { }
 
 interface IOpenTermLoanManager is IMOTLM { }
 
+interface IOpenTermLoanManagerStructs is IMOTLMS { }
+
 /******************************************************************************************************************************************/
-/*** Like Interfaces                                                                                                                *******/
+/*** Like Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
 
 interface IERC20Like {

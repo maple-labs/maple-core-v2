@@ -54,7 +54,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_500_000e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -94,7 +94,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_505_625e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -129,7 +129,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_511_250e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -166,7 +166,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_516_875e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,

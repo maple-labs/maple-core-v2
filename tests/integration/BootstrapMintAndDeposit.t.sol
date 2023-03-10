@@ -22,7 +22,7 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         globals.setBootstrapMint(address(fundsAsset), BOOTSTRAP_MINT_AMOUNT);
 
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
         _openPool();
 
         lp1 = address(new Address());

@@ -20,7 +20,7 @@ contract BusinessSimulationsMultiLoan is SimulationBase {
 
     function _createSimulationLoan(uint256 startingPrincipal, uint256 endingPrincipal, uint256 collateral, string memory loanName) internal {
         scenarios.push(new LoanScenario({
-            loan_: createLoan({
+            loan_: createFixedTermLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(0), uint256(30 days), uint256(6)],
                 amounts:     [uint256(collateral), uint256(startingPrincipal), uint256(endingPrincipal)],

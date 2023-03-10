@@ -50,7 +50,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
-        loan1 = IFixedTermLoan(createLoan({
+        loan1 = IFixedTermLoan(createFixedTermLoan({
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
@@ -58,7 +58,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             loanManager: address(loanManager)
         }));
 
-        loan2 = IFixedTermLoan(createLoan({
+        loan2 = IFixedTermLoan(createFixedTermLoan({
             borrower:    borrower2,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(750_000e6), uint256(750_000e6)],
@@ -118,7 +118,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_failIfAmountGreaterThanLockedLiquidity() external {
-        address loan = createLoan({
+        address loan = createFixedTermLoan({
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
@@ -650,25 +650,25 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
         depositLiquidity(address(pool), lp, principal);
 
-        assertLoanManager({
+        assertOpenTermLoanManager({
             loanManager:       address(loanManager),
             domainStart:       0,
             issuanceRate:      0,
             accountedInterest: 0,
+            accruedInterest:   0,
             principalOut:      0,
             unrealizedLosses:  0
         });
 
-        assertPayment({
-            loan:                      address(loan),
-            loanManager:               address(loanManager),
-            startDate:                 0,
-            issuanceRate:              0,
-            delegateManagementFeeRate: 0,
-            platformManagementFeeRate: 0
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            delegateFeeRate: 0,
+            platformFeeRate: 0,
+            startDate:       0,
+            issuanceRate:    0
         });
 
-        assertLoan({
+        assertOpenTermLoan({
             loan:            address(loan),
             dateCalled:      0,
             dateFunded:      0,
@@ -681,25 +681,25 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
 
-        assertLoanManager({
+        assertOpenTermLoanManager({
             loanManager:       address(loanManager),
             domainStart:       block.timestamp,
             issuanceRate:      issuanceRate,
             accountedInterest: 0,
+            accruedInterest:   0,
             principalOut:      principal,
             unrealizedLosses:  0
         });
 
-        assertPayment({
-            loan:                      address(loan),
-            loanManager:               address(loanManager),
-            startDate:                 block.timestamp,
-            issuanceRate:              issuanceRate,
-            delegateManagementFeeRate: delegateManagementFeeRate,
-            platformManagementFeeRate: platformManagementFeeRate
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            delegateFeeRate: delegateManagementFeeRate,
+            platformFeeRate: platformManagementFeeRate,
+            startDate:       block.timestamp,
+            issuanceRate:    issuanceRate
         });
 
-        assertLoan({
+        assertOpenTermLoan({
             loan:            address(loan),
             dateCalled:      0,
             dateFunded:      block.timestamp,

@@ -65,7 +65,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -73,7 +73,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -84,7 +84,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
@@ -105,7 +105,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -113,7 +113,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -142,7 +142,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     900e6,
@@ -193,7 +193,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -256,7 +256,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -264,7 +264,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -275,7 +275,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -298,7 +298,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -306,7 +306,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -327,7 +327,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -378,7 +378,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -425,7 +425,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -433,7 +433,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -444,7 +444,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
@@ -465,7 +465,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -484,7 +484,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -505,7 +505,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(netLateInterest, 603_216000);
         assertEq(platformFees,    342_903827);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -568,7 +568,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -576,7 +576,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -587,7 +587,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -610,7 +610,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -618,7 +618,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -639,7 +639,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -690,7 +690,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -698,7 +698,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -709,7 +709,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
@@ -730,7 +730,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -738,7 +738,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -767,7 +767,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     900e6,
@@ -818,7 +818,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -881,7 +881,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -889,7 +889,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -900,7 +900,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -923,7 +923,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -931,7 +931,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -952,7 +952,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -1003,7 +1003,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1048,7 +1048,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1056,7 +1056,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1067,7 +1067,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
@@ -1088,7 +1088,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1107,7 +1107,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1128,7 +1128,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(netLateInterest, 603_216000);
         assertEq(platformFees,    342_903827);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1191,7 +1191,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1199,7 +1199,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1210,7 +1210,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -1233,7 +1233,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1241,7 +1241,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1262,7 +1262,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1309,7 +1309,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1317,7 +1317,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1328,7 +1328,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
@@ -1349,7 +1349,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1357,7 +1357,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1388,7 +1388,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     900e6,
@@ -1439,7 +1439,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1500,7 +1500,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1508,7 +1508,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1519,7 +1519,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -1542,7 +1542,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1550,7 +1550,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1571,7 +1571,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -1622,7 +1622,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1669,7 +1669,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1677,7 +1677,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1688,7 +1688,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       900e6,
             accountedInterest:     0,
@@ -1709,7 +1709,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1728,7 +1728,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1739,7 +1739,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1797,7 +1797,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1805,7 +1805,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1816,7 +1816,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     540e6,
@@ -1839,7 +1839,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1847,7 +1847,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1868,7 +1868,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,

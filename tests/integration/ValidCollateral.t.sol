@@ -30,7 +30,7 @@ contract ValidCollateralTests is TestBase {
         );
 
         vm.expectRevert("MPF:CI:FAILED");
-        IProxyFactoryLike(loanFactory).createInstance({
+        IProxyFactoryLike(fixedTermLoanFactory).createInstance({
             arguments_: arguments,
             salt_: "SALT"
         });
@@ -38,7 +38,7 @@ contract ValidCollateralTests is TestBase {
         vm.prank(governor);
         globals.setValidCollateralAsset(address(collateralAsset), true);
 
-        IProxyFactoryLike(loanFactory).createInstance({
+        IProxyFactoryLike(fixedTermLoanFactory).createInstance({
             arguments_: arguments,
             salt_: "SALT"
         });

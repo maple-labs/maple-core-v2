@@ -45,7 +45,7 @@ contract BasicInvariants is BaseInvariants {
             fundsAsset_:      address(fundsAsset),
             globals_:         address(globals),
             governor_:        governor,
-            loanFactory_:     loanFactory,
+            loanFactory_:     fixedTermLoanFactory,
             poolManager_:     address(poolManager),
             testContract_:    address(this),
             numBorrowers_:    NUM_BORROWERS,

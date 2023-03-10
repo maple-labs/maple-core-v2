@@ -51,7 +51,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -77,7 +77,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -88,7 +88,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -99,7 +99,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -127,7 +127,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -141,7 +141,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
@@ -152,7 +152,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -182,7 +182,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -193,7 +193,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -204,7 +204,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -233,7 +233,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -259,7 +259,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -270,7 +270,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -281,7 +281,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -309,7 +309,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -320,7 +320,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
@@ -331,7 +331,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -361,7 +361,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -372,7 +372,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -383,7 +383,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -412,7 +412,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -438,7 +438,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -449,7 +449,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -460,7 +460,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -488,7 +488,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -499,7 +499,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
@@ -510,7 +510,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -539,7 +539,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -550,7 +550,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -561,7 +561,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -590,7 +590,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -616,7 +616,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -627,7 +627,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -638,7 +638,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -666,7 +666,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 302_114_803625,
@@ -677,7 +677,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   90_000e6,
@@ -688,7 +688,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -717,7 +717,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         697_885_196375,
             incomingPrincipal: 332_326_283988,
@@ -728,7 +728,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 62_809_667673,
             refinanceInterest:   0,
@@ -739,7 +739,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -768,7 +768,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,
@@ -794,7 +794,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -805,7 +805,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -816,7 +816,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -845,7 +845,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         // Principal + interest owed at refinance time (151_840e6 * 0.9 to discount service fees)
         assertTotalAssets(2_500_000e6 + 136_656e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -858,7 +858,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   136_656e6,
@@ -869,7 +869,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     136_656e6,
@@ -899,7 +899,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 136_656e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -910,7 +910,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -921,7 +921,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           address(loanManager),
             accruedInterest:       0,
             accountedInterest:     0,

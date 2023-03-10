@@ -29,16 +29,14 @@ import {
     Pool,
     PoolDelegateCover,
     PoolDeployer,
-    TestUtils
+    PoolManager,
+    PoolManagerFactory,
+    PoolManagerInitializer,
+    TestUtils,
+    WithdrawalManager,
+    WithdrawalManagerFactory,
+    WithdrawalManagerInitializer
 } from "../contracts/Contracts.sol";
-
-import { PoolManager }             from "../modules/pool/contracts/PoolManager.sol";
-import { PoolManagerFactory }      from "../modules/pool/contracts/proxy/PoolManagerFactory.sol";
-import { PoolManagerInitializer }  from "../modules/pool/contracts/proxy/PoolManagerInitializer.sol";
-
-import { WithdrawalManager }            from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-import { WithdrawalManagerFactory }     from "../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
-import { WithdrawalManagerInitializer } from "../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
 
@@ -57,25 +55,25 @@ contract TestBase is ProtocolActions {
     address treasury;
     address migrationAdmin;
 
+    address fixedTermLoanFactory;
+    address fixedTermLoanManagerFactory;
     address liquidatorFactory;
-    address loanFactory;
-    address loanManagerFactory;
     address openTermLoanFactory;
     address openTermLoanManagerFactory;
     address poolManagerFactory;
     address withdrawalManagerFactory;
 
+    address fixedTermLoanImplementation;
+    address fixedTermLoanManagerImplementation;
     address liquidatorImplementation;
-    address loanImplementation;
-    address loanManagerImplementation;
     address openTermLoanImplementation;
     address openTermLoanManagerImplementation;
     address poolManagerImplementation;
     address withdrawalManagerImplementation;
 
+    address fixedTermLoanInitializer;
+    address fixedTermLoanManagerInitializer;
     address liquidatorInitializer;
-    address loanInitializer;
-    address loanManagerInitializer;
     address openTermLoanInitializer;
     address openTermLoanManagerInitializer;
     address poolManagerInitializer;
@@ -106,7 +104,7 @@ contract TestBase is ProtocolActions {
         _createAssets();
         _createGlobals();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
         _openPool();
 
         start = block.timestamp;
@@ -129,51 +127,55 @@ contract TestBase is ProtocolActions {
     }
 
     function _createFactories() internal {
-        liquidatorFactory          = address(new LiquidatorFactory(address(globals)));
-        loanFactory                = address(new FixedTermLoanFactory(address(globals)));
-        loanManagerFactory         = address(new FixedTermLoanManagerFactory(address(globals)));
-        openTermLoanFactory        = address(new OpenTermLoanFactory(address(globals)));
-        openTermLoanManagerFactory = address(new OpenTermLoanManagerFactory(address(globals)));
-        poolManagerFactory         = address(new PoolManagerFactory(address(globals)));
-        withdrawalManagerFactory   = address(new WithdrawalManagerFactory(address(globals)));
+        fixedTermLoanFactory        = address(new FixedTermLoanFactory(address(globals)));
+        fixedTermLoanManagerFactory = address(new FixedTermLoanManagerFactory(address(globals)));
+        liquidatorFactory           = address(new LiquidatorFactory(address(globals)));
+        openTermLoanFactory         = address(new OpenTermLoanFactory(address(globals)));
+        openTermLoanManagerFactory  = address(new OpenTermLoanManagerFactory(address(globals)));
+        poolManagerFactory          = address(new PoolManagerFactory(address(globals)));
+        withdrawalManagerFactory    = address(new WithdrawalManagerFactory(address(globals)));
 
-        liquidatorImplementation          = address(new Liquidator());
-        loanImplementation                = address(new FixedTermLoan());
-        loanManagerImplementation         = address(new FixedTermLoanManager());
-        openTermLoanImplementation        = address(new OpenTermLoan());
-        openTermLoanManagerImplementation = address(new OpenTermLoanManager());
-        poolManagerImplementation         = address(new PoolManager());
-        withdrawalManagerImplementation   = address(new WithdrawalManager());
+        fixedTermLoanImplementation        = address(new FixedTermLoan());
+        fixedTermLoanManagerImplementation = address(new FixedTermLoanManager());
+        liquidatorImplementation           = address(new Liquidator());
+        openTermLoanImplementation         = address(new OpenTermLoan());
+        openTermLoanManagerImplementation  = address(new OpenTermLoanManager());
+        poolManagerImplementation          = address(new PoolManager());
+        withdrawalManagerImplementation    = address(new WithdrawalManager());
 
-        liquidatorInitializer          = address(new LiquidatorInitializer());
-        loanInitializer                = address(new FixedTermLoanInitializer());
-        loanManagerInitializer         = address(new FixedTermLoanManagerInitializer());
-        openTermLoanInitializer        = address(new OpenTermLoanInitializer());
-        openTermLoanManagerInitializer = address(new OpenTermLoanManagerInitializer());
-        poolManagerInitializer         = address(new PoolManagerInitializer());
-        withdrawalManagerInitializer   = address(new WithdrawalManagerInitializer());
+        fixedTermLoanInitializer        = address(new FixedTermLoanInitializer());
+        fixedTermLoanManagerInitializer = address(new FixedTermLoanManagerInitializer());
+        liquidatorInitializer           = address(new LiquidatorInitializer());
+        openTermLoanInitializer         = address(new OpenTermLoanInitializer());
+        openTermLoanManagerInitializer  = address(new OpenTermLoanManagerInitializer());
+        poolManagerInitializer          = address(new PoolManagerInitializer());
+        withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
 
         feeManager = new FeeManager(address(globals));
         refinancer = new FixedTermRefinancer();
 
         vm.startPrank(governor);
 
-        globals.setValidFactory("LIQUIDATOR",         liquidatorFactory,          true);
-        globals.setValidFactory("FT_LOAN",            loanFactory,                true);
-        globals.setValidFactory("OT_LOAN",            openTermLoanFactory,        true);
-        globals.setValidFactory("LOAN_MANAGER",       loanManagerFactory,         true);
-        globals.setValidFactory("LOAN_MANAGER",       openTermLoanManagerFactory, true);
-        globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,         true);
-        globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory,   true);
+        globals.setValidFactory("LIQUIDATOR",         liquidatorFactory,           true);
+        globals.setValidFactory("FT_LOAN",            fixedTermLoanFactory,        true);
+        globals.setValidFactory("OT_LOAN",            openTermLoanFactory,         true);
+        globals.setValidFactory("LOAN_MANAGER",       fixedTermLoanManagerFactory, true);
+        globals.setValidFactory("LOAN_MANAGER",       openTermLoanManagerFactory,  true);
+        globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,          true);
+        globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    true);
 
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
 
-        FixedTermLoanFactory(loanFactory).registerImplementation(1, loanImplementation, loanInitializer);
-        FixedTermLoanFactory(loanFactory).setDefaultVersion(1);
+        FixedTermLoanFactory(fixedTermLoanFactory).registerImplementation(1, fixedTermLoanImplementation, fixedTermLoanInitializer);
+        FixedTermLoanFactory(fixedTermLoanFactory).setDefaultVersion(1);
 
-        FixedTermLoanManagerFactory(loanManagerFactory).registerImplementation(1, loanManagerImplementation, loanManagerInitializer);
-        FixedTermLoanManagerFactory(loanManagerFactory).setDefaultVersion(1);
+        FixedTermLoanManagerFactory(fixedTermLoanManagerFactory).registerImplementation(
+            1,
+            fixedTermLoanManagerImplementation,
+            fixedTermLoanManagerInitializer
+        );
+        FixedTermLoanManagerFactory(fixedTermLoanManagerFactory).setDefaultVersion(1);
 
         OpenTermLoanFactory(openTermLoanFactory).registerImplementation(1, openTermLoanImplementation, openTermLoanInitializer);
         OpenTermLoanFactory(openTermLoanFactory).setDefaultVersion(1);
@@ -213,11 +215,19 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    function _createPool(uint256 withdrawalCycle, uint256 windowDuration) internal {
+    // TODO: Add all config params here
+    function _createPool(
+        address loanManagerFactory_,
+        address loanManagerInitializer_,
+        uint256 withdrawalCycle,
+        uint256 windowDuration
+    )
+        internal
+    {
         vm.prank(poolDelegate);
         ( address poolManager_, , address withdrawalManager_ ) = deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     loanManagerFactory_,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, loanManagerInitializer_, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -241,8 +251,13 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    function _createAndConfigurePool(uint256 withdrawalCycle, uint256 windowDuration) internal {
-        _createPool(withdrawalCycle, windowDuration);
+    function _createAndConfigurePool(
+        address loanManagerFactory_,
+        address loanManagerInitializer_,
+        uint256 withdrawalCycle,
+        uint256 windowDuration
+    ) internal {
+        _createPool(loanManagerFactory_, loanManagerInitializer_, withdrawalCycle, windowDuration);
         _configurePool();
     }
 
@@ -257,7 +272,6 @@ contract TestBase is ProtocolActions {
 
     // TODO: Can be moved into ProtocolActions, but it a bit heavy on arguments if state variables need to be passed in as well.
     /**
-     *  @param borrower    The address of the borrower.
      *  @param termDetails Array of loan parameters:
      *                       [0]: gracePeriod
      *                       [1]: paymentInterval
@@ -272,19 +286,19 @@ contract TestBase is ProtocolActions {
      *                       [2]: lateFeeRate
      *                       [3]: lateInterestPremium
      */
-    function createLoan(
+    function createFixedTermLoan(
         address borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address loanManager
+        address loanManager   // TODO: Move to top of params.
     )
         internal returns (address loan)
     {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        loan = FixedTermLoanFactory(loanFactory).createInstance({
+        loan = FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(
                 borrower,
                 loanManager,
@@ -374,6 +388,7 @@ contract TestBase is ProtocolActions {
         shares = depositLiquidity(address(pool), lp, liquidity);
     }
 
+    // TODO: Move all of these to ProtocolActions.
     function fundAndDrawdownLoan(
         address borrower,
         uint256[3] memory termDetails,
@@ -386,7 +401,7 @@ contract TestBase is ProtocolActions {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        loan = createLoan(borrower, termDetails, amounts, rates, loanManager);
+        loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);  // TODO: Remove create from this function.
 
         fundLoan(address(loan));
 

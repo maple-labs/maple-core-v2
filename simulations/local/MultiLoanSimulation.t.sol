@@ -19,7 +19,7 @@ contract MultiLoanSimulation is SimulationBase {
 
         // Add 1st loan.
         scenarios.push(new LoanScenario({
-            loan_: address(createLoan({
+            loan_: address(createFixedTermLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(30 days), uint256(3)],
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
@@ -34,7 +34,7 @@ contract MultiLoanSimulation is SimulationBase {
 
         // Add 2nd loan.
         scenarios.push(new LoanScenario({
-            loan_: address(createLoan({
+            loan_: address(createFixedTermLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(10 days), uint256(3)],
                 amounts:     [uint256(0), uint256(20_000_000e6), uint256(20_000_000e6)],
@@ -49,7 +49,7 @@ contract MultiLoanSimulation is SimulationBase {
 
         // Add 3rd loan.
         scenarios.push(new LoanScenario({
-            loan_: address(createLoan({
+            loan_: address(createFixedTermLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(15 days), uint256(3)],
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],
@@ -64,7 +64,7 @@ contract MultiLoanSimulation is SimulationBase {
 
         // Add 4th loan.
         scenarios.push(new LoanScenario({
-            loan_: address(createLoan({
+            loan_: address(createFixedTermLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(10 days), uint256(30 days), uint256(3)],
                 amounts:     [uint256(0), uint256(10_000_000e6), uint256(10_000_000e6)],

@@ -54,7 +54,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 3_600e6,
             refinanceInterest:   0,
@@ -124,7 +124,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 3_600e6,
             refinanceInterest:   0,
@@ -191,7 +191,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 3_600e6,
             refinanceInterest:   0,

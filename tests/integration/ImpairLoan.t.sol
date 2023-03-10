@@ -112,7 +112,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         // Management fees:              125 + 500 =     625
         // Net interest:         6,250 - 125 - 500 =   5,625
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -120,7 +120,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -131,7 +131,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -162,7 +162,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         vm.warp(start + ONE_MONTH);
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -173,7 +173,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       5_625e6 - 1,  // -1 due to issuance rate rounding error.
             accountedInterest:     0,
@@ -196,7 +196,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         makePayment(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -204,7 +204,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -225,7 +225,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -254,7 +254,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5);
         impairLoan(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -262,7 +262,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -283,7 +283,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     uint256(5_625e6 - 1) / 5,  // -1 due to issuance rate rounding error.
@@ -313,7 +313,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     uint256(5_625e6 - 1) / 5,  // No change, value no longer accruing
@@ -332,7 +332,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         removeLoanImpairment(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -340,7 +340,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -361,7 +361,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH,
@@ -391,7 +391,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         uint256 accountedInterest = 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH;  // Accounted at time of loan impairment removal.
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       5_625e6 - accountedInterest - 1,
             accountedInterest:     accountedInterest,
@@ -410,7 +410,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         makePayment(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -418,7 +418,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 1
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -439,7 +439,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -470,7 +470,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY);
         makePayment(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -478,7 +478,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 1
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 5_625e6 - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -499,7 +499,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     uint256(5_625e6) * 12 / 365,  // one day of interest: 5,625 * 12 / 365
@@ -533,7 +533,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         vm.warp(start + 2 * ONE_MONTH + ONE_MONTH / 5);
         makePayment(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -541,7 +541,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -562,7 +562,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -654,7 +654,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         uint256 periodInterest = MONTHLY_INTEREST * 5 days / ONE_MONTH;  // 5 days worth of interest
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -662,7 +662,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: MONTHLY_INTEREST - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -685,7 +685,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     periodInterest,  // -1 due to issuance rate rounding error.
@@ -731,7 +731,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         uint256 expectedNetRefinanceInterest = expectedRefinanceInterest * 0.9e6 / 1e6;
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: expectedRefinanceInterest,
@@ -739,7 +739,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: MONTHLY_INTEREST - 1,
             refinanceInterest:   expectedNetRefinanceInterest,
@@ -760,7 +760,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     expectedNetRefinanceInterest,  // Accounting gets updated to reflect the resulting refinance interest.
@@ -787,7 +787,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         makePayment(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -795,7 +795,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             paymentsRemaining: 1
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: MONTHLY_INTEREST - 1,
             refinanceInterest:   0,
@@ -806,7 +806,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -837,7 +837,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         vm.warp(start + 2 * ONE_MONTH + 1 days);
         impairLoan(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -845,7 +845,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: MONTHLY_INTEREST - 1,  // -1 due to rounding error.
             refinanceInterest:   0,
@@ -867,7 +867,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     MONTHLY_INTEREST - 1,
@@ -914,7 +914,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         uint256 expectedNetRefinanceInterest = expectedRefinanceInterest * 0.9e6 / 1e6;
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: expectedRefinanceInterest,
@@ -922,7 +922,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: MONTHLY_INTEREST - 1,
             refinanceInterest:   expectedNetRefinanceInterest,
@@ -943,7 +943,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     expectedNetRefinanceInterest,

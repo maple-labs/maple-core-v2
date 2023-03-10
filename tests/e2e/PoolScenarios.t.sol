@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
+import { Address, Pool, PoolManager } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -32,9 +32,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         depositLiquidity(lp1, 4_000_000e6);
 
         assertTotalAssets(4_000_000e6);
-        assertEq(pool.balanceOf(lp1), 4_000_000e6);
+        assertEq(Pool(pool).balanceOf(lp1), 4_000_000e6);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = PoolManager(poolManager).loanManagerList(0);
 
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
@@ -45,7 +45,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             loanManager: loanManager
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -57,7 +57,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -68,7 +68,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -100,7 +100,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             loanManager: loanManager
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     72_000e6,
@@ -112,7 +112,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -134,7 +134,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR.s
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 90_000e6 + 180_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -147,7 +147,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         // Loan1 has been adjusted to be late
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -173,7 +173,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             loanManager: loanManager
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     180_000e6,  // 90_000e6 from loan1 and 90_000e6 of loan2 at 0.15 IR
@@ -186,7 +186,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         // Loan1 has still the same state.
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -208,7 +208,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 principal + 200_000s of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 72_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     72_000e6 + 90_000e6,  // 72_000e6 from 200_000s of loan3 and 90_000e6 from loan1
@@ -237,7 +237,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Deposits + 1e6s of loan1 at 0.09 IR and 1_000_000s of loan2 at 0.18 IR + 1% of loan2 Principal + 1_000_000 of loan3 at 0.36 IR
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 18_000e6 + 360_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,           // 90_000e6 from loan1
@@ -316,7 +316,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         makePayment(loan3);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,           // 90_000e6 from loan1
@@ -428,7 +428,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             loanManager: loanManager
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -440,7 +440,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000_000_000_000_000e6,
             refinanceInterest:   0,
@@ -451,7 +451,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -479,7 +479,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 90_000e6);  // 1% of 1_000_000e6, removing management fees
 
         // Loan Manager should be in a coherent state
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -514,7 +514,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             loanManager: loanManager
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -526,7 +526,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -537,7 +537,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -559,7 +559,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -571,7 +571,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -582,7 +582,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -602,7 +602,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -614,7 +614,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -625,7 +625,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 1_000_000e6,
@@ -642,7 +642,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(4_000_000e6 + 9_000e6);  // 1 day worth of late interest
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -684,7 +684,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         fundsAsset.burn(treasury,     fundsAsset.balanceOf(treasury));
         fundsAsset.burn(poolDelegate, fundsAsset.balanceOf(poolDelegate));
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -696,7 +696,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -707,7 +707,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -750,7 +750,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertLoanInfoWasDeleted(loan1);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         0,
             refinanceInterest: 0,
@@ -758,7 +758,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -847,7 +847,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             availableLiquidity: 0
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -859,7 +859,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: dailyLoanInterest * 30,
             refinanceInterest:   0,
@@ -874,7 +874,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertEq(platformServiceFee, 25920e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -898,7 +898,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -909,7 +909,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 10,
@@ -921,7 +921,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: dailyLoanInterest * 60,
             refinanceInterest:   dailyLoanInterest * 10,
@@ -943,7 +943,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         ILoanManagerLike(loanManager).updateAccounting();  // TODO: Use `ProtocolActions`. TODO: `loanManager` variable.
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 70,
@@ -955,7 +955,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: dailyLoanInterest * 60,
             refinanceInterest:   dailyLoanInterest * 10,
@@ -969,7 +969,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Impair Loan
         impairLoan(address(loan));
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 70,
@@ -982,7 +982,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      1_000_000e6 + (dailyLoanInterest * 70)
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: dailyLoanInterest * 60,
             refinanceInterest:   dailyLoanInterest * 10,
@@ -1029,7 +1029,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     dailyLoanInterest * 5,
@@ -1067,7 +1067,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         // Loan Manager should be in a coherent state
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1079,7 +1079,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1090,7 +1090,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1128,7 +1128,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Principal + 225_000e6 (period from start to refinance) + late interest(18 * 86400 * 0.099)
         assertTotalAssets(2_500_000e6 + netRefinanceInterest);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1140,7 +1140,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   netRefinanceInterest,
@@ -1151,7 +1151,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     netRefinanceInterest,
@@ -1174,7 +1174,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Principal + refinanceInterest + installment + 10 days of late interest
         assertTotalAssets(2_500_000e6 + netRefinanceInterest + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1185,7 +1185,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1216,7 +1216,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         // Loan Manager should be in a coherent state
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1228,7 +1228,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1239,7 +1239,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1277,7 +1277,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Principal + 135_000e6 (period from start to refinance) + late interest(6 * 86400 * 0.09)
         assertTotalAssets(2_500_000e6 + netRefinanceInterest);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1288,7 +1288,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   netRefinanceInterest,
@@ -1299,7 +1299,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     netRefinanceInterest,
@@ -1317,7 +1317,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Pre default assertions
         assertTotalAssets(2_500_000e6 + netRefinanceInterest + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1330,7 +1330,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   netRefinanceInterest,
@@ -1341,7 +1341,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       180_000e6,
             accountedInterest:     netRefinanceInterest,
@@ -1357,7 +1357,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6);  // Only the amount in the pool
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1368,7 +1368,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1407,7 +1407,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         vm.warp(start + 2_000_000);
 
         // Loan Manager should be in a coherent state
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       150 * 90_000e6,
             accountedInterest:     0,
@@ -1426,7 +1426,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         ILoanManagerLike(loanManager).updateAccounting();  // TODO: Use `ProtocolActions`.
 
         // Loan Manager should be in a coherent state
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     150 * 90_000e6,

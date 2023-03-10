@@ -175,7 +175,7 @@ contract ClaimTestsSingleLoanInterestOnly is ActionHandler, TestBaseWithAssertio
         nextDelegateOriginationFee = constrictToRange(hashed(seed_ + 7), 0, startingPrincipal / 10);
         nextDelegateServiceFee     = constrictToRange(hashed(seed_ + 8), 0, startingPrincipal / 100);
 
-        return createLoan({
+        return createFixedTermLoan({
             borrower:    address(new Address()),
             termDetails: [uint256(0), paymentInterval, numberOfPayments],
             amounts:     [uint256(0), startingPrincipal, endingPrincipal],

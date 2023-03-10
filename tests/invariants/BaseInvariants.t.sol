@@ -497,6 +497,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
     }
 
+    // TODO: Pretty sure we can remove this whole thing.
     function _excludeAllContracts() internal {
         excludeContract(governor);
         excludeContract(poolDelegate);
@@ -506,13 +507,21 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         excludeContract(liquidatorInitializer);
         excludeContract(liquidatorImplementation);
 
-        excludeContract(loanFactory);
-        excludeContract(loanImplementation);
-        excludeContract(loanInitializer);
+        excludeContract(fixedTermLoanFactory);
+        excludeContract(fixedTermLoanImplementation);
+        excludeContract(fixedTermLoanInitializer);
 
-        excludeContract(loanManagerFactory);
-        excludeContract(loanManagerInitializer);
-        excludeContract(loanManagerImplementation);
+        excludeContract(fixedTermLoanManagerFactory);
+        excludeContract(fixedTermLoanManagerInitializer);
+        excludeContract(fixedTermLoanManagerImplementation);
+
+        excludeContract(openTermLoanFactory);
+        excludeContract(openTermLoanImplementation);
+        excludeContract(openTermLoanInitializer);
+
+        excludeContract(openTermLoanManagerFactory);
+        excludeContract(openTermLoanManagerInitializer);
+        excludeContract(openTermLoanManagerImplementation);
 
         excludeContract(poolManagerFactory);
         excludeContract(poolManagerImplementation);

@@ -121,7 +121,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -147,7 +147,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -158,7 +158,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -169,7 +169,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -191,7 +191,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -202,7 +202,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -213,7 +213,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -242,7 +242,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -268,7 +268,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6 + 45_000e6);  // 0.09e6 per second * 500_000 seconds
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -279,7 +279,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -290,7 +290,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       45_000e6,
             accountedInterest:     0,
@@ -312,7 +312,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -323,7 +323,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -334,7 +334,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -363,7 +363,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -389,7 +389,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         assertTotalAssets(1_500_000e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -400,7 +400,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -411,7 +411,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -437,7 +437,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         // 100_000s of interest from 2 payment: 9_000e6
         assertTotalAssets(1_500_000e6 + 90_000e6 + 15_552e6 + 9_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -448,7 +448,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -459,7 +459,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     9_000e6,          // Accounted during claim
@@ -526,7 +526,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -538,7 +538,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,     // Principal is adjusted to make equal loan payments across the term.
@@ -563,7 +563,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,
@@ -577,7 +577,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment1Principal = 952_380_952380;
         uint256 payment1Interest  = 200_000e6;
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -588,7 +588,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       180_000e6,
             accountedInterest:     0,
@@ -610,7 +610,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_047_619_047620,
             incomingPrincipal: 1_047_619_047620,
@@ -627,7 +627,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         // Assert that payments are equal
         assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 94_285_714285,
             refinanceInterest:   0,
@@ -638,7 +638,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -667,7 +667,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -679,7 +679,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,     // Principal is adjusted to make equal loan payments across the term.
@@ -704,7 +704,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 108_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,
@@ -718,7 +718,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment1Principal = 952_380_952380;
         uint256 payment1Interest  = 200_000e6;
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -729,7 +729,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       108_000e6,
             accountedInterest:     0,
@@ -751,7 +751,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_047_619_047620,
             incomingPrincipal: 1_047_619_047620,
@@ -768,7 +768,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         // Assert that payments are equal
         assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 94_285_714285,
             refinanceInterest:   0,
@@ -779,7 +779,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -808,7 +808,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -820,7 +820,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,     // Principal is adjusted to make equal loan payments across the term.
@@ -845,7 +845,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         2_000_000e6,
             incomingPrincipal: 952_380_952380,
@@ -859,7 +859,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment1Principal = 952_380_952380;
         uint256 payment1Interest  = 200_000e6;
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -870,7 +870,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       180_000e6,
             accountedInterest:     0,
@@ -893,7 +893,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         // (Principal + cash) + interest + late interest + 200k seconds of interest on remaining principal
         assertTotalAssets(2_500_000e6 + 180_000e6 + 46_656e6 + 18_857_142857);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_047_619_047620,
             incomingPrincipal: 1_047_619_047620,
@@ -910,7 +910,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         // Assert that payments are equal
         assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 94_285_714285,
             refinanceInterest:   0,
@@ -921,7 +921,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     18_857_142857,    // 200_000sec of the IR
@@ -1000,7 +1000,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 27_000e6);  // Already warped 300_000 seconds at 0.09 IR after start before funding loan2
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     27_000e6,
@@ -1027,7 +1027,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + 1_000_000s of loan1  at 0.09e6 IR + 700_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1038,7 +1038,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1049,7 +1049,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       90_000e6 + 126_000e6 - 27_000e6,
             accountedInterest:     27_000e6,
@@ -1071,7 +1071,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6);  // Principal + 1_000_000s of loan1 at 0.09 + 700_000s of loan2 at 0.18e6 IR
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1082,7 +1082,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1093,7 +1093,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     126_000e6,    // 700_000s at 0.18e6
@@ -1123,7 +1123,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1134,7 +1134,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1145,7 +1145,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       27_000e6 + 180_000e6 - 126_000e6,  // loan1 + loan2 - accounted from loan2
             accountedInterest:     126_000e6,    // 700_000s at 0.18e6
@@ -1168,7 +1168,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1179,7 +1179,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1190,7 +1190,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     27_000e6,    // 700_000s at 0.18e6
@@ -1239,7 +1239,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_527_000e6);  // 300_000s of loan1 at 0.09e6 IR
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     27_000e6,
@@ -1265,7 +1265,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 45_000e6 + 36_000e6);  // 500_000s of loan1 at 0.09 + 200_000s of loan2 at 0.18e6 IR
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1276,7 +1276,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1287,7 +1287,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       45_000e6 + 36_000e6 - 27_000e6,
             accountedInterest:     27_000e6,
@@ -1309,7 +1309,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 36_000e6);  // Principal + 1_000_000s of loan1 at 0.09 + 700_000s of loan2 at 0.18e6 IR
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1320,7 +1320,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1331,7 +1331,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     36_000e6,           // 200_000s at 0.18e6
@@ -1354,7 +1354,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + loan1 payment interest + 800_000s of loan1 at 0.6e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 90_000e6 + 48_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1365,7 +1365,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1376,7 +1376,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             // 800_000s of loan1 at 0.06 + 1_000_000s of loan2 at 0.18e6 - accounted
             loanManager:           loanManager,
             accruedInterest:       48_000e6 + 180_000e6 - 36_000e6,
@@ -1407,7 +1407,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + loan1 payment interest + 800_000s of loan1 at 0.6e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 90_000e6 + 48_000e6 + 180_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1418,7 +1418,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1429,7 +1429,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     48_000e6,           // 800_000s at 0.06e6
@@ -1479,7 +1479,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertTotalAssets(3_527_000e6);  // Already warped 300_000 seconds at 0.09 IR after start before funding loan2
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     27_000e6,
@@ -1507,7 +1507,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // The issuance stops at DomainEnd, so no accrual after second 1_000_000
         assertTotalAssets(3_500_000e6 + 90_000e6 + 126_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1518,7 +1518,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1529,7 +1529,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       90_000e6 + 126_000e6 - 27_000e6,
             accountedInterest:     27_000e6,
@@ -1556,7 +1556,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + 1_000_000s of loan1 at 0.09 + 800_000s of loan2 at 0.18e6 IR + late fees
         assertTotalAssets(3_500_000e6 + 90_000e6 + 9_000e6 + 15_552e6 + 144_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1567,7 +1567,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1578,7 +1578,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     144_000e6 + 9_000e6,  // 800_000s at 0.18e6 + 9_000e6 accrued from 100_000s at 0.9e6 from loan1
@@ -1608,7 +1608,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR + loan1 late interest
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6 + 15_552e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1619,7 +1619,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1630,7 +1630,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       27_000e6 + 180_000e6 - (144_000e6 + 9_000e6),  // loan1 + loan2 - accounted from loan2
             accountedInterest:     144_000e6 + 9_000e6,                           // 700_000s at 0.18e6
@@ -1653,7 +1653,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         // Principal + 1_300_000s of loan1 at 0.9e6 + 1_000_000s of loan2 at 0.18e6 IR
         assertTotalAssets(3_500_000e6 + 117_000e6 + 180_000e6 + 15_552e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1664,7 +1664,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1675,7 +1675,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     27_000e6,           // 700_000s at 0.18e6
@@ -1767,7 +1767,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -1795,7 +1795,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 90_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       90_000e6,
             accountedInterest:     0,
@@ -1808,7 +1808,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1819,7 +1819,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1846,7 +1846,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 90_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -1858,7 +1858,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1869,7 +1869,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1896,7 +1896,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6);  // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       180_000e6,
             accountedInterest:     90_000e6,
@@ -1909,7 +1909,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         // Loan1 Assertions.
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -1920,7 +1920,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -1932,7 +1932,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         // Loan2 Assertions.
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1943,7 +1943,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -1964,7 +1964,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6);  // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -1976,7 +1976,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             unrealizedLosses:      0
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -1987,7 +1987,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -2021,7 +2021,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         // loan1 2nd payment accounted interest: 90_000e6
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6 + 202_176e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -2032,7 +2032,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,           // Includes late interest.
             refinanceInterest:   0,
@@ -2043,7 +2043,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -2081,7 +2081,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         assertTotalAssets(3_500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6 + 90_000e6);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 1_000_000e6,
@@ -2092,7 +2092,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 1
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -2103,7 +2103,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6,
@@ -2142,7 +2142,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6 + 90_000e6 + 23_328e6);
 
         // Loan has be removed from storage.
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -2153,7 +2153,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     0,
@@ -2246,7 +2246,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         /**************************/
 
         // loan1
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -2257,7 +2257,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -2269,7 +2269,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         // loan2
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -2280,7 +2280,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -2292,7 +2292,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         // loan3
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan3,
             principal:         3_000_000e6,
             incomingPrincipal: 0,
@@ -2303,7 +2303,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan3,
             incomingNetInterest: 270_000e6,
             refinanceInterest:   0,
@@ -2319,7 +2319,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         // loan2 interest: 200_000s * 0.18e6 = 36_000e6
         assertTotalAssets(6_500_000e6 + 54_000e6 + 36_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     54_000e6 + 36_000e6,
@@ -2346,7 +2346,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         vm.warp(start + 1_700_000);
 
         // loan3
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan3,
             principal:         3_000_000e6,
             incomingPrincipal: 0,
@@ -2363,7 +2363,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         // loan3 interest: 400_000s * 0.27e6 = 108_000e6
         assertTotalAssets(6_500_000e6 + 90_000e6 + 108_000e6 + 108_000e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       (90_000e6 - 54_000e6) + (108_000e6 - 36_000e6) + 108_000e6,
             accountedInterest:     54_000e6 + 36_000e6,
@@ -2384,7 +2384,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         makePayment(loan3);
 
         // loan1
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan1,
             principal:         1_000_000e6,
             incomingPrincipal: 0,
@@ -2395,7 +2395,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan1,
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
@@ -2407,7 +2407,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         });
 
         // loan2
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan2,
             principal:         2_000_000e6,
             incomingPrincipal: 0,
@@ -2418,7 +2418,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan2,
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
@@ -2429,7 +2429,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan3,
             principal:         3_000_000e6,
             incomingPrincipal: 0,
@@ -2440,7 +2440,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan3,
             incomingNetInterest: 270_000e6,
             refinanceInterest:   0,
@@ -2459,7 +2459,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         // loan3 late interest:          86400s * 2 * 0.27 = 46_656e6
         assertTotalAssets(6_500_000e6 + 90_000e6 + 180_000e6 + 270_000e6 + 27_000e6 + 46_656e6);
 
-        assertLoanManager({
+        assertFixedTermLoanManager({
             loanManager:           loanManager,
             accruedInterest:       0,
             accountedInterest:     90_000e6 + 180_000e6 + 27_000e6,

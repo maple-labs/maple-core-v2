@@ -19,8 +19,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
     function test_deployPool_failWithInvalidPD() external {
         vm.expectRevert("PD:DP:INVALID_PD");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -35,8 +35,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_PM_FACTORY");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -46,13 +46,13 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failWithInvalidLMFactory() external {
         vm.prank(address(governor));
-        globals.setValidFactory("LOAN_MANAGER", loanManagerFactory, false);
+        globals.setValidFactory("LOAN_MANAGER", fixedTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_LM_FACTORY");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -67,8 +67,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_WM_FACTORY");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -80,8 +80,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(0),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -93,8 +93,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         // Fund first pool successfully
         vm.prank(poolDelegate);
         ( address poolManager_, ,  ) = deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -108,8 +108,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool 2",
             symbol_:       "MP 2",
@@ -124,8 +124,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -141,8 +141,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(asset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -162,8 +162,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -175,8 +175,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -188,8 +188,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -201,8 +201,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("PM:CO:OOB");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -214,8 +214,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:TRANSFER_FAILED");
         deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -244,8 +244,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         fundsAsset.approve(address(deployer), 1_000_000e6);
 
         ( address poolManager_, address loanManager_, address withdrawalManager_) = deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -266,8 +266,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         fundsAsset.approve(address(deployer), 1_000_000e6);
 
         ( address poolManager_, address loanManager_, address withdrawalManager_) = deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",
@@ -288,8 +288,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         fundsAsset.approve(address(deployer), 1_000_000e6);
 
         ( address poolManager_, address loanManager_, address withdrawalManager_) = deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer, withdrawalManagerInitializer],
+            factories_:    [poolManagerFactory,     fixedTermLoanManagerFactory,     withdrawalManagerFactory],
+            initializers_: [poolManagerInitializer, fixedTermLoanManagerInitializer, withdrawalManagerInitializer],
             asset_:        address(fundsAsset),
             name_:         "Maple Pool",
             symbol_:       "MP",

@@ -7,8 +7,11 @@ import {
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
-    IOpenTermLoanManager
+    IOpenTermLoanManager,
+    IOpenTermLoanManagerStructs
 } from "../contracts/interfaces/Interfaces.sol";
+
+import { Pool, PoolManager, WithdrawalManager } from "../contracts/Contracts.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";
@@ -19,7 +22,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     /*** State Assertion Functions                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    function assertLoanState(
+    function assertFixedTermLoan(
         address loan,
         uint256 principal,
         uint256 refinanceInterest,
@@ -32,7 +35,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
-    function assertLoanState(
+    function assertFixedTermLoan(
         address loan,
         uint256 principal,
         uint256 incomingPrincipal,
@@ -54,7 +57,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
-    function assertLoan(
+    function assertOpenTermLoan(
         address loan,
         uint256 dateCalled,
         uint256 dateFunded,
@@ -74,6 +77,32 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(otl.principal(),       principal);
     }
 
+    function assertOpenTermLoanPaymentState(
+        address loan,
+        uint40  paymentTimestamp,
+        uint256 principal,
+        uint256 interest,
+        uint256 lateInterest,
+        uint256 delegateServiceFee,
+        uint256 platformServiceFee,
+        uint256 paymentDueDate,
+        uint256 defaultDate
+    ) internal {
+        IOpenTermLoan otl = IOpenTermLoan(loan);
+
+        ( uint256 principal_, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_ )
+            = otl.paymentBreakdown(paymentTimestamp);
+
+        assertEq(principal_,          principal,          "principal");
+        assertEq(interest_,           interest,           "interest");
+        assertEq(lateInterest_,       lateInterest,       "lateInterest");
+        assertEq(delegateServiceFee_, delegateServiceFee, "delegateServiceFee");
+        assertEq(platformServiceFee_, platformServiceFee, "platformServiceFee");
+
+        assertEq(otl.paymentDueDate(), paymentDueDate, "paymentDueDate");
+        assertEq(otl.defaultDate(),    defaultDate,    "defaultDate");
+    }
+
     function assertLoanInfoWasDeleted(address loan) internal {
         ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
 
@@ -81,7 +110,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     // TODO: Investigate reverting back to tuples to expose changes easier.
-    function assertPaymentInfo(
+    function assertFixedTermPaymentInfo(
         address loan,
         uint256 incomingNetInterest,
         uint256 refinanceInterest,
@@ -107,7 +136,26 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate,     "loanInfo.delegateFeeRate");
     }
 
-    function assertLoanManager(
+    // TODO: Investigate reverting back to tuples to expose changes easier.
+    function assertOpenTermPaymentInfo(
+        address loan,
+        uint256 platformFeeRate,
+        uint256 delegateFeeRate,
+        uint256 startDate,
+        uint256 issuanceRate
+    )
+        internal
+    {
+        IOpenTermLoanManagerStructs.Payment memory loanInfo =
+            IOpenTermLoanManagerStructs(ILoanLike(loan).lender()).paymentFor(loan);
+
+        assertEq(loanInfo.platformManagementFeeRate, platformFeeRate, "loanInfo.platformManagementFeeRate");
+        assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate, "loanInfo.delegateManagementFeeRate");
+        assertEq(loanInfo.startDate,                 startDate,       "loanInfo.startDate");
+        assertEq(loanInfo.issuanceRate,              issuanceRate,    "loanInfo.issuanceRate");
+    }
+
+    function assertFixedTermLoanManager(
         address loanManager,
         uint256 accruedInterest,
         uint256 accountedInterest,
@@ -130,21 +178,23 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanManager_.unrealizedLosses(),      unrealizedLosses,      "unrealizedLosses");
     }
 
-    function assertLoanManager(
+    function assertOpenTermLoanManager(
         address loanManager,
         uint256 domainStart,
         uint256 issuanceRate,
         uint256 accountedInterest,
+        uint256 accruedInterest,
         uint256 principalOut,
         uint256 unrealizedLosses
     ) internal {
         IOpenTermLoanManager otlm = IOpenTermLoanManager(loanManager);
 
-        assertEq(otlm.domainStart(),       domainStart);
-        assertEq(otlm.issuanceRate(),      issuanceRate);
-        assertEq(otlm.accountedInterest(), accountedInterest);
-        assertEq(otlm.principalOut(),      principalOut);
-        assertEq(otlm.unrealizedLosses(),  unrealizedLosses);
+        assertEq(otlm.domainStart(),       domainStart,       "domainStart");
+        assertEq(otlm.issuanceRate(),      issuanceRate,      "issuanceRate");
+        assertEq(otlm.accountedInterest(), accountedInterest, "accountedInterest");
+        assertEq(otlm.accruedInterest(),   accruedInterest,   "accruedInterest");
+        assertEq(otlm.principalOut(),      principalOut,      "principalOut");
+        assertEq(otlm.unrealizedLosses(),  unrealizedLosses,  "unrealizedLosses");
     }
 
     function assertImpairment(
@@ -159,29 +209,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
         assertEq(impairedDate_, impairedDate);
         assertTrue(impairedByGovernor_ == impairedByGovernor);
-    }
-
-    function assertPayment(
-        address loan,
-        address loanManager,
-        uint256 startDate,
-        uint256 issuanceRate,
-        uint256 delegateManagementFeeRate,
-        uint256 platformManagementFeeRate
-    ) internal {
-        IOpenTermLoanManager otlm = IOpenTermLoanManager(loanManager);
-
-        (
-            uint24 platformManagementFeeRate_,
-            uint24 delegateManagementFeeRate_,
-            uint40 startDate_,
-            uint168 issuanceRate_
-        ) = otlm.paymentFor(loan);
-
-        assertEq(startDate_,                 startDate);
-        assertEq(issuanceRate_,              issuanceRate);
-        assertEq(delegateManagementFeeRate_, delegateManagementFeeRate);
-        assertEq(platformManagementFeeRate_, platformManagementFeeRate);
     }
 
     function assertLiquidationInfo(
@@ -209,6 +236,8 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(pool.totalAssets(),                  totalAssets,        "totalAssets");
         assertEq(pool.totalSupply(),                  totalSupply,        "totalSupply");
         assertEq(pool.unrealizedLosses(),             unrealizedLosses,   "unrealizedLosses");
+        assertEq(poolManager.totalAssets(),           totalAssets,        "totalAssets");
+        assertEq(poolManager.unrealizedLosses(),      unrealizedLosses,   "unrealizedLosses");
         assertEq(fundsAsset.balanceOf(address(pool)), availableLiquidity, "availableLiquidity");
     }
 

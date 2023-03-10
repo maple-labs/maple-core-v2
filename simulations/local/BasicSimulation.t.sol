@@ -15,7 +15,7 @@ contract BasicSimulation is SimulationBase {
         initialLiquidity = 1_500_000e6;
 
         scenarios.push(new LoanScenario({
-            loan_: createLoan({
+            loan_: createFixedTermLoan({
                 borrower:    address(new Address()),
                 termDetails: [uint256(0), uint256(30 days), uint256(3)],
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],

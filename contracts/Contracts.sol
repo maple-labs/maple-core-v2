@@ -15,9 +15,9 @@ import { LoanManagerFactory as MFTLMF }     from "../modules/fixed-term-loan-man
 import { LoanManagerInitializer as MFTLMI } from "../modules/fixed-term-loan-manager/contracts/proxy/LoanManagerInitializer.sol";
 
 import { MapleLoan as MOTL }             from "../modules/open-term-loan/contracts/MapleLoan.sol";
-import { MapleRefinancer as MOTLR }      from "../modules/open-term-loan/contracts/MapleRefinancer.sol";
 import { MapleLoanFactory as MOTLF }     from "../modules/open-term-loan/contracts/MapleLoanFactory.sol";
 import { MapleLoanInitializer as MOTLI } from "../modules/open-term-loan/contracts/MapleLoanInitializer.sol";
+import { MapleRefinancer as MOTLR }      from "../modules/open-term-loan/contracts/MapleRefinancer.sol";
 
 import { LoanManager as MOTLM }             from "../modules/open-term-loan-manager/contracts/LoanManager.sol";
 import { LoanManagerFactory as MOTLMF }     from "../modules/open-term-loan-manager/contracts/LoanManagerFactory.sol";
@@ -27,21 +27,24 @@ import { Liquidator }            from "../modules/liquidations/contracts/Liquida
 import { LiquidatorFactory }     from "../modules/liquidations/contracts/LiquidatorFactory.sol";
 import { LiquidatorInitializer } from "../modules/liquidations/contracts/LiquidatorInitializer.sol";
 
-import { MapleGlobals as MG } from "../modules/globals/contracts/MapleGlobals.sol";
-
-import { Pool }              from "../modules/pool/contracts/Pool.sol";
-import { PoolDelegateCover } from "../modules/pool/contracts/PoolDelegateCover.sol";
-import { PoolDeployer }      from "../modules/pool/contracts/PoolDeployer.sol";
-import { PoolManager }       from "../modules/pool/contracts/PoolManager.sol";
-
-import { WithdrawalManager } from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
-
+import { MapleGlobals as MG }  from "../modules/globals/contracts/MapleGlobals.sol";
 import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+
+import { Pool }                   from "../modules/pool/contracts/Pool.sol";
+import { PoolDelegateCover }      from "../modules/pool/contracts/PoolDelegateCover.sol";
+import { PoolDeployer }           from "../modules/pool/contracts/PoolDeployer.sol";
+import { PoolManager }            from "../modules/pool/contracts/PoolManager.sol";
+import { PoolManagerFactory }     from "../modules/pool/contracts/proxy/PoolManagerFactory.sol";
+import { PoolManagerInitializer } from "../modules/pool/contracts/proxy/PoolManagerInitializer.sol";
+
+import { WithdrawalManager }            from "../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import { WithdrawalManagerFactory }     from "../modules/withdrawal-manager/contracts/WithdrawalManagerFactory.sol";
+import { WithdrawalManagerInitializer } from "../modules/withdrawal-manager/contracts/WithdrawalManagerInitializer.sol";
 
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
 /******************************************************************************************************************************************/
-/*** Re-Exports                                                                                                                     *******/
+/*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
 
 contract FixedTermLoan is MFTL { }
