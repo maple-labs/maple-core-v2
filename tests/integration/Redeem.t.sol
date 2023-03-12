@@ -515,6 +515,7 @@ contract MultiUserRedeemTests is TestBase {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
 
         // Set interval to give round numbers

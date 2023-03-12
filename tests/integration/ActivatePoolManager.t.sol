@@ -9,6 +9,7 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
         _createPool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
     }
@@ -32,6 +33,7 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
         _createPool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
     }

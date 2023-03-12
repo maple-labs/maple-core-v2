@@ -103,6 +103,7 @@ contract TestBase is ProtocolActions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
         _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
         _openPool();
@@ -202,7 +203,6 @@ contract TestBase is ProtocolActions {
         deployer = new PoolDeployer(address(globals));
 
         vm.startPrank(governor);
-        globals.setMapleTreasury(treasury);
         globals.setMigrationAdmin(migrationAdmin);
         globals.setSecurityAdmin(governor);
         globals.setValidPoolAsset(address(fundsAsset), true);
@@ -264,6 +264,12 @@ contract TestBase is ProtocolActions {
     function _openPool() internal {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
+    }
+
+    function _setTreasury() internal {
+        vm.startPrank(governor);
+        globals.setMapleTreasury(treasury);
+        vm.stopPrank();
     }
 
     /**************************************************************************************************************************************/

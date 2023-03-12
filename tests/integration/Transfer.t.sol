@@ -16,6 +16,7 @@ contract TransferTests is TestBase {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
         _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
         // NOTE: As opposed to super.setUp(), do not open the pool,

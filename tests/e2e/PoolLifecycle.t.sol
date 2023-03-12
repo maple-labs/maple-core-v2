@@ -57,6 +57,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
 
         borrower1 = address(new Address());  // TODO: makeAddr

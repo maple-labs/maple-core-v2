@@ -17,6 +17,7 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
 
         vm.prank(governor);
         globals.setBootstrapMint(address(fundsAsset), BOOTSTRAP_MINT_AMOUNT);

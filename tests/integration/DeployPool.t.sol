@@ -13,6 +13,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
     }
 
