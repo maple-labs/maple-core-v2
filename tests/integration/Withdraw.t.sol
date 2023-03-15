@@ -509,3 +509,57 @@ contract WithdrawScenarios is TestBase {
     }
 
 }
+
+contract WithdrawOnPermissionedPool is TestBase {
+
+
+    IFixedTermLoanManager loanManager;
+
+    function setUp() public override {
+        // Manually doing setUp steps so the pool is not open to public.
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
+
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+
+        // Remove all fees to make interest calculations easier.
+        setupFees({
+            delegateOriginationFee:     0,
+            delegateServiceFee:         0,
+            delegateManagementFeeRate:  0,
+            platformOriginationFeeRate: 0,
+            platformServiceFeeRate:     0,
+            platformManagementFeeRate:  0
+        });
+
+        depositCover(2_500_000e6);
+
+        // Since it's a permissioned pool, the withdrawal manager needs to be whitelisted.
+        vm.prank(poolDelegate);
+        poolManager.setAllowedLender(address(withdrawalManager), true);
+    }
+
+    function test_withdraw_withUnwhitelistedUser() external {
+        address lp1 = address(new Address());
+
+        depositLiquidity(address(lp1), 500_000e6);
+
+        // Now, remove the LP from the whitelist.
+        vm.prank(poolDelegate);
+        poolManager.setAllowedLender(lp1, false);
+
+        requestRedeem(address(lp1), 500_000e6);
+
+        uint256 windowStart = withdrawalManager.getWindowStart(withdrawalManager.exitCycleId(address(lp1)));
+
+        vm.warp(windowStart);
+
+        vm.expectRevert("WM:PE:TRANSFER_FAIL");
+        redeem(address(lp1), 500_000e6);         // This fails because recipient is no longer allowed.
+    }
+ 
+}
