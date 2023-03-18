@@ -260,11 +260,13 @@ contract ProtocolActions is TestUtils {
         vm.stopPrank();
     }
 
-    function removeLoanCall(address loanManager_, address loan_) internal {
-        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
+    function removeLoanCall(address loan_) internal {
+        IOpenTermLoanManager loanManager_ = IOpenTermLoanManager(ILoanLike(loan_).lender());
+
+        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IOpenTermLoanManager(loanManager_).removeCall(loan_);
+        loanManager_.removeCall(loan_);
     }
 
     function removeLoanImpairment(address loan_) internal {
@@ -325,6 +327,16 @@ contract ProtocolActions is TestUtils {
         vm.startPrank(poolDelegate_);
         IPoolManager(poolManager_).setAllowedLender(lender_, true);
         vm.stopPrank();
+    }
+
+    function setDelegateManagementFeeRate(address poolManager_, uint256 rate_) internal {
+        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+
+        vm.startPrank(poolDelegate_);
+        IPoolManager(poolManager_).setDelegateManagementFeeRate(rate_);
+        vm.stopPrank();
+
+        assertEq(IPoolManager(poolManager_).delegateManagementFeeRate(), rate_);
     }
 
     function setLiquidityCap(address poolManager_, uint256 amount_) internal {

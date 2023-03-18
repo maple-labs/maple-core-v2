@@ -998,7 +998,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan3IssuanceRate
         });
 
-        removeLoanCall(address(loanManager), loan3);
+        removeLoanCall(loan3);
 
         assertOpenTermLoanPaymentState({
             loan:               loan3,
