@@ -522,7 +522,7 @@ contract WithdrawOnPermissionedPool is TestBase {
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
 
         loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
@@ -561,5 +561,5 @@ contract WithdrawOnPermissionedPool is TestBase {
         vm.expectRevert("WM:PE:TRANSFER_FAIL");
         redeem(address(lp1), 500_000e6);         // This fails because recipient is no longer allowed.
     }
- 
+
 }

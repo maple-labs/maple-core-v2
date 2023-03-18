@@ -72,7 +72,7 @@ contract MaxDepositTests is TestBase {
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
 
         lp1 = address(new Address());
         lp2 = address(new Address());
@@ -146,7 +146,7 @@ contract MaxMintTests is TestBase {
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
 
         lp1 = address(new Address());
         lp2 = address(new Address());

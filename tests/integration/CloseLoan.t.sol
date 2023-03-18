@@ -86,7 +86,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
     function test_closeLoan_failIfNotLoan() external {
         IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
-        vm.expectRevert("LM:C:NOT_LOAN");
+        vm.expectRevert("LM:DCF:NOT_LOAN");
         loanManager.claim(0, 10, start, start + 1_000_000);
     }
 

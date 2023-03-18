@@ -529,7 +529,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         vm.prank(address(poolManager));
         IOpenTermLoanManager fakeLoanManager = IOpenTermLoanManager(
             IProxyFactoryLike(openTermLoanManagerFactory).createInstance(
-                abi.encode(address(pool)),
+                abi.encode(address(poolManager)),
                 "SALT"
             )
         );

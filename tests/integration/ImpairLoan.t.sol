@@ -56,7 +56,7 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("LM:IL:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.impairLoan(address(loan));
     }
 

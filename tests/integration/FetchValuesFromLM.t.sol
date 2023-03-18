@@ -7,19 +7,6 @@ import { Address } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
-contract LoanManagerAddressGetterTests is TestBase {
-
-    function test_addressGetters() external {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
-
-        assertEq(loanManager.governor(),      governor);
-        assertEq(loanManager.globals(),       address(globals));
-        assertEq(loanManager.mapleTreasury(), treasury);
-        assertEq(loanManager.poolDelegate(),  poolDelegate);
-    }
-
-}
-
 contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
 
     address loan;

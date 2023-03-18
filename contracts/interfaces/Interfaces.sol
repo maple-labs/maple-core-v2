@@ -153,15 +153,9 @@ interface ILoanManagerLike is IProxiedLike {
 
     function getAccruedInterest() external view returns (uint256 accruedInterest_);
 
-    function globals() external view returns (address globals_);
-
-    function governor() external view returns (address governor_);
-
     function impairLoan(address loan_) external;
 
     function issuanceRate() external view returns (uint256 issuanceRate_);
-
-    function mapleTreasury() external view returns (address treasury_);
 
     function paymentIdOf(address loan_) external view returns (uint24 paymentId_);
 
@@ -178,10 +172,6 @@ interface ILoanManagerLike is IProxiedLike {
     );
 
     function paymentWithEarliestDueDate() external view returns (uint24 paymentWithEarliestDueDate_);
-
-    function pool() external view returns (address pool_);
-
-    function poolDelegate() external view returns (address poolDelegate_);
 
     function poolManager() external view returns (address poolManager_);
 

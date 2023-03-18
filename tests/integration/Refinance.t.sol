@@ -988,7 +988,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         globals.setProtocolPause(true);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:ANT:PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
@@ -1048,6 +1048,9 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     function test_acceptNewTerms_failWithInvalidRefinancer() external {
         address fakeRefinancer = address(2);
 
+        vm.prank(governor);
+        globals.setValidInstanceOf("FT_REFINANCER", fakeRefinancer, true);
+
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
         // Make commitment
@@ -1075,6 +1078,9 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
     function test_acceptNewTerms_failIfRefinanceCallFails() external {
         address fakeRefinancer = address(new Address());
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("FT_REFINANCER", fakeRefinancer, true);
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 

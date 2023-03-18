@@ -28,8 +28,8 @@ contract LoanManagerGetterTests is TestBase {
         });
 
         vm.startPrank(poolDelegate);
-        poolManager.setMinRatio(loanManager, address(collateralAsset), 1e6);
-        poolManager.setAllowedSlippage(loanManager, address(collateralAsset), 1e6);
+        IFixedTermLoanManager(loanManager).setMinRatio(address(collateralAsset), 1e6);
+        IFixedTermLoanManager(loanManager).setAllowedSlippage(address(collateralAsset), 1e6);
         vm.stopPrank();
     }
 
@@ -37,11 +37,6 @@ contract LoanManagerGetterTests is TestBase {
         ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
 
         assertEq(loanManager_.fundsAsset(),    address(fundsAsset));
-        assertEq(loanManager_.globals(),       address(globals));
-        assertEq(loanManager_.governor(),      address(governor));
-        assertEq(loanManager_.mapleTreasury(), address(treasury));
-        assertEq(loanManager_.pool(),          address(pool));
-        assertEq(loanManager_.poolDelegate(),  address(poolDelegate));
         assertEq(loanManager_.poolManager(),   address(poolManager));
     }
 

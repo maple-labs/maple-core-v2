@@ -59,7 +59,7 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withSlippage() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setAllowedSlippage(address(loanManager), address(weth), 0.113e6);  // Slippage of 11.3%
+        loanManager.setAllowedSlippage(address(weth), 0.113e6);  // Slippage of 11.3%
         vm.stopPrank();
 
         uint256 swapAmount   = 13.7234925e18;
@@ -71,7 +71,7 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withMinRatio() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setMinRatio(address(loanManager), address(weth), 2000e6);  // Minimum price of 2000 USDC
+        loanManager.setMinRatio(address(weth), 2000e6);  // Minimum price of 2000 USDC
         vm.stopPrank();
 
         uint256 swapAmount = 13.7234925e18;
@@ -86,8 +86,8 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withSlippageAndMinRatio_minRatioHigher() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setAllowedSlippage(address(loanManager), address(weth), 0.113e6);  // Slippage of 11.3%
-        poolManager.setMinRatio(address(loanManager), address(weth), 1200e6);          // Minimum price of 1200 USDC
+        loanManager.setAllowedSlippage(address(weth), 0.113e6);  // Slippage of 11.3%
+        loanManager.setMinRatio(address(weth), 1200e6);          // Minimum price of 1200 USDC
         vm.stopPrank();
 
         uint256 swapAmount = 13.7234925e18;
@@ -102,8 +102,8 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withSlippageAndMinRatio_slippageHigher() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setAllowedSlippage(address(loanManager), address(weth), 0.013e6);  // Slippage of 1.3%
-        poolManager.setMinRatio(address(loanManager), address(weth), 1200e6);          // Minimum price of 1200 USDC
+        loanManager.setAllowedSlippage(address(weth), 0.013e6);  // Slippage of 1.3%
+        loanManager.setMinRatio(address(weth), 1200e6);          // Minimum price of 1200 USDC
         vm.stopPrank();
 
         uint256 swapAmount = 13.7234925e18;

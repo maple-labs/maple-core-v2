@@ -519,7 +519,7 @@ contract MultiUserRedeemTests is TestBase {
         _createFactories();
 
         // Set interval to give round numbers
-        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, ONE_MONTH / 2, 2 days);
+        _createAndConfigurePool(ONE_MONTH / 2, 2 days);
         _openPool();
 
         start = block.timestamp;

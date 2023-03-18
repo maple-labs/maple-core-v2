@@ -16,7 +16,7 @@ contract EnterBase is TestBase {
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createPool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
+        _createPool(1 weeks, 2 days);
         // NOTE: As opposed to super.setUp(), do not configure the pool or perform any later steps, because pool configuration will be validated in the tests.
 
         start = block.timestamp;

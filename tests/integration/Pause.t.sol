@@ -199,11 +199,17 @@ contract PauseTests is TestBaseWithAssertions {
         /*** LoanManager                                                                                                                ***/
         /**********************************************************************************************************************************/
 
-        vm.expectRevert("LM:IL:PAUSED");
-        ILoanManagerLike(loanManager).impairLoan(address(0));
+        vm.expectRevert("LM:PAUSED");
+        IFixedTermLoanManager(loanManager).impairLoan(address(0));
 
-        vm.expectRevert("LM:RLI:PAUSED");
-        ILoanManagerLike(loanManager).removeLoanImpairment(address(0));
+        vm.expectRevert("LM:PAUSED");
+        IFixedTermLoanManager(loanManager).removeLoanImpairment(address(0));
+
+        vm.expectRevert("LM:PAUSED");
+        IFixedTermLoanManager(loanManager).setAllowedSlippage(address(0), 0);
+
+        vm.expectRevert("LM:PAUSED");
+        IFixedTermLoanManager(loanManager).setMinRatio(address(0), 0);
 
         /**********************************************************************************************************************************/
         /*** Pool                                                                                                                       ***/
@@ -254,7 +260,7 @@ contract PauseTests is TestBaseWithAssertions {
         poolManager.acceptPendingPoolDelegate();
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.addLoanManager(address(0), "");
+        poolManager.addLoanManager(address(0));
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.depositCover(0);
@@ -290,16 +296,10 @@ contract PauseTests is TestBaseWithAssertions {
         poolManager.setAllowedLender(address(0), false);
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.setAllowedSlippage(address(0), address(0), 0);
-
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.setDelegateManagementFeeRate(0);
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.setLiquidityCap(0);
-
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.setMinRatio(address(0), address(0), 0);
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.setOpenToPublic();

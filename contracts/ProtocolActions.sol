@@ -228,14 +228,14 @@ contract ProtocolActions is TestUtils {
     ) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_ = loanManager_.poolDelegate();
+        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
 
         vm.prank(poolDelegate_);
         loanManager_.acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
     }
 
     function callLoan(address loanManager_, address loan_, uint256 principal_) internal {
-        address poolDelegate_ = ILoanManagerLike(loanManager_).poolDelegate();
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
 
         vm.prank(poolDelegate_);
         IOpenTermLoanManager(loanManager_).callPrincipal(loan_, principal_);
@@ -244,7 +244,7 @@ contract ProtocolActions is TestUtils {
     function fundLoan(address loan_) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_ = loanManager_.poolDelegate();
+        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
 
         vm.prank(poolDelegate_);
         loanManager_.fund(loan_);
@@ -253,7 +253,7 @@ contract ProtocolActions is TestUtils {
     function impairLoan(address loan_) internal {
         ILoanManagerLike loanManager_  = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_ = loanManager_.poolDelegate();
+        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
 
         vm.startPrank(poolDelegate_);
         loanManager_.impairLoan(loan_);
@@ -261,7 +261,7 @@ contract ProtocolActions is TestUtils {
     }
 
     function removeLoanCall(address loanManager_, address loan_) internal {
-        address poolDelegate_ = ILoanManagerLike(loanManager_).poolDelegate();
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
 
         vm.prank(poolDelegate_);
         IOpenTermLoanManager(loanManager_).removeCall(loan_);
@@ -270,7 +270,7 @@ contract ProtocolActions is TestUtils {
     function removeLoanImpairment(address loan_) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_ = loanManager_.poolDelegate();
+        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
 
         vm.startPrank(poolDelegate_);
         loanManager_.removeLoanImpairment(loan_);

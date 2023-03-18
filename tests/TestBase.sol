@@ -84,6 +84,8 @@ contract TestBase is ProtocolActions {
 
     uint256 start;
 
+    address[] loanManagerFactories;
+
     // Helper mapping to assert differences in balance
     mapping(address => uint256) partialAssetBalances;
 
@@ -105,7 +107,7 @@ contract TestBase is ProtocolActions {
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(fixedTermLoanManagerFactory, fixedTermLoanManagerInitializer, 1 weeks, 2 days);
+        _createAndConfigurePool(1 weeks, 2 days);
         _openPool();
 
         start = block.timestamp;
@@ -165,6 +167,8 @@ contract TestBase is ProtocolActions {
         globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,          true);
         globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    true);
 
+        globals.setValidInstanceOf("FT_REFINANCER", address(refinancer), true);
+
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
 
@@ -195,6 +199,9 @@ contract TestBase is ProtocolActions {
         WithdrawalManagerFactory(withdrawalManagerFactory).setDefaultVersion(1);
 
         vm.stopPrank();
+
+        loanManagerFactories.push(fixedTermLoanManagerFactory);
+        loanManagerFactories.push(openTermLoanManagerFactory);
     }
 
     function _createGlobals() internal {
@@ -216,32 +223,21 @@ contract TestBase is ProtocolActions {
     }
 
     // TODO: Add all config params here
-    function _createPool(
-        address loanManagerFactory_,
-        address loanManagerInitializer_,
-        uint256 withdrawalCycle,
-        uint256 windowDuration
-    )
-        internal
-    {
+    function _createPool(uint256 withdrawalCycle, uint256 windowDuration) internal {
         vm.prank(poolDelegate);
-        ( address poolManager_, , address withdrawalManager_ ) = deployer.deployPool({
-            factories_:    [poolManagerFactory,     loanManagerFactory_,     withdrawalManagerFactory],
-            initializers_: [poolManagerInitializer, loanManagerInitializer_, withdrawalManagerInitializer],
-            asset_:        address(fundsAsset),
-            name_:         "Maple Pool",
-            symbol_:       "MP",
-            configParams_: [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0]
-        });
+        poolManager = PoolManager(deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: withdrawalManagerFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0]
+        }));
 
-        poolManager       = PoolManager(poolManager_);
-        withdrawalManager = WithdrawalManager(withdrawalManager_);
+        withdrawalManager = WithdrawalManager(poolManager.withdrawalManager());
         pool              = Pool(poolManager.pool());
         poolCover         = PoolDelegateCover(poolManager.poolDelegateCover());
-
-        // Add the open term loan manager (in addition to the fixed one).
-        vm.prank(poolDelegate);
-        poolManager.addLoanManager(openTermLoanManagerFactory, abi.encode(address(pool)));
     }
 
     function _configurePool() internal {
@@ -251,13 +247,8 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    function _createAndConfigurePool(
-        address loanManagerFactory_,
-        address loanManagerInitializer_,
-        uint256 withdrawalCycle,
-        uint256 windowDuration
-    ) internal {
-        _createPool(loanManagerFactory_, loanManagerInitializer_, withdrawalCycle, windowDuration);
+    function _createAndConfigurePool(uint256 withdrawalCycle, uint256 windowDuration) internal {
+        _createPool(withdrawalCycle, windowDuration);
         _configurePool();
     }
 
