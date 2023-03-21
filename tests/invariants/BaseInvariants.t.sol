@@ -39,12 +39,13 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
     /*** Invariant Tests                                                                                                                ***/
     /***************************************************************************************************************************************
-     * Loan
+
+     * Fixed Term Loan
         * Invariant A: collateral balance >= _collateral`
         * Invariant B: fundsAsset >= _drawableFunds`
         * Invariant C: `_collateral >= collateralRequired_ * (principal_ - drawableFunds_) / principalRequested_`
 
-     * Loan Manager (non-liquidating)
+     * Fixed Term Loan Manager (non-liquidating)
         * Invariant A: domainStart <= domainEnd
         * Invariant B: sortedPayments is always sorted
         * Invariant C: outstandingInterest = ∑outstandingInterest(loan) (theoretical)
@@ -59,6 +60,28 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         * Invariant L: refinanceInterest[payment] = loan.refinanceInterest()
         * Invariant M: paymentDueDate[payment] = loan.paymentDueDate()
         * Invariant N: startDate[payment] <= loan.paymentDueDate() - loan.paymentInterval()
+
+     * Open Term Loan
+        * Invariant A: dateFunded <= datePaid, dateCalled, dateImpaired (if not zero)
+        * Invariant B: datePaid <= dateImpaired (if not zero)
+        * Invariant C: datePaid <= dateCalled (if not zero)
+        * Invariant D: calledPrincipal <= principal
+        * Invariant E: dateCalled != 0 -> calledPrincipal != 0
+        * Invariant F: paymentDueDate() <= defaultDate()
+        * Invariant G: paymentBreakdown == theoretical calculation
+
+     * Open Term Loan Manager
+        * Invariant A: accountedInterest + accruedInterest() == ∑loan.paymentBreakdown(block.timestamp) (regular interest minus fees)
+        * Invariant B: if no payments exist: accountedInterest == 0
+        * Invariant C: principalOut = ∑loan.principal()
+        * Invariant D: issuanceRate = ∑payment.issuanceRate
+        * Invariant E: unrealizedLosses <= assetsUnderManagement()
+        * Invariant F: if no impairments exist: unrealizedLosses == 0
+        * Invariant G: assetsUnderManagement() == ∑loan.principal() + ∑loan.paymentBreakdown(block.timestamp) (regular interest minus fees)
+        * Invariant H: block.timestamp >= domainStart
+        * Invariant I: payment.startDate == loan.dateFunded() || loan.datePaid()
+        * Invariant J: payment.issuanceRate == theoretical calculation (regular interest minus management fees)
+        * Invariant K: ∑payment.impairedDate >= ∑payment.startDate
 
      * Pool (non-liquidating)
         * Invariant A: totalAssets > fundsAsset balance of pool
