@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract RequestRedeemTests is TestBase {
@@ -16,8 +14,8 @@ contract RequestRedeemTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
     }
 
@@ -161,7 +159,7 @@ contract RequestRedeemTests is TestBase {
     function test_requestRedeem_withApproval() external {
         depositLiquidity(lp, 1_000e6);
 
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         vm.prank(lp);
         pool.approve(sender, 1_000e6);
@@ -189,8 +187,8 @@ contract RequestRedeemTests is TestBase {
     }
 
     function testDeepFuzz_requestRedeem(uint256 depositAmount, uint256 redeemAmount) external {
-        depositAmount = constrictToRange(depositAmount, 1, 1e30);
-        redeemAmount  = constrictToRange(redeemAmount,  1, depositAmount);
+        depositAmount = bound(depositAmount, 1, 1e30);
+        redeemAmount  = bound(redeemAmount,  1, depositAmount);
 
         depositLiquidity(lp, depositAmount);
 
@@ -228,8 +226,8 @@ contract RedeemTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
     }
 
@@ -270,8 +268,8 @@ contract RedeemTests is TestBase {
     }
 
     function testDeepFuzz_redeem_singleUser_fullLiquidity_oneToOne(uint256 depositAmount, uint256 redeemAmount) external {
-        depositAmount = constrictToRange(depositAmount, 1, 1e30);
-        redeemAmount  = constrictToRange(redeemAmount,  1, depositAmount);
+        depositAmount = bound(depositAmount, 1, 1e30);
+        redeemAmount  = bound(redeemAmount,  1, depositAmount);
 
         depositLiquidity(lp, depositAmount);
 
@@ -348,7 +346,7 @@ contract RedeemTests is TestBase {
     }
 
     function test_redeem_singleUser_withApprovals() external {
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         depositLiquidity(lp, 1_000e6);
 
@@ -409,7 +407,7 @@ contract RedeemTests is TestBase {
 
         // Fund a loan with all the liquidity
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
@@ -462,7 +460,7 @@ contract RedeemTests is TestBase {
 
         // Fund a loan with all the liquidity
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
@@ -524,10 +522,10 @@ contract MultiUserRedeemTests is TestBase {
 
         start = block.timestamp;
 
-        borrower = address(new Address());
-        lp1      = address(new Address());
-        lp2      = address(new Address());
-        lp3      = address(new Address());
+        borrower = makeAddr("borrower");
+        lp1      = makeAddr("lp1");
+        lp2      = makeAddr("lp2");
+        lp3      = makeAddr("lp3");
 
         loanManager = poolManager.loanManagerList(0);
         wm          = address(withdrawalManager);
@@ -612,13 +610,13 @@ contract MultiUserRedeemTests is TestBase {
     }
 
     function test_redeem_partialLiquidity_sameCash_sameExchangeRate_exposeRounding() external {
-        address lp4  = address(new Address());
-        address lp5  = address(new Address());
-        address lp6  = address(new Address());
-        address lp7  = address(new Address());
-        address lp8  = address(new Address());
-        address lp9  = address(new Address());
-        address lp10 = address(new Address());
+        address lp4  = makeAddr("lp4");
+        address lp5  = makeAddr("lp5");
+        address lp6  = makeAddr("lp6");
+        address lp7  = makeAddr("lp7");
+        address lp8  = makeAddr("lp8");
+        address lp9  = makeAddr("lp9");
+        address lp10 = makeAddr("lp10");
 
         depositLiquidity(lp1,  1_000_000e6);
         depositLiquidity(lp2,  1_000_000e6);
@@ -805,21 +803,21 @@ contract RequestRedeemFailureTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
         depositLiquidity(lp, 1_000e6);
     }
 
     function test_requestRedeem_failIfInsufficientApproval() external {
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.requestRedeem(1_000e6, lp);
 
         vm.prank(lp);
         pool.approve(address(this), 1000e6 - 1);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.requestRedeem(1_000e6, lp);
     }
 
@@ -853,8 +851,8 @@ contract RedeemFailureTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
         depositLiquidity(lp, 1_000e6);
@@ -954,7 +952,7 @@ contract RedeemFailureTests is TestBase {
         vm.prank(lp);
         pool.approve(address(this), 1_000e6 - 1);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.redeem(1_000e6, lp, lp);
     }
 
@@ -971,9 +969,9 @@ contract RedeemIntegrationTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1      = address(new Address());
-        lp2      = address(new Address());
-        borrower = address(new Address());
+        lp1      = makeAddr("lp1");
+        lp2      = makeAddr("lp2");
+        borrower = makeAddr("borrower");
         wm       = address(withdrawalManager);
 
         depositLiquidity(lp1, 3_000_000e6);

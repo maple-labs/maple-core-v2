@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { CSVWriter }                                  from "../modules/contract-test-utils/contracts/csv.sol";
-import { Address, console, InvariantTest, TestUtils } from "../modules/contract-test-utils/contracts/test.sol";
+import { console, StdInvariant, Test as T } from "../modules/forge-std/src/Test.sol";
 
 import { MapleLoan as MFTL }             from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
 import { Refinancer as MFTLR }           from "../modules/fixed-term-loan/contracts/Refinancer.sol";
@@ -46,6 +45,8 @@ import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
+
+contract EmptyContract { }
 
 contract FixedTermLoan is MFTL { }
 
@@ -104,3 +105,18 @@ contract OpenTermLoanManagerFactory is MOTLMF {
 contract OpenTermLoanManagerInitializer is MOTLMI { }
 
 contract OpenTermRefinancer is MOTLR { }
+
+// Test does not import stdError which contain the error constants. 
+contract Test is T { 
+
+    bytes public constant assertionError      = abi.encodeWithSignature("Panic(uint256)", 0x01);
+    bytes public constant arithmeticError     = abi.encodeWithSignature("Panic(uint256)", 0x11);
+    bytes public constant divisionError       = abi.encodeWithSignature("Panic(uint256)", 0x12);
+    bytes public constant enumConversionError = abi.encodeWithSignature("Panic(uint256)", 0x21);
+    bytes public constant encodeStorageError  = abi.encodeWithSignature("Panic(uint256)", 0x22);
+    bytes public constant popError            = abi.encodeWithSignature("Panic(uint256)", 0x31);
+    bytes public constant indexOOBError       = abi.encodeWithSignature("Panic(uint256)", 0x32);
+    bytes public constant memOverflowError    = abi.encodeWithSignature("Panic(uint256)", 0x41);
+    bytes public constant zeroVarError        = abi.encodeWithSignature("Panic(uint256)", 0x51);
+
+}

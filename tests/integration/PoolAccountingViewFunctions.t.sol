@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract BalanceOfAssetsTests is TestBase {
@@ -13,8 +11,8 @@ contract BalanceOfAssetsTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
     }
 
     function test_balanceOfAssets() external {
@@ -35,9 +33,9 @@ contract BalanceOfAssetsTests is TestBase {
     }
 
     function testDeepFuzz_balanceOfAssets(uint256 depositAmount1, uint256 depositAmount2, uint256 additionalAmount) external {
-        depositAmount1   = constrictToRange(depositAmount1,   1, 1e29);
-        depositAmount2   = constrictToRange(depositAmount2,   1, 1e29);
-        additionalAmount = constrictToRange(additionalAmount, 1, 1e29);
+        depositAmount1   = bound(depositAmount1,   1, 1e29);
+        depositAmount2   = bound(depositAmount2,   1, 1e29);
+        additionalAmount = bound(additionalAmount, 1, 1e29);
 
         uint256 totalDeposits = depositAmount1 + depositAmount2;
 
@@ -74,8 +72,8 @@ contract MaxDepositTests is TestBase {
         _createFactories();
         _createAndConfigurePool(1 weeks, 2 days);
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
     }
 
     function test_maxDeposit_closedPool() external {
@@ -115,8 +113,8 @@ contract MaxDepositTests is TestBase {
     }
 
     function testDeepFuzz_maxDeposit_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
-        liquidityCap = constrictToRange(liquidityCap, 1, 1e29);
-        totalAssets  = constrictToRange(totalAssets,  1, 1e29);
+        liquidityCap = bound(liquidityCap, 1, 1e29);
+        totalAssets  = bound(totalAssets,  1, 1e29);
 
         uint256 availableDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
 
@@ -148,8 +146,8 @@ contract MaxMintTests is TestBase {
         _createFactories();
         _createAndConfigurePool(1 weeks, 2 days);
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
     }
 
     function test_maxMint_closedPool() external {
@@ -189,8 +187,8 @@ contract MaxMintTests is TestBase {
     }
 
     function testDeepFuzz_maxMint_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
-        liquidityCap = constrictToRange(liquidityCap, 1, 1e29);
-        totalAssets  = constrictToRange(totalAssets,  1, 1e29);
+        liquidityCap = bound(liquidityCap, 1, 1e29);
+        totalAssets  = bound(totalAssets,  1, 1e29);
 
         uint256 availableDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
 
@@ -225,9 +223,9 @@ contract MaxMintTests is TestBase {
     }
 
     function testDeepFuzz_maxMint_exchangeRateGtOne(uint256 liquidityCap, uint256 depositAmount, uint256 transferAmount) external {
-        liquidityCap   = constrictToRange(liquidityCap,   1, 1e29);
-        depositAmount  = constrictToRange(depositAmount,  1, liquidityCap);
-        transferAmount = constrictToRange(transferAmount, 1, 1e29);
+        liquidityCap   = bound(liquidityCap,   1, 1e29);
+        depositAmount  = bound(depositAmount,  1, liquidityCap);
+        transferAmount = bound(transferAmount, 1, 1e29);
 
         vm.startPrank(poolDelegate);
         poolManager.setLiquidityCap(liquidityCap);
@@ -260,7 +258,7 @@ contract MaxRedeemTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
     }
 
     function test_maxRedeem_noLockedShares_notInExitWindow() external {
@@ -315,7 +313,7 @@ contract MaxWithdrawTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
     }
 
     function test_maxWithdraw_noLockedShares_notInExitWindow() external {
@@ -361,7 +359,7 @@ contract MaxWithdrawTests is TestBase {
     }
 
     function testDeepFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
-        assets_ = constrictToRange(assets_, 1, 1_000e6);
+        assets_ = bound(assets_, 1, 1_000e6);
 
         depositLiquidity(lp, assets_);
 
@@ -388,7 +386,7 @@ contract PreviewRedeemTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
     }
 
     function test_previewRedeem_invalidShares() external {
@@ -436,7 +434,7 @@ contract PreviewWithdrawTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
     }
 
     function test_previewWithdraw() external {
@@ -459,7 +457,7 @@ contract PreviewWithdrawTests is TestBase {
     }
 
     function testDeepFuzz_previewWithdraw_lockedShares_notInExitWindow(uint256 assets_) external {
-        assets_ = constrictToRange(assets_, 1, 1_000e6);
+        assets_ = bound(assets_, 1, 1_000e6);
 
         depositLiquidity(lp, assets_);
 
@@ -472,7 +470,7 @@ contract PreviewWithdrawTests is TestBase {
     }
 
     function testDeepFuzz_previewWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
-        assets_ = constrictToRange(assets_, 1, 1_000e6);
+        assets_ = bound(assets_, 1, 1_000e6);
 
         depositLiquidity(lp, assets_);
 
@@ -500,9 +498,9 @@ contract ConvertToAssetsTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
-        lp3 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
+        lp3 = makeAddr("lp3");
     }
 
     function test_convertToAssets_zeroTotalSupply() external {
@@ -553,9 +551,9 @@ contract ConvertToSharesTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
-        lp3 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
+        lp3 = makeAddr("lp3");
     }
 
     function test_convertToShares_zeroTotalSupply() external {
@@ -606,9 +604,9 @@ contract PreviewDepositTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
-        lp3 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
+        lp3 = makeAddr("lp3");
     }
 
     function test_previewDeposit_zeroTotalSupply() external {
@@ -659,9 +657,9 @@ contract PreviewMintTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
-        lp3 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
+        lp3 = makeAddr("lp3");
     }
 
     function test_previewMint_zeroTotalSupply() external {
@@ -712,8 +710,8 @@ contract TotalAssetsTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp1      = address(new Address());
-        borrower = address(new Address());
+        lp1      = makeAddr("lp1");
+        borrower = makeAddr("borrower");
 
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);

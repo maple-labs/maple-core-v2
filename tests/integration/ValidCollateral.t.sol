@@ -3,14 +3,12 @@ pragma solidity 0.8.7;
 
 import { IProxyFactoryLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract ValidCollateralTests is TestBase {
 
     function test_setValidCollateral_invalidCollateral() external {
-        address borrower = address(new Address());
+        address borrower = makeAddr("borrower");
 
         vm.prank(governor);
         globals.setValidCollateralAsset(address(collateralAsset), false);

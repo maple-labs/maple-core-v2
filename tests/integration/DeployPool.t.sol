@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { ILoanManagerLike, IProxyFactoryLike, IPool, IPoolManager, IWithdrawalManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract DeployPoolTests is TestBaseWithAssertions {
@@ -143,7 +141,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
     }
 
     function test_deployPool_failWithInvalidAsset() external {
-        address asset = address(new Address());
+        address asset = makeAddr("asset");
         vm.prank(address(governor));
         globals.setValidPoolAsset(address(asset), true);
 

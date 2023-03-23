@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { Address, console } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 import { OpenTermLoan, OpenTermLoanManager, Pool, PoolManager } from "../../contracts/Contracts.sol";
@@ -60,15 +58,15 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         _setTreasury();
         _createFactories();
 
-        borrower1 = address(new Address());  // TODO: makeAddr
-        borrower2 = address(new Address());
-        borrower3 = address(new Address());
-        borrower4 = address(new Address());
+        borrower1 = makeAddr("borrower1");
+        borrower2 = makeAddr("borrower2");
+        borrower3 = makeAddr("borrower3");
+        borrower4 = makeAddr("borrower4");
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
-        lp3 = address(new Address());
-        lp4 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
+        lp3 = makeAddr("lp3");
+        lp4 = makeAddr("lp4");
 
         start = block.timestamp;
     }

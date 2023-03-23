@@ -14,9 +14,9 @@ import {
 
 import { ITest } from "../interfaces/ITest.sol";
 
-import { Address, TestUtils, MockERC20 } from "../../../contracts/Contracts.sol";
+import { Test, MockERC20 } from "../../../contracts/Contracts.sol";
 
-contract LoanHandler is TestUtils {
+contract LoanHandler is Test {
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -102,12 +102,12 @@ contract LoanHandler is TestUtils {
         pool            = IPool(poolManager.pool());
         testContract    = ITest(testContract_);
 
-        poolDelegate = address(new Address());
+        poolDelegate = makeAddr("poolDelegate");
 
         earliestPaymentDueDate = testContract.currentTimestamp();
 
         for (uint256 i; i < numBorrowers_; ++i) {
-            address borrower = address(new Address());
+            address borrower = makeAddr("borrower");
             vm.prank(governor);
             IGlobals(globals).setValidBorrower(borrower, true);
             borrowers.push(borrower);
@@ -142,27 +142,27 @@ contract LoanHandler is TestUtils {
 
         if (numLoans > maxLoans) return;
 
-        address borrower_ = borrowers[constrictToRange(borrowerIndexSeed_, 0, numBorrowers - 1)];
+        address borrower_ = borrowers[bound(borrowerIndexSeed_, 0, numBorrowers - 1)];
 
-        termDetails_[0] = constrictToRange(termDetails_[0], 0,      30 days);   // Grace period
-        termDetails_[1] = constrictToRange(termDetails_[1], 1 days, 730 days);  // Payment interval
-        termDetails_[2] = constrictToRange(termDetails_[2], 1,      30);        // Number of payments
+        termDetails_[0] = bound(termDetails_[0], 0,      30 days);   // Grace period
+        termDetails_[1] = bound(termDetails_[1], 1 days, 730 days);  // Payment interval
+        termDetails_[2] = bound(termDetails_[2], 1,      30);        // Number of payments
 
-        amounts_[0] = constrictToRange(amounts_[0], 0,        1e29);         // Collateral required is zero as we don't drawdown
-        amounts_[1] = constrictToRange(amounts_[1], 10_000e6, 1e29);         // Principal requested
-        amounts_[2] = constrictToRange(amounts_[2], 0,        amounts_[1]);  // Ending principal
+        amounts_[0] = bound(amounts_[0], 0,        1e29);         // Collateral required is zero as we don't drawdown
+        amounts_[1] = bound(amounts_[1], 10_000e6, 1e29);         // Principal requested
+        amounts_[2] = bound(amounts_[2], 0,        amounts_[1]);  // Ending principal
 
-        rates_[0] = constrictToRange(rates_[0], 0.0001e18, 0.5e18);  // Interest rate
-        rates_[1] = constrictToRange(rates_[1], 0.0001e18, 1.0e18);  // Closing fee rate
-        rates_[2] = constrictToRange(rates_[2], 0.0001e18, 0.6e18);  // Late fee rate
-        rates_[3] = constrictToRange(rates_[3], 0.0001e18, 0.2e18);  // Late interest premium
+        rates_[0] = bound(rates_[0], 0.0001e18, 0.5e18);  // Interest rate
+        rates_[1] = bound(rates_[1], 0.0001e18, 1.0e18);  // Closing fee rate
+        rates_[2] = bound(rates_[2], 0.0001e18, 0.6e18);  // Late fee rate
+        rates_[3] = bound(rates_[3], 0.0001e18, 0.2e18);  // Late interest premium
 
-        fees_[0] = constrictToRange(fees_[0], 0, amounts_[1] / 10);  // Delegate origination fee
-        fees_[1] = constrictToRange(fees_[1], 0, amounts_[1] / 10);  // Delegate service fee
+        fees_[0] = bound(fees_[0], 0, amounts_[1] / 10);  // Delegate origination fee
+        fees_[1] = bound(fees_[1], 0, amounts_[1] / 10);  // Delegate service fee
 
         if (
             pool.totalSupply() == 0 ||
-            getDiff(fundsAsset.balanceOf(address(pool)), IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity()) < amounts_[1] ||
+            delta(fundsAsset.balanceOf(address(pool)), IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity()) < amounts_[1] ||
             IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity() > fundsAsset.balanceOf(address(pool))
         ) return;
 
@@ -222,9 +222,9 @@ contract LoanHandler is TestUtils {
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = bound(loanIndexSeed_, 0, activeLoans.length - 1);
 
-        address borrower_ = borrowers[constrictToRange(borrowerIndexSeed_, 0, numBorrowers - 1)];
+        address borrower_ = borrowers[bound(borrowerIndexSeed_, 0, numBorrowers - 1)];
 
         vm.startPrank(borrower_);
 
@@ -287,7 +287,7 @@ contract LoanHandler is TestUtils {
     function warp(uint256 warpAmount_) external useTimestamps {
         numCalls++;
 
-        warpAmount_ = constrictToRange(warpAmount_, 0, 10 days);
+        warpAmount_ = bound(warpAmount_, 0, 10 days);
 
         vm.warp(block.timestamp + warpAmount_);
     }
@@ -298,6 +298,10 @@ contract LoanHandler is TestUtils {
 
     function min(uint256 a_, uint256 b_) internal pure returns (uint256 minimum_) {
         minimum_ = a_ < b_ ? a_ : b_;
+    }
+
+    function delta(uint256 x, uint256 y) internal pure returns (uint256 diff) {
+        diff = x > y ? x - y : y - x;
     }
 
 }

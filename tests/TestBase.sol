@@ -4,7 +4,6 @@ pragma solidity 0.8.7;
 import { IFixedTermLoanManager, ILoanLike } from "../contracts/interfaces/Interfaces.sol";
 
 import {
-    Address,
     FeeManager,
     FixedTermLoan,
     FixedTermLoanFactory,
@@ -32,7 +31,6 @@ import {
     PoolManager,
     PoolManagerFactory,
     PoolManagerInitializer,
-    TestUtils,
     WithdrawalManager,
     WithdrawalManagerFactory,
     WithdrawalManagerInitializer
@@ -118,10 +116,10 @@ contract TestBase is ProtocolActions {
     /**************************************************************************************************************************************/
 
     function _createAccounts() internal {
-        governor       = address(new Address());
-        migrationAdmin = address(new Address());
-        poolDelegate   = address(new Address());
-        treasury       = address(new Address());
+        governor       = makeAddr("governor");
+        migrationAdmin = makeAddr("migrationAdmin");
+        poolDelegate   = makeAddr("poolDelegate");
+        treasury       = makeAddr("treasury");
     }
 
     function _createAssets() internal {

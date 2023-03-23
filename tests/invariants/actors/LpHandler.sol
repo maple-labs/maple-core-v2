@@ -6,9 +6,9 @@ import { IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/inte
 import { ITest } from "../interfaces/ITest.sol";
 
 // TODO: MockERC20 is not needed if protocol actions are used which handle minting.
-import { Address, TestUtils, MockERC20 } from "../../../contracts/Contracts.sol";
+import { Test, MockERC20 } from "../../../contracts/Contracts.sol";
 
-contract LpHandler is TestUtils {
+contract LpHandler is Test {
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                        ***/
@@ -45,7 +45,7 @@ contract LpHandler is TestUtils {
         numHolders = numLps + 1;  // Include withdrawal manager
 
         for (uint256 i; i < numLps_; ++i) {
-            address lp = address(new Address());
+            address lp = makeAddr(string(abi.encode(i)));
             lps.push(lp);
             holders.push(lp);
         }
@@ -64,7 +64,7 @@ contract LpHandler is TestUtils {
     }
 
     modifier useRandomLp(uint256 lpIndex_) {
-        currentLp = lps[constrictToRange(lpIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
+        currentLp = lps[bound(lpIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
         vm.startPrank(currentLp);
         _;
         vm.stopPrank();
@@ -78,7 +78,7 @@ contract LpHandler is TestUtils {
         numCalls++;
         numberOfCalls["deposit"]++;
 
-        assets_ = constrictToRange(assets_, 100, 1e29);
+        assets_ = bound(assets_, 100, 1e29);
 
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
@@ -90,7 +90,7 @@ contract LpHandler is TestUtils {
         numCalls++;
         numberOfCalls["mint"]++;
 
-        shares_ = constrictToRange(shares_, 1, 1e29);
+        shares_ = bound(shares_, 1, 1e29);
 
         assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
 
@@ -112,7 +112,7 @@ contract LpHandler is TestUtils {
 
         if (block.timestamp > windowStart_) return 0;  // Only warp forward
 
-        vm.warp(constrictToRange(warpSeed_, windowStart_, windowEnd_));
+        vm.warp(bound(warpSeed_, windowStart_, windowEnd_));
 
         assets_ = pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);  // TODO: Fuzz owner and receiver
     }
@@ -130,7 +130,7 @@ contract LpHandler is TestUtils {
 
         if (block.timestamp > windowStart_) return 0;
 
-        vm.warp(constrictToRange(warpSeed_, windowStart_, windowStart_ + 1 days));
+        vm.warp(bound(warpSeed_, windowStart_, windowStart_ + 1 days));
 
         assets_ = pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);  // TODO: Fuzz owner and receiver
     }
@@ -141,7 +141,7 @@ contract LpHandler is TestUtils {
 
         if (pool.balanceOf(currentLp) == 0 || withdrawalManager.lockedShares(currentLp) != 0) return 0;
 
-        shares_ = constrictToRange(shares_, 1, pool.balanceOf(currentLp));
+        shares_ = bound(shares_, 1, pool.balanceOf(currentLp));
 
         escrowShares_ = pool.requestRedeem(shares_, currentLp);  // TODO: Add fuzzing for users
     }
@@ -156,9 +156,9 @@ contract LpHandler is TestUtils {
 
         if (pool.balanceOf(currentLp) == 0) return false;
 
-        amount_ = constrictToRange(amount_, 1, pool.balanceOf(currentLp));
+        amount_ = bound(amount_, 1, pool.balanceOf(currentLp));
 
-        address recipient_ = lps[constrictToRange(recipientIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
+        address recipient_ = lps[bound(recipientIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
 
         success_ = pool.transfer(recipient_, amount_);
     }

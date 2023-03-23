@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { ILoanManagerLike, IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address, OpenTermLoan } from "../../contracts/Contracts.sol";
+import { OpenTermLoan } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -14,7 +14,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity(address(new Address()), 1_500_000e6);
+        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -26,7 +26,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
         });
 
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
@@ -56,8 +56,8 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
 
 contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     uint256 constant gracePeriod     = 5 days;
     uint256 constant noticePeriod    = 5 days;

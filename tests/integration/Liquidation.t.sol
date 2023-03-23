@@ -3,14 +3,12 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager, ILiquidator, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract LoanLiquidationTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     address loan;
     address loanManager;
@@ -1895,8 +1893,8 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
 contract FinishLiquidationFailureTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     address loan;
 

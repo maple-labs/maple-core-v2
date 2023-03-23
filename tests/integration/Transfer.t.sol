@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 // TODO: instead of putting this into its own file, maybe consider putting all tests that manipulate basic LP token functionality
 //       (transfer, deposit, redeem, etc) into the same file.
 contract TransferTests is TestBase {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     function setUp() public override {
         _createAccounts();
@@ -30,7 +28,7 @@ contract TransferTests is TestBase {
         poolManager.setOpenToPublic();
 
         uint256 lpShares  = depositLiquidity(lp, 1_000e6);
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
 
         vm.prank(governor);
         globals.setProtocolPause(true);
@@ -48,7 +46,7 @@ contract TransferTests is TestBase {
         uint256 lpShares = depositLiquidity(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
         vm.expectRevert("P:T:RECIPIENT_NOT_ALLOWED");
         pool.transfer(recipient, lpShares);
 
@@ -69,7 +67,7 @@ contract TransferTests is TestBase {
         uint256 lpShares = depositLiquidity(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
         vm.expectRevert("P:T:RECIPIENT_NOT_ALLOWED");
         pool.transfer(recipient, lpShares);
 
@@ -86,7 +84,7 @@ contract TransferTests is TestBase {
         poolManager.setOpenToPublic();
 
         uint256 lpShares  = depositLiquidity(lp, 1_000e6);
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
 
         assertEq(pool.balanceOf(lp),        lpShares);
         assertEq(pool.balanceOf(recipient), 0);
@@ -103,7 +101,7 @@ contract TransferTests is TestBase {
         poolManager.setOpenToPublic();
 
         uint256 lpShares  = depositLiquidity(lp, 1_000e6);
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
 
         vm.prank(lp);
         pool.approve(recipient, lpShares);
@@ -123,8 +121,8 @@ contract TransferTests is TestBase {
 
         // LP gets pool tokens.
         uint256 lpShares   = depositLiquidity(lp, 1_000e6);
-        address recipient  = address(new Address());
-        address transferer = address(new Address());
+        address recipient  = makeAddr("recipient");
+        address transferer = makeAddr("transferer");
 
         vm.prank(lp);
         pool.approve(transferer, lpShares);
@@ -149,8 +147,8 @@ contract TransferTests is TestBase {
 
         // LP gets pool tokens.
         uint256 lpShares   = depositLiquidity(lp, 1_000e6);
-        address recipient  = address(new Address());
-        address transferer = address(new Address());
+        address recipient  = makeAddr("recipient");
+        address transferer = makeAddr("transferer");
 
         vm.prank(lp);
         pool.approve(transferer, lpShares);
@@ -173,10 +171,10 @@ contract TransferTests is TestBase {
         poolManager.setOpenToPublic();
 
         uint256 lpShares  = depositLiquidity(lp, 1_000e6);
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
 
         vm.prank(recipient);
-        vm.expectRevert(ARITHMETIC_ERROR);  // ERC20: subtraction underflow in _decreaseAllowance
+        vm.expectRevert(arithmeticError);  // ERC20: subtraction underflow in _decreaseAllowance
         pool.transferFrom(lp, recipient, lpShares);
     }
 
@@ -185,13 +183,13 @@ contract TransferTests is TestBase {
         poolManager.setOpenToPublic();
 
         uint256 lpShares  = depositLiquidity(lp, 1_000e6);
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
 
         vm.prank(lp);
         pool.approve(recipient, lpShares - 1);
 
         vm.prank(recipient);
-        vm.expectRevert(ARITHMETIC_ERROR);  // ERC20: subtraction underflow in _decreaseAllowance
+        vm.expectRevert(arithmeticError);  // ERC20: subtraction underflow in _decreaseAllowance
         pool.transferFrom(lp, recipient, lpShares);
     }
 
@@ -200,7 +198,7 @@ contract TransferTests is TestBase {
         poolManager.setOpenToPublic();
 
         uint256 lpShares  = depositLiquidity(lp, 1_000e6);
-        address recipient = address(new Address());
+        address recipient = makeAddr("recipient");
 
         vm.prank(lp);
         pool.approve(recipient, lpShares);

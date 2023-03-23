@@ -10,7 +10,6 @@ import {
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import {
-    Address,
     FixedTermLoanManager,
     Globals,
     Liquidator,
@@ -230,8 +229,8 @@ contract LoanManagerUpgradeTests is TestBase {
 
 contract LiquidationUpgradeTests is TestBase {
 
-    address borrower          = address(new Address());
-    address lp                = address(new Address());
+    address borrower          = makeAddr("borrower");
+    address lp                = makeAddr("lp");
     address newImplementation = address(new FixedTermLoanManager());
 
     address loan;

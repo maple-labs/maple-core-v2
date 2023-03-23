@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract MakePaymentFailureTests is TestBaseWithAssertions {
@@ -16,8 +14,8 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositLiquidity(lp, 1_500_000e6);
 
@@ -65,7 +63,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
         vm.prank(borrower);
         // NOTE: When there's not enough balance, the tx fails in the ERC20 with an underflow
         //       rather than on the ERC20-helper library with the error message.
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         IFixedTermLoan(loan).makePayment(0);
     }
 
@@ -89,8 +87,8 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositLiquidity(lp, 1_500_000e6);
 
@@ -493,8 +491,8 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositLiquidity(lp, 2_500_000e6);
 
@@ -625,7 +623,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment2Interest  = 104_761_904762;
 
         // Assert that payments are equal
-        assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
+        assertApproxEqAbs(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
         assertFixedTermPaymentInfo({
             loan:                loan,
@@ -766,7 +764,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment2Interest  = 104_761_904762;
 
         // Assert that payments are equal
-        assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
+        assertApproxEqAbs(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
         assertFixedTermPaymentInfo({
             loan:                loan,
@@ -908,7 +906,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         uint256 payment2Interest  = 104_761_904762;
 
         // Assert that payments are equal
-        assertWithinDiff(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
+        assertApproxEqAbs(payment1Principal + payment1Interest, payment2Principal + payment2Interest, 5);
 
         assertFixedTermPaymentInfo({
             loan:                loan,
@@ -957,9 +955,9 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower1 = address(new Address());
-        borrower2 = address(new Address());
-        lp        = address(new Address());
+        borrower1 = makeAddr("borrower1");
+        borrower2 = makeAddr("borrower2");
+        lp        = makeAddr("lp");
 
         depositLiquidity(lp, 3_500_000e6);
 
@@ -1733,9 +1731,9 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower1 = address(new Address());
-        borrower2 = address(new Address());
-        lp        = address(new Address());
+        borrower1 = makeAddr("borrower1");
+        borrower2 = makeAddr("borrower2");
+        lp        = makeAddr("lp");
 
         loanManager = poolManager.loanManagerList(0);
 
@@ -2193,10 +2191,10 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower1 = address(new Address());
-        borrower2 = address(new Address());
-        borrower3 = address(new Address());
-        lp        = address(new Address());
+        borrower1 = makeAddr("borrower1");
+        borrower2 = makeAddr("borrower2");
+        borrower3 = makeAddr("borrower3");
+        lp        = makeAddr("lp");
 
         depositLiquidity(lp, 6_500_000e6);
 

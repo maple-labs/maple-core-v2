@@ -1,7 +1,3 @@
-[submodule "modules/contract-test-utils"]
-	path = modules/contract-test-utils
-	url = git@github.com:maple-labs/contract-test-utils.git
-	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git

@@ -28,13 +28,13 @@ contract DepositFuzzTests is FuzzBase {
         vm.assume(depositor != address(pool));
         vm.assume(receiver  != address(pool));
 
-        totalSupply      = constrictToRange(totalSupply,      0, 1e30);
-        totalAssets      = constrictToRange(totalAssets,      0, 1e30);
-        unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);
-        depositorAssets  = constrictToRange(depositorAssets,  0, 1e30);
-        assetsToDeposit  = constrictToRange(assetsToDeposit,  0, depositorAssets);
-        receiverShares   = constrictToRange(receiverShares,   0, totalSupply);
-        cash             = constrictToRange(receiverShares,   0, totalAssets);
+        totalSupply      = bound(totalSupply,      0, 1e30);
+        totalAssets      = bound(totalAssets,      0, 1e30);
+        unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
+        depositorAssets  = bound(depositorAssets,  0, 1e30);
+        assetsToDeposit  = bound(assetsToDeposit,  0, depositorAssets);
+        receiverShares   = bound(receiverShares,   0, totalSupply);
+        cash             = bound(receiverShares,   0, totalAssets);
 
         mintShares(receiver, receiverShares, totalSupply);
         mintAssets(depositor, depositorAssets);
@@ -44,7 +44,7 @@ contract DepositFuzzTests is FuzzBase {
         fundsAsset.approve(address(pool), assetsToDeposit);
 
         if (totalSupply != 0 && totalAssets == 0) {
-            vm.expectRevert(ZERO_DIVISION);
+            vm.expectRevert(divisionError);
             pool.deposit(assetsToDeposit, receiver);
             return;
         }

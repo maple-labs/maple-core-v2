@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract RequestWithdrawTests is TestBase {
@@ -16,8 +14,8 @@ contract RequestWithdrawTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
     }
 
@@ -40,7 +38,7 @@ contract RequestWithdrawTests is TestBase {
     function test_requestWithdraw_withApproval() external {
         depositLiquidity(lp, 1_000e6);
 
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         vm.prank(lp);
         pool.approve(sender, 1_000e6);
@@ -60,8 +58,8 @@ contract RequestWithdrawTests is TestBase {
 
 
     function testDeepFuzz_requestWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
-        depositAmount  = constrictToRange(depositAmount,  1, 1e30);
-        withdrawAmount = constrictToRange(withdrawAmount, 1, depositAmount);
+        depositAmount  = bound(depositAmount,  1, 1e30);
+        withdrawAmount = bound(withdrawAmount, 1, depositAmount);
 
         depositLiquidity(lp, depositAmount);
 
@@ -90,21 +88,21 @@ contract RequestWithdrawFailureTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
         depositLiquidity(lp, 1_000e6);
     }
 
     function test_requestWithdraw_failIfInsufficientApproval() external {
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.requestWithdraw(1_000e6, lp);
 
         vm.prank(lp);
         pool.approve(address(this), 1_000e6 - 1);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.requestWithdraw(1_000e6, lp);
     }
 
@@ -129,8 +127,8 @@ contract WithdrawFailureTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
         depositLiquidity(lp, 1_000e6);
@@ -182,10 +180,10 @@ contract WithdrawScenarios is TestBase {
 
     function test_withdrawals_withUpdateAccounting() external {
         // Create four liquidity providers.
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
-        address lp3 = address(new Address());
-        address lp4 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
+        address lp3 = makeAddr("lp3");
+        address lp4 = makeAddr("lp4");
 
         // Deposit liquidity into the pool.
         depositLiquidity(address(lp1), 500_000e6);
@@ -195,7 +193,7 @@ contract WithdrawScenarios is TestBase {
 
         // Fund three loans.
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
@@ -203,7 +201,7 @@ contract WithdrawScenarios is TestBase {
         });
 
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(12 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
@@ -211,7 +209,7 @@ contract WithdrawScenarios is TestBase {
         });
 
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(15 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
             rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
@@ -219,7 +217,7 @@ contract WithdrawScenarios is TestBase {
         });
 
         // Deposit extra liquidity to allow for partial withdrawals.
-        depositLiquidity(address(new Address()), 500_000e6);
+        depositLiquidity(makeAddr("depositor"), 500_000e6);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
@@ -267,7 +265,7 @@ contract WithdrawScenarios is TestBase {
 
         assertEq(totalWithdrawn, 500_000e6);
 
-        assertWithinDiff(fundsAsset.balanceOf(address(pool)), 0, 1);
+        assertApproxEqAbs(fundsAsset.balanceOf(address(pool)), 0, 1);
 
         // Assert all LP balances.
         assertEq(fundsAsset.balanceOf(address(lp1)), assets1);
@@ -293,11 +291,11 @@ contract WithdrawScenarios is TestBase {
     }
 
     function test_withdrawals_cashInjection() external {
-        address borrower = address(new Address());
+        address borrower = makeAddr("borrower");
 
         // Create two liquidity providers.
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
 
         // Deposit liquidity into the pool.
         depositLiquidity(address(lp1), 1_500_000e6);
@@ -376,13 +374,13 @@ contract WithdrawScenarios is TestBase {
     }
 
     function test_withdrawals_poorExchangeRates() external {
-        address borrower = address(new Address());
+        address borrower = makeAddr("borrower");
 
         // Create four liquidity providers.
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
-        address lp3 = address(new Address());
-        address lp4 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
+        address lp3 = makeAddr("lp3");
+        address lp4 = makeAddr("lp4");
 
         // Deposit liquidity into the pool.
         depositLiquidity(address(lp1),   500_000e6);
@@ -544,7 +542,7 @@ contract WithdrawOnPermissionedPool is TestBase {
     }
 
     function test_withdraw_withUnwhitelistedUser() external {
-        address lp1 = address(new Address());
+        address lp1 = makeAddr("lp1");
 
         depositLiquidity(address(lp1), 500_000e6);
 

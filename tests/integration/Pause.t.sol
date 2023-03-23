@@ -10,14 +10,14 @@ import {
     IProxyFactoryLike
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
+import { EmptyContract } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract PauseTests is TestBaseWithAssertions {
 
-    address borrower          = address(new Address());
-    address pausePoolDelegate = address(new Address());
+    address borrower          = makeAddr("borrower");
+    address pausePoolDelegate = makeAddr("pausePoolDelegate");
 
     address loan;
     address loanManager;
@@ -30,11 +30,11 @@ contract PauseTests is TestBaseWithAssertions {
         super.setUp();
 
         // Create new implementations for upgrades
-        address liquidatorImplementationForUpgrade        = address(new Address());
-        address loanImplementationForUpgrade              = address(new Address());
-        address loanManagerImplementationForUpgrade       = address(new Address());
-        address poolManagerImplementationForUpgrade       = address(new Address());
-        address withdrawalManagerImplementationForUpgrade = address(new Address());
+        address liquidatorImplementationForUpgrade        = address(new EmptyContract());
+        address loanImplementationForUpgrade              = address(new EmptyContract());
+        address loanManagerImplementationForUpgrade       = address(new EmptyContract());
+        address poolManagerImplementationForUpgrade       = address(new EmptyContract());
+        address withdrawalManagerImplementationForUpgrade = address(new EmptyContract());
 
         // Register implementation and upgrade paths
         vm.startPrank(governor);
@@ -56,7 +56,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.stopPrank();
 
-        depositLiquidity(address(new Address()), 1_500_000e6);
+        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -70,7 +70,7 @@ contract PauseTests is TestBaseWithAssertions {
         loanManager = poolManager.loanManagerList(0);
 
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],

@@ -24,12 +24,12 @@ contract WithdrawFuzzTests is FuzzBase {
         vm.assume(caller   != address(pool));
         vm.assume(receiver != address(pool));
 
-        totalSupply      = constrictToRange(totalSupply,      0, 1e29);
-        totalAssets      = constrictToRange(totalAssets,      0, 1e20);
-        unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);
-        assetsToWithdraw = constrictToRange(assetsToWithdraw, 1, 1e20);
-        receiverAssets   = constrictToRange(receiverAssets,   0, 1e20);
-        availableAssets  = constrictToRange(availableAssets,  0, totalAssets - unrealizedLosses);
+        totalSupply      = bound(totalSupply,      0, 1e29);
+        totalAssets      = bound(totalAssets,      0, 1e20);
+        unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
+        assetsToWithdraw = bound(assetsToWithdraw, 1, 1e20);
+        receiverAssets   = bound(receiverAssets,   0, 1e20);
+        availableAssets  = bound(availableAssets,  0, totalAssets - unrealizedLosses);
 
         if ((totalAssets - unrealizedLosses) == 0) {
             return;
@@ -50,7 +50,7 @@ contract WithdrawFuzzTests is FuzzBase {
         pool.approve(caller, type(uint256).max);
 
         if (escrowShares > ownerShares) {
-            vm.expectRevert(ARITHMETIC_ERROR);
+            vm.expectRevert(arithmeticError);
             pool.requestWithdraw(assetsToWithdraw, owner);
             return;
         }

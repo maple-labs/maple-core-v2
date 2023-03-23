@@ -14,10 +14,10 @@ import {
     IPoolManager
 } from "./interfaces/Interfaces.sol";
 
-import { TestUtils } from "../contracts/Contracts.sol";
+import { Test } from "../contracts/Contracts.sol";
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
-contract ProtocolActions is TestUtils {
+contract ProtocolActions is Test {
 
     address internal MPL  = address(0x33349B282065b0284d756F0577FB39c158F935e6);
     address internal WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);

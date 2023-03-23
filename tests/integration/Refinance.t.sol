@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
+import { EmptyContract } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -18,8 +18,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositLiquidity(lp, 2_500_000e6);
 
@@ -958,8 +958,8 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositLiquidity(lp, 2_500_000e6);
 
@@ -993,7 +993,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     }
 
     function testFail_acceptNewTerms_failIfNotValidLoanManager() external {
-        address fakeLoan = address(new Address());
+        address fakeLoan = makeAddr("fakeLoan");
 
         // NOTE: EVM reverts on factory call.
         vm.prank(poolDelegate);
@@ -1077,7 +1077,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     }
 
     function test_acceptNewTerms_failIfRefinanceCallFails() external {
-        address fakeRefinancer = address(new Address());
+        address fakeRefinancer = address(new EmptyContract());
 
         vm.prank(governor);
         globals.setValidInstanceOf("FT_REFINANCER", fakeRefinancer, true);

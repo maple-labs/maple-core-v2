@@ -10,8 +10,6 @@ import {
     IOpenTermLoanManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract ImpairLoanFailureTests is TestBaseWithAssertions {
@@ -25,8 +23,8 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositCover(100_000e6);
 
@@ -92,9 +90,9 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower    = address(new Address());
+        borrower    = makeAddr("borrower");
         loanManager = poolManager.loanManagerList(0);
-        lp          = address(new Address());
+        lp          = makeAddr("lp");
 
         depositCover(100_000e6);
 
@@ -620,9 +618,9 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower    = address(new Address());
+        borrower    = makeAddr("borrower");
         loanManager = poolManager.loanManagerList(0);
-        lp          = address(new Address());
+        lp          = makeAddr("lp");
 
         depositCover(100_000e6);
 
@@ -981,8 +979,8 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
 contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     uint256 constant gracePeriod     = 5 days;
     uint256 constant noticePeriod    = 5 days;
@@ -1238,8 +1236,8 @@ contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
 
 contract OpenTermLoanManagerRemoveLoanImpairmentTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     uint256 constant gracePeriod     = 5 days;
     uint256 constant noticePeriod    = 5 days;

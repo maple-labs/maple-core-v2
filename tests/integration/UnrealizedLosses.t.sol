@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract UnrealizedLossesTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp1      = address(new Address());
-    address lp2      = address(new Address());
-    address lp3      = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp1      = makeAddr("lp1");
+    address lp2      = makeAddr("lp2");
+    address lp3      = makeAddr("lp3");
 
     address loan;
 
@@ -205,7 +203,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertEq(poolManager.unrealizedLosses(), 4_003_600e6);
 
         // Create a new LP to deposit
-        address lp4 = address(new Address());
+        address lp4 = makeAddr("lp4");
 
         // The amount of exit shares won't equal the amount of join shares due to the unrealized losses.
         uint256 exitShares      = pool.convertToExitShares(2_000_000e6);

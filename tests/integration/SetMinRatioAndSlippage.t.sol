@@ -3,13 +3,11 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract SetMinRatioTests is TestBase {
 
-    address COLLATERAL_ASSET = address(new Address());
+    address COLLATERAL_ASSET = makeAddr("collateralAsset");
 
     IFixedTermLoanManager loanManager;
 
@@ -47,7 +45,7 @@ contract SetMinRatioTests is TestBase {
 
 contract SetSlippageTests is TestBase {
 
-    address COLLATERAL_ASSET = address(new Address());
+    address COLLATERAL_ASSET = makeAddr("collateralAsset");
 
     IFixedTermLoanManager loanManager;
 

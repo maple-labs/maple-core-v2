@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract LoanManagerGetterTests is TestBase {
@@ -15,12 +13,12 @@ contract LoanManagerGetterTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        depositLiquidity(address(new Address()), 1_500_000e6);
+        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
 
         loanManager = poolManager.loanManagerList(0);
 
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
@@ -106,7 +104,7 @@ contract LoanManagerGetterTests is TestBase {
     function test_loanManagerGetters_sortedPayments() external {
         // Fund another loan to populate the sortedPayments array.
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(3_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(250_000e6), uint256(250_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],

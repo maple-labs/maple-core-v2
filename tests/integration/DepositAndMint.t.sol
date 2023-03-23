@@ -2,7 +2,7 @@
 pragma solidity 0.8.7;
 
 // TODO: Should import an interface instead of the MockERC20 contract.
-import { Address, MockERC20 } from "../../contracts/Contracts.sol";
+import { MockERC20 } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
@@ -58,7 +58,7 @@ contract DepositTest is EnterBase {
     function setUp() public override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
 
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
@@ -99,7 +99,7 @@ contract DepositTest is EnterBase {
 
     function testDeepFuzz_deposit_singleUser(uint256 depositAmount) public {
         // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
-        depositAmount = constrictToRange(depositAmount, 1, type(uint256).max - 1);
+        depositAmount = bound(depositAmount, 1, type(uint256).max - 1);
 
         // Mint asset to LP
         fundsAsset.mint(address(lp), depositAmount);
@@ -159,7 +159,7 @@ contract DepositTest is EnterBase {
 
         assertEq(poolManager.totalAssets(), 1_000_000e6);
 
-        address lp2 = address(new Address());
+        address lp2 = makeAddr("lp2");
 
         fundsAsset.mint(address(lp2), 3_000_000e6);
 
@@ -187,7 +187,7 @@ contract DepositTest is EnterBase {
     }
 
     function testDeepFuzz_deposit_variableExchangeRate(uint256 depositAmount, uint256 warpTime) public {
-        address initialDepositor = address(new Address());
+        address initialDepositor = makeAddr("initialDepositor");
 
         // Initial user does a deposit
         fundsAsset.mint(address(initialDepositor), 1_000_000e6);
@@ -201,7 +201,7 @@ contract DepositTest is EnterBase {
 
         // Fund loan
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
@@ -209,8 +209,8 @@ contract DepositTest is EnterBase {
         });
 
         // Constrict time to be within the first loan payment and amount to be within token amounts
-        warpTime      = constrictToRange(warpTime,      0, 1_000_000);
-        depositAmount = constrictToRange(depositAmount, 1, 1e32);
+        warpTime      = bound(warpTime,      0, 1_000_000);
+        depositAmount = bound(depositAmount, 1, 1e32);
 
         vm.warp(start + warpTime);
 
@@ -296,7 +296,7 @@ contract DepositWithPermitTests is EnterBase {
 
     function testDeepFuzz_depositWithPermit_singleUser(uint256 depositAmount) public {
         // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
-        depositAmount = constrictToRange(depositAmount, 1, type(uint256).max - 1);
+        depositAmount = bound(depositAmount, 1, type(uint256).max - 1);
 
         // Mint asset to LP
         fundsAsset.mint(address(lp), depositAmount);
@@ -340,7 +340,7 @@ contract DepositFailureTests is EnterBase {
     function setUp() public virtual override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
     }
 
     function test_deposit_protocolPaused() external {
@@ -700,7 +700,7 @@ contract MintTest is EnterBase {
     function setUp() public override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
 
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
@@ -741,7 +741,7 @@ contract MintTest is EnterBase {
 
     function testDeepFuzz_mint_singleUser(uint256 mintAmount) public {
         // With max uint256, the assertion of allowance after deposit fails because on the token is treated as infinite allowance.
-        mintAmount = constrictToRange(mintAmount, 1, type(uint256).max - 1);
+        mintAmount = bound(mintAmount, 1, type(uint256).max - 1);
 
         // Mint asset to LP
         fundsAsset.mint(address(lp), mintAmount);
@@ -801,7 +801,7 @@ contract MintTest is EnterBase {
 
         assertEq(poolManager.totalAssets(), 1_000_000e6);
 
-        address lp2 = address(new Address());
+        address lp2 = makeAddr("lp2");
 
         fundsAsset.mint(address(lp2), 3_000_000e6);
 
@@ -830,7 +830,7 @@ contract MintTest is EnterBase {
 
     function testDeepFuzz_mint_variableExchangeRate(uint256 assetAmount, uint256 warpTime) public {
 
-        address initialDepositor = address(new Address());
+        address initialDepositor = makeAddr("initialDepositor");
 
         // Initial user does a deposit
         fundsAsset.mint(address(initialDepositor), 1_000_000e6);
@@ -844,7 +844,7 @@ contract MintTest is EnterBase {
 
         // Fund loan
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
@@ -852,8 +852,8 @@ contract MintTest is EnterBase {
         });
 
         // Constrict time to be within the first loan payment and amount to be within token amounts
-        warpTime    = constrictToRange(warpTime, 2, 1_000_000);
-        assetAmount = constrictToRange(assetAmount, 1e6, 1e32);
+        warpTime    = bound(warpTime, 2, 1_000_000);
+        assetAmount = bound(assetAmount, 1e6, 1e32);
 
         vm.warp(start + warpTime);
 
@@ -879,13 +879,13 @@ contract MintTest is EnterBase {
 
             assertEq(pool.balanceOf(address(lp)), expectedShares);
 
-            assertWithinDiff(assets,                                           assetAmount,                    1);
-            assertWithinDiff(pool.totalSupply(),                               calculatedShares + 1_000_000e6, 1);
-            assertWithinDiff(pool.balanceOf(address(lp)),                      calculatedShares,               0);
+            assertApproxEqAbs(assets,                                           assetAmount,                    1);
+            assertApproxEqAbs(pool.totalSupply(),                               calculatedShares + 1_000_000e6, 1);
+            assertApproxEqAbs(pool.balanceOf(address(lp)),                      calculatedShares,               0);
             // Assets from initial depositor are in the loan
-            assertWithinDiff(fundsAsset.balanceOf(address(pool)),              assetAmount,                    1);
-            assertWithinDiff(fundsAsset.balanceOf(address(lp)),                0,                              1);
-            assertWithinDiff(fundsAsset.allowance(address(lp), address(pool)), 0,                              1);
+            assertApproxEqAbs(fundsAsset.balanceOf(address(pool)),              assetAmount,                    1);
+            assertApproxEqAbs(fundsAsset.balanceOf(address(lp)),                0,                              1);
+            assertApproxEqAbs(fundsAsset.allowance(address(lp), address(pool)), 0,                              1);
         }
     }
 
@@ -988,7 +988,7 @@ contract MintFailureTests is EnterBase {
     function setUp() public virtual override {
         super.setUp();
 
-        lp = address(new Address());
+        lp = makeAddr("lp");
     }
 
     function test_mint_protocolPaused() external {

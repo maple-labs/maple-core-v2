@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, ILiquidator, ILoanLike } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../../contracts/Contracts.sol";
-
 import { LoanHandler } from "./LoanHandler.sol";
 
 contract LoanHandlerWithDefaults is LoanHandler {
@@ -47,7 +45,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
     function makePayment(uint256 borrowerIndexSeed_, uint256 loanIndexSeed_) public override useTimestamps {
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = bound(loanIndexSeed_, 0, activeLoans.length - 1);
 
         if (loanDefaulted[activeLoans[loanIndex_]]) return;  // Loan defaulted
 
@@ -59,7 +57,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_  = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_  = bound(loanIndexSeed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
         if (loanDefaulted[loanAddress]) return;  // Loan already defaulted
@@ -108,7 +106,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_  = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_  = bound(loanIndexSeed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
         // Check loan needs liquidation
@@ -119,7 +117,7 @@ contract LoanHandlerWithDefaults is LoanHandler {
         uint256 collateralAmount_ = collateralAsset.balanceOf(liquidator_);
         uint256 expectedAmount_   = ILiquidator(liquidator_).getExpectedAmount(collateralAmount_);
 
-        address externalLiquidator = address(new Address());
+        address externalLiquidator = makeAddr("externalLiquidator");
 
         // Mint fund asset to external liquidator and liquidate collateral
         vm.startPrank(externalLiquidator);

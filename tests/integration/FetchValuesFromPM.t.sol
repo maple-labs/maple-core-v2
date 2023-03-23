@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract PoolManagerGetterTests is TestBase {
@@ -13,9 +11,9 @@ contract PoolManagerGetterTests is TestBase {
     }
 
     function testDeepFuzz_getEscrowParams_shouldReturnValues(uint256 amount) external {
-        amount = constrictToRange(amount, 0, 1e29);
+        amount = bound(amount, 0, 1e29);
 
-        address account = address(new Address());
+        address account = makeAddr("account");
 
         // Any address and any destination will do - function just returns values and contract address
         ( uint256 returnedShares, address destination ) = poolManager.getEscrowParams(account, amount);
@@ -25,7 +23,7 @@ contract PoolManagerGetterTests is TestBase {
     }
 
     function test_hasSufficientCover_insufficientCover(uint256 amount) external {
-        amount = constrictToRange(amount, 0, 1e29);
+        amount = bound(amount, 0, 1e29);
 
         assertEq(poolManager.poolDelegateCover(), address(poolCover));
 
@@ -44,7 +42,7 @@ contract PoolManagerGetterTests is TestBase {
     }
 
     function test_hasSufficientCover_sufficientCover(uint256 amount) external {
-        amount = constrictToRange(amount, 0, 1e29);
+        amount = bound(amount, 0, 1e29);
 
         assertEq(poolManager.poolDelegateCover(), address(poolCover));
 

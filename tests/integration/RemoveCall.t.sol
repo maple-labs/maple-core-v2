@@ -3,14 +3,12 @@ pragma solidity 0.8.7;
 
 import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract RemoveCallTestsBase is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     uint256 constant delegateServiceFeeRate    = 0.03e18;
     uint256 constant delegateManagementFeeRate = 0.02e6;

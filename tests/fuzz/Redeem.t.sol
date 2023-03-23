@@ -41,14 +41,14 @@ contract RedeemFuzzTests is FuzzBase {
         vm.assume(caller   != address(pool));
         vm.assume(receiver != address(pool));
 
-        totalSupply      = constrictToRange(totalSupply,      1, 1e30);
-        totalAssets      = constrictToRange(totalAssets,      0, 1e30);
-        unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);
-        ownerShares      = constrictToRange(ownerShares,      1, totalSupply);
-        sharesToRedeem   = constrictToRange(sharesToRedeem,   1, ownerShares);
-        receiverAssets   = constrictToRange(receiverAssets,   0, 1e30);
-        availableAssets  = constrictToRange(availableAssets,  0, totalAssets - unrealizedLosses);
-        withdrawalDelay  = constrictToRange(withdrawalDelay,  0, 4 weeks);
+        totalSupply      = bound(totalSupply,      1, 1e30);
+        totalAssets      = bound(totalAssets,      0, 1e30);
+        unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
+        ownerShares      = bound(ownerShares,      1, totalSupply);
+        sharesToRedeem   = bound(sharesToRedeem,   1, ownerShares);
+        receiverAssets   = bound(receiverAssets,   0, 1e30);
+        availableAssets  = bound(availableAssets,  0, totalAssets - unrealizedLosses);
+        withdrawalDelay  = bound(withdrawalDelay,  0, 4 weeks);
 
         mintShares(owner, ownerShares, totalSupply);
         mintAssets(receiver, receiverAssets);

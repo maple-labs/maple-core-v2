@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract RemoveLoanImpairmentFailureTests is TestBase {
@@ -15,7 +13,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity(address(new Address()), 1_500_000e6);
+        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -29,7 +27,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
         loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],

@@ -3,14 +3,15 @@ pragma solidity 0.8.7;
 
 import { IFeeManager, IFixedTermLoan, IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { InvariantTest } from "../../contracts/Contracts.sol";
+import { StdInvariant } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 import { LoanHandler } from "./actors/LoanHandler.sol";
 import { LpHandler }   from "./actors/LpHandler.sol";
 
-contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
+
+contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -210,7 +211,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
 
         uint256 sumOutstandingInterest = getAllOutstandingInterest();
 
-        assertWithinDiff(
+        assertApproxEqAbs(
             ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).getAccruedInterest(),
             sumOutstandingInterest,
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,
@@ -232,7 +233,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
         uint256 aum      = ILoanManagerLike(loanManager).assetsUnderManagement();
 
         if (losses > aum) {
-            assertWithinDiff(losses, aum, loanHandler.numPayments() + 1);
+            assertApproxEqAbs(losses, aum, loanHandler.numPayments() + 1);
         } else {
             assertLe(losses, aum + 1, "LoanManager Invariant F");
         }
@@ -243,7 +244,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     }
 
     function assert_loanManager_invariant_H(address loanManager) internal {
-        assertWithinDiff(
+        assertApproxEqAbs(
             ILoanManagerLike(loanManager).assetsUnderManagement(),
             getAllOutstandingInterest() + loanHandler.sum_loan_principal(),
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,
@@ -302,7 +303,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     function assert_pool_invariant_B(uint256 sumBalanceOfAssets) internal {
         assertGe(pool.totalAssets(), sumBalanceOfAssets, "Pool Invariant B1");
 
-        assertWithinDiff(pool.totalAssets(), sumBalanceOfAssets, lpHandler.numHolders(), "Pool Invariant B2");
+        assertApproxEqAbs(pool.totalAssets(), sumBalanceOfAssets, lpHandler.numHolders(), "Pool Invariant B2");
     }
 
     function assert_pool_invariant_C() internal {
@@ -312,13 +313,13 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     function assert_pool_invariant_D() internal {
         assertGe(pool.totalAssets(), pool.convertToAssets(pool.totalSupply()), "Pool Invariant D1");
 
-        assertWithinDiff(pool.totalAssets(), pool.convertToAssets(pool.totalSupply()), 1, "Pool Invariant D2");
+        assertApproxEqAbs(pool.totalAssets(), pool.convertToAssets(pool.totalSupply()), 1, "Pool Invariant D2");
     }
 
     function assert_pool_invariant_E() internal {
         assertGe(pool.convertToShares(pool.totalAssets()), pool.totalSupply(), "Pool Invariant E1");
 
-        assertWithinDiff(pool.convertToShares(pool.totalAssets()), pool.totalSupply(), 1, "Pool Invariant E2");
+        assertApproxEqAbs(pool.convertToShares(pool.totalAssets()), pool.totalSupply(), 1, "Pool Invariant E2");
     }
 
     function assert_pool_invariant_F(address holder) internal {
@@ -356,7 +357,7 @@ contract BaseInvariants is InvariantTest, TestBaseWithAssertions {
     function assert_poolManager_invariant_A() internal {
         uint256 expectedTotalAssets = loanHandler.sum_loan_principal() + getAllOutstandingInterest() + fundsAsset.balanceOf(address(pool));
 
-        assertWithinDiff(
+        assertApproxEqAbs(
             poolManager.totalAssets(),
             expectedTotalAssets,
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,

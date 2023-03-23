@@ -28,12 +28,6 @@ integration:
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
-local-sim:
-	./test.sh -d simulations/local -p local_simulations
-
-mainnet-sim:
-	./simulate.sh -d simulations/mainnet -p mainnet_simulations
-
 # Forge scripting
 
 validate:

@@ -29,12 +29,12 @@ contract MintFuzzTests is FuzzBase {
         vm.assume(depositor != address(pool) && depositor != address(this));
         vm.assume(receiver  != address(pool) && receiver  != address(this));
 
-        totalSupply      = constrictToRange(totalSupply,      0, 1e30);
-        totalAssets      = constrictToRange(totalAssets,      0, 1e30);
-        unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);
-        depositorAssets  = constrictToRange(depositorAssets,  0, 1e30);
-        receiverShares   = constrictToRange(receiverShares,   0, totalSupply);
-        cash             = constrictToRange(cash,             0, totalAssets);
+        totalSupply      = bound(totalSupply,      0, 1e30);
+        totalAssets      = bound(totalAssets,      0, 1e30);
+        unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
+        depositorAssets  = bound(depositorAssets,  0, 1e30);
+        receiverShares   = bound(receiverShares,   0, totalSupply);
+        cash             = bound(cash,             0, totalAssets);
 
         mintShares(receiver, receiverShares, totalSupply);
         mintAssets(depositor, depositorAssets);
@@ -42,7 +42,7 @@ contract MintFuzzTests is FuzzBase {
 
         uint256 maxShares = totalAssets == 0 ? depositorAssets : depositorAssets * totalSupply / totalAssets;
 
-        sharesToMint = constrictToRange(sharesToMint, 0, maxShares);
+        sharesToMint = bound(sharesToMint, 0, maxShares);
 
         uint256 assetsToDeposit = totalSupply == 0 ? sharesToMint : _divRoundUp(sharesToMint * totalAssets, totalSupply);
 
@@ -62,7 +62,7 @@ contract MintFuzzTests is FuzzBase {
         }
 
         if (totalSupply != 0 && totalAssets == 0) {
-            vm.expectRevert(ZERO_DIVISION);
+            vm.expectRevert(divisionError);
             pool.mint(sharesToMint, receiver);  // Use assets since conversion fails
             return;
         }

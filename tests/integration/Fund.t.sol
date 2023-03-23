@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import {
     IFixedTermLoan,
     IFixedTermLoanManager,
@@ -30,9 +28,9 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower1 = address(new Address());
-        borrower2 = address(new Address());
-        lp        = address(new Address());
+        borrower1 = makeAddr("borrower1");
+        borrower2 = makeAddr("borrower2");
+        lp        = makeAddr("lp");
 
         depositLiquidity(lp, 1_500_000e6);
 
@@ -417,8 +415,8 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
 contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
-    address borrower = address(new Address());
-    address lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
     uint256 gracePeriod     = 5 days;
     uint256 noticePeriod    = 5 days;

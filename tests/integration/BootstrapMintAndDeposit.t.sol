@@ -2,7 +2,7 @@
 pragma solidity 0.8.7;
 
 // TODO: Should import and interface instead of the MockERC20 contract.
-import { Address, MockERC20 } from "../../contracts/Contracts.sol";
+import { MockERC20 } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -26,8 +26,8 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         _createAndConfigurePool(1 weeks, 2 days);
         _openPool();
 
-        lp1 = address(new Address());
-        lp2 = address(new Address());
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
 
         assertEq(pool.BOOTSTRAP_MINT(), 1e5);
     }
@@ -80,19 +80,19 @@ contract BootstrapDepositTests is BootstrapTestBase {
         vm.startPrank(lp1);
         fundsAsset.approve(address(pool), BOOTSTRAP_MINT_AMOUNT - 1);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.deposit(BOOTSTRAP_MINT_AMOUNT - 1, lp1);
     }
 
     function testFuzz_deposit_ltBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
+        amount_ = bound(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
         fundsAsset.mint(lp1, amount_);
 
         vm.startPrank(lp1);
         fundsAsset.approve(address(pool), amount_);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.deposit(amount_, lp1);
     }
 
@@ -123,7 +123,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
     }
 
     function testFuzz_deposit_gtBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
+        amount_ = bound(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
         depositLiquidity(lp1, amount_);
 
@@ -162,7 +162,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
     }
 
     function testFuzz_deposit_secondDepositorGetsCorrectShares(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, 1_000_000e6);
+        amount_ = bound(amount_, 1, 1_000_000e6);
 
         depositLiquidity(lp1, BOOTSTRAP_MINT_AMOUNT);
 
@@ -213,12 +213,12 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, nonce, deadline, lp1PK);
 
         vm.prank(lp1);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.depositWithPermit(BOOTSTRAP_MINT_AMOUNT - 1, lp1, deadline, v, r, s);
     }
 
     function testFuzz_depositWithPermit_ltBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
+        amount_ = bound(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
         (
             uint8 v,
@@ -227,7 +227,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, nonce, deadline, lp1PK);
 
         vm.prank(lp1);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.depositWithPermit(amount_, lp1, deadline, v, r, s);
     }
 
@@ -276,7 +276,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
     }
 
     function testFuzz_depositWithPermit_gtBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
+        amount_ = bound(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
         fundsAsset.mint(lp1, amount_);
 
@@ -338,7 +338,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
     }
 
     function testFuzz_depositWithPermit_secondDepositorGetsCorrectShares(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, 1_000_000e6);
+        amount_ = bound(amount_, 1, 1_000_000e6);
 
         fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 
@@ -387,19 +387,19 @@ contract BootstrapMintTests is BootstrapTestBase {
         vm.startPrank(lp1);
         fundsAsset.approve(address(pool), BOOTSTRAP_MINT_AMOUNT - 1);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.mint(BOOTSTRAP_MINT_AMOUNT - 1, lp1);
     }
 
     function testFuzz_mint_ltBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
+        amount_ = bound(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
         fundsAsset.mint(lp1, amount_);
 
         vm.startPrank(lp1);
         fundsAsset.approve(address(pool), amount_);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.mint(amount_, lp1);
     }
 
@@ -430,7 +430,7 @@ contract BootstrapMintTests is BootstrapTestBase {
     }
 
     function testFuzz_mint_gtBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
+        amount_ = bound(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
         mintPoolShares(lp1, amount_);
 
@@ -469,7 +469,7 @@ contract BootstrapMintTests is BootstrapTestBase {
     }
 
     function testFuzz_mint_secondDepositorGetsCorrectShares(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, 1_000_000e6);
+        amount_ = bound(amount_, 1, 1_000_000e6);
 
         mintPoolShares(lp1, BOOTSTRAP_MINT_AMOUNT);
 
@@ -520,12 +520,12 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, nonce, deadline, lp1PK);
 
         vm.prank(lp1);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.mintWithPermit(BOOTSTRAP_MINT_AMOUNT - 1, lp1, BOOTSTRAP_MINT_AMOUNT - 1, deadline, v, r, s);
     }
 
     function testFuzz_mintWithPermit_ltBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
+        amount_ = bound(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
         (
             uint8 v,
@@ -534,7 +534,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, nonce, deadline, lp1PK);
 
         vm.prank(lp1);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.mintWithPermit(amount_, lp1, amount_, deadline, v, r, s);
     }
 
@@ -583,7 +583,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
     }
 
     function testFuzz_mintWithPermit_gtBootstrapMintAmount(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
+        amount_ = bound(amount_, BOOTSTRAP_MINT_AMOUNT + 1, 1_000_000e6);
 
         fundsAsset.mint(lp1, amount_);
 
@@ -645,7 +645,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
     }
 
     function testFuzz_mintWithPermit_secondDepositorGetsCorrectShares(uint256 amount_) external {
-        amount_ = constrictToRange(amount_, 1, 1_000_000e6);
+        amount_ = bound(amount_, 1, 1_000_000e6);
 
         fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT);
 

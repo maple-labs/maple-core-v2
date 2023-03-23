@@ -40,9 +40,9 @@ contract LoanHandlerWithImpairment is LoanHandler {
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = bound(loanIndexSeed_, 0, activeLoans.length - 1);
 
-        address borrower_ = borrowers[constrictToRange(borrowerIndexSeed_, 0, numBorrowers - 1)];
+        address borrower_ = borrowers[bound(borrowerIndexSeed_, 0, numBorrowers - 1)];
 
         vm.startPrank(borrower_);
 
@@ -113,7 +113,7 @@ contract LoanHandlerWithImpairment is LoanHandler {
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = constrictToRange(loanIndexSeed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = bound(loanIndexSeed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
         if (loanImpaired[loanAddress]) return;

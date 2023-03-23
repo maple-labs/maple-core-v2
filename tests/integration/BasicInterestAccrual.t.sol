@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract BasicInterestAccrualTest is TestBaseWithAssertions {
@@ -13,8 +11,8 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
     }
 
     function test_basicInterestAccrual() external {

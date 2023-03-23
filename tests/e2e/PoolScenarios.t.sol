@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address, Pool, PoolManager } from "../../contracts/Contracts.sol";
+import { Pool, PoolManager } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -25,9 +25,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
     // Test 11
     function test_poolScenario_fundLoanAndNeverTouchIt() external {
         // Create 3 actors
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
-        address lp3 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
+        address lp3 = makeAddr("lp3");
 
         depositLiquidity(lp1, 4_000_000e6);
 
@@ -38,7 +38,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
@@ -93,7 +93,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 72_000e6);
 
         address loan2 = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)],
@@ -166,7 +166,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertTotalAssets(4_000_000e6 + 6_000_000e6 + 2_000_000e6 + 90_000e6 + 180_000e6 + 90_000e6);
 
         address loan3 = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(4_000_000e6), uint256(4_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
@@ -410,7 +410,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 12
     function test_poolScenario_loanWithVeryHighInterestRate() external {
-        address lp1 = address(new Address());
+        address lp1 = makeAddr("lp1");
 
         depositLiquidity(lp1, 4_000_000e6);
 
@@ -421,7 +421,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e30), uint256(0.1e18), uint256(0), uint256(0)],
@@ -496,7 +496,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 13
     function test_poolScenario_loanWithZeroInterestRate() external {
-        address lp1 = address(new Address());
+        address lp1 = makeAddr("lp1");
 
         depositLiquidity(lp1, 4_000_000e6);
 
@@ -507,7 +507,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)],
@@ -662,7 +662,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.5e6);
 
-        address lp1 = address(new Address());
+        address lp1 = makeAddr("lp1");
 
         depositLiquidity(lp1, 4_000_000e6);
 
@@ -673,7 +673,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)],
@@ -787,7 +787,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 15
     function test_poolScenario_intendToWithdrawAndChangeWMToZero() external {
-        address lp1 = address(new Address());
+        address lp1 = makeAddr("lp1");
 
         depositLiquidity(lp1, 4_000_000e6);
 
@@ -809,8 +809,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
     function test_poolScenario_impairLoanWithLatePaymentAndRefinance() external {
         depositCover(200_000e6);
 
-        address lp1      = address(new Address());
-        address borrower = address(new Address());
+        address lp1      = makeAddr("lp1");
+        address borrower = makeAddr("borrower");
 
         depositLiquidity(lp1, 1_000_000e6);
 
@@ -1051,8 +1051,8 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 19
     function test_poolScenarios_refinanceATwoPeriodsLateLoan() external {
-        address lp1      = address(new Address());
-        address borrower = address(new Address());
+        address lp1      = makeAddr("lp1");
+        address borrower = makeAddr("borrower");
 
         depositLiquidity(lp1, 2_500_000e6);
 
@@ -1200,9 +1200,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 20
     function test_poolScenarios_refinanceLateLoanAndDefault() external {
-        address lp1      = address(new Address());
-        address borrower = address(new Address());
-
+        address lp1      = makeAddr("lp1");
+        address borrower = makeAddr("borrower");
+        
         depositLiquidity(lp1, 2_500_000e6);
 
         address loanManager = poolManager.loanManagerList(0);
@@ -1383,7 +1383,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
     // Test 21
     function test_poolScenarios_stressTestAdvanceGlobalPaymentAccounting() external {
-        address lp1 = address(new Address());
+        address lp1 = makeAddr("lp1");
 
         depositLiquidity(lp1, 400_000_000e6);
 
@@ -1393,7 +1393,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         for (uint256 i; i < 150; ++i) {
             fundAndDrawdownLoan({
-                borrower:    address(new Address()),
+                borrower:    makeAddr(string(abi.encode(i))),
                 termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
                 rates:       [uint256(3.1536e18), uint256(0.1e18), uint256(0.01e18), uint256(0.31536e18)],

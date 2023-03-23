@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoan, IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract CloseLoanTests is TestBaseWithAssertions {
@@ -16,8 +14,8 @@ contract CloseLoanTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
         depositLiquidity(lp, 1_500_000e6);
 
@@ -79,7 +77,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
         fundsAsset.mint(loan, fullPayment - 1);
 
         vm.prank(borrower);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         IFixedTermLoan(loan).closeLoan(0);
     }
 

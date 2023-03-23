@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 // TODO: Add Pool Delegate cover for liquidation related test cases
@@ -20,14 +18,14 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp1      = address(new Address());
-        lp2      = address(new Address());
-        lp3      = address(new Address());
+        borrower = makeAddr("borrower");
+        lp1      = makeAddr("lp1");
+        lp2      = makeAddr("lp2");
+        lp3      = makeAddr("lp3");
 
         // Setup 50 random Addresses for LPs
         for (uint256 i; i < 50; ++i) {
-            lps.push(address(new Address()));
+            lps.push(makeAddr(string(abi.encode("lps", i))));
         }
 
         setupFees({
@@ -52,7 +50,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
@@ -253,7 +251,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
@@ -463,7 +461,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
@@ -651,7 +649,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 lp2RemainingShares =
             1_000_000e6 - (uint256(1_000_000e6) * (500_000e6 * 1e18 / (uint256(1_500_000e6) + loanInterestAccrued)) / 1e18);
 
-        assertWithinDiff(lp2RemainingShares, 666_942.917333e6, 1);
+        assertApproxEqAbs(lp2RemainingShares, 666_942.917333e6, 1);
 
         assertWithdrawalManagerState({
             lp:                           lp2,
@@ -665,7 +663,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(lp1), 500_000e6);
 
-        assertWithinDiff(fundsAsset.balanceOf(lp2), 500_000e6, 1);
+        assertApproxEqAbs(fundsAsset.balanceOf(lp2), 500_000e6, 1);
 
         assertPoolState({
             totalSupply:        666_942.917334e6,
@@ -689,7 +687,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
@@ -1016,7 +1014,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
@@ -1225,7 +1223,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Fund a new loan at 50% of pool liquidity
         loan = fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(25_000_000e6), uint256(25_000_000e6)],
             rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
