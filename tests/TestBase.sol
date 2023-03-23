@@ -308,6 +308,27 @@ contract TestBase is ProtocolActions {
         });
     }
 
+    function createFixedTermLoan(
+        address borrower,
+        address lender,
+        address feeManager,
+        address[2] memory assets,
+        uint256[3] memory terms,
+        uint256[3] memory amounts,
+        uint256[4] memory rates,
+        uint256[2] memory fees
+    )
+        internal returns (address loan)
+    {
+        vm.prank(governor);
+        globals.setValidBorrower(borrower, true);
+
+        loan = FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+            arguments_: abi.encode(borrower, lender, feeManager, assets, terms, amounts, rates, fees),
+            salt_: "SALT"
+        });
+    }
+
     function createOpenTermLoan(
         address borrower,
         address lender,

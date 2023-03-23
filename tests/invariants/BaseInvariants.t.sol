@@ -212,7 +212,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 sumOutstandingInterest = getAllOutstandingInterest();
 
         assertApproxEqAbs(
-            ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).getAccruedInterest(),
+            ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).accruedInterest(),
             sumOutstandingInterest,
             max(loanHandler.numPayments(), loanHandler.numLoans()) + 1,
             "LoanManager Invariant C"

@@ -153,7 +153,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
 
     function test_triggerDefault_notLoan() external {
         vm.prank(address(poolDelegate));
-        vm.expectRevert("LM:AFLIR:NOT_LOAN");
+        vm.expectRevert("LM:AFLI:NOT_LOAN");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 
@@ -186,7 +186,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
         vm.warp(start + paymentInterval + gracePeriod + 1);
 
         vm.startPrank(address(poolDelegate));
-        vm.expectRevert("LM:DLF:ZERO_ADDRESS_MT");
+        vm.expectRevert("LM:DLF:TRANSFER_MT");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 

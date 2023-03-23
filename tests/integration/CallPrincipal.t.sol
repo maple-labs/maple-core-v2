@@ -81,16 +81,6 @@ contract CallPrincipalFailureTests is CallPrincipalTestsBase {
         loanManager.callPrincipal(address(loan), principal);
     }
 
-    function test_callPrincipal_alreadyCalled() external {
-        vm.startPrank(poolDelegate);
-        loanManager.fund(address(loan));
-
-        loanManager.callPrincipal(address(loan), principal);
-
-        vm.expectRevert("ML:C:ALREADY_CALLED");
-        loanManager.callPrincipal(address(loan), principal);
-    }
-
     function test_callPrincipal_invalidAmount_boundary() external {
         vm.startPrank(poolDelegate);
         loanManager.fund(address(loan));

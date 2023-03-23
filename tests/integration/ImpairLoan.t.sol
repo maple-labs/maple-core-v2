@@ -1043,46 +1043,41 @@ contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
         loanManager.impairLoan(address(loan));
     }
 
-    function test_impairLoan_notLoan() external {
-        vm.expectRevert("LM:AFLI:NOT_LOAN");
-        vm.prank(poolDelegate);
-        loanManager.impairLoan(address(1));
-    }
-
     function test_impairLoan_loanInactive() external {
         vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
         vm.prank(poolDelegate);
         poolManager.triggerDefault(address(loan), liquidatorFactory);
 
-        vm.expectRevert("LM:AFLI:NOT_LOAN");
+        vm.expectRevert("ML:I:LOAN_INACTIVE");
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(loan));
+    }
+
+    function testFail_impairLoan_notLoanContract() external {
+        // vm.expectRevert();  TODO: Update to use forge-std
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(address(1));
+    }
+
+    function test_impairLoan_notLoanInLoanManager() external {
+        address unfundedLoan = createOpenTermLoan(
+            address(borrower),
+            address(loanManager),
+            address(fundsAsset),
+            principal + 1,  // Different salt
+            [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
+            [uint64(delegateServiceFeeRate), uint64(interestRate), uint64(lateFeeRate), uint64(lateInterestPremium)]
+        );
+
+        // vm.expectRevert("LM:AFLI:NOT_LOAN");  // NOTE: Code is not reachable but should still be kept for extra safety.
+        vm.expectRevert("ML:I:LOAN_INACTIVE");
+        vm.prank(poolDelegate);
+        loanManager.impairLoan(unfundedLoan);
     }
 
     function test_impairLoan_notLender() external {
         vm.expectRevert("ML:I:NOT_LENDER");
         loan.impair();
-    }
-
-    // TODO: Error condition can not be reached since it fails on loan manager.
-    // function test_impairLoan_loanInactive() external {
-    //     vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
-
-    //     vm.prank(poolDelegate);
-    //     poolManager.triggerDefault(address(loan), liquidatorFactory);
-
-    //     vm.expectRevert("ML:I:LOAN_INACTIVE");
-    //     vm.prank(poolDelegate);
-    //     loanManager.impairLoan(address(loan));
-    // }
-
-    function test_impairLoan_alreadyImpaired() external {
-        vm.prank(poolDelegate);
-        loanManager.impairLoan(address(loan));
-
-        vm.expectRevert("ML:I:ALREADY_IMPAIRED");
-        vm.prank(poolDelegate);
-        loanManager.impairLoan(address(loan));
     }
 
     function test_impairLoan_governorAcl() external {

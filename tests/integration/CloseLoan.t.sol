@@ -115,7 +115,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
 
         ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
 
-        assertEq(loanManager.getAccruedInterest(),    90_000e6 / 4);  // A quarter of incoming interest.
+        assertEq(loanManager.accruedInterest(),       90_000e6 / 4);  // A quarter of incoming interest.
         assertEq(loanManager.accountedInterest(),     0);
         assertEq(loanManager.principalOut(),          1_000_000e6);
         assertEq(loanManager.assetsUnderManagement(), 1_000_000e6 + 90_000e6 / 4);
@@ -152,7 +152,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  0);
         assertEq(IFixedTermLoan(loan).principal(),          0);
 
-        assertEq(loanManager.getAccruedInterest(),    0);
+        assertEq(loanManager.accruedInterest(),       0);
         assertEq(loanManager.accountedInterest(),     0);
         assertEq(loanManager.principalOut(),          0);
         assertEq(loanManager.assetsUnderManagement(), 0);

@@ -177,7 +177,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     ) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
 
-        assertEq(loanManager_.getAccruedInterest(),    accruedInterest,       "getAccruedInterest");
+        assertEq(loanManager_.accruedInterest(),       accruedInterest,       "accruedInterest");
         assertEq(loanManager_.accountedInterest(),     accountedInterest,     "accountedInterest");
         assertEq(loanManager_.principalOut(),          principalOut,          "principalOut");
         assertEq(loanManager_.assetsUnderManagement(), assetsUnderManagement, "assetsUnderManagement");

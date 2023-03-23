@@ -151,7 +151,7 @@ interface ILoanManagerLike is IProxiedLike {
 
     function fundsAsset() external view returns (address fundsAsset_);
 
-    function getAccruedInterest() external view returns (uint256 accruedInterest_);
+    function accruedInterest() external view returns (uint256 accruedInterest_);
 
     function impairLoan(address loan_) external;
 

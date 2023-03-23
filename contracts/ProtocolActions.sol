@@ -90,6 +90,10 @@ contract ProtocolActions is Test {
         vm.stopPrank();
     }
 
+    function makeFixedTermPayment(address loan_) internal {
+        makePayment(loan_);
+    }
+
     // TODO: Use three function structure.
     function makeOpenTermPayment(address loan_) internal returns (uint256 principal_, uint256 totalInterest_, uint256 totalServiceFees_) {
         uint256 interest_;
