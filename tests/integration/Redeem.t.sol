@@ -20,7 +20,7 @@ contract RequestRedeemTests is TestBase {
     }
 
     function test_requestRedeem_refresh_notOwnerAndNoApproval() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -51,7 +51,7 @@ contract RequestRedeemTests is TestBase {
     }
 
     function test_requestRedeem_refresh() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -89,7 +89,7 @@ contract RequestRedeemTests is TestBase {
     }
 
     function test_requestRedeem_refresh_notOwnerWithApproval() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -133,7 +133,7 @@ contract RequestRedeemTests is TestBase {
     }
 
     function test_requestRedeem() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -157,7 +157,7 @@ contract RequestRedeemTests is TestBase {
     }
 
     function test_requestRedeem_withApproval() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         address sender = makeAddr("sender");
 
@@ -190,7 +190,7 @@ contract RequestRedeemTests is TestBase {
         depositAmount = bound(depositAmount, 1, 1e30);
         redeemAmount  = bound(redeemAmount,  1, depositAmount);
 
-        depositLiquidity(lp, depositAmount);
+        deposit(lp, depositAmount);
 
         vm.startPrank(lp);
 
@@ -232,7 +232,7 @@ contract RedeemTests is TestBase {
     }
 
     function test_redeem_singleUser_fullLiquidity_oneToOne() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -271,7 +271,7 @@ contract RedeemTests is TestBase {
         depositAmount = bound(depositAmount, 1, 1e30);
         redeemAmount  = bound(redeemAmount,  1, depositAmount);
 
-        depositLiquidity(lp, depositAmount);
+        deposit(lp, depositAmount);
 
         vm.startPrank(lp);
 
@@ -307,7 +307,7 @@ contract RedeemTests is TestBase {
     }
 
     function test_redeem_singleUser_fullLiquidity_fullRedeem() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         // Transfer cash into pool to increase totalAssets
         fundsAsset.mint(address(pool), 250e6);
@@ -348,7 +348,7 @@ contract RedeemTests is TestBase {
     function test_redeem_singleUser_withApprovals() external {
         address sender = makeAddr("sender");
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         // Transfer cash into pool to increase totalAssets
         fundsAsset.mint(address(pool), 250e6);
@@ -400,7 +400,7 @@ contract RedeemTests is TestBase {
     }
 
     function test_redeem_singleUser_noLiquidity_notOwner() external {
-        depositLiquidity(lp, 1_000_000e6);
+        deposit(lp, 1_000_000e6);
 
         vm.prank(lp);
         pool.requestRedeem(1_000_000e6, lp);
@@ -453,7 +453,7 @@ contract RedeemTests is TestBase {
     }
 
     function test_redeem_singleUser_noLiquidity() external {
-        depositLiquidity(lp, 1_000_000e6);
+        deposit(lp, 1_000_000e6);
 
         vm.prank(lp);
         pool.requestRedeem(1_000_000e6, lp);
@@ -518,7 +518,7 @@ contract MultiUserRedeemTests is TestBase {
 
         // Set interval to give round numbers
         _createAndConfigurePool(ONE_MONTH / 2, 2 days);
-        _openPool();
+        openPool(address(poolManager));
 
         start = block.timestamp;
 
@@ -535,9 +535,9 @@ contract MultiUserRedeemTests is TestBase {
     }
 
     function test_redeem_partialLiquidity_sameCash_sameExchangeRate() external {
-        depositLiquidity(lp1, 1_000_000e6);
-        depositLiquidity(lp2, 4_000_000e6);
-        depositLiquidity(lp3, 5_000_000e6);
+        deposit(lp1, 1_000_000e6);
+        deposit(lp2, 4_000_000e6);
+        deposit(lp3, 5_000_000e6);
 
         fundAndDrawdownLoan({
             borrower:    borrower,
@@ -618,16 +618,16 @@ contract MultiUserRedeemTests is TestBase {
         address lp9  = makeAddr("lp9");
         address lp10 = makeAddr("lp10");
 
-        depositLiquidity(lp1,  1_000_000e6);
-        depositLiquidity(lp2,  1_000_000e6);
-        depositLiquidity(lp3,  1_000_000e6);
-        depositLiquidity(lp4,  1_000_000e6);
-        depositLiquidity(lp5,  1_000_000e6);
-        depositLiquidity(lp6,  1_000_000e6);
-        depositLiquidity(lp7,  1_000_000e6);
-        depositLiquidity(lp8,  1_000_000e6);
-        depositLiquidity(lp9,  1_000_000e6);
-        depositLiquidity(lp10, 1_000_000e6);
+        deposit(lp1,  1_000_000e6);
+        deposit(lp2,  1_000_000e6);
+        deposit(lp3,  1_000_000e6);
+        deposit(lp4,  1_000_000e6);
+        deposit(lp5,  1_000_000e6);
+        deposit(lp6,  1_000_000e6);
+        deposit(lp7,  1_000_000e6);
+        deposit(lp8,  1_000_000e6);
+        deposit(lp9,  1_000_000e6);
+        deposit(lp10, 1_000_000e6);
 
         fundAndDrawdownLoan({
             borrower:    borrower,
@@ -691,9 +691,9 @@ contract MultiUserRedeemTests is TestBase {
     }
 
     function test_redeem_partialLiquidity_sameCash_differentExchangeRate() external {
-        depositLiquidity(lp1, 1_000_000e6);
-        depositLiquidity(lp2, 4_000_000e6);
-        depositLiquidity(lp3, 5_000_000e6);
+        deposit(lp1, 1_000_000e6);
+        deposit(lp2, 4_000_000e6);
+        deposit(lp3, 5_000_000e6);
 
         fundAndDrawdownLoan({
             borrower:    borrower,
@@ -807,7 +807,7 @@ contract RequestRedeemFailureTests is TestBase {
         lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
     }
 
     function test_requestRedeem_failIfInsufficientApproval() external {
@@ -855,7 +855,7 @@ contract RedeemFailureTests is TestBase {
         lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
     }
 
     function test_redeem_failIfNotPool() external {
@@ -974,8 +974,8 @@ contract RedeemIntegrationTests is TestBase {
         borrower = makeAddr("borrower");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp1, 3_000_000e6);
-        depositLiquidity(lp2, 3_000_000e6);
+        deposit(lp1, 3_000_000e6);
+        deposit(lp2, 3_000_000e6);
 
         vm.prank(governor);
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%

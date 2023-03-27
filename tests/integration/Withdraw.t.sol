@@ -20,7 +20,7 @@ contract RequestWithdrawTests is TestBase {
     }
 
     function test_requestWithdraw() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -36,7 +36,7 @@ contract RequestWithdrawTests is TestBase {
     }
 
     function test_requestWithdraw_withApproval() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         address sender = makeAddr("sender");
 
@@ -61,7 +61,7 @@ contract RequestWithdrawTests is TestBase {
         depositAmount  = bound(depositAmount,  1, 1e30);
         withdrawAmount = bound(withdrawAmount, 1, depositAmount);
 
-        depositLiquidity(lp, depositAmount);
+        deposit(lp, depositAmount);
 
         vm.startPrank(lp);
 
@@ -92,7 +92,7 @@ contract RequestWithdrawFailureTests is TestBase {
         lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
     }
 
     function test_requestWithdraw_failIfInsufficientApproval() external {
@@ -131,7 +131,7 @@ contract WithdrawFailureTests is TestBase {
         lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
     }
 
     function test_withdraw_failIfNotPool() external {
@@ -186,10 +186,10 @@ contract WithdrawScenarios is TestBase {
         address lp4 = makeAddr("lp4");
 
         // Deposit liquidity into the pool.
-        depositLiquidity(address(lp1), 500_000e6);
-        depositLiquidity(address(lp2), 1_500_000e6);
-        depositLiquidity(address(lp3), 500_000e6);
-        depositLiquidity(address(lp4), 1_000_000e6);
+        deposit(address(lp1), 500_000e6);
+        deposit(address(lp2), 1_500_000e6);
+        deposit(address(lp3), 500_000e6);
+        deposit(address(lp4), 1_000_000e6);
 
         // Fund three loans.
         fundAndDrawdownLoan({
@@ -217,7 +217,7 @@ contract WithdrawScenarios is TestBase {
         });
 
         // Deposit extra liquidity to allow for partial withdrawals.
-        depositLiquidity(makeAddr("depositor"), 500_000e6);
+        deposit(makeAddr("depositor"), 500_000e6);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
@@ -298,8 +298,8 @@ contract WithdrawScenarios is TestBase {
         address lp2 = makeAddr("lp2");
 
         // Deposit liquidity into the pool.
-        depositLiquidity(address(lp1), 1_500_000e6);
-        depositLiquidity(address(lp2), 2_500_000e6);
+        deposit(address(lp1), 1_500_000e6);
+        deposit(address(lp2), 2_500_000e6);
 
         // Fund three loans.
         address bigLoan = fundAndDrawdownLoan({
@@ -383,10 +383,10 @@ contract WithdrawScenarios is TestBase {
         address lp4 = makeAddr("lp4");
 
         // Deposit liquidity into the pool.
-        depositLiquidity(address(lp1),   500_000e6);
-        depositLiquidity(address(lp2), 1_500_000e6);
-        depositLiquidity(address(lp3),   500_000e6);
-        depositLiquidity(address(lp4), 1_000_000e6);
+        deposit(address(lp1),   500_000e6);
+        deposit(address(lp2), 1_500_000e6);
+        deposit(address(lp3),   500_000e6);
+        deposit(address(lp4), 1_000_000e6);
 
         // Fund three loans.
         address loan1 = fundAndDrawdownLoan({
@@ -544,7 +544,7 @@ contract WithdrawOnPermissionedPool is TestBase {
     function test_withdraw_withUnwhitelistedUser() external {
         address lp1 = makeAddr("lp1");
 
-        depositLiquidity(address(lp1), 500_000e6);
+        deposit(address(lp1), 500_000e6);
 
         // Now, remove the LP from the whitelist.
         vm.prank(poolDelegate);

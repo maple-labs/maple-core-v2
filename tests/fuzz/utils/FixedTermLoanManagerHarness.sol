@@ -3,6 +3,7 @@ pragma solidity 0.8.7;
 
 import { FixedTermLoanManager } from "../../../contracts/Contracts.sol";
 
+// TODO: This existing implies unit tests are being done somewhere, rather than integration tests.
 contract FixedTermLoanManagerHarness is FixedTermLoanManager {
 
     function __setAccountedInterest(uint256 accountedInterest_) external {

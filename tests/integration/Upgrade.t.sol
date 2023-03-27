@@ -249,7 +249,7 @@ contract LiquidationUpgradeTests is TestBase {
 
         vm.stopPrank();
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,

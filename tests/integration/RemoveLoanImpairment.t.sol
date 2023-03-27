@@ -13,7 +13,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
+        deposit(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,

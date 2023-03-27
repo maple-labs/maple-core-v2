@@ -16,7 +16,7 @@ contract RemoveSharesTests is TestBase {
         lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.prank(lp);
         pool.requestRedeem(1_000e6, lp);
@@ -104,7 +104,7 @@ contract RemoveSharesTests is TestBase {
     function test_removeShares_sameAddressCallingTwice() external {
         address sender = makeAddr("sender");
 
-        uint256 senderShares = depositLiquidity(sender, 1_000e6);
+        uint256 senderShares = deposit(sender, 1_000e6);
 
         vm.prank(sender);
         pool.requestRedeem(senderShares, sender);
@@ -172,7 +172,7 @@ contract RemoveSharesFailureTests is TestBase {
         lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.prank(lp);
         pool.requestRedeem(1_000e6, lp);

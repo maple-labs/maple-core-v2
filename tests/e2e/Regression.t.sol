@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { console } from "../../modules/forge-std/src/Test.sol";
 
-import { ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { BaseInvariants }            from "../invariants/BaseInvariants.t.sol";
 import { LoanHandlerWithImpairment } from "../invariants/actors/LoanHandlerWithImpairment.sol";
@@ -167,7 +167,7 @@ contract RegressionTest is BaseInvariants {
             assert_loan_invariant_B(loan);
             assert_loan_invariant_C(loan, loanHandlerWithImpairment.platformOriginationFee(loan));
 
-            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+            IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
             ( , , uint256 startDate, uint256 paymentDueDate, , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 
@@ -272,7 +272,7 @@ contract RegressionTest is BaseInvariants {
             assert_loan_invariant_B(loan);
             assert_loan_invariant_C(loan, loanHandlerWithImpairment.platformOriginationFee(loan));
 
-            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+            IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
             ( , , uint256 startDate, uint256 paymentDueDate, , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
 

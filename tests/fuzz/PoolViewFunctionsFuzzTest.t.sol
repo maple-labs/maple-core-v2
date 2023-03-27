@@ -44,7 +44,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     function testFuzz_convertToAssets_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
         sharesAmount_ = bound(sharesAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),                 0);
+        assertEq(pool.totalSupply(),                  0);
         assertEq(pool.convertToAssets(sharesAmount_), sharesAmount_);
     }
 
@@ -64,7 +64,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -78,7 +78,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     function testFuzz_convertToShares_whenTotalSupplyIsZero(uint256 assetAmount_) external {
         assetAmount_ = bound(assetAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),                0);
+        assertEq(pool.totalSupply(),                 0);
         assertEq(pool.convertToShares(assetAmount_), assetAmount_);
     }
 
@@ -98,8 +98,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -129,7 +128,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
         loanManagerHarness.__setUnrealizedLosses(unrealizedLosses_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -143,7 +142,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     function testFuzz_previewDeposit_whenTotalSupplyIsZero(uint256 assetAmount_) external {
         assetAmount_ = bound(assetAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),               0);
+        assertEq(pool.totalSupply(),                0);
         assertEq(pool.previewDeposit(assetAmount_), assetAmount_);
     }
 
@@ -151,7 +150,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assetAmount_     = bound(assetAmount_,     0, 1e29);
         amountToDeposit_ = bound(amountToDeposit_, 1, 1e29);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -165,7 +164,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     function testFuzz_previewMint_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
         sharesAmount_ = bound(sharesAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),             0);
+        assertEq(pool.totalSupply(),              0);
         assertEq(pool.previewMint(sharesAmount_), sharesAmount_);
     }
 
@@ -185,7 +184,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -194,17 +193,6 @@ contract PoolViewFunctionsFuzzTests is TestBase {
 
         // Calculate the expected amount
         assertEq(assetsAmount, _divRoundUp(sharesAmount_ * pool.totalAssets(), pool.totalSupply()));
-    }
-
-    function _mintToUserAndDepositToPool(address user_, uint256 amountToDeposit_) internal {
-        // Mint to user
-        fundsAsset.mint(user_, amountToDeposit_);
-        vm.startPrank(user_);
-        fundsAsset.approve(address(pool), amountToDeposit_);
-
-        // Deposit in pool to increase totalSupply
-        pool.deposit(amountToDeposit_, user_);
-        vm.stopPrank();
     }
 
     function _divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {

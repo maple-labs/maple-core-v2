@@ -178,6 +178,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6]
         });
+
+        vm.stopPrank();
     }
 
     function test_deployPool_failWithZeroWindowDuration() external {
@@ -266,6 +268,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 0]
         });
 
+        vm.stopPrank();
+
         assertTrue(poolManager_ != address(0));
     }
 
@@ -276,7 +280,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         fundsAsset.approve(address(deployer), 1_000_000e6);
 
-         address poolManager_ = deployer.deployPool({
+        address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
@@ -285,6 +289,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6]
         });
+
+        vm.stopPrank();
 
         // Just testing that the deployment succeeded, the full assertion are made in the tests below.
         assertTrue(poolManager_ != address(0));
@@ -297,7 +303,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         fundsAsset.approve(address(deployer), 1_000_000e6);
 
-         address poolManager_ = deployer.deployPool({
+        address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
@@ -306,6 +312,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6]
         });
+
+        vm.stopPrank();
 
         IPoolManager       poolManager       = IPoolManager(poolManager_);
         IPool              pool              = IPool(poolManager.pool());

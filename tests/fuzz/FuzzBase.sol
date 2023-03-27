@@ -23,9 +23,7 @@ contract FuzzBase is TestBase {
     }
 
     function mintShares(address account, uint256 shares, uint256 totalSupply) internal {
-        if (totalSupply == 0) {
-            return;
-        }
+        if (totalSupply == 0) return;
 
         fundsAsset.mint(address(this), totalSupply);
         fundsAsset.approve(address(pool), totalSupply);

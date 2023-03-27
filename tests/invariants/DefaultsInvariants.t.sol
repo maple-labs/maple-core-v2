@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { LoanHandlerWithDefaults } from "./actors/LoanHandlerWithDefaults.sol";
 import { LpHandler }               from "./actors/LpHandler.sol";
@@ -73,8 +73,8 @@ contract DefaultsInvariants is BaseInvariants {
 
     function invariant_loan_A_B_loanManager_L_M_N() external useCurrentTimestamp {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
-            address          loan        = loanHandler.activeLoans(i);
-            ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+            address               loan        = loanHandler.activeLoans(i);
+            IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
             assert_loan_invariant_A(loan);
             assert_loan_invariant_B(loan);

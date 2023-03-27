@@ -12,7 +12,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
+        deposit(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -40,7 +40,6 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
     function test_finishCollateralLiquidation_notPoolManager() external {
         IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
-        vm.prank(address(1));
         vm.expectRevert("LM:FCL:NOT_PM");
         loanManager.finishCollateralLiquidation(loan);
     }
@@ -51,7 +50,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
 
         triggerDefault(loan, address(liquidatorFactory));
 
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         vm.expectRevert("LM:FCL:LIQ_ACTIVE");
         poolManager.finishCollateralLiquidation(loan);
     }

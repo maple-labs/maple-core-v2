@@ -31,9 +31,7 @@ contract WithdrawFuzzTests is FuzzBase {
         receiverAssets   = bound(receiverAssets,   0, 1e20);
         availableAssets  = bound(availableAssets,  0, totalAssets - unrealizedLosses);
 
-        if ((totalAssets - unrealizedLosses) == 0) {
-            return;
-        }
+        if ((totalAssets - unrealizedLosses) == 0) return;
 
         uint256 escrowShares = divRoundUp(assetsToWithdraw * totalSupply, totalAssets - unrealizedLosses);
         uint256 ownerShares  = escrowShares;

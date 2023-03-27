@@ -14,7 +14,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
+        deposit(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -79,7 +79,7 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
         _createGlobals();
         _createFactories();
         _createAndConfigurePool(1 weeks, 2 days);
-        _openPool();
+        openPool(address(poolManager));
 
         start = block.timestamp;
 
@@ -89,10 +89,9 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 

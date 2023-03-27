@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -17,7 +17,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -113,15 +113,18 @@ contract CloseLoanTests is TestBaseWithAssertions {
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  3);
         assertEq(IFixedTermLoan(loan).principal(),          1_000_000e6);
 
-        ILoanManagerLike loanManager = ILoanManagerLike(ILoanLike(loan).lender());
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
-        assertEq(loanManager.accruedInterest(),       90_000e6 / 4);  // A quarter of incoming interest.
-        assertEq(loanManager.accountedInterest(),     0);
-        assertEq(loanManager.principalOut(),          1_000_000e6);
-        assertEq(loanManager.assetsUnderManagement(), 1_000_000e6 + 90_000e6 / 4);
-        assertEq(loanManager.issuanceRate(),          90_000e6 * 1e30 / 1_000_000 seconds);
-        assertEq(loanManager.domainStart(),           start);
-        assertEq(loanManager.domainEnd(),             start + 1_000_000 seconds);
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   90_000e6 / 4,  // A quarter of incoming interest.
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      90_000e6 * 1e30 / 1_000_000 seconds,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000 seconds,
+            unrealizedLosses:  0
+        });
 
         (
             ,
@@ -152,13 +155,16 @@ contract CloseLoanTests is TestBaseWithAssertions {
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  0);
         assertEq(IFixedTermLoan(loan).principal(),          0);
 
-        assertEq(loanManager.accruedInterest(),       0);
-        assertEq(loanManager.accountedInterest(),     0);
-        assertEq(loanManager.principalOut(),          0);
-        assertEq(loanManager.assetsUnderManagement(), 0);
-        assertEq(loanManager.issuanceRate(),          0);
-        assertEq(loanManager.domainStart(),           block.timestamp);
-        assertEq(loanManager.domainEnd(),             block.timestamp);
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       block.timestamp,
+            domainEnd:         block.timestamp,
+            unrealizedLosses:  0
+        });
 
         (
             ,

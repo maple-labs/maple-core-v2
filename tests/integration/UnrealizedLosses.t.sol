@@ -15,9 +15,9 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity(lp1, 1_500_000e6);
-        depositLiquidity(lp2, 3_500_000e6);
-        depositLiquidity(lp3, 5_000_000e6);
+        deposit(lp1, 1_500_000e6);
+        deposit(lp2, 3_500_000e6);
+        deposit(lp3, 5_000_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -207,7 +207,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
 
         // The amount of exit shares won't equal the amount of join shares due to the unrealized losses.
         uint256 exitShares      = pool.convertToExitShares(2_000_000e6);
-        uint256 depositedShares = depositLiquidity(lp4, 2_000_000e6);
+        uint256 depositedShares = deposit(lp4, 2_000_000e6);
 
         assertEq(exitShares, (2_000_000e6 * 10_000_000e6 / uint256(6_000_000e6)) + 1);    // totalSupply / (totalAssets - unrealizedLosses) + 1
         assertEq(exitShares, 3_333_333.333334e6);

@@ -32,7 +32,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         borrower2 = makeAddr("borrower2");
         lp        = makeAddr("lp");
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         vm.prank(governor);
         globals.setValidBorrower(borrower1, true);
@@ -144,7 +144,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_failIfLoanActive() external {
-        depositLiquidity(lp, 1_500_000e6);  // Deposit again
+        deposit(lp, 1_500_000e6);  // Deposit again
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan1));
@@ -263,6 +263,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     function test_fund_twoLoans() external {
         fundLoan(address(loan1));
 
+        // TODO: Consider replacing with `assertFixedTermLoanManager`.
         assertEq(loanManager.paymentIdOf(address(loan1)),  1);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.domainEnd(),                  start + 1_000_000);
@@ -443,8 +444,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
@@ -499,7 +499,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_loanNotActive() external {
-        depositLiquidity(address(pool), lp, 2 * principal);
+        deposit(address(pool), lp, 2 * principal);
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
@@ -538,7 +538,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_zeroSupply() external {
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
         requestRedeem(address(pool), lp, pool.balanceOf(lp));
 
         vm.warp(start + 2 weeks);
@@ -551,7 +551,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_insufficientCover() external {
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
 
         vm.prank(governor);
         globals.setMinCoverAmount(address(poolManager), cover);
@@ -562,7 +562,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_poolManagerTransferFailure() external {
-        depositLiquidity(address(pool), lp, principal / 2);
+        deposit(address(pool), lp, principal / 2);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:TRANSFER_FAIL");
@@ -570,7 +570,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_lockedLiquidity() external {
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
 
         requestRedeem(address(pool), lp, pool.balanceOf(lp));
 
@@ -582,7 +582,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_loanManagerApproveFailure() external {
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
 
         fundsAsset.__failWhenCalledBy(address(loanManager));
 
@@ -597,7 +597,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_loanActive() external {
-        depositLiquidity(address(pool), lp, 2 * principal);
+        deposit(address(pool), lp, 2 * principal);
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
@@ -609,7 +609,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
     // TODO: Unreachable due to the loan manager checking for the same error condition first.
     // function test_fund_loanClosed() external {
-    //     depositLiquidity(address(pool), lp, 2 * principal);
+    //     deposit(address(pool), lp, 2 * principal);
     //
     //     vm.prank(poolDelegate);
     //     loanManager.fund(address(loan));
@@ -625,7 +625,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     // }
 
     function test_fund_loanTransferFailure() external {
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
 
         fundsAsset.__failWhenCalledBy(address(loan));
 
@@ -646,7 +646,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         uint256 managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
         uint256 issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
 
         assertOpenTermLoanManager({
             loanManager:       address(loanManager),

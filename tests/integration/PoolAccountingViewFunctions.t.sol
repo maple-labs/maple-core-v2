@@ -16,12 +16,12 @@ contract BalanceOfAssetsTests is TestBase {
     }
 
     function test_balanceOfAssets() external {
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.balanceOfAssets(lp1), 1_000e6);
         assertEq(pool.balanceOfAssets(lp2), 0);
 
-        depositLiquidity(lp2, 3_000e6);
+        deposit(lp2, 3_000e6);
 
         assertEq(pool.balanceOfAssets(lp1), 1_000e6);
         assertEq(pool.balanceOfAssets(lp2), 3_000e6);
@@ -39,12 +39,12 @@ contract BalanceOfAssetsTests is TestBase {
 
         uint256 totalDeposits = depositAmount1 + depositAmount2;
 
-        depositLiquidity(lp1, depositAmount1);
+        deposit(lp1, depositAmount1);
 
         assertEq(pool.balanceOfAssets(lp1), depositAmount1);
         assertEq(pool.balanceOfAssets(lp2), 0);
 
-        depositLiquidity(lp2, depositAmount2);
+        deposit(lp2, depositAmount2);
 
         assertEq(pool.balanceOfAssets(lp1), depositAmount1);
         assertEq(pool.balanceOfAssets(lp2), depositAmount2);
@@ -211,7 +211,7 @@ contract MaxMintTests is TestBase {
         poolManager.setOpenToPublic();
         vm.stopPrank();
 
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.maxMint(lp1), 9_000e6);
         assertEq(pool.maxMint(lp2), 9_000e6);
@@ -232,7 +232,7 @@ contract MaxMintTests is TestBase {
         poolManager.setOpenToPublic();
         vm.stopPrank();
 
-        depositLiquidity(lp1, depositAmount);
+        deposit(lp1, depositAmount);
 
         uint256 availableDeposit = liquidityCap > depositAmount ? liquidityCap - depositAmount : 0;
 
@@ -262,7 +262,7 @@ contract MaxRedeemTests is TestBase {
     }
 
     function test_maxRedeem_noLockedShares_notInExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
@@ -272,7 +272,7 @@ contract MaxRedeemTests is TestBase {
     }
 
     function test_maxRedeem_lockedShares_notInExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
@@ -287,7 +287,7 @@ contract MaxRedeemTests is TestBase {
     }
 
     function test_maxRedeem_lockedShares_inExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
@@ -317,7 +317,7 @@ contract MaxWithdrawTests is TestBase {
     }
 
     function test_maxWithdraw_noLockedShares_notInExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
@@ -327,7 +327,7 @@ contract MaxWithdrawTests is TestBase {
     }
 
     function test_maxWithdraw_lockedShares_notInExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
@@ -342,7 +342,7 @@ contract MaxWithdrawTests is TestBase {
     }
 
     function test_maxWithdraw_lockedShares_inExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
@@ -361,7 +361,7 @@ contract MaxWithdrawTests is TestBase {
     function testDeepFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
         assets_ = bound(assets_, 1, 1_000e6);
 
-        depositLiquidity(lp, assets_);
+        deposit(lp, assets_);
 
         assertEq(pool.balanceOf(lp), assets_);
 
@@ -390,7 +390,7 @@ contract PreviewRedeemTests is TestBase {
     }
 
     function test_previewRedeem_invalidShares() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
         pool.requestRedeem(1_000e6, lp);
@@ -404,7 +404,7 @@ contract PreviewRedeemTests is TestBase {
     }
 
     function test_previewRedeem_lockedShares_notInExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
         pool.requestRedeem(1_000e6, lp);
@@ -415,7 +415,7 @@ contract PreviewRedeemTests is TestBase {
     }
 
     function test_previewRedeem_lockedShares_inExitWindow() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
         pool.requestRedeem(1_000e6, lp);
@@ -438,14 +438,14 @@ contract PreviewWithdrawTests is TestBase {
     }
 
     function test_previewWithdraw() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.prank(lp);
         assertEq(pool.previewWithdraw(1_000e6), 0);
     }
 
     function test_previewWithdraw_zeroAssetsWithDeposit() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.prank(lp);
         assertEq(pool.previewWithdraw(0), 0);
@@ -459,7 +459,7 @@ contract PreviewWithdrawTests is TestBase {
     function testDeepFuzz_previewWithdraw_lockedShares_notInExitWindow(uint256 assets_) external {
         assets_ = bound(assets_, 1, 1_000e6);
 
-        depositLiquidity(lp, assets_);
+        deposit(lp, assets_);
 
         vm.startPrank(lp);
         pool.requestRedeem(assets_, lp);
@@ -472,7 +472,7 @@ contract PreviewWithdrawTests is TestBase {
     function testDeepFuzz_previewWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
         assets_ = bound(assets_, 1, 1_000e6);
 
-        depositLiquidity(lp, assets_);
+        deposit(lp, assets_);
 
         vm.startPrank(lp);
         pool.requestRedeem(assets_, lp);
@@ -510,7 +510,7 @@ contract ConvertToAssetsTests is TestBase {
     }
 
     function test_convertToAssets_singleUser() external {
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.convertToAssets(1),       1);
         assertEq(pool.convertToAssets(2),       2);
@@ -518,9 +518,9 @@ contract ConvertToAssetsTests is TestBase {
     }
 
     function test_convertToAssets_multipleUsers() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         assertEq(pool.convertToAssets(1),       1);
         assertEq(pool.convertToAssets(2),       2);
@@ -528,9 +528,9 @@ contract ConvertToAssetsTests is TestBase {
     }
 
     function test_convertToAssets_multipleUsers_changeTotalAssets() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
         fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
@@ -563,7 +563,7 @@ contract ConvertToSharesTests is TestBase {
     }
 
     function test_convertToShares_singleUser() external {
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.convertToShares(1),       1);
         assertEq(pool.convertToShares(2),       2);
@@ -571,9 +571,9 @@ contract ConvertToSharesTests is TestBase {
     }
 
     function test_convertToShares_multipleUsers() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         assertEq(pool.convertToShares(1),       1);
         assertEq(pool.convertToShares(2),       2);
@@ -581,9 +581,9 @@ contract ConvertToSharesTests is TestBase {
     }
 
     function test_convertToShares_multipleUsers_changeTotalAssets() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
         fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
@@ -616,7 +616,7 @@ contract PreviewDepositTests is TestBase {
     }
 
     function test_previewDeposit_nonZeroTotalSupply() external {
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.previewDeposit(1),       1);
         assertEq(pool.previewDeposit(2),       2);
@@ -624,9 +624,9 @@ contract PreviewDepositTests is TestBase {
     }
 
     function test_previewDeposit_multipleUsers() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         assertEq(pool.previewDeposit(1),       1);
         assertEq(pool.previewDeposit(2),       2);
@@ -634,9 +634,9 @@ contract PreviewDepositTests is TestBase {
     }
 
     function test_previewDeposit_multipleUsers_changeTotalAssets() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
         fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
@@ -669,7 +669,7 @@ contract PreviewMintTests is TestBase {
     }
 
     function test_previewMint_nonZeroTotalSupply() external {
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.previewMint(1),       1);
         assertEq(pool.previewMint(2),       2);
@@ -677,9 +677,9 @@ contract PreviewMintTests is TestBase {
     }
 
     function test_previewMint_multipleUsers() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         assertEq(pool.previewMint(1),       1);
         assertEq(pool.previewMint(2),       2);
@@ -687,9 +687,9 @@ contract PreviewMintTests is TestBase {
     }
 
     function test_previewMint_multipleUsers_changeTotalAssets() external {
-        depositLiquidity(lp1, 1_000e6);
-        depositLiquidity(lp2, 1_000e6);
-        depositLiquidity(lp3, 1_000e6);
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+        deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
         fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
@@ -731,13 +731,13 @@ contract TotalAssetsTests is TestBase {
     }
 
     function test_totalAssets_singleDeposit() external {
-        depositLiquidity(lp1, 1_000e6);
+        deposit(lp1, 1_000e6);
 
         assertEq(pool.totalAssets(), 1_000e6);
     }
 
     function test_totalAssets_singleLoanFunded() external {
-        depositLiquidity(lp1, 1_500_000e6);
+        deposit(lp1, 1_500_000e6);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
@@ -752,7 +752,7 @@ contract TotalAssetsTests is TestBase {
     }
 
     function test_totalAssets_singleLoanFundedWithInterest() external {
-        depositLiquidity(lp1, 1_500_000e6);
+        deposit(lp1, 1_500_000e6);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
@@ -779,7 +779,7 @@ contract TotalAssetsTests is TestBase {
     }
 
     function test_totalAssets_singleLoanFundedWithPayment() external {
-        depositLiquidity(lp1, 1_500_000e6);
+        deposit(lp1, 1_500_000e6);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,

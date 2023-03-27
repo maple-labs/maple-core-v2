@@ -112,7 +112,7 @@ contract LpHandler is Test {
 
         if (block.timestamp > windowStart_) return 0;  // Only warp forward
 
-        vm.warp(bound(warpSeed_, windowStart_, windowEnd_));
+        vm.warp(bound(warpSeed_, windowStart_, windowEnd_ - 1 seconds));
 
         assets_ = pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);  // TODO: Fuzz owner and receiver
     }

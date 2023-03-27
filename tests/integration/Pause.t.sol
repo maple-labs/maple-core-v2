@@ -56,7 +56,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         vm.stopPrank();
 
-        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
+        deposit(makeAddr("depositor"), 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,

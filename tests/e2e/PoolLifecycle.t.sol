@@ -106,10 +106,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         fundsAsset.mint(address(poolDelegate), 1_000_000e6);
 
-        vm.startPrank(poolDelegate);
-        fundsAsset.approve(address(poolManager), 1_000_000e6);
-        poolManager.depositCover(1_000_000e6);
-        vm.stopPrank();
+        depositCover(address(poolManager), 1_000_000e6);
 
         /*******************************************/
         /*** Step 5: Governor activates the Pool ***/
@@ -122,8 +119,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         /*** Step 6: PD sets the Pool to public ***/
         /******************************************/
 
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         /***********************************************/
         /*** Step 7: 2 LPs deposit 5m each at ER = 1 ***/
@@ -131,8 +127,8 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         vm.warp(start + 1 days);
 
-        depositLiquidity(lp1, 5_000_000e6);
-        depositLiquidity(lp2, 5_000_000e6);
+        deposit(lp1, 5_000_000e6);
+        deposit(lp2, 5_000_000e6);
 
         expectedCash        = 10_000_000e6;
         expectedTotalAssets = 10_000_000e6;
@@ -401,7 +397,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets += expectedTotalAccruedInterest;
 
         // LP3 deposits 5 mil
-        depositLiquidity(lp3, 5_000_000e6);
+        deposit(lp3, 5_000_000e6);
 
         expectedCash        += 5_000_000e6;
         expectedTotalSupply += (5_000_000e6 * expectedTotalSupply) / expectedTotalAssets;
@@ -666,7 +662,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan2IssuanceRate
         });
 
-        callLoan(address(loanManager), loan2, OpenTermLoan(loan2).principal());
+        callLoan(loan2, OpenTermLoan(loan2).principal());
 
         assertOpenTermLoanPaymentState({
             loan:               loan2,
@@ -770,7 +766,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan2IssuanceRate  // No change
         });
 
-        ( uint256 principal, uint256 interest, ) = makeOpenTermPayment(loan2);
+        ( uint256 principal, uint256 interest, ) = makePayment(loan2);
 
         expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
 
@@ -892,7 +888,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan3IssuanceRate
         });
 
-        callLoan(address(loanManager), loan3, OpenTermLoan(loan3).principal());
+        callLoan(loan3, OpenTermLoan(loan3).principal());
 
         assertOpenTermLoanPaymentState({
             loan:               loan3,

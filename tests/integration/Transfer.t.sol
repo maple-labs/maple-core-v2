@@ -27,7 +27,7 @@ contract TransferTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
 
-        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
 
         vm.prank(governor);
@@ -43,7 +43,7 @@ contract TransferTests is TestBase {
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares = deposit(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = makeAddr("recipient");
@@ -64,7 +64,7 @@ contract TransferTests is TestBase {
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares = deposit(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = makeAddr("recipient");
@@ -83,7 +83,7 @@ contract TransferTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
 
-        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
 
         assertEq(pool.balanceOf(lp),        lpShares);
@@ -100,7 +100,7 @@ contract TransferTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
 
-        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
 
         vm.prank(lp);
@@ -120,7 +120,7 @@ contract TransferTests is TestBase {
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares   = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares   = deposit(lp, 1_000e6);
         address recipient  = makeAddr("recipient");
         address transferer = makeAddr("transferer");
 
@@ -146,7 +146,7 @@ contract TransferTests is TestBase {
         poolManager.setAllowedLender(lp, true);
 
         // LP gets pool tokens.
-        uint256 lpShares   = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares   = deposit(lp, 1_000e6);
         address recipient  = makeAddr("recipient");
         address transferer = makeAddr("transferer");
 
@@ -170,7 +170,7 @@ contract TransferTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
 
-        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
 
         vm.prank(recipient);
@@ -182,7 +182,7 @@ contract TransferTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
 
-        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
 
         vm.prank(lp);
@@ -197,7 +197,7 @@ contract TransferTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setOpenToPublic();
 
-        uint256 lpShares  = depositLiquidity(lp, 1_000e6);
+        uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
 
         vm.prank(lp);

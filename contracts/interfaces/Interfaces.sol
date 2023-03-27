@@ -115,8 +115,6 @@ interface ILoanLike is IProxiedLike {
 
     function principal() external view returns (uint256 principal_);
 
-    function principalRequested() external view returns (uint256 principalRequested_);
-
     function proposeNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
         external returns (bytes32 refinanceCommitment_);
 
@@ -131,19 +129,11 @@ interface ILoanLike is IProxiedLike {
 
 interface ILoanManagerLike is IProxiedLike {
 
-    function acceptNewTerms(
-        address loan_,
-        address refinancer_,
-        uint256 deadline_,
-        bytes[] calldata calls_,
-        uint256 principalIncrease_
-    ) external;
-
     function accountedInterest() external view returns (uint112 accountedInterest_);
 
-    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
+    function accruedInterest() external view returns (uint256 accruedInterest_);
 
-    function domainEnd() external view returns (uint48 domainEnd_);
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
 
     function domainStart() external view returns (uint48 domainStart_);
 
@@ -151,42 +141,22 @@ interface ILoanManagerLike is IProxiedLike {
 
     function fundsAsset() external view returns (address fundsAsset_);
 
-    function accruedInterest() external view returns (uint256 accruedInterest_);
-
     function impairLoan(address loan_) external;
 
     function issuanceRate() external view returns (uint256 issuanceRate_);
-
-    function paymentIdOf(address loan_) external view returns (uint24 paymentId_);
-
-    function paymentCounter() external view returns (uint24 paymentCounter_);
-
-    function payments(uint256 paymentId_) external view returns (
-        uint24  platformManagementFeeRate,
-        uint24  delegateManagementFeeRate,
-        uint48  startDate,
-        uint48  paymentDueDate,
-        uint128 incomingNetInterest,
-        uint128 refinanceInterest,
-        uint256 issuanceRate
-    );
-
-    function paymentWithEarliestDueDate() external view returns (uint24 paymentWithEarliestDueDate_);
 
     function poolManager() external view returns (address poolManager_);
 
     function principalOut() external view returns (uint128 principalOut_);
 
-    function removeLoanImpairment(address loan_) external;
+    function rejectNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
 
-    function sortedPayments(uint256 paymentId_) external view returns (uint24 previous, uint24 next, uint48 paymentDueDate);
+    function removeLoanImpairment(address loan_) external;
 
     function triggerDefault(address loan_, address liquidatorFactory_)
         external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
 
     function unrealizedLosses() external view returns (uint128 unrealizedLosses_);
-
-    function updateAccounting() external;
 
 }
 

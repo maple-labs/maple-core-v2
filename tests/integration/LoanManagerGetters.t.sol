@@ -13,7 +13,7 @@ contract LoanManagerGetterTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
+        deposit(makeAddr("depositor"), 1_500_000e6);
 
         loanManager = poolManager.loanManagerList(0);
 
@@ -32,23 +32,19 @@ contract LoanManagerGetterTests is TestBase {
     }
 
     function test_loanManagerGetters_addresses() external {
-        ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
-
-        assertEq(loanManager_.fundsAsset(),    address(fundsAsset));
-        assertEq(loanManager_.poolManager(),   address(poolManager));
+        assertEq(ILoanManagerLike(loanManager).fundsAsset(),  address(fundsAsset));
+        assertEq(ILoanManagerLike(loanManager).poolManager(), address(poolManager));
     }
 
     function test_loanManagerGetters_uints() external {
-        ILoanManagerLike loanManager_ = ILoanManagerLike(loanManager);
-
-        assertEq(loanManager_.accountedInterest(),          0);
-        assertEq(loanManager_.domainEnd(),                  start + 1_000_000);
-        assertEq(loanManager_.domainStart(),                start);
-        assertEq(loanManager_.issuanceRate(),               0.1e6 * 1e30);
-        assertEq(loanManager_.paymentCounter(),             1);
-        assertEq(loanManager_.paymentWithEarliestDueDate(), 1);
-        assertEq(loanManager_.principalOut(),               1_000_000e6);
-        assertEq(loanManager_.unrealizedLosses(),           0);
+        assertEq(ILoanManagerLike(loanManager).accountedInterest(),               0);
+        assertEq(IFixedTermLoanManager(loanManager).domainEnd(),                  start + 1_000_000);
+        assertEq(ILoanManagerLike(loanManager).domainStart(),                     start);
+        assertEq(ILoanManagerLike(loanManager).issuanceRate(),                    0.1e6 * 1e30);
+        assertEq(IFixedTermLoanManager(loanManager).paymentCounter(),             1);
+        assertEq(IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate(), 1);
+        assertEq(ILoanManagerLike(loanManager).principalOut(),                    1_000_000e6);
+        assertEq(ILoanManagerLike(loanManager).unrealizedLosses(),                0);
     }
 
     function test_loanManagerGetters_liquidationInformation() external {
@@ -80,7 +76,7 @@ contract LoanManagerGetterTests is TestBase {
     }
 
     function test_loanManagerGetters_paymentInformation() external {
-        assertEq(ILoanManagerLike(loanManager).paymentIdOf(loan), 1);
+        assertEq(IFixedTermLoanManager(loanManager).paymentIdOf(loan), 1);
 
         (
             uint24  platformManagementFeeRate,
@@ -90,7 +86,7 @@ contract LoanManagerGetterTests is TestBase {
             uint128 incomingNetInterest,
             uint128 refinanceInterest,
             uint256 issuanceRate
-        ) = ILoanManagerLike(loanManager).payments(1);
+        ) = IFixedTermLoanManager(loanManager).payments(1);
 
             assertEq(platformManagementFeeRate, 0);
             assertEq(delegateManagementFeeRate, 0);
@@ -111,7 +107,7 @@ contract LoanManagerGetterTests is TestBase {
             loanManager: loanManager
         });
 
-        ( uint256 previous, uint256 next, uint256 paymentDueDate) = ILoanManagerLike(loanManager).sortedPayments(1);
+        ( uint256 previous, uint256 next, uint256 paymentDueDate) = IFixedTermLoanManager(loanManager).sortedPayments(1);
 
         assertEq(previous,       0);
         assertEq(next,           2);

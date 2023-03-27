@@ -16,7 +16,7 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
 
         loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
-        depositLiquidity(makeAddr("depositor"), 1_500_000e6);
+        deposit(makeAddr("depositor"), 1_500_000e6);
 
         loan = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),
@@ -53,6 +53,6 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
         assertTrue(!loanManager.isLiquidationActive(loan));
     }
 
-    /// @TODO: Add test_isLiquidationActive_afterLiquidation
+    // TODO: Add test_isLiquidationActive_afterLiquidation
 
 }

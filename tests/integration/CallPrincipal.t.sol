@@ -39,7 +39,7 @@ contract CallPrincipalTestsBase is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
@@ -82,15 +82,17 @@ contract CallPrincipalFailureTests is CallPrincipalTestsBase {
     }
 
     function test_callPrincipal_invalidAmount_boundary() external {
-        vm.startPrank(poolDelegate);
-        loanManager.fund(address(loan));
+        fundLoan(address(loan));
 
         vm.expectRevert("ML:C:INVALID_AMOUNT");
+        vm.prank(poolDelegate);
         loanManager.callPrincipal(address(loan), principal + 1);
 
         vm.expectRevert("ML:C:INVALID_AMOUNT");
+        vm.prank(poolDelegate);
         loanManager.callPrincipal(address(loan), 0);
 
+        vm.prank(poolDelegate);
         loanManager.callPrincipal(address(loan), principal);
     }
 
@@ -101,8 +103,7 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
     function setUp() public override {
         super.setUp();
 
-        vm.prank(poolDelegate);
-        loanManager.fund(address(loan));
+        fundLoan(address(loan));
 
         assertOpenTermLoanManager({
             loanManager:       address(loanManager),
@@ -145,7 +146,7 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
 
         vm.warp(callTimestamp);
 
-        callLoan(address(loanManager), address(loan), principal);
+        callLoan(address(loan), principal);
 
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 
@@ -190,7 +191,7 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
 
         vm.warp(callTimestamp);
 
-        callLoan(address(loanManager), address(loan), principal);
+        callLoan(address(loan), principal);
 
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 
@@ -289,7 +290,7 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
 
         vm.warp(callTimestamp);
 
-        callLoan(address(loanManager), address(loan), principal);
+        callLoan(address(loan), principal);
 
         assertPoolState({
             totalSupply:        1_500_000e6,  // Same as initial deposit
@@ -346,7 +347,7 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
 
         vm.warp(callTimestamp);
 
-        callLoan(address(loanManager), address(loan), principal / 2);
+        callLoan(address(loan), principal / 2);
 
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 

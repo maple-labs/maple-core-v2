@@ -17,7 +17,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -90,7 +90,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -120,15 +120,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -168,15 +167,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // Principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -212,15 +210,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 590_000e6);
@@ -241,15 +238,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -289,15 +285,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       45_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_045_000e6,     // Principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   45_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -333,15 +328,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.06e6 * 1e30,
-            domainStart:           start + 500_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.06e6 * 1e30,
+            domainStart:       start + 500_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 590_000e6);
@@ -362,15 +356,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         assertTotalAssets(1_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -410,15 +403,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,     // Principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -458,15 +450,14 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     9_000e6,          // Accounted during claim
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_009_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 1_100_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 9_000e6,          // Accounted during claim
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 1_100_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
@@ -494,7 +485,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
 
-        depositLiquidity(lp, 2_500_000e6);
+        deposit(lp, 2_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -525,15 +516,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_000_000e6,
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertFixedTermLoan({
@@ -587,15 +577,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       180_000e6,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_180_000e6,     // Principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   180_000e6,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -637,15 +626,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_047_619_047620,
-            assetsUnderManagement: 1_047_619_047620,
-            issuanceRate:          0.094285714285e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_047_619_047620,
+            issuanceRate:      0.094285714285e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
@@ -666,15 +654,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_000_000e6,
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertFixedTermLoan({
@@ -728,15 +715,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       108_000e6,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_108_000e6,     // Principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   108_000e6,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -778,15 +764,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_047_619_047620,
-            assetsUnderManagement: 1_047_619_047620,
-            issuanceRate:          0.067346938775e6 * 1e30,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_047_619_047620,
+            issuanceRate:      0.067346938775e6 * 1e30,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6);
@@ -807,15 +792,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         assertTotalAssets(2_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_000_000e6,
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertFixedTermLoan({
@@ -869,15 +853,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       180_000e6,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_180_000e6,     // Principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   180_000e6,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -920,15 +903,14 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     18_857_142857,    // 200_000sec of the IR
-            principalOut:          1_047_619_047620,
-            assetsUnderManagement: 1_047_619_047620 + 18_857_142857,
-            issuanceRate:          0.094285714285e6 * 1e30,
-            domainStart:           start + 1_200_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 18_857_142857,    // 200_000sec of the IR
+            principalOut:      1_047_619_047620,
+            issuanceRate:      0.094285714285e6 * 1e30,
+            domainStart:       start + 1_200_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + payment1Principal + 180_000e6 + 46_656e6);
@@ -959,7 +941,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         borrower2 = makeAddr("borrower2");
         lp        = makeAddr("lp");
 
-        depositLiquidity(lp, 3_500_000e6);
+        deposit(lp, 3_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -999,15 +981,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 27_000e6);  // Already warped 300_000 seconds at 0.09 IR after start before funding loan2
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     27_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_027_000e6,
-            issuanceRate:          0.27e6 * 1e30,      // 0.09 from loan1 and 0.18 from loan2
-            domainStart:           start + 300_000,    // Time of loan2 funding
-            domainEnd:             start + 1_000_000,  // Payment due date of loan1
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 27_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,      // 0.09 from loan1 and 0.18 from loan2
+            domainStart:       start + 300_000,    // Time of loan2 funding
+            domainEnd:         start + 1_000_000,  // Payment due date of loan1
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee for each loan
@@ -1048,15 +1029,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       90_000e6 + 126_000e6 - 27_000e6,
-            accountedInterest:     27_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_000_000e6 + 216_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 300_000,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   90_000e6 + 126_000e6 - 27_000e6,
+            accountedInterest: 27_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 300_000,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -1092,15 +1072,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     126_000e6,    // 700_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_000_000e6 + 126_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 1_300_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 126_000e6,    // 700_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 1_300_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
@@ -1144,15 +1123,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       27_000e6 + 180_000e6 - 126_000e6,  // loan1 + loan2 - accounted from loan2
-            accountedInterest:     126_000e6,    // 700_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_207_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 1_300_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   27_000e6 + 180_000e6 - 126_000e6,  // loan1 + loan2 - accounted from loan2
+            accountedInterest: 126_000e6,    // 700_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 1_300_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
@@ -1189,15 +1167,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     27_000e6,    // 700_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_027_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_300_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 27_000e6,    // 700_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_300_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
@@ -1238,15 +1215,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_527_000e6);  // 300_000s of loan1 at 0.09e6 IR
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     27_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_027_000e6,
-            issuanceRate:          0.27e6 * 1e30,      // 0.09 from loan1 and 0.18 from loan2
-            domainStart:           start + 300_000,    // Time of loan2 funding
-            domainEnd:             start + 1_000_000,  // Payment due date of loan1
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 27_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,      // 0.09 from loan1 and 0.18 from loan2
+            domainStart:       start + 300_000,    // Time of loan2 funding
+            domainEnd:         start + 1_000_000,  // Payment due date of loan1
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee for each loan
@@ -1286,15 +1262,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       45_000e6 + 36_000e6 - 27_000e6,
-            accountedInterest:     27_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_081_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 300_000,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   45_000e6 + 36_000e6 - 27_000e6,
+            accountedInterest: 27_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 300_000,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -1330,15 +1305,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     36_000e6,           // 200_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_036_000e6,
-            issuanceRate:          0.24e6 * 1e30,      // 0.18 from loan2 and 0.6 from loan1
-            domainStart:           start + 500_000,
-            domainEnd:             start + 1_300_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 36_000e6,           // 200_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.24e6 * 1e30,      // 0.18 from loan2 and 0.6 from loan1
+            domainStart:       start + 500_000,
+            domainEnd:         start + 1_300_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
@@ -1376,15 +1350,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         assertFixedTermLoanManager({
             // 800_000s of loan1 at 0.06 + 1_000_000s of loan2 at 0.18e6 - accounted
-            loanManager:           loanManager,
-            accruedInterest:       48_000e6 + 180_000e6 - 36_000e6,
-            accountedInterest:     36_000e6,                         // 200_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_228_000e6,
-            issuanceRate:          0.24e6 * 1e30,
-            domainStart:           start + 500_000,
-            domainEnd:             start + 1_300_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   48_000e6 + 180_000e6 - 36_000e6,
+            accountedInterest: 36_000e6,                         // 200_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.24e6 * 1e30,
+            domainStart:       start + 500_000,
+            domainEnd:         start + 1_300_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6);
@@ -1428,15 +1401,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     48_000e6,           // 800_000s at 0.06e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_048_000e6,
-            issuanceRate:          0.24e6 * 1e30,
-            domainStart:           start + 1_300_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 48_000e6,           // 800_000s at 0.06e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.24e6 * 1e30,
+            domainStart:       start + 1_300_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6);
@@ -1478,15 +1450,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         assertTotalAssets(3_527_000e6);  // Already warped 300_000 seconds at 0.09 IR after start before funding loan2
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     27_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_027_000e6,
-            issuanceRate:          0.27e6 * 1e30,      // 0.09 from loan1 and 0.18 from loan2
-            domainStart:           start + 300_000,    // Time of loan2 funding
-            domainEnd:             start + 1_000_000,  // Payment due date of loan1
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 27_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,      // 0.09 from loan1 and 0.18 from loan2
+            domainStart:       start + 300_000,    // Time of loan2 funding
+            domainEnd:         start + 1_000_000,  // Payment due date of loan1
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee for each loan
@@ -1528,15 +1499,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       90_000e6 + 126_000e6 - 27_000e6,
-            accountedInterest:     27_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_216_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 300_000,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   90_000e6 + 126_000e6 - 27_000e6,
+            accountedInterest: 27_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 300_000,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -1577,15 +1547,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     144_000e6 + 9_000e6,  // 800_000s at 0.18e6 + 9_000e6 accrued from 100_000s at 0.9e6 from loan1
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_153_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_100_000,
-            domainEnd:             start + 1_300_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 144_000e6 + 9_000e6,  // 800_000s at 0.18e6 + 9_000e6 accrued from 100_000s at 0.9e6 from loan1
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_100_000,
+            domainEnd:         start + 1_300_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
@@ -1629,15 +1598,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       27_000e6 + 180_000e6 - (144_000e6 + 9_000e6),  // loan1 + loan2 - accounted from loan2
-            accountedInterest:     144_000e6 + 9_000e6,                           // 700_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_207_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_100_000,
-            domainEnd:             start + 1_300_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   27_000e6 + 180_000e6 - (144_000e6 + 9_000e6),  // loan1 + loan2 - accounted from loan2
+            accountedInterest: 144_000e6 + 9_000e6,                           // 700_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_100_000,
+            domainEnd:         start + 1_300_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 15_552e6);
@@ -1674,15 +1642,14 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     27_000e6,           // 700_000s at 0.18e6
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_027_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_300_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 27_000e6,           // 700_000s at 0.18e6
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_300_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 15_552e6);
@@ -1737,7 +1704,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         loanManager = poolManager.loanManagerList(0);
 
-        depositLiquidity(lp, 3_500_000e6);
+        deposit(lp, 3_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -1766,15 +1733,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,  // Payment due date of loan1.
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,  // Payment due date of loan1.
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 2_500_000e6);
@@ -1794,16 +1760,15 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,
+            loanManager:       loanManager,
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
             // Although it's past the domainEnd, the loanManager haven't been pinged, so it's considering the old issuance rate.
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertFixedTermLoan({
@@ -1845,15 +1810,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_090_000e6,
-            issuanceRate:          0.18e6 * 1e30,      // Only loan2 is accruing.
-            domainStart:           start + 2_200_000,
-            domainEnd:             start + 3_200_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,      // Only loan2 is accruing.
+            domainStart:       start + 2_200_000,
+            domainEnd:         start + 3_200_000,
+            unrealizedLosses:  0
         });
 
         assertFixedTermLoan({
@@ -1895,15 +1859,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6);  // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       180_000e6,
-            accountedInterest:     90_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_270_000e6,
-            issuanceRate:          0.18e6 * 1e30,      // Only loan2 is accruing.
-            domainStart:           start + 2_200_000,
-            domainEnd:             start + 3_200_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   180_000e6,
+            accountedInterest: 90_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,      // Only loan2 is accruing.
+            domainStart:       start + 2_200_000,
+            domainEnd:         start + 3_200_000,
+            unrealizedLosses:  0
         });
 
         // Loan1 Assertions.
@@ -1963,15 +1926,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(3_500_000e6 + 90_000e6 + 180_000e6);  // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_090_000e6,
-            issuanceRate:          0.18e6 * 1e30,      // Only loan2 is accruing.
-            domainStart:           start + 3_200_000,
-            domainEnd:             start + 4_200_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,      // Only loan2 is accruing.
+            domainStart:       start + 3_200_000,
+            domainEnd:         start + 4_200_000,
+            unrealizedLosses:  0
         });
 
         assertFixedTermLoan({
@@ -2042,15 +2004,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_090_000e6,
-            issuanceRate:          0.18e6 * 1e30,      // Only loan2 is accruing.
-            domainStart:           start + 3_200_000,
-            domainEnd:             start + 4_200_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,      // Only loan2 is accruing.
+            domainStart:       start + 3_200_000,
+            domainEnd:         start + 4_200_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 90_000e6 + 180_000e6 + 202_176e6);
@@ -2102,15 +2063,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          3_000_000e6,
-            assetsUnderManagement: 3_090_000e6,
-            issuanceRate:          0.18e6 * 1e30,      // Only loan2 is accruing.
-            domainStart:           start + 3_200_000,
-            domainEnd:             start + 4_200_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,      // Only loan2 is accruing.
+            domainStart:       start + 3_200_000,
+            domainEnd:         start + 4_200_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 180_000e6 + 90_000e6 + 202_176e6 + 90_000e6 + 108_864e6);
@@ -2152,15 +2112,14 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_000_000e6,
-            issuanceRate:          0.18e6 * 1e30,      // Only loan2 is accruing.
-            domainStart:           start + 3_200_000,
-            domainEnd:             start + 4_200_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,      // Only loan2 is accruing.
+            domainStart:       start + 3_200_000,
+            domainEnd:         start + 4_200_000,
+            unrealizedLosses:  0
         });
 
         assertEq(
@@ -2196,7 +2155,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         borrower3 = makeAddr("borrower3");
         lp        = makeAddr("lp");
 
-        depositLiquidity(lp, 6_500_000e6);
+        deposit(lp, 6_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -2318,15 +2277,14 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(6_500_000e6 + 54_000e6 + 36_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     54_000e6 + 36_000e6,
-            principalOut:          6_000_000e6,
-            assetsUnderManagement: 6_090_000e6,
-            issuanceRate:          0.54e6 * 1e30,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 54_000e6 + 36_000e6,
+            principalOut:      6_000_000e6,
+            issuanceRate:      0.54e6 * 1e30,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -2362,15 +2320,14 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(6_500_000e6 + 90_000e6 + 108_000e6 + 108_000e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       (90_000e6 - 54_000e6) + (108_000e6 - 36_000e6) + 108_000e6,
-            accountedInterest:     54_000e6 + 36_000e6,
-            principalOut:          6_000_000e6,
-            assetsUnderManagement: 6_306_000e6,
-            issuanceRate:          0.54e6 * 1e30,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   (90_000e6 - 54_000e6) + (108_000e6 - 36_000e6) + 108_000e6,
+            accountedInterest: 54_000e6 + 36_000e6,
+            principalOut:      6_000_000e6,
+            issuanceRate:      0.54e6 * 1e30,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -2458,15 +2415,14 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
         assertTotalAssets(6_500_000e6 + 90_000e6 + 180_000e6 + 270_000e6 + 27_000e6 + 46_656e6);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     90_000e6 + 180_000e6 + 27_000e6,
-            principalOut:          6_000_000e6,
-            assetsUnderManagement: 6_297_000e6,
-            issuanceRate:          0.27e6 * 1e30,
-            domainStart:           start + 1_700_000,
-            domainEnd:             start + 2_600_000,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 90_000e6 + 180_000e6 + 27_000e6,
+            principalOut:      6_000_000e6,
+            issuanceRate:      0.27e6 * 1e30,
+            domainStart:       start + 1_700_000,
+            domainEnd:         start + 2_600_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 270_000e6 + 46_656e6);

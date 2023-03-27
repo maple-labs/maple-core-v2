@@ -182,11 +182,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function assert_loanManager_invariant_A(address loanManager) internal {
-        assertLe(ILoanManagerLike(loanManager).domainStart(), ILoanManagerLike(loanManager).domainEnd(), "LoanManager Invariant A");
+        assertLe(ILoanManagerLike(loanManager).domainStart(), IFixedTermLoanManager(loanManager).domainEnd(), "LoanManager Invariant A");
     }
 
     function assert_loanManager_invariant_B(address loanManager) internal {
-        uint256 next = ILoanManagerLike(loanManager).paymentWithEarliestDueDate();
+        uint256 next = IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate();
 
         uint256 previousPaymentDueDate;
         uint256 nextPaymentDueDate;
@@ -194,9 +194,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         while (next != 0) {
             uint256 current = next;
 
-            ( , next, ) = ILoanManagerLike(loanManager).sortedPayments(current);  // Overwrite `next` in loop
+            ( , next, ) = IFixedTermLoanManager(loanManager).sortedPayments(current);  // Overwrite `next` in loop
 
-            ( , , nextPaymentDueDate ) = ILoanManagerLike(loanManager).sortedPayments(next);  // Get the next payment due date
+            ( , , nextPaymentDueDate ) = IFixedTermLoanManager(loanManager).sortedPayments(next);  // Get the next payment due date
 
             if (next == 0 && nextPaymentDueDate == 0) break;  // End of list
 
@@ -257,18 +257,18 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_loanManager_invariant_J(address loanManager) internal {
-        if (ILoanManagerLike(loanManager).paymentWithEarliestDueDate() != 0) {
+        if (IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate() != 0) {
             assertGt(ILoanManagerLike(loanManager).issuanceRate(), 0, "LoanManager Invariant J");
         }
     }
 
     function assert_loanManager_invariant_K(address loanManager) internal {
-        uint256 paymentWithEarliestDueDate = ILoanManagerLike(loanManager).paymentWithEarliestDueDate();
+        uint256 paymentWithEarliestDueDate = IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate();
 
-        ( , , uint256 earliestPaymentDueDate ) = ILoanManagerLike(loanManager).sortedPayments(paymentWithEarliestDueDate);
+        ( , , uint256 earliestPaymentDueDate ) = IFixedTermLoanManager(loanManager).sortedPayments(paymentWithEarliestDueDate);
 
         if (paymentWithEarliestDueDate != 0) {
-            assertEq(ILoanManagerLike(loanManager).domainEnd(), earliestPaymentDueDate, "LoanManager Invariant K");
+            assertEq(IFixedTermLoanManager(loanManager).domainEnd(), earliestPaymentDueDate, "LoanManager Invariant K");
         }
     }
 
@@ -603,10 +603,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function getAllOutstandingInterest() public returns (uint256 sumOutstandingInterest_) {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
-            ILoanLike        loan_        = ILoanLike(loanHandler.activeLoans(i));
-            ILoanManagerLike loanManager_ = ILoanManagerLike(loan_.lender());
+            ILoanLike loan_ = ILoanLike(loanHandler.activeLoans(i));
 
-            assertTrue(loanHandler.earliestPaymentDueDate() == ILoanManagerLike(loanManager_).domainEnd());
+            assertTrue(loanHandler.earliestPaymentDueDate() == IFixedTermLoanManager(loan_.lender()).domainEnd());
 
             sumOutstandingInterest_ += _getCurrentOutstandingInterest(loanHandler.activeLoans(i), loanHandler.earliestPaymentDueDate());
         }
@@ -614,8 +613,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function getSumIssuanceRates() public view returns (uint256 sumIssuanceRate_) {
         for (uint256 i; i < loanHandler.numLoans(); ++i) {
-            ILoanLike        loan_        = ILoanLike(loanHandler.activeLoans(i));
-            ILoanManagerLike loanManager_ = ILoanManagerLike(loan_.lender());
+            ILoanLike             loan_        = ILoanLike(loanHandler.activeLoans(i));
+            IFixedTermLoanManager loanManager_ = IFixedTermLoanManager(loan_.lender());
 
             ( , , , , , , uint256 issuanceRate ) = loanManager_.payments(loanManager_.paymentIdOf(address(loan_)));
 

@@ -34,7 +34,7 @@ contract RemoveCallTestsBase is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
@@ -99,7 +99,7 @@ contract RemoveCallTests is RemoveCallTestsBase {
 
         vm.warp(callTimestamp);
 
-        callLoan(address(loanManager), address(loan), principal);
+        callLoan(address(loan), principal);
 
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 
@@ -216,7 +216,7 @@ contract RemoveCallTests is RemoveCallTestsBase {
         uint256 impairmentTimestamp = callTimestamp + 1 days;
 
         vm.warp(impairmentTimestamp);
-        
+
         impairLoan(address(loan));
 
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;

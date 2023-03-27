@@ -106,7 +106,7 @@ contract TestBase is ProtocolActions {
         _setTreasury();
         _createFactories();
         _createAndConfigurePool(1 weeks, 2 days);
-        _openPool();
+        openPool(address(poolManager));
 
         start = block.timestamp;
     }
@@ -250,11 +250,6 @@ contract TestBase is ProtocolActions {
         _configurePool();
     }
 
-    function _openPool() internal {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
-    }
-
     function _setTreasury() internal {
         vm.startPrank(governor);
         globals.setMapleTreasury(treasury);
@@ -381,11 +376,10 @@ contract TestBase is ProtocolActions {
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
-        vm.startPrank(poolDelegate);
         nextDelegateOriginationFee = delegateOriginationFee;
         nextDelegateServiceFee     = delegateServiceFee;
-        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
-        vm.stopPrank();
+
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
     }
 
     /**************************************************************************************************************************************/
@@ -400,8 +394,8 @@ contract TestBase is ProtocolActions {
         depositCover(address(poolManager), cover);
     }
 
-    function depositLiquidity(address lp, uint256 liquidity) internal returns (uint256 shares) {
-        shares = depositLiquidity(address(pool), lp, liquidity);
+    function deposit(address lp, uint256 liquidity) internal returns (uint256 shares) {
+        shares = deposit(address(pool), lp, liquidity);
     }
 
     // TODO: Move all of these to ProtocolActions.

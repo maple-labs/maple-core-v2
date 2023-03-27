@@ -95,8 +95,7 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         ftLoanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
         otLoanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
@@ -146,7 +145,7 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 0th month
         vm.warp(start + 0 * paymentInterval);
 
-        depositLiquidity(address(pool), lp0, deposit0);
+        deposit(address(pool), lp0, deposit0);
         runningDeposits += deposit0;
 
         fundLoan(address(ftLoan1));
@@ -160,10 +159,10 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 1st month
         vm.warp(start + 1 * paymentInterval);
 
-        makeFixedTermPayment(address(ftLoan1));
+        makePayment(address(ftLoan1));
         runningInterest0 += interestToDistribute;
 
-        depositLiquidity(address(pool), lp1, deposit1);
+        deposit(address(pool), lp1, deposit1);
         runningDeposits += deposit1;
 
         fundLoan(address(otLoan3));
@@ -177,12 +176,12 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 2nd month
         vm.warp(start + 2 * paymentInterval);
 
-        makeFixedTermPayment(address(ftLoan1));
-        makeOpenTermPayment(address(otLoan3));
+        makePayment(address(ftLoan1));
+        makePayment(address(otLoan3));
         runningInterest0 += interestToDistribute * deposit0 / runningDeposits;
         runningInterest1 += interestToDistribute * deposit1 / runningDeposits;
 
-        depositLiquidity(address(pool), lp2, deposit2);
+        deposit(address(pool), lp2, deposit2);
         runningDeposits += deposit2;
 
         fundLoan(address(ftLoan2));
@@ -196,14 +195,15 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 3rd month
         vm.warp(start + 3 * paymentInterval);
 
-        makeFixedTermPayment(address(ftLoan1));
-        makeFixedTermPayment(address(ftLoan2));
-        makeOpenTermPayment(address(otLoan3));
+        makePayment(address(ftLoan1));
+        makePayment(address(ftLoan2));
+        makePayment(address(otLoan3));
+
         runningInterest0 += interestToDistribute * deposit0 / runningDeposits;
         runningInterest1 += interestToDistribute * deposit1 / runningDeposits;
         runningInterest2 += interestToDistribute * deposit2 / runningDeposits;
 
-        depositLiquidity(address(pool), lp3, deposit3);
+        deposit(address(pool), lp3, deposit3);
         runningDeposits += deposit3;
 
         fundLoan(address(otLoan4));
@@ -217,10 +217,11 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 4th month
         vm.warp(start + 4 * paymentInterval);
 
-        makeFixedTermPayment(address(ftLoan1));
-        makeFixedTermPayment(address(ftLoan2));
-        makeOpenTermPayment(address(otLoan3));
-        makeOpenTermPayment(address(otLoan4));
+        makePayment(address(ftLoan1));
+        makePayment(address(ftLoan2));
+        makePayment(address(otLoan3));
+        makePayment(address(otLoan4));
+
         runningInterest0 += interestToDistribute * deposit0 / runningDeposits;
         runningInterest1 += interestToDistribute * deposit1 / runningDeposits;
         runningInterest2 += interestToDistribute * deposit2 / runningDeposits;
@@ -234,10 +235,11 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 5th month
         vm.warp(start + 5 * paymentInterval);
 
-        makeFixedTermPayment(address(ftLoan1));
-        makeFixedTermPayment(address(ftLoan2));
-        makeOpenTermPayment(address(otLoan3));
-        makeOpenTermPayment(address(otLoan4));
+        makePayment(address(ftLoan1));
+        makePayment(address(ftLoan2));
+        makePayment(address(otLoan3));
+        makePayment(address(otLoan4));
+
         runningInterest0 += interestToDistribute * deposit0 / runningDeposits;
         runningInterest1 += interestToDistribute * deposit1 / runningDeposits;
         runningInterest2 += interestToDistribute * deposit2 / runningDeposits;
@@ -251,10 +253,11 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         // 6th month
         vm.warp(start + 6 * paymentInterval);
 
-        makeFixedTermPayment(address(ftLoan1));
-        makeFixedTermPayment(address(ftLoan2));
-        makeOpenTermPayment(address(otLoan3));
-        makeOpenTermPayment(address(otLoan4));
+        makePayment(address(ftLoan1));
+        makePayment(address(ftLoan2));
+        makePayment(address(otLoan3));
+        makePayment(address(otLoan4));
+
         runningInterest0 += interestToDistribute * deposit0 / runningDeposits;
         runningInterest1 += interestToDistribute * deposit1 / runningDeposits;
         runningInterest2 += interestToDistribute * deposit2 / runningDeposits;

@@ -12,7 +12,7 @@ import {
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-contract ImpairLoanFailureTests is TestBaseWithAssertions {
+contract FixedTermLoanManagerImpairFailureTests is TestBaseWithAssertions {
 
     address borrower;
     address lp;
@@ -28,7 +28,7 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
 
         depositCover(100_000e6);
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -80,7 +80,7 @@ contract ImpairLoanFailureTests is TestBaseWithAssertions {
 
 }
 
-contract ImpairLoanSuccessTests is TestBaseWithAssertions {
+contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
 
     address borrower;
     address loan;
@@ -96,7 +96,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
         depositCover(100_000e6);
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -141,15 +141,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           start,
-            domainEnd:             start + ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       start,
+            domainEnd:         start + ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -183,15 +182,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       5_625e6 - 1,  // -1 due to issuance rate rounding error.
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + 5_625e6 - 1,
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           start,
-            domainEnd:             start + ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   5_625e6 - 1,  // -1 due to issuance rate rounding error.
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       start,
+            domainEnd:         start + ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -235,15 +233,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           start + 1 * ONE_MONTH,
-            domainEnd:             start + 2 * ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       start + 1 * ONE_MONTH,
+            domainEnd:         start + 2 * ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -293,15 +290,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     uint256(5_625e6 - 1) / 5,  // -1 due to issuance rate rounding error.
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + uint256(5_625e6 - 1) / 5,
-            issuanceRate:          0,
-            domainStart:           block.timestamp,
-            domainEnd:             block.timestamp,
-            unrealizedLosses:      1_000_000e6 + uint256(5_625e6 - 1) / 5
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: uint256(5_625e6 - 1) / 5,  // -1 due to issuance rate rounding error.
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       block.timestamp,
+            domainEnd:         block.timestamp,
+            unrealizedLosses:  1_000_000e6 + uint256(5_625e6 - 1) / 5
         });
 
         assertPoolManager({
@@ -323,15 +319,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         vm.warp(start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY);
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     uint256(5_625e6 - 1) / 5,  // No change, value no longer accruing
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + uint256(5_625e6 - 1) / 5,  // No change, value no longer accruing
-            issuanceRate:          0,
-            domainStart:           start + ONE_MONTH + ONE_MONTH / 5,
-            domainEnd:             start + ONE_MONTH + ONE_MONTH / 5,
-            unrealizedLosses:      1_000_000e6 + uint256(5_625e6 - 1) / 5
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: uint256(5_625e6 - 1) / 5,  // No change, value no longer accruing
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + ONE_MONTH + ONE_MONTH / 5,
+            domainEnd:         start + ONE_MONTH + ONE_MONTH / 5,
+            unrealizedLosses:  1_000_000e6 + uint256(5_625e6 - 1) / 5
         });
 
         assertPoolManager({
@@ -371,15 +366,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH,
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           block.timestamp,
-            domainEnd:             start + 2 * ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH,
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       block.timestamp,
+            domainEnd:         start + 2 * ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -401,15 +395,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         uint256 accountedInterest = 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH;  // Accounted at time of loan impairment removal.
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       5_625e6 - accountedInterest - 1,
-            accountedInterest:     accountedInterest,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + uint256(5_625e6 - 1),
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY,
-            domainEnd:             start + 2 * ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   5_625e6 - accountedInterest - 1,
+            accountedInterest: accountedInterest,
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY,
+            domainEnd:         start + 2 * ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -449,15 +442,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           block.timestamp,
-            domainEnd:             start + 3 * ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       block.timestamp,
+            domainEnd:         start + 3 * ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -509,15 +501,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     uint256(5_625e6) * 12 / 365,  // one day of interest: 5,625 * 12 / 365
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + uint256(5_625e6) * 12 / 365,
-            issuanceRate:          5_625e6 * 1e30 / ONE_MONTH,
-            domainStart:           start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY,
-            domainEnd:             start + ONE_MONTH + ONE_MONTH / 5 + ONE_MONTH,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: uint256(5_625e6) * 12 / 365,  // one day of interest: 5,625 * 12 / 365
+            principalOut:      1_000_000e6,
+            issuanceRate:      5_625e6 * 1e30 / ONE_MONTH,
+            domainStart:       start + ONE_MONTH + ONE_MONTH / 5 + ONE_DAY,
+            domainEnd:         start + ONE_MONTH + ONE_MONTH / 5 + ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         // TODO: Add a late interest premium to illustrate difference in late interest.
@@ -572,15 +563,14 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           block.timestamp,
-            domainEnd:             block.timestamp,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       block.timestamp,
+            domainEnd:         block.timestamp,
+            unrealizedLosses:  0
         });
 
         // pool balance:          1,000,000 + 500,000 + 5,625 * (3 + 12 / 365)  // Three payments plus one day of late interest.
@@ -600,7 +590,7 @@ contract ImpairLoanSuccessTests is TestBaseWithAssertions {
 
 }
 
-contract ImpairAndRefinanceTests is TestBaseWithAssertions {
+contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
 
     address borrower;
     address loan;
@@ -624,7 +614,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
         depositCover(100_000e6);
 
-        depositLiquidity(lp, 1_500_000e6);
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -695,15 +685,14 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     periodInterest,  // -1 due to issuance rate rounding error.
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + periodInterest,
-            issuanceRate:          0,
-            domainStart:           block.timestamp,
-            domainEnd:             block.timestamp,
-            unrealizedLosses:      1_000_000e6 + periodInterest
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: periodInterest,  // -1 due to issuance rate rounding error.
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       block.timestamp,
+            domainEnd:         block.timestamp,
+            unrealizedLosses:  1_000_000e6 + periodInterest
         });
 
         assertPoolManager({
@@ -770,15 +759,14 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     expectedNetRefinanceInterest,  // Accounting gets updated to reflect the resulting refinance interest.
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + expectedNetRefinanceInterest,
-            issuanceRate:          MONTHLY_INTEREST * 1e30 / ONE_MONTH,
-            domainStart:           start + 1 * ONE_MONTH + 10 days,
-            domainEnd:             start + 2 * ONE_MONTH + 10 days,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: expectedNetRefinanceInterest,  // Accounting gets updated to reflect the resulting refinance interest.
+            principalOut:      1_000_000e6,
+            issuanceRate:      MONTHLY_INTEREST * 1e30 / ONE_MONTH,
+            domainStart:       start + 1 * ONE_MONTH + 10 days,
+            domainEnd:         start + 2 * ONE_MONTH + 10 days,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -816,15 +804,14 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          MONTHLY_INTEREST * 1e30 / ONE_MONTH,
-            domainStart:           start + 2 * ONE_MONTH + 10 days,
-            domainEnd:             start + 3 * ONE_MONTH + 10 days,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      MONTHLY_INTEREST * 1e30 / ONE_MONTH,
+            domainStart:       start + 2 * ONE_MONTH + 10 days,
+            domainEnd:         start + 3 * ONE_MONTH + 10 days,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -877,15 +864,14 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     MONTHLY_INTEREST - 1,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + MONTHLY_INTEREST - 1,
-            issuanceRate:          0,
-            domainStart:           block.timestamp,
-            domainEnd:             block.timestamp,
-            unrealizedLosses:      1_000_000e6 + MONTHLY_INTEREST - 1
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: MONTHLY_INTEREST - 1,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       block.timestamp,
+            domainEnd:         block.timestamp,
+            unrealizedLosses:  1_000_000e6 + MONTHLY_INTEREST - 1
         });
 
         assertPoolManager({
@@ -953,15 +939,14 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertFixedTermLoanManager({
-            loanManager:           loanManager,
-            accruedInterest:       0,
-            accountedInterest:     expectedNetRefinanceInterest,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6 + expectedNetRefinanceInterest,
-            issuanceRate:          MONTHLY_INTEREST * 1e30 / ONE_MONTH,
-            domainStart:           start + 2 * ONE_MONTH + 3 days,
-            domainEnd:             start + 3 * ONE_MONTH + 3 days,
-            unrealizedLosses:      0
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: expectedNetRefinanceInterest,
+            principalOut:      1_000_000e6,
+            issuanceRate:      MONTHLY_INTEREST * 1e30 / ONE_MONTH,
+            domainStart:       start + 2 * ONE_MONTH + 3 days,
+            domainEnd:         start + 3 * ONE_MONTH + 3 days,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -977,7 +962,7 @@ contract ImpairAndRefinanceTests is TestBaseWithAssertions {
 
 }
 
-contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
+contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
 
     address borrower = makeAddr("borrower");
     address lp       = makeAddr("lp");
@@ -1013,8 +998,7 @@ contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
@@ -1026,7 +1010,7 @@ contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
             [uint64(delegateServiceFeeRate), uint64(interestRate), uint64(lateFeeRate), uint64(lateInterestPremium)]
         ));
 
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
         fundLoan(address(loan));
     }
 
@@ -1229,7 +1213,7 @@ contract OpenTermLoanManagerImpairLoanTests is TestBaseWithAssertions {
 
 }
 
-contract OpenTermLoanManagerRemoveLoanImpairmentTests is TestBaseWithAssertions {
+contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
 
     address borrower = makeAddr("borrower");
     address lp       = makeAddr("lp");
@@ -1265,8 +1249,7 @@ contract OpenTermLoanManagerRemoveLoanImpairmentTests is TestBaseWithAssertions 
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
-        poolManager.setDelegateManagementFeeRate(delegateManagementFeeRate);
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
@@ -1278,17 +1261,17 @@ contract OpenTermLoanManagerRemoveLoanImpairmentTests is TestBaseWithAssertions 
             [uint64(delegateServiceFeeRate), uint64(interestRate), uint64(lateFeeRate), uint64(lateInterestPremium)]
         ));
 
-        depositLiquidity(address(pool), lp, principal);
+        deposit(address(pool), lp, principal);
         fundLoan(address(loan));
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start,
-            issuanceRate:          issuanceRate,
-            accountedInterest:     0,
-            accruedInterest:       0,
-            principalOut:          principal,
-            unrealizedLosses:      0
+            loanManager:       address(loanManager),
+            domainStart:       start,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  0
         });
 
         assertImpairment({
@@ -1361,13 +1344,13 @@ contract OpenTermLoanManagerRemoveLoanImpairmentTests is TestBaseWithAssertions 
         vm.warp(start + paymentInterval * 2 / 3);
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start + paymentInterval / 3,
-            issuanceRate:          0,
-            accountedInterest:     issuanceRate * paymentInterval / 3 / 1e27,
-            accruedInterest:       0,  // No interest accrued because of IR == 0
-            principalOut:          principal,
-            unrealizedLosses:      principal + issuanceRate * paymentInterval / 3 / 1e27
+            loanManager:       address(loanManager),
+            domainStart:       start + paymentInterval / 3,
+            issuanceRate:      0,
+            accountedInterest: issuanceRate * paymentInterval / 3 / 1e27,
+            accruedInterest:   0,  // No interest accrued because of IR == 0
+            principalOut:      principal,
+            unrealizedLosses:  principal + issuanceRate * paymentInterval / 3 / 1e27
         });
 
         assertImpairment({
@@ -1396,13 +1379,13 @@ contract OpenTermLoanManagerRemoveLoanImpairmentTests is TestBaseWithAssertions 
         loanManager.removeLoanImpairment(address(loan));
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start + paymentInterval * 2 / 3,
-            issuanceRate:          issuanceRate,
-            accountedInterest:     issuanceRate * paymentInterval * 2 / 3 / 1e27 - 1,  // -1 due to rounding error.
-            accruedInterest:       0,
-            principalOut:          principal,
-            unrealizedLosses:      0
+            loanManager:       address(loanManager),
+            domainStart:       start + paymentInterval * 2 / 3,
+            issuanceRate:      issuanceRate,
+            accountedInterest: issuanceRate * paymentInterval * 2 / 3 / 1e27 - 1,  // -1 due to rounding error.
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  0
         });
 
         assertImpairment({
