@@ -93,7 +93,8 @@ contract TestBase is ProtocolActions {
     PoolDeployer deployer;
 
     FeeManager           feeManager;
-    FixedTermRefinancer  refinancer;
+    FixedTermRefinancer  refinancer;          // TODO rename to fixedTermRefinancer
+    OpenTermRefinancer   openTermRefinancer;
     Pool                 pool;
     PoolDelegateCover    poolCover;
     PoolManager          poolManager;
@@ -152,8 +153,9 @@ contract TestBase is ProtocolActions {
         poolManagerInitializer          = address(new PoolManagerInitializer());
         withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
 
-        feeManager = new FeeManager(address(globals));
-        refinancer = new FixedTermRefinancer();
+        feeManager         = new FeeManager(address(globals));
+        openTermRefinancer = new OpenTermRefinancer();
+        refinancer         = new FixedTermRefinancer();
 
         vm.startPrank(governor);
 
@@ -164,6 +166,8 @@ contract TestBase is ProtocolActions {
         globals.setValidFactory("LOAN_MANAGER",       openTermLoanManagerFactory,  true);
         globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,          true);
         globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    true);
+        globals.setValidInstanceOf("OT_REFINANCER",   address(openTermRefinancer), true);
+        globals.setValidInstanceOf("FT_REFINANCER",   address(refinancer),         true);
 
         globals.setValidInstanceOf("FT_REFINANCER", address(refinancer), true);
 
@@ -398,7 +402,7 @@ contract TestBase is ProtocolActions {
         shares = deposit(address(pool), lp, liquidity);
     }
 
-    // TODO: Move all of these to ProtocolActions.
+    // TODO: Move all of these to ProtocolActions. Not sure if they belong there because they are "complex" actions that involve many steps.
     function fundAndDrawdownLoan(
         address borrower,
         uint256[3] memory termDetails,
