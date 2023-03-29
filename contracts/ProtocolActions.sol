@@ -7,6 +7,7 @@ import {
     IFeeManager,
     IFixedTermLoan,
     IFixedTermLoanManager,
+    IGlobals,
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
@@ -601,6 +602,17 @@ contract ProtocolActions is Test {
         vm.startPrank(poolDelegate_);
         IFixedTermLoanManager(loanManager_).updateAccounting();
         vm.stopPrank();
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Governor Functions                                                                                                              **/
+    /**************************************************************************************************************************************/
+
+    function setAllowedBorrower(address globals_, address borrower_, bool valid_) internal {
+        IGlobals globals = IGlobals(globals_);
+
+        vm.prank(globals.governor());
+        globals.setValidBorrower(borrower_, valid_);
     }
 
     /**************************************************************************************************************************************/
