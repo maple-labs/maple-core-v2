@@ -178,7 +178,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
         ));
 
         vm.prank(address(loan));
-        vm.expectRevert("LM:AFLIR:NOT_LOAN");
+        vm.expectRevert("LM:NOT_LOAN");
         loanManager.claim(0, 100_000e6, 10_000e6, 1_000e6, uint40(start + 1_000_000));
     }
 

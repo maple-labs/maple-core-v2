@@ -146,13 +146,16 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_notPM() external {
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan));
+
         vm.expectRevert("LM:TD:NOT_PM");
         loanManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 
     function test_triggerDefault_notLoan() external {
         vm.prank(address(poolDelegate));
-        vm.expectRevert("LM:AFLI:NOT_LOAN");
+        vm.expectRevert("LM:NOT_LOAN");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 
@@ -194,6 +197,8 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
 }
 
 contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase {
+
+    event CollateralLiquidationFinished(address indexed loan_, uint256 unrealizedLosses_);
 
     uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
     uint256 managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
@@ -409,11 +414,10 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         vm.prank(address(poolDelegate));
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (defaultTime - start))          / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))          / (365 days * 1e18);
-        uint256 lateInterest       = (principal * interestRate * (defaultTime - impairmentDate)) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e18      * (impairmentDate - start)) / (365 days * 1e18);
+        uint256 normalInterest     = (principal * interestRate * (impairmentDate - start)) / (365 days * 1e18);
 
-        uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
+        uint256 platformManagementFee = normalInterest  * 0.08e6 / 1e6;
 
         uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee; // poolCover - platformFees
 
@@ -653,6 +657,84 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 4_000_000e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),  0);
         assertEq(fundsAsset.balanceOf(address(pool)),      0);
+
+        vm.prank(address(poolDelegate));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+
+        assertEq(fundsAsset.balanceOf(address(poolCover)), 4_000_000e6 - principal - netInterest - platformFees);
+        assertEq(fundsAsset.balanceOf(address(treasury)),  platformFees);
+        assertEq(fundsAsset.balanceOf(address(pool)),      principal + netInterest);
+    }
+
+    function test_triggerDefault_impaired_onlyFeesRecovered() external {
+        uint256 impairmentTime = start + paymentInterval / 2;
+
+        vm.warp(impairmentTime);
+        impairLoan(address(loan));
+
+        uint256 defaultTime = start + paymentInterval + gracePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        uint256 platformServiceFee = (principal * 0.04e18      * (impairmentTime - start)) / (365 days * 1e18);
+        uint256 normalInterest     = (principal * interestRate * (impairmentTime - start)) / (365 days * 1e18);
+        uint256 lateInterest       = 0;
+
+        uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
+        uint256 delegateManagementFee = (normalInterest + lateInterest) * 0.02e6 / 1e6;
+
+        uint256 netInterest = normalInterest + lateInterest - platformManagementFee - delegateManagementFee;
+
+        uint256 expectedLosses = principal + netInterest;
+
+        fundsAsset.burn(address(poolCover), 1_000_000e6);  // Burn so recovered amount only from loan repossession
+        fundsAsset.mint(address(loan), (platformServiceFee + platformManagementFee));
+
+        assertEq(fundsAsset.balanceOf(address(poolCover)), 0);
+        assertEq(fundsAsset.balanceOf(address(treasury)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),      0);
+
+        vm.expectEmit();
+        emit CollateralLiquidationFinished(address(loan), expectedLosses);
+
+        vm.prank(address(poolDelegate));
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+
+        assertEq(fundsAsset.balanceOf(address(poolCover)), 0);
+        assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
+        assertEq(fundsAsset.balanceOf(address(pool)),      0);
+    }
+
+    function test_triggerDefault_impaired_feesAndFullRecovery() external {
+        uint256 impairmentTime = start + paymentInterval / 2;
+
+        vm.warp(impairmentTime);
+        impairLoan(address(loan));
+
+        uint256 defaultTime = start + paymentInterval + gracePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        uint256 normalInterest        = (principal * interestRate * (impairmentTime - start)) / (365 days * 1e18);
+        uint256 platformServiceFee    = (principal * 0.04e18      * (impairmentTime - start)) / (365 days * 1e18);
+        uint256 lateInterest          = 0;
+
+        uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
+        uint256 delegateManagementFee = (normalInterest + lateInterest) * 0.02e6 / 1e6;
+        uint256 platformFees          = platformServiceFee + platformManagementFee;
+
+        uint256 netInterest = normalInterest + lateInterest - platformManagementFee - delegateManagementFee;
+
+        uint256 expectedLosses = principal + netInterest;
+
+        fundsAsset.mint(address(poolCover), 3_000_000e6);
+
+        assertEq(fundsAsset.balanceOf(address(poolCover)), 4_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(treasury)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),      0);
+
+        vm.expectEmit();
+        emit CollateralLiquidationFinished(address(loan), expectedLosses);
 
         vm.prank(address(poolDelegate));
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));

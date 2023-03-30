@@ -1032,7 +1032,7 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         poolManager.triggerDefault(address(loan), liquidatorFactory);
 
-        vm.expectRevert("ML:I:LOAN_INACTIVE");
+        vm.expectRevert("LM:NOT_LOAN");
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(loan));
     }
@@ -1053,8 +1053,7 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
             [uint64(delegateServiceFeeRate), uint64(interestRate), uint64(lateFeeRate), uint64(lateInterestPremium)]
         );
 
-        // vm.expectRevert("LM:AFLI:NOT_LOAN");  // NOTE: Code is not reachable but should still be kept for extra safety.
-        vm.expectRevert("ML:I:LOAN_INACTIVE");
+        vm.expectRevert("LM:NOT_LOAN");
         vm.prank(poolDelegate);
         loanManager.impairLoan(unfundedLoan);
     }
@@ -1307,7 +1306,7 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
 
     function test_removeLoanImpairment_notLoan() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("LM:AFLIR:NOT_LOAN");
+        vm.expectRevert("LM:NOT_LOAN");
         loanManager.removeLoanImpairment(address(1));
     }
 
