@@ -93,7 +93,7 @@ contract TestBase is ProtocolActions {
     PoolDeployer deployer;
 
     FeeManager           feeManager;
-    FixedTermRefinancer  refinancer;          // TODO rename to fixedTermRefinancer
+    FixedTermRefinancer  fixedTermRefinancer;
     OpenTermRefinancer   openTermRefinancer;
     Pool                 pool;
     PoolDelegateCover    poolCover;
@@ -153,9 +153,10 @@ contract TestBase is ProtocolActions {
         poolManagerInitializer          = address(new PoolManagerInitializer());
         withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
 
-        feeManager         = new FeeManager(address(globals));
-        openTermRefinancer = new OpenTermRefinancer();
-        refinancer         = new FixedTermRefinancer();
+        // TODO: Update to addresses
+        feeManager          = new FeeManager(address(globals));
+        fixedTermRefinancer = new FixedTermRefinancer();
+        openTermRefinancer  = new OpenTermRefinancer();
 
         vm.startPrank(governor);
 
@@ -166,10 +167,9 @@ contract TestBase is ProtocolActions {
         globals.setValidFactory("LOAN_MANAGER",       openTermLoanManagerFactory,  true);
         globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,          true);
         globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    true);
-        globals.setValidInstanceOf("OT_REFINANCER",   address(openTermRefinancer), true);
-        globals.setValidInstanceOf("FT_REFINANCER",   address(refinancer),         true);
 
-        globals.setValidInstanceOf("FT_REFINANCER", address(refinancer), true);
+        globals.setValidInstanceOf("FT_REFINANCER", address(fixedTermRefinancer), true);
+        globals.setValidInstanceOf("OT_REFINANCER", address(openTermRefinancer),  true);
 
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);

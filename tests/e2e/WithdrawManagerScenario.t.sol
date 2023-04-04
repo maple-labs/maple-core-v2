@@ -1591,11 +1591,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Refinance Loan
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
 
-        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
         returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
 

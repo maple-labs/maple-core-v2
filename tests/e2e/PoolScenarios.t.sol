@@ -453,7 +453,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // Although the values here don't revert, if they were a bit higher, they would in the `getNextPaymentBreakdown` function.
         // Currently, the way out of the situation would be to either:
-        // 1. Refinance using a custom refinancer that can manually alter the storage of the interest rate.
+        // 1. Refinance using a custom fixedTermRefinancer that can manually alter the storage of the interest rate.
         // 2. Close the loan, paying only the closing interest.
 
         close(loan1);
@@ -864,11 +864,11 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // Refinance Loan
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 60 days);
 
-        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
         returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         platformServiceFee = uint256(1_000_000e6) * 0.31536e6 * 70 days / 1e6 / 365 days;
 
@@ -1080,9 +1080,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(loan1, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        acceptRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan1, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
         uint256 grossRefinanceInterest = 100_000e6 + 18 days * 0.11e6;
@@ -1222,9 +1222,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        proposeRefinance(loan1, address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(loan1, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        acceptRefinance(loan1, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan1, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         // Late interest accrues at 0.99e6/s because the lateInterestPremium is 10% of the interest rate.
         uint256 grossRefinanceInterest = 100_000e6 + 6 days * 0.11e6;

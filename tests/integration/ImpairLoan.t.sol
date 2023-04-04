@@ -711,11 +711,11 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         // Refinance - setting the payment interval will reset the payment due date.
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", ONE_MONTH);
 
-        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
         returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         // Impairment was removed
         assertTrue(!ILoanLike(loan).isImpaired());
@@ -894,11 +894,11 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         // Refinance - setting the payment interval will reset the payment due date.
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", ONE_MONTH);
 
-        proposeRefinance(loan, address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
         returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        acceptRefinance(loan, address(refinancer), block.timestamp + 1, data, 0);
+        acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         // Impairment was removed
         assertTrue(!ILoanLike(loan).isImpaired());
