@@ -257,7 +257,7 @@ contract PauseTests is TestBaseWithAssertions {
         // poolManager.acceptNewTerms(address(0), address(0), 0, data, 0);
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         vm.expectRevert("PM:PROTOCOL_PAUSED");
         poolManager.addLoanManager(address(0));

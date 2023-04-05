@@ -160,16 +160,20 @@ contract TestBase is ProtocolActions {
 
         vm.startPrank(governor);
 
-        globals.setValidFactory("LIQUIDATOR",         liquidatorFactory,           true);
-        globals.setValidFactory("FT_LOAN",            fixedTermLoanFactory,        true);
-        globals.setValidFactory("OT_LOAN",            openTermLoanFactory,         true);
-        globals.setValidFactory("LOAN_MANAGER",       fixedTermLoanManagerFactory, true);
-        globals.setValidFactory("LOAN_MANAGER",       openTermLoanManagerFactory,  true);
-        globals.setValidFactory("POOL_MANAGER",       poolManagerFactory,          true);
-        globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    true);
+        globals.setValidInstanceOf("LIQUIDATOR_FACTORY",         liquidatorFactory,            true);
+        globals.setValidInstanceOf("FT_LOAN_FACTORY",            fixedTermLoanFactory,         true);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY",            openTermLoanFactory,          true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       fixedTermLoanManagerFactory,  true);
+        globals.setValidInstanceOf("FT_LOAN_MANAGER_FACTORY",    fixedTermLoanManagerFactory,  true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       openTermLoanManagerFactory,   true);
+        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",    openTermLoanManagerFactory,   true);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",       poolManagerFactory,           true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory,     true);
+        globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
+        globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
 
-        globals.setValidInstanceOf("FT_REFINANCER", address(fixedTermRefinancer), true);
-        globals.setValidInstanceOf("OT_REFINANCER", address(openTermRefinancer),  true);
+        // NOTE: Needed to be compatible with deployed liquidations modules
+        globals.setValidInstanceOf("LOAN_MANAGER", fixedTermLoanManagerFactory,  true); 
 
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);

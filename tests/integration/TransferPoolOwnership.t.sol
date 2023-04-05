@@ -17,18 +17,18 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.pendingPoolDelegate(), newPoolDelegate);
     }
 
-    function test_acceptPendingPoolDelegate_notPendingPoolDelegate() external {
+    function test_acceptPoolDelegate_notPendingPoolDelegate() external {
         vm.prank(governor);
         globals.setValidPoolDelegate(newPoolDelegate, true);
 
         vm.prank(poolDelegate);
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
-        vm.expectRevert("PM:APPD:NOT_PENDING_PD");
-        poolManager.acceptPendingPoolDelegate();
+        vm.expectRevert("PM:APD:NOT_PENDING_PD");
+        poolManager.acceptPoolDelegate();
 
         vm.prank(newPoolDelegate);
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
@@ -52,7 +52,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         globals.transferOwnedPoolManager(poolDelegate, newPoolDelegate);
 
         vm.prank(newPoolDelegate);
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
@@ -70,13 +70,13 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
 
         vm.prank(newPoolDelegate);
         vm.expectRevert("MG:TOPM:NOT_POOL_DELEGATE");
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         vm.prank(governor);
         globals.setValidPoolDelegate(newPoolDelegate, true);
 
         vm.prank(newPoolDelegate);
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
@@ -96,7 +96,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(newPoolDelegate);
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
@@ -112,7 +112,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
 
         vm.prank(newPoolDelegate);
         vm.expectRevert("MG:TOPM:ALREADY_OWNS");
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
     }
 
     function test_setPendingPoolDelegate() external {
@@ -122,7 +122,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.pendingPoolDelegate(), newPoolDelegate);
     }
 
-    function test_acceptPendingPoolDelegate() external {
+    function test_acceptPoolDelegate() external {
         vm.prank(governor);
         globals.setValidPoolDelegate(newPoolDelegate, true);
 
@@ -130,7 +130,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(newPoolDelegate);
-        poolManager.acceptPendingPoolDelegate();
+        poolManager.acceptPoolDelegate();
 
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));

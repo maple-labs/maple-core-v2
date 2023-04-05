@@ -30,7 +30,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failWithInvalidPMFactory() external {
         vm.prank(address(governor));
-        globals.setValidFactory("POOL_MANAGER", poolManagerFactory, false);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_PM_FACTORY");
@@ -47,7 +47,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failWithInvalidLMFactory() external {
         vm.prank(address(governor));
-        globals.setValidFactory("LOAN_MANAGER", fixedTermLoanManagerFactory, false);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY", fixedTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ALM:INVALID_FACTORY");
@@ -64,7 +64,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failWithInvalidWMFactory() external {
         vm.prank(address(governor));
-        globals.setValidFactory("WITHDRAWAL_MANAGER", withdrawalManagerFactory, false);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_WM_FACTORY");

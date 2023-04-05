@@ -428,7 +428,7 @@ contract ProtocolActions is Test {
         address pendingPoolDelegate_ = IPoolManager(poolManager_).pendingPoolDelegate();
 
         vm.startPrank(pendingPoolDelegate_);
-        IPoolManager(poolManager_).acceptPendingPoolDelegate();
+        IPoolManager(poolManager_).acceptPoolDelegate();
         vm.stopPrank();
     }
 

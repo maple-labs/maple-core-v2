@@ -5,6 +5,8 @@ import { IFixedTermLoan, IFixedTermLoanManager, IOpenTermLoan, IOpenTermLoanMana
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
+import { console } from "../../modules/forge-std/src/Test.sol";
+
 contract MakePaymentFailureTests is TestBaseWithAssertions {
 
     address borrower;
@@ -139,13 +141,23 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
     }
 
     function test_makePayment_tooMuchPrincipal() external {
-        vm.expectRevert("ML:MP:RETUNING_TOO_MUCH");
+        vm.expectRevert("ML:MP:RETURNING_TOO_MUCH");
         loan.makePayment(1_000_000e6 + 1);
     }
 
     function test_makePayment_tooLittlePrincipal() external {
         vm.prank(poolDelegate);
         loanManager.callPrincipal(address(loan), 1);
+
+        vm.warp(start + 1);
+
+        (uint256 principal_,
+            uint256 interest_,
+            uint256 lateInterest_,
+            uint256 delegateServiceFee_,
+            uint256 platformServiceFee_) = loan.paymentBreakdown(loan.paymentDueDate());
+
+            console.log(principal_);
 
         vm.expectRevert("ML:MP:INSUFFICIENT_FOR_CALL");
         loan.makePayment(0);

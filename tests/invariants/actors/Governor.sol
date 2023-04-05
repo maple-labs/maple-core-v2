@@ -55,8 +55,8 @@ contract GovernorBase {
         globals.setValidBorrower(borrower_, isValid_);
     }
 
-    function setValidFactory(bytes32 factoryKey_, address factory_, bool isValid_) public virtual {
-        globals.setValidFactory(factoryKey_, factory_, isValid_);
+    function setValidInstanceOf(bytes32 factoryKey_, address factory_, bool isValid_) public virtual {
+        globals.setValidInstanceOf(factoryKey_, factory_, isValid_);
     }
 
     function setValidPoolAsset(address poolAsset_, bool isValid_) public virtual {

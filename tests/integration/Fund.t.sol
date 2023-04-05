@@ -70,7 +70,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         globals.setProtocolPause(true);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("LM:PAUSED");
         loanManager.fund(address(loan1));
     }
 
@@ -472,7 +472,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
     function test_fund_invalidLoanFactory() external {
         vm.prank(governor);
-        globals.setValidFactory("OT_LOAN", openTermLoanFactory, false);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY", openTermLoanFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:F:INVALID_LOAN_FACTORY");
@@ -516,7 +516,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
     function test_fund_invalidLoanManagerFactory() external {
         vm.prank(governor);
-        globals.setValidFactory("LOAN_MANAGER", openTermLoanManagerFactory, false);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY", openTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:INVALID_FACTORY");
