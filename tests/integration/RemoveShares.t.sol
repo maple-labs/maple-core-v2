@@ -182,7 +182,7 @@ contract RemoveSharesFailureTests is TestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.removeShares(1_000e6, lp);
     }
 

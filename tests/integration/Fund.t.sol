@@ -75,7 +75,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_failIfNotPoolDelegate() external {
-        vm.expectRevert("LM:F:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.fund(address(loan1));
     }
 

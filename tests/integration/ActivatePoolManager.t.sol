@@ -47,7 +47,7 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         vm.startPrank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         globals.activatePoolManager(address(poolManager));
     }
 

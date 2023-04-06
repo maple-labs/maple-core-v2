@@ -72,7 +72,7 @@ contract LoanManagerUpgradeTests is TestBase {
 
         vm.startPrank(poolDelegate);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
@@ -93,7 +93,7 @@ contract LoanManagerUpgradeTests is TestBase {
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks);
@@ -110,7 +110,7 @@ contract LoanManagerUpgradeTests is TestBase {
         // Warp to right after duration end.
         vm.warp(start + 1 weeks + 2 days + 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks + 2 days);
@@ -140,19 +140,19 @@ contract LoanManagerUpgradeTests is TestBase {
         vm.startPrank(poolDelegate);
 
         // With timelock change, upgrade should now revert.
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 weeks - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 weeks + 1 weeks + 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
@@ -184,19 +184,19 @@ contract LoanManagerUpgradeTests is TestBase {
         vm.startPrank(poolDelegate);
 
         // With timelock change, we should be past the duration.
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 days - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 days + 1 days + 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
@@ -215,7 +215,7 @@ contract LoanManagerUpgradeTests is TestBase {
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Call upgrade using governor instead, unaffected by pool delegate's scheduled timelock.

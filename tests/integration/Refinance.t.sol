@@ -1451,7 +1451,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     }
 
     function test_acceptNewTerms_failIfNotPoolDelegate() external {
-        vm.expectRevert("LM:ANT:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 

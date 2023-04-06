@@ -113,7 +113,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 

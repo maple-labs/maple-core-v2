@@ -253,7 +253,7 @@ contract DepositFailureTests is EnterBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         vm.prank(lp);
         pool.deposit(liquidity, lp);
     }
@@ -360,7 +360,7 @@ contract DepositWithPermitFailureTests is EnterBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         vm.prank(lp);
         pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
     }
@@ -679,7 +679,7 @@ contract MintFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         vm.prank(lp);
         pool.mint(shares, lp);
     }
@@ -803,7 +803,7 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         vm.prank(lp);
         pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
     }

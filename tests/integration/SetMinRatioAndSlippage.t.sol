@@ -67,7 +67,7 @@ contract SetSlippageTests is TestBase {
 
     function test_setAllowedSlippage_invalidSlippage() external {
         vm.startPrank(governor);
-        vm.expectRevert("LM:SAS:INVALID_SLIPPAGE");
+        vm.expectRevert("LM:SAS:INV_SLIPPAGE");
         loanManager.setAllowedSlippage(COLLATERAL_ASSET, 1e6 + 1);
 
         loanManager.setAllowedSlippage(COLLATERAL_ASSET, 1e6);

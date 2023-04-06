@@ -215,37 +215,37 @@ contract PauseTests is TestBaseWithAssertions {
         /*** Pool                                                                                                                       ***/
         /**********************************************************************************************************************************/
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.deposit(0, address(0));
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.depositWithPermit(0, address(0), 0, 0, 0, 0);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.mint(0, address(0));
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.mintWithPermit(0, address(0), 0, 0, 0, 0, 0);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.redeem(0, address(0), address(0));
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.removeShares(0, address(0));
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.requestRedeem(0, address(0));
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.requestWithdraw(0, address(0));
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.transfer(address(0), 0);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.transferFrom(address(0), address(0), 0);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.withdraw(0, address(0), address(0));
 
         /**********************************************************************************************************************************/
@@ -253,71 +253,71 @@ contract PauseTests is TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         // TODO: Replace `poolManager` with `loanManager`
-        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // vm.expectRevert("PM:PAUSED");
         // poolManager.acceptNewTerms(address(0), address(0), 0, data, 0);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.acceptPoolDelegate();
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.addLoanManager(address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.depositCover(0);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.finishCollateralLiquidation(address(0));
 
         // TODO: Replace `poolManager` with `loanManager`
-        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // vm.expectRevert("PM:PAUSED");
         // poolManager.fund(0, address(0), address(0));
 
         // TODO: Replace `poolManager` with `loanManager`
-        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // vm.expectRevert("PM:PAUSED");
         // poolManager.impairLoan(address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.processRedeem(0, address(0), address(0));
 
         // TODO: Replace `poolManager` with `loanManager`
-        // vm.expectRevert("PM:PROTOCOL_PAUSED");
+        // vm.expectRevert("PM:PAUSED");
         // poolManager.removeLoanImpairment(address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.removeShares(0, address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.requestRedeem(0, address(0), address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setActive(true);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setAllowedLender(address(0), false);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setDelegateManagementFeeRate(0);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setLiquidityCap(0);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setOpenToPublic();
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setPendingPoolDelegate(address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.setWithdrawalManager(address(0));
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.triggerDefault(address(0), address(0));
 
         // vm.prank(governor);
         // vm.expectRevert("MPF:PROTOCOL_PAUSED");
         // poolManager.upgrade(2, "");
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         poolManager.withdrawCover(0, address(0));
 
         /**********************************************************************************************************************************/

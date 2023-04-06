@@ -33,7 +33,7 @@ contract TransferTests is TestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.transfer(recipient, lpShares);
     }
 
@@ -110,7 +110,7 @@ contract TransferTests is TestBase {
         globals.setProtocolPause(true);
 
         vm.prank(recipient);
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.transferFrom(lp, recipient, lpShares);
     }
 
