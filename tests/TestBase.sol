@@ -160,20 +160,28 @@ contract TestBase is ProtocolActions {
 
         vm.startPrank(governor);
 
+        // NOTE: Needed to be compatible with deployed liquidations modules
+        globals.setValidInstanceOf("LOAN_MANAGER", fixedTermLoanManagerFactory,  true);
+
         globals.setValidInstanceOf("LIQUIDATOR_FACTORY",         liquidatorFactory,            true);
         globals.setValidInstanceOf("FT_LOAN_FACTORY",            fixedTermLoanFactory,         true);
-        globals.setValidInstanceOf("OT_LOAN_FACTORY",            openTermLoanFactory,          true);
         globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       fixedTermLoanManagerFactory,  true);
         globals.setValidInstanceOf("FT_LOAN_MANAGER_FACTORY",    fixedTermLoanManagerFactory,  true);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       openTermLoanManagerFactory,   true);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY",            openTermLoanFactory,          true);
         globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",    openTermLoanManagerFactory,   true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       openTermLoanManagerFactory,   true);
         globals.setValidInstanceOf("POOL_MANAGER_FACTORY",       poolManagerFactory,           true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory,     true);
         globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
         globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
 
-        // NOTE: Needed to be compatible with deployed liquidations modules
-        globals.setValidInstanceOf("LOAN_MANAGER", fixedTermLoanManagerFactory,  true); 
+        globals.setCanDeploy(fixedTermLoanFactory,        address(deployer), true);
+        globals.setCanDeploy(openTermLoanFactory,         address(deployer), true);
+        globals.setCanDeploy(fixedTermLoanManagerFactory, address(deployer), true);
+        globals.setCanDeploy(openTermLoanManagerFactory,  address(deployer), true);
+        globals.setCanDeploy(liquidatorFactory,           address(deployer), true);
+        globals.setCanDeploy(poolManagerFactory,          address(deployer), true);
+        globals.setCanDeploy(withdrawalManagerFactory,    address(deployer), true);
 
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
@@ -201,7 +209,11 @@ contract TestBase is ProtocolActions {
         PoolManagerFactory(poolManagerFactory).registerImplementation(1, poolManagerImplementation, poolManagerInitializer);
         PoolManagerFactory(poolManagerFactory).setDefaultVersion(1);
 
-        WithdrawalManagerFactory(withdrawalManagerFactory).registerImplementation(1, withdrawalManagerImplementation, withdrawalManagerInitializer);
+        WithdrawalManagerFactory(withdrawalManagerFactory).registerImplementation(
+            1,
+            withdrawalManagerImplementation,
+            withdrawalManagerInitializer
+        );
         WithdrawalManagerFactory(withdrawalManagerFactory).setDefaultVersion(1);
 
         vm.stopPrank();
@@ -221,7 +233,6 @@ contract TestBase is ProtocolActions {
         globals.setValidPoolAsset(address(fundsAsset), true);
         globals.setValidCollateralAsset(address(collateralAsset), true);
         globals.setValidPoolDelegate(poolDelegate, true);
-        globals.setValidPoolDeployer(address(deployer), true);
         globals.setManualOverridePrice(address(fundsAsset),      1e8);     // 1     USD / 1 USDC
         globals.setManualOverridePrice(address(collateralAsset), 1500e8);  // 1_500 USD / 1 WETH
         globals.setDefaultTimelockParameters(1 weeks, 2 days);
@@ -289,13 +300,14 @@ contract TestBase is ProtocolActions {
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address loanManager   // TODO: Move to top of params.
+        address loanManager             // TODO: Move to top of params.
     )
         internal returns (address loan)
     {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
+        vm.prank(borrower);
         loan = FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(
                 borrower,
@@ -323,9 +335,12 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.prank(governor);
+        vm.startPrank(governor);
         globals.setValidBorrower(borrower, true);
+        globals.setCanDeploy(fixedTermLoanFactory, borrower, true);
+        vm.stopPrank();
 
+        vm.prank(borrower);
         loan = FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, lender, feeManager, assets, terms, amounts, rates, fees),
             salt_: "SALT"
@@ -342,9 +357,12 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.prank(governor);
+        vm.startPrank(governor);
         globals.setValidBorrower(borrower, true);
+        globals.setCanDeploy(openTermLoanFactory, borrower, true);
+        vm.stopPrank();
 
+        vm.prank(borrower);
         loan = OpenTermLoanFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, lender, asset, principal, terms, rates),
             salt_: "SALT"
@@ -416,8 +434,10 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.prank(governor);
+        vm.startPrank(governor);
         globals.setValidBorrower(borrower, true);
+        globals.setCanDeploy(fixedTermLoanFactory, borrower, true);
+        vm.stopPrank();
 
         loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);  // TODO: Remove create from this function.
 

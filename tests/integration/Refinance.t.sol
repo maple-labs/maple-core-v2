@@ -38,7 +38,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: address(loanManager)
         }));
 
@@ -468,7 +468,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Refinance Assertions ***/
         /****************************/
 
-        bytes[] memory data = encodeWithSignatureAndUint("setInterestRate(uint256)", 6.3072e18);  // 2x
+        bytes[] memory data = encodeWithSignatureAndUint("setInterestRate(uint256)", 6.3072e6);  // 2x
 
         proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
@@ -936,7 +936,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
     uint32 noticePeriod    = 100_000;
     uint32 paymentInterval = 1_000_000;
 
-    uint64 interestRate = 0.31536e18;
+    uint64 interestRate = 0.31536e6;
 
     uint256 principal = 1_000_000e6;
 
@@ -964,7 +964,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
-        setAllowedBorrower(address(globals), borrower, true);
+        setValidBorrower(address(globals), borrower, true);
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
@@ -972,7 +972,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
             address(fundsAsset),
             principal,
             [gracePeriod, noticePeriod, paymentInterval],
-            [0.015768e18, interestRate, 0.01e18, 0.015768e18]
+            [0.015768e6, interestRate, 0.01e6, 0.015768e6]
         ));
 
         fundLoan(address(loan));
@@ -1291,14 +1291,14 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // Perform multiple actions, but none changes principal
         bytes[] memory calls = new bytes[](5);
         calls[0] = abi.encodeWithSignature("setGracePeriod(uint32)",             500_000);
-        calls[1] = abi.encodeWithSignature("setInterestRate(uint64)",            0.63072e18);
-        calls[2] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", 0.031536e18);
+        calls[1] = abi.encodeWithSignature("setInterestRate(uint64)",            0.63072e6);
+        calls[2] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", 0.031536e6);
         calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)",            50_000);
         calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)",         500_000);
 
         assertEq(loan.gracePeriod(),             200_000);
-        assertEq(loan.interestRate(),            0.31536e18);
-        assertEq(loan.lateInterestPremiumRate(), 0.015768e18);
+        assertEq(loan.interestRate(),            0.31536e6);
+        assertEq(loan.lateInterestPremiumRate(), 0.015768e6);
         assertEq(loan.noticePeriod(),            100_000);
         assertEq(loan.paymentInterval(),         1_000_000);
         assertEq(loan.dateCalled(),              start + 400_000);
@@ -1312,8 +1312,8 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         /*********************************/
 
         assertEq(loan.gracePeriod(),             500_000);
-        assertEq(loan.interestRate(),            0.63072e18);
-        assertEq(loan.lateInterestPremiumRate(), 0.031536e18);
+        assertEq(loan.interestRate(),            0.63072e6);
+        assertEq(loan.lateInterestPremiumRate(), 0.031536e6);
         assertEq(loan.noticePeriod(),            50_000);
         assertEq(loan.paymentInterval(),         500_000);
         assertEq(loan.dateCalled(),              0);           // Resets regardless of principal change.
@@ -1399,7 +1399,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],
+            rates:       [uint256(3.1536e6), 0, 0, 0],
             loanManager: address(loanManager)
         }));
     }

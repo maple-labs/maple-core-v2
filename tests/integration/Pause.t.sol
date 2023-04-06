@@ -73,7 +73,7 @@ contract PauseTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -156,43 +156,43 @@ contract PauseTests is TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).upgrade(2, "");
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).acceptBorrower();
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         IFixedTermLoan(loan).closeLoan(0);
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         IFixedTermLoan(loan).drawdownFunds(0, address(0));
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         IFixedTermLoan(loan).makePayment(0);
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         IFixedTermLoan(loan).postCollateral(0);
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).proposeNewTerms(address(0), 0, data);
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         IFixedTermLoan(loan).removeCollateral(0, address(0));
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         IFixedTermLoan(loan).returnFunds(0);
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).setPendingBorrower(address(0));
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).acceptLender();
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).rejectNewTerms(address(0), 0, data);
 
-        vm.expectRevert("L:PROTOCOL_PAUSED");
+        vm.expectRevert("L:PAUSED");
         ILoanLike(loan).skim(address(0), address(0));
 
         /**********************************************************************************************************************************/

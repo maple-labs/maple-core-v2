@@ -47,7 +47,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -121,13 +121,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
         uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
         uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -201,11 +201,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         uint256 coverUsedForPool = 1_000_000e6 + 900e6 + netLateInterest - 150_000e6;
-        assertEq(coverUsedForPool, 851_503_216000);
+        assertEq(coverUsedForPool, 851_923_120000);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 10_000_000e6 - coverUsedForPool - platformFees);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest);
 
         assertPoolManager({
@@ -221,7 +221,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -401,7 +401,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -486,15 +486,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30; // Default interest rate is double
 
         uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
 
         uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertFixedTermLoanManager({
             loanManager:       loanManager,
@@ -508,11 +508,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         uint256 coverUsedForPool = 1_000_000e6 + 900e6 + netLateInterest;
-        assertEq(coverUsedForPool, 100_1503_216000);
+        assertEq(coverUsedForPool, 1_001_923_120000);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 10_000_000e6 - coverUsedForPool - platformFees);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest);
 
         assertPoolManager({
@@ -528,7 +528,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -662,7 +662,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -736,13 +736,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
         uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
         uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -816,11 +816,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         uint256 coverUsedForPool = 40_000e6 - platformFees;
-        assertEq(coverUsedForPool, 39_657_096173);
+        assertEq(coverUsedForPool, 39_619_771373);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 150_000e6 + coverUsedForPool);
 
         assertPoolManager({
@@ -836,7 +836,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1014,7 +1014,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1099,15 +1099,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
 
         uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
 
         uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertFixedTermLoanManager({
             loanManager:       loanManager,
@@ -1121,11 +1121,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         uint256 coverUsedForPool = 40_000e6 - platformFees;
-        assertEq(coverUsedForPool, 39_657_096173);
+        assertEq(coverUsedForPool, 39_619_771373);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + coverUsedForPool);
 
         assertPoolManager({
@@ -1141,7 +1141,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1271,7 +1271,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1345,15 +1345,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
 
         uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
 
         uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1445,7 +1445,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1625,7 +1625,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1737,7 +1737,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: loanManager
         });
 
@@ -1894,7 +1894,7 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: poolManager.loanManagerList(0)
         });
 

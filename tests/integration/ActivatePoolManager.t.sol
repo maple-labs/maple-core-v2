@@ -39,7 +39,7 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
     }
 
     function test_activatePoolManager_failIfNotGovernor() public {
-        vm.expectRevert("MG:NOT_GOVERNOR");
+        vm.expectRevert("MG:NOT_GOV");
         globals.activatePoolManager(address(poolManager));
     }
 

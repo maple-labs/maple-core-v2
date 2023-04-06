@@ -32,7 +32,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0.01e6), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
         });
     }

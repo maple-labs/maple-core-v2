@@ -152,10 +152,10 @@ contract LoanHandler is Test {
         amounts_[1] = bound(amounts_[1], 10_000e6, 1e29);         // Principal requested
         amounts_[2] = bound(amounts_[2], 0,        amounts_[1]);  // Ending principal
 
-        rates_[0] = bound(rates_[0], 0.0001e18, 0.5e18);  // Interest rate
-        rates_[1] = bound(rates_[1], 0.0001e18, 1.0e18);  // Closing fee rate
-        rates_[2] = bound(rates_[2], 0.0001e18, 0.6e18);  // Late fee rate
-        rates_[3] = bound(rates_[3], 0.0001e18, 0.2e18);  // Late interest premium
+        rates_[0] = bound(rates_[0], 0.0001e6, 0.5e6);  // Interest rate
+        rates_[1] = bound(rates_[1], 0.0001e6, 1.0e6);  // Closing fee rate
+        rates_[2] = bound(rates_[2], 0.0001e6, 0.6e6);  // Late fee rate
+        rates_[3] = bound(rates_[3], 0.0001e6, 0.2e6);  // Late interest premium
 
         fees_[0] = bound(fees_[0], 0, amounts_[1] / 10);  // Delegate origination fee
         fees_[1] = bound(fees_[1], 0, amounts_[1] / 10);  // Delegate service fee

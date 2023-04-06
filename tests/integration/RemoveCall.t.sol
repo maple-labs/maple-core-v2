@@ -10,10 +10,10 @@ contract RemoveCallTestsBase is TestBaseWithAssertions {
     address borrower = makeAddr("borrower");
     address lp       = makeAddr("lp");
 
-    uint256 constant delegateServiceFeeRate    = 0.03e18;
+    uint256 constant delegateServiceFeeRate    = 0.03e6;
     uint256 constant delegateManagementFeeRate = 0.02e6;
     uint256 constant gracePeriod               = 5 days;
-    uint256 constant interestRate              = 0.1e18;
+    uint256 constant interestRate              = 0.1e6;
     uint256 constant noticePeriod              = 5 days;
     uint256 constant paymentInterval           = 30 days;
     uint256 constant platformManagementFeeRate = 0.08e6;
@@ -86,7 +86,7 @@ contract RemoveCallFailureTests is RemoveCallTestsBase {
 
 contract RemoveCallTests is RemoveCallTestsBase {
 
-    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
     uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 

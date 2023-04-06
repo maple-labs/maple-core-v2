@@ -38,14 +38,14 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
     uint256 constant principal3 = 750_000e6;
     uint256 constant principal4 = 1_205_000e6;
 
-    uint256 constant interestRate1 = 0.02e18;
-    uint256 constant interestRate2 = 0.04e18;
-    uint256 constant interestRate3 = 0.09e18;
-    uint256 constant interestRate4 = 0.027e18;
+    uint256 constant interestRate1 = 0.02e6;
+    uint256 constant interestRate2 = 0.04e6;
+    uint256 constant interestRate3 = 0.09e6;
+    uint256 constant interestRate4 = 0.027e6;
 
     uint256 constant closingFeeRate      = 0;
     uint256 constant lateFeeRate         = 0;
-    uint256 constant lateInterestPremium = 0.01e18;
+    uint256 constant lateInterestPremium = 0.01e6;
 
     uint256 constant delegateServiceFeeRate = 0.015e6;
     uint256 constant platformServiceFeeRate = 0.035e6;
@@ -57,10 +57,10 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
     uint256 constant delegateServiceFee1 = principal1 * delegateServiceFeeRate * paymentInterval / 365 days / 1e6;
     uint256 constant delegateServiceFee2 = principal2 * delegateServiceFeeRate * paymentInterval / 365 days / 1e6;
 
-    uint256 constant grossInterest1 = principal1 * interestRate1 * paymentInterval / 365 days / 1e18;
-    uint256 constant grossInterest2 = principal2 * interestRate2 * paymentInterval / 365 days / 1e18;
-    uint256 constant grossInterest3 = principal3 * interestRate3 * paymentInterval / 365 days / 1e18;
-    uint256 constant grossInterest4 = principal4 * interestRate4 * paymentInterval / 365 days / 1e18;
+    uint256 constant grossInterest1 = principal1 * interestRate1 * paymentInterval / 365 days / 1e6;
+    uint256 constant grossInterest2 = principal2 * interestRate2 * paymentInterval / 365 days / 1e6;
+    uint256 constant grossInterest3 = principal3 * interestRate3 * paymentInterval / 365 days / 1e6;
+    uint256 constant grossInterest4 = principal4 * interestRate4 * paymentInterval / 365 days / 1e6;
 
     uint256 constant interest1 = grossInterest1 - grossInterest1 * managementFeeRate / 1e6;
     uint256 constant interest2 = grossInterest2 - grossInterest2 * managementFeeRate / 1e6;
@@ -128,7 +128,7 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: uint256(principal3),
             terms:     [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
-            rates:     [uint64(delegateServiceFeeRate * 1e12), uint64(interestRate3), uint64(lateFeeRate), uint64(lateInterestPremium)]
+            rates:     [uint64(delegateServiceFeeRate), uint64(interestRate3), uint64(lateFeeRate), uint64(lateInterestPremium)]
         }));
 
         otLoan4 = IOpenTermLoan(createOpenTermLoan({
@@ -137,7 +137,7 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: uint256(principal4),
             terms:     [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
-            rates:     [uint64(delegateServiceFeeRate * 1e12), uint64(interestRate4), uint64(lateFeeRate), uint64(lateInterestPremium)]
+            rates:     [uint64(delegateServiceFeeRate), uint64(interestRate4), uint64(lateFeeRate), uint64(lateInterestPremium)]
         }));
     }
 

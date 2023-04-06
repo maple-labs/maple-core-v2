@@ -32,12 +32,12 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(1_000e6), uint256(4_000_000e6), uint256(4_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
         });
     }
 
-    function test_unrealizedLosses_redeemWithUL_fullLiquidity() external {
+    function test_unrealizedLosses_redeemWithUnrealizedLosses_fullLiquidity() external {
         vm.warp(start + 1_000_000);
 
         impairLoan(loan);
@@ -82,14 +82,14 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         uint256 fullAssets  = pool.convertToAssets(1_500_000e6);
         uint256 totalAssets = poolManager.totalAssets();
 
-        // The whole amount for LP1, without unrealized losses
+        // The whole amount for LP1, without unrealized losses.
         assertEq(fullAssets,  1_500_540e6);
         assertEq(totalAssets, 10_003_600e6);
 
         vm.prank(lp1);
         uint256 withdrawnAssets = pool.redeem(1_500_000e6, lp1, lp1);
 
-        // Total assets (10_003_600e6) - unrealized losses (4_003_600e6) = 6_000_000e6 * lp1 pool share (0.15) = 900_000e6
+        // Total assets (10_003_600e6) - unrealized losses (4_003_600e6) = 6_000_000e6 * lp1 pool share (0.15) = 900_000e6.
         assertEq(withdrawnAssets, 900_000e6);
 
         assertEq(pool.balanceOf(address(withdrawalManager)), 0);
@@ -98,13 +98,13 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(lp1)),         900_000e6);
     }
 
-    function test_unrealizedLosses_redeemWithUL_partialLiquidity() external {
-        // Fund another loan for 5_200_000e6
+    function test_unrealizedLosses_redeemWithUnrealizedLosses_partialLiquidity() external {
+        // Fund another loan for 5_200_000e6.
         fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(1_000e6), uint256(5_200_000e6), uint256(4_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
         });
 
@@ -152,7 +152,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         uint256 fullAssets  = pool.convertToAssets(1_500_000e6);
         uint256 totalAssets = poolManager.totalAssets();
 
-        // The whole amount for LP1, without unrealized losses
+        // The whole amount for LP1, without unrealized losses.
         assertEq(fullAssets,  1_501_242e6);
         assertEq(totalAssets, 10_008_280e6);
 
@@ -174,7 +174,7 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(lp1)),         800_000e6 - 1);  // Rounding error
     }
 
-    function test_unrealizedLosses_depositWithUL() external {
+    function test_unrealizedLosses_depositWithUnrealizedLosses() external {
         vm.warp(start + 1_000_000);
 
         impairLoan(loan);
@@ -202,17 +202,19 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
 
         assertEq(poolManager.unrealizedLosses(), 4_003_600e6);
 
-        // Create a new LP to deposit
+        // Create a new LP to deposit.
         address lp4 = makeAddr("lp4");
 
         // The amount of exit shares won't equal the amount of join shares due to the unrealized losses.
         uint256 exitShares      = pool.convertToExitShares(2_000_000e6);
         uint256 depositedShares = deposit(lp4, 2_000_000e6);
 
-        assertEq(exitShares, (2_000_000e6 * 10_000_000e6 / uint256(6_000_000e6)) + 1);    // totalSupply / (totalAssets - unrealizedLosses) + 1
+        // totalSupply / (totalAssets - unrealizedLosses) + 1
+        assertEq(exitShares, (2_000_000e6 * 10_000_000e6 / uint256(6_000_000e6)) + 1);
         assertEq(exitShares, 3_333_333.333334e6);
 
-        assertEq(depositedShares, (2_000_000e6 * 10_000_000e6 / uint256(10_003_600e6)));  // totalSupply / totalAssets (rounding not necessary)
+        // totalSupply / totalAssets (rounding not necessary)
+        assertEq(depositedShares, (2_000_000e6 * 10_000_000e6 / uint256(10_003_600e6)));
         assertEq(depositedShares, 1_999_280.259106e6);
     }
 

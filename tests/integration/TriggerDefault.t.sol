@@ -29,7 +29,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
         });
     }
@@ -59,16 +59,15 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
     address borrower = makeAddr("borrower");
     address lp       = makeAddr("lp");
 
+    uint256 constant delegateManagementFeeRate = 0.02e6;
+    uint256 constant delegateServiceFeeRate    = 0.03e6;
     uint256 constant gracePeriod     = 5 days;
+    uint256 constant interestRate    = 0.1e6;
     uint256 constant noticePeriod    = 5 days;
     uint256 constant paymentInterval = 30 days;
-    uint256 constant principal       = 1_500_000e6;
-    uint256 constant interestRate    = 0.1e18;
-
-    uint256 constant delegateServiceFeeRate    = 0.03e18;
-    uint256 constant delegateManagementFeeRate = 0.02e6;
-    uint256 constant platformServiceFeeRate    = 0.04e6;
     uint256 constant platformManagementFeeRate = 0.08e6;
+    uint256 constant platformServiceFeeRate    = 0.04e6;
+    uint256 constant principal       = 1_500_000e6;
 
     IOpenTermLoan        loan;
     IOpenTermLoanManager loanManager;
@@ -107,7 +106,7 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
 }
 
-// TODO To consider if transfer fails are possible/worth doing.
+// TODO: To consider if transfer fails are possible/worth doing.
 contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTestsBase {
 
     function test_triggerDefault_protocolPaused_poolManager() external {
@@ -200,7 +199,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
     event CollateralLiquidationFinished(address indexed loan_, uint256 unrealizedLosses_);
 
-    uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+    uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
     uint256 managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
@@ -231,7 +230,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         uint256 accruedInterest = (issuanceRate * (defaultTime - start)) / 1e27;
 
         assertPoolState({
-            totalSupply:        1_500_000e6,  // Same as initial deposit
+            totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   0,
             availableLiquidity: 0
@@ -271,13 +270,13 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         vm.prank(address(poolDelegate));
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e6       * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e6);
 
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
 
-        uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee; // poolCover - platformFees
+        uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee;  // poolCover - platformFees
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 500_000e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
@@ -329,7 +328,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         loanManager.impairLoan(address(loan));
 
         assertPoolState({
-            totalSupply:        1_500_000e6,  // Same as initial deposit
+            totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   principal + accruedInterest,
             availableLiquidity: 0
@@ -374,7 +373,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         vm.warp(defaultTime);
 
         assertPoolState({
-            totalSupply:        1_500_000e6,  // Same as initial deposit
+            totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   principal + accruedInterest,
             availableLiquidity: 0
@@ -414,12 +413,12 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         vm.prank(address(poolDelegate));
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (impairmentDate - start)) / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (impairmentDate - start)) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e6       * (impairmentDate - start)) / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (impairmentDate - start)) / (365 days * 1e6);
 
         uint256 platformManagementFee = normalInterest  * 0.08e6 / 1e6;
 
-        uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee; // poolCover - platformFees
+        uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee;  // poolCover - platformFees
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 500_000e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
@@ -477,7 +476,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         loanManager.callPrincipal(address(loan), principal);
 
         assertPoolState({
-            totalSupply:        1_500_000e6,  // Same as initial deposit
+            totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   0,
             availableLiquidity: 0
@@ -518,7 +517,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         accruedInterest = (issuanceRate * (defaultTime - start)) / 1e27;
 
         assertPoolState({
-            totalSupply:        1_500_000e6,  // Same as initial deposit
+            totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   0,
             availableLiquidity: 0
@@ -540,13 +539,13 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         vm.prank(address(poolDelegate));
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 lateInterest       = (principal * interestRate * (defaultTime - (callDate + noticePeriod))) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e6       * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 lateInterest       = (principal * interestRate * (defaultTime - (callDate + noticePeriod))) / (365 days * 1e6);
 
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
 
-        uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee; // poolCover - platformFees
+        uint256 totalAssets = 500_000e6 - platformServiceFee - platformManagementFee;  // poolCover - platformFees
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 500_000e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
@@ -594,9 +593,9 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
         vm.warp(defaultTime);
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e6       * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e6);
 
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
 
@@ -620,9 +619,9 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
         vm.warp(defaultTime);
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e6       * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e6);
 
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
 
@@ -643,9 +642,9 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
         vm.warp(defaultTime);
 
-        uint256 normalInterest        = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e18);
-        uint256 lateInterest          = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e18);
-        uint256 platformServiceFee    = (principal * 0.04e18      * (defaultTime - start))                     / (365 days * 1e18);
+        uint256 normalInterest        = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 lateInterest          = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e6);
+        uint256 platformServiceFee    = (principal * 0.04e6       * (defaultTime - start))                     / (365 days * 1e6);
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
 
         uint256 grossInterest = normalInterest + lateInterest;
@@ -676,8 +675,8 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
         vm.warp(defaultTime);
 
-        uint256 platformServiceFee = (principal * 0.04e18      * (impairmentTime - start)) / (365 days * 1e18);
-        uint256 normalInterest     = (principal * interestRate * (impairmentTime - start)) / (365 days * 1e18);
+        uint256 platformServiceFee = (principal * 0.04e6       * (impairmentTime - start)) / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (impairmentTime - start)) / (365 days * 1e6);
         uint256 lateInterest       = 0;
 
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
@@ -687,7 +686,8 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
         uint256 expectedLosses = principal + netInterest;
 
-        fundsAsset.burn(address(poolCover), 1_000_000e6);  // Burn so recovered amount only from loan repossession
+        // Burn so recovered amount only from loan repossession.
+        fundsAsset.burn(address(poolCover), 1_000_000e6);
         fundsAsset.mint(address(loan), (platformServiceFee + platformManagementFee));
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 0);
@@ -715,9 +715,9 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
         vm.warp(defaultTime);
 
-        uint256 normalInterest        = (principal * interestRate * (impairmentTime - start)) / (365 days * 1e18);
-        uint256 platformServiceFee    = (principal * 0.04e18      * (impairmentTime - start)) / (365 days * 1e18);
-        uint256 lateInterest          = 0;
+        uint256 normalInterest     = (principal * interestRate * (impairmentTime - start)) / (365 days * 1e6);
+        uint256 platformServiceFee = (principal * 0.04e6       * (impairmentTime - start)) / (365 days * 1e6);
+        uint256 lateInterest       = 0;
 
         uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
         uint256 delegateManagementFee = (normalInterest + lateInterest) * 0.02e6 / 1e6;

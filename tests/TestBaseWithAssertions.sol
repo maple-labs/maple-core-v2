@@ -87,7 +87,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 defaultDate
     ) internal {
         ( uint256 principal_, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_ )
-            = IOpenTermLoan(loan).paymentBreakdown(uint40(paymentTimestamp));
+            = IOpenTermLoan(loan).getPaymentBreakdown(uint40(paymentTimestamp));
 
         assertEq(principal_,          principal,          "principal");
         assertEq(interest_,           interest,           "interest");

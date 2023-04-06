@@ -7,7 +7,7 @@ import { TestBase } from "../TestBase.sol";
 
 contract ValidCollateralTests is TestBase {
 
-    function test_setValidCollateral_invalidCollateral() external {
+    function test_setIsCollateral_invalidCollateral() external {
         address borrower = makeAddr("borrower");
 
         vm.prank(governor);
@@ -23,7 +23,7 @@ contract ValidCollateralTests is TestBase {
             [address(collateralAsset), address(fundsAsset)],
             [uint256(5_000), uint256(1_000_000), uint256(3)],
             [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
-            [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             [nextDelegateOriginationFee, nextDelegateServiceFee]
         );
 

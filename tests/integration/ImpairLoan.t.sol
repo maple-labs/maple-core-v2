@@ -44,8 +44,8 @@ contract FixedTermLoanManagerImpairFailureTests is TestBaseWithAssertions {
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), 0, 0, 0],
+            amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.075e6), 0, 0, 0],
             loanManager: address(loanManager)
         }));
     }
@@ -110,8 +110,8 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), 0, 0, 0],
+            amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.075e6), 0, 0, 0],
             loanManager: loanManager
         });
 
@@ -597,10 +597,10 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
     address loanManager;
     address lp;
 
-    // Principal * 1 month in seconds * annual interest rate * 0.9 to discount fees / 365 days / 1e18 rate precision / 1e6 (0.9) precision.
-    uint256 constant GROSS_MONTHLY_INTEREST      = 1_000_000e6 * ONE_MONTH * 0.075e18 / 365 days / 1e18;
+    // Principal * 1 month in seconds * annual interest rate * 0.9 to discount fees / 365 days / 1e6 rate precision / 1e6 (0.9) precision.
+    uint256 constant GROSS_MONTHLY_INTEREST      = 1_000_000e6 * ONE_MONTH * 0.075e6 / 365 days / 1e6;
     uint256 constant MONTHLY_INTEREST            = GROSS_MONTHLY_INTEREST * 0.9e6 / 1e6;
-    uint256 constant GROSS_MONTHLY_LATE_INTEREST = 1_000_000e6 * ONE_MONTH * 0.085e18 / 365 days / 1e18;
+    uint256 constant GROSS_MONTHLY_LATE_INTEREST = 1_000_000e6 * ONE_MONTH * 0.085e6 / 365 days / 1e6;
     uint256 constant MONTHLY_LATE_INTEREST       = GROSS_MONTHLY_LATE_INTEREST * 0.9e6 / 1e6;
 
     uint256 platformServiceFee = uint256(1_000_000e6) * 0.0066e6 * ONE_MONTH / 365 days / 1e6;
@@ -628,8 +628,8 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), 0, 0, 0.01e18],
+            amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.075e6), 0, 0, 0.01e6],
             loanManager: loanManager
         });
 
@@ -973,16 +973,16 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
 
     uint256 constant principal = 2_500_000e6;
 
-    uint256 constant interestRate        = 0.115e18;  // 11.5%
-    uint256 constant lateFeeRate         = 0.02e18;   // 2%
-    uint256 constant lateInterestPremium = 0.045e18;  // 4.5%
+    uint256 constant interestRate        = 0.115e6;  // 11.5%
+    uint256 constant lateFeeRate         = 0.02e6;   // 2%
+    uint256 constant lateInterestPremium = 0.045e6;  // 4.5%
 
-    uint256 constant delegateServiceFeeRate    = 0.03e18;  // 3%
+    uint256 constant delegateServiceFeeRate    = 0.03e6;  // 3%
     uint256 constant delegateManagementFeeRate = 0.02e6;   // 2%
     uint256 constant platformServiceFeeRate    = 0.043e6;  // 4.3%
     uint256 constant platformManagementFeeRate = 0.057e6;  // 5.7%
 
-    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
     uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
@@ -1223,16 +1223,16 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
 
     uint256 constant principal = 2_500_000e6;
 
-    uint256 constant interestRate        = 0.115e18;  // 11.5%
-    uint256 constant lateFeeRate         = 0.02e18;   // 2%
-    uint256 constant lateInterestPremium = 0.045e18;  // 4.5%
+    uint256 constant interestRate        = 0.115e6;  // 11.5%
+    uint256 constant lateFeeRate         = 0.02e6;   // 2%
+    uint256 constant lateInterestPremium = 0.045e6;  // 4.5%
 
     uint256 constant delegateServiceFeeRate    = 0.03e6;   // 3%
     uint256 constant delegateManagementFeeRate = 0.02e6;   // 2%
     uint256 constant platformServiceFeeRate    = 0.043e6;  // 4.3%
     uint256 constant platformManagementFeeRate = 0.057e6;  // 5.7%
 
-    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+    uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
     uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 

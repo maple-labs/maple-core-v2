@@ -196,7 +196,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -204,7 +204,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(12 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.09e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -212,7 +212,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(15 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
-            rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.081e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -231,9 +231,9 @@ contract WithdrawScenarios is TestBase {
         vm.warp(start + 14 days);
 
         // Assert only 10 days of interest has accrued, even though 14 days have elapsed.
-        uint256 interest1 = uint256(1_000_000e6) * 0.075e18 * 10 days / 365 days / 1e18;
-        uint256 interest2 = uint256(2_000_000e6) * 0.09e18  * 10 days / 365 days / 1e18;
-        uint256 interest3 = uint256(500_000e6)   * 0.081e18 * 10 days / 365 days / 1e18;
+        uint256 interest1 = uint256(1_000_000e6) * 0.075e6 * 10 days / 365 days / 1e6;
+        uint256 interest2 = uint256(2_000_000e6) * 0.09e6  * 10 days / 365 days / 1e6;
+        uint256 interest3 = uint256(500_000e6)   * 0.081e6 * 10 days / 365 days / 1e6;
 
         assertEq(loanManager.domainEnd(),             start + 10 days);
         assertEq(loanManager.assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 1);
@@ -249,9 +249,9 @@ contract WithdrawScenarios is TestBase {
         loanManager.updateAccounting();
 
         // Assert loans have accrued interest up to the latest payment.
-        interest1 = uint256(1_000_000e6) * 0.075e18 * 10 days / 365 days / 1e18;
-        interest2 = uint256(2_000_000e6) * 0.09e18  * 12 days / 365 days / 1e18;  // Account full loan2 amount.
-        interest3 = uint256(500_000e6)   * 0.081e18 * 14 days / 365 days / 1e18;  // 14 days of interest on last loan.
+        interest1 = uint256(1_000_000e6) * 0.075e6 * 10 days / 365 days / 1e6;
+        interest2 = uint256(2_000_000e6) * 0.09e6  * 12 days / 365 days / 1e6;  // Account full loan2 amount.
+        interest3 = uint256(500_000e6)   * 0.081e6 * 14 days / 365 days / 1e6;  // 14 days of interest on last loan.
 
         assertEq(loanManager.domainEnd(),             start + 15 days);
         assertEq(loanManager.assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 2);
@@ -306,7 +306,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(15 days), uint256(1)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(100e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(100e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -314,7 +314,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.09e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -322,7 +322,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
-            rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.081e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -346,7 +346,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(300_000e6), uint256(300_000e6)],
-            rates:       [uint256(0.055e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.055e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -393,7 +393,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -401,7 +401,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.09e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -409,7 +409,7 @@ contract WithdrawScenarios is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
-            rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.081e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 

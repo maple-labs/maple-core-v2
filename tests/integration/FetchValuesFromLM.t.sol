@@ -21,8 +21,8 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
         loan = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: poolManager.loanManagerList(0)
         });
     }

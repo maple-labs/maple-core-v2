@@ -16,8 +16,8 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
     uint256 constant initialDeposit = 5_000_000e6;
 
     // Loan Parameters
-    uint256 constant interestRate1            = 0.02e18;
-    uint256 constant interestRate2            = 0.04e18;
+    uint256 constant interestRate1            = 0.02e6;
+    uint256 constant interestRate2            = 0.04e6;
     uint256 constant lateInterestPremiumRate1 = interestRate1;
     uint256 constant lateInterestPremiumRate2 = interestRate2;
 
@@ -38,8 +38,8 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
     // Expected Values
     uint256 cash = initialDeposit - principal1 - principal2;
 
-    uint256 grossInterest1 = principal1 * interestRate1 * paymentInterval / 365 days / 1e18;
-    uint256 grossInterest2 = principal2 * interestRate2 * paymentInterval / 365 days / 1e18;
+    uint256 grossInterest1 = principal1 * interestRate1 * paymentInterval / 365 days / 1e6;
+    uint256 grossInterest2 = principal2 * interestRate2 * paymentInterval / 365 days / 1e6;
 
     uint256 netInterest1 = grossInterest1 - (grossInterest1 * managementFeeRate / 1e6);
     uint256 netInterest2 = grossInterest2 - (grossInterest2 * managementFeeRate / 1e6);
@@ -76,7 +76,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: uint256(principal1),
             terms:     [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
-            rates:     [uint64(delegateServiceFeeRate * 1e12), uint64(interestRate1), uint64(0), uint64(lateInterestPremiumRate1)]
+            rates:     [uint64(delegateServiceFeeRate), uint64(interestRate1), uint64(0), uint64(lateInterestPremiumRate1)]
         }));
 
         otLoan2 = OpenTermLoan(createOpenTermLoan({
@@ -85,7 +85,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: uint256(principal2),
             terms:     [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
-            rates:     [uint64(delegateServiceFeeRate * 1e12), uint64(interestRate2), uint64(0), uint64(lateInterestPremiumRate2)]
+            rates:     [uint64(delegateServiceFeeRate), uint64(interestRate2), uint64(0), uint64(lateInterestPremiumRate2)]
         }));
 
         deposit(address(pool), lp, initialDeposit);
@@ -172,8 +172,8 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",  decreasePrincipalBy);
 
-        uint256 interestPayment      = principal1 * interestRate1 * 20 days / 365 days / 1e18;
-        uint256 lateInterestPayment  = principal1 * lateInterestPremiumRate1 * 5 days / 365 days / 1e18;
+        uint256 interestPayment      = principal1 * interestRate1 * 20 days / 365 days / 1e6;
+        uint256 lateInterestPayment  = principal1 * lateInterestPremiumRate1 * 5 days / 365 days / 1e6;
         uint256 totalInterestPayment = interestPayment + lateInterestPayment;
         uint256 serviceFees          = principal1 * (delegateServiceFeeRate + platformServiceFeeRate) * 20 days / 365 days / 1e6;
 
@@ -188,7 +188,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         acceptRefinanceOT(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
 
         // Calculate new issuance rate for otLoan1
-        grossInterest1 = (principal1 - decreasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e18;
+        grossInterest1 = (principal1 - decreasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e6;
         netInterest1   = grossInterest1 - (grossInterest1 * managementFeeRate / 1e6);
         issuanceRate1  = netInterest1 * 1e27 / paymentInterval;
 
@@ -280,8 +280,8 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  increasePrincipalBy);
 
-        uint256 interestPayment      = principal1 * interestRate1 * 20 days / 365 days / 1e18;
-        uint256 lateInterestPayment  = principal1 * lateInterestPremiumRate1 * 5 days / 365 days / 1e18;
+        uint256 interestPayment      = principal1 * interestRate1 * 20 days / 365 days / 1e6;
+        uint256 lateInterestPayment  = principal1 * lateInterestPremiumRate1 * 5 days / 365 days / 1e6;
         uint256 totalInterestPayment = interestPayment + lateInterestPayment;
         uint256 serviceFees          = principal1 * (delegateServiceFeeRate + platformServiceFeeRate) * 20 days / 365 days / 1e6;
 
@@ -296,7 +296,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         acceptRefinanceOT(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
 
         // Calculate new issuance rate for otLoan1
-        grossInterest1 = (principal1 + increasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e18;
+        grossInterest1 = (principal1 + increasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e6;
         netInterest1   = grossInterest1 - (grossInterest1 * managementFeeRate / 1e6);
         issuanceRate1  = netInterest1 * 1e27 / paymentInterval;
 
@@ -456,8 +456,8 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  increasePrincipalBy);
 
-        uint256 interestPayment      = principal1 * interestRate1 * 20 days / 365 days / 1e18;
-        uint256 lateInterestPayment  = principal1 * lateInterestPremiumRate1 * 5 days / 365 days / 1e18;
+        uint256 interestPayment      = principal1 * interestRate1 * 20 days / 365 days / 1e6;
+        uint256 lateInterestPayment  = principal1 * lateInterestPremiumRate1 * 5 days / 365 days / 1e6;
         uint256 totalInterestPayment = interestPayment + lateInterestPayment;
         uint256 serviceFees          = principal1 * (delegateServiceFeeRate + platformServiceFeeRate) * 20 days / 365 days / 1e6;
 
@@ -472,7 +472,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         acceptRefinanceOT(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
 
         // Calculate new issuance rate for otLoan1
-        grossInterest1 = (principal1 + increasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e18;
+        grossInterest1 = (principal1 + increasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e6;
         netInterest1   = grossInterest1 - (grossInterest1 * managementFeeRate / 1e6);
         issuanceRate1  = netInterest1 * 1e27 / paymentInterval;
 

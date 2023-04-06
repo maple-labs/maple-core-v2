@@ -41,7 +41,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -95,7 +95,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0.01e18), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0.01e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -166,7 +166,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(4_000_000e6), uint256(4_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -408,7 +408,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e30), uint256(0.1e18), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e18), uint256(0.1e6), uint256(0), uint256(0)],  // 1e12 * 100% = 1e18 precision
             loanManager: loanManager
         });
 
@@ -492,7 +492,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)],
+            rates:       [uint256(0), uint256(0.1e6), uint256(0.01e6), uint256(0)],
             loanManager: loanManager
         });
 
@@ -654,7 +654,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0), uint256(0.1e18), uint256(0.01e18), uint256(0)],
+            rates:       [uint256(0), uint256(0.1e6), uint256(0.01e6), uint256(0)],
             loanManager: loanManager
         });
 
@@ -799,14 +799,14 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest      = annualLoanInterest * 1 days / 365 days;
-        uint256 dailyLoanInterestGross = (1_000_000e6 * 0.031536e18 / 1e18) * 1 days / 365 days;
+        uint256 dailyLoanInterestGross = (1_000_000e6 * 0.031536e6 / 1e6) * 1 days / 365 days;
 
         uint256 issuanceRate = (dailyLoanInterest * 30) * 1e30 / 30 days;
 
@@ -1033,7 +1033,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0.31536e6)],
             loanManager: loanManager
         });
 
@@ -1175,7 +1175,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0.31536e18)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0.31536e6)],
             loanManager: loanManager
         });
 
@@ -1352,7 +1352,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
                 borrower:    makeAddr(string(abi.encode(i))),
                 termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-                rates:       [uint256(3.1536e18), uint256(0.1e18), uint256(0.01e18), uint256(0.31536e18)],
+                rates:       [uint256(3.1536e6), uint256(0.1e6), uint256(0.01e6), uint256(0.31536e6)],
                 loanManager: loanManager
             });
         }

@@ -53,11 +53,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -191,7 +191,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         uint256 loanPrincipal     = 1_000_000e6;
-        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 45_000e6
+        uint256 closeLoanInterest = loanPrincipal * 0.05e6 * 0.9e6 / 1e6 / 1e6;  // 45_000e6
 
         assertEq(closeLoanInterest, 45_000e6);
 
@@ -247,11 +247,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -449,11 +449,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -667,11 +667,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -900,7 +900,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Platform fees from liquidation: 25_920e6 + 103.68e6 = 26_023.68e6
         // Funds added to pool from liquidation: 150_000e6 - 26_023.68e6 = 123_976.32e6
 
-        uint256 grossInterestPerInstallment = (1_000_000e6 * 0.031536e18 / 1e18) * (30 days / 365 days);
+        uint256 grossInterestPerInstallment = (1_000_000e6 * 0.031536e6 / 1e6) * (30 days / 365 days);
         uint256 platformManagementFee       = (2592e6 * 0.08e6 / 1e6) * (15 days / 30 days);              // Loan impaired 15 days in
         uint256 platformServiceFee          = (0.31536e6 * 1_000_000e6 / 1e6) * (30 days / 365 days);
         uint256 platformFeesFromLiquidation = platformManagementFee + platformServiceFee;
@@ -984,11 +984,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -1131,7 +1131,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         uint256 loanPrincipal     = 1_000_000e6;
-        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 45_000e6
+        uint256 closeLoanInterest = loanPrincipal * 0.05e6 * 0.9e6 / 1e6 / 1e6;  // 45_000e6
 
         assertEq(closeLoanInterest, 45_000e6);
 
@@ -1186,11 +1186,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(25_000_000e6), uint256(25_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 25_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 25_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -1331,7 +1331,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         uint256 loanPrincipal     = 25_000_000e6;
-        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 1_125_000e6
+        uint256 closeLoanInterest = loanPrincipal * 0.05e6 * 0.9e6 / 1e6 / 1e6;  // 1_125_000e6
 
         assertEq(closeLoanInterest, 1_125_000e6);
 
@@ -1483,11 +1483,11 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(0), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0.05e18), uint256(0), uint256(0)],
+            rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
-        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e18 * 0.9e6 / 1e6 / 1e18;  // Note: 10% of interest is paid in fees
+        uint256 annualLoanInterest = 1_000_000e6 * 0.031536e6 * 0.9e6 / 1e6 / 1e6;  // Note: 10% of interest is paid in fees
 
         uint256 dailyLoanInterest = annualLoanInterest * 1 days / 365 days;
 
@@ -1648,7 +1648,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         close(loan);
 
         uint256 loanPrincipal     = 1_000_000e6;
-        uint256 closeLoanInterest = loanPrincipal * 0.05e18 * 0.9e6 / 1e6 / 1e18;  // 45_000e6
+        uint256 closeLoanInterest = loanPrincipal * 0.05e6 * 0.9e6 / 1e6 / 1e6;  // 45_000e6
 
         assertEq(closeLoanInterest, 45_000e6);
 

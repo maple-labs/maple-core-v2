@@ -157,7 +157,7 @@ contract ProtocolActions is Test {
             lateInterest_,
             delegateServiceFee_,
             platformServiceFee_
-        ) = IOpenTermLoan(loan_).paymentBreakdown(block.timestamp);
+        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         uint256 paymentAmount_ = principal_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
 
@@ -173,7 +173,7 @@ contract ProtocolActions is Test {
             lateInterest_,
             delegateServiceFee_,
             platformServiceFee_
-        ) = IOpenTermLoan(loan_).paymentBreakdown(block.timestamp);
+        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         uint256 paymentAmount_ = principalToReturn_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
 
@@ -608,7 +608,7 @@ contract ProtocolActions is Test {
     /*** Governor Functions                                                                                                              **/
     /**************************************************************************************************************************************/
 
-    function setAllowedBorrower(address globals_, address borrower_, bool valid_) internal {
+    function setValidBorrower(address globals_, address borrower_, bool valid_) internal {
         IGlobals globals = IGlobals(globals_);
 
         vm.prank(globals.governor());

@@ -52,7 +52,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         }));
 
@@ -60,7 +60,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             borrower:    borrower2,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(750_000e6), uint256(750_000e6)],
-            rates:       [uint256(6.3072e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(6.3072e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         }));
     }
@@ -120,7 +120,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
 
@@ -424,7 +424,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     uint256 paymentInterval = 30 days;
 
     uint256 cover        = 100_000e6;
-    uint256 interestRate = 0.1e18;
+    uint256 interestRate = 0.1e6;
     uint256 principal    = 1_500_000e6;
 
     uint256 delegateServiceFeeRate    = 0.03e6;
@@ -642,7 +642,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     // }
 
     function test_fund_success() external {
-        uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e18;
+        uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
         uint256 managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
         uint256 issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 

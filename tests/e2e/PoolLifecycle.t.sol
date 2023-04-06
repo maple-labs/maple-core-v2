@@ -156,10 +156,10 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: 2_500_000e6,
             terms:     [uint32(5 days), uint32(3 days),  uint32(30 days)],
-            rates:     [uint64(0.01e18), uint64(0.08e18), uint64(0.05e18), uint64(0.02e18)]
+            rates:     [uint64(0.01e6), uint64(0.08e6), uint64(0.05e6), uint64(0.02e6)]
         });
 
-        loan1AnnualInterest = 2_500_000e6 * 0.8e6 * 0.08e18 / 1e6 / 1e18;
+        loan1AnnualInterest = 2_500_000e6 * 0.8e6 * 0.08e6 / 1e6 / 1e6;
 
         assertOpenTermLoan({
             loan:            loan1,
@@ -203,7 +203,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedCash         -= 2_500_000e6;
         expectedPrincipalOut += 2_500_000e6;
 
-        uint256 grossInterest = uint256(2_500_000e6) * 0.08e18 * 30 days / 365 days / 1e18;
+        uint256 grossInterest = uint256(2_500_000e6) * 0.08e6 * 30 days / 365 days / 1e6;
 
         loan1IssuanceRate = (grossInterest - grossInterest * 0.2e6 / 1e6) * 1e27 / 30 days;
 
@@ -213,7 +213,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan1,
             paymentTimestamp:   uint40(start + 2 days + 30 days),
             principal:          0,
-            interest:           uint256(2_500_000e6) * 0.08e18 * 30 / 365 / 1e18,
+            interest:           uint256(2_500_000e6) * 0.08e6 * 30 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(2_500_000e6) * 30 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(2_500_000e6) * 30 * 0.02e6 / 1e6 / 365,
@@ -277,10 +277,10 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: 1_000_000e6,
             terms:     [uint32(5 days),  uint32(3 days),  uint32(30 days)],
-            rates:     [uint64(0.01e18), uint64(0.10e18), uint64(0.05e18), uint64(0.02e18)]
+            rates:     [uint64(0.01e6), uint64(0.10e6), uint64(0.05e6), uint64(0.02e6)]
         });
 
-        loan2AnnualInterest = 1_000_000e6 * 0.10e18 * 0.8e6 / 1e18 / 1e6;
+        loan2AnnualInterest = 1_000_000e6 * 0.10e6 * 0.8e6 / 1e6 / 1e6;
 
         assertOpenTermLoan({
             loan:            loan2,
@@ -327,7 +327,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedAccountedInterest += expectedAccruedInterest;
         expectedAccruedInterest    = 0;
 
-        grossInterest = uint256(1_000_000e6) * 0.10e18 * 30 days / 365 days / 1e18;
+        grossInterest = uint256(1_000_000e6) * 0.10e6 * 30 days / 365 days / 1e6;
 
         loan2IssuanceRate = (grossInterest - grossInterest * 0.2e6 / 1e6) * 1e27 / 30 days;
 
@@ -337,7 +337,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan2,
             paymentTimestamp:   uint40(start + 3 days + 30 days),
             principal:          0,
-            interest:           uint256(1_000_000e6) * 0.10e18 * 30 / 365 / 1e18,
+            interest:           uint256(1_000_000e6) * 0.10e6 * 30 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(1_000_000e6) * 30 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(1_000_000e6) * 30 * 0.02e6 / 1e6 / 365,
@@ -507,10 +507,10 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             asset:     address(fundsAsset),
             principal: 3_000_000e6,
             terms:     [uint32(5 days),  uint32(3 days),  uint32(30 days)],
-            rates:     [uint64(0.01e18), uint64(0.07e18), uint64(0.05e18), uint64(0.02e18)]
+            rates:     [uint64(0.01e6), uint64(0.07e6), uint64(0.05e6), uint64(0.02e6)]
         });
 
-        loan3AnnualInterest = 3_000_000e6 * 0.07e18 * 0.8e6 / 1e18 / 1e6;
+        loan3AnnualInterest = 3_000_000e6 * 0.07e6 * 0.8e6 / 1e6 / 1e6;
 
         assertOpenTermLoan({
             loan:            loan3,
@@ -559,7 +559,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedAccountedInterest += expectedAccruedInterest;
         expectedAccruedInterest    = 0;
 
-        grossInterest = uint256(3_000_000e6) * 0.07e18 * 30 days / 365 days / 1e18;
+        grossInterest = uint256(3_000_000e6) * 0.07e6 * 30 days / 365 days / 1e6;
 
         loan3IssuanceRate = (grossInterest - grossInterest * 0.2e6 / 1e6) * 1e27 / 30 days;
 
@@ -567,7 +567,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan3,
             paymentTimestamp:   uint40(start + 21 days + 30 days),
             principal:          0,
-            interest:           uint256(3_000_000e6) * 0.07e18 * 30 / 365 / 1e18,
+            interest:           uint256(3_000_000e6) * 0.07e6 * 30 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(3_000_000e6) * 30 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(3_000_000e6) * 30 * 0.02e6 / 1e6 / 365,
@@ -668,7 +668,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan2,
             paymentTimestamp:   uint40(start + 3 days + 22 days + 3 days),   // Day 3 start + 22 days in + 3 day notice period
             principal:          uint256(1_000_000e6),
-            interest:           uint256(1_000_000e6) * 0.10e18 * 25 / 365 / 1e18,
+            interest:           uint256(1_000_000e6) * 0.10e6 * 25 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(1_000_000e6) * 25 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(1_000_000e6) * 25 * 0.02e6 / 1e6 / 365,
@@ -894,7 +894,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan3,
             paymentTimestamp:   uint40(start + 21 days + 6 days + 3 days),
             principal:          uint256(3_000_000e6),
-            interest:           uint256(3_000_000e6) * 0.07e18 * 9 / 365 / 1e18,
+            interest:           uint256(3_000_000e6) * 0.07e6 * 9 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(3_000_000e6) * 9 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(3_000_000e6) * 9 * 0.02e6 / 1e6 / 365,
@@ -998,7 +998,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan3,
             paymentTimestamp:   uint40(start + 21 days + 30 days),
             principal:          0,
-            interest:           uint256(3_000_000e6) * 0.07e18 * 30 / 365 / 1e18,
+            interest:           uint256(3_000_000e6) * 0.07e6 * 30 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(3_000_000e6) * 30 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(3_000_000e6) * 30 * 0.02e6 / 1e6 / 365,

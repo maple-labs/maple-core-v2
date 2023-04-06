@@ -410,7 +410,7 @@ contract RedeemTests is TestBase {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: poolManager.loanManagerList(0)
         });
 
@@ -463,7 +463,7 @@ contract RedeemTests is TestBase {
             borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
             loanManager: poolManager.loanManagerList(0)
         });
 
@@ -543,7 +543,7 @@ contract MultiUserRedeemTests is TestBase {
             borrower:    borrower,
             termDetails: [5_000, ONE_MONTH, 3],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],  // Pool will be at 50% liquidity
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -633,7 +633,7 @@ contract MultiUserRedeemTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), uint256(0)],
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -699,7 +699,7 @@ contract MultiUserRedeemTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(ONE_MONTH * 2), uint256(3)],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
 
@@ -988,7 +988,7 @@ contract RedeemIntegrationTests is TestBase {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(collateralAmount_), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.12e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
         });
     }

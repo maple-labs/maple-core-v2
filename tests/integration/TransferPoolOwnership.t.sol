@@ -48,7 +48,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(newPoolDelegate);
-        vm.expectRevert("MG:TOPM:NOT_AUTHORIZED");
+        vm.expectRevert("MG:TOPM:NO_AUTH");
         globals.transferOwnedPoolManager(poolDelegate, newPoolDelegate);
 
         vm.prank(newPoolDelegate);
@@ -69,7 +69,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(newPoolDelegate);
-        vm.expectRevert("MG:TOPM:NOT_POOL_DELEGATE");
+        vm.expectRevert("MG:TOPM:NOT_PD");
         poolManager.acceptPoolDelegate();
 
         vm.prank(governor);

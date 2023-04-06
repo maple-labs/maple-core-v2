@@ -34,7 +34,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
         });
 
@@ -86,7 +86,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
     uint32 constant noticePeriod    = 100_000 seconds;
     uint32 constant paymentInterval = 1_000_000 seconds;
 
-    uint64 constant interestRate = 0.031536e18;
+    uint64 constant interestRate = 0.031536e6;
 
     uint256 constant principal = 1_000_000e6;
 
@@ -112,7 +112,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
-        setAllowedBorrower(address(globals), borrower, true);
+        setValidBorrower(address(globals), borrower, true);
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
@@ -120,7 +120,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
             address(fundsAsset),
             principal,
             [gracePeriod, noticePeriod, paymentInterval],
-            [0.031536e18, interestRate, 0, 0.15768e18]
+            [0.031536e6, interestRate, 0, 0.15768e6]
         ));
 
         fundLoan(address(loan));
@@ -133,7 +133,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
             address(fundsAsset),
             principal,
             [gracePeriod, noticePeriod, paymentInterval],
-            [0.031536e18, interestRate, 0, 0]
+            [0.031536e6, interestRate, 0, 0]
         ));
 
         vm.expectRevert("ML:MP:LOAN_INACTIVE");
@@ -151,13 +151,13 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
 
         vm.warp(start + 1);
 
-        (uint256 principal_,
+        (
+            uint256 principal_,
             uint256 interest_,
             uint256 lateInterest_,
             uint256 delegateServiceFee_,
-            uint256 platformServiceFee_) = loan.paymentBreakdown(loan.paymentDueDate());
-
-            console.log(principal_);
+            uint256 platformServiceFee_
+        ) = loan.getPaymentBreakdown(loan.paymentDueDate());
 
         vm.expectRevert("ML:MP:INSUFFICIENT_FOR_CALL");
         loan.makePayment(0);
@@ -186,7 +186,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
             address(fundsAsset),
             principal,
             [gracePeriod, noticePeriod, paymentInterval],
-            [0.031536e18, interestRate, 0, 0]
+            [0.031536e6, interestRate, 0, 0]
         ));
 
         vm.prank(address(loan));
@@ -269,7 +269,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
         });
     }
@@ -664,7 +664,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(2)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(0)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
         });
 
@@ -1093,7 +1093,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
     uint32 constant noticePeriod    = 100_000;
     uint32 constant paymentInterval = 1_000_000;
 
-    uint64 constant interestRate = 0.031536e18;
+    uint64 constant interestRate = 0.031536e6;
 
     uint256 constant principal = 1_000_000e6;
 
@@ -1119,7 +1119,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
-        setAllowedBorrower(address(globals), borrower, true);
+        setValidBorrower(address(globals), borrower, true);
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
@@ -1127,7 +1127,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
             address(fundsAsset),
             principal,
             [gracePeriod, noticePeriod, paymentInterval],
-            [0.015768e18, interestRate, 0, 0.015768e18]
+            [0.015768e6, interestRate, 0, 0.015768e6]
         ));
 
         fundLoan(address(loan));
@@ -1648,7 +1648,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
         });
 
@@ -1658,7 +1658,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             borrower:    borrower2,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
         });
     }
@@ -2412,7 +2412,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
         });
 
@@ -2493,7 +2493,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
             borrower:    borrower2,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0],  // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
         });
 
@@ -2862,7 +2862,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             borrower:    borrower1,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
             loanManager: loanManager
         });
 
@@ -2872,7 +2872,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             borrower:    borrower2,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
             loanManager: loanManager
         });
 
@@ -2882,7 +2882,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             borrower:    borrower3,
             termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(3_000_000e6), uint256(3_000_000e6)],
-            rates:       [uint256(3.1536e18), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
+            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
             loanManager: loanManager
         });
     }
