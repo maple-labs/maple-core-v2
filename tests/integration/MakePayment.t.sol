@@ -112,8 +112,6 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
-        setValidBorrower(address(globals), borrower, true);
-
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
             address(loanManager),
@@ -1118,8 +1116,6 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
         });
 
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
-
-        setValidBorrower(address(globals), borrower, true);
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),

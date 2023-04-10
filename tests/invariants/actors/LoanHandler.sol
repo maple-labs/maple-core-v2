@@ -6,13 +6,12 @@ import {
     IFixedTermLoan,
     IFixedTermLoanManager,
     IGlobals,
+    IInvariantTest,
     IPool,
     IPoolManager,
     IProxyFactoryLike,
     IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
-
-import { ITest } from "../interfaces/ITest.sol";
 
 import { Test, MockERC20 } from "../../../contracts/Contracts.sol";
 
@@ -48,9 +47,9 @@ contract LoanHandler is Test {
     MockERC20 fundsAsset;
 
     IFixedTermLoanManager loanManager;   // Liquidation interfaces prevent this from being ILoanManagerLike. Consider an address.
+    IInvariantTest        testContract;
     IPool                 pool;
     IPoolManager          poolManager;
-    ITest                 testContract;
 
     /**************************************************************************************************************************************/
     /*** State Variables for Invariant Assertions                                                                                       ***/
@@ -100,16 +99,20 @@ contract LoanHandler is Test {
         poolManager     = IPoolManager(poolManager_);
         loanManager     = IFixedTermLoanManager(poolManager.loanManagerList(0));  // TODO: May need to be constructor arg.
         pool            = IPool(poolManager.pool());
-        testContract    = ITest(testContract_);
+        testContract    = IInvariantTest(testContract_);
 
         poolDelegate = makeAddr("poolDelegate");
 
         earliestPaymentDueDate = testContract.currentTimestamp();
 
         for (uint256 i; i < numBorrowers_; ++i) {
-            address borrower = makeAddr("borrower");
-            vm.prank(governor);
+            address borrower = makeAddr(string(abi.encode("borrower", i)));
+
+            vm.startPrank(governor);
             IGlobals(globals).setValidBorrower(borrower, true);
+            IGlobals(globals).setCanDeploy(loanFactory, borrower, true);
+            vm.stopPrank();
+
             borrowers.push(borrower);
         }
 

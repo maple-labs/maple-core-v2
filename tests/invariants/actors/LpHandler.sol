@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
-
-import { ITest } from "../interfaces/ITest.sol";
+import { IInvariantTest, IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 // TODO: MockERC20 is not needed if protocol actions are used which handle minting.
 import { Test, MockERC20 } from "../../../contracts/Contracts.sol";
@@ -26,8 +24,8 @@ contract LpHandler is Test {
     mapping(bytes32 => uint256) public numberOfCalls;
 
     MockERC20          fundsAsset;
+    IInvariantTest     testContract;
     IPool              pool;
-    ITest              testContract;
     IWithdrawalManager withdrawalManager;
 
     /**************************************************************************************************************************************/
@@ -36,7 +34,7 @@ contract LpHandler is Test {
 
     constructor (address pool_, address testContract_, uint256 numLps_) {
         pool              = IPool(pool_);
-        testContract      = ITest(testContract_);
+        testContract      = IInvariantTest(testContract_);
         withdrawalManager = IWithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
 
         fundsAsset = MockERC20(pool.asset());
@@ -45,7 +43,7 @@ contract LpHandler is Test {
         numHolders = numLps + 1;  // Include withdrawal manager
 
         for (uint256 i; i < numLps_; ++i) {
-            address lp = makeAddr(string(abi.encode(i)));
+            address lp = makeAddr(string(abi.encode("lp", i)));
             lps.push(lp);
             holders.push(lp);
         }

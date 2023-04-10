@@ -7,8 +7,9 @@ import { StdInvariant } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { LoanHandler } from "./actors/LoanHandler.sol";
-import { LpHandler }   from "./actors/LpHandler.sol";
+import { LoanHandler }         from "./actors/LoanHandler.sol";
+import { LpHandler }           from "./actors/LpHandler.sol";
+import { OpenTermLoanHandler } from "./actors/OpenTermLoanHandler.sol";
 
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
@@ -17,8 +18,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    LoanHandler loanHandler;
-    LpHandler   lpHandler;
+    LoanHandler         loanHandler;
+    LpHandler           lpHandler;
+    OpenTermLoanHandler otlHandler;
 
     uint256 setTimestamps;
 
@@ -69,16 +71,16 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant D: calledPrincipal <= principal
         * Invariant E: dateCalled != 0 -> calledPrincipal != 0
         * Invariant F: paymentDueDate() <= defaultDate()
-        * Invariant G: paymentBreakdown == theoretical calculation
+        * Invariant G: getPaymentBreakdown == theoretical calculation
 
      * Open Term Loan Manager
-        * Invariant A: accountedInterest + accruedInterest() == ∑loan.paymentBreakdown(block.timestamp) (regular interest minus fees)
+        * Invariant A: accountedInterest + accruedInterest() == ∑loan.getPaymentBreakdown(block.timestamp) (regular interest minus fees)
         * Invariant B: if no payments exist: accountedInterest == 0
         * Invariant C: principalOut = ∑loan.principal()
         * Invariant D: issuanceRate = ∑payment.issuanceRate
         * Invariant E: unrealizedLosses <= assetsUnderManagement()
         * Invariant F: if no impairments exist: unrealizedLosses == 0
-        * Invariant G: assetsUnderManagement() == ∑loan.principal() + ∑loan.paymentBreakdown(block.timestamp) (regular interest minus fees)
+        * Invariant G: assetsUnderManagement() == ∑loan.principal() + ∑loan.getPaymentBreakdown(block.timestamp) (regular interest minus fees)
         * Invariant H: block.timestamp >= domainStart
         * Invariant I: payment.startDate == loan.dateFunded() || loan.datePaid()
         * Invariant J: payment.issuanceRate == theoretical calculation (regular interest minus management fees)

@@ -10,6 +10,7 @@ import {
     IGlobals,
     ILoanLike,
     ILoanManagerLike,
+    IMapleProxyFactory,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
@@ -79,6 +80,39 @@ contract ProtocolActions is Test {
         IERC20(fundsAsset_).approve(loan_, payment_);
         ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).closeLoan(payment_);
         vm.stopPrank();
+    }
+
+    function createOpenTermLoan(
+        address factory_,
+        address borrower_,
+        address lender_,
+        address asset_,
+        uint256 principal_,
+        uint256[3] memory terms_,
+        uint256[4] memory rates_
+    )
+        internal returns (address loan_)
+    {
+        address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.startPrank(governor_);
+        IGlobals(globals_).setValidBorrower(borrower_, true);
+        IGlobals(globals_).setCanDeploy(factory_, address(borrower_), true);
+        vm.stopPrank();
+
+        vm.prank(borrower_);
+        loan_ = IMapleProxyFactory(factory_).createInstance({
+            arguments_: abi.encode(
+                borrower_,
+                lender_,
+                asset_,
+                principal_,
+                [uint32(terms_[0]), uint32(terms_[1]), uint32(terms_[2])],
+                [uint64(rates_[0]), uint64(rates_[1]), uint64(rates_[2]), uint64(rates_[3])]
+            ),
+            salt_: "SALT"
+        });
     }
 
     function drawdown(address loan_, uint256 amount_) internal returns (uint256 collateralPosted_) {

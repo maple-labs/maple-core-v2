@@ -89,7 +89,6 @@ contract PauseTests is TestBaseWithAssertions {
 
         globals.setValidPoolDelegate(pausePoolDelegate, true);
         globals.setProtocolPause(true);
-        globals.setValidBorrower(borrower, true);
 
         vm.stopPrank();
     }

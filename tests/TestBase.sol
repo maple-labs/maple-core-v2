@@ -49,9 +49,10 @@ contract TestBase is ProtocolActions {
     uint256 constant ONE_YEAR  = 365 days;
 
     address governor;
-    address poolDelegate;
-    address treasury;
     address migrationAdmin;
+    address poolDelegate;
+    address securityAdmin;
+    address treasury;
 
     address fixedTermLoanFactory;
     address fixedTermLoanManagerFactory;
@@ -87,18 +88,17 @@ contract TestBase is ProtocolActions {
     // Helper mapping to assert differences in balance
     mapping(address => uint256) partialAssetBalances;
 
-    MockERC20    collateralAsset;
-    MockERC20    fundsAsset;
-    Globals      globals;
-    PoolDeployer deployer;
-
-    FeeManager           feeManager;
-    FixedTermRefinancer  fixedTermRefinancer;
-    OpenTermRefinancer   openTermRefinancer;
-    Pool                 pool;
-    PoolDelegateCover    poolCover;
-    PoolManager          poolManager;
-    WithdrawalManager    withdrawalManager;
+    FeeManager          feeManager;
+    FixedTermRefinancer fixedTermRefinancer;
+    Globals             globals;
+    MockERC20           collateralAsset;
+    MockERC20           fundsAsset;
+    OpenTermRefinancer  openTermRefinancer;
+    Pool                pool;
+    PoolDelegateCover   poolCover;
+    PoolDeployer        deployer;
+    PoolManager         poolManager;
+    WithdrawalManager   withdrawalManager;
 
     function setUp() public virtual {
         _createAccounts();
@@ -120,6 +120,7 @@ contract TestBase is ProtocolActions {
         governor       = makeAddr("governor");
         migrationAdmin = makeAddr("migrationAdmin");
         poolDelegate   = makeAddr("poolDelegate");
+        securityAdmin  = makeAddr("securityAdmin");
         treasury       = makeAddr("treasury");
     }
 
@@ -175,11 +176,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
         globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
 
-        globals.setCanDeploy(fixedTermLoanFactory,        address(deployer), true);
-        globals.setCanDeploy(openTermLoanFactory,         address(deployer), true);
         globals.setCanDeploy(fixedTermLoanManagerFactory, address(deployer), true);
-        globals.setCanDeploy(openTermLoanManagerFactory,  address(deployer), true);
-        globals.setCanDeploy(liquidatorFactory,           address(deployer), true);
         globals.setCanDeploy(poolManagerFactory,          address(deployer), true);
         globals.setCanDeploy(withdrawalManagerFactory,    address(deployer), true);
 
@@ -335,10 +332,8 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.startPrank(governor);
+        vm.prank(governor);
         globals.setValidBorrower(borrower, true);
-        globals.setCanDeploy(fixedTermLoanFactory, borrower, true);
-        vm.stopPrank();
 
         vm.prank(borrower);
         loan = FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
@@ -434,11 +429,6 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.startPrank(governor);
-        globals.setValidBorrower(borrower, true);
-        globals.setCanDeploy(fixedTermLoanFactory, borrower, true);
-        vm.stopPrank();
-
         loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);  // TODO: Remove create from this function.
 
         fundLoan(address(loan));

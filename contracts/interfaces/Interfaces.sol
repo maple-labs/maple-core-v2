@@ -21,8 +21,9 @@ import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/inte
 import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
 import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
-import { IPool }        from "../../modules/pool/contracts/interfaces/IPool.sol";
-import { IPoolManager } from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
+import { IPool }              from "../../modules/pool/contracts/interfaces/IPool.sol";
+import { IPoolManager }       from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
+import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
 import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
@@ -169,5 +170,25 @@ interface IProxyFactoryLike {
     function enableUpgradePath(uint256 fromVersion_, uint256 toVersion_, address migrator_) external;
 
     function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
+
+}
+
+/******************************************************************************************************************************************/
+/*** Test Interfaces                                                                                                                    ***/
+/******************************************************************************************************************************************/
+
+interface IInvariantTest {
+
+    function currentTimestamp() external view returns (uint256 currentTimestamp_);
+
+    function setCurrentTimestamp(uint256 currentTimestamp_) external;
+
+}
+
+interface IMockERC20 is IERC20 {
+
+    function burn(address owner_, uint256 amount_) external;
+
+    function mint(address recipient_, uint256 amount_) external;
 
 }

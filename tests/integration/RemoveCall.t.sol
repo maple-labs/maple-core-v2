@@ -27,7 +27,6 @@ contract RemoveCallTestsBase is TestBaseWithAssertions {
         super.setUp();
 
         vm.startPrank(governor);
-        globals.setValidBorrower(borrower, true);
         globals.setPlatformServiceFeeRate(address(poolManager)   , platformServiceFeeRate);
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
@@ -39,12 +38,13 @@ contract RemoveCallTestsBase is TestBaseWithAssertions {
         loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
         loan = IOpenTermLoan(createOpenTermLoan(
+            openTermLoanFactory,
             borrower,
             address(loanManager),
             address(fundsAsset),
             principal,
-            [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
-            [uint64(delegateServiceFeeRate), uint64(interestRate), 0, uint64(interestRate)]
+            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+            [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
         ));
 
         fundLoan(address(loan));

@@ -713,9 +713,6 @@ contract TotalAssetsTests is TestBase {
         lp1      = makeAddr("lp1");
         borrower = makeAddr("borrower");
 
-        vm.prank(governor);
-        globals.setValidBorrower(borrower, true);
-
         setupFees({
             delegateOriginationFee:     500e6,
             delegateServiceFee:         300e6,
