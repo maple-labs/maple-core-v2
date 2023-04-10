@@ -93,6 +93,11 @@ interface IProxiedLike {
 
 }
 
+interface ILoanV4Like {
+
+    function lateInterestPremium() external view returns (uint256 lateInterestPremium_);
+}
+
 interface ILoanLike is IProxiedLike {
 
     function acceptBorrower() external;
@@ -161,6 +166,7 @@ interface ILoanManagerLike is IProxiedLike {
 
 }
 
+// NOTE: Isn't it better to import the interface from the module instead of re-declaring it here?
 interface IProxyFactoryLike {
 
     function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
@@ -169,7 +175,15 @@ interface IProxyFactoryLike {
 
     function enableUpgradePath(uint256 fromVersion_, uint256 toVersion_, address migrator_) external;
 
+    function isInstance(address instance_) external view returns (bool isInstance_);
+
+    function migratorForPath(uint256 oldVersion_, uint256 newVersion_) external view returns (address migrator_);
+
     function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
+
+    function setDefaultVersion(uint256 version_) external;
+
+    function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
 
 }
 

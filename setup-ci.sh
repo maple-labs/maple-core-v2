@@ -4,6 +4,9 @@ chmod 600 $HOME/.ssh/id_rsa
 
 git config --global url."git@github.com:".insteadOf "https://github.com/"
 
+echo "$SSH_KEY_ADDRESS_REGISTRY" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/address-registry
+
 echo "$SSH_KEY_FIXED_TERM_LOAN" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/fixed-term-loan
 

@@ -28,6 +28,9 @@ integration:
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
+migration:
+	./test.sh -d tests/migration -p $(profile)
+
 # Forge scripting
 
 validate:

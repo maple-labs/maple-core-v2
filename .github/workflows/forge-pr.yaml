@@ -13,6 +13,7 @@ jobs:
 
       - name: Checkout submodules
         env:
+          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
           SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
@@ -43,6 +44,7 @@ jobs:
 
       - name: Checkout submodules
         env:
+          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
           SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
@@ -73,6 +75,7 @@ jobs:
 
       - name: Checkout submodules
         env:
+          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
           SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
@@ -103,6 +106,7 @@ jobs:
 
       - name: Checkout submodules
         env:
+          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
           SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
@@ -133,6 +137,7 @@ jobs:
 
       - name: Checkout submodules
         env:
+          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
           SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
           SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
           SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}

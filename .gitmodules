@@ -35,3 +35,6 @@
 [submodule "modules/forge-std"]
 	path = modules/forge-std
 	url = git@github.com:foundry-rs/forge-std
+[submodule "modules/address-registry"]
+	path = modules/address-registry
+	url = git@github.com:maple-labs/address-registry.git

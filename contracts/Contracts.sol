@@ -3,11 +3,14 @@ pragma solidity 0.8.7;
 
 import { console, StdInvariant, Test as T } from "../modules/forge-std/src/Test.sol";
 
-import { MapleLoan as MFTL }             from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
-import { Refinancer as MFTLR }           from "../modules/fixed-term-loan/contracts/Refinancer.sol";
-import { MapleLoanFactory as MFTLF }     from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as MFTLFM } from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as MFTLI } from "../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
+import { AddressRegistry } from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
+
+import { MapleLoan as MFTL }              from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { Refinancer as MFTLR }            from "../modules/fixed-term-loan/contracts/Refinancer.sol";
+import { MapleLoanFactory as MFTLF }      from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager as MFTLFM }  from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer as MFTLI }  from "../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoanV5Migrator as MFTLV5M } from "../modules/fixed-term-loan/contracts/MapleLoanV5Migrator.sol";
 
 import { LoanManager as MFTLM }             from "../modules/fixed-term-loan-manager/contracts/LoanManager.sol";
 import { LoanManagerFactory as MFTLMF }     from "../modules/fixed-term-loan-manager/contracts/proxy/LoanManagerFactory.sol";
@@ -58,6 +61,8 @@ contract FixedTermLoanFactory is MFTLF {
 
 contract FixedTermLoanInitializer is MFTLI { }
 
+contract FixedTermLoanV5Migrator is MFTLV5M { }
+
 contract FeeManager is MFTLFM {
 
     constructor(address globals_) MFTLFM(globals_) { }
@@ -106,8 +111,8 @@ contract OpenTermLoanManagerInitializer is MOTLMI { }
 
 contract OpenTermRefinancer is MOTLR { }
 
-// Test does not import stdError which contain the error constants. 
-contract Test is T { 
+// Test does not import stdError which contain the error constants.
+contract Test is T {
 
     bytes public constant assertionError      = abi.encodeWithSignature("Panic(uint256)", 0x01);
     bytes public constant arithmeticError     = abi.encodeWithSignature("Panic(uint256)", 0x11);

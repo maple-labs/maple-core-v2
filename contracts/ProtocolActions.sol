@@ -15,6 +15,7 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
+    IProxiedLike,
     IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
@@ -41,18 +42,18 @@ contract ProtocolActions is Test {
 
     function erc20_transfer(address asset_, address account_, address destination_, uint256 amount_) internal {
         vm.startPrank(account_);
-        IERC20Like(asset_).transfer(destination_, amount_);
+        IERC20(asset_).transfer(destination_, amount_);
         vm.stopPrank();
     }
 
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
-        // TODO: consider using minters for each token
+        // TODO: Consider using minters for each token.
 
         if      (asset_ == MPL)  erc20_transfer(MPL,  MPL_SOURCE,  account_, amount_);
         else if (asset_ == WBTC) erc20_transfer(WBTC, WBTC_SOURCE, account_, amount_);
         else if (asset_ == WETH) erc20_transfer(WETH, WETH_SOURCE, account_, amount_);
         else if (asset_ == USDC) erc20_transfer(USDC, USDC_SOURCE, account_, amount_);
-        else IERC20Like(asset_).mint(account_, amount_);  // Try to mint ig its not one of the "real" tokens.
+        else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
     function isOpenTermLoan(address loan) internal view returns (bool isOpen) {
@@ -466,6 +467,13 @@ contract ProtocolActions is Test {
         vm.stopPrank();
     }
 
+    function addLoanManager(address poolManager_, address loanManagerFactory_) internal {
+        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+
+        vm.prank(poolDelegate_);
+        IPoolManager(poolManager_).addLoanManager(loanManagerFactory_);
+    }
+
     function allowLender(address poolManager_, address lender_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -499,7 +507,7 @@ contract ProtocolActions is Test {
         IPoolManager(poolManager_).depositCover(amount_);
         vm.stopPrank();
 
-        assertEq(IERC20Like(asset_).balanceOf(IPoolManager(poolManager_).poolDelegateCover()), amount_);
+        assertEq(IERC20(asset_).balanceOf(IPoolManager(poolManager_).poolDelegateCover()), amount_);
     }
 
     function finishCollateralLiquidation(address loan_) internal {
@@ -681,5 +689,30 @@ contract ProtocolActions is Test {
         );
     }
 
+    /**************************************************************************************************************************************/
+    /*** Governor Functions                                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    function upgradeLoans(address[] memory loans, uint256 version, bytes memory data, address caller) internal {
+        for (uint256 i = 0; i < loans.length; i++) {
+            vm.prank(caller);
+            IProxiedLike(loans[i]).upgrade(version, data);
+        }
+    }
+
+    function upgradeLoan(address loan, uint256 version, bytes memory data, address caller) internal {
+        vm.prank(caller);
+        IProxiedLike(loan).upgrade(version, data);
+    }
+
+    function upgradeLoanManagerByGovernor(address loanManager, uint256 version, bytes memory data) internal {
+        vm.prank(IPoolManager(ILoanManagerLike(loanManager).poolManager()).governor());
+        IProxiedLike(loanManager).upgrade(version, data);
+    }
+
+    function upgradePoolManagerByGovernor(address poolManager, uint256 version, bytes memory data) internal {
+        vm.prank(IPoolManager(poolManager).governor());
+        IProxiedLike(poolManager).upgrade(version, data);
+    }
 
 }
