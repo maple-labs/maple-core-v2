@@ -345,7 +345,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_pool_invariant_K() internal {
-        if (pool.totalAssets() > 0) {
+        if (pool.totalAssets() - pool.unrealizedLosses() > 0) {
             assertEq(pool.convertToExitShares(pool.totalAssets()), poolManager.convertToExitShares(pool.totalAssets()), "Pool Invariant K");
         }
     }
