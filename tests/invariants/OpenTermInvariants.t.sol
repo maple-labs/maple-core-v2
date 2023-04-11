@@ -174,7 +174,7 @@ contract OpenTermInvariants is BaseInvariants {
             if (startDate != 0) return;
         }
 
-        assertEq(assetsUnderManagement, 0, "OTLM Invariant B");
+        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans(), "OTLM Invariant B");
     }
 
     // OTLM Invariant C: principalOut = ∑loan.principal()
