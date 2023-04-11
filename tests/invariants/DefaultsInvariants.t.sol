@@ -25,8 +25,6 @@ contract DefaultsInvariants is BaseInvariants {
     function setUp() public override {
         super.setUp();
 
-        _excludeAllContracts();
-
         currentTimestamp = block.timestamp;
 
         loanHandler = new LoanHandlerWithDefaults({

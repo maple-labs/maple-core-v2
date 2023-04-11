@@ -25,8 +25,6 @@ contract BasicInvariants is BaseInvariants {
     function setUp() public override {
         super.setUp();
 
-        _excludeAllContracts();
-
         currentTimestamp = block.timestamp;
 
         // TODO: Add to handler

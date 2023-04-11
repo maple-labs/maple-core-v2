@@ -523,53 +523,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
     }
 
-    // TODO: Pretty sure we can remove this whole thing.
-    function _excludeAllContracts() internal {
-        excludeContract(governor);
-        excludeContract(poolDelegate);
-        excludeContract(treasury);
-
-        excludeContract(liquidatorFactory);
-        excludeContract(liquidatorInitializer);
-        excludeContract(liquidatorImplementation);
-
-        excludeContract(fixedTermLoanFactory);
-        excludeContract(fixedTermLoanImplementation);
-        excludeContract(fixedTermLoanInitializer);
-
-        excludeContract(fixedTermLoanManagerFactory);
-        excludeContract(fixedTermLoanManagerInitializer);
-        excludeContract(fixedTermLoanManagerImplementation);
-
-        excludeContract(openTermLoanFactory);
-        excludeContract(openTermLoanImplementation);
-        excludeContract(openTermLoanInitializer);
-
-        excludeContract(openTermLoanManagerFactory);
-        excludeContract(openTermLoanManagerInitializer);
-        excludeContract(openTermLoanManagerImplementation);
-
-        excludeContract(poolManagerFactory);
-        excludeContract(poolManagerImplementation);
-        excludeContract(poolManagerInitializer);
-
-        excludeContract(withdrawalManagerFactory);
-        excludeContract(withdrawalManagerImplementation);
-        excludeContract(withdrawalManagerInitializer);
-
-        excludeContract(address(collateralAsset));
-        excludeContract(address(deployer));
-        excludeContract(address(globals));
-        excludeContract(address(feeManager));
-        excludeContract(address(fundsAsset));
-        excludeContract(address(pool));
-        excludeContract(address(poolCover));
-        excludeContract(address(poolManager));
-        excludeContract(address(withdrawalManager));
-
-        excludeContract(globals.implementation());
-    }
-
     // TODO: Figure out best way to support invariant assertions per LM
     function forEachLoanManager(function (address) assertInvariant) internal {
         for (uint256 i; ; ++i) {

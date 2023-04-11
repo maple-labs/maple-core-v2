@@ -23,9 +23,6 @@ contract OpenTermInvariants is BaseInvariants {
     function setUp() public override {
         super.setUp();
 
-        // TODO: Remove this
-        _excludeAllContracts();
-
         // TODO: Check if all timestamp accounting can be removed.
         currentTimestamp = block.timestamp;
 
