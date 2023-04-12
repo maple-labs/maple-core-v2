@@ -88,7 +88,8 @@ contract LpHandler is Test {
         numCalls++;
         numberOfCalls["mint"]++;
 
-        shares_ = bound(shares_, 1, 1e29);
+        // The first mint needs to be large enough to not lock mints if total assets eventually become zero due to defaults.
+        shares_ = bound(shares_, 10, 1e29);
 
         assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
 
