@@ -114,49 +114,17 @@ contract BasicInvariants is BaseInvariants {
     /*** Loan Manager Non-Iterative Invariants                                                                                          ***/
     /**************************************************************************************************************************************/
 
-    function invariant_fixedTermLoanManager_A() external useCurrentTimestamp {
-        assert_ftlm_invariant_A(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_B() external useCurrentTimestamp {
-        assert_ftlm_invariant_B(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_C() external useCurrentTimestamp {
-        assert_ftlm_invariant_C(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_D() external useCurrentTimestamp {
-        assert_ftlm_invariant_D(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_E() external useCurrentTimestamp {
-        assert_ftlm_invariant_E(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_F() external useCurrentTimestamp {
-        assert_ftlm_invariant_F(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_G() external useCurrentTimestamp {
-        assert_ftlm_invariant_G(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_H() external useCurrentTimestamp {
-        assert_ftlm_invariant_H(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_I() external useCurrentTimestamp {
-        assert_ftlm_invariant_I(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_J() external useCurrentTimestamp {
-        assert_ftlm_invariant_J(poolManager.loanManagerList(0));
-    }
-
-    function invariant_fixedTermLoanManager_K() external useCurrentTimestamp {
-        assert_ftlm_invariant_K(poolManager.loanManagerList(0));
-    }
+    function invariant_fixedTermLoanManager_A() external useCurrentTimestamp { assert_ftlm_invariant_A(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_B() external useCurrentTimestamp { assert_ftlm_invariant_B(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_C() external useCurrentTimestamp { assert_ftlm_invariant_C(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_D() external useCurrentTimestamp { assert_ftlm_invariant_D(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_E() external useCurrentTimestamp { assert_ftlm_invariant_E(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_F() external useCurrentTimestamp { assert_ftlm_invariant_F(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_G() external useCurrentTimestamp { assert_ftlm_invariant_G(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_H() external useCurrentTimestamp { assert_ftlm_invariant_H(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_I() external useCurrentTimestamp { assert_ftlm_invariant_I(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_J() external useCurrentTimestamp { assert_ftlm_invariant_J(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_K() external useCurrentTimestamp { assert_ftlm_invariant_K(poolManager.loanManagerList(0)); }
 
     /**************************************************************************************************************************************/
     /*** Pool Invariants                                                                                                                ***/
