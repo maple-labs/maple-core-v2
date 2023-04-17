@@ -191,6 +191,12 @@ interface IProxyFactoryLike {
 /*** Test Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
 
+interface IHandlerEntryPoint {
+
+    function entryPoint(uint256 seed_) external;
+
+}
+
 interface IInvariantTest {
 
     function currentTimestamp() external view returns (uint256 currentTimestamp_);

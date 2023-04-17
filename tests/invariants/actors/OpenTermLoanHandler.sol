@@ -13,21 +13,21 @@ import {
     IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console } from "../../../contracts/Contracts.sol";
+import { console2 } from "../../../contracts/Contracts.sol";
 
-import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
+import { HandlerBase } from "./HandlerBase.sol";
 
-contract OpenTermLoanHandler is ProtocolActions {
+contract OpenTermLoanHandler is HandlerBase {
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    address[] public borrowers;
-    address[] public loans;
-
     uint256 public numLoans;
     uint256 public maxLoans;
+
+    address[] public borrowers;
+    address[] public loans;
 
     IGlobals             public globals;
     IMapleProxyFactory   public liquidatorFactory;
@@ -37,13 +37,18 @@ contract OpenTermLoanHandler is ProtocolActions {
     IPool                public pool;
     IPoolManager         public poolManager;
 
-    IInvariantTest testContract;
-
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(address loanFactory_, address liquidatorFactory_, address poolManager_, uint256 maxBorrowers_, uint256 maxLoans_) {
+    constructor(
+        address loanFactory_,
+        address liquidatorFactory_,
+        address poolManager_,
+        uint256 maxBorrowers_,
+        uint256 maxLoans_
+    )
+    {
         loanFactory       = IMapleProxyFactory(loanFactory_);
         liquidatorFactory = IMapleProxyFactory(liquidatorFactory_);
         poolManager       = IPoolManager(poolManager_);
@@ -62,16 +67,6 @@ contract OpenTermLoanHandler is ProtocolActions {
     }
 
     /**************************************************************************************************************************************/
-    /*** Modifiers                                                                                                                      ***/
-    /**************************************************************************************************************************************/
-
-    modifier useTimestamps {
-        vm.warp(testContract.currentTimestamp());
-        _;
-        testContract.setCurrentTimestamp(block.timestamp);
-    }
-
-    /**************************************************************************************************************************************/
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
@@ -85,7 +80,11 @@ contract OpenTermLoanHandler is ProtocolActions {
     //     callLoan(loan_, principal_);
     // }
 
-    function fundLoan(uint256 seed_) external useTimestamps {
+    function fundLoan(uint256 seed_) public useTimestamps {
+        console2.log("fundLoan() with seed:", seed_);
+
+        numberOfCalls["fundLoan"]++;
+
         address loan_ = _createLoan(seed_);
 
         if (loan_ == address(0)) return;
@@ -102,7 +101,11 @@ contract OpenTermLoanHandler is ProtocolActions {
     //     impairLoan(loan_);
     // }
 
-    function makePayment(uint256 seed_) external useTimestamps {
+    function makePayment(uint256 seed_) public useTimestamps {
+        console2.log("makePayment() with seed:", seed_);
+
+        numberOfCalls["makePayment"]++;
+
         address loan_ = _selectActiveLoan(seed_);
 
         if (loan_ == address(0)) return;
@@ -110,7 +113,11 @@ contract OpenTermLoanHandler is ProtocolActions {
         makePayment(loan_);
     }
 
-    function triggerDefault(uint256 seed_) external useTimestamps {
+    function triggerDefault(uint256 seed_) public useTimestamps {
+        console2.log("triggerDefault() with seed:", seed_);
+
+        numberOfCalls["triggerDefault"]++;
+
         address loan_ = _selectOverdueLoan(seed_);
 
         if (loan_ == address(0)) return;
@@ -118,7 +125,11 @@ contract OpenTermLoanHandler is ProtocolActions {
         triggerDefault(loan_, address(liquidatorFactory));
     }
 
-    function warp(uint256 seed_) external useTimestamps {
+    function warp(uint256 seed_) public useTimestamps {
+        console2.log("warp() with seed:", seed_);
+
+        numberOfCalls["warp"]++;
+
         uint256 timeSpan_ = bound(seed_, 1 days, 15 days);
 
         vm.warp(block.timestamp + timeSpan_);

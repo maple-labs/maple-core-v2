@@ -3,8 +3,9 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { LoanHandler } from "./actors/LoanHandler.sol";
-import { LpHandler }   from "./actors/LpHandler.sol";
+import { DistributionHandler } from "./actors/DistributionHandler.sol";
+import { FixedTermLoanHandler } from "./actors/FixedTermLoanHandler.sol";
+import { LpHandler }            from "./actors/LpHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -16,7 +17,6 @@ contract BasicInvariants is BaseInvariants {
 
     uint256 constant NUM_BORROWERS = 5;
     uint256 constant NUM_LPS       = 10;
-    uint256 constant MAX_NUM_LOANS = 50;
 
     /**************************************************************************************************************************************/
     /*** Setup Function                                                                                                                 ***/
@@ -37,23 +37,46 @@ contract BasicInvariants is BaseInvariants {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanHandler = new LoanHandler({
-            collateralAsset_: address(collateralAsset),
-            feeManager_:      address(feeManager),
-            fundsAsset_:      address(fundsAsset),
-            globals_:         address(globals),
-            governor_:        governor,
-            loanFactory_:     fixedTermLoanFactory,
-            poolManager_:     address(poolManager),
-            testContract_:    address(this),
-            numBorrowers_:    NUM_BORROWERS,
-            maxLoans_:        MAX_NUM_LOANS
+        ftlHandler = new FixedTermLoanHandler({
+            collateralAsset_:   address(collateralAsset),
+            feeManager_:        address(feeManager),
+            governor_:          governor,
+            liquidatorFactory_: liquidatorFactory,
+            loanFactory_:       fixedTermLoanFactory,
+            poolManager_:       address(poolManager),
+            testContract_:      address(this),
+            numBorrowers_:      NUM_BORROWERS
         });
 
         lpHandler = new LpHandler(address(pool), address(this), NUM_LPS);
 
-        targetContract(address(lpHandler));
-        targetContract(address(loanHandler));
+        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           30);
+        ftlHandler.setSelectorWeight("makePayment(uint256)",                 50);
+        ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       0);
+        ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          0);
+        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  0);
+        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              0);
+        ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 0);
+        ftlHandler.setSelectorWeight("warp(uint256)",                        20);
+
+        lpHandler.setSelectorWeight("deposit(uint256)",       25);
+        lpHandler.setSelectorWeight("mint(uint256)",          15);
+        lpHandler.setSelectorWeight("redeem(uint256)",        15);
+        lpHandler.setSelectorWeight("removeShares(uint256)",  15);
+        lpHandler.setSelectorWeight("requestRedeem(uint256)", 15);
+        lpHandler.setSelectorWeight("transfer(uint256)",      15);
+
+        uint256[] memory weightsDistributorHandler = new uint256[](2);
+        weightsDistributorHandler[0] = 20;  // lpHandler()
+        weightsDistributorHandler[1] = 80;  // OTLHandler()
+
+        address[] memory targetContracts = new address[](2);
+        targetContracts[0] = address(lpHandler);
+        targetContracts[1] = address(ftlHandler);
+
+        address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
+
+        targetContract(distributionHandler);
 
         targetSender(address(0xdeed));
     }
@@ -62,14 +85,14 @@ contract BasicInvariants is BaseInvariants {
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function invariant_loan_A_B_C_loanManager_L_M_N() external useCurrentTimestamp {
-        for (uint256 i; i < loanHandler.numLoans(); ++i) {
-            address               loan        = loanHandler.activeLoans(i);
+    function invariant_fixedTermLoan_A_B_C_fixedTermLoanManager_L_M_N() external useCurrentTimestamp {
+        for (uint256 i; i < ftlHandler.numLoans(); ++i) {
+            address               loan        = ftlHandler.activeLoans(i);
             IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
-            assert_loan_invariant_A(loan);
-            assert_loan_invariant_B(loan);
-            assert_loan_invariant_C(loan, loanHandler.platformOriginationFee(loan));
+            assert_ftl_invariant_A(loan);
+            assert_ftl_invariant_B(loan);
+            assert_ftl_invariant_C(loan, ftlHandler.platformOriginationFee(loan));
 
             (
                 ,
@@ -81,9 +104,9 @@ contract BasicInvariants is BaseInvariants {
                 ,
             ) = loanManager.payments(loanManager.paymentIdOf(loan));
 
-            assert_loanManager_invariant_L(loan, refinanceInterest);
-            assert_loanManager_invariant_M(loan, paymentDueDate);
-            assert_loanManager_invariant_N(loan, startDate);
+            assert_ftlm_invariant_L(loan, refinanceInterest);
+            assert_ftlm_invariant_M(loan, paymentDueDate);
+            assert_ftlm_invariant_N(loan, startDate);
         }
     }
 
@@ -91,17 +114,49 @@ contract BasicInvariants is BaseInvariants {
     /*** Loan Manager Non-Iterative Invariants                                                                                          ***/
     /**************************************************************************************************************************************/
 
-    function invariant_loanManager_A() external useCurrentTimestamp { assert_loanManager_invariant_A(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_B() external useCurrentTimestamp { assert_loanManager_invariant_B(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_C() external useCurrentTimestamp { assert_loanManager_invariant_C(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_D() external useCurrentTimestamp { assert_loanManager_invariant_D(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_E() external useCurrentTimestamp { assert_loanManager_invariant_E(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_F() external useCurrentTimestamp { assert_loanManager_invariant_F(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_G() external useCurrentTimestamp { assert_loanManager_invariant_G(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_H() external useCurrentTimestamp { assert_loanManager_invariant_H(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_I() external useCurrentTimestamp { assert_loanManager_invariant_I(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_J() external useCurrentTimestamp { assert_loanManager_invariant_J(poolManager.loanManagerList(0)); }
-    function invariant_loanManager_K() external useCurrentTimestamp { assert_loanManager_invariant_K(poolManager.loanManagerList(0)); }
+    function invariant_fixedTermLoanManager_A() external useCurrentTimestamp {
+        assert_ftlm_invariant_A(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_B() external useCurrentTimestamp {
+        assert_ftlm_invariant_B(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_C() external useCurrentTimestamp {
+        assert_ftlm_invariant_C(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_D() external useCurrentTimestamp {
+        assert_ftlm_invariant_D(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_E() external useCurrentTimestamp {
+        assert_ftlm_invariant_E(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_F() external useCurrentTimestamp {
+        assert_ftlm_invariant_F(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_G() external useCurrentTimestamp {
+        assert_ftlm_invariant_G(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_H() external useCurrentTimestamp {
+        assert_ftlm_invariant_H(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_I() external useCurrentTimestamp {
+        assert_ftlm_invariant_I(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_J() external useCurrentTimestamp {
+        assert_ftlm_invariant_J(poolManager.loanManagerList(0));
+    }
+
+    function invariant_fixedTermLoanManager_K() external useCurrentTimestamp {
+        assert_ftlm_invariant_K(poolManager.loanManagerList(0));
+    }
 
     /**************************************************************************************************************************************/
     /*** Pool Invariants                                                                                                                ***/

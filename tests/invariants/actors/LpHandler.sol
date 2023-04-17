@@ -4,27 +4,25 @@ pragma solidity 0.8.7;
 import { IInvariantTest, IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 // TODO: MockERC20 is not needed if protocol actions are used which handle minting.
-import { Test, MockERC20 } from "../../../contracts/Contracts.sol";
+import { console2, MockERC20 } from "../../../contracts/Contracts.sol";
 
-contract LpHandler is Test {
+import { HandlerBase } from "./HandlerBase.sol";
+
+contract LpHandler is HandlerBase {
 
     /**************************************************************************************************************************************/
-    /*** State Variables                                                                                                        ***/
+    /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
     address currentLp;
 
-    address[] public holders;
-    address[] public lps;
-
-    uint256 public numCalls;
     uint256 public numHolders;
     uint256 public numLps;
 
-    mapping(bytes32 => uint256) public numberOfCalls;
+    address[] public holders;
+    address[] public lps;
 
     MockERC20          fundsAsset;
-    IInvariantTest     testContract;
     IPool              pool;
     IWithdrawalManager withdrawalManager;
 
@@ -32,7 +30,7 @@ contract LpHandler is Test {
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor (address pool_, address testContract_, uint256 numLps_) {
+    constructor(address pool_, address testContract_, uint256 numLps_) {
         pool              = IPool(pool_);
         testContract      = IInvariantTest(testContract_);
         withdrawalManager = IWithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
@@ -55,12 +53,6 @@ contract LpHandler is Test {
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    modifier useTimestamps {
-        vm.warp(testContract.currentTimestamp());
-        _;
-        testContract.setCurrentTimestamp(block.timestamp);
-    }
-
     modifier useRandomLp(uint256 lpIndex_) {
         currentLp = lps[bound(lpIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
         vm.startPrank(currentLp);
@@ -69,14 +61,15 @@ contract LpHandler is Test {
     }
 
     /**************************************************************************************************************************************/
-    /*** Pool Functions                                                                                                                 ***/
+    /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function deposit(uint256 assets_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 shares_) {
-        numCalls++;
+    function deposit(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 shares_) {
+        console2.log("deposit() with seed:", seed_);
+
         numberOfCalls["deposit"]++;
 
-        assets_ = bound(assets_, 100, 1e29);
+        uint256 assets_ = bound(_randomize(seed_, "assets"), 100, 1e29);
 
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
@@ -84,12 +77,13 @@ contract LpHandler is Test {
         shares_ = pool.deposit(assets_, currentLp);  // TODO: Fuzz receiver
     }
 
-    function mint(uint256 shares_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
-        numCalls++;
+    function mint(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
+        console2.log("mint() with seed:", seed_);
+
         numberOfCalls["mint"]++;
 
         // The first mint needs to be large enough to not lock mints if total assets eventually become zero due to defaults.
-        shares_ = bound(shares_, 10, 1e29);
+        uint256 shares_ = bound(_randomize(seed_, "shares"), 10, 1e29);
 
         assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
 
@@ -99,8 +93,9 @@ contract LpHandler is Test {
         assets_ = pool.mint(shares_, currentLp);  // TODO: Fuzz receiver
     }
 
-    function redeem(uint256 warpSeed_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
-        numCalls++;
+    function redeem(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
+        console2.log("redeem() with seed:", seed_);
+
         numberOfCalls["redeem"]++;
 
         uint256 exitCycleId_ = withdrawalManager.exitCycleId(currentLp);
@@ -111,14 +106,15 @@ contract LpHandler is Test {
 
         if (block.timestamp > windowStart_) return 0;  // Only warp forward
 
-        vm.warp(bound(warpSeed_, windowStart_, windowEnd_ - 1 seconds));
+        vm.warp(bound(_randomize(seed_, "warp"), windowStart_, windowEnd_ - 1 seconds));
 
         assets_ = pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);  // TODO: Fuzz owner and receiver
     }
 
     // TODO: Add WM interface
-    function removeShares(uint256 warpSeed_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
-        numCalls++;
+    function removeShares(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
+        console2.log("removeShares() with seed:", seed_);
+
         numberOfCalls["removeShares"]++;
 
         uint256 exitCycleId_ = withdrawalManager.exitCycleId(currentLp);
@@ -129,37 +125,48 @@ contract LpHandler is Test {
 
         if (block.timestamp > windowStart_) return 0;
 
-        vm.warp(bound(warpSeed_, windowStart_, windowStart_ + 1 days));
+        vm.warp(bound(_randomize(seed_, "warp"), windowStart_, windowStart_ + 1 days));
 
         assets_ = pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);  // TODO: Fuzz owner and receiver
     }
 
-    function requestRedeem(uint256 shares_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 escrowShares_) {
-        numCalls++;
+    function requestRedeem(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 escrowShares_) {
+        console2.log("requestRedeem() with seed:", seed_);
+
         numberOfCalls["requestRedeem"]++;
 
         if (pool.balanceOf(currentLp) == 0 || withdrawalManager.lockedShares(currentLp) != 0) return 0;
 
-        shares_ = bound(shares_, 1, pool.balanceOf(currentLp));
+        uint256 shares_ = bound(_randomize(seed_, "shares"), 1, pool.balanceOf(currentLp));
 
         escrowShares_ = pool.requestRedeem(shares_, currentLp);  // TODO: Add fuzzing for users
     }
 
     /**************************************************************************************************************************************/
-    /*** ERC-20 Functions                                                                                                       ***/
+    /*** ERC-20 Functions                                                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function transfer(uint256 amount_, uint256 lpIndex_, uint256 recipientIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
-        numCalls++;
+    function transfer(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (bool success_) {
+        console2.log("transfer() with seed:", seed_);
+
         numberOfCalls["transfer"]++;
 
         if (pool.balanceOf(currentLp) == 0) return false;
 
-        amount_ = bound(amount_, 1, pool.balanceOf(currentLp));
+        uint256 amount_ = bound(_randomize(seed_, "amount"), 1, pool.balanceOf(currentLp));
 
-        address recipient_ = lps[bound(recipientIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
+        // TODO: Investigate why this is happening
+        address recipient_ = lps[bound(_randomize(seed_, "recipient"), 0, lps.length - 1)];
 
         success_ = pool.transfer(recipient_, amount_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Helpers                                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function _randomize(uint256 seed, string memory salt) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(seed, salt)));
     }
 
 }
