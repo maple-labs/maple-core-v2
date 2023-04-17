@@ -40,6 +40,7 @@ contract OpenTermInvariants is BaseInvariants {
             loanFactory_:       address(openTermLoanFactory),
             liquidatorFactory_: address(liquidatorFactory),
             poolManager_:       address(poolManager),
+            refinancer_:        address(openTermRefinancer),
             maxBorrowers_:      NUM_BORROWERS,
             maxLoans_:          NUM_OT_LOANS
         });

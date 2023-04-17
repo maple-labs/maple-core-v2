@@ -23,6 +23,8 @@ contract OpenTermLoanHandler is HandlerBase {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
+    address public refinancer;
+
     uint256 public numLoans;
     uint256 public maxLoans;
 
@@ -45,6 +47,7 @@ contract OpenTermLoanHandler is HandlerBase {
         address loanFactory_,
         address liquidatorFactory_,
         address poolManager_,
+        address refinancer_,
         uint256 maxBorrowers_,
         uint256 maxLoans_
     )
@@ -58,6 +61,8 @@ contract OpenTermLoanHandler is HandlerBase {
         loanManager  = IOpenTermLoanManager(poolManager.loanManagerList(1));
         pool         = IPool(poolManager.pool());
         testContract = IInvariantTest(msg.sender);
+
+        refinancer = refinancer_;
 
         for (uint256 i; i < maxBorrowers_; ++i) {
             borrowers.push(makeAddr(string(abi.encode("borrower", i))));
@@ -75,7 +80,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
     //     if (loan_ == address(0)) return;
 
-    //     uint256 principal_ = bound(seed_ = _hash(seed_), 1, IOpenTermLoan(loan_).principal());
+    //     uint256 principal_ = bound(_hash(seed_), 1, IOpenTermLoan(loan_).principal());
 
     //     callLoan(loan_, principal_);
     // }
@@ -111,6 +116,22 @@ contract OpenTermLoanHandler is HandlerBase {
         if (loan_ == address(0)) return;
 
         makePayment(loan_);
+    }
+
+    function refinance(uint256 seed_) public useTimestamps {
+        console2.log("refinance() with seed:", seed_);
+
+        numberOfCalls["refinance"]++;
+
+        address loan_ = _selectActiveLoan(seed_);
+
+        if (loan_ == address(0)) return;
+
+        bytes[] memory calls_ = _generateRefinanceCalls(_hash(seed_, "refinance"), loan_);
+
+        proposeRefinance(loan_, refinancer, block.timestamp, calls_);
+
+        acceptRefinanceOT(loan_, refinancer, block.timestamp, calls_);
     }
 
     function triggerDefault(uint256 seed_) public useTimestamps {
@@ -165,27 +186,13 @@ contract OpenTermLoanHandler is HandlerBase {
         // Do nothing if no deposits have been made yet.
         if (pool.totalSupply() == 0) return address(0);
 
-        address borrower_ = borrowers[bound(seed_ = _hash(seed_), 0, borrowers.length - 1)];
-
-        uint256 availableAssets_ = asset.balanceOf(address(pool));
-        uint256 lockedLiquidity_ = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();
+        address borrower_  = borrowers[bound(_hash(seed_, "borrower"), 0, borrowers.length - 1)];
+        uint256 principal_ = _getPrincipalIncrease(seed_);
 
         // Do nothing if there are no assets available for utilization.
-        if (availableAssets_ <= lockedLiquidity_) return address(0);
+        if (principal_ == 0) return address(0);
 
-        uint256 principal_ = bound(seed_ = _hash(seed_), 1, availableAssets_ - lockedLiquidity_);
-
-        uint256 noticePeriod_    = 1 weeks;
-        uint256 gracePeriod_     = 5 days;
-        uint256 paymentInterval_ = bound(seed_ = _hash(seed_), 10 days, 30 days);
-
-        uint256 delegateServiceFeeRate_ = bound(seed_ = _hash(seed_), 0, 0.1e6);
-        uint256 interestRate_           = bound(seed_ = _hash(seed_), 1, 0.2e6);
-        uint256 lateFeeRate_            = bound(seed_ = _hash(seed_), 0, 0.1e6);
-        uint256 lateInterestPremium_    = bound(seed_ = _hash(seed_), 0, 0.1e6);
-
-        uint256[3] memory terms_ = [gracePeriod_, noticePeriod_, paymentInterval_];
-        uint256[4] memory rates_ = [delegateServiceFeeRate_, interestRate_, lateFeeRate_, lateInterestPremium_];
+        ( uint256[3] memory terms_, uint256[4] memory rates_ ) = _getLoanParams(seed_);
 
         loan_ = createOpenTermLoan(
             address(loanFactory),
@@ -210,8 +217,65 @@ contract OpenTermLoanHandler is HandlerBase {
         if (!onlyOverdue_ || block.timestamp > IOpenTermLoan(loan_).defaultDate()) return true;
     }
 
-    function _hash(uint256 number_) internal pure returns (uint256 hash_) {
-        hash_ = uint256(keccak256(abi.encode(number_)));
+    function _getLoanParams(uint256 seed_) internal view returns (uint256[3] memory terms_, uint256[4] memory rates_) {
+        uint256 noticePeriod_    = bound(_hash(seed_, "noticePeriod"),    0,       30 days);
+        uint256 gracePeriod_     = bound(_hash(seed_, "gracePeriod"),     0,       30 days);
+        uint256 paymentInterval_ = bound(_hash(seed_, "paymentInterval"), 1 hours, 30 days);
+
+        uint256 delegateServiceFeeRate_ = bound(_hash(seed_, "delegateService"), 0, 0.1e6);
+        uint256 interestRate_           = bound(_hash(seed_, "interestRate"),    1, 0.2e6);
+        uint256 lateFeeRate_            = bound(_hash(seed_, "lateFeeRate"),     0, 0.1e6);
+        uint256 lateInterestPremium_    = bound(_hash(seed_, "lateInterest"),    0, 0.1e6);
+
+        terms_ = [gracePeriod_, noticePeriod_, paymentInterval_];
+        rates_ = [delegateServiceFeeRate_, interestRate_, lateFeeRate_, lateInterestPremium_];
+    }
+
+    function _generateRefinanceCalls(uint256 seed_, address loan_) internal view returns (bytes[] memory data_) {
+        // Get how many calls will be done
+        uint256 numberOfCalls = _hash(seed_, "numberOfCalls") % 10; // 9 functions on refi contract (0 - 9)
+
+        // Generate completely new loan parameters
+        ( uint256[3] memory terms_, uint256[4] memory rates_ ) = _getLoanParams(seed_);
+
+        uint256 principalIncrease = _getPrincipalIncrease(seed_);
+        uint256 principalDecrease =  bound(_hash(seed_, "decrease"), 0, IOpenTermLoan(loan_).principal() - 1);
+
+        bytes[] memory calls = new bytes[](9);
+
+        // Create an array of arguments, even if not all will be used
+        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",         principalIncrease);
+        calls[1] = abi.encodeWithSignature("increasePrincipal(uint256)",         principalDecrease);
+        calls[2] = abi.encodeWithSignature("setGracePeriod(uint32)",             terms_[0]);
+        calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)",            terms_[1]);
+        calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)",         terms_[2]);
+        calls[5] = abi.encodeWithSignature("setDelegateServiceFeeRate(uint64)",  rates_[0]);
+        calls[6] = abi.encodeWithSignature("setInterestRate(uint64)",            rates_[1]);
+        calls[7] = abi.encodeWithSignature("setLateFeeRate(uint64)",             rates_[2]);
+        calls[8] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", rates_[3]);
+
+        data_ = new bytes[](numberOfCalls);
+
+        for (uint i = 0; i < numberOfCalls; i++) {
+            // Get a random index, so calls happen in different orders every time. Can cause repeated calls, but that's ok.
+            uint256 index = _hash(seed_, string(abi.encode(i))) % calls.length;
+
+            data_[i] = calls[index];
+        }
+    }
+
+    function _getPrincipalIncrease(uint256 seed_) internal view returns (uint256 principal_) {
+        uint256 availableAssets_ = asset.balanceOf(address(pool));
+        uint256 lockedLiquidity_ = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();
+
+        // Do nothing if there are no assets available for utilization.
+        if (availableAssets_ <= lockedLiquidity_) return 0;
+
+        principal_ = bound(_hash(seed_, "principal"), 1, availableAssets_ - lockedLiquidity_);
+    }
+
+    function _hash(uint256 number_, string memory salt) internal pure returns (uint256 hash_) {
+        hash_ = uint256(keccak256(abi.encode(number_, salt)));
     }
 
     function _selectActiveLoan(uint256 seed_) internal view returns (address loan_) {
