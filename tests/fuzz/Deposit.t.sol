@@ -25,8 +25,8 @@ contract DepositFuzzTests is FuzzBase {
         if (depositor == address(0)) depositor = address(1);
         if (receiver  == address(0)) receiver  = address(1);
 
-        vm.assume(depositor != address(pool));
-        vm.assume(receiver  != address(pool));
+        vm.assume(depositor != address(pool) && depositor != address(this));
+        vm.assume(receiver  != address(pool) && receiver  != address(this));
 
         totalSupply      = bound(totalSupply,      0, 1e30);
         totalAssets      = bound(totalAssets,      0, 1e30);

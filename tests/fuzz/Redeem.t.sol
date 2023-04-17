@@ -40,6 +40,7 @@ contract RedeemFuzzTests is FuzzBase {
         vm.assume(owner    != address(pool));
         vm.assume(caller   != address(pool));
         vm.assume(receiver != address(pool));
+        vm.assume(receiver != address(this));
 
         totalSupply      = bound(totalSupply,      1, 1e30);
         totalAssets      = bound(totalAssets,      0, 1e30);

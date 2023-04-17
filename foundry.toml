@@ -33,6 +33,10 @@ test = 'simulations/local'  # The test directory
 [profile.shallow.fuzz]
 runs = 20
 
+[profile.deep.fuzz]
+optimizer = true
+runs      = 10_000
+
 [profile.deep.invariant]
 optimizer      = true
 runs           = 10    # The number of calls to make in the invariant tests
@@ -42,7 +46,7 @@ fail_on_revert = true  # Fail the test if the contract reverts
 
 [profile.super_deep.fuzz]
 optimizer = true
-runs      = 50_000
+runs      = 500_000
 
 [profile.super_deep.invariant]
 optimizer = true

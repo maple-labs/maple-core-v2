@@ -23,6 +23,7 @@ contract WithdrawFuzzTests is FuzzBase {
         vm.assume(owner    != address(pool));
         vm.assume(caller   != address(pool));
         vm.assume(receiver != address(pool));
+        vm.assume(receiver != address(this));
 
         totalSupply      = bound(totalSupply,      0, 1e29);
         totalAssets      = bound(totalAssets,      0, 1e20);
