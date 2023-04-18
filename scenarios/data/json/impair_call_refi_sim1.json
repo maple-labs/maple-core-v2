@@ -1,0 +1,119 @@
+{
+    "config": {},
+    "actions": [
+        {
+            "timestamp": 1681355591,
+            "actionType": "createPool",
+            "parameters": {
+                "name": "pool1",
+                "asset": "USDC",
+                "liquidityCap": 14000000000000,
+                "platformServiceFeeRate": 50,
+                "delegateManagementFeeRate": 1000,
+                "platformManagementFeeRate": 400,
+                "platformOriginationFeeRate": 0
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 0,
+                "principalOutstanding": 0,
+                "totalAssets": 0,
+                "totalSupply": 0,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1681434791,
+            "actionType": "deposit",
+            "parameters": {
+                "name": "lender1",
+                "assets": 7000000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 7000000000000,
+                "principalOutstanding": 0,
+                "totalAssets": 7000000000000,
+                "totalSupply": 7000000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1681549991,
+            "actionType": "fundLoan",
+            "parameters": {
+                "delegateServiceFeeRate": 40,
+                "gracePeriod": 5,
+                "interestRate": 500,
+                "isOpenTerm": true,
+                "lateFeeRate": 250,
+                "lateInterestPremiumRate": 300,
+                "name": "loanA",
+                "noticePeriod": 3,
+                "paymentInterval": 30,
+                "principal": 1900000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 5100000000000,
+                "principalOutstanding": 1900000000000,
+                "totalAssets": 7000000000000,
+                "totalSupply": 7000000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1683298626,
+            "actionType": "impairLoan",
+            "parameters": {
+                "name": "loanA"
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 5100000000000,
+                "principalOutstanding": 1900000000000,
+                "totalAssets": 7000000000000,
+                "totalSupply": 7000000000000,
+                "unrealizedLosses": 1904530171000
+            }
+        },
+        {
+            "timestamp": 1683979029,
+            "actionType": "callLoan",
+            "parameters": {
+                "name": "loanA",
+                "principal": 1900000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 5100000000000,
+                "principalOutstanding": 1900000000000,
+                "totalAssets": 7000000000000,
+                "totalSupply": 7000000000000,
+                "unrealizedLosses": 1904530171000
+            }
+        },
+        {
+            "timestamp": 1684403125,
+            "actionType": "refiLoan",
+            "parameters": {
+                "principal": 0,
+                "interest": 58091202847,
+                "delegate_service_fee": 687.5893708777271,
+                "platform_service_fee": 859.4867135971588,
+                "delegate_mgmt_fee": 5809.120284753932,
+                "platform_mgmt_fee": 2323.6481139015727,
+                "terms": [],
+                "values": []
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 5149958434000,
+                "principalOutstanding": 1900000000000,
+                "totalAssets": 7049958434000,
+                "totalSupply": 7000000000000,
+                "unrealizedLosses": 0
+            }
+        }
+    ]
+}

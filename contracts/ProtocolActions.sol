@@ -22,6 +22,7 @@ import {
 import { Test } from "../contracts/Contracts.sol";
 
 // TODO: `deployPool`.
+// TODO: `createLoan`.
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Test {
@@ -39,6 +40,12 @@ contract ProtocolActions is Test {
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
+
+    function erc20_approve(address asset_, address account_, address spender_, uint256 amount_) internal {
+        vm.startPrank(account_);
+        IERC20Like(asset_).approve(spender_, amount_);
+        vm.stopPrank();
+    }
 
     function erc20_transfer(address asset_, address account_, address destination_, uint256 amount_) internal {
         vm.startPrank(account_);
@@ -76,9 +83,9 @@ contract ProtocolActions is Test {
         uint256 payment_    = principal_ + interest_ + fees_;
 
         erc20_mint(fundsAsset_, borrower_, payment_);
+        erc20_approve(fundsAsset_, borrower_, loan_, payment_);
 
         vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, payment_);
         ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).closeLoan(payment_);
         vm.stopPrank();
     }
@@ -124,9 +131,9 @@ contract ProtocolActions is Test {
         uint256 collateralRequired_ = IFixedTermLoan(loan_).getAdditionalCollateralRequiredFor(amount_);
 
         erc20_mint(collateralAsset_, borrower_, collateralRequired_);
+        erc20_approve(collateralAsset_, borrower_, loan_, collateralRequired_);
 
         vm.startPrank(borrower_);
-        IERC20(collateralAsset_).approve(loan_, collateralRequired_);
         ( collateralPosted_ ) = IFixedTermLoan(loan_).drawdownFunds(amount_, borrower_);
         vm.stopPrank();
     }
@@ -176,9 +183,9 @@ contract ProtocolActions is Test {
         address fundsAsset_ = ILoanLike(loan_).fundsAsset();
 
         erc20_mint(fundsAsset_, borrower_, amount_);
+        erc20_approve(fundsAsset_, borrower_, loan_, amount_);
 
         vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, amount_);
         ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).makePayment(amount_);
         vm.stopPrank();
     }
@@ -222,9 +229,9 @@ contract ProtocolActions is Test {
         address fundsAsset_ = ILoanLike(loan_).fundsAsset();
 
         erc20_mint(fundsAsset_, borrower_, paymentAmount_);
+        erc20_approve(fundsAsset_, borrower_, loan_, paymentAmount_);
 
         vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, paymentAmount_);
         ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = IOpenTermLoan(loan_).makePayment(principalToReturn_);
         vm.stopPrank();
     }
@@ -236,9 +243,9 @@ contract ProtocolActions is Test {
         address collateralAsset_ = IFixedTermLoan(loan_).collateralAsset();
 
         erc20_mint(collateralAsset_, borrower_, amount_);
+        erc20_approve(collateralAsset_, borrower_, loan_, amount_);
 
         vm.startPrank(borrower_);
-        IERC20(collateralAsset_).approve(loan_, amount_);
         collateralPosted_ = IFixedTermLoan(loan_).postCollateral(amount_);
         vm.stopPrank();
     }
@@ -260,9 +267,9 @@ contract ProtocolActions is Test {
         address fundsAsset_ = ILoanLike(loan_).fundsAsset();
 
         erc20_mint(fundsAsset_, borrower_, amount_);
+        erc20_approve(fundsAsset_, borrower_, loan_, amount_);
 
         vm.startPrank(borrower_);
-        IERC20(fundsAsset_).approve(loan_, amount_);
         fundsReturned_ = IFixedTermLoan(loan_).returnFunds(amount_);
         vm.stopPrank();
     }
@@ -371,9 +378,9 @@ contract ProtocolActions is Test {
         address asset_ = IPool(pool_).asset();
 
         erc20_mint(asset_, account_, assets_);
+        erc20_approve(asset_, account_, pool_, assets_);
 
         vm.startPrank(account_);
-        IERC20(asset_).approve(pool_, assets_);
         shares_ = IPool(pool_).deposit(assets_, account_);
         vm.stopPrank();
     }
@@ -408,9 +415,9 @@ contract ProtocolActions is Test {
         assets_ = IPool(pool_).previewMint(shares_);
 
         erc20_mint(asset_, account_, assets_);
+        erc20_approve(asset_, account_, pool_, assets_);
 
         vm.startPrank(account_);
-        IERC20(asset_).approve(pool_, assets_);
         assets_ = IPool(pool_).mint(shares_, account_);
         vm.stopPrank();
     }
@@ -501,9 +508,9 @@ contract ProtocolActions is Test {
         address asset_        = IPool(IPoolManager(poolManager_).pool()).asset();
 
         erc20_mint(asset_, poolDelegate_, amount_);
+        erc20_approve(asset_, poolDelegate_, poolManager_, amount_);
 
         vm.startPrank(poolDelegate_);
-        IERC20(asset_).approve(poolManager_, amount_);
         IPoolManager(poolManager_).depositCover(amount_);
         vm.stopPrank();
 

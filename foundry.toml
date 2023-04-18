@@ -52,3 +52,8 @@ runs      = 500_000
 optimizer = true
 runs      = 200  # The number of calls to make in the invariant tests
 depth     = 250  # The number of times to run the invariant tests
+
+[profile.scenarios]
+test           = 'scenarios'
+fs_permissions = [{ access = "read", path = "./" }]
+verbosity      = 2

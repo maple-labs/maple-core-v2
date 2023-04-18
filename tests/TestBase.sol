@@ -161,14 +161,13 @@ contract TestBase is ProtocolActions {
 
         vm.startPrank(governor);
 
-        // NOTE: Needed to be compatible with deployed liquidations modules
-        globals.setValidInstanceOf("LOAN_MANAGER", fixedTermLoanManagerFactory,  true);
-
         globals.setValidInstanceOf("LIQUIDATOR_FACTORY",         liquidatorFactory,            true);
+        globals.setValidInstanceOf("LOAN_FACTORY",               fixedTermLoanFactory,         true);
         globals.setValidInstanceOf("FT_LOAN_FACTORY",            fixedTermLoanFactory,         true);
+        globals.setValidInstanceOf("LOAN_FACTORY",               openTermLoanFactory,          true);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY",            openTermLoanFactory,          true);
         globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       fixedTermLoanManagerFactory,  true);
         globals.setValidInstanceOf("FT_LOAN_MANAGER_FACTORY",    fixedTermLoanManagerFactory,  true);
-        globals.setValidInstanceOf("OT_LOAN_FACTORY",            openTermLoanFactory,          true);
         globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",    openTermLoanManagerFactory,   true);
         globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       openTermLoanManagerFactory,   true);
         globals.setValidInstanceOf("POOL_MANAGER_FACTORY",       poolManagerFactory,           true);
@@ -343,10 +342,10 @@ contract TestBase is ProtocolActions {
     }
 
     function createOpenTermLoan(
-        address borrower,
-        address lender,
-        address asset,
-        uint256 principal,
+        address          borrower,
+        address          lender,
+        address          asset,
+        uint256          principal,
         uint32[3] memory terms,
         uint64[4] memory rates
     )

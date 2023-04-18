@@ -1,0 +1,124 @@
+{
+    "config": {},
+    "actions": [
+        {
+            "timestamp": 1681159734,
+            "actionType": "createPool",
+            "parameters": {
+                "name": "pool1",
+                "asset": "USDC",
+                "liquidityCap": 42000000000000,
+                "platformServiceFeeRate": 65,
+                "delegateManagementFeeRate": 1800,
+                "platformManagementFeeRate": 150,
+                "platformOriginationFeeRate": 0
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 0,
+                "principalOutstanding": 0,
+                "totalAssets": 0,
+                "totalSupply": 0,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1681177734,
+            "actionType": "deposit",
+            "parameters": {
+                "name": "lender1",
+                "assets": 37000000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 37000000000000,
+                "principalOutstanding": 0,
+                "totalAssets": 37000000000000,
+                "totalSupply": 37000000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1681411734,
+            "actionType": "fundLoan",
+            "parameters": {
+                "delegateServiceFeeRate": 0,
+                "gracePeriod": 5,
+                "interestRate": 550,
+                "isOpenTerm": true,
+                "lateFeeRate": 100,
+                "lateInterestPremiumRate": 200,
+                "name": "loanA",
+                "noticePeriod": 3,
+                "paymentInterval": 10,
+                "principal": 17900000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 19100000000000,
+                "principalOutstanding": 17900000000000,
+                "totalAssets": 37000000000000,
+                "totalSupply": 37000000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1682135747,
+            "actionType": "payLoan",
+            "parameters": {
+                "name": "loanA",
+                "principal": 0,
+                "interest": 22602447948,
+                "delegateServiceFee": 0,
+                "platformServiceFee": 2671198393,
+                "delegateManagementFee": 4068440630,
+                "platformManagementFee": 339036719
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 19118194970000,
+                "principalOutstanding": 17900000000000,
+                "totalAssets": 37018194970000,
+                "totalSupply": 37000000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1682998751,
+            "actionType": "callLoan",
+            "parameters": {
+                "name": "loanA",
+                "principal": 17900000000000
+            },
+            "expected": {
+                "accruedInterest": 21687915000,
+                "cash": 19118194970000,
+                "principalOutstanding": 17900000000000,
+                "totalAssets": 37039882890000,
+                "totalSupply": 37000000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1683203635,
+            "actionType": "payLoan",
+            "parameters": {
+                "name": "loanA",
+                "principal": 17900000000000,
+                "interest": 214652195585,
+                "delegateServiceFee": 0,
+                "platformServiceFee": 3939902612,
+                "delegateManagementFee": 38637395205,
+                "platformManagementFee": 3219782933
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 37190989990000,
+                "principalOutstanding": 0,
+                "totalAssets": 37190989990000,
+                "totalSupply": 37000000000000,
+                "unrealizedLosses": 0
+            }
+        }
+    ]
+}

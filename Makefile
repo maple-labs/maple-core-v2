@@ -31,6 +31,9 @@ invariant:
 migration:
 	./test.sh -d tests/migration -p $(profile)
 
+scenario:
+	./scenarios.sh
+
 # Forge scripting
 
 validate:
