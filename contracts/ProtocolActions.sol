@@ -11,6 +11,7 @@ import {
     ILoanLike,
     ILoanManagerLike,
     IMapleProxyFactory,
+    INonTransparentProxy,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
@@ -19,7 +20,7 @@ import {
     IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
-import { Test } from "../contracts/Contracts.sol";
+import { console, Test } from "../contracts/Contracts.sol";
 
 // TODO: `deployPool`.
 // TODO: `createLoan`.
@@ -27,15 +28,15 @@ import { Test } from "../contracts/Contracts.sol";
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Test {
 
-    address internal MPL  = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address internal WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
-    address internal WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address internal USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address MPL  = address(0x33349B282065b0284d756F0577FB39c158F935e6);
+    address WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+    address WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 
-    address internal MPL_SOURCE  = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address internal WBTC_SOURCE = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
-    address internal WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
-    address internal USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
+    address MPL_SOURCE  = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
+    address WBTC_SOURCE = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
+    address WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
+    address USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -664,6 +665,13 @@ contract ProtocolActions is Test {
         globals.setValidBorrower(borrower_, valid_);
     }
 
+    function upgradeGlobals(address globals_, address newImplementation_) internal {
+        address governor = IGlobals(globals_).governor();
+
+        vm.prank(governor);
+        INonTransparentProxy(globals_).setImplementation(newImplementation_);
+    }
+
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
@@ -700,24 +708,38 @@ contract ProtocolActions is Test {
     /*** Governor Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
-    function upgradeLoans(address[] memory loans, uint256 version, bytes memory data, address caller) internal {
-        for (uint256 i = 0; i < loans.length; i++) {
-            vm.prank(caller);
-            IProxiedLike(loans[i]).upgrade(version, data);
+    function upgradeLoansAsBorrowers(address[] memory loans, uint256 version, bytes memory data) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            upgradeLoanAsBorrower(loans[i], version, data);
         }
     }
 
-    function upgradeLoan(address loan, uint256 version, bytes memory data, address caller) internal {
-        vm.prank(caller);
+    function upgradeLoansAsSecurityAdmin(address[] memory loans, uint256 version, bytes memory data) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            upgradeLoanAsSecurityAdmin(loans[i], version, data);
+        }
+    }
+
+    function upgradeLoanAsBorrower(address loan, uint256 version, bytes memory data) internal {
+        address borrower = ILoanLike(loan).borrower();
+
+        vm.prank(borrower);
         IProxiedLike(loan).upgrade(version, data);
     }
 
-    function upgradeLoanManagerByGovernor(address loanManager, uint256 version, bytes memory data) internal {
+    function upgradeLoanAsSecurityAdmin(address loan, uint256 version, bytes memory data) internal {
+        address securityAdmin = IGlobals(ILoanLike(loan).globals()).securityAdmin();
+
+        vm.prank(securityAdmin);
+        IProxiedLike(loan).upgrade(version, data);
+    }
+
+    function upgradeLoanManagerAsGovernor(address loanManager, uint256 version, bytes memory data) internal {
         vm.prank(IPoolManager(ILoanManagerLike(loanManager).poolManager()).governor());
         IProxiedLike(loanManager).upgrade(version, data);
     }
 
-    function upgradePoolManagerByGovernor(address poolManager, uint256 version, bytes memory data) internal {
+    function upgradePoolManagerAsGovernor(address poolManager, uint256 version, bytes memory data) internal {
         vm.prank(IPoolManager(poolManager).governor());
         IProxiedLike(poolManager).upgrade(version, data);
     }

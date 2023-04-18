@@ -28,8 +28,8 @@ integration:
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
-migration:
-	./test.sh -d tests/migration -p $(profile)
+upgrade:
+	./test.sh -d tests/protocol-upgrade -p $(profile)
 
 scenario:
 	./scenarios.sh

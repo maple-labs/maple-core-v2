@@ -89,6 +89,8 @@ interface ILiquidatorLike {
 
 interface IProxiedLike {
 
+    function implementation() external view returns (address implementation_);
+
     function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
 
 }
@@ -110,6 +112,8 @@ interface ILoanLike is IProxiedLike {
     function borrower() external view returns (address borrower_);
 
     function fundsAsset() external view returns (address fundsAsset_);
+
+    function globals() external view returns (address globals_);
 
     function gracePeriod() external view returns (uint256 gracePeriod_);
 
