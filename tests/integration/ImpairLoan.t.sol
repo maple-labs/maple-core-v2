@@ -43,7 +43,7 @@ contract FixedTermLoanManagerImpairFailureTests is TestBaseWithAssertions {
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), 0, 0, 0],
             loanManager: address(loanManager)
@@ -59,12 +59,12 @@ contract FixedTermLoanManagerImpairFailureTests is TestBaseWithAssertions {
     }
 
     function test_impairLoan_notAuthorized() external {
-        vm.expectRevert("LM:IL:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.impairLoan(address(loan));
     }
 
     function test_impairLoan_notLender() external {
-        vm.expectRevert("ML:IL:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.impairLoan();
     }
 
@@ -109,7 +109,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), 0, 0, 0],
             loanManager: loanManager
@@ -627,7 +627,7 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), 0, 0, 0.01e6],
             loanManager: loanManager
@@ -1059,7 +1059,7 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
     }
 
     function test_impairLoan_notLender() external {
-        vm.expectRevert("ML:I:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.impair();
     }
 
@@ -1325,7 +1325,7 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
     }
 
     function test_removeLoanImpairment_notLender() external {
-        vm.expectRevert("ML:RI:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.removeImpairment();
     }
 

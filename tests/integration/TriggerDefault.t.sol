@@ -35,7 +35,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
     }
 
     function test_triggerDefault_notAuthorized() external {
-        vm.expectRevert("PM:TD:NOT_AUTHORIZED");
+        vm.expectRevert("PM:NOT_PD_OR_GOV");
         poolManager.triggerDefault(loan, address(liquidatorFactory));
     }
 
@@ -48,7 +48,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
     function test_triggerDefault_notPoolManager() external {
         ILoanManagerLike loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
 
-        vm.expectRevert("LM:TD:NOT_PM");
+        vm.expectRevert("LM:NOT_PM");
         loanManager.triggerDefault(loan, address(liquidatorFactory));
     }
 
@@ -118,7 +118,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_notAuthorized() external {
-        vm.expectRevert("PM:TD:NOT_AUTHORIZED");
+        vm.expectRevert("PM:NOT_PD_OR_GOV");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 
@@ -176,7 +176,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_repossess_notLender() external {
-        vm.expectRevert("ML:R:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.repossess(address(loanManager));
     }
 

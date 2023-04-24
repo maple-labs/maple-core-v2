@@ -39,7 +39,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -406,7 +406,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e18), uint256(0.1e6), uint256(0), uint256(0)],  // 1e12 * 100% = 1e18 precision
             loanManager: loanManager
@@ -490,7 +490,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0), uint256(0.1e6), uint256(0.01e6), uint256(0)],
             loanManager: loanManager
@@ -652,7 +652,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0), uint256(0.1e6), uint256(0.01e6), uint256(0)],
             loanManager: loanManager
@@ -762,25 +762,6 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(finalCover,   100_000e6);
     }
 
-    // Test 15
-    function test_poolScenario_intendToWithdrawAndChangeWMToZero() external {
-        address lp1 = makeAddr("lp1");
-
-        deposit(lp1, 4_000_000e6);
-
-        assertTotalAssets(4_000_000e6);
-        assertEq(pool.balanceOf(lp1), 4_000_000e6);
-
-        requestRedeem(address(pool), lp1, 2_000_000e6);  // Request half of the shares
-
-        setWithdrawalManager(address(poolManager), address(0));
-
-        vm.warp(start + 2 weeks);
-
-        vm.prank(lp1);
-        try pool.redeem(2_000_000e6, lp1, lp1) { assertTrue(false, "Did not fail" ); } catch { }
-    }
-
     function test_poolScenario_impairLoanWithLatePaymentAndRefinance() external {
         depositCover(200_000e6);
 
@@ -797,7 +778,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         // This loan will be refinanced
         address loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(0), uint256(30 days), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -1031,7 +1012,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0.31536e6)],
             loanManager: loanManager
@@ -1173,7 +1154,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0.31536e6)],
             loanManager: loanManager
@@ -1350,7 +1331,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         for (uint256 i; i < 150; ++i) {
             fundAndDrawdownLoan({
                 borrower:    makeAddr(string(abi.encode(i))),
-                termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+                termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
                 amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
                 rates:       [uint256(3.1536e6), uint256(0.1e6), uint256(0.01e6), uint256(0.31536e6)],
                 loanManager: loanManager

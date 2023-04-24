@@ -67,12 +67,12 @@ contract RemoveCallFailureTests is RemoveCallTestsBase {
     }
 
     function test_callPrincipal_notPoolDelegate() external {
-        vm.expectRevert("LM:RC:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.removeCall(address(loan));
     }
 
     function test_callPrincipal_notLender() external {
-        vm.expectRevert("ML:RC:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.removeCall();
     }
 

@@ -187,7 +187,7 @@ contract RemoveSharesFailureTests is TestBase {
     }
 
     function test_removeShares_failIfNotPool() external {
-        vm.expectRevert("PM:RS:NOT_POOL");
+        vm.expectRevert("PM:NOT_POOL");
         poolManager.removeShares(1_000e6, address(lp));
     }
 

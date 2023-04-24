@@ -8,7 +8,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
     address newPoolDelegate = makeAddr("newPoolDelegate");
 
     function test_setPendingPoolDelegate_notPD() external {
-        vm.expectRevert("PM:SPA:NOT_PD");
+        vm.expectRevert("PM:NOT_PD");
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(poolDelegate);

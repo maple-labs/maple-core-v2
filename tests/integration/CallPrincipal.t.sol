@@ -66,12 +66,12 @@ contract CallPrincipalFailureTests is CallPrincipalTestsBase {
     }
 
     function test_callPrincipal_notPoolDelegate() external {
-        vm.expectRevert("LM:C:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.callPrincipal(address(loan), principal);
     }
 
     function test_callPrincipal_notLender() external {
-        vm.expectRevert("ML:C:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.callPrincipal(principal);
     }
 

@@ -182,7 +182,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         fixedTermLoan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.31536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: fixedTermLoanManager
@@ -291,12 +291,12 @@ contract PauseTests is TestBaseWithAssertions {
 
         for (uint256 i = 0; i < contracts.length; i++) {
             vm.prank(governor);
-            globals.setContactPause(contracts[i], true);
+            globals.setContractPause(contracts[i], true);
 
             _assertAllPaused(contracts[i], functions[contracts[i]], messages[contracts[i]]);
 
             vm.prank(governor);
-            globals.setContactPause(contracts[i], false);
+            globals.setContractPause(contracts[i], false);
 
             _assertNonePaused(contracts[i], functions[contracts[i]], messages[contracts[i]]);
         }
@@ -355,7 +355,7 @@ contract PauseTests is TestBaseWithAssertions {
 
             // Set contract pause
             vm.prank(governor);
-            globals.setContactPause(contracts[i], true);
+            globals.setContractPause(contracts[i], true);
 
             // Iterate through each of the contract's functions
             for (uint256 j = 0; j < functions[contracts[i]].length; j++) {

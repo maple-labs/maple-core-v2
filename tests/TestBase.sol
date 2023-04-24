@@ -174,10 +174,11 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory,     true);
         globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
         globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
+        globals.setValidInstanceOf("FEE_MANAGER",                address(feeManager),          true);
 
-        globals.setCanDeploy(fixedTermLoanManagerFactory, address(deployer), true);
-        globals.setCanDeploy(poolManagerFactory,          address(deployer), true);
-        globals.setCanDeploy(withdrawalManagerFactory,    address(deployer), true);
+        globals.setCanDeployFrom(fixedTermLoanManagerFactory, address(deployer), true);
+        globals.setCanDeployFrom(poolManagerFactory,          address(deployer), true);
+        globals.setCanDeployFrom(withdrawalManagerFactory,    address(deployer), true);
 
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
@@ -353,7 +354,7 @@ contract TestBase is ProtocolActions {
     {
         vm.startPrank(governor);
         globals.setValidBorrower(borrower, true);
-        globals.setCanDeploy(openTermLoanFactory, borrower, true);
+        globals.setCanDeployFrom(openTermLoanFactory, borrower, true);
         vm.stopPrank();
 
         vm.prank(borrower);

@@ -32,7 +32,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: poolManager.loanManagerList(0)
@@ -265,7 +265,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -1642,7 +1642,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         loan1 = fundAndDrawdownLoan({
             borrower:    borrower1,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
@@ -1652,7 +1652,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
 
         loan2 = fundAndDrawdownLoan({
             borrower:    borrower2,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
@@ -2406,7 +2406,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         // Loan1 is funded at start
         loan1 = fundAndDrawdownLoan({
             borrower:    borrower1,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
@@ -2487,7 +2487,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         loan2 = fundAndDrawdownLoan({
             borrower:    borrower2,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: loanManager
@@ -2856,7 +2856,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
 
         loan1 = fundAndDrawdownLoan({
             borrower:    borrower1,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
             loanManager: loanManager
@@ -2866,7 +2866,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
 
         loan2 = fundAndDrawdownLoan({
             borrower:    borrower2,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
             loanManager: loanManager
@@ -2876,7 +2876,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
 
         loan3 = fundAndDrawdownLoan({
             borrower:    borrower3,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(3_000_000e6), uint256(3_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],   // 0.1e6 tokens per second
             loanManager: loanManager

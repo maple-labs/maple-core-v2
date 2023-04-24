@@ -18,12 +18,12 @@ contract SetMinRatioTests is TestBase {
     }
 
     function test_setMinRatio_notAuthorized() external {
-        vm.expectRevert("LM:SMR:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.setMinRatio(COLLATERAL_ASSET, 1000e6);
     }
 
     function test_setMinRatio_notPoolManager() external {
-        vm.expectRevert("LM:SMR:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.setMinRatio(COLLATERAL_ASSET, 1000e6);
     }
 
@@ -56,12 +56,12 @@ contract SetSlippageTests is TestBase {
     }
 
     function test_setAllowedSlippage_notAuthorized() external {
-        vm.expectRevert("LM:SAS:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.setAllowedSlippage(COLLATERAL_ASSET, 0.1e6);
     }
 
     function test_setAllowedSlippage_notPoolManager() external {
-        vm.expectRevert("LM:SAS:NO_AUTH");
+        vm.expectRevert("LM:NOT_PD_OR_GOV");
         loanManager.setAllowedSlippage(COLLATERAL_ASSET, 0.1e6);
     }
 

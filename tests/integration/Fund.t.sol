@@ -47,7 +47,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         loan1 = IFixedTermLoan(createFixedTermLoan({
             borrower:    borrower1,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
@@ -55,7 +55,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
 
         loan2 = IFixedTermLoan(createFixedTermLoan({
             borrower:    borrower2,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(750_000e6), uint256(750_000e6)],
             rates:       [uint256(6.3072e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
@@ -115,7 +115,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     function test_fund_failIfAmountGreaterThanLockedLiquidity() external {
         address loan = createFixedTermLoan({
             borrower:    borrower1,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
@@ -463,7 +463,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_notPoolDelegate() external {
-        vm.expectRevert("LM:F:NOT_PD");
+        vm.expectRevert("LM:NOT_PD");
         loanManager.fund(address(loan));
     }
 
@@ -589,7 +589,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_notLender() external {
-        vm.expectRevert("ML:F:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.fund();
     }
 

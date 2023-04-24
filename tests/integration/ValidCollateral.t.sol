@@ -21,7 +21,7 @@ contract ValidCollateralTests is TestBase {
             address(poolManager.loanManagerList(0)),
             address(feeManager),
             [address(collateralAsset), address(fundsAsset)],
-            [uint256(5_000), uint256(1_000_000), uint256(3)],
+            [uint256(12 hours), uint256(1_000_000), uint256(3)],
             [uint256(0), uint256(1_500_000e6), uint256(1_500_000e6)],
             [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
             [nextDelegateOriginationFee, nextDelegateServiceFee]

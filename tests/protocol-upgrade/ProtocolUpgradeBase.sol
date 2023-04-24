@@ -142,8 +142,8 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         // TODO: Check if actually need canDeploy, since it was mainly to alow borrowers to deploy either of the loans, but since there is
         //       no new FT Loan Factory, we question it's usefulness. Consider new FT Factories to make proper use of all of this.
 
-        globals_.setCanDeploy(poolManagerFactory,       newPoolDeployer, true);
-        globals_.setCanDeploy(withdrawalManagerFactory, newPoolDeployer, true);
+        globals_.setCanDeployFrom(poolManagerFactory,       newPoolDeployer, true);
+        globals_.setCanDeployFrom(withdrawalManagerFactory, newPoolDeployer, true);
 
         vm.stopPrank();
     }

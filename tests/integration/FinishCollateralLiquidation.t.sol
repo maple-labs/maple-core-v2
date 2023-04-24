@@ -33,14 +33,14 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
     }
 
     function test_finishCollateralLiquidation_notAuthorized() external {
-        vm.expectRevert("PM:FCL:NOT_AUTHORIZED");
+        vm.expectRevert("PM:NOT_PD_OR_GOV");
         poolManager.finishCollateralLiquidation(loan);
     }
 
     function test_finishCollateralLiquidation_notPoolManager() external {
         IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
 
-        vm.expectRevert("LM:FCL:NOT_PM");
+        vm.expectRevert("LM:NOT_PM");
         loanManager.finishCollateralLiquidation(loan);
     }
 

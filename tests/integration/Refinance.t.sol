@@ -36,7 +36,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
             loanManager: address(loanManager)
@@ -1395,7 +1395,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), 0, 0, 0],
             loanManager: address(loanManager)
@@ -1454,7 +1454,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
     }
 
     function test_acceptNewTerms_failIfNotLender() external {
-        vm.expectRevert("ML:ANT:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.acceptNewTerms(address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0));
     }
 

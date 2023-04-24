@@ -541,7 +541,7 @@ contract MultiUserRedeemTests is TestBase {
 
         fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [5_000, ONE_MONTH, 3],
+            termDetails: [12 hours, ONE_MONTH, 3],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],  // Pool will be at 50% liquidity
             rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -631,7 +631,7 @@ contract MultiUserRedeemTests is TestBase {
 
         fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(ONE_MONTH), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), uint256(0)],
             rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -697,7 +697,7 @@ contract MultiUserRedeemTests is TestBase {
 
         fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(ONE_MONTH * 2), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(ONE_MONTH * 2), uint256(3)],
             amounts:     [uint256(5_000_000e6), uint256(5_000_000e6), 0],
             rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -822,7 +822,7 @@ contract RequestRedeemFailureTests is TestBase {
     }
 
     function test_requestRedeem_failIfNotPool() external {
-        vm.expectRevert("PM:RR:NOT_POOL");
+        vm.expectRevert("PM:NOT_POOL");
         poolManager.requestRedeem(0, address(lp), address(lp));
     }
 
@@ -859,7 +859,7 @@ contract RedeemFailureTests is TestBase {
     }
 
     function test_redeem_failIfNotPool() external {
-        vm.expectRevert("PM:PR:NOT_POOL");
+        vm.expectRevert("PM:NOT_POOL");
         poolManager.processRedeem(1, lp, lp);
     }
 

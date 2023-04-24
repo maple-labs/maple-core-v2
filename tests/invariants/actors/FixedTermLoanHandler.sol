@@ -117,7 +117,7 @@ contract FixedTermLoanHandler is HandlerBase {
 
             vm.startPrank(governor);
             IGlobals(globals).setValidBorrower(borrower, true);
-            IGlobals(globals).setCanDeploy(loanFactory, borrower, true);
+            IGlobals(globals).setCanDeployFrom(loanFactory, borrower, true);
             vm.stopPrank();
 
             borrowers.push(borrower);
@@ -141,9 +141,9 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256[3] memory termDetails_;
 
-        termDetails_[0] = bound(_randomize(seed_, "termDetails_[0]"), 0,      30 days);   // Grace period
-        termDetails_[1] = bound(_randomize(seed_, "termDetails_[1]"), 1 days, 730 days);  // Payment interval
-        termDetails_[2] = bound(_randomize(seed_, "termDetails_[2]"), 1,      30);        // Number of payments
+        termDetails_[0] = bound(_randomize(seed_, "termDetails_[0]"), 12 hours, 30 days);   // Grace period
+        termDetails_[1] = bound(_randomize(seed_, "termDetails_[1]"), 1 days,   730 days);  // Payment interval
+        termDetails_[2] = bound(_randomize(seed_, "termDetails_[2]"), 1,        30);        // Number of payments
 
         uint256[3] memory amounts_;
 
@@ -162,8 +162,8 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256[2] memory fees_;
 
-        fees_[0] = bound(_randomize(seed_, "fees_[0]"), 0, amounts_[1] / 10);  // Delegate origination fee
-        fees_[1] = bound(_randomize(seed_, "fees_[1]"), 0, amounts_[1] / 10);  // Delegate service fee
+        fees_[0] = bound(_randomize(seed_, "fees_[0]"), 0, amounts_[1] * 0.025e6 / 1e6);  // Delegate origination fee
+        fees_[1] = bound(_randomize(seed_, "fees_[1]"), 0, amounts_[1] / 10);             // Delegate service fee
 
         if (
             pool.totalSupply() == 0 ||

@@ -107,7 +107,7 @@ contract ProtocolActions is Test {
 
         vm.startPrank(governor_);
         IGlobals(globals_).setValidBorrower(borrower_, true);
-        IGlobals(globals_).setCanDeploy(factory_, address(borrower_), true);
+        IGlobals(globals_).setCanDeployFrom(factory_, address(borrower_), true);
         vm.stopPrank();
 
         vm.prank(borrower_);

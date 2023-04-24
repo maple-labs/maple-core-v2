@@ -245,7 +245,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Fund a new loan
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(0), uint256(30 days), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -665,7 +665,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Fund a new loan
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(0), uint256(30 days), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager
@@ -836,7 +836,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Warp 12 hours and default
-        vm.warp(start + 2 weeks + 1 days + 12 hours);
+        vm.warp(start + 2 weeks + 1 days + 12 hours + 1);
 
         triggerDefault(loan, address(liquidatorFactory));
 
@@ -1481,7 +1481,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(0), uint256(30 days), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0.05e6), uint256(0), uint256(0)],
             loanManager: loanManager

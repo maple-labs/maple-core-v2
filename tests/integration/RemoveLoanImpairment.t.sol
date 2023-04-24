@@ -50,7 +50,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
     }
 
     function test_removeLoanImpairment_notLender() external {
-        vm.expectRevert("ML:RLI:NOT_LENDER");
+        vm.expectRevert("ML:NOT_LENDER");
         loan.removeLoanImpairment();
     }
 
