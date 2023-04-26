@@ -12,6 +12,7 @@ import {
     FixedTermLoan,
     FixedTermLoanInitializer,
     FixedTermLoanManager,
+    FixedTermLoanManagerInitializer,
     FixedTermLoanV5Migrator,
     Globals,
     OpenTermLoan,
@@ -22,7 +23,8 @@ import {
     OpenTermLoanManagerInitializer,
     OpenTermRefinancer,
     PoolDeployer,
-    PoolManager
+    PoolManager,
+    PoolManagerInitializer
 } from "../../contracts/Contracts.sol";
 
 import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
@@ -46,6 +48,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     // New Globals and PoolManager implementations.
     address newGlobalsImplementation;
     address newPoolManagerImplementation;
+    address newPoolManagerInitializer;
 
     // New FixedTermLoan contracts.
     address newFixedTermLoanImplementation;
@@ -54,6 +57,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
     // New FixedTermLoanManager contracts.
     address newFixedTermLoanManagerImplementation;
+    address newFixedTermLoanManagerInitializer;
 
     // OpenTermLoan contracts.
     address openTermLoanFactory;
@@ -81,11 +85,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         // Upgrade contracts for PoolManager and Globals
         newGlobalsImplementation     = address(new Globals());
         newPoolManagerImplementation = address(new PoolManager());
+        newPoolManagerInitializer    = address(new PoolManagerInitializer());
 
         // Upgrade contracts for Fixed Term Loan and Fixed Term Loan Manager
         newFixedTermLoanImplementation        = address(new FixedTermLoan());
         newFixedTermLoanInitializer           = address(new FixedTermLoanInitializer());
         newFixedTermLoanManagerImplementation = address(new FixedTermLoanManager());
+        newFixedTermLoanManagerInitializer    = address(new FixedTermLoanManagerInitializer());
         newFixedTermLoanMigrator              = address(new FixedTermLoanV5Migrator());
 
         // New contracts for Open Term Loan
@@ -138,9 +144,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         globals_.setValidInstanceOf("OT_REFINANCER", openTermLoanRefinancer, true);
         globals_.setValidInstanceOf("REFINANCER",    openTermLoanRefinancer, true);
 
-        // TODO: Add FeeManager whitelist check.
-        // TODO: Check if actually need canDeploy, since it was mainly to alow borrowers to deploy either of the loans, but since there is
-        //       no new FT Loan Factory, we question it's usefulness. Consider new FT Factories to make proper use of all of this.
+        globals_.setValidInstanceOf("FEE_MANAGER", feeManager, true);
 
         globals_.setCanDeployFrom(poolManagerFactory,       newPoolDeployer, true);
         globals_.setCanDeployFrom(withdrawalManagerFactory, newPoolDeployer, true);
@@ -153,7 +157,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         vm.startPrank(governor);
 
         // PoolManager upgrade 100 => 200
-        IProxyFactoryLike(poolManagerFactory).registerImplementation(200, newPoolManagerImplementation, address(0));
+        IProxyFactoryLike(poolManagerFactory).registerImplementation(200, newPoolManagerImplementation, newPoolManagerInitializer);
         IProxyFactoryLike(poolManagerFactory).setDefaultVersion(200);
         IProxyFactoryLike(poolManagerFactory).enableUpgradePath(100, 200, address(0));
 
@@ -165,7 +169,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(
             300,
             newFixedTermLoanManagerImplementation,
-            address(0)
+            newFixedTermLoanManagerInitializer
         );
         IProxyFactoryLike(fixedTermLoanManagerFactory).setDefaultVersion(300);
         IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(200, 300, address(0));
@@ -261,6 +265,39 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         // TODO: Whitelist the withdrawal managers for AQRU and Maven 03 on mainnet.
         allowLender(mavenUsdc3PoolManager, mavenUsdc3WithdrawalManager);
         allowLender(aqruPoolManager,       aqruWithdrawalManager);
+    }
+
+    function _deployActivateAndOpenNewPool(
+        address       poolDelegate,
+        address       fundsAsset,
+        bool          publicPool,
+        string memory name,
+        string memory symbol,
+        uint256       poolCoverAmount
+    )
+        internal returns (address poolManager_)
+    {
+        address[] memory loanManagerFactories = new address[](2);
+
+        loanManagerFactories[0] = fixedTermLoanManagerFactory;
+        loanManagerFactories[1] = openTermLoanManagerFactory;
+
+        uint256[6] memory configParams_ = [type(uint256).max, 0.2e6, poolCoverAmount, 1 weeks, 2 days, 0];
+
+        poolManager_ = deployAndActivatePool(
+            newPoolDeployer,
+            fundsAsset,
+            mapleGlobalsV2Proxy,
+            poolDelegate,
+            poolManagerFactory,
+            withdrawalManagerFactory,
+            name,
+            symbol,
+            loanManagerFactories,
+            configParams_
+        );
+
+        if (publicPool == true) openPool(poolManager_);
     }
 
     // TODO: Add deprecation steps.

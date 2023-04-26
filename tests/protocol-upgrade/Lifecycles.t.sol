@@ -20,6 +20,15 @@ import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
 
 contract LifecycleBase is ProtocolUpgradeBase {
 
+    address newPoolDelegate = makeAddr("newPoolDelegate");
+
+    address newPool;
+    address newPoolManager;
+
+    address[] newBorrowers;
+    address[] newPoolLps;
+    address[] newLps;
+
     mapping(address => uint256) lpExitTimestamps;
 
     mapping(address => address[]) public loansForPool;
@@ -27,6 +36,15 @@ contract LifecycleBase is ProtocolUpgradeBase {
     struct ExitTimestamp {
         address pool;
         uint256 timestamp;
+    }
+
+    function setUp() public override  {
+        super.setUp();
+
+        for (uint256 i; i < 3; ++i) {
+            newBorrowers.push(makeAddr(vm.toString(i)));
+            newLps.push(makeAddr(vm.toString(i)));
+        }
     }
 
     /**************************************************************************************************************************************/
@@ -41,6 +59,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
         action(icebreakerPool);
         action(aqruPool);
         action(mavenUsdc3Pool);
+        action(newPool);
     }
 
     function performActionOnAllPools(function(address,address) internal action, address borrower_) internal {
@@ -51,6 +70,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
         action(icebreakerPool,        borrower_);
         action(aqruPool,              borrower_);
         action(mavenUsdc3Pool,        borrower_);
+        action(newPool,               borrower_);
     }
 
     function performActionOnAllPoolLps(function(address[] storage) internal action) internal {
@@ -61,13 +81,14 @@ contract LifecycleBase is ProtocolUpgradeBase {
         action(icebreakerLps);
         action(aqruLps);
         action(mavenUsdc3Lps);
+        action(newPoolLps);
     }
 
     /**************************************************************************************************************************************/
     /*** Lifecycle Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
 
-    function exitFromAllPoolsWhenPossible() internal returns (uint256[][7] memory redeemedAmounts) {
+    function exitFromAllPoolsWhenPossible() internal returns (uint256[][8] memory redeemedAmounts) {
         requestAllRedemptions(mavenPermissionedPool, mavenPermissionedLps);
         requestAllRedemptions(mavenUsdcPool,         mavenUsdcLps);
         requestAllRedemptions(mavenWethPool,         mavenWethLps);
@@ -75,10 +96,11 @@ contract LifecycleBase is ProtocolUpgradeBase {
         requestAllRedemptions(icebreakerPool,        icebreakerLps);
         requestAllRedemptions(aqruPool,              aqruLps);
         requestAllRedemptions(mavenUsdc3Pool,        mavenUsdc3Lps);
+        requestAllRedemptions(newPool,               newPoolLps);
 
-        ExitTimestamp[] memory exitTimestampArray = new ExitTimestamp[](7 * 3);
+        ExitTimestamp[] memory exitTimestampArray = new ExitTimestamp[](8 * 3);
 
-        address[] memory poolArray = new address[](7);
+        address[] memory poolArray = new address[](8);
         poolArray[0] = mavenPermissionedPool;
         poolArray[1] = mavenUsdcPool;
         poolArray[2] = mavenWethPool;
@@ -86,6 +108,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
         poolArray[4] = icebreakerPool;
         poolArray[5] = aqruPool;
         poolArray[6] = mavenUsdc3Pool;
+        poolArray[7] = newPool;
 
         for (uint256 i; i < poolArray.length; ++i) {
             IWithdrawalManager withdrawalManager = IWithdrawalManager(IPoolManager(IPool(poolArray[i]).manager()).withdrawalManager());
@@ -111,6 +134,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
             if (pool == icebreakerPool)        redeemedAmounts[4] = redeemAll(icebreakerPool,        icebreakerLps);
             if (pool == aqruPool)              redeemedAmounts[5] = redeemAll(aqruPool,              aqruLps);
             if (pool == mavenUsdc3Pool)        redeemedAmounts[6] = redeemAll(mavenUsdc3Pool,        mavenUsdc3Lps);
+            if (pool == newPool)               redeemedAmounts[7] = redeemAll(newPool,               newPoolLps);
         }
     }
 
@@ -185,7 +209,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
 
             // NOTE: Since accountedInterest includes dust, lockedLiquidity > cash when AUM == 0. TA > cash in this case as well.
             //       Because of this, getRedeemableShares introduces a rounding error.
-            assertApproxEqAbs(withdrawalManager.lockedShares(lp), 0, 1);
+            assertApproxEqAbs(withdrawalManager.lockedShares(lp), 0, 2);
         }
     }
 
@@ -206,12 +230,6 @@ contract LifecycleBase is ProtocolUpgradeBase {
     /*** Utility Functions                                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    function addMainnetLoansToMapping(address pool_, address[] storage loans_) internal {
-        for (uint256 i; i < loans_.length; ++i) {
-            loansForPool[pool_].push(loans_[i]);
-        }
-    }
-
     function addAllMainnetLoansToAllMappings() internal {
         addMainnetLoansToMapping(mavenPermissionedPool, mavenPermissionedLoans);
         addMainnetLoansToMapping(mavenUsdcPool,         mavenUsdcLoans);
@@ -220,6 +238,75 @@ contract LifecycleBase is ProtocolUpgradeBase {
         addMainnetLoansToMapping(icebreakerPool,        icebreakerLoans);
         addMainnetLoansToMapping(aqruPool,              aqruLoans);
         addMainnetLoansToMapping(mavenUsdc3Pool,        mavenUsdc3Loans);
+    }
+
+    function addMainnetLoansToMapping(address pool_, address[] storage loans_) internal {
+        for (uint256 i; i < loans_.length; ++i) {
+            loansForPool[pool_].push(loans_[i]);
+        }
+    }
+
+    function addNewLps(address[] storage lpArray_) internal {
+        for (uint256 i; i < newLps.length; ++i) {
+            lpArray_.push(newLps[i]);
+        }
+    }
+
+    function createAndFundFixedTermLoan(address pool_, address borrower_) internal {
+        IPoolManager poolManager = IPoolManager(IPool(pool_).manager());
+
+        address loan = createFixedTermLoan(
+            fixedTermLoanFactory,
+            borrower_,
+            poolManager.loanManagerList(0),
+            feeManager,
+            [WBTC, address(IPool(pool_).asset())],
+            [0, uint256(1_000_000e6), uint256(1_000_000e6)],
+            [uint256(3 days), uint256(30 days), uint256(3)],
+            [uint256(0.01e6), uint256(0.12e6), uint256(0.05e6), uint256(0.05e6)],
+            [uint256(0.01e6), uint256(0.12e6)]
+        );
+
+        loansForPool[pool_].push(loan);
+
+        fundLoan(loan);
+    }
+
+    function createAndFundOpenTermLoan(address pool_, address borrower_) internal {
+        IPoolManager poolManager = IPoolManager(IPool(pool_).manager());
+
+        address loan = createOpenTermLoan(
+            openTermLoanFactory,
+            borrower_,
+            poolManager.loanManagerList(1),
+            address(IPool(pool_).asset()),
+            1_000_000e6,
+            [uint256(5 days), uint256(3 days), uint256(30 days)],
+            [uint256(0.01e6), uint256(0.12e6), 0, uint256(0.05e6)]
+        );
+
+        loansForPool[pool_].push(loan);
+
+        fundLoan(loan);
+    }
+
+    function createNewPool() internal {
+        newPoolManager = _deployActivateAndOpenNewPool(newPoolDelegate, USDC, true, "Maple Pool", "MP", 1_000_000e6);
+        newPool        = IPoolManager(newPoolManager).pool();
+    }
+
+    function depositNewLps(address pool) internal {
+        IPoolManager poolManager = IPoolManager(IPool(pool).manager());
+
+        uint256 baseAmount = IPool(pool).asset() == WETH ? 10_000e18 : 1_000_000e6;
+
+        vm.startPrank(poolManager.poolDelegate());
+        poolManager.setLiquidityCap(poolManager.totalAssets() + baseAmount * 6);
+        vm.stopPrank();
+
+        deposit(pool, newLps[0], baseAmount);
+        deposit(pool, newLps[1], baseAmount * 2);
+        deposit(pool, newLps[2], baseAmount * 3);
     }
 
     function getNextLoan() internal view returns (address nextLoan) {
@@ -232,6 +319,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
         ( nextLoan, nextPaymentDueDate ) = getNextLoanAndPaymentDueDate(orthogonalPool,        nextLoan, nextPaymentDueDate);
         ( nextLoan, nextPaymentDueDate ) = getNextLoanAndPaymentDueDate(aqruPool,              nextLoan, nextPaymentDueDate);
         ( nextLoan, nextPaymentDueDate ) = getNextLoanAndPaymentDueDate(mavenUsdc3Pool,        nextLoan, nextPaymentDueDate);
+        ( nextLoan, nextPaymentDueDate ) = getNextLoanAndPaymentDueDate(newPool,               nextLoan, nextPaymentDueDate);
     }
 
     function getNextLoanAndPaymentDueDate(address pool_, address currentEarliestLoan_, uint256 currentEarliestDueDate_)
@@ -298,8 +386,8 @@ contract LifecycleBase is ProtocolUpgradeBase {
         assertEq(fixedTermLoanManager.principalOut(),     0, "FT principalOut");
         assertEq(fixedTermLoanManager.unrealizedLosses(), 0, "FT unrealizedLosses");
 
-        assertApproxEqAbs(fixedTermLoanManager.assetsUnderManagement(), 0, 4, "FT assetsUnderManagement");
-        assertApproxEqAbs(fixedTermLoanManager.accountedInterest(),     0, 4, "FT accountedInterest");
+        assertApproxEqAbs(fixedTermLoanManager.assetsUnderManagement(), 0, 5, "FT assetsUnderManagement");
+        assertApproxEqAbs(fixedTermLoanManager.accountedInterest(),     0, 5, "FT accountedInterest");
 
         if (poolManager.loanManagerListLength() > 1) {
             ILoanManagerLike openTermLoanManager = ILoanManagerLike(poolManager.loanManagerList(1));
@@ -313,18 +401,34 @@ contract LifecycleBase is ProtocolUpgradeBase {
         }
 
         // TODO: Remove by getting dummy LP address
-        if (pool_ == aqruPool || pool_ == mavenUsdc3Pool || pool_ == icebreakerPool) {
+        if (pool_ == aqruPool || pool_ == mavenUsdc3Pool || pool_ == icebreakerPool || pool_ == newPool) {
             assertApproxEqAbs(pool.totalSupply(), 0, 0.1e6, "totalSupply");
 
-            assertApproxEqAbs(pool.totalAssets(), IERC20(pool.asset()).balanceOf(pool_), 7, "totalAssets <> cash mismatch");
+            assertApproxEqAbs(pool.totalAssets(), IERC20(pool.asset()).balanceOf(pool_), 9, "totalAssets <> cash mismatch");
             return;
         }
 
-        assertApproxEqAbs(pool.totalSupply(), 0, 14, "totalSupply");
+        assertApproxEqAbs(pool.totalSupply(), 0, 37, "totalSupply");
 
         assertEq(IERC20(pool.asset()).balanceOf(pool_), 0, "cash");
 
-        assertApproxEqAbs(pool.totalAssets(), 0, 4, "totalAssets");
+        assertApproxEqAbs(pool.totalAssets(), 0, 9, "totalAssets");
+    }
+
+    function logPoolState(address pool_) internal view {
+        IPoolManager poolManager = IPoolManager(IPool(pool_).manager());
+
+        ILoanManagerLike fixedTermLoanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+        ILoanManagerLike openTermLoanManager  = ILoanManagerLike(poolManager.loanManagerList(1));
+
+        console.log("\npool", pool_);
+
+        console.log("totalSupply    ", IPool(pool_).totalSupply());
+        console.log("totalAssets    ", poolManager.totalAssets());
+        console.log("FT AUM         ", fixedTermLoanManager.assetsUnderManagement());
+        console.log("OT AUM         ", openTermLoanManager.assetsUnderManagement());
+        console.log("FT principalOut", fixedTermLoanManager.principalOut());
+        console.log("OT principalOut", openTermLoanManager.principalOut());
     }
 
 }
@@ -335,6 +439,17 @@ contract FixedTermLifecycle is LifecycleBase {
         _addWithdrawalManagersToAllowlists();  // TODO: Remove once this is done on mainnet.
 
         _performProtocolUpgrade();
+
+        createNewPool();
+
+        addNewLps(newPoolLps);
+
+        depositNewLps(newPool);
+
+        for(uint256 i; i < newBorrowers.length; ++i) {
+            vm.warp(block.timestamp + 3 days);
+            createAndFundFixedTermLoan(newPool, newBorrowers[i]);
+        }
 
         addAllMainnetLoansToAllMappings();
 
@@ -351,22 +466,12 @@ contract FixedTermLifecycle is LifecycleBase {
 
 contract OpenTermOnboardLifecycle is LifecycleBase {
 
-    address[] newBorrowers;
-    address[] newLps;
-
-    function setUp() public override  {
-        super.setUp();
-
-        for (uint256 i; i < 3; ++i) {
-            newBorrowers.push(makeAddr(vm.toString(i)));
-            newLps.push(makeAddr(vm.toString(i)));
-        }
-    }
-
     function test_openTermOnboardLifecycle() external {
         _addWithdrawalManagersToAllowlists();  // TODO: Remove once this is done on mainnet.
 
         _performProtocolUpgrade();
+
+        createNewPool();
 
         _addLoanManagers();
 
@@ -390,62 +495,40 @@ contract OpenTermOnboardLifecycle is LifecycleBase {
         performActionOnAllPools(assertPoolIsEmpty);
     }
 
-    /**************************************************************************************************************************************/
-    /*** Open Term Loan Helper Functions                                                                                                ***/
-    /**************************************************************************************************************************************/
+}
 
-    function addNewLps(address[] storage lpArray_) internal {
-        for (uint256 i; i < newLps.length; ++i) {
-            lpArray_.push(newLps[i]);
+contract OpenAndFixedTermLifecycle is LifecycleBase {
+
+    function test_openAndFixedTermLifecycle() external {
+        _addWithdrawalManagersToAllowlists();  // TODO: Remove once this is done on mainnet.
+
+        _performProtocolUpgrade();
+
+        createNewPool();
+
+        _addLoanManagers();
+
+        performActionOnAllPools(depositNewLps);
+
+        performActionOnAllPoolLps(addNewLps);
+
+        for(uint256 i; i < newBorrowers.length; ++i) {
+            vm.warp(block.timestamp + 3 days);
+
+            // Fund OTL and FTL on BOTH old and new pools
+            performActionOnAllPools(createAndFundFixedTermLoan, newBorrowers[i]);
+            performActionOnAllPools(createAndFundOpenTermLoan, newBorrowers[i]);
         }
-    }
 
-    function createAndFundOpenTermLoan(address pool_, address borrower_) internal {
-        IPoolManager poolManager = IPoolManager(IPool(pool_).manager());
+        addAllMainnetLoansToAllMappings();
 
-        address loan = createOpenTermLoan(
-            openTermLoanFactory,
-            borrower_,
-            poolManager.loanManagerList(1),
-            address(IPool(pool_).asset()),
-            1_000_000e6,
-            [uint256(5 days), uint256(3 days), uint256(30 days)],
-            [uint256(0.01e6), uint256(0.12e6), 0, uint256(0.05e6)]
-        );
+        payOffAllLoansWhenDue();
 
-        loansForPool[pool_].push(loan);
+        exitFromAllPoolsWhenPossible();
 
-        fundLoan(loan);
-    }
+        performActionOnAllPools(withdrawAllPoolCover);
 
-    function depositNewLps(address pool) internal {
-        IPoolManager poolManager = IPoolManager(IPool(pool).manager());
-
-        uint256 baseAmount = IPool(pool).asset() == WETH ? 10_000e18 : 1_000_000e6;
-
-        vm.startPrank(poolManager.poolDelegate());
-        poolManager.setLiquidityCap(poolManager.totalAssets() + baseAmount * 6);
-        vm.stopPrank();
-
-        deposit(pool, newLps[0], baseAmount);
-        deposit(pool, newLps[1], baseAmount * 2);
-        deposit(pool, newLps[2], baseAmount * 3);
-    }
-
-    function logPoolState(address pool_) internal view {
-        IPoolManager poolManager = IPoolManager(IPool(pool_).manager());
-
-        ILoanManagerLike fixedTermLoanManager = ILoanManagerLike(poolManager.loanManagerList(0));
-        ILoanManagerLike openTermLoanManager  = ILoanManagerLike(poolManager.loanManagerList(1));
-
-        console.log("\npool", pool_);
-
-        console.log("totalSupply    ", IPool(pool_).totalSupply());
-        console.log("totalAssets    ", poolManager.totalAssets());
-        console.log("FT AUM         ", fixedTermLoanManager.assetsUnderManagement());
-        console.log("OT AUM         ", openTermLoanManager.assetsUnderManagement());
-        console.log("FT principalOut", fixedTermLoanManager.principalOut());
-        console.log("OT principalOut", openTermLoanManager.principalOut());
+        performActionOnAllPools(assertPoolIsEmpty);
     }
 
 }

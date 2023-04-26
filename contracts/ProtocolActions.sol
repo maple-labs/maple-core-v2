@@ -15,6 +15,7 @@ import {
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
+    IPoolDeployer,
     IPoolManager,
     IProxiedLike,
     IWithdrawalManager
@@ -89,6 +90,41 @@ contract ProtocolActions is Test {
         vm.startPrank(borrower_);
         ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).closeLoan(payment_);
         vm.stopPrank();
+    }
+
+    function createFixedTermLoan(
+        address           factory_,
+        address           borrower_,
+        address           lender_,
+        address           feeManager_,
+        address[2] memory assets_,
+        uint256[3] memory amounts_,
+        uint256[3] memory terms_,
+        uint256[4] memory rates_,
+        uint256[2] memory fees_
+    )
+        internal returns (address loan_)
+    {
+        address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        IGlobals(globals_).setValidBorrower(borrower_, true);
+        vm.stopPrank();
+
+        loan_ = IMapleProxyFactory(factory_).createInstance({
+            arguments_: abi.encode(
+                borrower_,
+                lender_,
+                feeManager_,
+                assets_,
+                terms_,
+                amounts_,
+                rates_,
+                fees_
+            ),
+            salt_: "SALT"
+        });
     }
 
     function createOpenTermLoan(
@@ -501,6 +537,48 @@ contract ProtocolActions is Test {
 
         vm.startPrank(poolDelegate_);
         IOpenTermLoanManager(loanManager_).callPrincipal(loan_, principal_);
+        vm.stopPrank();
+    }
+
+    function deployAndActivatePool(
+        address           deployer_,
+        address           fundsAsset_,
+        address           globals_,
+        address           poolDelegate_,
+        address           poolManagerFactory_,
+        address           withdrawalManagerFactory_,
+        string     memory name_,
+        string     memory symbol_,
+        address[]  memory loanManagerFactories_,
+        uint256[6] memory configParams_
+    )
+        internal returns (address poolManager_)
+    {
+        erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
+
+        erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
+
+        // Set Valid PD
+        IGlobals globals = IGlobals(globals_);
+        vm.prank(globals.governor());
+        globals.setValidPoolDelegate(poolDelegate_, true);
+
+        // PD deploys pool
+        vm.prank(poolDelegate_);
+        poolManager_ = IPoolDeployer(deployer_).deployPool({
+            poolManagerFactory_:       poolManagerFactory_,
+            withdrawalManagerFactory_: withdrawalManagerFactory_,
+            loanManagerFactories_:     loanManagerFactories_,
+            asset_:                    fundsAsset_,
+            name_:                     name_,
+            symbol_:                   symbol_,
+            configParams_:             configParams_
+        });
+
+        // Governor activates the pool
+        vm.startPrank(globals.governor());
+        globals.activatePoolManager(poolManager_);
+        globals.setMaxCoverLiquidationPercent(poolManager_, 1e6);
         vm.stopPrank();
     }
 

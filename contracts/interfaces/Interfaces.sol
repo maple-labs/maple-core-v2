@@ -22,6 +22,7 @@ import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-man
 import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
 import { IPool }              from "../../modules/pool/contracts/interfaces/IPool.sol";
+import { IPoolDeployer }      from "../../modules/pool/contracts/interfaces/IPoolDeployer.sol";
 import { IPoolManager }       from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
 import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
