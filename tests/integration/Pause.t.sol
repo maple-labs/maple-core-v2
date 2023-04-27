@@ -20,8 +20,6 @@ contract PauseTests is TestBaseWithAssertions {
     /*** Functions Mappings (Need to be continuously updated with new functions)                                                        ***/
     /**************************************************************************************************************************************/
 
-    // NOTE: Commented functions currently don't implement paused modifier.
-
     bytes[] fixedTermLoanFunctions = [
         abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
         abi.encodeWithSignature("setImplementation(address)", address(0)),
@@ -55,21 +53,22 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("setMinRatio(address,uint256)", address(0), 0),
         abi.encodeWithSignature("updateAccounting()"),
         abi.encodeWithSignature("acceptNewTerms(address,address,uint256,bytes[],uint256)",  address(0), address(0), 0, new bytes[](0), 0),
-        // abi.encodeWithSignature("rejectNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
-        // abi.encodeWithSignature("claim(uint256,uint256,uint256,uint256)", 0, 0, 0, 0),
+        abi.encodeWithSignature("rejectNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
+        abi.encodeWithSignature("claim(uint256,uint256,uint256,uint256)", 0, 0, 0, 0),
         abi.encodeWithSignature("impairLoan(address)", address(0)),
-        abi.encodeWithSignature("removeLoanImpairment(address)", address(0))
-        // abi.encodeWithSignature("finishCollateralLiquidation(address)", address(0)),
-        // abi.encodeWithSignature("triggerDefault(address,address)", address(0), address(0))
+        abi.encodeWithSignature("removeLoanImpairment(address)", address(0)),
+        abi.encodeWithSignature("finishCollateralLiquidation(address)", address(0)),
+        abi.encodeWithSignature("triggerDefault(address,address)", address(0), address(0))
     ];
 
     bytes[] liquidatorFunctions = [
+        // NOTE: Commented functions currently don't implement paused modifier.
         // abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
         // abi.encodeWithSignature("setImplementation(address)", address(0)),
         // abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
-        abi.encodeWithSignature("liquidatePortion(uint256,uint256,bytes)", 0, 0, new bytes(0))
+        // abi.encodeWithSignature("setCollateralRemaining(uint256)", 0),
         // abi.encodeWithSignature("pullFunds(address,address,uint256)", address(0), address(0), 0)
-        // abi.encodeWithSignature("setCollateralRemaining(uint256)", 0)
+        abi.encodeWithSignature("liquidatePortion(uint256,uint256,bytes)", 0, 0, new bytes(0))
     ];
 
     bytes[] openTermLoanFunctions = [
@@ -95,11 +94,11 @@ contract PauseTests is TestBaseWithAssertions {
 
     bytes[] openTermLoanManagerFunctions = [
         abi.encodeWithSignature("fund(address)", address(0)),
-        // abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
-        // abi.encodeWithSignature("setImplementation(address)", address(0)),
+        abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
+        abi.encodeWithSignature("setImplementation(address)", address(0)),
         abi.encodeWithSignature("upgrade(uint256,bytes)", address(0), new bytes(0)),
-        // abi.encodeWithSignature("proposeNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
-        // abi.encodeWithSignature("rejectNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
+        abi.encodeWithSignature("proposeNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
+        abi.encodeWithSignature("rejectNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
         abi.encodeWithSignature("claim(int256,uint256,uint256,uint256,uint40)", int(0), 0, 0, 0, 0),
         abi.encodeWithSignature("callPrincipal(address,uint256)", address(0), 0),
         abi.encodeWithSignature("removeCall(address)", address(0)),
