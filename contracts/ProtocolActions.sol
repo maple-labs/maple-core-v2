@@ -110,7 +110,6 @@ contract ProtocolActions is Test {
 
         vm.prank(governor_);
         IGlobals(globals_).setValidBorrower(borrower_, true);
-        vm.stopPrank();
 
         loan_ = IMapleProxyFactory(factory_).createInstance({
             arguments_: abi.encode(

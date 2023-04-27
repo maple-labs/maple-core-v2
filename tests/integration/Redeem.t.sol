@@ -1097,7 +1097,6 @@ contract RedeemIntegrationTests is TestBase {
 
         // Loan should be impaired
         assertTrue(ILoanLike(loan).isImpaired());
-        vm.stopPrank();
 
         // Warp to the withdrawal cycle
         vm.warp(start + 2 weeks);
@@ -1216,7 +1215,6 @@ contract RedeemIntegrationTests is TestBase {
 
         // Loan should be impaired
         assertTrue(ILoanLike(loan).isImpaired());
-        vm.stopPrank();
 
         // Warp to the withdrawal cycle
         vm.warp(start + 2 weeks);
