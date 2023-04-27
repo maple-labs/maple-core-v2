@@ -34,7 +34,7 @@ interface IFixedTermLoanV4Like {
 
 contract FTLoansFromV4ToV5 is AddressRegistry, ProtocolActions {
 
-    uint256 blockNumber = 16941500;
+    uint256 constant blockNumber = 16941500;
 
     // Current Fixed-term Loans
     address[] activeLoans = [
