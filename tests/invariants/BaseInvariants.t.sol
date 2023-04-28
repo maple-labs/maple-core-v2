@@ -15,9 +15,9 @@ import { StdInvariant } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { FixedTermLoanHandler } from "./actors/FixedTermLoanHandler.sol";
-import { LpHandler }            from "./actors/LpHandler.sol";
-import { OpenTermLoanHandler }  from "./actors/OpenTermLoanHandler.sol";
+import { FixedTermLoanHandler } from "./handlers/FixedTermLoanHandler.sol";
+import { LpHandler }            from "./handlers/LpHandler.sol";
+import { OpenTermLoanHandler }  from "./handlers/OpenTermLoanHandler.sol";
 
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {

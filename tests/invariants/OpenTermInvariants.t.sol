@@ -5,9 +5,9 @@ import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/
 
 import { console } from "../../contracts/Contracts.sol";
 
-import { DistributionHandler } from "./actors/DistributionHandler.sol";
-import { LpHandler }           from "./actors/LpHandler.sol";
-import { OpenTermLoanHandler } from "./actors/OpenTermLoanHandler.sol";
+import { DistributionHandler } from "./handlers/DistributionHandler.sol";
+import { LpHandler }           from "./handlers/LpHandler.sol";
+import { OpenTermLoanHandler } from "./handlers/OpenTermLoanHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 

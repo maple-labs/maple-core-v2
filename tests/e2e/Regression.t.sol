@@ -6,8 +6,8 @@ import { console } from "../../modules/forge-std/src/Test.sol";
 import { IFixedTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { BaseInvariants }       from "../invariants/BaseInvariants.t.sol";
-import { FixedTermLoanHandler } from "../invariants/actors/FixedTermLoanHandler.sol";
-import { LpHandler }            from "../invariants/actors/LpHandler.sol";
+import { FixedTermLoanHandler } from "../invariants/handlers/FixedTermLoanHandler.sol";
+import { LpHandler }            from "../invariants/handlers/LpHandler.sol";
 
 // NOTE: Placeholder for regression tests.
 contract RegressionTest is BaseInvariants {

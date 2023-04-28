@@ -3,9 +3,9 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { DistributionHandler }  from "./actors/DistributionHandler.sol";
-import { FixedTermLoanHandler } from "./actors/FixedTermLoanHandler.sol";
-import { LpHandler }            from "./actors/LpHandler.sol";
+import { DistributionHandler }  from "./handlers/DistributionHandler.sol";
+import { FixedTermLoanHandler } from "./handlers/FixedTermLoanHandler.sol";
+import { LpHandler }            from "./handlers/LpHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
