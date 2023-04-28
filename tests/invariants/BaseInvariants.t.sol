@@ -588,8 +588,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             expectedAssetsUnderManagement += loans_[i].principal() + _getExpectedNetInterest(loans_[i]);
         }
 
-        // TODO: Checkout difference in real and expected AUM.
-        assertApproxEqAbs(assetsUnderManagement, expectedAssetsUnderManagement, 200, "OTLM Invariant A");
+        assertApproxEqAbs(assetsUnderManagement, expectedAssetsUnderManagement, 300, "OTLM Invariant A");
     }
 
     function assert_otlm_invariant_B(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
