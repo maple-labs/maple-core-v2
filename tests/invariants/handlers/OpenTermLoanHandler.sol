@@ -75,15 +75,19 @@ contract OpenTermLoanHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    // function callLoan(uint256 seed_) external useTimestamps  {
-    //     address loan_ = _selectActiveLoan(seed_ = _hash(seed_));
+    function callLoan(uint256 seed_) external useTimestamps {
+        console2.log("callLoan() with seed:", seed_);
 
-    //     if (loan_ == address(0)) return;
+        numberOfCalls["callLoan"]++;
 
-    //     uint256 principal_ = bound(_hash(seed_), 1, IOpenTermLoan(loan_).principal());
+        address loan_ = _selectActiveLoan(seed_);
 
-    //     callLoan(loan_, principal_);
-    // }
+        if (loan_ == address(0)) return;
+
+        uint256 principal_ = bound(_hash(seed_, ""), 1, IOpenTermLoan(loan_).principal());
+
+        callLoan(loan_, principal_);
+    }
 
     function fundLoan(uint256 seed_) public useTimestamps {
         console2.log("fundLoan() with seed:", seed_);
@@ -97,14 +101,17 @@ contract OpenTermLoanHandler is HandlerBase {
         fundLoan(loan_);
     }
 
-    // TODO: Enable later.
-    // function impairLoan(uint256 seed_) external useTimestamps {
-    //     address loan_ = _selectActiveLoan(seed_);
+    function impairLoan(uint256 seed_) external useTimestamps {
+        console2.log("impairLoan() with seed:", seed_);
 
-    //     if (loan_ == address(0)) return;
+        numberOfCalls["impairLoan"]++;
 
-    //     impairLoan(loan_);
-    // }
+        address loan_ = _selectActiveLoan(seed_);
+
+        if (loan_ == address(0)) return;
+
+        impairLoan(loan_);
+    }
 
     function makePayment(uint256 seed_) public useTimestamps {
         console2.log("makePayment() with seed:", seed_);
@@ -134,9 +141,27 @@ contract OpenTermLoanHandler is HandlerBase {
         acceptRefinanceOT(loan_, refinancer, block.timestamp, calls_);
     }
 
-    function triggerDefault(uint256 seed_) public useTimestamps {
-        console2.log("triggerDefault() with seed:", seed_);
+    function removeLoanCall(uint256 seed_) external useTimestamps {
+        numberOfCalls["removeLoanCall"]++;
 
+        address loan_ = _selectCalledLoan(seed_);
+
+        if (loan_ == address(0)) return;
+
+        removeLoanCall(loan_);
+    }
+
+    function removeLoanImpairment(uint256 seed_) external useTimestamps {
+        numberOfCalls["removeLoanImpairment"]++;
+
+        address loan_ = _selectImpairedLoan(seed_);
+
+        if (loan_ == address(0)) return;
+
+        removeLoanImpairment(loan_);
+    }
+
+    function triggerDefault(uint256 seed_) external useTimestamps {
         numberOfCalls["triggerDefault"]++;
 
         address loan_ = _selectOverdueLoan(seed_);
@@ -284,6 +309,46 @@ contract OpenTermLoanHandler is HandlerBase {
         if (activeLoans_.length == 0) return address(0);
 
         loan_ = activeLoans_[bound(seed_, 0, activeLoans_.length - 1)];
+    }
+
+    function _selectCalledLoan(uint256 seed_) internal view returns (address loan_) {
+        uint256 index_;
+        uint256 length_;
+        address[] memory calledLoans_;
+
+        for (uint256 i; i < loans.length; ++i) {
+            if (IOpenTermLoan(loans[i]).dateCalled() != 0) length_++;
+        }
+
+        calledLoans_ = new address[](length_);
+
+        for (uint256 i; i < loans.length; ++i) {
+            if (IOpenTermLoan(loans[i]).dateCalled() != 0) calledLoans_[index_++] = loans[i];
+        }
+
+        if (calledLoans_.length == 0) return address(0);
+
+        loan_ = calledLoans_[bound(seed_, 0, calledLoans_.length - 1)];
+    }
+
+    function _selectImpairedLoan(uint256 seed_) internal view returns (address loan_) {
+        uint256 index_;
+        uint256 length_;
+        address[] memory impairedLoans_;
+
+        for (uint256 i; i < loans.length; ++i) {
+            if (IOpenTermLoan(loans[i]).dateImpaired() != 0) length_++;
+        }
+
+        impairedLoans_ = new address[](length_);
+
+        for (uint256 i; i < loans.length; ++i) {
+            if (IOpenTermLoan(loans[i]).dateImpaired() != 0) impairedLoans_[index_++] = loans[i];
+        }
+
+        if (impairedLoans_.length == 0) return address(0);
+
+        loan_ = impairedLoans_[bound(seed_, 0, impairedLoans_.length - 1)];
     }
 
     function _selectOverdueLoan(uint256 seed_) internal view returns (address loan_) {

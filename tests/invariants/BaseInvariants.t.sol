@@ -38,6 +38,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     uint256 public currentTimestamp;
 
+    uint256 constant ALLOWED_DIFF        = 100;
+    uint256 constant UNDERFLOW_THRESHOLD = 10;
+
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
@@ -93,6 +96,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant I: payment.startDate == loan.dateFunded() || loan.datePaid()
         * Invariant J: payment.issuanceRate == theoretical calculation (regular interest minus management fees)
         * Invariant K: ∑payment.impairedDate >= ∑payment.startDate
+        * Invariant L: assetsUnderManagement - unrealizedLosses - ∑outstandingValue(loan) ~= 0
 
      * Pool (non-liquidating)
         * Invariant A: totalAssets > fundsAsset balance of pool
@@ -691,6 +695,24 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
+    function assert_otlm_invariant_K(address loanManager_, IOpenTermLoan[] memory loans_) internal useCurrentTimestamp {
+        uint256 outstandingValue;
+
+        uint256 assetsUnderManagement = IOpenTermLoanManager(loanManager_).assetsUnderManagement();
+        uint256 unrealizedLosses      = IOpenTermLoanManager(loanManager_).unrealizedLosses();
+
+        for (uint256 i; i < loans_.length; ++i) {
+            outstandingValue += _getOutstandingValue(address(loans_[i]));
+        }
+
+        assertApproxEqAbs(
+            assetsUnderManagement + UNDERFLOW_THRESHOLD - unrealizedLosses - outstandingValue,
+            0,
+            ALLOWED_DIFF,
+            "OTLM Invariant K"
+        );
+    }
+
     /**************************************************************************************************************************************/
     /*** Internal Helpers Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
@@ -789,7 +811,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     {
         uint256 startTime    = loan.datePaid() == 0 ? loan.dateFunded() : loan.datePaid();
         uint256 interval     = block.timestamp - startTime;
-        uint256 lateInterval = interval > loan.paymentInterval() ? interval - loan.paymentInterval() : 0;
+        uint256 lateInterval = block.timestamp > IOpenTermLoan(loan).paymentDueDate()
+            ? block.timestamp - IOpenTermLoan(loan).paymentDueDate()
+            : 0;
 
         expectedPrincipal          = loan.dateCalled() == 0 ? 0 : loan.calledPrincipal();
         expectedInterest           = _getProRatedAmount(loan.principal(), loan.interestRate(), interval);
@@ -803,8 +827,39 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
+    function _getLoanManager() internal view returns (address loanManager_) {
+        loanManager_ = address(otlHandler.loanManager());
+    }
+
     function _getNetInterest(uint256 interest_, uint256 feeRate_) internal pure returns (uint256 netInterest_) {
         netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
+    }
+
+    function _getOutstandingValue(address loan_) internal view returns (uint256) {
+        if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
+        if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
+
+        address loanManager_ = _getLoanManager();
+
+        (
+            uint256 platformManagementFeeRate_,
+            uint256 delegateManagementFeeRate_,
+            ,
+        ) = IOpenTermLoanManager(loanManager_).paymentFor(loan_);
+
+        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0
+            ? IOpenTermLoan(loan_).datePaid()
+            : IOpenTermLoan(loan_).dateFunded();
+
+        uint256 grossInterest_ = _getProRatedAmount(
+            IOpenTermLoan(loan_).principal(),
+            IOpenTermLoan(loan_).interestRate(),
+            block.timestamp - startTime_
+        );
+
+        uint256 netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
+
+        return IOpenTermLoan(loan_).principal() + netInterest_;
     }
 
     function _getProRatedAmount(uint256 amount_, uint256 rate_, uint256 interval_) internal pure returns (uint256 proRatedAmount_) {

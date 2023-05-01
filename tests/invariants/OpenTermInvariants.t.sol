@@ -52,10 +52,15 @@ contract OpenTermInvariants is BaseInvariants {
         lpHandler.setSelectorWeight("requestRedeem(uint256)", 15);
         lpHandler.setSelectorWeight("transfer(uint256)",      15);
 
-        otlHandler.setSelectorWeight("fundLoan(uint256)",       30);
-        otlHandler.setSelectorWeight("makePayment(uint256)",    50);
-        otlHandler.setSelectorWeight("triggerDefault(uint256)", 0);
-        otlHandler.setSelectorWeight("warp(uint256)",           20);
+        otlHandler.setSelectorWeight("callLoan(uint256)",             5);
+        otlHandler.setSelectorWeight("fundLoan(uint256)",             15);
+        otlHandler.setSelectorWeight("impairLoan(uint256)",           5);
+        otlHandler.setSelectorWeight("makePayment(uint256)",          20);
+        otlHandler.setSelectorWeight("refinance(uint256)",            10);
+        otlHandler.setSelectorWeight("removeLoanCall(uint256)",       5);
+        otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 5);
+        otlHandler.setSelectorWeight("triggerDefault(uint256)",       10);
+        otlHandler.setSelectorWeight("warp(uint256)",                 25);
 
         uint256[] memory weightsDistributorHandler = new uint256[](2);
         weightsDistributorHandler[0] = 20;  // lpHandler()
@@ -82,6 +87,7 @@ contract OpenTermInvariants is BaseInvariants {
         assert_otlm_invariant_C(address(otlHandler.loanManager()), loans);
         assert_otlm_invariant_D(address(otlHandler.loanManager()), loans);
         assert_otlm_invariant_F(address(otlHandler.loanManager()), loans);
+        assert_otlm_invariant_K(address(otlHandler.loanManager()), loans);
 
         for (uint256 i; i < loans.length; ++i) {
             assert_otl_invariant_A(address(loans[i]));
