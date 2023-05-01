@@ -757,21 +757,22 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 fundingTime      = ftlHandler.fundingTime(loan_);
         uint256 paymentTimestamp = ftlHandler.paymentTimestamp(loan_);
 
-        // TODO: This will break with globals
-        uint256 netInterest =
-            interestArray[0] *
-            (1e6 - globals.platformManagementFeeRate(address(poolManager)) - poolManager.delegateManagementFeeRate())
-            / 1e6;
+        uint256 platformManagementRate = globals.platformManagementFeeRate(address(poolManager));
+        uint256 delegateManagementRate = poolManager.delegateManagementFeeRate();
+
+        uint256 netInterest          = (interestArray[0]) * (1e6 - platformManagementRate - delegateManagementRate) / 1e6;
+        uint256 netRefinanceInterest = (interestArray[2]) * (1e6 - platformManagementRate - delegateManagementRate) / 1e6;
 
         uint256 startDate = paymentTimestamp == 0 ? fundingTime : min(paymentTimestamp, loan.nextPaymentDueDate() - loan.paymentInterval());
+        uint256 endDate   = min(block.timestamp, min(earliestPaymentDueDate, loan.nextPaymentDueDate()));
 
-        uint256 endDate = min(block.timestamp, min(earliestPaymentDueDate, loan.nextPaymentDueDate()));
-
-        interestAccrued_ =
+        uint256 accrued_ =
             endDate < startDate
                 ? netInterest
                 // Use longer if early payment made
                 : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());
+
+        interestAccrued_ = accrued_ + netRefinanceInterest;
     }
 
     function _getExpectedIssuanceRate(IOpenTermLoan loan) internal view returns (uint256 expectedIssuanceRate) {

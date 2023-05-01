@@ -34,6 +34,7 @@ contract ImpairInvariants is BaseInvariants {
             liquidatorFactory_: liquidatorFactory,
             loanFactory_:       fixedTermLoanFactory,
             poolManager_:       address(poolManager),
+            refinancer_:        address(fixedTermRefinancer),
             testContract_:      address(this),
             numBorrowers_:      NUM_BORROWERS
         });
@@ -47,7 +48,8 @@ contract ImpairInvariants is BaseInvariants {
         ftlHandler.setSelectorWeight("impairLoan(uint256)",                  20);
         ftlHandler.setSelectorWeight("triggerDefault(uint256)",              0);
         ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 0);
-        ftlHandler.setSelectorWeight("warp(uint256)",                        20);
+        ftlHandler.setSelectorWeight("warp(uint256)",                        15);
+        ftlHandler.setSelectorWeight("refinance(uint256)",                   5);
 
         lpHandler.setSelectorWeight("deposit(uint256)",       25);
         lpHandler.setSelectorWeight("mint(uint256)",          15);

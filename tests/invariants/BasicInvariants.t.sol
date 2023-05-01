@@ -44,6 +44,7 @@ contract BasicInvariants is BaseInvariants {
             liquidatorFactory_: liquidatorFactory,
             loanFactory_:       fixedTermLoanFactory,
             poolManager_:       address(poolManager),
+            refinancer_:        address(fixedTermRefinancer),
             testContract_:      address(this),
             numBorrowers_:      NUM_BORROWERS
         });
@@ -51,13 +52,14 @@ contract BasicInvariants is BaseInvariants {
         lpHandler = new LpHandler(address(pool), address(this), NUM_LPS);
 
         ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           30);
-        ftlHandler.setSelectorWeight("makePayment(uint256)",                 50);
+        ftlHandler.setSelectorWeight("makePayment(uint256)",                 45);
         ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       0);
         ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          0);
         ftlHandler.setSelectorWeight("impairLoan(uint256)",                  0);
         ftlHandler.setSelectorWeight("triggerDefault(uint256)",              0);
         ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 0);
         ftlHandler.setSelectorWeight("warp(uint256)",                        20);
+        ftlHandler.setSelectorWeight("refinance(uint256)",                   5);
 
         lpHandler.setSelectorWeight("deposit(uint256)",       25);
         lpHandler.setSelectorWeight("mint(uint256)",          15);

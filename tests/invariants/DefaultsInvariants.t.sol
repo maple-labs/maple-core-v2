@@ -18,6 +18,8 @@ contract DefaultsInvariants is BaseInvariants {
     uint256 constant NUM_BORROWERS = 5;
     uint256 constant NUM_LPS       = 10;
 
+    DistributionHandler distributionHandler;
+
     /**************************************************************************************************************************************/
     /*** Setup Function                                                                                                                 ***/
     /**************************************************************************************************************************************/
@@ -34,20 +36,22 @@ contract DefaultsInvariants is BaseInvariants {
             liquidatorFactory_: liquidatorFactory,
             loanFactory_:       fixedTermLoanFactory,
             poolManager_:       address(poolManager),
+            refinancer_:        address(fixedTermRefinancer),
             testContract_:      address(this),
             numBorrowers_:      NUM_BORROWERS
         });
 
         lpHandler = new LpHandler(address(pool), address(this), NUM_LPS);
 
-        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           30);
+        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           20);
         ftlHandler.setSelectorWeight("makePayment(uint256)",                 0);
         ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       0);
         ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          20);
-        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  0);
-        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              20);
+        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  10);
+        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              15);
         ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 10);
         ftlHandler.setSelectorWeight("warp(uint256)",                        20);
+        ftlHandler.setSelectorWeight("refinance(uint256)",                   5);
 
         lpHandler.setSelectorWeight("deposit(uint256)",       25);
         lpHandler.setSelectorWeight("mint(uint256)",          15);
@@ -64,9 +68,9 @@ contract DefaultsInvariants is BaseInvariants {
         targetContracts[0] = address(lpHandler);
         targetContracts[1] = address(ftlHandler);
 
-        address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
+        distributionHandler = new DistributionHandler(targetContracts, weightsDistributorHandler);
 
-        targetContract(distributionHandler);
+        targetContract(address(distributionHandler));
 
         targetSender(address(0xdeed));
     }
@@ -78,7 +82,8 @@ contract DefaultsInvariants is BaseInvariants {
     * Loan Manager
         * Invariant G: unrealizedLosses == 0
             NOTE: triggerDefault() with collateral that needs liquidating then unrealizedLosses will be > 0
-
+        * Invariant L: paymentInfo.refinanceInterest == loan's netRefinanceInterest.
+            NOTE: If a loan is refinanced then defaulted, the refinanceInterest will be > 0 while paymentInfo will be zeroed.
     * Pool
         * Invariant C: totalAssets >= totalSupply (in non-liquidating scenario)
         * Invariant F: balanceOfAssets[user] >= balanceOf[user]
@@ -91,7 +96,7 @@ contract DefaultsInvariants is BaseInvariants {
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function invariant_fixedTermLoan_A_B_fixedTermLoanManager_L_M_N() external useCurrentTimestamp {
+    function invariant_fixedTermLoan_A_B_fixedTermLoanManager_M_N() external useCurrentTimestamp {
         for (uint256 i; i < ftlHandler.numLoans(); ++i) {
             address               loan        = ftlHandler.activeLoans(i);
             IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
@@ -110,7 +115,6 @@ contract DefaultsInvariants is BaseInvariants {
                 ,
             ) = loanManager.payments(loanManager.paymentIdOf(loan));
 
-            assert_ftlm_invariant_L(loan, refinanceInterest);
             assert_ftlm_invariant_M(loan, paymentDueDate);
             assert_ftlm_invariant_N(loan, startDate);
         }

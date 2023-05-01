@@ -39,6 +39,7 @@ contract FixedTermLoanHandler is HandlerBase {
     address governor;
     address liquidatorFactory;
     address loanFactory;
+    address refinancer;
 
     // Debugging
     uint256 public numBorrowers;
@@ -92,6 +93,7 @@ contract FixedTermLoanHandler is HandlerBase {
         address liquidatorFactory_,
         address loanFactory_,
         address poolManager_,
+        address refinancer_,
         address testContract_,
         uint256 numBorrowers_
     ) {
@@ -99,6 +101,7 @@ contract FixedTermLoanHandler is HandlerBase {
         loanFactory = loanFactory_;
         globals     = IMapleProxyFactory(loanFactory).mapleGlobals();
         governor    = governor_;
+        refinancer  = refinancer_;
 
         collateralAsset   = MockERC20(collateralAsset_);
         poolManager       = IPoolManager(poolManager_);
@@ -139,37 +142,13 @@ contract FixedTermLoanHandler is HandlerBase {
 
         address borrower_ = borrowers[bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
 
-        uint256[3] memory termDetails_;
+        uint256[3] memory termDetails_ = _getLoanTerms(_randomize(seed_, "termDetails"));
+        uint256[3] memory amounts_     = _getLoanAmounts(_randomize(seed_, "amounts"));
+        uint256[4] memory rates_       = _getLoanRates(_randomize(seed_, "rates"));
 
-        termDetails_[0] = bound(_randomize(seed_, "termDetails_[0]"), 12 hours, 30 days);   // Grace period
-        termDetails_[1] = bound(_randomize(seed_, "termDetails_[1]"), 1 days,   730 days);  // Payment interval
-        termDetails_[2] = bound(_randomize(seed_, "termDetails_[2]"), 1,        30);        // Number of payments
+        if (amounts_[1] == 0) return;
 
-        uint256[3] memory amounts_;
-
-        amounts_[0] = bound(_randomize(seed_, "amounts_[0]"), 0,        1e29);         // Collateral required is zero as we don't drawdown
-        amounts_[1] = bound(_randomize(seed_, "amounts_[1]"), 10_000e6, 1e29);         // Principal requested
-        amounts_[2] = bound(_randomize(seed_, "amounts_[2]"), 0,        amounts_[1]);  // Ending principal
-
-        require(amounts_[1] >= amounts_[2], "LH:INVALID_AMOUNTS");
-
-        uint256[4] memory rates_;
-
-        rates_[0] = bound(_randomize(seed_, "rates_[0]"), 0.0001e6, 0.5e6);  // Interest rate
-        rates_[1] = bound(_randomize(seed_, "rates_[1]"), 0.0001e6, 1.0e6);  // Closing fee rate
-        rates_[2] = bound(_randomize(seed_, "rates_[2]"), 0.0001e6, 0.6e6);  // Late fee rate
-        rates_[3] = bound(_randomize(seed_, "rates_[3]"), 0.0001e6, 0.2e6);  // Late interest premium
-
-        uint256[2] memory fees_;
-
-        fees_[0] = bound(_randomize(seed_, "fees_[0]"), 0, amounts_[1] * 0.025e6 / 1e6);  // Delegate origination fee
-        fees_[1] = bound(_randomize(seed_, "fees_[1]"), 0, amounts_[1] / 10);             // Delegate service fee
-
-        if (
-            pool.totalSupply() == 0 ||
-            delta(fundsAsset.balanceOf(address(pool)), IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity()) < amounts_[1] ||
-            IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity() > fundsAsset.balanceOf(address(pool))
-        ) return;
+        uint256[2] memory fees_ = _getLoanFees(_randomize(seed_,"fees"), amounts_[1]);
 
         vm.startPrank(borrower_);
         address loan_ = IProxyFactoryLike(loanFactory).createInstance({
@@ -501,6 +480,79 @@ contract FixedTermLoanHandler is HandlerBase {
         }
     }
 
+    function refinance(uint256 seed_) public useTimestamps {
+        console2.log("refinance() with seed:", seed_);
+
+        numberOfCalls["refinance"]++;
+
+        if (activeLoans.length == 0) return;
+
+        uint256 loanIndex_ = bound(seed_, 0, activeLoans.length - 1);
+
+        IFixedTermLoan loan_ = IFixedTermLoan(activeLoans[loanIndex_]);
+
+        ( bytes[] memory calls_, uint256 principalIncrease_ ) = _generateRefinanceCalls(_randomize(seed_, "refinance"), address(loan_));
+
+        ( , , uint256 startDate , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
+
+        // Loan is not active
+        if (startDate == 0) return;
+
+        if (!loanImpaired[address(loan_)]) {
+            sum_loanManager_paymentIssuanceRate -= issuanceRate;
+        }
+
+        sum_loan_principal -= loan_.principal();
+
+        // There's a need to pay origination fees during refinance, but it's impossible
+        // to know how much it'll be. So an exorbitant amount is sent then is drawdown.
+        address borrower = loan_.borrower();
+        fundsAsset.mint(borrower, 1e29);
+        vm.startPrank(borrower);
+        fundsAsset.approve(address(loan_), 1e29);
+        loan_.returnFunds(1e29);
+
+        collateralAsset.mint(address(loan_), 1e29);
+        loan_.postCollateral(0);
+        vm.stopPrank();
+
+        proposeRefinanceFT(address(loan_), refinancer, block.timestamp, calls_);
+
+        acceptRefinanceFT(address(loan_), refinancer, block.timestamp, calls_, principalIncrease_);
+
+        ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
+
+        sum_loan_principal                  += loan_.principal();
+        sum_loanManager_paymentIssuanceRate += issuanceRate;
+
+        paymentTimestamp[address(loan_)] = block.timestamp;
+        numPayments++;
+
+        uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
+
+        if (paymentWithEarliestDueDate != 0) {
+            ( , , earliestPaymentDueDate ) = loanManager.sortedPayments(loanManager.paymentWithEarliestDueDate());
+        } else {
+            earliestPaymentDueDate = block.timestamp;
+        }
+
+        require(earliestPaymentDueDate == loanManager.domainEnd(), "Not equal");
+
+        uint256 drawable   = loan_.drawableFunds();
+        uint256 collateral = loan_.getAdditionalCollateralRequiredFor(drawable);
+
+        collateralAsset.mint(address(loan_), collateral);
+
+        vm.startPrank(borrower);
+        loan_.drawdownFunds(drawable, address(borrower));
+        loan_.removeCollateral(loan_.excessCollateral(), address(borrower));
+        vm.stopPrank();
+
+        fundsAsset.burn(borrower, fundsAsset.balanceOf(borrower));
+        collateralAsset.burn(borrower, collateralAsset.balanceOf(borrower));
+    }
+
+
     function warp(uint256 seed_) public useTimestamps {
         console2.log("warp() with seed:", seed_);
 
@@ -514,6 +566,123 @@ contract FixedTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
+
+     function _availableLiquidity() internal view returns (uint256 availableLiquidity) {
+        if (pool.totalSupply() == 0) return 0;
+
+        uint256 lockedLiquidity = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();
+        uint256 assetBalance    = fundsAsset.balanceOf(address(pool));
+
+        availableLiquidity = lockedLiquidity > assetBalance ? 0 : assetBalance - lockedLiquidity;
+    }
+
+    function _generateRefinanceCalls(uint256 seed_, address loan_)
+        internal view returns (bytes[] memory data_, uint256 principalChange_)
+    {
+        uint256 currentPrincipal = IFixedTermLoan(loan_).principal();
+
+        // Get how many calls will be done
+        uint256 numOfCalls = (_randomize(seed_, "numOfCalls") % 11) + 1; // 11 functions on refi contract
+
+        uint256[3] memory termDetails = _getLoanTerms(_randomize(seed_, "termDetails"));
+        uint256[4] memory rates       = _getLoanRates(_randomize(seed_, "rates"));
+        uint256[2] memory fees        = _getLoanFees(_randomize(seed_, "fees"), currentPrincipal);
+
+        // Increase is limited to available principal
+        uint256 principalIncrease = bound(_randomize(seed_, "principal"),       0, _availableLiquidity());
+        uint256 endingPrincipal   = bound(_randomize(seed_, "endingPrincipal"), 0, currentPrincipal + principalIncrease);
+
+        // Create an array of arguments, even if not all will be used
+        bytes[] memory calls = new bytes[](11);
+
+        calls[0] = abi.encodeWithSignature("setCollateralRequired(uint256)", bound(_randomize(seed_, "collateralRequired"), 0, 1e29));
+
+        calls[1]  = abi.encodeWithSignature("increasePrincipal(uint256)",              principalIncrease);
+        calls[2]  = abi.encodeWithSignature("setEndingPrincipal(uint256)",             endingPrincipal);
+        calls[3]  = abi.encodeWithSignature("setInterestRate(uint256)",                rates[0]);
+        calls[4]  = abi.encodeWithSignature("setClosingRate(uint256)",                 rates[1]);
+        calls[5]  = abi.encodeWithSignature("setLateFeeRate(uint256)",                 rates[2]);
+        calls[6]  = abi.encodeWithSignature("setGracePeriod(uint256)",                 termDetails[0]);
+        calls[7]  = abi.encodeWithSignature("setPaymentInterval(uint256)",             termDetails[1]);
+        calls[8]  = abi.encodeWithSignature("setPaymentsRemaining(uint256)",           termDetails[2]);
+        calls[9]  = abi.encodeWithSignature("setLateInterestPremiumRate(uint256)",     rates[3]);
+        calls[10] = abi.encodeWithSignature("updateDelegateFeeTerms(uint256,uint256)", fees[0], fees[1]);
+
+        data_ = new bytes[](numOfCalls);
+
+        for (uint256 i = 0; i < numOfCalls; i++) {
+            // Get a random index, so calls happen in different orders every time.
+            uint256 index = _randomize(seed_, string(abi.encode(i))) % calls.length;
+
+            data_[i] = calls[index];
+
+            // `increasePrincipal`-specific logic
+            if (index == 1) {
+
+                // Only call `increasePrincipal` once to ensure that amount corresponds to available liquidity
+                if (principalChange_ > 0) {
+                    data_[i] = calls[4];  // `setClosingRate` instead of duplicate `increasePrincipal`
+                    continue;
+                }
+
+                principalChange_ += principalIncrease;
+
+                // If the ending principal is set to a value higher than the current principal and the ending principal is set
+                // before the new principal is set, the refinance will revert with `R:SEP:ABOVE_CURRENT_PRINCIPAL`.
+                // Reorder the calls to fix this.
+                for (uint256 j; j < i; j++) {
+                    if (keccak256(data_[j]) == keccak256(calls[2])) {
+                        data_[j] = calls[index];
+                        data_[i] = calls[2];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (principalChange_ > 0) return (data_, principalChange_);
+
+        // If there is no principal change, ensure that all `setEndingPrincipal` calls
+        // are made with an amount less than principal + increase
+        for (uint256 i; i < data_.length; i++) {
+            if (keccak256(data_[i]) == keccak256(calls[2])) {
+                data_[i] = abi.encodeWithSignature(
+                    "setEndingPrincipal(uint256)",
+                    bound(_randomize(seed_, "endingPrincipal 2"), 0, currentPrincipal)
+                );
+            }
+        }
+    }
+
+    function _getLoanAmounts(uint256 seed_) internal view returns(uint256[3] memory amounts_) {
+        uint256 availableLiquidity = _availableLiquidity();
+
+        if (availableLiquidity < 10_000e6) return [uint256(0), 0, 0];
+
+        amounts_[0] = bound(_randomize(seed_, "collateralRequired"), 0,        1e29);
+        amounts_[1] = bound(_randomize(seed_, "principalRequested"), 10_000e6, availableLiquidity);
+        amounts_[2] = bound(_randomize(seed_, "endingPrincipal"),    0,        amounts_[1]);
+
+        require(amounts_[1] >= amounts_[2], "LH:INVALID_AMOUNTS");
+    }
+
+    function _getLoanFees(uint256 seed_, uint256 principal_) internal view returns(uint256[2] memory fees_) {
+        fees_[0] = bound(_randomize(seed_, "delegateOriginationFee"), 0, principal_ * 0.025e6 / 1e6);
+        fees_[1] = bound(_randomize(seed_, "delegateServiceFee"),     0, principal_ * 0.025e6 / 1e6);
+    }
+
+    function _getLoanRates(uint256 seed_) internal view returns(uint256[4] memory rates_) {
+        rates_[0] = bound(_randomize(seed_, "interestRate"),            0, 1.0e6);
+        rates_[1] = bound(_randomize(seed_, "closingFeeRate"),          0, 1.0e6);
+        rates_[2] = bound(_randomize(seed_, "lateFeeRate"),             0, 0.6e6);
+        rates_[3] = bound(_randomize(seed_, "lateInterestPremiumRate"), 0, 0.2e6);
+    }
+
+    function _getLoanTerms(uint256 seed_) internal view returns(uint256[3] memory termDetails_) {
+        termDetails_[0] = bound(_randomize(seed_, "gracePeriod"),      12 hours,  30 days);
+        termDetails_[1] = bound(_randomize(seed_, "paymentInterval"),  5 minutes, 730 days);
+        termDetails_[2] = bound(_randomize(seed_, "numberOfPayments"), 1,         30);
+    }
 
     function _randomize(uint256 seed, string memory salt) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(seed, salt)));
