@@ -622,13 +622,16 @@ contract ProtocolActions is Test {
     }
 
     function impairLoan(address loan_) internal {
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager()).poolDelegate();
+
+        impairLoan(loan_, poolDelegate_);
+    }
+
+    function impairLoan(address loan_, address caller_) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
+        vm.prank(caller_);
         loanManager_.impairLoan(loan_);
-        vm.stopPrank();
     }
 
     function openPool(address poolManager_) internal {
@@ -652,13 +655,16 @@ contract ProtocolActions is Test {
     }
 
     function removeLoanImpairment(address loan_) internal {
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager()).poolDelegate();
+
+        removeLoanImpairment(loan_, poolDelegate_);
+    }
+
+    function removeLoanImpairment(address loan_, address caller_) internal {
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
-        address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
+        vm.prank(caller_);
         loanManager_.removeLoanImpairment(loan_);
-        vm.stopPrank();
     }
 
     function setDelegateManagementFeeRate(address poolManager_, uint256 rate_) internal {
@@ -702,17 +708,16 @@ contract ProtocolActions is Test {
     }
 
     function triggerDefault(address loan_, address liquidatorFactory_) internal {
-        IPoolManager poolManager_ = IPoolManager(
-            ILoanManagerLike(
-                ILoanLike(loan_).lender()
-            ).poolManager()
-        );
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager()).poolDelegate();
 
-        address poolDelegate_ = poolManager_.poolDelegate();
+        triggerDefault(loan_, liquidatorFactory_, poolDelegate_);
+    }
 
-        vm.startPrank(poolDelegate_);
+    function triggerDefault(address loan_, address liquidatorFactory_, address caller_) internal {
+        IPoolManager poolManager_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager());
+
+        vm.prank(caller_);
         poolManager_.triggerDefault(loan_, liquidatorFactory_);
-        vm.stopPrank();
     }
 
     function withdrawCover(address poolManager_, uint256 amount_) internal {
@@ -784,6 +789,41 @@ contract ProtocolActions is Test {
     /**************************************************************************************************************************************/
     /*** Governor Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
+
+    function setMaxCoverLiquidationPercent(address globals, address poolManager, uint256 maxCoverLiquidationPercent) internal {
+        address governor = IGlobals(globals).governor();
+
+        vm.prank(governor);
+        IGlobals(globals).setMaxCoverLiquidationPercent(poolManager, maxCoverLiquidationPercent);
+    }
+
+    function setMinCoverAmount(address globals, address poolManager, uint256 minCoverAmount) internal {
+        address governor = IGlobals(globals).governor();
+
+        vm.prank(governor);
+        IGlobals(globals).setMinCoverAmount(poolManager, minCoverAmount);
+    }
+
+    function setPlatformManagementFeeRate(address globals, address poolManager, uint256 feeRate) internal {
+        address governor = IGlobals(globals).governor();
+
+        vm.prank(governor);
+        IGlobals(globals).setPlatformManagementFeeRate(address(poolManager), feeRate);
+    }
+
+    function setPlatformOriginationFeeRate(address globals, address poolManager, uint256 feeRate) internal {
+        address governor = IGlobals(globals).governor();
+
+        vm.prank(governor);
+        IGlobals(globals).setPlatformOriginationFeeRate(address(poolManager), feeRate);
+    }
+
+    function setPlatformServiceFeeRate(address globals, address poolManager, uint256 feeRate) internal {
+        address governor = IGlobals(globals).governor();
+
+        vm.prank(governor);
+        IGlobals(globals).setPlatformServiceFeeRate(address(poolManager), feeRate);
+    }
 
     function upgradeLoansAsBorrowers(address[] memory loans, uint256 version, bytes memory data) internal {
         for (uint256 i; i < loans.length; ++i) {

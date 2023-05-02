@@ -6,15 +6,13 @@ import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/
 import { console } from "../../contracts/Contracts.sol";
 
 import { DistributionHandler } from "./handlers/DistributionHandler.sol";
+import { GlobalsHandler }      from "./handlers/GlobalsHandler.sol";
 import { LpHandler }           from "./handlers/LpHandler.sol";
 import { OpenTermLoanHandler } from "./handlers/OpenTermLoanHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
 contract OpenTermInvariants is BaseInvariants {
-
-    // TODO: Add governor handler
-    // TODO: Update fees
 
     uint256 constant NUM_LPS       = 10;
     uint256 constant NUM_OT_LOANS  = 10;
@@ -45,6 +43,11 @@ contract OpenTermInvariants is BaseInvariants {
             maxLoans_:          NUM_OT_LOANS
         });
 
+        globalsHandler = new GlobalsHandler({
+            globals_:     address(globals),
+            poolManager_: address(poolManager)
+        });
+
         lpHandler.setSelectorWeight("deposit(uint256)",       25);
         lpHandler.setSelectorWeight("mint(uint256)",          15);
         lpHandler.setSelectorWeight("redeem(uint256)",        15);
@@ -62,13 +65,21 @@ contract OpenTermInvariants is BaseInvariants {
         otlHandler.setSelectorWeight("triggerDefault(uint256)",       10);
         otlHandler.setSelectorWeight("warp(uint256)",                 25);
 
-        uint256[] memory weightsDistributorHandler = new uint256[](2);
-        weightsDistributorHandler[0] = 20;  // lpHandler()
-        weightsDistributorHandler[1] = 80;  // OTLHandler()
+        globalsHandler.setSelectorWeight("setMaxCoverLiquidationPercent(uint256)", 20);
+        globalsHandler.setSelectorWeight("setMinCoverAmount(uint256)",             20);
+        globalsHandler.setSelectorWeight("setPlatformManagementFeeRate(uint256)",  20);
+        globalsHandler.setSelectorWeight("setPlatformOriginationFeeRate(uint256)", 20);
+        globalsHandler.setSelectorWeight("setPlatformServiceFeeRate(uint256)",     20);
 
-        address[] memory targetContracts = new address[](2);
+        uint256[] memory weightsDistributorHandler = new uint256[](3);
+        weightsDistributorHandler[0] = 20;  // lpHandler()
+        weightsDistributorHandler[1] = 70;  // OTLHandler()
+        weightsDistributorHandler[2] = 10;  // globalsHandler()
+
+        address[] memory targetContracts = new address[](3);
         targetContracts[0] = address(lpHandler);
         targetContracts[1] = address(otlHandler);
+        targetContracts[2] = address(globalsHandler);
 
         address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
 

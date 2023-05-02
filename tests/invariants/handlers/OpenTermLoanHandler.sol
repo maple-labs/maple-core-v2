@@ -110,7 +110,9 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (loan_ == address(0)) return;
 
-        impairLoan(loan_);
+        address caller_ = _selectCaller(seed_);
+
+        impairLoan(loan_, caller_);
     }
 
     function makePayment(uint256 seed_) public useTimestamps {
@@ -158,7 +160,9 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (loan_ == address(0)) return;
 
-        removeLoanImpairment(loan_);
+        address caller_ = _selectCaller(seed_);
+
+        removeLoanImpairment(loan_, caller_);
     }
 
     function triggerDefault(uint256 seed_) external useTimestamps {
@@ -168,7 +172,9 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (loan_ == address(0)) return;
 
-        triggerDefault(loan_, address(liquidatorFactory));
+        address caller_ = _selectCaller(seed_);
+
+        triggerDefault(loan_, address(liquidatorFactory), caller_);
     }
 
     function warp(uint256 seed_) public useTimestamps {
@@ -329,6 +335,10 @@ contract OpenTermLoanHandler is HandlerBase {
         if (calledLoans_.length == 0) return address(0);
 
         loan_ = calledLoans_[bound(seed_, 0, calledLoans_.length - 1)];
+    }
+
+    function _selectCaller(uint256 seed_) internal view returns (address caller_) {
+        caller_ = seed_ % 2 == 0 ? poolManager.poolDelegate() : globals.governor();
     }
 
     function _selectImpairedLoan(uint256 seed_) internal view returns (address loan_) {
