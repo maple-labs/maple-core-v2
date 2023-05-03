@@ -76,7 +76,7 @@ contract OpenTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function callLoan(uint256 seed_) external useTimestamps {
-        console2.log("callLoan() with seed:", seed_);
+        console2.log("otlHandler.callLoan(%s)", seed_);
 
         numberOfCalls["callLoan"]++;
 
@@ -84,13 +84,13 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (loan_ == address(0)) return;
 
-        uint256 principal_ = bound(_hash(seed_, ""), 1, IOpenTermLoan(loan_).principal());
+        uint256 principal_ = _bound(_hash(seed_, ""), 1, IOpenTermLoan(loan_).principal());
 
         callLoan(loan_, principal_);
     }
 
     function fundLoan(uint256 seed_) public useTimestamps {
-        console2.log("fundLoan() with seed:", seed_);
+        console2.log("otlHandler.fundLoan(%s)", seed_);
 
         numberOfCalls["fundLoan"]++;
 
@@ -102,7 +102,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function impairLoan(uint256 seed_) external useTimestamps {
-        console2.log("impairLoan() with seed:", seed_);
+        console2.log("otlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["impairLoan"]++;
 
@@ -116,7 +116,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function makePayment(uint256 seed_) public useTimestamps {
-        console2.log("makePayment() with seed:", seed_);
+        console2.log("otlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["makePayment"]++;
 
@@ -128,7 +128,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public useTimestamps {
-        console2.log("refinance() with seed:", seed_);
+        console2.log("otlHandler.refinance(%s)", seed_);
 
         numberOfCalls["refinance"]++;
 
@@ -178,11 +178,11 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function warp(uint256 seed_) public useTimestamps {
-        console2.log("warp() with seed:", seed_);
+        console2.log("otlHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;
 
-        uint256 timeSpan_ = bound(seed_, 1 days, 15 days);
+        uint256 timeSpan_ = _bound(seed_, 1 days, 15 days);
 
         vm.warp(block.timestamp + timeSpan_);
     }
@@ -217,7 +217,7 @@ contract OpenTermLoanHandler is HandlerBase {
         // Do nothing if no deposits have been made yet.
         if (pool.totalSupply() == 0) return address(0);
 
-        address borrower_  = borrowers[bound(_hash(seed_, "borrower"), 0, borrowers.length - 1)];
+        address borrower_  = borrowers[_bound(_hash(seed_, "borrower"), 0, borrowers.length - 1)];
         uint256 principal_ = _getPrincipalIncrease(seed_);
 
         // Do nothing if there are no assets available for utilization.
@@ -249,14 +249,14 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function _getLoanParams(uint256 seed_) internal view returns (uint256[3] memory terms_, uint256[4] memory rates_) {
-        uint256 noticePeriod_    = bound(_hash(seed_, "noticePeriod"),    0,       30 days);
-        uint256 gracePeriod_     = bound(_hash(seed_, "gracePeriod"),     0,       30 days);
-        uint256 paymentInterval_ = bound(_hash(seed_, "paymentInterval"), 1 hours, 30 days);
+        uint256 noticePeriod_    = _bound(_hash(seed_, "noticePeriod"),    0,       30 days);
+        uint256 gracePeriod_     = _bound(_hash(seed_, "gracePeriod"),     0,       30 days);
+        uint256 paymentInterval_ = _bound(_hash(seed_, "paymentInterval"), 1 hours, 30 days);
 
-        uint256 delegateServiceFeeRate_ = bound(_hash(seed_, "delegateService"), 0, 0.1e6);
-        uint256 interestRate_           = bound(_hash(seed_, "interestRate"),    1, 0.2e6);
-        uint256 lateFeeRate_            = bound(_hash(seed_, "lateFeeRate"),     0, 0.1e6);
-        uint256 lateInterestPremium_    = bound(_hash(seed_, "lateInterest"),    0, 0.1e6);
+        uint256 delegateServiceFeeRate_ = _bound(_hash(seed_, "delegateService"), 0, 0.1e6);
+        uint256 interestRate_           = _bound(_hash(seed_, "interestRate"),    1, 0.2e6);
+        uint256 lateFeeRate_            = _bound(_hash(seed_, "lateFeeRate"),     0, 0.1e6);
+        uint256 lateInterestPremium_    = _bound(_hash(seed_, "lateInterest"),    0, 0.1e6);
 
         terms_ = [gracePeriod_, noticePeriod_, paymentInterval_];
         rates_ = [delegateServiceFeeRate_, interestRate_, lateFeeRate_, lateInterestPremium_];
@@ -270,7 +270,7 @@ contract OpenTermLoanHandler is HandlerBase {
         ( uint256[3] memory terms_, uint256[4] memory rates_ ) = _getLoanParams(seed_);
 
         uint256 principalIncrease = _getPrincipalIncrease(seed_);
-        uint256 principalDecrease =  bound(_hash(seed_, "decrease"), 0, IOpenTermLoan(loan_).principal() - 1);
+        uint256 principalDecrease =  _bound(_hash(seed_, "decrease"), 0, IOpenTermLoan(loan_).principal() - 1);
 
         bytes[] memory calls = new bytes[](9);
 
@@ -302,7 +302,7 @@ contract OpenTermLoanHandler is HandlerBase {
         // Do nothing if there are no assets available for utilization.
         if (availableAssets_ <= lockedLiquidity_) return 0;
 
-        principal_ = bound(_hash(seed_, "principal"), 1, availableAssets_ - lockedLiquidity_);
+        principal_ = _bound(_hash(seed_, "principal"), 1, availableAssets_ - lockedLiquidity_);
     }
 
     function _hash(uint256 number_, string memory salt) internal pure returns (uint256 hash_) {
@@ -314,7 +314,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (activeLoans_.length == 0) return address(0);
 
-        loan_ = activeLoans_[bound(seed_, 0, activeLoans_.length - 1)];
+        loan_ = activeLoans_[_bound(seed_, 0, activeLoans_.length - 1)];
     }
 
     function _selectCalledLoan(uint256 seed_) internal view returns (address loan_) {
@@ -334,7 +334,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (calledLoans_.length == 0) return address(0);
 
-        loan_ = calledLoans_[bound(seed_, 0, calledLoans_.length - 1)];
+        loan_ = calledLoans_[_bound(seed_, 0, calledLoans_.length - 1)];
     }
 
     function _selectCaller(uint256 seed_) internal view returns (address caller_) {
@@ -358,7 +358,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (impairedLoans_.length == 0) return address(0);
 
-        loan_ = impairedLoans_[bound(seed_, 0, impairedLoans_.length - 1)];
+        loan_ = impairedLoans_[_bound(seed_, 0, impairedLoans_.length - 1)];
     }
 
     function _selectOverdueLoan(uint256 seed_) internal view returns (address loan_) {
@@ -366,7 +366,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (overdueLoans_.length == 0) return address(0);
 
-        loan_ = overdueLoans_[bound(seed_, 0, overdueLoans_.length - 1)];
+        loan_ = overdueLoans_[_bound(seed_, 0, overdueLoans_.length - 1)];
     }
 
 }

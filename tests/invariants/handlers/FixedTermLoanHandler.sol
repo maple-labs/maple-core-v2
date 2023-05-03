@@ -134,13 +134,13 @@ contract FixedTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function createLoanAndFund(uint256 seed_) public useTimestamps {
-        console2.log("createLoanAndFund() with seed:", seed_);
+        console2.log("ftlHandler.createLoanAndFund(%s)", seed_);
 
         numberOfCalls["createLoanAndFund"]++;
 
         if (numLoans > MAX_LOANS) return;
 
-        address borrower_ = borrowers[bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
+        address borrower_ = borrowers[_bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
 
         uint256[3] memory termDetails_ = _getLoanTerms(_randomize(seed_, "termDetails"));
         uint256[3] memory amounts_     = _getLoanAmounts(_randomize(seed_, "amounts"));
@@ -201,15 +201,15 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function makePayment(uint256 seed_) public virtual useTimestamps {
-        console2.log("makePayment() with seed:", seed_);
+        console2.log("ftlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["makePayment"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
 
-        address borrower_ = borrowers[bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
+        address borrower_ = borrowers[_bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
 
         vm.startPrank(borrower_);
 
@@ -269,15 +269,15 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function impairmentMakePayment(uint256 seed_) public useTimestamps {
-        console2.log("impairmentMakePayment() with seed:", seed_);
+        console2.log("ftlHandler.impairmentMakePayment(%s)", seed_);
 
         numberOfCalls["impairmentMakePayment"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
 
-        address borrower_ = borrowers[bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
+        address borrower_ = borrowers[_bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
 
         vm.startPrank(borrower_);
 
@@ -343,13 +343,13 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function defaultMakePayment(uint256 seed_) public useTimestamps {
-        console2.log("defaultMakePayment() with seed:", seed_);
+        console2.log("ftlHandler.defaultMakePayment(%s)", seed_);
 
         numberOfCalls["defaultMakePayment"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
 
         if (loanDefaulted[activeLoans[loanIndex_]]) return;  // Loan defaulted
 
@@ -357,13 +357,13 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function impairLoan(uint256 seed_) public useTimestamps {
-        console2.log("impairLoan() with seed:", seed_);
+        console2.log("ftlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["impairLoan"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
         if (loanImpaired[loanAddress]) return;
@@ -390,13 +390,13 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function triggerDefault(uint256 seed_) public useTimestamps {
-        console2.log("triggerDefault() with seed:", seed_);
+        console2.log("ftlHandler.triggerDefault(%s)", seed_);
 
         numberOfCalls["triggerDefault"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_  = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_  = _bound(seed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
         if (loanDefaulted[loanAddress]) return;  // Loan already defaulted
@@ -439,13 +439,13 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function finishCollateralLiquidation(uint256 seed_) public useTimestamps {
-        console2.log("finishCollateralLiquidation() with seed:", seed_);
+        console2.log("ftlHandler.finishCollateralLiquidation(%s)", seed_);
 
         numberOfCalls["finishCollateralLiquidation"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_  = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_  = _bound(seed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
 
         // Check loan needs liquidation
@@ -481,13 +481,13 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public useTimestamps {
-        console2.log("refinance() with seed:", seed_);
+        console2.log("ftlHandler.refinance(%s)", seed_);
 
         numberOfCalls["refinance"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
 
         IFixedTermLoan loan_ = IFixedTermLoan(activeLoans[loanIndex_]);
 
@@ -554,11 +554,11 @@ contract FixedTermLoanHandler is HandlerBase {
 
 
     function warp(uint256 seed_) public useTimestamps {
-        console2.log("warp() with seed:", seed_);
+        console2.log("ftlHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;
 
-        uint256 warpAmount_ = bound(seed_, 0, 10 days);
+        uint256 warpAmount_ = _bound(seed_, 0, 10 days);
 
         vm.warp(block.timestamp + warpAmount_);
     }
@@ -589,13 +589,13 @@ contract FixedTermLoanHandler is HandlerBase {
         uint256[2] memory fees        = _getLoanFees(_randomize(seed_, "fees"), currentPrincipal);
 
         // Increase is limited to available principal
-        uint256 principalIncrease = bound(_randomize(seed_, "principal"),       0, _availableLiquidity());
-        uint256 endingPrincipal   = bound(_randomize(seed_, "endingPrincipal"), 0, currentPrincipal + principalIncrease);
+        uint256 principalIncrease = _bound(_randomize(seed_, "principal"),       0, _availableLiquidity());
+        uint256 endingPrincipal   = _bound(_randomize(seed_, "endingPrincipal"), 0, currentPrincipal + principalIncrease);
 
         // Create an array of arguments, even if not all will be used
         bytes[] memory calls = new bytes[](11);
 
-        calls[0] = abi.encodeWithSignature("setCollateralRequired(uint256)", bound(_randomize(seed_, "collateralRequired"), 0, 1e29));
+        calls[0] = abi.encodeWithSignature("setCollateralRequired(uint256)", _bound(_randomize(seed_, "collateralRequired"), 0, 1e29));
 
         calls[1]  = abi.encodeWithSignature("increasePrincipal(uint256)",              principalIncrease);
         calls[2]  = abi.encodeWithSignature("setEndingPrincipal(uint256)",             endingPrincipal);
@@ -648,7 +648,7 @@ contract FixedTermLoanHandler is HandlerBase {
             if (keccak256(data_[i]) == keccak256(calls[2])) {
                 data_[i] = abi.encodeWithSignature(
                     "setEndingPrincipal(uint256)",
-                    bound(_randomize(seed_, "endingPrincipal 2"), 0, currentPrincipal)
+                    _bound(_randomize(seed_, "endingPrincipal 2"), 0, currentPrincipal)
                 );
             }
         }
@@ -659,29 +659,29 @@ contract FixedTermLoanHandler is HandlerBase {
 
         if (availableLiquidity < 10_000e6) return [uint256(0), 0, 0];
 
-        amounts_[0] = bound(_randomize(seed_, "collateralRequired"), 0,        1e29);
-        amounts_[1] = bound(_randomize(seed_, "principalRequested"), 10_000e6, availableLiquidity);
-        amounts_[2] = bound(_randomize(seed_, "endingPrincipal"),    0,        amounts_[1]);
+        amounts_[0] = _bound(_randomize(seed_, "collateralRequired"), 0,        1e29);
+        amounts_[1] = _bound(_randomize(seed_, "principalRequested"), 10_000e6, availableLiquidity);
+        amounts_[2] = _bound(_randomize(seed_, "endingPrincipal"),    0,        amounts_[1]);
 
         require(amounts_[1] >= amounts_[2], "LH:INVALID_AMOUNTS");
     }
 
     function _getLoanFees(uint256 seed_, uint256 principal_) internal view returns(uint256[2] memory fees_) {
-        fees_[0] = bound(_randomize(seed_, "delegateOriginationFee"), 0, principal_ * 0.025e6 / 1e6);
-        fees_[1] = bound(_randomize(seed_, "delegateServiceFee"),     0, principal_ * 0.025e6 / 1e6);
+        fees_[0] = _bound(_randomize(seed_, "delegateOriginationFee"), 0, principal_ * 0.025e6 / 1e6);
+        fees_[1] = _bound(_randomize(seed_, "delegateServiceFee"),     0, principal_ * 0.025e6 / 1e6);
     }
 
     function _getLoanRates(uint256 seed_) internal view returns(uint256[4] memory rates_) {
-        rates_[0] = bound(_randomize(seed_, "interestRate"),            0, 1.0e6);
-        rates_[1] = bound(_randomize(seed_, "closingFeeRate"),          0, 1.0e6);
-        rates_[2] = bound(_randomize(seed_, "lateFeeRate"),             0, 0.6e6);
-        rates_[3] = bound(_randomize(seed_, "lateInterestPremiumRate"), 0, 0.2e6);
+        rates_[0] = _bound(_randomize(seed_, "interestRate"),            0, 1.0e6);
+        rates_[1] = _bound(_randomize(seed_, "closingFeeRate"),          0, 1.0e6);
+        rates_[2] = _bound(_randomize(seed_, "lateFeeRate"),             0, 0.6e6);
+        rates_[3] = _bound(_randomize(seed_, "lateInterestPremiumRate"), 0, 0.2e6);
     }
 
     function _getLoanTerms(uint256 seed_) internal view returns(uint256[3] memory termDetails_) {
-        termDetails_[0] = bound(_randomize(seed_, "gracePeriod"),      12 hours,  30 days);
-        termDetails_[1] = bound(_randomize(seed_, "paymentInterval"),  5 minutes, 730 days);
-        termDetails_[2] = bound(_randomize(seed_, "numberOfPayments"), 1,         30);
+        termDetails_[0] = _bound(_randomize(seed_, "gracePeriod"),      12 hours,  30 days);
+        termDetails_[1] = _bound(_randomize(seed_, "paymentInterval"),  5 minutes, 730 days);
+        termDetails_[2] = _bound(_randomize(seed_, "numberOfPayments"), 1,         30);
     }
 
     function _randomize(uint256 seed, string memory salt) internal pure returns (uint256) {
