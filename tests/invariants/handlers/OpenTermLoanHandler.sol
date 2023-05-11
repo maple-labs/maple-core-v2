@@ -182,9 +182,11 @@ contract OpenTermLoanHandler is HandlerBase {
 
         numberOfCalls["warp"]++;
 
-        uint256 timeSpan_ = _bound(seed_, 1 days, 15 days);
+        uint256 warpAmount_ = _bound(seed_, 1 days, 15 days);
 
-        vm.warp(block.timestamp + timeSpan_);
+        console2.log("warp():", warpAmount_);
+
+        vm.warp(block.timestamp + warpAmount_);
     }
 
     /**************************************************************************************************************************************/

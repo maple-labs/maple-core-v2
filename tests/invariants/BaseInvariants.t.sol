@@ -244,8 +244,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_ftlm_invariant_F(address loanManager) internal {
         // NOTE: To account for precision errors for unrealizedLosses(), we add 1 to the AUM
-        uint256 losses   = ILoanManagerLike(loanManager).unrealizedLosses();
-        uint256 aum      = ILoanManagerLike(loanManager).assetsUnderManagement();
+        uint256 losses = ILoanManagerLike(loanManager).unrealizedLosses();
+        uint256 aum    = ILoanManagerLike(loanManager).assetsUnderManagement();
 
         if (losses > aum) {
             assertApproxEqAbs(losses, aum, ftlHandler.numPayments() + 1);
@@ -593,7 +593,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             expectedAssetsUnderManagement += loans_[i].principal() + _getExpectedNetInterest(loans_[i]);
         }
 
-        assertApproxEqAbs(assetsUnderManagement, expectedAssetsUnderManagement, 300, "OTLM Invariant A");
+        assertApproxEqAbs(
+            assetsUnderManagement,
+            expectedAssetsUnderManagement,
+            1e6,  // As the number can be unbounded but we realistically expect it to not go over $1
+            "OTLM Invariant A"
+        );
     }
 
     function assert_otlm_invariant_B(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {

@@ -69,7 +69,7 @@ contract LpHandler is HandlerBase {
 
         numberOfCalls["deposit"]++;
 
-        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, 1e29);
+        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, 1e26); // Set to max resolution / 10 of LM
 
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
@@ -83,7 +83,7 @@ contract LpHandler is HandlerBase {
         numberOfCalls["mint"]++;
 
         // The first mint needs to be large enough to not lock mints if total assets eventually become zero due to defaults.
-        uint256 shares_ = _bound(_randomize(seed_, "shares"), 10, 1e29);
+        uint256 shares_ = _bound(_randomize(seed_, "shares"), 10, 1e26);
 
         assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
 

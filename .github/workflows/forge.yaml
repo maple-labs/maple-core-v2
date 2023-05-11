@@ -67,7 +67,7 @@ jobs:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
         run: make integration profile=production
 
-  deep_fuzz_tests:
+  fuzz_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -560,6 +560,8 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256 warpAmount_ = _bound(seed_, 0, 10 days);
 
+        console2.log("warp():", warpAmount_);
+
         vm.warp(block.timestamp + warpAmount_);
     }
 
@@ -581,16 +583,14 @@ contract FixedTermLoanHandler is HandlerBase {
     {
         uint256 currentPrincipal = IFixedTermLoan(loan_).principal();
 
-        // Get how many calls will be done
-        uint256 numOfCalls = (_randomize(seed_, "numOfCalls") % 11) + 1; // 11 functions on refi contract
+        // Increase is limited to available principal
+        uint256 principalIncrease = _bound(_randomize(seed_, "principal"), 0, _availableLiquidity() > 1e29 ? 1e29 : _availableLiquidity());
+
+        uint256 endingPrincipal = _bound(_randomize(seed_, "endingPrincipal"), 0, currentPrincipal + principalIncrease);
 
         uint256[3] memory termDetails = _getLoanTerms(_randomize(seed_, "termDetails"));
         uint256[4] memory rates       = _getLoanRates(_randomize(seed_, "rates"));
         uint256[2] memory fees        = _getLoanFees(_randomize(seed_, "fees"), currentPrincipal);
-
-        // Increase is limited to available principal
-        uint256 principalIncrease = _bound(_randomize(seed_, "principal"),       0, _availableLiquidity());
-        uint256 endingPrincipal   = _bound(_randomize(seed_, "endingPrincipal"), 0, currentPrincipal + principalIncrease);
 
         // Create an array of arguments, even if not all will be used
         bytes[] memory calls = new bytes[](11);
@@ -607,6 +607,9 @@ contract FixedTermLoanHandler is HandlerBase {
         calls[8]  = abi.encodeWithSignature("setPaymentsRemaining(uint256)",           termDetails[2]);
         calls[9]  = abi.encodeWithSignature("setLateInterestPremiumRate(uint256)",     rates[3]);
         calls[10] = abi.encodeWithSignature("updateDelegateFeeTerms(uint256,uint256)", fees[0], fees[1]);
+
+        // Get how many calls will be done
+        uint256 numOfCalls = (_randomize(seed_, "numOfCalls") % 11) + 1; // 11 functions on refi contract
 
         data_ = new bytes[](numOfCalls);
 
@@ -659,8 +662,10 @@ contract FixedTermLoanHandler is HandlerBase {
 
         if (availableLiquidity < 10_000e6) return [uint256(0), 0, 0];
 
+        uint256 maxPrincipal = availableLiquidity > 1e29 ? 1e29 : availableLiquidity;
+
         amounts_[0] = _bound(_randomize(seed_, "collateralRequired"), 0,        1e29);
-        amounts_[1] = _bound(_randomize(seed_, "principalRequested"), 10_000e6, availableLiquidity);
+        amounts_[1] = _bound(_randomize(seed_, "principalRequested"), 10_000e6, maxPrincipal);
         amounts_[2] = _bound(_randomize(seed_, "endingPrincipal"),    0,        amounts_[1]);
 
         require(amounts_[1] >= amounts_[2], "LH:INVALID_AMOUNTS");
