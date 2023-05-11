@@ -666,19 +666,19 @@ contract FixedTermLoanHandler is HandlerBase {
         require(amounts_[1] >= amounts_[2], "LH:INVALID_AMOUNTS");
     }
 
-    function _getLoanFees(uint256 seed_, uint256 principal_) internal view returns(uint256[2] memory fees_) {
+    function _getLoanFees(uint256 seed_, uint256 principal_) internal pure returns(uint256[2] memory fees_) {
         fees_[0] = _bound(_randomize(seed_, "delegateOriginationFee"), 0, principal_ * 0.025e6 / 1e6);
         fees_[1] = _bound(_randomize(seed_, "delegateServiceFee"),     0, principal_ * 0.025e6 / 1e6);
     }
 
-    function _getLoanRates(uint256 seed_) internal view returns(uint256[4] memory rates_) {
+    function _getLoanRates(uint256 seed_) internal pure returns(uint256[4] memory rates_) {
         rates_[0] = _bound(_randomize(seed_, "interestRate"),            0, 1.0e6);
         rates_[1] = _bound(_randomize(seed_, "closingFeeRate"),          0, 1.0e6);
         rates_[2] = _bound(_randomize(seed_, "lateFeeRate"),             0, 0.6e6);
         rates_[3] = _bound(_randomize(seed_, "lateInterestPremiumRate"), 0, 0.2e6);
     }
 
-    function _getLoanTerms(uint256 seed_) internal view returns(uint256[3] memory termDetails_) {
+    function _getLoanTerms(uint256 seed_) internal pure returns(uint256[3] memory termDetails_) {
         termDetails_[0] = _bound(_randomize(seed_, "gracePeriod"),      12 hours,  30 days);
         termDetails_[1] = _bound(_randomize(seed_, "paymentInterval"),  5 minutes, 730 days);
         termDetails_[2] = _bound(_randomize(seed_, "numberOfPayments"), 1,         30);

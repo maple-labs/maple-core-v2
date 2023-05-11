@@ -111,7 +111,6 @@ contract DefaultsInvariants is BaseInvariants {
                 uint256 startDate,
                 uint256 paymentDueDate,
                 ,
-                uint256 refinanceInterest
                 ,
             ) = loanManager.payments(loanManager.paymentIdOf(loan));
 

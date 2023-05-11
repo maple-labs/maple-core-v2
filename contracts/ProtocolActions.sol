@@ -65,9 +65,13 @@ contract ProtocolActions is Test {
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
-    function isOpenTermLoan(address loan) internal view returns (bool isOpen) {
+    function isFixedTermLoan(address loan) internal view returns (bool isFixedTermLoan_) {
+        isFixedTermLoan_ = !isOpenTermLoan(loan);
+    }
+
+    function isOpenTermLoan(address loan) internal view returns (bool isOpenTermLoan_) {
         try IOpenTermLoan(loan).dateCalled() {
-            isOpen = true;
+            isOpenTermLoan_ = true;
         } catch { }
     }
 

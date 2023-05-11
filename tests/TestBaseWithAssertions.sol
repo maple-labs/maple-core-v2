@@ -209,6 +209,31 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         );
     }
 
+    function assertOpenTermLoanManagerWithDiff(
+        address loanManager,
+        uint256 accountedInterest,
+        uint256 accruedInterest,
+        uint256 domainStart,
+        uint256 issuanceRate,
+        uint256 principalOut,
+        uint256 unrealizedLosses,
+        uint256 diff
+    ) internal {
+        assertApproxEqAbs(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, diff, "accountedInterest");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   diff, "accruedInterest");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).domainStart(),       domainStart,       diff, "domainStart");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      diff, "issuanceRate");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).principalOut(),      principalOut,      diff, "principalOut");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  diff, "unrealizedLosses");
+
+        assertApproxEqAbs(
+            ILoanManagerLike(loanManager).assetsUnderManagement(),
+            principalOut + accountedInterest + accruedInterest,
+            diff,
+            "assetsUnderManagement"
+        );
+    }
+
     function assertImpairment(address loan, uint256 impairedDate, bool impairedByGovernor) internal {
         IOpenTermLoanManager loanManager = IOpenTermLoanManager(ILoanLike(loan).lender());
 
@@ -248,6 +273,23 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(poolManager.totalAssets(),           totalAssets,        "totalAssets");
         assertEq(poolManager.unrealizedLosses(),      unrealizedLosses,   "unrealizedLosses");
         assertEq(fundsAsset.balanceOf(address(pool)), availableLiquidity, "availableLiquidity");
+    }
+
+    function assertPoolStateWithDiff(
+        uint256 totalAssets,
+        uint256 totalSupply,
+        uint256 unrealizedLosses,
+        uint256 availableLiquidity,
+        uint256 diff
+    ) 
+        internal 
+    {
+        assertApproxEqAbs(pool.totalAssets(),                  totalAssets,        diff, "totalAssets");
+        assertApproxEqAbs(pool.totalSupply(),                  totalSupply,        diff, "totalSupply");
+        assertApproxEqAbs(pool.unrealizedLosses(),             unrealizedLosses,   diff, "unrealizedLosses");
+        assertApproxEqAbs(poolManager.totalAssets(),           totalAssets,        diff, "totalAssets");
+        assertApproxEqAbs(poolManager.unrealizedLosses(),      unrealizedLosses,   diff, "unrealizedLosses");
+        assertApproxEqAbs(fundsAsset.balanceOf(address(pool)), availableLiquidity, diff, "availableLiquidity");
     }
 
     // TODO: Take `poolManager` as argument to be more functional.
