@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoan, IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, IFixedTermLoanManager, IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { Pool, PoolManager } from "../../contracts/Contracts.sol";
+import { console2, Pool, PoolManager } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract PoolScenarioTests is TestBaseWithAssertions {
+
+    address[] public loans;
 
     function setUp() public override {
         super.setUp();
@@ -1373,6 +1375,198 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         });
 
         assertTotalAssets(400_000_000e6 + 150 * 90_000e6);
+    }
+
+    function testFuzz_poolScenarios_OTLWithBigPaymentInterval(uint256 interestRate) external {
+        interestRate = bound(interestRate, 0.001e6, 0.1e6);
+
+        // Create an LP
+        address lp1 = makeAddr("lp1");
+
+        deposit(lp1, 20_000_000_000e18);
+
+        address loanManager = PoolManager(poolManager).loanManagerList(1);
+
+        // Create a loan
+        IOpenTermLoan loan = IOpenTermLoan(createOpenTermLoan({
+            borrower:  makeAddr("borrower"),
+            lender:    loanManager,
+            asset:     address(fundsAsset),
+            principal: uint256(20_000_000_000e18),
+            terms:     [uint32(3 days), uint32(5 days), uint32(730 days)],
+            rates:     [uint64(0.1e6), uint64(interestRate), uint64(0), uint64(0)]
+        }));
+
+        fundLoan(address(loan));
+
+        vm.warp(loan.paymentDueDate());
+
+        ( , uint256 grossInterest, , , ) = loan.getPaymentBreakdown(block.timestamp);
+        (
+            uint24 platformManagementFeeRate,
+            uint24 delegateManagementFeeRate,
+            ,
+        ) = IOpenTermLoanManager(loanManager).paymentFor(address(loan));
+
+        uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
+
+        uint256 totalAssets    = IOpenTermLoanManager(loanManager).assetsUnderManagement();
+        uint256 expectedAssets = loan.principal() + (grossInterest - managementFees);
+
+        uint256 diff = totalAssets > expectedAssets ? totalAssets - expectedAssets : expectedAssets - totalAssets;
+
+        assertLe(diff, 2);
+    }
+
+    function testFuzz_poolScenarios_multipleOTLWithBigPaymentInterval(
+        uint256 interestRate_,
+        uint256 lateFeeRate_,
+        uint256 lateInterestPremiumRate_
+    )
+        external
+    {
+        interestRate_            = bound(interestRate_,            0.1e6, 0.2e6);
+        lateFeeRate_             = bound(lateFeeRate_,             0.1e6, 0.2e6);
+        lateInterestPremiumRate_ = bound(lateInterestPremiumRate_, 0.1e6, 0.2e6);
+
+        address loanManager = PoolManager(poolManager).loanManagerList(1);
+
+        // Have 50 LPs deposit
+        for (uint256 i = 0; i < 50; i++) {
+            address lp = makeAddr(string(abi.encodePacked(i)));
+            deposit(lp, 20_000_000_000e18);
+        }
+
+        for (uint256 i = 0; i < 50; i++) {
+            IOpenTermLoan loan = IOpenTermLoan(createOpenTermLoan({
+                borrower:  makeAddr(string(abi.encodePacked(i))),
+                lender:    loanManager,
+                asset:     address(fundsAsset),
+                principal: uint256(20_000_000_000e18),
+                terms:     [uint32(3 days), uint32(5 days), uint32(730 days)],
+                rates:     [uint64(0.1e6), uint64(interestRate_), uint64(lateFeeRate_), uint64(lateInterestPremiumRate_)]
+            }));
+
+            fundLoan(address(loan));
+
+            loans.push(address(loan));
+
+            vm.warp(block.timestamp + 10 days);
+        }
+
+        uint256 expectedAssets;
+
+        for (uint256 i = 0; i < 50; i++) {
+            ( , uint256 grossInterest, , , ) = IOpenTermLoan(loans[i]).getPaymentBreakdown(block.timestamp);
+
+            (
+                uint24 platformManagementFeeRate,
+                uint24 delegateManagementFeeRate,
+                ,
+            ) = IOpenTermLoanManager(loanManager).paymentFor(address(loans[i]));
+
+            uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
+
+            expectedAssets += IOpenTermLoan(loans[i]).principal() + (grossInterest - managementFees);
+        }
+
+        uint256 totalAssets = IOpenTermLoanManager(loanManager).assetsUnderManagement();
+
+        console2.log("totalAssets   ", totalAssets);
+        console2.log("expectedAssets", expectedAssets);
+
+        uint256 diff = totalAssets > expectedAssets ? totalAssets - expectedAssets : expectedAssets - totalAssets;
+        console2.log("Diff", totalAssets > expectedAssets ? totalAssets - expectedAssets : expectedAssets - totalAssets);
+
+        if (diff > 50 * 2) {
+            assertTrue(false);
+        }
+
+        // Roughly same payment due date for loans
+        vm.warp(IOpenTermLoan(loans[loans.length - 1]).paymentDueDate());
+
+        expectedAssets = 0;
+
+        for (uint256 i = 0; i < 50; i++) {
+            ( , uint256 grossInterest, , , ) = IOpenTermLoan(loans[i]).getPaymentBreakdown(block.timestamp);
+            (
+                uint24 platformManagementFeeRate,
+                uint24 delegateManagementFeeRate,
+                ,
+            ) = IOpenTermLoanManager(loanManager).paymentFor(address(loans[i]));
+            uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
+
+            expectedAssets += IOpenTermLoan(loans[i]).principal() + (grossInterest - managementFees);
+        }
+
+        totalAssets = IOpenTermLoanManager(loanManager).assetsUnderManagement();
+
+        console2.log("totalAssets   ", totalAssets);
+        console2.log("expectedAssets", expectedAssets);
+
+        diff = totalAssets > expectedAssets ? totalAssets - expectedAssets : expectedAssets - totalAssets;
+        console2.log("Diff", totalAssets > expectedAssets ? totalAssets - expectedAssets : expectedAssets - totalAssets);
+
+        if (diff > 50 * 2) {
+            assertTrue(false);
+        }
+    }
+
+    function testFuzz_poolScenarios_exposeAccountedInterestDust(uint24 timeToWarp1, uint24 timeToWarp2) external {
+        address lp1 = makeAddr("lp1");
+
+        deposit(lp1, 4_000_000e6);
+
+        address loanManager = PoolManager(poolManager).loanManagerList(1);
+
+        // Create a loan
+        IOpenTermLoan loan1 = IOpenTermLoan(createOpenTermLoan({
+            borrower:  makeAddr("borrower1"),
+            lender:    loanManager,
+            asset:     address(fundsAsset),
+            principal: uint256(2_000_000e6),
+            terms:     [uint32(3 days), uint32(5 days), uint32(730 days)],
+            rates:     [uint64(0.1e6), uint64(0.1e6), uint64(0), uint64(0)]
+        }));
+
+        fundLoan(address(loan1));
+
+        vm.warp(block.timestamp + timeToWarp1);
+
+        // Create a second loan to store accountedInterest for loan1 on the LM
+        IOpenTermLoan loan2 = IOpenTermLoan(createOpenTermLoan({
+            borrower:  makeAddr("borrower2"),
+            lender:    loanManager,
+            asset:     address(fundsAsset),
+            principal: uint256(2_000_000e6),
+            terms:     [uint32(3 days), uint32(5 days), uint32(730 days)],
+            rates:     [uint64(0.1e6), uint64(0.1e6), uint64(0), uint64(0)]
+        }));
+
+        fundLoan(address(loan2));
+
+        vm.warp(block.timestamp + timeToWarp2);
+
+        makePaymentOT(address(loan1), 2_000_000e6);  // Pay off loan1 this should remove its accounting in full from the LM and leave dust
+
+        ( , , uint40 startDate, uint256 issuanceRate ) = IOpenTermLoanManager(loanManager).paymentFor(address(loan2));
+
+        uint256 accountedInterestForLoan2 = (issuanceRate * (block.timestamp - startDate)) / 1e27;  // Matches calculation in LM
+
+        console2.log("Actual Accounted Interest");
+        console2.log(IOpenTermLoanManager(loanManager).accountedInterest());
+        console2.log("Expected Accounted Interest for loan 2");
+        console2.log(accountedInterestForLoan2);
+
+        // A diff indicates that there is accounted interest dust left over from loan1
+        // Note: By using loan1 to calculate the expected subtraction from accountedInterest we would run into the same div round down
+        bool isAccountedInterestDust = IOpenTermLoanManager(loanManager).accountedInterest() > accountedInterestForLoan2;
+
+        // Note test is flakey due to rounding errors that can or cannot lead to dust
+        if (isAccountedInterestDust) {
+            console2.log("Accounted Interest Dust Exists");
+            assertTrue(IOpenTermLoanManager(loanManager).accountedInterest() - accountedInterestForLoan2 < 2);
+        }
     }
 
 }

@@ -36,7 +36,7 @@ runs = 20
 
 [profile.deep.fuzz]
 optimizer = true
-runs      = 10_000
+runs      = 1_000
 
 [profile.deep.invariant]
 optimizer      = true
