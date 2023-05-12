@@ -45,6 +45,11 @@ contract StorageSnapshot {
         uint256 previousFundsAssetBalance;
     }
 
+    struct OpenTermLoanImpairmentStorage {
+        uint40 previousDateImpaired;
+        bool   previousImpairedByGovernor;
+    }
+
     struct OpenTermPaymentStorage {
         uint24  previousPlatformManagementFeeRate;
         uint24  previousDelegateManagementFeeRate;
@@ -81,6 +86,15 @@ contract StorageSnapshot {
         loanStorage.previousPlatformServiceFeeRate   = loan.platformServiceFeeRate();
 
         loanStorage.previousFundsAssetBalance = IERC20(loan.fundsAsset()).balanceOf(address(loan));
+    }
+
+    function _snapshotOpenTermImpairment(IOpenTermLoan loan) internal view returns (OpenTermLoanImpairmentStorage memory impairmentStorage) {
+        IOpenTermLoanManager loanManager = IOpenTermLoanManager(loan.lender());
+
+        ( uint40 dateImpaired, bool impairedByGovernor ) = loanManager.impairmentFor(address(loan));
+
+        impairmentStorage.previousDateImpaired       = dateImpaired;
+        impairmentStorage.previousImpairedByGovernor = impairedByGovernor;
     }
 
     function _snapshotOpenTermLoanManager(IOpenTermLoanManager loanManager)

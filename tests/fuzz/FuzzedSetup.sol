@@ -22,6 +22,7 @@ enum LoanAction {
 contract FuzzedSetup is TestBaseWithAssertions {
 
     uint256 constant CALL_FACTOR              = 75;
+    // uint256 constant CLOSE_FACTOR          = 100;
     uint256 constant DEFAULT_FACTOR           = 33;
     uint256 constant FUND_FACTOR              = 100;
     uint256 constant IMPAIR_FACTOR            = 75;
@@ -36,7 +37,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
     address[] loans;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         fixedTermLoanManager = poolManager.loanManagerList(0);
@@ -78,7 +79,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
             performSomeLoanAction(loan);
 
-            if (isOpenTermLoan(loan) ? IOpenTermLoan(loan).paymentDueDate() == 0 : IFixedTermLoan(loan).nextPaymentDueDate() == 0) {
+            if (ILoanLike(loan).principal() == 0) {
                 removeLoan(loan);
             }
         }
@@ -95,7 +96,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
         require(fundsAsset.balanceOf(address(pool)) > 0, "No funding is available.");
 
         uint256 principal              = getSomeValue(100_000e6, 10_000_000e6);
-        uint256 noticePeriod           = getSomeValue(0,         10 days);
+        uint256 noticePeriod           = getSomeValue(1 hours,   10 days);
         uint256 gracePeriod            = getSomeValue(0,         10 days);
         uint256 paymentInterval        = getSomeValue(10 days,   90 days);
         uint256 delegateServiceFeeRate = getSomeValue(0,         0.1e6);
@@ -217,10 +218,12 @@ contract FuzzedSetup is TestBaseWithAssertions {
         bool isImpaired  = IFixedTermLoan(loan).isImpaired();
         bool isInDefault = block.timestamp > IFixedTermLoan(loan).nextPaymentDueDate() + IFixedTermLoan(loan).gracePeriod();
 
-        // If the loan is impaired also enable impairment removal, else enable impairment.
-        total += isImpaired && block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate() ?
-            REMOVE_IMPAIRMENT_FACTOR :
-            IMPAIR_FACTOR;
+        // If the loan is not impaired, enable impairment, else if the loan is impaired and not late, enable impairment removal.
+        if (!isImpaired) {
+            total += IMPAIR_FACTOR;
+        } else if (block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
+            total += REMOVE_IMPAIRMENT_FACTOR;
+        }
 
         // If the loan is past the default date also enable default triggering.
         if (isInDefault) {
@@ -233,21 +236,17 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
         draw -= PAYMENT_FACTOR;
 
-        if (isImpaired && block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
-            if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
-
-            draw -= REMOVE_IMPAIRMENT_FACTOR;
-        } else if (!isImpaired) {
+        if (!isImpaired) {
             if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
 
             draw -= IMPAIR_FACTOR;
-        } else if (isInDefault) {
-            if (draw < DEFAULT_FACTOR) return LoanAction.TriggerDefault;
+        } else if (block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
+            if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
 
-            draw -= DEFAULT_FACTOR;
+            draw -= REMOVE_IMPAIRMENT_FACTOR;
         }
 
-        return LoanAction.Payment;  // The default action if other conditions are not met.
+        return LoanAction.TriggerDefault;
     }
 
     // NOTE: Code duplication with `getSomeFixedTermAction` because can not yet identify cleaner way to do this.
@@ -339,6 +338,14 @@ contract FuzzedSetup is TestBaseWithAssertions {
         loan_ = getSomeLoan(isActiveOpenTermLoan);
     }
 
+    function getSomeCalledOpenTermLoan() internal returns (address loan_) {
+        loan_ = getSomeLoan(isCalledOpenTermLoan);
+    }
+
+    function getSomeImpairedOpenTermLoan() internal returns (address loan_) {
+        loan_ = getSomeLoan(isImpairedOpenTermLoan);
+    }
+
     function isActiveLoan(address loan_) internal returns (bool isActiveLoan_) {
         isActiveLoan_ = ILoanLike(loan_).principal() > 0;
     }
@@ -349,6 +356,14 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
     function isActiveOpenTermLoan(address loan_) internal returns (bool isActiveOpenTermLoan_) {
         isActiveOpenTermLoan_ = isOpenTermLoan(loan_) && isActiveLoan(loan_);
+    }
+
+    function isCalledOpenTermLoan(address loan_) internal returns (bool isCalledOpenTermLoan_) {
+        isCalledOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isCalled();
+    }
+
+    function isImpairedOpenTermLoan(address loan_) internal returns (bool isImpairedOpenTermLoan_) {
+        isImpairedOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isImpaired();
     }
 
     function getSomeLoan(function (address) returns (bool) filter_) internal returns (address loan) {
