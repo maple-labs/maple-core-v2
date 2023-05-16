@@ -86,18 +86,17 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant G: getPaymentBreakdown == theoretical calculation
 
      * Open Term Loan Manager
-        * Invariant A: accountedInterest + accruedInterest() == ∑loan.getPaymentBreakdown(block.timestamp) (regular interest minus fees)
+        * Invariant A: accountedInterest + accruedInterest() == ∑loan.getPaymentBreakdown(block.timestamp) (minus fees)
         * Invariant B: if no payments exist: accountedInterest == 0
         * Invariant C: principalOut = ∑loan.principal()
         * Invariant D: issuanceRate = ∑payment.issuanceRate
         * Invariant E: unrealizedLosses <= assetsUnderManagement()
         * Invariant F: if no impairments exist: unrealizedLosses == 0
-        * Invariant G: assetsUnderManagement() == ∑loan.principal() + ∑loan.getPaymentBreakdown(block.timestamp) (regular interest minus fees)
-        * Invariant H: block.timestamp >= domainStart
-        * Invariant I: payment.startDate == loan.dateFunded() || loan.datePaid()
-        * Invariant J: payment.issuanceRate == theoretical calculation (regular interest minus management fees)
-        * Invariant K: ∑payment.impairedDate >= ∑payment.startDate
-        * Invariant L: assetsUnderManagement - unrealizedLosses - ∑outstandingValue(loan) ~= 0
+        * Invariant G: block.timestamp >= domainStart
+        * Invariant H: payment.startDate == loan.dateFunded() || loan.datePaid()
+        * Invariant I: payment.issuanceRate == theoretical calculation (minus management fees)
+        * Invariant J: payment.impairedDate >= payment.startDate
+        * Invariant K: assetsUnderManagement - unrealizedLosses - ∑outstandingValue(loan) ~= 0
 
      * Pool (non-liquidating)
         * Invariant A: totalAssets > fundsAsset balance of pool
