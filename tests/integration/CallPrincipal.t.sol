@@ -77,7 +77,7 @@ contract CallPrincipalFailureTests is CallPrincipalTestsBase {
 
     function test_callPrincipal_loanActive() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("ML:C:LOAN_INACTIVE");
+        vm.expectRevert("LM:NOT_LOAN");
         loanManager.callPrincipal(address(loan), principal);
     }
 
