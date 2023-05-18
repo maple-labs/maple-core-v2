@@ -22,5 +22,5 @@ then
         forge test --ffi --match-path "$directory/*.t.sol";
     fi
 else
-    forge test --ffi --match "$test";
+    forge test --ffi --match-test "$test";
 fi
