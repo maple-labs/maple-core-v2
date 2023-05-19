@@ -315,3 +315,39 @@ contract ValidateUpgradeFixedTermLoanManagers is ValidationBase {
     }
 
 }
+
+contract ValidateUpgradePoolManagers is ValidationBase {
+
+    function run() external view {
+        validateCodeHash();
+
+        validatePoolManager(mavenPermissionedPoolManager);
+        validatePoolManager(mavenUsdcPoolManager);
+        validatePoolManager(mavenWethPoolManager);
+        validatePoolManager(orthogonalPoolManager);
+        validatePoolManager(icebreakerPoolManager);
+        validatePoolManager(aqruPoolManager);
+        validatePoolManager(mavenUsdc3PoolManager);
+        validateLoanManager(cashMgmtPoolManager);
+    }
+
+    function validateCodeHash() internal view {
+        bytes32 computedCodeHash =newPmImplementation.codehash;
+
+        console2.log("computed code hash:", uint256(computedCodeHash));
+        console2.log("expected code hash:", uint256(expectedPmImplementationCodeHash));
+
+        require(computedCodeHash == expectedPmImplementationCodeHash, "code hash does not match");
+    }
+
+    function validatePoolManager(address poolManager) internal view {
+        address implementation = IProxiedLike(poolManager).implementation();
+
+        console2.log("PM address:                     ", poolManager);
+        console2.log("current implementation address: ", implementation);
+        console2.log("expected implementation address:", newPmImplementation);
+
+        require(implementation == newPmImplementation, "implementation address does not match");
+    }
+
+}
