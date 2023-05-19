@@ -180,6 +180,8 @@ interface IProxyFactoryLike {
 
     function enableUpgradePath(uint256 fromVersion_, uint256 toVersion_, address migrator_) external;
 
+    function implementationOf(uint256 version_) external view returns (address implementation_);
+
     function isInstance(address instance_) external view returns (bool isInstance_);
 
     function migratorForPath(uint256 oldVersion_, uint256 newVersion_) external view returns (address migrator_);
