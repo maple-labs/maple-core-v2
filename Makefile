@@ -37,7 +37,7 @@ scenario:
 # Forge scripting
 
 validate:
-	@FOUNDRY_PROFILE=mainnet_simulations forge script --rpc-url $(ETH_RPC_URL) -vvv simulations/mainnet/ValidationScripts.s.sol:$(step)
+	@forge script Validate$(step)
 
 # Utility
 
