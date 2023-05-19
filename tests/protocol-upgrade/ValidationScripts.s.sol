@@ -279,3 +279,39 @@ contract ValidateAddGlobalConfiguration is ValidationBase {
     }
 
 }
+
+contract ValidateUpgradeFixedTermLoanManagers is ValidationBase {
+
+    function run() external view {
+        validateCodeHash();
+
+        validateLoanManager(mavenPermissionedFixedTermLoanManager);
+        validateLoanManager(mavenUsdcFixedTermLoanManager);
+        validateLoanManager(mavenWethFixedTermLoanManager);
+        validateLoanManager(orthogonalFixedTermLoanManager);
+        validateLoanManager(icebreakerFixedTermLoanManager);
+        validateLoanManager(aqruFixedTermLoanManager);
+        validateLoanManager(mavenUsdc3FixedTermLoanManager);
+        validateLoanManager(cashMgmtFixedTermLoanManager);
+    }
+
+    function validateCodeHash() internal view {
+        bytes32 computedCodeHash = newFtlmImplementation.codehash;
+
+        console2.log("computed code hash:", uint256(computedCodeHash));
+        console2.log("expected code hash:", uint256(expectedFtlImplementationCodeHash));
+
+        require(computedCodeHash == expectedFtlImplementationCodeHash, "code hash does not match");
+    }
+
+    function validateLoanManager(address loanManager) internal view {
+        address implementation = IProxiedLike(loanManager).implementation();
+
+        console2.log("FT-LM address:                  ", loanManager);
+        console2.log("current implementation address: ", implementation);
+        console2.log("expected implementation address:", newFtlmImplementation);
+
+        require(implementation == newFtlmImplementation, "implementation address does not match");
+    }
+
+}
