@@ -6,6 +6,36 @@ import { AddressRegistry as FixedAddressRegistry } from "../../contracts/Contrac
 contract AddressRegistry is FixedAddressRegistry {
 
     /**************************************************************************************************************************************/
+    /*** Transient Addresses                                                                                                            ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace with deployed addresses.
+    address constant newFtlImplementation  = address(0);
+    address constant newFtlMigrator        = address(0);
+    address constant newFtlmImplementation = address(0);
+    address constant newOtlFactory         = address(0);
+    address constant newOtlImplementation  = address(0);
+    address constant newOtlInitializer     = address(0);
+    address constant newOtlmFactory        = address(0);
+    address constant newOtlmImplementation = address(0);
+    address constant newOtlmInitializer    = address(0);
+    address constant newOtlRefinancer      = address(0);
+    address constant newDeployer           = address(0);
+    address constant newPmImplementation   = address(0);
+
+    // TODO: Replace with code hashes.
+    bytes32 constant expectedFtlImplementationCodeHash  = bytes32(0);
+    bytes32 constant expectedFtlMigratorCodeHash        = bytes32(0);
+    bytes32 constant expectedFtlmImplementationCodeHash = bytes32(0);
+    bytes32 constant expectedOtlFactoryCodeHash         = bytes32(0);
+    bytes32 constant expectedOtlImplementationCodeHash  = bytes32(0);
+    bytes32 constant expectedOtlInitializerCodeHash     = bytes32(0);
+    bytes32 constant expectedOtlmFactoryCodeHash        = bytes32(0);
+    bytes32 constant expectedOtlmImplementationCodeHash = bytes32(0);
+    bytes32 constant expectedOtlmInitializerCodeHash    = bytes32(0);
+    bytes32 constant expectedPmImplementationCodeHash   = bytes32(0);
+
+    /**************************************************************************************************************************************/
     /*** M11 Credit Maple Pool USDC2 (Public)                                                                                           ***/
     /**************************************************************************************************************************************/
 
@@ -721,5 +751,13 @@ contract AddressRegistry is FixedAddressRegistry {
     address[] mavenUsdc3Loans = [
         0x10f151006056Ad9a3d2c385b08B63CA6db5E0Efa
     ];
+
+    /**************************************************************************************************************************************/
+    /*** CashMgmt - USDC                                                                                                                ***/
+    /**************************************************************************************************************************************/
+
+    address[] cashMgmtLps;
+
+    address[] cashMgmtLoans;
 
 }
