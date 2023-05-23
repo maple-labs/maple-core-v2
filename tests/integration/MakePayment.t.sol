@@ -149,14 +149,6 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
 
         vm.warp(start + 1);
 
-        (
-            uint256 principal_,
-            uint256 interest_,
-            uint256 lateInterest_,
-            uint256 delegateServiceFee_,
-            uint256 platformServiceFee_
-        ) = loan.getPaymentBreakdown(loan.paymentDueDate());
-
         vm.expectRevert("ML:MP:INSUFFICIENT_FOR_CALL");
         loan.makePayment(0);
     }

@@ -164,7 +164,7 @@ contract Scenario is TestBase {
         address loan = loanNamed[parameters.name] = createFixedTermLoan(
             makeAddr("borrower"),
             poolManager.loanManagerList(0),
-            address(feeManager),
+            address(fixedTermFeeManager),
             [address(collateralAsset), address(fundsAsset)],
             [
                 parameters.gracePeriod * 1 days,

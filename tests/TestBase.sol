@@ -88,7 +88,7 @@ contract TestBase is ProtocolActions {
     // Helper mapping to assert differences in balance
     mapping(address => uint256) partialAssetBalances;
 
-    FeeManager          feeManager;
+    FeeManager          fixedTermFeeManager;
     FixedTermRefinancer fixedTermRefinancer;
     Globals             globals;
     MockERC20           collateralAsset;
@@ -155,7 +155,7 @@ contract TestBase is ProtocolActions {
         withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
 
         // TODO: Update to addresses
-        feeManager          = new FeeManager(address(globals));
+        fixedTermFeeManager = new FeeManager(address(globals));
         fixedTermRefinancer = new FixedTermRefinancer();
         openTermRefinancer  = new OpenTermRefinancer();
 
@@ -174,7 +174,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory,     true);
         globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
         globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
-        globals.setValidInstanceOf("FEE_MANAGER",                address(feeManager),          true);
+        globals.setValidInstanceOf("FEE_MANAGER",                address(fixedTermFeeManager), true);
 
         globals.setCanDeployFrom(fixedTermLoanManagerFactory, address(deployer), true);
         globals.setCanDeployFrom(poolManagerFactory,          address(deployer), true);
@@ -309,7 +309,7 @@ contract TestBase is ProtocolActions {
             arguments_: abi.encode(
                 borrower,
                 loanManager,
-                address(feeManager),
+                address(fixedTermFeeManager),
                 [address(collateralAsset), address(fundsAsset)],
                 termDetails,
                 amounts,

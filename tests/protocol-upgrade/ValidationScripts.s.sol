@@ -328,7 +328,7 @@ contract ValidateUpgradePoolManagers is ValidationBase {
         validatePoolManager(icebreakerPoolManager);
         validatePoolManager(aqruPoolManager);
         validatePoolManager(mavenUsdc3PoolManager);
-        validateLoanManager(cashMgmtPoolManager);
+        validatePoolManager(cashMgmtPoolManager);
     }
 
     function validateCodeHash() internal view {

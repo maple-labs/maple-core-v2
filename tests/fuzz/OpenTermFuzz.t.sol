@@ -177,10 +177,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
 
         (
             ,  // Unused
-            uint256 interest_,
-            uint256 lateInterest_,
+            interest_,
+            lateInterest_,
             ,  // Unused
-            uint256 platformServiceFee_
+            platformServiceFee_
         ) = loan.getPaymentBreakdown(isImpaired ? impairDate : block.timestamp);
 
         // Save Balances
@@ -267,25 +267,25 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     }
 
     function _calculateLiquidationDistribution(
-        uint256 principal_,
-        uint256 interest_,
-        uint256 platformServiceFee_,
-        uint256 recoveredFunds_,
-        uint256 platformManagementFeeRate_,
-        uint256 delegateManagementFeeRate_
+        uint256 principal,
+        uint256 interest,
+        uint256 platformServiceFee,
+        uint256 recoveredFunds,
+        uint256 platformManagementFeeRate,
+        uint256 delegateManagementFeeRate
     )
         internal pure returns (uint256 toBorrower_, uint256 toTreasury_, uint256 toPool_)
     {
-        uint256 delegateManagementFee_ = _getRatedAmount(interest_, delegateManagementFeeRate_);
-        uint256 platformManagementFee_ = _getRatedAmount(interest_, platformManagementFeeRate_);
+        uint256 delegateManagementFee_ = _getRatedAmount(interest, delegateManagementFeeRate);
+        uint256 platformManagementFee_ = _getRatedAmount(interest, platformManagementFeeRate);
 
-        uint256 netInterest_ = interest_ - (platformManagementFee_ + delegateManagementFee_);
-        uint256 platformFee_ = platformServiceFee_ + platformManagementFee_;
+        uint256 netInterest_ = interest - (platformManagementFee_ + delegateManagementFee_);
+        uint256 platformFee_ = platformServiceFee + platformManagementFee_;
 
-        toTreasury_ = _min(recoveredFunds_,               platformFee_);
-        toPool_     = _min(recoveredFunds_ - toTreasury_, principal_ + netInterest_);
+        toTreasury_ = _min(recoveredFunds,               platformFee_);
+        toPool_     = _min(recoveredFunds - toTreasury_, principal + netInterest_);
 
-        toBorrower_ = recoveredFunds_ - toTreasury_ - toPool_;
+        toBorrower_ = recoveredFunds - toTreasury_ - toPool_;
     }
 
     function _getRatedAmount(uint256 amount_, uint256 rate_) internal pure returns (uint256 ratedAmount_) {
@@ -296,7 +296,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         minimum_ = a_ < b_ ? a_ : b_;
     }
 
-    function _subtractWithDiff(uint256 a_, uint256 b_, uint256 diff_) internal view returns (uint256 result_) {
+    function _subtractWithDiff(uint256 a_, uint256 b_, uint256 diff_) internal pure returns (uint256 result_) {
         result_ = a_ >= b_ ? a_ - b_ : b_ - a_;
 
         if (a_ >= b_) return result_;

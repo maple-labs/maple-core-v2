@@ -31,7 +31,7 @@ contract DefaultsInvariants is BaseInvariants {
 
         ftlHandler = new FixedTermLoanHandler({
             collateralAsset_:   address(collateralAsset),
-            feeManager_:        address(feeManager),
+            feeManager_:        address(fixedTermFeeManager),
             governor_:          governor,
             liquidatorFactory_: liquidatorFactory,
             loanFactory_:       fixedTermLoanFactory,

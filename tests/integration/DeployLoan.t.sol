@@ -31,22 +31,22 @@ contract DeployFixedTermLoanTests is TestBaseWithAssertions {
 
     function test_deployFixedTermLoan_feeManagerCheck() external {
         vm.prank(governor);
-        globals.setValidInstanceOf("FEE_MANAGER", address(feeManager), false);
+        globals.setValidInstanceOf("FEE_MANAGER", address(fixedTermFeeManager), false);
 
         vm.prank(borrower);
         vm.expectRevert("MPF:CI:FAILED");
         FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
-            arguments_: abi.encode(borrower, loanManager, address(feeManager), assets, terms, amounts, rates, fees),
+            arguments_: abi.encode(borrower, loanManager, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
 
         vm.prank(governor);
-        globals.setValidInstanceOf("FEE_MANAGER", address(feeManager), true);
+        globals.setValidInstanceOf("FEE_MANAGER", address(fixedTermFeeManager), true);
 
         // Success
         vm.prank(borrower);
         FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
-            arguments_: abi.encode(borrower, loanManager, address(feeManager), assets, terms, amounts, rates, fees),
+            arguments_: abi.encode(borrower, loanManager, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
     }

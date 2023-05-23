@@ -148,7 +148,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
             address(fixedTermLoanFactory),
             makeAddr(string(abi.encode("borrower", getSomeValue(0, 100)))),
             address(fixedTermLoanManager),
-            address(feeManager),
+            address(fixedTermFeeManager),
             [address(collateralAsset), address(fundsAsset)],
             amounts,
             term,
@@ -302,7 +302,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
         return LoanAction.TriggerDefault;
     }
 
-    function getEarliestDueDate() internal returns (address loan_, uint256 dueDate_) {
+    function getEarliestDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
             uint256 paymentDueDate = isOpenTermLoan(loan) ? IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
@@ -314,7 +314,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
         }
     }
 
-    function getNextDueDate() internal returns (address loan_, uint256 dueDate_) {
+    function getNextDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
             uint256 paymentDueDate = isOpenTermLoan(loan) ? IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
@@ -346,23 +346,23 @@ contract FuzzedSetup is TestBaseWithAssertions {
         loan_ = getSomeLoan(isImpairedOpenTermLoan);
     }
 
-    function isActiveLoan(address loan_) internal returns (bool isActiveLoan_) {
+    function isActiveLoan(address loan_) internal view returns (bool isActiveLoan_) {
         isActiveLoan_ = ILoanLike(loan_).principal() > 0;
     }
 
-    function isActiveFixedTermLoan(address loan_) internal returns (bool isActiveFixedTermLoan_) {
+    function isActiveFixedTermLoan(address loan_) internal view returns (bool isActiveFixedTermLoan_) {
         isActiveFixedTermLoan_ = isFixedTermLoan(loan_) && isActiveLoan(loan_);
     }
 
-    function isActiveOpenTermLoan(address loan_) internal returns (bool isActiveOpenTermLoan_) {
+    function isActiveOpenTermLoan(address loan_) internal view returns (bool isActiveOpenTermLoan_) {
         isActiveOpenTermLoan_ = isOpenTermLoan(loan_) && isActiveLoan(loan_);
     }
 
-    function isCalledOpenTermLoan(address loan_) internal returns (bool isCalledOpenTermLoan_) {
+    function isCalledOpenTermLoan(address loan_) internal view returns (bool isCalledOpenTermLoan_) {
         isCalledOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isCalled();
     }
 
-    function isImpairedOpenTermLoan(address loan_) internal returns (bool isImpairedOpenTermLoan_) {
+    function isImpairedOpenTermLoan(address loan_) internal view returns (bool isImpairedOpenTermLoan_) {
         isImpairedOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isImpaired();
     }
 

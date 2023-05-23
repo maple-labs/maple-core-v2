@@ -101,25 +101,25 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         otLoanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
         ftLoan1 = IFixedTermLoan(createFixedTermLoan({
-            borrower:    address(borrower1),
-            lender:      address(ftLoanManager),
-            feeManager:  address(feeManager),
-            assets:      [address(collateralAsset), address(fundsAsset)],
-            terms:       [uint256(gracePeriod), uint256(paymentInterval), uint256(numberOfPayments)],
-            amounts:     [uint256(0), uint256(principal1), uint256(principal1)],
-            rates:       [uint256(interestRate1), uint256(closingFeeRate), uint256(lateFeeRate), uint256(lateInterestPremium)],
-            fees:        [uint256(0), uint256(delegateServiceFee1)]
+            borrower:   address(borrower1),
+            lender:     address(ftLoanManager),
+            feeManager: address(fixedTermFeeManager),
+            assets:     [address(collateralAsset), address(fundsAsset)],
+            terms:      [uint256(gracePeriod), uint256(paymentInterval), uint256(numberOfPayments)],
+            amounts:    [uint256(0), uint256(principal1), uint256(principal1)],
+            rates:      [uint256(interestRate1), uint256(closingFeeRate), uint256(lateFeeRate), uint256(lateInterestPremium)],
+            fees:       [uint256(0), uint256(delegateServiceFee1)]
         }));
 
         ftLoan2 = IFixedTermLoan(createFixedTermLoan({
-            borrower:    address(borrower2),
-            lender:      address(ftLoanManager),
-            feeManager:  address(feeManager),
-            assets:      [address(collateralAsset), address(fundsAsset)],
-            terms:       [uint256(gracePeriod), uint256(paymentInterval), uint256(numberOfPayments)],
-            amounts:     [uint256(0), uint256(principal2), uint256(principal2)],
-            rates:       [uint256(interestRate2), uint256(closingFeeRate), uint256(lateFeeRate), uint256(lateInterestPremium)],
-            fees:        [uint256(0), uint256(delegateServiceFee2)]
+            borrower:   address(borrower2),
+            lender:     address(ftLoanManager),
+            feeManager: address(fixedTermFeeManager),
+            assets:     [address(collateralAsset), address(fundsAsset)],
+            terms:      [uint256(gracePeriod), uint256(paymentInterval), uint256(numberOfPayments)],
+            amounts:    [uint256(0), uint256(principal2), uint256(principal2)],
+            rates:      [uint256(interestRate2), uint256(closingFeeRate), uint256(lateFeeRate), uint256(lateInterestPremium)],
+            fees:       [uint256(0), uint256(delegateServiceFee2)]
         }));
 
         otLoan3 = IOpenTermLoan(createOpenTermLoan({

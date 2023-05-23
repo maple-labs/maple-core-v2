@@ -47,10 +47,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         }
 
         // Cache the token balances.
-        uint256 borrowerBalance = fundsAsset.balanceOf(loan.borrower());
-        uint256 delegateBalance = fundsAsset.balanceOf(address(poolManager.poolDelegate()));
-        uint256 poolBalance     = fundsAsset.balanceOf(address(pool));
-        uint256 treasuryBalance = fundsAsset.balanceOf(address(treasury));
+        borrowerBalance = fundsAsset.balanceOf(loan.borrower());
+        pdBalance       = fundsAsset.balanceOf(address(poolManager.poolDelegate()));
+        poolBalance     = fundsAsset.balanceOf(address(pool));
+        treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
         // Cache the contract states.
         impairmentStorage  = _snapshotOpenTermImpairment(loan);
@@ -70,7 +70,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         assertEq(fundsAsset.balanceOf(loan.borrower()),                     borrowerBalance);
         assertEq(fundsAsset.balanceOf(address(pool)),                       poolBalance);
         assertEq(fundsAsset.balanceOf(address(treasury)),                   treasuryBalance);
-        assertEq(fundsAsset.balanceOf(address(poolManager.poolDelegate())), delegateBalance);
+        assertEq(fundsAsset.balanceOf(address(poolManager.poolDelegate())), pdBalance);
 
         assertOpenTermLoan({
             loan:            address(loan),
@@ -164,10 +164,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         }
 
         // Cache the state.
-        uint256 borrowerBalance = fundsAsset.balanceOf(loan.borrower());
-        uint256 delegateBalance = fundsAsset.balanceOf(address(poolManager.poolDelegate()));
-        uint256 poolBalance     = fundsAsset.balanceOf(address(pool));
-        uint256 treasuryBalance = fundsAsset.balanceOf(address(treasury));
+        borrowerBalance = fundsAsset.balanceOf(loan.borrower());
+        pdBalance       = fundsAsset.balanceOf(address(poolManager.poolDelegate()));
+        poolBalance     = fundsAsset.balanceOf(address(pool));
+        treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
         impairmentStorage  = _snapshotOpenTermImpairment(loan);
         loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
@@ -183,7 +183,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         assertEq(fundsAsset.balanceOf(loan.borrower()),                     borrowerBalance);
         assertEq(fundsAsset.balanceOf(address(pool)),                       poolBalance);
         assertEq(fundsAsset.balanceOf(address(treasury)),                   treasuryBalance);
-        assertEq(fundsAsset.balanceOf(address(poolManager.poolDelegate())), delegateBalance);
+        assertEq(fundsAsset.balanceOf(address(poolManager.poolDelegate())), pdBalance);
 
         assertOpenTermLoan({
             loan:            address(loan),

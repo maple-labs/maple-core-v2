@@ -189,7 +189,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             assertEq(sortedPaymentDueDate, 0);
         }
 
-        assertEq(feeManager.platformServiceFee(address(loan1)), 0);
+        assertEq(fixedTermFeeManager.platformServiceFee(address(loan1)), 0);
 
         assertEq(loan1.drawableFunds(),      0);
         assertEq(loan1.lender(),             address(loanManager));
@@ -201,7 +201,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(poolDelegate)), 0);
         assertEq(fundsAsset.balanceOf(address(treasury)),     0);
 
-        assertEq(fundsAsset.allowance(address(loan1), address(feeManager)), 0);
+        assertEq(fundsAsset.allowance(address(loan1), address(fixedTermFeeManager)), 0);
 
         fundLoan(address(loan1));
 
@@ -242,7 +242,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             assertEq(sortedPaymentDueDate, start + 1_000_000);
         }
 
-        assertEq(feeManager.platformServiceFee(address(loan1)), 15_000e6);
+        assertEq(fixedTermFeeManager.platformServiceFee(address(loan1)), 15_000e6);
 
         assertEq(loan1.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
         assertEq(loan1.lender(),             address(loanManager));
@@ -254,7 +254,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6);
 
-        assertEq(fundsAsset.allowance(address(loan1), address(feeManager)), type(uint256).max);
+        assertEq(fundsAsset.allowance(address(loan1), address(fixedTermFeeManager)), type(uint256).max);
     }
 
     function test_fund_twoLoans() external {
@@ -298,7 +298,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             assertEq(sortedPaymentDueDate, start + 1_000_000);
         }
 
-        assertEq(feeManager.platformServiceFee(address(loan1)), 15_000e6);
+        assertEq(fixedTermFeeManager.platformServiceFee(address(loan1)), 15_000e6);
 
         assertEq(loan1.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
         assertEq(loan1.lender(),             address(loanManager));
@@ -310,7 +310,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6);
 
-        assertEq(fundsAsset.allowance(address(loan1), address(feeManager)), type(uint256).max);
+        assertEq(fundsAsset.allowance(address(loan1), address(fixedTermFeeManager)), type(uint256).max);
 
         // Mint the extra funds needed to fund the second loan1.
         fundsAsset.mint(address(pool), 750_000e6);
@@ -386,8 +386,8 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             assertEq(sortedPaymentDueDate, start + 1_000 + 1_000_000);
         }
 
-        assertEq(feeManager.platformServiceFee(address(loan1)), 15_000e6);
-        assertEq(feeManager.platformServiceFee(address(loan2)), 7_500e6);
+        assertEq(fixedTermFeeManager.platformServiceFee(address(loan1)), 15_000e6);
+        assertEq(fixedTermFeeManager.platformServiceFee(address(loan2)), 7_500e6);
 
         assertEq(loan1.drawableFunds(),      1_500_000e6 - 500e6 - 142.694063e6);
         assertEq(loan1.lender(),             address(loanManager));
@@ -405,8 +405,8 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(poolDelegate)), 500e6 + 500e6);
         assertEq(fundsAsset.balanceOf(address(treasury)),     142.694063e6 + 71.347031e6);
 
-        assertEq(fundsAsset.allowance(address(loan1), address(feeManager)), type(uint256).max);
-        assertEq(fundsAsset.allowance(address(loan2), address(feeManager)), type(uint256).max);
+        assertEq(fundsAsset.allowance(address(loan1), address(fixedTermFeeManager)), type(uint256).max);
+        assertEq(fundsAsset.allowance(address(loan2), address(fixedTermFeeManager)), type(uint256).max);
     }
 
 }
