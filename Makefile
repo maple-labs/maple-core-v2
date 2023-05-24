@@ -34,6 +34,9 @@ upgrade:
 scenario:
 	./scenarios.sh
 
+deploy:
+	./deploy.sh
+
 # Forge scripting
 
 validate:

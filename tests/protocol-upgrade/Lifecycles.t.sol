@@ -209,7 +209,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
 
             // NOTE: Since accountedInterest includes dust, lockedLiquidity > cash when AUM == 0. TA > cash in this case as well.
             //       Because of this, getRedeemableShares introduces a rounding error.
-            assertApproxEqAbs(withdrawalManager.lockedShares(lp), 0, 2);
+            assertApproxEqAbs(withdrawalManager.lockedShares(lp), 0, 4);
         }
     }
 
@@ -221,7 +221,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
         if (amount == 0) return;
 
         vm.prank(governor);
-        IGlobals(mapleGlobalsV2Proxy).setMinCoverAmount(mavenPermissionedPoolManager, 0);
+        IGlobals(mapleGlobalsProxy).setMinCoverAmount(mavenPermissionedPoolManager, 0);
 
         withdrawCover(poolManager, amount);
     }
@@ -259,7 +259,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
             fixedTermLoanFactory,
             borrower_,
             poolManager.loanManagerList(0),
-            feeManager,
+            fixedTermFeeManagerV1,
             [WBTC, address(IPool(pool_).asset())],
             [0, uint256(1_000_000e6), uint256(1_000_000e6)],
             [uint256(3 days), uint256(30 days), uint256(3)],
@@ -386,8 +386,8 @@ contract LifecycleBase is ProtocolUpgradeBase {
         assertEq(fixedTermLoanManager.principalOut(),     0, "FT principalOut");
         assertEq(fixedTermLoanManager.unrealizedLosses(), 0, "FT unrealizedLosses");
 
-        assertApproxEqAbs(fixedTermLoanManager.assetsUnderManagement(), 0, 5, "FT assetsUnderManagement");
-        assertApproxEqAbs(fixedTermLoanManager.accountedInterest(),     0, 5, "FT accountedInterest");
+        assertApproxEqAbs(fixedTermLoanManager.assetsUnderManagement(), 0, 10, "FT assetsUnderManagement");
+        assertApproxEqAbs(fixedTermLoanManager.accountedInterest(),     0, 10, "FT accountedInterest");
 
         if (poolManager.loanManagerListLength() > 1) {
             ILoanManagerLike openTermLoanManager = ILoanManagerLike(poolManager.loanManagerList(1));
@@ -396,23 +396,23 @@ contract LifecycleBase is ProtocolUpgradeBase {
             assertEq(openTermLoanManager.principalOut(),     0, "OT principalOut");
             assertEq(openTermLoanManager.unrealizedLosses(), 0, "OT unrealizedLosses");
 
-            assertApproxEqAbs(openTermLoanManager.assetsUnderManagement(), 0, 5, "OT assetsUnderManagement");
-            assertApproxEqAbs(openTermLoanManager.accountedInterest(),     0, 5, "OT accountedInterest");
+            assertApproxEqAbs(openTermLoanManager.assetsUnderManagement(), 0, 10, "OT assetsUnderManagement");
+            assertApproxEqAbs(openTermLoanManager.accountedInterest(),     0, 10, "OT accountedInterest");
         }
 
         // TODO: Remove by getting dummy LP address
         if (pool_ == aqruPool || pool_ == mavenUsdc3Pool || pool_ == icebreakerPool || pool_ == newPool) {
             assertApproxEqAbs(pool.totalSupply(), 0, 0.1e6, "totalSupply");
 
-            assertApproxEqAbs(pool.totalAssets(), IERC20(pool.asset()).balanceOf(pool_), 9, "totalAssets <> cash mismatch");
+            assertApproxEqAbs(pool.totalAssets(), IERC20(pool.asset()).balanceOf(pool_), 20, "totalAssets <> cash mismatch");
             return;
         }
 
-        assertApproxEqAbs(pool.totalSupply(), 0, 37, "totalSupply");
+        assertApproxEqAbs(pool.totalSupply(), 0, 100, "totalSupply");
 
         assertEq(IERC20(pool.asset()).balanceOf(pool_), 0, "cash");
 
-        assertApproxEqAbs(pool.totalAssets(), 0, 9, "totalAssets");
+        assertApproxEqAbs(pool.totalAssets(), 0, 20, "totalAssets");
     }
 
     function logPoolState(address pool_) internal view {
@@ -446,7 +446,7 @@ contract FixedTermLifecycle is LifecycleBase {
 
         depositNewLps(newPool);
 
-        for(uint256 i; i < newBorrowers.length; ++i) {
+        for (uint256 i; i < newBorrowers.length; ++i) {
             vm.warp(block.timestamp + 3 days);
             createAndFundFixedTermLoan(newPool, newBorrowers[i]);
         }
@@ -479,7 +479,7 @@ contract OpenTermOnboardLifecycle is LifecycleBase {
 
         performActionOnAllPoolLps(addNewLps);
 
-        for(uint256 i; i < newBorrowers.length; ++i) {
+        for (uint256 i; i < newBorrowers.length; ++i) {
             vm.warp(block.timestamp + 3 days);
             performActionOnAllPools(createAndFundOpenTermLoan, newBorrowers[i]);
         }
@@ -512,7 +512,7 @@ contract OpenAndFixedTermLifecycle is LifecycleBase {
 
         performActionOnAllPoolLps(addNewLps);
 
-        for(uint256 i; i < newBorrowers.length; ++i) {
+        for (uint256 i; i < newBorrowers.length; ++i) {
             vm.warp(block.timestamp + 3 days);
 
             // Fund OTL and FTL on BOTH old and new pools

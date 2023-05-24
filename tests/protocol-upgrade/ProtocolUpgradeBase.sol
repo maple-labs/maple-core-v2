@@ -14,6 +14,7 @@ import {
     FixedTermLoanManager,
     FixedTermLoanManagerInitializer,
     FixedTermLoanV5Migrator,
+    FixedTermRefinancer,
     Globals,
     OpenTermLoan,
     OpenTermLoanFactory,
@@ -29,7 +30,7 @@ import {
 
 import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
-import { AddressRegistry } from "./AddressRegistry.sol";
+import { UpgradeAddressRegistry as AddressRegistry } from "./UpgradeAddressRegistry.sol";
 
 contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
@@ -38,40 +39,8 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     // TODO: Assert entire storage layout against all real upgrades
     // TODO: Update timestamp to current and add newest maven 11 pool and updated loan set
 
-    /**************************************************************************************************************************************/
-    /*** New Contracts Storage and Setup                                                                                                ***/
-    /**************************************************************************************************************************************/
-
-    // New PoolDeployer contract.
-    address newPoolDeployer;
-
-    // New Globals and PoolManager implementations.
-    address newGlobalsImplementation;
-    address newPoolManagerImplementation;
-    address newPoolManagerInitializer;
-
-    // New FixedTermLoan contracts.
-    address newFixedTermLoanImplementation;
-    address newFixedTermLoanInitializer;
-    address newFixedTermLoanMigrator;
-
-    // New FixedTermLoanManager contracts.
-    address newFixedTermLoanManagerImplementation;
-    address newFixedTermLoanManagerInitializer;
-
-    // OpenTermLoan contracts.
-    address openTermLoanFactory;
-    address openTermLoanImplementation;
-    address openTermLoanInitializer;
-    address openTermLoanRefinancer;
-
-    // OpenTermLoanManager contracts.
-    address openTermLoanManagerFactory;
-    address openTermLoanManagerImplementation;
-    address openTermLoanManagerInitializer;
-
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 16990500);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17296000);
     }
 
     /**************************************************************************************************************************************/
@@ -80,46 +49,42 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
     // Step 1: Deploy all new contracts necessary for protocol upgrade.
     function _deployAllNewContracts() internal {
-        newPoolDeployer = address(new PoolDeployer(mapleGlobalsV2Proxy));
+        // Upgrade contracts for Fixed Term Loan
+        fixedTermLoanImplementationV500 = address(new FixedTermLoan());
+        fixedTermLoanInitializerV500    = address(new FixedTermLoanInitializer());
+        fixedTermLoanMigratorV500       = address(new FixedTermLoanV5Migrator());
+        fixedTermRefinancerV2           = address(new FixedTermRefinancer());
 
-        // Upgrade contracts for PoolManager and Globals
-        newGlobalsImplementation     = address(new Globals());
-        newPoolManagerImplementation = address(new PoolManager());
-        newPoolManagerInitializer    = address(new PoolManagerInitializer());
+        // Upgrade contracts for Fixed Term Loan Manager
+        fixedTermLoanManagerImplementationV300 = address(new FixedTermLoanManager());
+        fixedTermLoanManagerInitializerV300    = address(new FixedTermLoanManagerInitializer());
 
-        // Upgrade contracts for Fixed Term Loan and Fixed Term Loan Manager
-        newFixedTermLoanImplementation        = address(new FixedTermLoan());
-        newFixedTermLoanInitializer           = address(new FixedTermLoanInitializer());
-        newFixedTermLoanManagerImplementation = address(new FixedTermLoanManager());
-        newFixedTermLoanManagerInitializer    = address(new FixedTermLoanManagerInitializer());
-        newFixedTermLoanMigrator              = address(new FixedTermLoanV5Migrator());
+        // Upgrade contract for Globals
+        globalsImplementationV2 = address(new Globals());
 
         // New contracts for Open Term Loan
-        openTermLoanManagerFactory        = address(new OpenTermLoanManagerFactory(mapleGlobalsV2Proxy));
-        openTermLoanManagerImplementation = address(new OpenTermLoanManager());
-        openTermLoanManagerInitializer    = address(new OpenTermLoanManagerInitializer());
+        openTermLoanFactory            = address(new OpenTermLoanFactory(mapleGlobalsProxy));
+        openTermLoanImplementationV100 = address(new OpenTermLoan());
+        openTermLoanInitializerV100    = address(new OpenTermLoanInitializer());
+        openTermRefinancerV1           = address(new OpenTermRefinancer());
 
         // New contracts for Open Term LoanManager
-        openTermLoanFactory        = address(new OpenTermLoanFactory(mapleGlobalsV2Proxy));
-        openTermLoanInitializer    = address(new OpenTermLoanInitializer());
-        openTermLoanImplementation = address(new OpenTermLoan());
-        openTermLoanRefinancer     = address(new OpenTermRefinancer());
+        openTermLoanManagerFactory            = address(new OpenTermLoanManagerFactory(mapleGlobalsProxy));
+        openTermLoanManagerImplementationV100 = address(new OpenTermLoanManager());
+        openTermLoanManagerInitializerV100    = address(new OpenTermLoanManagerInitializer());
+
+        // New contract for PoolDeployer
+        poolDeployerV2 = address(new PoolDeployer(mapleGlobalsProxy));
+
+        // Upgrade contract for PoolManager
+        poolManagerImplementationV200 = address(new PoolManager());
     }
 
-    // Step 3. Configure globals factories, instances, and deployers.
-    function _reconfigureGlobals() internal {
-        IGlobals globals_ = IGlobals(mapleGlobalsV2Proxy);
+    // Step 3. Enable instance keys at globals for factories, instances, and deployers.
+    function _enableGlobalsKeys() internal {
+        IGlobals globals_ = IGlobals(mapleGlobalsProxy);
 
         vm.startPrank(governor);
-
-        // Remove old instance settings
-        globals_.setValidInstanceOf("LIQUIDATOR",         liquidatorFactory,           false);
-        globals_.setValidInstanceOf("LOAN_MANAGER",       fixedTermLoanManagerFactory, false);
-        globals_.setValidInstanceOf("POOL_MANAGER",       poolManagerFactory,          false);
-        globals_.setValidInstanceOf("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    false);
-        globals_.setValidInstanceOf("LOAN",               fixedTermLoanFactory,        false);
-
-        globals_.setValidPoolDeployer(poolDeployer, false);
 
         // Apply new instance settings
         globals_.setValidInstanceOf("LIQUIDATOR_FACTORY",         liquidatorFactory,        true);
@@ -138,16 +103,16 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         globals_.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY", openTermLoanManagerFactory, true);
         globals_.setValidInstanceOf("LOAN_MANAGER_FACTORY",    openTermLoanManagerFactory, true);
 
-        globals_.setValidInstanceOf("FT_REFINANCER", address(fixedTermRefinancer), true);
-        globals_.setValidInstanceOf("REFINANCER",    address(fixedTermRefinancer), true);
+        globals_.setValidInstanceOf("FT_REFINANCER", fixedTermRefinancerV2, true);
+        globals_.setValidInstanceOf("REFINANCER",    fixedTermRefinancerV2, true);
 
-        globals_.setValidInstanceOf("OT_REFINANCER", openTermLoanRefinancer, true);
-        globals_.setValidInstanceOf("REFINANCER",    openTermLoanRefinancer, true);
+        globals_.setValidInstanceOf("OT_REFINANCER", openTermRefinancerV1, true);
+        globals_.setValidInstanceOf("REFINANCER",    openTermRefinancerV1, true);
 
-        globals_.setValidInstanceOf("FEE_MANAGER", feeManager, true);
+        globals_.setValidInstanceOf("FEE_MANAGER", fixedTermFeeManagerV1, true);
 
-        globals_.setCanDeployFrom(poolManagerFactory,       newPoolDeployer, true);
-        globals_.setCanDeployFrom(withdrawalManagerFactory, newPoolDeployer, true);
+        globals_.setCanDeployFrom(poolManagerFactory,       poolDeployerV2, true);
+        globals_.setCanDeployFrom(withdrawalManagerFactory, poolDeployerV2, true);
 
         vm.stopPrank();
     }
@@ -157,32 +122,34 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         vm.startPrank(governor);
 
         // PoolManager upgrade 100 => 200
-        IProxyFactoryLike(poolManagerFactory).registerImplementation(200, newPoolManagerImplementation, newPoolManagerInitializer);
+        address poolManagerInitializer = IProxyFactoryLike(poolManagerFactory).migratorForPath(100, 100);
+        IProxyFactoryLike(poolManagerFactory).registerImplementation(200, poolManagerImplementationV200, poolManagerInitializer);
         IProxyFactoryLike(poolManagerFactory).setDefaultVersion(200);
         IProxyFactoryLike(poolManagerFactory).enableUpgradePath(100, 200, address(0));
 
-        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(500, newFixedTermLoanImplementation, newFixedTermLoanInitializer);
+        // FixedTermLoan upgrade 400 => 500
+        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(500, fixedTermLoanImplementationV500, fixedTermLoanInitializerV500);
         IProxyFactoryLike(fixedTermLoanFactory).setDefaultVersion(500);
-        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(400, 500, newFixedTermLoanMigrator);
+        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(400, 500, fixedTermLoanMigratorV500);
 
-        // FTLM upgrade 200 => 300
+        // FixedTermLoanManager upgrade 200 => 300
         IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(
             300,
-            newFixedTermLoanManagerImplementation,
-            newFixedTermLoanManagerInitializer
+            fixedTermLoanManagerImplementationV300,
+            fixedTermLoanManagerInitializerV300
         );
         IProxyFactoryLike(fixedTermLoanManagerFactory).setDefaultVersion(300);
         IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(200, 300, address(0));
 
-        // OTL initial config for 100
-        IProxyFactoryLike(openTermLoanFactory).registerImplementation(100, openTermLoanImplementation, openTermLoanInitializer);
+        // OpenTermLoan initial config for 100
+        IProxyFactoryLike(openTermLoanFactory).registerImplementation(100, openTermLoanImplementationV100, openTermLoanInitializerV100);
         IProxyFactoryLike(openTermLoanFactory).setDefaultVersion(100);
 
-        // OTLM initial config for 100
+        // OpenTermLoanManager initial config for 100
         IProxyFactoryLike(openTermLoanManagerFactory).registerImplementation(
             100,
-            openTermLoanManagerImplementation,
-            openTermLoanManagerInitializer
+            openTermLoanManagerImplementationV100,
+            openTermLoanManagerInitializerV100
         );
         IProxyFactoryLike(openTermLoanManagerFactory).setDefaultVersion(100);
 
@@ -224,16 +191,34 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradeLoansAsSecurityAdmin(mavenUsdc3Loans,        500, new bytes(0));
     }
 
+    // Step 7. Disable instance keys at globals for factories, instances, and deployers.
+    function _disableGlobalsKeys() internal {
+        IGlobals globals_ = IGlobals(mapleGlobalsProxy);
+
+        vm.startPrank(governor);
+
+        // Remove old instance settings
+        globals_.setValidInstanceOf("LIQUIDATOR",         liquidatorFactory,           false);
+        globals_.setValidInstanceOf("LOAN_MANAGER",       fixedTermLoanManagerFactory, false);
+        globals_.setValidInstanceOf("POOL_MANAGER",       poolManagerFactory,          false);
+        globals_.setValidInstanceOf("WITHDRAWAL_MANAGER", withdrawalManagerFactory,    false);
+        globals_.setValidInstanceOf("LOAN",               fixedTermLoanFactory,        false);
+
+        globals_.setValidPoolDeployer(poolDeployerV1, false);
+
+        vm.stopPrank();
+    }
+
     // Full protocol upgrade
     function _performProtocolUpgrade() internal {
         // 1. Deploy all the new implementations and factories
         _deployAllNewContracts();
 
         // 2. Upgrade Globals, as the new version is needed to setup all the factories accordingly
-        upgradeGlobals(mapleGlobalsV2Proxy, newGlobalsImplementation);
+        upgradeGlobals(mapleGlobalsProxy, globalsImplementationV2);
 
-        // 3. Configure globals factories, instances, and deployers.
-        _reconfigureGlobals();
+        // 3. Enable instance keys at globals for factories, instances, and deployers.
+        _enableGlobalsKeys();
 
         // 4. Register the factories on globals and set the default versions.
         _setupFactories();
@@ -243,6 +228,9 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
         // 6. Upgrade all the existing Loans
         _upgradeLoanContractsAsSecurityAdmin();
+
+        // 7. Disable instance keys at globals for factories, instances, and deployers.
+        _disableGlobalsKeys();
     }
 
     /**************************************************************************************************************************************/
@@ -285,9 +273,9 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         uint256[6] memory configParams_ = [type(uint256).max, 0.2e6, poolCoverAmount, 1 weeks, 2 days, 0];
 
         poolManager_ = deployAndActivatePool(
-            newPoolDeployer,
+            poolDeployerV2,
             fundsAsset,
-            mapleGlobalsV2Proxy,
+            mapleGlobalsProxy,
             poolDelegate,
             poolManagerFactory,
             withdrawalManagerFactory,
@@ -297,7 +285,9 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
             configParams_
         );
 
-        if (publicPool == true) openPool(poolManager_);
+        if (publicPool == true) {
+            openPool(poolManager_);
+        }
     }
 
     // TODO: Add deprecation steps.

@@ -1,1 +1,2 @@
-FOUNDRY_PROFILE=production forge script scripts/DeployOpenTermLoans.s.sol:DeployOpenTermLoans --rpc-url $ETH_RPC_URL --broadcast
+source ./.env
+FOUNDRY_PROFILE=production forge script --fork-url $ETH_RPC_URL -vvvv --legacy --slow --sender $ETH_SENDER --unlocked --broadcast scripts/DeployContracts.s.sol:DeployContracts

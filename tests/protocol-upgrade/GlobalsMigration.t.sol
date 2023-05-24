@@ -20,7 +20,7 @@ contract GlobalsMigration is ProtocolUpgradeBase {
     }
 
     function test_globals_upgrade() public {
-        IGlobals globals_ = IGlobals(mapleGlobalsV2Proxy);
+        IGlobals globals_ = IGlobals(mapleGlobalsProxy);
 
         // Fetch current globals state.
         ( uint256 oldDelay, uint256 oldDuration ) = globals_.defaultTimelockParameters();
@@ -51,7 +51,7 @@ contract GlobalsMigration is ProtocolUpgradeBase {
 
         vm.stopPrank();
 
-        upgradeGlobals(mapleGlobalsV2Proxy, newGlobalsImplementation);
+        upgradeGlobals(mapleGlobalsProxy, globalsImplementationV2);
 
         /********************************/
         /*** Assert Old State         ***/
@@ -74,13 +74,13 @@ contract GlobalsMigration is ProtocolUpgradeBase {
         assertTrue(globals_.isCollateralAsset(SET_ADDRESS));
         assertTrue(globals_.isPoolAsset(SET_ADDRESS));
 
-        assertEq(globals_.manualOverridePrice(SET_ADDRESS), 1);
+        assertEq(globals_.manualOverridePrice(SET_ADDRESS),        1);
         assertEq(globals_.maxCoverLiquidationPercent(SET_ADDRESS), 2);
-        assertEq(globals_.minCoverAmount(SET_ADDRESS), 3);
-        assertEq(globals_.bootstrapMint(SET_ADDRESS), 4);
-        assertEq(globals_.platformManagementFeeRate(SET_ADDRESS), 5);
+        assertEq(globals_.minCoverAmount(SET_ADDRESS),             3);
+        assertEq(globals_.bootstrapMint(SET_ADDRESS),              4);
+        assertEq(globals_.platformManagementFeeRate(SET_ADDRESS),  5);
         assertEq(globals_.platformOriginationFeeRate(SET_ADDRESS), 6);
-        assertEq(globals_.platformServiceFeeRate(SET_ADDRESS), 7);
+        assertEq(globals_.platformServiceFeeRate(SET_ADDRESS),     7);
 
         ( delay, duration ) = globals_.timelockParametersOf(SET_ADDRESS, "TEST");
 
@@ -103,13 +103,14 @@ contract GlobalsMigration is ProtocolUpgradeBase {
         assertTrue(globals_.isInstanceOf("LIQUIDATOR",         liquidatorFactory));
 
         // Check new implementation is set
-        assertTrue(INonTransparentProxied(mapleGlobalsV2Proxy).implementation() == newGlobalsImplementation);
+        assertTrue(INonTransparentProxied(mapleGlobalsProxy).implementation() == globalsImplementationV2);
 
         /********************************/
         /*** Backwards Compatibility  ***/
         /********************************/
 
-        _reconfigureGlobals();
+        _enableGlobalsKeys();
+        _disableGlobalsKeys();
 
         // Ensure the liquidator factory can call `isFactory()` to check if the loan manager factory is valid.
         vm.prank(liquidatorFactory);
@@ -120,16 +121,18 @@ contract GlobalsMigration is ProtocolUpgradeBase {
         assertTrue(globals_.isPoolDeployer(mavenPermissionedPoolManager));  // Any poolManager is sufficient to test.
 
         vm.prank(withdrawalManagerFactory);
-        assertTrue(globals_.isPoolDeployer(newPoolDeployer));
+        assertTrue(globals_.isPoolDeployer(poolDeployerV2));
 
         vm.prank(poolManagerFactory);
-        assertTrue(globals_.isPoolDeployer(newPoolDeployer));
+        assertTrue(globals_.isPoolDeployer(poolDeployerV2));
 
         // Old deployer is disabled.
-        assertEq(vm.load(mapleGlobalsV2Proxy, keccak256(abi.encode(poolDeployer, uint256(9)))), bytes32(0));
+        assertEq(vm.load(mapleGlobalsProxy, keccak256(abi.encode(poolDeployerV1, uint256(9)))), bytes32(0));
 
         // New deployer is enabled.
-        assertEq(vm.load(mapleGlobalsV2Proxy, keccak256(abi.encode(newPoolDeployer, uint256(9)))), bytes32(0));
+        // NOTE: Since the pool deployer mapping was deprecated, this is the way to read the slot to assert the expected values
+        //       and to make sure this slot isn't updated when setting the new can deploy from mapping instead.
+        assertEq(vm.load(mapleGlobalsProxy, keccak256(abi.encode(poolDeployerV2, uint256(9)))), bytes32(0));
     }
 
 }

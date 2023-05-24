@@ -172,7 +172,9 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       openTermLoanManagerFactory,   true);
         globals.setValidInstanceOf("POOL_MANAGER_FACTORY",       poolManagerFactory,           true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory,     true);
+        globals.setValidInstanceOf("REFINANCER",                 address(openTermRefinancer),  true);
         globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
+        globals.setValidInstanceOf("REFINANCER",                 address(fixedTermRefinancer), true);
         globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
         globals.setValidInstanceOf("FEE_MANAGER",                address(fixedTermFeeManager), true);
 

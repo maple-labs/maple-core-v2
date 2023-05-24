@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { console, console2, stdJson, StdInvariant, stdMath, StdStyle, Test as T } from "../modules/forge-std/src/Test.sol";
 
-import { AddressRegistry } from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
+import { MapleAddressRegistry as AR } from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
 
 import { MapleLoan as MFTL }              from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
 import { Refinancer as MFTLR }            from "../modules/fixed-term-loan/contracts/Refinancer.sol";
@@ -48,6 +48,8 @@ import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
+
+contract AddressRegistry is AR { }
 
 contract EmptyContract { }
 

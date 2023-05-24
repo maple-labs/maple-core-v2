@@ -1,39 +1,88 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { AddressRegistry as FixedAddressRegistry } from "../../contracts/Contracts.sol";
+import { AddressRegistry } from "../../contracts/Contracts.sol";
 
-contract AddressRegistry is FixedAddressRegistry {
+contract UpgradeAddressRegistry is AddressRegistry {
 
     /**************************************************************************************************************************************/
     /*** Transient Addresses                                                                                                            ***/
     /**************************************************************************************************************************************/
 
     // TODO: Replace with deployed addresses.
-    address constant newFtlImplementation  = address(0);
-    address constant newFtlMigrator        = address(0);
-    address constant newFtlmImplementation = address(0);
-    address constant newOtlFactory         = address(0);
-    address constant newOtlImplementation  = address(0);
-    address constant newOtlInitializer     = address(0);
-    address constant newOtlmFactory        = address(0);
-    address constant newOtlmImplementation = address(0);
-    address constant newOtlmInitializer    = address(0);
-    address constant newOtlRefinancer      = address(0);
-    address constant newDeployer           = address(0);
-    address constant newPmImplementation   = address(0);
+    // NOTE: Not constant as they are used by tests that deploy contracts instead.
+    address fixedTermLoanImplementationV500 = address(0x5DA11a51d8986def7048d07D08D7e529837dA50F);
+    address fixedTermLoanInitializerV500    = address(0x3b8B7C064BA86E1165e6e44a5F8eDd1108892D1E);
+    address fixedTermLoanMigratorV500       = address(0x5A73B8Fa47c2D9369b0ae0beEF3eBbb3A8f047bC);
 
-    // TODO: Replace with code hashes.
-    bytes32 constant expectedFtlImplementationCodeHash  = bytes32(0);
-    bytes32 constant expectedFtlMigratorCodeHash        = bytes32(0);
-    bytes32 constant expectedFtlmImplementationCodeHash = bytes32(0);
-    bytes32 constant expectedOtlFactoryCodeHash         = bytes32(0);
-    bytes32 constant expectedOtlImplementationCodeHash  = bytes32(0);
-    bytes32 constant expectedOtlInitializerCodeHash     = bytes32(0);
-    bytes32 constant expectedOtlmFactoryCodeHash        = bytes32(0);
-    bytes32 constant expectedOtlmImplementationCodeHash = bytes32(0);
-    bytes32 constant expectedOtlmInitializerCodeHash    = bytes32(0);
-    bytes32 constant expectedPmImplementationCodeHash   = bytes32(0);
+    address fixedTermRefinancerV2 = address(0x08dAa18b2Ca1b53602e34D0F8B358De9d9b14725);
+
+    address fixedTermLoanManagerImplementationV300 = address(0x05542f68262eC89575885EFC9Ef8F6d33BB9E550);
+    address fixedTermLoanManagerInitializerV300    = address(0x13C6aD18Ed26a2238d37a68c368b764f8e09A67C);
+
+    address globalsImplementationV2 = address(0x4b329A2D7500918df3484e0E539E423c0631366A);
+
+    address openTermLoanFactory            = address(0x73c93615976FCdd92cd2440D1DB74194353F9855);
+    address openTermLoanImplementationV100 = address(0xC595e7F63B0164702934EB21D9952F19aE159D28);
+    address openTermLoanInitializerV100    = address(0x4e88694Ce3e1D5ba0DDC05d943E9b04f8ee6D495);
+
+    address openTermRefinancerV1 = address(0x79a0BE54Fd2623242986Cbef05DD51cEEf4Ec47D);
+
+    address openTermLoanManagerFactory            = address(0x3eb315930e8e61fDCbe53ECFCf364a981cCD0947);
+    address openTermLoanManagerImplementationV100 = address(0x1cAe76a5387812cb8b6B9f281D467828094de676);
+    address openTermLoanManagerInitializerV100    = address(0xf4022b31439Fd1AEDd9AfC0095678C319Ed1c222);
+
+    address poolDeployerV2 = address(0x1f18e00f028da5269df9338C275a3E0A0d03673B);
+
+    address poolManagerImplementationV200 = address(0x9bBDb1f604E23FEeB5D52734b6b119b128A49cBc);
+
+    bytes32 constant expectedFixedTermLoanImplementationV500CodeHash
+        = bytes32(uint256(83113587380712146442486648592748459837441423174467121157461572637683940514975));
+
+    bytes32 constant expectedFixedTermLoanInitializerV500CodeHash
+        = bytes32(uint256(56540632229383670451479012739562168130691255823518432923279365788509742641382));
+
+    bytes32 constant expectedFixedTermLoanMigratorV500CodeHash
+        = bytes32(uint256(55280481816030937447378284270512164392123153327982476052981391705179816697102));
+
+    bytes32 constant expectedFixedTermRefinancerV2CodeHash
+        = bytes32(uint256(43355394738850429146666775498904108217468186373589256346767488039314926497548));
+
+    bytes32 constant expectedFixedTermLoanManagerImplementationV300CodeHash
+        = bytes32(uint256(96451974751872718750721954524274829061222470461174555129881420321893856501194));
+
+    bytes32 constant expectedFixedTermLoanManagerInitializerV300CodeHash
+        = bytes32(uint256(61513895692058517367409022048086048851215226106777643746425965391376034180935));
+
+    bytes32 constant expectedGlobalsImplementationV2CodeHash
+        = bytes32(uint256(9404031847556954349327798627368585069944112605921129499274184521357491685586));
+
+    bytes32 constant expectedOpenTermLoanFactoryCodeHash
+        = bytes32(uint256(20571217150417685631766199929292492712491299012885141668753121330304907599228));
+
+    bytes32 constant expectedOpenTermLoanImplementationV100CodeHash
+        = bytes32(uint256(45432284934244147962126490415695158732384877746192582643345271056070585383260));
+
+    bytes32 constant expectedOpenTermLoanInitializerV100CodeHash
+        = bytes32(uint256(92600958275198943642553432453566497676216162709614575418426848520050581576378));
+
+    bytes32 constant expectedOpenTermRefinancerV1CodeHash
+        = bytes32(uint256(25001571621862972395858988963915451537853238683543809440193470847408664645127));
+
+    bytes32 constant expectedOpenTermLoanManagerFactoryCodeHash
+        = bytes32(uint256(55834898342011722403870381740641595400878421970299479919465661569370489887743));
+
+    bytes32 constant expectedOpenTermLoanManagerImplementationV100CodeHash
+        = bytes32(uint256(8572211606230252783701603249090944372360941122866433278134668078117418121602));
+
+    bytes32 constant expectedOpenTermLoanManagerInitializerV100CodeHash
+        = bytes32(uint256(112993290825542613270186434384195622615512741616451055564229759050642599264831));
+
+    bytes32 constant expectedPoolDeployerV2CodeHash
+        = bytes32(uint256(100052918353375759102895385086816377882767441951310901260511654573568064757031));
+
+    bytes32 constant expectedPoolManagerImplementationV200CodeHash
+        = bytes32(uint256(68501737216554926195986452202653871428552466722041947097903747323687782851377));
 
     /**************************************************************************************************************************************/
     /*** M11 Credit Maple Pool USDC2 (Public)                                                                                           ***/
@@ -394,7 +443,8 @@ contract AddressRegistry is FixedAddressRegistry {
     ];
 
     address[] mavenUsdcLoans = [
-        0xE12c3B659bc734b20f45FF35970bB2e892A1387C
+        0x71963bd09D8Dad05fef1f326B0FD216F8F93581B,
+        0xa6b77ac12251ea144A85cd11C9d7f457c124bBa8
     ];
 
     /**************************************************************************************************************************************/
@@ -428,6 +478,7 @@ contract AddressRegistry is FixedAddressRegistry {
         0x10EE63E67f1599aBE651E526a761F428a725F235,
         0x11be28b25720eFb11bd78790C80b215F46254394,
         0x186cf5714316F47BC59e30a850615A3f938d7D79,
+        0x39ec72e7011DF5b07C8688C732BdD3A6D36945ff,
         0x3af586034a0923Ed561B6C2AD9b3D566162eacd0,
         0x3Ecd0359496F9A49A1b11eB50Bb603C262Ff4218,
         0x5118b43F116543c03197eB94A53F2fe6d50Ec9F3,
@@ -436,6 +487,7 @@ contract AddressRegistry is FixedAddressRegistry {
         0x5A30a2C5a2B3B5b76ad721877D4163B599af757a,
         0x688B5c7B549339922C0D2243debE2Fe921A1A488,
         0x86950F7fC23920aFb83523d8362FaD39712ec719,
+        0x8c8C2431658608F5649B8432764a930c952d8A98,
         0x8dcB33D373966486885aA933c2dcb2B134bA9445,
         0x8eB2E34552A618f92bA32E045a06529b186dC8Da,
         0x9164E822Db664A1B139F39Cc3eCC40aecd276b0F,
@@ -470,7 +522,7 @@ contract AddressRegistry is FixedAddressRegistry {
     /**************************************************************************************************************************************/
 
     address[] orthogonalLps = [
-       0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
+        0x0013CEFc104698Bb40d574E2aE6C822d5D52cff3,
         0x00843213a104A752Ec360108688979e378204137,
         0x01930dC6d5D5EF8D02e02dc163C33c4a963752Fb,
         0x02d7F86F6e4aB78F4020E001204372072aB364C8,
@@ -722,7 +774,8 @@ contract AddressRegistry is FixedAddressRegistry {
         0x375Efc656fdF7D9f14fA4b3270A338e7E60C24f0,
         0x6a4d361B7d0daDF8146DcfE6258A8699ea35eB81,
         0x7674C0ad7Cc25B1003104399F1Da46ebdEF787D5,
-        0xa0f75491720835b36edC92D06DDc468D201e9b73
+        0xa0f75491720835b36edC92D06DDc468D201e9b73,
+        0xf0163143Ed4F65CEdC3fF7DB3A0B30A610088518
     ];
 
     address[] aqruLoans = [
@@ -730,6 +783,7 @@ contract AddressRegistry is FixedAddressRegistry {
         0x1b42E16958ed30dd3750d765C243BdDE980fdf64,
         0x1F2bCA37106b30C4d72d8E60eBD2bFeAa10BFfE2,
         0x3E36372119f12DEe3De6C260CC7283557C24f471,
+        0x69A8ebf9dC1677f5E61dE22101E7e46179a9B668,
         0x79c1f41B4cC890050375344918EF81Ce916B41C7,
         0xeB4F034958C6D3da0293142dd11F9EE2e2ad5019,
         0xfb520De9e8CaD09a28A06E5fE27b8e392bffc209
@@ -756,7 +810,9 @@ contract AddressRegistry is FixedAddressRegistry {
     /*** CashMgmt - USDC                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    address[] cashMgmtLps;
+    address[] cashMgmtLps = [
+        0x94F98416CA0DC0310Bcaeda0e16903e19307539F
+    ];
 
     address[] cashMgmtLoans;
 
