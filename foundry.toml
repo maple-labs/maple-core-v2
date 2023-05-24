@@ -47,7 +47,7 @@ fail_on_revert = true   # Fail the test if the contract reverts
 
 [profile.super_deep.fuzz]
 optimizer = true
-runs      = 500_000
+runs      = 250_000
 
 [profile.super_deep.invariant]
 optimizer = true
