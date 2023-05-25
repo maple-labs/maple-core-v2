@@ -55,4 +55,12 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
         poolManager.finishCollateralLiquidation(loan);
     }
 
+    function test_finishCollateralLiquidation_whenImpaired() external {
+        impairLoan(loan);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("LM:FCL:NOT_LIQUIDATED");
+        poolManager.finishCollateralLiquidation(loan);
+    }
+
 }
