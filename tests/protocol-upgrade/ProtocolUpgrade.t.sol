@@ -71,18 +71,18 @@ contract ProtocolUpgradeTest is ProtocolUpgradeBase {
         assertTrue(globals_.canDeployFrom(openTermLoanManagerFactory, mavenUsdc3PoolManager));
 
         // Assert all factories have correct default versions and upgrade paths enabled.
-        assertEq(IProxyFactoryLike(fixedTermLoanFactory).defaultVersion(),        500);
-        assertEq(IProxyFactoryLike(fixedTermLoanManagerFactory).defaultVersion(), 300);
+        assertEq(IProxyFactoryLike(fixedTermLoanFactory).defaultVersion(),        501);
+        assertEq(IProxyFactoryLike(fixedTermLoanManagerFactory).defaultVersion(), 301);
         assertEq(IProxyFactoryLike(openTermLoanFactory).defaultVersion(),         100);
         assertEq(IProxyFactoryLike(openTermLoanManagerFactory).defaultVersion(),  100);
         assertEq(IProxyFactoryLike(poolManagerFactory).defaultVersion(),          200);
 
-        assertTrue(IProxyFactoryLike(fixedTermLoanFactory).upgradeEnabledForPath(400, 500));
-        assertTrue(IProxyFactoryLike(fixedTermLoanManagerFactory).upgradeEnabledForPath(200, 300));
+        assertTrue(IProxyFactoryLike(fixedTermLoanFactory).upgradeEnabledForPath(400, 501));
+        assertTrue(IProxyFactoryLike(fixedTermLoanManagerFactory).upgradeEnabledForPath(200, 301));
         assertTrue(IProxyFactoryLike(poolManagerFactory).upgradeEnabledForPath(100, 200));
 
-        assertEq(IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(400, 500),        fixedTermLoanMigratorV500);
-        assertEq(IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(200, 300), address(0));
+        assertEq(IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(400, 501),        fixedTermLoanMigratorV500);
+        assertEq(IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(200, 301), address(0));
         assertEq(IProxyFactoryLike(poolManagerFactory).migratorForPath(100, 200),          address(0));
 
         assertEq(IProxyFactoryLike(openTermLoanFactory).migratorForPath(100, 100),        openTermLoanInitializerV100);
@@ -98,13 +98,13 @@ contract ProtocolUpgradeTest is ProtocolUpgradeBase {
         assertEq(PoolManager(mavenUsdc3PoolManager).implementation(),        poolManagerImplementationV200);
 
         // All the Fixed Term Loan Managers are upgraded
-        assertEq(FixedTermLoanManager(mavenPermissionedFixedTermLoanManager).implementation(), fixedTermLoanManagerImplementationV300);
-        assertEq(FixedTermLoanManager(mavenUsdcFixedTermLoanManager).implementation(),         fixedTermLoanManagerImplementationV300);
-        assertEq(FixedTermLoanManager(mavenWethFixedTermLoanManager).implementation(),         fixedTermLoanManagerImplementationV300);
-        assertEq(FixedTermLoanManager(orthogonalFixedTermLoanManager).implementation(),        fixedTermLoanManagerImplementationV300);
-        assertEq(FixedTermLoanManager(icebreakerFixedTermLoanManager).implementation(),        fixedTermLoanManagerImplementationV300);
-        assertEq(FixedTermLoanManager(aqruFixedTermLoanManager).implementation(),              fixedTermLoanManagerImplementationV300);
-        assertEq(FixedTermLoanManager(mavenUsdc3FixedTermLoanManager).implementation(),        fixedTermLoanManagerImplementationV300);
+        assertEq(FixedTermLoanManager(mavenPermissionedFixedTermLoanManager).implementation(), fixedTermLoanManagerImplementationV301);
+        assertEq(FixedTermLoanManager(mavenUsdcFixedTermLoanManager).implementation(),         fixedTermLoanManagerImplementationV301);
+        assertEq(FixedTermLoanManager(mavenWethFixedTermLoanManager).implementation(),         fixedTermLoanManagerImplementationV301);
+        assertEq(FixedTermLoanManager(orthogonalFixedTermLoanManager).implementation(),        fixedTermLoanManagerImplementationV301);
+        assertEq(FixedTermLoanManager(icebreakerFixedTermLoanManager).implementation(),        fixedTermLoanManagerImplementationV301);
+        assertEq(FixedTermLoanManager(aqruFixedTermLoanManager).implementation(),              fixedTermLoanManagerImplementationV301);
+        assertEq(FixedTermLoanManager(mavenUsdc3FixedTermLoanManager).implementation(),        fixedTermLoanManagerImplementationV301);
 
         // Globals is upgraded
         assertEq(globals_.implementation(), globalsImplementationV2);
@@ -121,13 +121,13 @@ contract ProtocolUpgradeTest is ProtocolUpgradeBase {
         assertTrue(newOpenTermLoanManagerFactory_.isInstance(PoolManager(mavenUsdc3PoolManager).loanManagerList(1)));
 
         // All fixed term loans were upgraded
-        _assertLoans(mavenPermissionedLoans, fixedTermLoanImplementationV500);
-        _assertLoans(mavenUsdcLoans,         fixedTermLoanImplementationV500);
-        _assertLoans(mavenWethLoans,         fixedTermLoanImplementationV500);
-        _assertLoans(orthogonalLoans,        fixedTermLoanImplementationV500);
-        _assertLoans(icebreakerLoans,        fixedTermLoanImplementationV500);
-        _assertLoans(aqruLoans,              fixedTermLoanImplementationV500);
-        _assertLoans(mavenUsdc3Loans,        fixedTermLoanImplementationV500);
+        _assertLoans(mavenPermissionedLoans, fixedTermLoanImplementationV501);
+        _assertLoans(mavenUsdcLoans,         fixedTermLoanImplementationV501);
+        _assertLoans(mavenWethLoans,         fixedTermLoanImplementationV501);
+        _assertLoans(orthogonalLoans,        fixedTermLoanImplementationV501);
+        _assertLoans(icebreakerLoans,        fixedTermLoanImplementationV501);
+        _assertLoans(aqruLoans,              fixedTermLoanImplementationV501);
+        _assertLoans(mavenUsdc3Loans,        fixedTermLoanImplementationV501);
     }
 
 }

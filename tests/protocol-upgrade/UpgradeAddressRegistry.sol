@@ -11,32 +11,32 @@ contract UpgradeAddressRegistry is AddressRegistry {
 
     // TODO: Replace with deployed addresses.
     // NOTE: Not constant as they are used by tests that deploy contracts instead.
-    address fixedTermLoanImplementationV500 = address(0x5DA11a51d8986def7048d07D08D7e529837dA50F);
-    address fixedTermLoanInitializerV500    = address(0x3b8B7C064BA86E1165e6e44a5F8eDd1108892D1E);
-    address fixedTermLoanMigratorV500       = address(0x5A73B8Fa47c2D9369b0ae0beEF3eBbb3A8f047bC);
+    address fixedTermLoanImplementationV501 = address(0x98b7893C5717aF41d3e351c6e3445Be02a062A90);
+    address fixedTermLoanInitializerV500    = address(0x8F596D2f57C26FB1CD22F25c9a686e38A62Ce137);
+    address fixedTermLoanMigratorV500       = address(0xAf19511EA6Ad222695A762Ce01b33fd2d777992c);
 
-    address fixedTermRefinancerV2 = address(0x08dAa18b2Ca1b53602e34D0F8B358De9d9b14725);
+    address fixedTermRefinancerV2 = address(0x27ea6e67FB62AB2A603d4ACBc9377D7a9A0fd5e3);
 
-    address fixedTermLoanManagerImplementationV300 = address(0x05542f68262eC89575885EFC9Ef8F6d33BB9E550);
-    address fixedTermLoanManagerInitializerV300    = address(0x13C6aD18Ed26a2238d37a68c368b764f8e09A67C);
+    address fixedTermLoanManagerImplementationV301 = address(0x5b97c9DccE2693844b90Cea40ba1fD15Bf99Eb01);
+    address fixedTermLoanManagerInitializerV300    = address(0xcbe920B1931DA57069b12A19Bc6d11Ad7B5adaBD);
 
-    address globalsImplementationV2 = address(0x4b329A2D7500918df3484e0E539E423c0631366A);
+    address globalsImplementationV2 = address(0x562374079a8A07417ec4A69d5d52F9CBa796d364);
 
-    address openTermLoanFactory            = address(0x73c93615976FCdd92cd2440D1DB74194353F9855);
-    address openTermLoanImplementationV100 = address(0xC595e7F63B0164702934EB21D9952F19aE159D28);
-    address openTermLoanInitializerV100    = address(0x4e88694Ce3e1D5ba0DDC05d943E9b04f8ee6D495);
+    address openTermLoanFactory            = address(0x6Fad515Fc046DD17166453A79725f50b917b7cF6);
+    address openTermLoanImplementationV100 = address(0x085176E2a201c90cE506be00BFc4f411bf9b3998);
+    address openTermLoanInitializerV100    = address(0x92d40038e411612E8cE633cCC29158c6A55CD9f3);
 
-    address openTermRefinancerV1 = address(0x79a0BE54Fd2623242986Cbef05DD51cEEf4Ec47D);
+    address openTermRefinancerV1 = address(0x653D4947620B73a433cAbBc9DFb068c3e9c18984);
 
-    address openTermLoanManagerFactory            = address(0x3eb315930e8e61fDCbe53ECFCf364a981cCD0947);
-    address openTermLoanManagerImplementationV100 = address(0x1cAe76a5387812cb8b6B9f281D467828094de676);
-    address openTermLoanManagerInitializerV100    = address(0xf4022b31439Fd1AEDd9AfC0095678C319Ed1c222);
+    address openTermLoanManagerFactory            = address(0x90b14505221a24039A2D11Ad5862339db97Cc160);
+    address openTermLoanManagerImplementationV100 = address(0xbAD003DA1e107f537Ae2f687f5FE7a7aFFe9B241);
+    address openTermLoanManagerInitializerV100    = address(0x20d0B31c2620c28D22489BaBFeF9445c7d952921);
 
-    address poolDeployerV2 = address(0x1f18e00f028da5269df9338C275a3E0A0d03673B);
+    address poolDeployerV2 = address(0x87826F821AF105802064785A3905C794eF259D5C);
 
-    address poolManagerImplementationV200 = address(0x9bBDb1f604E23FEeB5D52734b6b119b128A49cBc);
+    address poolManagerImplementationV200 = address(0xb918c805B33B02895F6F06c2EfA31d178678c947);
 
-    bytes32 constant expectedFixedTermLoanImplementationV500CodeHash
+    bytes32 constant expectedFixedTermLoanImplementationV501CodeHash
         = bytes32(uint256(83113587380712146442486648592748459837441423174467121157461572637683940514975));
 
     bytes32 constant expectedFixedTermLoanInitializerV500CodeHash
@@ -48,7 +48,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
     bytes32 constant expectedFixedTermRefinancerV2CodeHash
         = bytes32(uint256(43355394738850429146666775498904108217468186373589256346767488039314926497548));
 
-    bytes32 constant expectedFixedTermLoanManagerImplementationV300CodeHash
+    bytes32 constant expectedFixedTermLoanManagerImplementationV301CodeHash
         = bytes32(uint256(96451974751872718750721954524274829061222470461174555129881420321893856501194));
 
     bytes32 constant expectedFixedTermLoanManagerInitializerV300CodeHash
@@ -811,9 +811,15 @@ contract UpgradeAddressRegistry is AddressRegistry {
     /**************************************************************************************************************************************/
 
     address[] cashMgmtLps = [
+        0x6a4d361B7d0daDF8146DcfE6258A8699ea35eB81,
+        0x86A07dDED024121b282362f4e7A249b00F5dAB37,
         0x94F98416CA0DC0310Bcaeda0e16903e19307539F
     ];
 
-    address[] cashMgmtLoans;
+    address[] cashMgmtLoans = [
+        0x54096783F286CAD5f023a0dae8eeA2949A8C887E,
+        0x6E51e775a41Ac7C153E3dfa21eb7469E4AB8EB8C,
+        0xcb8B7968b4b7333fE85e89e802F2a5eD98408320
+    ];
 
 }

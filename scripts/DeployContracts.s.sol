@@ -37,23 +37,23 @@ contract DeployContracts is AddressRegistry, Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Fixed Term Loan upgrades
-        fixedTermLoanImplementationV500 = address(new FixedTermLoan());
+        fixedTermLoanImplementationV501 = address(new FixedTermLoan());
         fixedTermLoanInitializerV500    = address(new FixedTermLoanInitializer());
         fixedTermLoanMigratorV500       = address(new FixedTermLoanV5Migrator());
         fixedTermRefinancerV2           = address(new FixedTermRefinancerV2());
 
         console.log("");
-        console.log("FixedTermLoan Implementation:", fixedTermLoanImplementationV500);
+        console.log("FixedTermLoan Implementation:", fixedTermLoanImplementationV501);
         console.log("FixedTermLoan Initializer:   ", fixedTermLoanInitializerV500);
         console.log("FixedTermLoan Migrator:      ", fixedTermLoanMigratorV500);
         console.log("FixedTermRefinancer:         ", fixedTermRefinancerV2);
 
         // Fixed Term LoanManager upgrades
-        fixedTermLoanManagerImplementationV300 = address(new FixedTermLoanManager());
+        fixedTermLoanManagerImplementationV301 = address(new FixedTermLoanManager());
         fixedTermLoanManagerInitializerV300    = address(new FTLMInitializer());
 
         console.log("");
-        console.log("FixedTermLoanManager Implementation:", fixedTermLoanManagerImplementationV300);
+        console.log("FixedTermLoanManager Implementation:", fixedTermLoanManagerImplementationV301);
         console.log("FixedTermLoanManager Initializer:   ", fixedTermLoanManagerInitializerV300);
 
         // Globals

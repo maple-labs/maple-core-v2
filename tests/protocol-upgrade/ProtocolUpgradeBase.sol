@@ -50,13 +50,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     // Step 1: Deploy all new contracts necessary for protocol upgrade.
     function _deployAllNewContracts() internal {
         // Upgrade contracts for Fixed Term Loan
-        fixedTermLoanImplementationV500 = address(new FixedTermLoan());
+        fixedTermLoanImplementationV501 = address(new FixedTermLoan());
         fixedTermLoanInitializerV500    = address(new FixedTermLoanInitializer());
         fixedTermLoanMigratorV500       = address(new FixedTermLoanV5Migrator());
         fixedTermRefinancerV2           = address(new FixedTermRefinancer());
 
         // Upgrade contracts for Fixed Term Loan Manager
-        fixedTermLoanManagerImplementationV300 = address(new FixedTermLoanManager());
+        fixedTermLoanManagerImplementationV301 = address(new FixedTermLoanManager());
         fixedTermLoanManagerInitializerV300    = address(new FixedTermLoanManagerInitializer());
 
         // Upgrade contract for Globals
@@ -127,19 +127,19 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IProxyFactoryLike(poolManagerFactory).setDefaultVersion(200);
         IProxyFactoryLike(poolManagerFactory).enableUpgradePath(100, 200, address(0));
 
-        // FixedTermLoan upgrade 400 => 500
-        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(500, fixedTermLoanImplementationV500, fixedTermLoanInitializerV500);
-        IProxyFactoryLike(fixedTermLoanFactory).setDefaultVersion(500);
-        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(400, 500, fixedTermLoanMigratorV500);
+        // FixedTermLoan upgrade 400 => 501
+        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(501, fixedTermLoanImplementationV501, fixedTermLoanInitializerV500);
+        IProxyFactoryLike(fixedTermLoanFactory).setDefaultVersion(501);
+        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(400, 501, fixedTermLoanMigratorV500);
 
-        // FixedTermLoanManager upgrade 200 => 300
+        // FixedTermLoanManager upgrade 200 => 301
         IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(
-            300,
-            fixedTermLoanManagerImplementationV300,
+            301,
+            fixedTermLoanManagerImplementationV301,
             fixedTermLoanManagerInitializerV300
         );
-        IProxyFactoryLike(fixedTermLoanManagerFactory).setDefaultVersion(300);
-        IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(200, 300, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).setDefaultVersion(301);
+        IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(200, 301, address(0));
 
         // OpenTermLoan initial config for 100
         IProxyFactoryLike(openTermLoanFactory).registerImplementation(100, openTermLoanImplementationV100, openTermLoanInitializerV100);
@@ -168,13 +168,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradePoolManagerAsGovernor(mavenUsdc3PoolManager,        200, new bytes(0));
 
         // Governor atomically upgrades all Fixed Term Loan Managers
-        upgradeLoanManagerAsGovernor(mavenPermissionedFixedTermLoanManager, 300, new bytes(0));
-        upgradeLoanManagerAsGovernor(mavenUsdcFixedTermLoanManager,         300, new bytes(0));
-        upgradeLoanManagerAsGovernor(mavenWethFixedTermLoanManager,         300, new bytes(0));
-        upgradeLoanManagerAsGovernor(orthogonalFixedTermLoanManager,        300, new bytes(0));
-        upgradeLoanManagerAsGovernor(icebreakerFixedTermLoanManager,        300, new bytes(0));
-        upgradeLoanManagerAsGovernor(aqruFixedTermLoanManager,              300, new bytes(0));
-        upgradeLoanManagerAsGovernor(mavenUsdc3FixedTermLoanManager,        300, new bytes(0));
+        upgradeLoanManagerAsGovernor(mavenPermissionedFixedTermLoanManager, 301, new bytes(0));
+        upgradeLoanManagerAsGovernor(mavenUsdcFixedTermLoanManager,         301, new bytes(0));
+        upgradeLoanManagerAsGovernor(mavenWethFixedTermLoanManager,         301, new bytes(0));
+        upgradeLoanManagerAsGovernor(orthogonalFixedTermLoanManager,        301, new bytes(0));
+        upgradeLoanManagerAsGovernor(icebreakerFixedTermLoanManager,        301, new bytes(0));
+        upgradeLoanManagerAsGovernor(aqruFixedTermLoanManager,              301, new bytes(0));
+        upgradeLoanManagerAsGovernor(mavenUsdc3FixedTermLoanManager,        301, new bytes(0));
     }
 
     // Step 6: Upgrade PoolManager and FixedTermLoanManager contracts as the Governor.
@@ -182,13 +182,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         // TODO: Determine if protocol is vulnerable at this stage
 
         // Security Admin atomically upgrades all Fixed Term Loans
-        upgradeLoansAsSecurityAdmin(mavenPermissionedLoans, 500, new bytes(0));
-        upgradeLoansAsSecurityAdmin(mavenUsdcLoans,         500, new bytes(0));
-        upgradeLoansAsSecurityAdmin(mavenWethLoans,         500, new bytes(0));
-        upgradeLoansAsSecurityAdmin(orthogonalLoans,        500, new bytes(0));
-        upgradeLoansAsSecurityAdmin(icebreakerLoans,        500, new bytes(0));
-        upgradeLoansAsSecurityAdmin(aqruLoans,              500, new bytes(0));
-        upgradeLoansAsSecurityAdmin(mavenUsdc3Loans,        500, new bytes(0));
+        upgradeLoansAsSecurityAdmin(mavenPermissionedLoans, 501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(mavenUsdcLoans,         501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(mavenWethLoans,         501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(orthogonalLoans,        501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(icebreakerLoans,        501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(aqruLoans,              501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(mavenUsdc3Loans,        501, new bytes(0));
     }
 
     // Step 7. Disable instance keys at globals for factories, instances, and deployers.

@@ -35,7 +35,7 @@ interface IFixedTermLoanV4Like {
 
 contract FTLoansFromV4ToV5 is UpgradeAddressRegistry, ProtocolActions {
 
-    uint256 constant blockNumber = 17296000;
+    uint256 constant blockNumber = 17337075;
 
     // Current Fixed-term Loans
     address[] activeLoans;
@@ -48,13 +48,13 @@ contract FTLoansFromV4ToV5 is UpgradeAddressRegistry, ProtocolActions {
         vm.startPrank(governor);
 
         IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(
-            500,
+            501,
             address(new FixedTermLoan()),
             address(new FixedTermLoanInitializer())
         );
 
-        IProxyFactoryLike(fixedTermLoanFactory).setDefaultVersion(500);
-        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(400, 500, address(new FixedTermLoanV5Migrator()));
+        IProxyFactoryLike(fixedTermLoanFactory).setDefaultVersion(501);
+        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(400, 501, address(new FixedTermLoanV5Migrator()));
 
         vm.stopPrank();
     }
@@ -107,7 +107,7 @@ contract FTLoansFromV4ToV5 is UpgradeAddressRegistry, ProtocolActions {
             uint256 oldClosingFees
         ) = IFixedTermLoanV4Like(loan).getClosingPaymentBreakdown();
 
-        upgradeLoanAsSecurityAdmin(loan, 500, new bytes(0));
+        upgradeLoanAsSecurityAdmin(loan, 501, new bytes(0));
 
         assertEq(oldInterestRate,        IFixedTermLoan(loan).interestRate() * 1e12);
         assertEq(oldLateInterestPremium, IFixedTermLoan(loan).lateInterestPremiumRate() * 1e12);

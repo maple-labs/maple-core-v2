@@ -30,9 +30,9 @@ contract ValidateDeployContracts is ValidationBase {
 
     function run() external view {
         validateContract(
-            "fixedTermLoanImplementationV500",
-            fixedTermLoanImplementationV500,
-            expectedFixedTermLoanImplementationV500CodeHash
+            "fixedTermLoanImplementationV501",
+            fixedTermLoanImplementationV501,
+            expectedFixedTermLoanImplementationV501CodeHash
         );
 
         validateContract(
@@ -54,9 +54,9 @@ contract ValidateDeployContracts is ValidationBase {
         );
 
         validateContract(
-            "fixedTermLoanManagerImplementationV300",
-            fixedTermLoanManagerImplementationV300,
-            expectedFixedTermLoanManagerImplementationV300CodeHash
+            "fixedTermLoanManagerImplementationV301",
+            fixedTermLoanManagerImplementationV301,
+            expectedFixedTermLoanManagerImplementationV301CodeHash
         );
 
         validateContract(
@@ -217,10 +217,10 @@ contract ValidateConfigureFactories is ValidationBase {
 
     function validateFixedTermLoanFactory() internal view {
         uint256 defaultVersion = IProxyFactoryLike(fixedTermLoanFactory).defaultVersion();
-        address implementation = IProxyFactoryLike(fixedTermLoanFactory).implementationOf(500);
-        address migrator       = IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(400, 500);
-        address initializer    = IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(500, 500);
-        bool    upgradeEnabled = IProxyFactoryLike(fixedTermLoanFactory).upgradeEnabledForPath(400, 500);
+        address implementation = IProxyFactoryLike(fixedTermLoanFactory).implementationOf(501);
+        address migrator       = IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(400, 501);
+        address initializer    = IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(501, 501);
+        bool    upgradeEnabled = IProxyFactoryLike(fixedTermLoanFactory).upgradeEnabledForPath(400, 501);
 
         console.log("default version:       ", defaultVersion);
         console.log("implementation address:", implementation);
@@ -228,8 +228,8 @@ contract ValidateConfigureFactories is ValidationBase {
         console.log("migrator address:      ", migrator);
         console.log("upgrade enabled:       ", upgradeEnabled);
 
-        require(defaultVersion == 500,                             "FTL default version is invalid");
-        require(implementation == fixedTermLoanImplementationV500, "FTL implementation is invalid");
+        require(defaultVersion == 501,                             "FTL default version is invalid");
+        require(implementation == fixedTermLoanImplementationV501, "FTL implementation is invalid");
         require(initializer == fixedTermLoanInitializerV500,       "FTL initializer is invalid");
         require(migrator == fixedTermLoanMigratorV500,             "FTL migrator is invalid");
         require(upgradeEnabled,                                    "FTL upgrade is not enabled");
@@ -239,10 +239,10 @@ contract ValidateConfigureFactories is ValidationBase {
 
     function validateFixedTermLoanManagerFactory() internal view {
         uint256 defaultVersion = IProxyFactoryLike(fixedTermLoanManagerFactory).defaultVersion();
-        address implementation = IProxyFactoryLike(fixedTermLoanManagerFactory).implementationOf(300);
-        address migrator       = IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(200, 300);
-        address initializer    = IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(300, 300);
-        bool    upgradeEnabled = IProxyFactoryLike(fixedTermLoanManagerFactory).upgradeEnabledForPath(200, 300);
+        address implementation = IProxyFactoryLike(fixedTermLoanManagerFactory).implementationOf(301);
+        address migrator       = IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(200, 301);
+        address initializer    = IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(301, 301);
+        bool    upgradeEnabled = IProxyFactoryLike(fixedTermLoanManagerFactory).upgradeEnabledForPath(200, 301);
 
         console.log("default version:       ", defaultVersion);
         console.log("implementation address:", implementation);
@@ -250,8 +250,8 @@ contract ValidateConfigureFactories is ValidationBase {
         console.log("migrator address:      ", migrator);
         console.log("upgrade enabled:       ", upgradeEnabled);
 
-        require(defaultVersion == 300,                                    "FT-LM default version is invalid");
-        require(implementation == fixedTermLoanManagerImplementationV300, "FT-LM implementation is invalid");
+        require(defaultVersion == 301,                                    "FT-LM default version is invalid");
+        require(implementation == fixedTermLoanManagerImplementationV301, "FT-LM implementation is invalid");
         require(initializer == fixedTermLoanManagerInitializerV300,       "FT-LM initializer is invalid");
         require(migrator == address(0),                                   "FT-LM migrator is invalid");
         require(upgradeEnabled,                                           "FT-LM upgrade is not enabled");
@@ -355,9 +355,9 @@ contract ValidateUpgradePoolContracts is ValidationBase {
 
         console.log("FT-LM address:                  ", loanManager);
         console.log("current implementation address: ", implementation);
-        console.log("expected implementation address:", fixedTermLoanManagerImplementationV300);
+        console.log("expected implementation address:", fixedTermLoanManagerImplementationV301);
 
-        require(implementation == fixedTermLoanManagerImplementationV300, "implementation address does not match");
+        require(implementation == fixedTermLoanManagerImplementationV301, "implementation address does not match");
 
         console.log("");
     }
@@ -389,9 +389,9 @@ contract ValidateUpgradeFixedTermLoans is ValidationBase {
 
         console.log("fixed term loan address:        ", loan);
         console.log("current implementation address: ", implementation);
-        console.log("expected implementation address:", fixedTermLoanImplementationV500);
+        console.log("expected implementation address:", fixedTermLoanImplementationV501);
 
-        require(implementation == fixedTermLoanImplementationV500, "implementation address does not match");
+        require(implementation == fixedTermLoanImplementationV501, "implementation address does not match");
     }
 
 }
