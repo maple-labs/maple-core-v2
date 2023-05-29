@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 } from "../../modules/forge-std/src/console2.sol";
+import { console2 as console } from "../../modules/forge-std/src/console2.sol";
 
 import { IOpenTermLoan, IOpenTermLoanManager, IOpenTermLoanManagerStructs } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -302,8 +302,8 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         if (a_ >= b_) return result_;
 
         if (result_ <= diff_) {
-            console2.log("left ", a_);
-            console2.log("right", b_);
+            console.log("left ", a_);
+            console.log("right", b_);
         }
 
         require(result_ <= diff_, "SWD: Diff exceeded");

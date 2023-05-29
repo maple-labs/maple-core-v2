@@ -209,6 +209,33 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         );
     }
 
+    function assertFixedTermLoanManagerWithDiff(
+        address loanManager,
+        uint256 accountedInterest,
+        uint256 accruedInterest,
+        uint256 domainEnd,
+        uint256 domainStart,
+        uint256 issuanceRate,
+        uint256 principalOut,
+        uint256 unrealizedLosses,
+        uint256 diff
+    ) internal {
+        assertApproxEqAbs(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, diff, "accountedInterest");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   diff, "accruedInterest");
+        assertApproxEqAbs(IFixedTermLoanManager(loanManager).domainEnd(),    domainEnd,         diff, "domainEnd");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).domainStart(),       domainStart,       diff, "domainStart");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      diff, "issuanceRate");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).principalOut(),      principalOut,      diff, "principalOut");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  diff, "unrealizedLosses");
+
+        assertApproxEqAbs(
+            ILoanManagerLike(loanManager).assetsUnderManagement(),
+            principalOut + accountedInterest + accruedInterest,
+            diff,
+            "assetsUnderManagement"
+        );
+    }
+
     function assertOpenTermLoanManagerWithDiff(
         address loanManager,
         uint256 accountedInterest,
@@ -281,8 +308,8 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 unrealizedLosses,
         uint256 availableLiquidity,
         uint256 diff
-    ) 
-        internal 
+    )
+        internal
     {
         assertApproxEqAbs(pool.totalAssets(),                  totalAssets,        diff, "totalAssets");
         assertApproxEqAbs(pool.totalSupply(),                  totalSupply,        diff, "totalSupply");

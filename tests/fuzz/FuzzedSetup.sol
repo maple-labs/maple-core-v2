@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 } from "../../modules/forge-std/src/console2.sol";
+import { console2 as console } from "../../modules/forge-std/src/console2.sol";
 
-import { IFixedTermLoan, ILoanLike, IOpenTermLoan } from "../../contracts/interfaces/Interfaces.sol";
+import {
+    IERC20,
+    IFixedTermLoan,
+    IFixedTermLoanManager,
+    ILoanLike,
+    IOpenTermLoan,
+    IOpenTermLoanManager,
+    IPoolManager,
+    IWithdrawalManager
+} from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -35,7 +44,10 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
     uint256 seed;
 
+    address[] lps;
     address[] loans;
+
+    uint256[] escrowedShares;
 
     function setUp() public virtual override {
         super.setUp();
@@ -43,8 +55,15 @@ contract FuzzedSetup is TestBaseWithAssertions {
         fixedTermLoanManager = poolManager.loanManagerList(0);
         openTermLoanManager  = poolManager.loanManagerList(1);
 
-        // Deposit the initial liquidity.
-        deposit(address(pool), makeAddr("lp"), 500_000_000e6);
+        lps.push(makeAddr("lp1"));
+        lps.push(makeAddr("lp2"));
+        lps.push(makeAddr("lp3"));
+        lps.push(makeAddr("lp4"));
+        lps.push(makeAddr("lp5"));
+
+        for (uint256 i; i < lps.length; ++i) {
+            deposit(address(pool), lps[i], 100_000_000e6);
+        }
     }
 
     function fuzzedSetup(uint256 fixedTermLoans, uint256 openTermLoans, uint256 actionCount, uint256 seed_) internal {
@@ -82,6 +101,77 @@ contract FuzzedSetup is TestBaseWithAssertions {
             if (ILoanLike(loan).principal() == 0) {
                 removeLoan(loan);
             }
+        }
+    }
+
+    function payOffLoansAndRedeemAllLps() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
+        ( lastDomainStartFTLM_, lastDomainStartOTLM_ ) = payOffAllLoans();
+
+        requestRedeemAllLps();
+        redeemAllLps();
+    }
+
+    function payOffAllLoans() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
+        ( address loan , ) = getEarliestDueDate();
+
+        lastDomainStartFTLM_ = IFixedTermLoanManager(fixedTermLoanManager).domainStart();
+        lastDomainStartOTLM_ = IOpenTermLoanManager(openTermLoanManager).domainStart();
+
+        while (loan != address(0)) {
+            bool isOpenTermLoan = isOpenTermLoan(loan);
+
+            uint256 nextPaymentDueDate = isOpenTermLoan
+                ? IOpenTermLoan(loan).paymentDueDate()
+                : IFixedTermLoan(loan).nextPaymentDueDate();
+
+            // Call open terms after 5 payments on average
+            if (isOpenTermLoan && uint256(keccak256(abi.encode(nextPaymentDueDate))) % 5 == 0) {
+                callLoan(loan, IOpenTermLoan(loan).principal());
+            }
+
+            if (nextPaymentDueDate > block.timestamp) {
+                vm.warp(nextPaymentDueDate);
+            }
+
+            makePayment(loan);
+
+            isOpenTermLoan ? lastDomainStartOTLM_ = block.timestamp : lastDomainStartFTLM_ = block.timestamp;
+
+            if (ILoanLike(loan).principal() == 0) {
+                removeLoan(loan);
+            }
+
+            ( loan , ) = getEarliestDueDate();
+        }
+    }
+
+    function requestRedeemAllLps() internal {
+        for (uint256 i; i < lps.length; ++i) {
+            address lp = lps[i];
+
+            escrowedShares.push(IERC20(address(pool)).balanceOf(lp));
+
+            // Request redeem all LP tokens.
+            requestRedeem(address(pool), lp, IERC20(address(pool)).balanceOf(lp));
+        }
+    }
+
+    function redeemAllLps() internal {
+        for (uint256 i; i < lps.length; ++i) {
+            address lp = lps[i];
+
+            IWithdrawalManager withdrawalManager = IWithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
+
+            uint256 exitCycleId = withdrawalManager.exitCycleId(lp);
+
+            uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(exitCycleId);
+
+            if (withdrawalWindowStart > block.timestamp) {
+                vm.warp(withdrawalWindowStart);
+            }
+
+            // Redeem all LP tokens.
+            redeem(address(pool), lp, escrowedShares[i]);
         }
     }
 
@@ -175,37 +265,37 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
         if (action == LoanAction.Payment) {
             makePayment(loan);
-            console2.log("Payment made:", loan);
+            console.log("Payment made:", loan);
             return;
         }
 
         if (action == LoanAction.Call) {
             callLoan(loan, getSomeValue(1, IOpenTermLoan(loan).principal()));
-            console2.log("Loan called:", loan);
+            console.log("Loan called:", loan);
             return;
         }
 
         if (action == LoanAction.Impair) {
             impairLoan(loan);
-            console2.log("Loan impaired:", loan);
+            console.log("Loan impaired:", loan);
             return;
         }
 
         if (action == LoanAction.TriggerDefault) {
             triggerDefault(loan, address(liquidatorFactory));
-            console2.log("Default triggered:", loan);
+            console.log("Default triggered:", loan);
             return;
         }
 
         if (action == LoanAction.RemoveImpairment) {
             removeLoanImpairment(loan);
-            console2.log("Loan impairment removed:", loan);
+            console.log("Loan impairment removed:", loan);
             return;
         }
 
         if (action == LoanAction.RemoveCall) {
             removeLoanCall(loan);
-            console2.log("Loan call removed:", loan);
+            console.log("Loan call removed:", loan);
             return;
         }
     }
