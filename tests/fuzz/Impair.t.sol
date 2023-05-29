@@ -42,9 +42,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
 
         // Do nothing if no loan is available.
-        if (address(loan) == address(0)) {
-            return;
-        }
+        if (address(loan) == address(0)) return;
 
         // Cache the token balances.
         borrowerBalance = fundsAsset.balanceOf(loan.borrower());
@@ -159,9 +157,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         loan = IOpenTermLoan(getSomeImpairedOpenTermLoan());
 
         // Do nothing if no loan is available.
-        if (address(loan) == address(0)) {
-            return;
-        }
+        if (address(loan) == address(0)) return;
 
         // Cache the state.
         borrowerBalance = fundsAsset.balanceOf(loan.borrower());
