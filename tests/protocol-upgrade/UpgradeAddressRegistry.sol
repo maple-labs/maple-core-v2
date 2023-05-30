@@ -23,7 +23,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address globalsImplementationV2 = address(0x562374079a8A07417ec4A69d5d52F9CBa796d364);
 
     address openTermLoanFactory            = address(0x6Fad515Fc046DD17166453A79725f50b917b7cF6);
-    address openTermLoanImplementationV100 = address(0x085176E2a201c90cE506be00BFc4f411bf9b3998);
+    address openTermLoanImplementationV101 = address(0x085176E2a201c90cE506be00BFc4f411bf9b3998);
     address openTermLoanInitializerV100    = address(0x92d40038e411612E8cE633cCC29158c6A55CD9f3);
 
     address openTermRefinancerV1 = address(0x653D4947620B73a433cAbBc9DFb068c3e9c18984);
@@ -60,7 +60,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
     bytes32 constant expectedOpenTermLoanFactoryCodeHash
         = bytes32(uint256(20571217150417685631766199929292492712491299012885141668753121330304907599228));
 
-    bytes32 constant expectedOpenTermLoanImplementationV100CodeHash
+    bytes32 constant expectedOpenTermLoanImplementationV101CodeHash
         = bytes32(uint256(45432284934244147962126490415695158732384877746192582643345271056070585383260));
 
     bytes32 constant expectedOpenTermLoanInitializerV100CodeHash

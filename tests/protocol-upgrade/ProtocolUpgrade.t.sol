@@ -73,7 +73,7 @@ contract ProtocolUpgradeTest is ProtocolUpgradeBase {
         // Assert all factories have correct default versions and upgrade paths enabled.
         assertEq(IProxyFactoryLike(fixedTermLoanFactory).defaultVersion(),        501);
         assertEq(IProxyFactoryLike(fixedTermLoanManagerFactory).defaultVersion(), 301);
-        assertEq(IProxyFactoryLike(openTermLoanFactory).defaultVersion(),         100);
+        assertEq(IProxyFactoryLike(openTermLoanFactory).defaultVersion(),         101);
         assertEq(IProxyFactoryLike(openTermLoanManagerFactory).defaultVersion(),  100);
         assertEq(IProxyFactoryLike(poolManagerFactory).defaultVersion(),          200);
 
@@ -85,7 +85,7 @@ contract ProtocolUpgradeTest is ProtocolUpgradeBase {
         assertEq(IProxyFactoryLike(fixedTermLoanManagerFactory).migratorForPath(200, 301), address(0));
         assertEq(IProxyFactoryLike(poolManagerFactory).migratorForPath(100, 200),          address(0));
 
-        assertEq(IProxyFactoryLike(openTermLoanFactory).migratorForPath(100, 100),        openTermLoanInitializerV100);
+        assertEq(IProxyFactoryLike(openTermLoanFactory).migratorForPath(101, 101),        openTermLoanInitializerV100);
         assertEq(IProxyFactoryLike(openTermLoanManagerFactory).migratorForPath(100, 100), openTermLoanManagerInitializerV100);
 
         // All the Pool Managers are upgraded

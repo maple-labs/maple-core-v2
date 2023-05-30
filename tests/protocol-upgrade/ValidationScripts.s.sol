@@ -78,9 +78,9 @@ contract ValidateDeployContracts is ValidationBase {
         );
 
         validateContract(
-            "openTermLoanImplementationV100",
-            openTermLoanImplementationV100,
-            expectedOpenTermLoanImplementationV100CodeHash
+            "openTermLoanImplementationV101",
+            openTermLoanImplementationV101,
+            expectedOpenTermLoanImplementationV101CodeHash
         );
 
         validateContract(
@@ -261,15 +261,15 @@ contract ValidateConfigureFactories is ValidationBase {
 
     function validateOpenTermLoanFactory() internal view {
         uint256 defaultVersion = IProxyFactoryLike(openTermLoanFactory).defaultVersion();
-        address implementation = IProxyFactoryLike(openTermLoanFactory).implementationOf(100);
-        address initializer    = IProxyFactoryLike(openTermLoanFactory).migratorForPath(100, 100);
+        address implementation = IProxyFactoryLike(openTermLoanFactory).implementationOf(101);
+        address initializer    = IProxyFactoryLike(openTermLoanFactory).migratorForPath(101, 101);
 
         console.log("default version:       ", defaultVersion);
         console.log("implementation address:", implementation);
         console.log("initializer address:   ", initializer);
 
-        require(defaultVersion == 100,                            "OTL default version is invalid");
-        require(implementation == openTermLoanImplementationV100, "OTL implementation is invalid");
+        require(defaultVersion == 101,                            "OTL default version is invalid");
+        require(implementation == openTermLoanImplementationV101, "OTL implementation is invalid");
         require(initializer == openTermLoanInitializerV100,       "OTL initializer is invalid");
 
         console.log("");

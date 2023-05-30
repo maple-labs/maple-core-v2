@@ -64,13 +64,13 @@ contract DeployContracts is AddressRegistry, Script {
 
         // New contracts for Open Term Loan
         openTermLoanFactory            = address(new OpenTermLoanFactory(mapleGlobalsProxy));
-        openTermLoanImplementationV100 = address(new OpenTermLoan());
+        openTermLoanImplementationV101 = address(new OpenTermLoan());
         openTermLoanInitializerV100    = address(new OpenTermLoanInitializer());
         openTermRefinancerV1           = address(new OpenTermRefinancer());
 
         console.log("");
         console.log("OpenTermLoanFactory:        ", openTermLoanFactory);
-        console.log("OpenTermLoan Implementation:", openTermLoanImplementationV100);
+        console.log("OpenTermLoan Implementation:", openTermLoanImplementationV101);
         console.log("OpenTermLoan Initializer:   ", openTermLoanInitializerV100);
         console.log("OpenTermRefinancer:         ", openTermRefinancerV1);
 

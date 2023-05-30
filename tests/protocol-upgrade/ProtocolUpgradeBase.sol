@@ -64,7 +64,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
         // New contracts for Open Term Loan
         openTermLoanFactory            = address(new OpenTermLoanFactory(mapleGlobalsProxy));
-        openTermLoanImplementationV100 = address(new OpenTermLoan());
+        openTermLoanImplementationV101 = address(new OpenTermLoan());
         openTermLoanInitializerV100    = address(new OpenTermLoanInitializer());
         openTermRefinancerV1           = address(new OpenTermRefinancer());
 
@@ -141,9 +141,9 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IProxyFactoryLike(fixedTermLoanManagerFactory).setDefaultVersion(301);
         IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(200, 301, address(0));
 
-        // OpenTermLoan initial config for 100
-        IProxyFactoryLike(openTermLoanFactory).registerImplementation(100, openTermLoanImplementationV100, openTermLoanInitializerV100);
-        IProxyFactoryLike(openTermLoanFactory).setDefaultVersion(100);
+        // OpenTermLoan initial config for 101
+        IProxyFactoryLike(openTermLoanFactory).registerImplementation(101, openTermLoanImplementationV101, openTermLoanInitializerV100);
+        IProxyFactoryLike(openTermLoanFactory).setDefaultVersion(101);
 
         // OpenTermLoanManager initial config for 100
         IProxyFactoryLike(openTermLoanManagerFactory).registerImplementation(
