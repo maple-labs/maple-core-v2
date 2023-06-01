@@ -114,6 +114,11 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         globals_.setCanDeployFrom(poolManagerFactory,       poolDeployerV2, true);
         globals_.setCanDeployFrom(withdrawalManagerFactory, poolDeployerV2, true);
 
+        // setCanDeploy for all valid borrowers for OTL Factory
+        for (uint256 i; i < validBorrowers.length; ++i) {
+            globals_.setCanDeployFrom(openTermLoanFactory, validBorrowers[i], true);
+        }
+
         vm.stopPrank();
     }
 

@@ -128,6 +128,11 @@ contract ProtocolUpgradeTest is ProtocolUpgradeBase {
         _assertLoans(icebreakerLoans,        fixedTermLoanImplementationV501);
         _assertLoans(aqruLoans,              fixedTermLoanImplementationV501);
         _assertLoans(mavenUsdc3Loans,        fixedTermLoanImplementationV501);
+
+        // Assert all valid borrowers had setCanDeployFrom set for the OTL Factory
+        for (uint256 i; i < validBorrowers.length; ++i) {
+            assertTrue(globals_.canDeployFrom(openTermLoanFactory, validBorrowers[i]));
+        }
     }
 
 }

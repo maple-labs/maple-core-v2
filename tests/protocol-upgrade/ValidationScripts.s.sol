@@ -201,6 +201,10 @@ contract ValidateAddGlobalConfiguration is ValidationBase {
         require(globals.canDeployFrom(openTermLoanManagerFactory, aqruPoolManager),              "PM can't deploy OT-LM");
         require(globals.canDeployFrom(openTermLoanManagerFactory, mavenUsdc3PoolManager),        "PM can't deploy OT-LM");
         require(globals.canDeployFrom(openTermLoanManagerFactory, cashMgmtPoolManager),          "PM can't deploy OT-LM");
+
+        for (uint256 i; i < validBorrowers.length; ++i) {
+            require(globals.canDeployFrom(openTermLoanFactory, validBorrowers[i]), "Borrower cannot deploy OTL");
+        }
     }
 
 }
@@ -412,3 +416,4 @@ contract ValidateRemoveGlobalConfiguration is ValidationBase {
     }
 
 }
+
