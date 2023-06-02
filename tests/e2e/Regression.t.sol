@@ -77,7 +77,7 @@ contract RegressionTest is BaseInvariants {
         }
 
         bool isLoanManagerDiffLarger = assetsUnderManagement > expectedAssetsUnderManagement;
-        
+
         uint256 diff = isLoanManagerDiffLarger ?
             assetsUnderManagement - expectedAssetsUnderManagement : expectedAssetsUnderManagement - assetsUnderManagement;
 
@@ -135,7 +135,6 @@ contract RegressionTest is BaseInvariants {
         otlHandler.warp(350856977337102308613052635060);
         otlHandler.makePayment(20281);
         otlHandler.makePayment(0);
-        logDiff();
         otlHandler.fundLoan(2067194811715099453568056790963870903271317930973339);
         lpHandler.deposit(22616);
         otlHandler.fundLoan(113644145843999865459519967922657712404284833385708043106264899265606206182537);
@@ -201,7 +200,6 @@ contract RegressionTest is BaseInvariants {
         lpHandler.deposit(18222);
         otlHandler.makePayment(521);
         otlHandler.warp(5241699634718014300816198576121227639125985198956);
-        logDiff();
         lpHandler.deposit(115792089237316195423570985008687907853269984665640564039457584007913129639933);
         otlHandler.fundLoan(3107044680656420359214484961774638531733779032801751403277);
         otlHandler.warp(5273);
@@ -267,12 +265,9 @@ contract RegressionTest is BaseInvariants {
         otlHandler.fundLoan(2);
         otlHandler.warp(1422);
         otlHandler.fundLoan(1140066042034132600042288622);
-        logDiff();
         lpHandler.deposit(115792089237316195423570985008687907853269984665640564039457584007913129639933);
         otlHandler.warp(437759439162553905342380480474511);
-        logDiff();
         vm.warp(block.timestamp + 1);
-        logDiff();
         lpHandler.deposit(20383);
         otlHandler.makePayment(2027928309074611076353034545081045885263272232977919677954974930);
         otlHandler.makePayment(0);
@@ -337,11 +332,8 @@ contract RegressionTest is BaseInvariants {
         otlHandler.warp(32607951069992885614303882);
         otlHandler.fundLoan(2);
         otlHandler.warp(8796);
-        logDiff();
         vm.warp(block.timestamp + 1);  // Use 1 second to get the diff of the Loans Net Interest to calculate the Loans_IR
-        logDiff();
         payOffAllLoans();
-        logDiff();
     }
 
     function test_ftlRegression() public {
