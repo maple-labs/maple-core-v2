@@ -40,7 +40,7 @@ deploy:
 # Forge scripting
 
 validate:
-	@forge script Validate$(step)
+	@FOUNDRY_PROFILE=production forge script Validate$(step)
 
 # Utility
 

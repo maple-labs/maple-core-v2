@@ -40,7 +40,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     // TODO: Update timestamp to current and add newest maven 11 pool and updated loan set
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17296000);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17394087);
     }
 
     /**************************************************************************************************************************************/

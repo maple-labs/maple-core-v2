@@ -35,10 +35,7 @@ interface IFixedTermLoanV4Like {
 
 contract FTLoansFromV4ToV5 is UpgradeAddressRegistry, ProtocolActions {
 
-    uint256 constant blockNumber = 17337075;
-
-    // Current Fixed-term Loans
-    address[] activeLoans;
+    uint256 constant blockNumber = 17394087;
 
     function setUp() external {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), blockNumber);

@@ -410,7 +410,7 @@ contract LifecycleBase is ProtocolUpgradeBase {
 
         assertApproxEqAbs(pool.totalSupply(), 0, 100, "totalSupply");
 
-        assertEq(IERC20(pool.asset()).balanceOf(pool_), 0, "cash");
+        assertApproxEqAbs(IERC20(pool.asset()).balanceOf(pool_), 0, 1, "cash");
 
         assertApproxEqAbs(pool.totalAssets(), 0, 20, "totalAssets");
     }

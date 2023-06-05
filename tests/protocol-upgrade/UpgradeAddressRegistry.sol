@@ -802,24 +802,29 @@ contract UpgradeAddressRegistry is AddressRegistry {
         0x5A154E4408Be554216a709E2C1637ef5ca141dD8
     ];
 
-    address[] mavenUsdc3Loans = [
-        0x10f151006056Ad9a3d2c385b08B63CA6db5E0Efa
-    ];
+    address[] mavenUsdc3Loans;
 
     /**************************************************************************************************************************************/
     /*** CashMgmt - USDC                                                                                                                ***/
     /**************************************************************************************************************************************/
 
     address[] cashMgmtLps = [
+        0x3295B00134a1Ca31f2cFB7FB381644D289009407,
         0x6a4d361B7d0daDF8146DcfE6258A8699ea35eB81,
+        0x6b7873Ba6D71D9c3478F8F9b1D6cE3fB3662C063,
         0x86A07dDED024121b282362f4e7A249b00F5dAB37,
-        0x94F98416CA0DC0310Bcaeda0e16903e19307539F
+        0x94F98416CA0DC0310Bcaeda0e16903e19307539F,
+        0xad4645dF2aF7B9bC79042aA7ec8D88ddd7933f8A,
+        0xbB432C675F74C784723c38eaFe216Cc62b3dC38D
     ];
 
     address[] cashMgmtLoans = [
         0x54096783F286CAD5f023a0dae8eeA2949A8C887E,
         0x6E51e775a41Ac7C153E3dfa21eb7469E4AB8EB8C,
-        0xcb8B7968b4b7333fE85e89e802F2a5eD98408320
+        0x8D785B208560837a253F66aEbdB1C49033777286,
+        0xa6b5F3a55596fe8DF52Ca83Dd3aEaF7c2669a25B,
+        0xcb8B7968b4b7333fE85e89e802F2a5eD98408320,
+        0xE32B24F1A8877dE54804Bf82DfB1D4578850135E
     ];
 
     /**************************************************************************************************************************************/
