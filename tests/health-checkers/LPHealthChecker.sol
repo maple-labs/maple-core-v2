@@ -289,7 +289,7 @@ contract LPHealthChecker {
     ) internal view returns (uint256 totalRequestedLiquidity_) {
         uint256 supply = IPool(pool_).totalSupply();
 
-        if (supply == 0) return 0; 
+        if (supply == 0) return 0;
 
         totalRequestedLiquidity_ = IWithdrawalManager(withdrawalManager_).totalCycleShares(
             IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_)) *

@@ -33,7 +33,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     function setUp() public override {
         super.setUp();
 
-        loanManager = IOpenTermLoanManager(openTermLoanManager);
+        loanManager = IOpenTermLoanManager(_openTermLoanManager);
     }
 
     function testFuzz_impair_otl(uint256 seed) external {

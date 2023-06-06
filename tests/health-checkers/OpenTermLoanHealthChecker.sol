@@ -66,7 +66,7 @@ contract OpenTermLoanHealthChecker {
 
         // Assume indexes for FT/OT LMs are 0 and 1 respectively.
         address openTermLoanManager_;
-        
+
         bool noOpenTermLM;
 
         try poolManager.loanManagerList(1) {

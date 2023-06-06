@@ -40,7 +40,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     // TODO: Update timestamp to current and add newest maven 11 pool and updated loan set
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17394087);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17421835);
     }
 
     /**************************************************************************************************************************************/
@@ -171,6 +171,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradePoolManagerAsGovernor(icebreakerPoolManager,        200, new bytes(0));
         upgradePoolManagerAsGovernor(aqruPoolManager,              200, new bytes(0));
         upgradePoolManagerAsGovernor(mavenUsdc3PoolManager,        200, new bytes(0));
+        upgradePoolManagerAsGovernor(cashMgmtPoolManager,          200, new bytes(0));
 
         // Governor atomically upgrades all Fixed Term Loan Managers
         upgradeLoanManagerAsGovernor(mavenPermissionedFixedTermLoanManager, 301, new bytes(0));
@@ -180,6 +181,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradeLoanManagerAsGovernor(icebreakerFixedTermLoanManager,        301, new bytes(0));
         upgradeLoanManagerAsGovernor(aqruFixedTermLoanManager,              301, new bytes(0));
         upgradeLoanManagerAsGovernor(mavenUsdc3FixedTermLoanManager,        301, new bytes(0));
+        upgradeLoanManagerAsGovernor(cashMgmtFixedTermLoanManager,          301, new bytes(0));
     }
 
     // Step 6: Upgrade PoolManager and FixedTermLoanManager contracts as the Governor.
@@ -194,6 +196,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradeLoansAsSecurityAdmin(icebreakerLoans,        501, new bytes(0));
         upgradeLoansAsSecurityAdmin(aqruLoans,              501, new bytes(0));
         upgradeLoansAsSecurityAdmin(mavenUsdc3Loans,        501, new bytes(0));
+        upgradeLoansAsSecurityAdmin(cashMgmtLoans,          501, new bytes(0));
     }
 
     // Step 7. Disable instance keys at globals for factories, instances, and deployers.
@@ -252,6 +255,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         addLoanManager(icebreakerPoolManager,        openTermLoanManagerFactory);
         addLoanManager(aqruPoolManager,              openTermLoanManagerFactory);
         addLoanManager(mavenUsdc3PoolManager,        openTermLoanManagerFactory);
+        addLoanManager(cashMgmtPoolManager,          openTermLoanManagerFactory);
     }
 
     function _addWithdrawalManagersToAllowlists() internal {

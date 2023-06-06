@@ -10,9 +10,12 @@ import {
     ILoanLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
+    IPool,
     IPoolManager,
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
+
+import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -28,7 +31,7 @@ enum LoanAction {
     TriggerDefault
 }
 
-contract FuzzedSetup is TestBaseWithAssertions {
+contract FuzzedUtil is ProtocolActions {
 
     uint256 constant CALL_FACTOR              = 75;
     // uint256 constant CLOSE_FACTOR          = 100;
@@ -39,32 +42,26 @@ contract FuzzedSetup is TestBaseWithAssertions {
     uint256 constant REMOVE_CALL_FACTOR       = 100;
     uint256 constant REMOVE_IMPAIRMENT_FACTOR = 100;
 
-    address fixedTermLoanManager;
-    address openTermLoanManager;
+    // Local addresses that will be overriden by implementers
+    address _collateralAsset;
+    address _feeManager;
+    address _fixedTermLoanManager;
+    address _fixedTermLoanFactory;
+    address _fundsAsset;
+    address _liquidatorFactory;
+    address _openTermLoanFactory;
+    address _openTermLoanManager;
+    address _pool;
+    address _poolManager;
 
     uint256 seed;
 
+    address[] _fixedTermLoans;
+    address[] _openTermLoans;
     address[] lps;
     address[] loans;
 
     uint256[] escrowedShares;
-
-    function setUp() public virtual override {
-        super.setUp();
-
-        fixedTermLoanManager = poolManager.loanManagerList(0);
-        openTermLoanManager  = poolManager.loanManagerList(1);
-
-        lps.push(makeAddr("lp1"));
-        lps.push(makeAddr("lp2"));
-        lps.push(makeAddr("lp3"));
-        lps.push(makeAddr("lp4"));
-        lps.push(makeAddr("lp5"));
-
-        for (uint256 i; i < lps.length; ++i) {
-            deposit(address(pool), lps[i], 100_000_000e6);
-        }
-    }
 
     function fuzzedSetup(uint256 fixedTermLoans, uint256 openTermLoans, uint256 actionCount, uint256 seed_) internal {
         seed = seed_;
@@ -114,8 +111,8 @@ contract FuzzedSetup is TestBaseWithAssertions {
     function payOffAllLoans() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
         ( address loan , ) = getEarliestDueDate();
 
-        lastDomainStartFTLM_ = IFixedTermLoanManager(fixedTermLoanManager).domainStart();
-        lastDomainStartOTLM_ = IOpenTermLoanManager(openTermLoanManager).domainStart();
+        lastDomainStartFTLM_ = IFixedTermLoanManager(_fixedTermLoanManager).domainStart();
+        lastDomainStartOTLM_ = IOpenTermLoanManager(_openTermLoanManager).domainStart();
 
         while (loan != address(0)) {
             bool isOpenTermLoan = isOpenTermLoan(loan);
@@ -149,10 +146,10 @@ contract FuzzedSetup is TestBaseWithAssertions {
         for (uint256 i; i < lps.length; ++i) {
             address lp = lps[i];
 
-            escrowedShares.push(IERC20(address(pool)).balanceOf(lp));
+            escrowedShares.push(IERC20(address(_pool)).balanceOf(lp));
 
             // Request redeem all LP tokens.
-            requestRedeem(address(pool), lp, IERC20(address(pool)).balanceOf(lp));
+            requestRedeem(address(_pool), lp, IERC20(address(_pool)).balanceOf(lp));
         }
     }
 
@@ -160,7 +157,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
         for (uint256 i; i < lps.length; ++i) {
             address lp = lps[i];
 
-            IWithdrawalManager withdrawalManager = IWithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
+            IWithdrawalManager withdrawalManager = IWithdrawalManager(IPoolManager(_poolManager).withdrawalManager());
 
             uint256 exitCycleId = withdrawalManager.exitCycleId(lp);
 
@@ -171,7 +168,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
             }
 
             // Redeem all LP tokens.
-            redeem(address(pool), lp, escrowedShares[i]);
+            redeem(address(_pool), lp, escrowedShares[i]);
         }
     }
 
@@ -183,7 +180,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
     }
 
     function createSomeOpenTermLoan() internal returns (address loan) {
-        require(fundsAsset.balanceOf(address(pool)) > 0, "No funding is available.");
+        require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
         uint256 principal              = getSomeValue(100_000e6, 10_000_000e6);
         uint256 noticePeriod           = getSomeValue(1 hours,   10 days);
@@ -195,10 +192,10 @@ contract FuzzedSetup is TestBaseWithAssertions {
         uint256 lateInterestPremium    = getSomeValue(0,         0.1e6);
 
         loan = createOpenTermLoan(
-            address(openTermLoanFactory),
+            address(_openTermLoanFactory),
             makeAddr("borrower"),
-            address(openTermLoanManager),
-            address(fundsAsset),
+            address(_openTermLoanManager),
+            address(_fundsAsset),
             principal,
             [gracePeriod, noticePeriod, paymentInterval],
             [delegateServiceFeeRate, interestRate, lateFeeRate, lateInterestPremium]
@@ -206,7 +203,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
     }
 
     function createSomeFixedTermLoan() internal returns (address loan) {
-        require(fundsAsset.balanceOf(address(pool)) > 0, "No funding is available.");
+        require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
         uint256 principal = getSomeValue(100_000e6, 10_000_000e6);
 
@@ -235,11 +232,11 @@ contract FuzzedSetup is TestBaseWithAssertions {
         ];
 
         loan = createFixedTermLoan(
-            address(fixedTermLoanFactory),
+            address(_fixedTermLoanFactory),
             makeAddr(string(abi.encode("borrower", getSomeValue(0, 100)))),
-            address(fixedTermLoanManager),
-            address(fixedTermFeeManager),
-            [address(collateralAsset), address(fundsAsset)],
+            address(_fixedTermLoanManager),
+            address(_feeManager),
+            [address(_collateralAsset), address(_fundsAsset)],
             amounts,
             term,
             rates,
@@ -282,7 +279,7 @@ contract FuzzedSetup is TestBaseWithAssertions {
         }
 
         if (action == LoanAction.TriggerDefault) {
-            triggerDefault(loan, address(liquidatorFactory));
+            triggerDefault(loan, address(_liquidatorFactory));
             console.log("Default triggered:", loan);
             return;
         }
@@ -395,7 +392,8 @@ contract FuzzedSetup is TestBaseWithAssertions {
     function getEarliestDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
-            uint256 paymentDueDate = isOpenTermLoan(loan) ? IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
+            uint256 paymentDueDate = isOpenTermLoan(loan) ?
+                IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
 
             if (paymentDueDate < dueDate_ || (paymentDueDate > 0 && dueDate_ == 0)) {
                 loan_    = loan;
@@ -407,7 +405,8 @@ contract FuzzedSetup is TestBaseWithAssertions {
     function getNextDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
-            uint256 paymentDueDate = isOpenTermLoan(loan) ? IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
+            uint256 paymentDueDate = isOpenTermLoan(loan) ?
+                IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
 
             if (paymentDueDate < dueDate_ || (paymentDueDate > block.timestamp && dueDate_ == 0)) {
                 loan_    = loan;
@@ -456,6 +455,26 @@ contract FuzzedSetup is TestBaseWithAssertions {
         isImpairedOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isImpaired();
     }
 
+    function getAllActiveFixedTermLoans() internal returns (address[] memory loans_) {
+        for (uint256 i; i < loans.length; ++i) {
+            if (isActiveFixedTermLoan(loans[i])) {
+                _fixedTermLoans.push(loans[i]);
+            }
+        }
+
+        return abi.decode(abi.encode(_fixedTermLoans), (address[]));
+    }
+
+    function getAllActiveOpenTermLoans() internal returns (address[] memory loans_) {
+        for (uint256 i; i < loans.length; ++i) {
+            if (isActiveOpenTermLoan(loans[i])) {
+                _openTermLoans.push(loans[i]);
+            }
+        }
+
+        return abi.decode(abi.encode(_openTermLoans), (address[]));
+    }
+
     function getSomeLoan(function (address) returns (bool) filter_) internal returns (address loan) {
         // Choose the starting loan.
         uint256 index = getSomeValue(0, loans.length - 1);
@@ -476,6 +495,43 @@ contract FuzzedSetup is TestBaseWithAssertions {
 
     function getSomeValue(uint256 min_, uint256 max_) internal returns (uint256 value_) {
         value_ = _bound(seed = uint256(keccak256(abi.encode(seed))), min_, max_);
+    }
+
+    function setAddresses(address pool) internal {
+        _pool        = pool;
+        _poolManager = IPool(pool).manager();
+        _fundsAsset  = IPool(pool).asset();
+
+        _fixedTermLoanManager = IPoolManager(_poolManager).loanManagerList(0);
+        _openTermLoanManager  = IPoolManager(_poolManager).loanManagerList(1);
+    }
+
+}
+
+contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        setAddresses(address(pool));
+
+        _collateralAsset      = address(collateralAsset);
+        _feeManager           = address(fixedTermFeeManager);
+        _fixedTermLoanFactory = address(fixedTermLoanFactory);
+        _liquidatorFactory    = address(liquidatorFactory);
+        _openTermLoanFactory  = address(openTermLoanFactory);
+
+        // Deposit the initial liquidity.
+        lps.push(makeAddr("lp1"));
+        lps.push(makeAddr("lp2"));
+        lps.push(makeAddr("lp3"));
+        lps.push(makeAddr("lp4"));
+        lps.push(makeAddr("lp5"));
+
+        for (uint256 i; i < lps.length; ++i) {
+            deposit(address(pool), lps[i], 100_000_000e6);
+        }
+
     }
 
 }

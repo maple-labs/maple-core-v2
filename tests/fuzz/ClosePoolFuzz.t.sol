@@ -20,7 +20,7 @@ contract ClosePoolFuzz is FuzzedSetup {
         ( uint256 lastDomainStartFTLM, uint256 lastDomainStartOTLM ) = payOffLoansAndRedeemAllLps();
 
         assertOpenTermLoanManagerWithDiff({
-            loanManager:       openTermLoanManager,
+            loanManager:       _openTermLoanManager,
             accountedInterest: 0,
             accruedInterest:   0,
             domainStart:       lastDomainStartOTLM,
@@ -31,7 +31,7 @@ contract ClosePoolFuzz is FuzzedSetup {
         });
 
         assertFixedTermLoanManagerWithDiff({
-            loanManager:       fixedTermLoanManager,
+            loanManager:       _fixedTermLoanManager,
             accruedInterest:   0,
             accountedInterest: 0,
             principalOut:      0,

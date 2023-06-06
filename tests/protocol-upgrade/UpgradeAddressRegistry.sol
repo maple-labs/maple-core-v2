@@ -809,6 +809,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
     /**************************************************************************************************************************************/
 
     address[] cashMgmtLps = [
+        0x2B72D6b9D1E63547A2fE8aDD3D982F250ccD0b2a,
         0x3295B00134a1Ca31f2cFB7FB381644D289009407,
         0x6a4d361B7d0daDF8146DcfE6258A8699ea35eB81,
         0x6b7873Ba6D71D9c3478F8F9b1D6cE3fB3662C063,
@@ -820,6 +821,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
 
     address[] cashMgmtLoans = [
         0x54096783F286CAD5f023a0dae8eeA2949A8C887E,
+        0x55c6FfD8637B3D936Ed6F7924DdcE591D013A0fF,
         0x6E51e775a41Ac7C153E3dfa21eb7469E4AB8EB8C,
         0x8D785B208560837a253F66aEbdB1C49033777286,
         0xa6b5F3a55596fe8DF52Ca83Dd3aEaF7c2669a25B,

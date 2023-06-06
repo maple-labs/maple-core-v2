@@ -301,12 +301,12 @@ contract LifecycleBase is ProtocolUpgradeBase {
         uint256 baseAmount = IPool(pool).asset() == WETH ? 10_000e18 : 1_000_000e6;
 
         vm.startPrank(poolManager.poolDelegate());
-        poolManager.setLiquidityCap(poolManager.totalAssets() + baseAmount * 6);
+        poolManager.setLiquidityCap(poolManager.totalAssets() + baseAmount * 10);
         vm.stopPrank();
 
         deposit(pool, newLps[0], baseAmount);
-        deposit(pool, newLps[1], baseAmount * 2);
-        deposit(pool, newLps[2], baseAmount * 3);
+        deposit(pool, newLps[1], baseAmount * 4);
+        deposit(pool, newLps[2], baseAmount * 5);
     }
 
     function getNextLoan() internal view returns (address nextLoan) {

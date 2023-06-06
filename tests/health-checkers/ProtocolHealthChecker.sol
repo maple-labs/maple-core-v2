@@ -277,10 +277,10 @@ contract ProtocolHealthChecker {
         address pool_,
         address poolManager_
     ) public view returns (bool isMaintained_) {
-        uint256 fixedTermAUM = 
+        uint256 fixedTermAUM =
             fixedTermLoanManager_ == address(0) ? 0 : IFixedTermLoanManager(fixedTermLoanManager_).assetsUnderManagement();
 
-        uint256 openTermAUM = 
+        uint256 openTermAUM =
             openTermLoanManager_ == address(0) ? 0 : IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement();
 
         isMaintained_ =
