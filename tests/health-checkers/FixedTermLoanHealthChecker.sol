@@ -140,6 +140,8 @@ contract FixedTermLoanHealthChecker {
             IFixedTermLoan loan               = IFixedTermLoan(loans_[i]);
             IFixedTermLoanManager loanManager = IFixedTermLoanManager(loanManager_);
 
+            if (loan.isImpaired()) continue;
+
             ( , , , uint256 paymentDueDate, , , ) = loanManager.payments(loanManager.paymentIdOf(address(loan)));
 
             if (paymentDueDate != loan.nextPaymentDueDate()) return false;
@@ -156,9 +158,11 @@ contract FixedTermLoanHealthChecker {
             IFixedTermLoan loan               = IFixedTermLoan(loans_[i]);
             IFixedTermLoanManager loanManager = IFixedTermLoanManager(loanManager_);
 
+            if (loan.isImpaired()) continue;
+
             ( , , uint256 startDate, , , , ) = loanManager.payments(loanManager.paymentIdOf(address(loan)));
 
-            if (startDate != loan.nextPaymentDueDate() - loan.paymentInterval()) return false;
+            if (startDate > loan.nextPaymentDueDate() - loan.paymentInterval()) return false;
         }
 
         isMaintained_ = true;

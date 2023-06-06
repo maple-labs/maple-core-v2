@@ -51,18 +51,20 @@ contract LPHealthChecker {
         address pool_              = poolManager.pool();
         address withdrawalManager_ = poolManager.withdrawalManager();
 
+        bool noSupply = IERC20(pool_).totalSupply() == 0;
+
         invariants_.poolInvariantB = check_pool_invariant_B(pool_, withdrawalManager_, poolLps_);
         invariants_.poolInvariantG = check_pool_invariant_G(pool_, withdrawalManager_, poolLps_);
 
-        invariants_.withdrawalManagerInvariantA = check_withdrawalManager_invariant_A(pool_, withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantB = check_withdrawalManager_invariant_B(withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantF = check_withdrawalManager_invariant_F(pool_, withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantG = check_withdrawalManager_invariant_G(withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantH = check_withdrawalManager_invariant_H(withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantI = check_withdrawalManager_invariant_I(pool_, withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantJ = check_withdrawalManager_invariant_J(pool_, withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantK = check_withdrawalManager_invariant_K(pool_, withdrawalManager_, poolLps_);
-        invariants_.withdrawalManagerInvariantL = check_withdrawalManager_invariant_L(pool_, withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantA = noSupply || check_withdrawalManager_invariant_A(pool_, withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantB = noSupply || check_withdrawalManager_invariant_B(withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantF = noSupply || check_withdrawalManager_invariant_F(pool_, withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantG = noSupply || check_withdrawalManager_invariant_G(withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantH = noSupply || check_withdrawalManager_invariant_H(withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantI = noSupply || check_withdrawalManager_invariant_I(pool_, withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantJ = noSupply || check_withdrawalManager_invariant_J(pool_, withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantK = noSupply || check_withdrawalManager_invariant_K(pool_, withdrawalManager_, poolLps_);
+        invariants_.withdrawalManagerInvariantL = noSupply || check_withdrawalManager_invariant_L(pool_, withdrawalManager_, poolLps_);
     }
 
     /******************************************************************************************************************************/
@@ -243,6 +245,8 @@ contract LPHealthChecker {
 
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
+        if (pool.totalSupply() == 0) return true;
+
         for (uint256 i; i < poolLps_.length; i++) {
             ( , uint256 assets, ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
@@ -283,10 +287,14 @@ contract LPHealthChecker {
         address withdrawalManager_,
         address poolLp_
     ) internal view returns (uint256 totalRequestedLiquidity_) {
+        uint256 supply = IPool(pool_).totalSupply();
+
+        if (supply == 0) return 0; 
+
         totalRequestedLiquidity_ = IWithdrawalManager(withdrawalManager_).totalCycleShares(
-            IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_) *
+            IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_)) *
             (IPool(pool_).totalAssets() - IPool(pool_).unrealizedLosses())
-        ) / IPool(pool_).totalSupply();
+            / IPool(pool_).totalSupply();
     }
 
     function _getDiff(uint256 x, uint256 y) internal pure returns (uint256 diff) {

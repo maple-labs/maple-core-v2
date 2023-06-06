@@ -80,22 +80,38 @@ contract ProtocolHealthChecker {
     function checkInvariants(address poolManager_) external returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        // Assume indexes for FT/OT LMs are 0 and 1 respectively.
-        address fixedTermLoanManager_ = poolManager.loanManagerList(0);
-        address openTermLoanManager_  = poolManager.loanManagerList(1);
+        address fixedTermLoanManager_;
+        address openTermLoanManager_;
+
+        bool noFixedTermLM;
+        bool noOpenTermLM;
+
+        // Assume indexes for FT/OT LMs are 0 and 1 respectively. This might not be true for some deployed pools.;
+        try poolManager.loanManagerList(0) {
+            fixedTermLoanManager_ = poolManager.loanManagerList(0);
+        } catch {
+            noFixedTermLM = true;
+        }
+
+        try poolManager.loanManagerList(1) {
+            openTermLoanManager_ = poolManager.loanManagerList(1);
+        } catch {
+            noOpenTermLM = true;
+        }
+
         address pool_                 = poolManager.pool();
         address fundsAsset_           = IPool(pool_).asset();
         address withdrawalManager_    = poolManager.withdrawalManager();
 
-        invariants_.fixedTermLoanManagerInvariantA = check_fixedTermLoanManager_invariant_A(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantB = check_fixedTermLoanManager_invariant_B(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantF = check_fixedTermLoanManager_invariant_F(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantI = check_fixedTermLoanManager_invariant_I(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantA = noFixedTermLM || check_fixedTermLoanManager_invariant_A(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantB = noFixedTermLM || check_fixedTermLoanManager_invariant_B(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantF = noFixedTermLM || check_fixedTermLoanManager_invariant_F(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantI = noFixedTermLM || check_fixedTermLoanManager_invariant_I(fixedTermLoanManager_);
         invariants_.fixedTermLoanManagerInvariantJ = true; // 0 interest loan possible, is this really an invariants as our system allows it
-        invariants_.fixedTermLoanManagerInvariantK = check_fixedTermLoanManager_invariant_K(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantK = noFixedTermLM || check_fixedTermLoanManager_invariant_K(fixedTermLoanManager_);
 
-        invariants_.openTermLoanManagerInvariantE = check_openTermLoanManager_invariant_E(openTermLoanManager_);
-        invariants_.openTermLoanManagerInvariantG = check_openTermLoanManager_invariant_G(openTermLoanManager_);
+        invariants_.openTermLoanManagerInvariantE = noOpenTermLM || check_openTermLoanManager_invariant_E(openTermLoanManager_);
+        invariants_.openTermLoanManagerInvariantG = noOpenTermLM || check_openTermLoanManager_invariant_G(openTermLoanManager_);
 
         invariants_.poolInvariantA = check_pool_invariant_A(pool_);
         invariants_.poolInvariantD = check_pool_invariant_D(pool_);
@@ -261,10 +277,16 @@ contract ProtocolHealthChecker {
         address pool_,
         address poolManager_
     ) public view returns (bool isMaintained_) {
+        uint256 fixedTermAUM = 
+            fixedTermLoanManager_ == address(0) ? 0 : IFixedTermLoanManager(fixedTermLoanManager_).assetsUnderManagement();
+
+        uint256 openTermAUM = 
+            openTermLoanManager_ == address(0) ? 0 : IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement();
+
         isMaintained_ =
         _assertApproxEqAbs(
-            (IFixedTermLoanManager(fixedTermLoanManager_).assetsUnderManagement() +
-            IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement() +
+            (fixedTermAUM +
+            openTermAUM +
             IERC20(fundsAsset_).balanceOf(pool_)),
             IPoolManager(poolManager_).totalAssets(),
             BUFFER

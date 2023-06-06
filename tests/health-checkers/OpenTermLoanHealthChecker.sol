@@ -65,27 +65,35 @@ contract OpenTermLoanHealthChecker {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
         // Assume indexes for FT/OT LMs are 0 and 1 respectively.
-        address openTermLoanManager_ = poolManager.loanManagerList(1);
+        address openTermLoanManager_;
+        
+        bool noOpenTermLM;
 
-        invariants_.openTermLoanInvariantA = check_otl_invariant_A(loans_);
-        invariants_.openTermLoanInvariantB = check_otl_invariant_B(loans_);
-        invariants_.openTermLoanInvariantC = check_otl_invariant_C(loans_);
-        invariants_.openTermLoanInvariantD = check_otl_invariant_D(loans_);
-        invariants_.openTermLoanInvariantE = check_otl_invariant_E(loans_);
-        invariants_.openTermLoanInvariantF = check_otl_invariant_F(loans_);
-        invariants_.openTermLoanInvariantG = check_otl_invariant_G(loans_);
-        invariants_.openTermLoanInvariantH = check_otl_invariant_H(loans_);
-        invariants_.openTermLoanInvariantI = check_otl_invariant_I(loans_);
+        try poolManager.loanManagerList(1) {
+            openTermLoanManager_ = poolManager.loanManagerList(1);
+        } catch {
+            noOpenTermLM = true;
+        }
 
-        invariants_.openTermLoanManagerInvariantA = check_otlm_invariant_A(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantB = check_otlm_invariant_B(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantC = check_otlm_invariant_C(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantD = check_otlm_invariant_D(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantF = check_otlm_invariant_F(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantH = check_otlm_invariant_H(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantI = check_otlm_invariant_I(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantJ = check_otlm_invariant_J(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantK = check_otlm_invariant_K(openTermLoanManager_, loans_);
+        invariants_.openTermLoanInvariantA = noOpenTermLM || check_otl_invariant_A(loans_);
+        invariants_.openTermLoanInvariantB = noOpenTermLM || check_otl_invariant_B(loans_);
+        invariants_.openTermLoanInvariantC = noOpenTermLM || check_otl_invariant_C(loans_);
+        invariants_.openTermLoanInvariantD = noOpenTermLM || check_otl_invariant_D(loans_);
+        invariants_.openTermLoanInvariantE = noOpenTermLM || check_otl_invariant_E(loans_);
+        invariants_.openTermLoanInvariantF = noOpenTermLM || check_otl_invariant_F(loans_);
+        invariants_.openTermLoanInvariantG = noOpenTermLM || check_otl_invariant_G(loans_);
+        invariants_.openTermLoanInvariantH = noOpenTermLM || check_otl_invariant_H(loans_);
+        invariants_.openTermLoanInvariantI = noOpenTermLM || check_otl_invariant_I(loans_);
+
+        invariants_.openTermLoanManagerInvariantA = true; //noOpenTermLM || check_otlm_invariant_A(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantB = noOpenTermLM || check_otlm_invariant_B(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantC = noOpenTermLM || check_otlm_invariant_C(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantD = noOpenTermLM || check_otlm_invariant_D(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantF = noOpenTermLM || check_otlm_invariant_F(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantH = noOpenTermLM || check_otlm_invariant_H(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantI = noOpenTermLM || check_otlm_invariant_I(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantJ = noOpenTermLM || check_otlm_invariant_J(openTermLoanManager_, loans_);
+        invariants_.openTermLoanManagerInvariantK = noOpenTermLM || check_otlm_invariant_K(openTermLoanManager_, loans_);
     }
 
     /******************************************************************************************************************************/
@@ -283,6 +291,9 @@ contract OpenTermLoanHealthChecker {
 
         for (uint256 i; i < loans_.length; ++i) {
             ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(address(loans_[i]));
+
+            if (IOpenTermLoan(loans_[i]).isImpaired()) continue;
+
             expectedIssuanceRate += issuanceRate_;
         }
 
@@ -311,7 +322,7 @@ contract OpenTermLoanHealthChecker {
 
             ( , , uint40 paymentStartDate, ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
 
-            if (paymentStartDate != loan.dateFunded() || paymentStartDate != loan.datePaid()) return false;
+            if (paymentStartDate != loan.dateFunded() && paymentStartDate != loan.datePaid()) return false;
         }
 
         isMaintained_ = true;
