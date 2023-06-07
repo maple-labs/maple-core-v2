@@ -1,31 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { Refinancer }        from "../../modules/loan-v400/contracts/Refinancer.sol";
+import { IFixedTermLoan, IFixedTermLoanManager, IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
+
+import { EmptyContract } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
+    address borrower;
+    address lp;
 
-    Loan       internal loan;
-    Refinancer internal refinancer;
+    IFixedTermLoan        loan;
+    IFixedTermLoanManager loanManager;
 
     function setUp() public override {
         super.setUp();
 
-        borrower   = address(new Address());
-        lp         = address(new Address());
-        refinancer = new Refinancer();
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
 
-        depositLiquidity({
-            lp:        lp,
-            liquidity: 2_500_000e6
-        });
+        deposit(lp, 2_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -36,12 +32,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5_000), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(3.1536e18), 0, 0, 0]  // 0.1e6 tokens per second
-        });
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+
+        loan = IFixedTermLoan(fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(3.1536e6), 0, 0, 0],  // 0.1e6 tokens per second
+            loanManager: address(loanManager)
+        }));
 
     }
 
@@ -52,15 +51,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -77,8 +76,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
@@ -88,8 +87,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -99,15 +98,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -118,20 +117,16 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
-        vm.stopPrank();
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+
+        acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -144,8 +139,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.09e6 * 1e30,
@@ -155,15 +150,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 3_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 3_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -184,8 +179,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,          // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -195,8 +190,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -206,15 +201,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,        // Principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 3_000_000,
-            domainEnd:             start + 5_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 3_000_000,
+            domainEnd:         start + 5_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
@@ -234,15 +229,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -259,8 +254,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
@@ -270,8 +265,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -281,15 +276,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -302,20 +297,14 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  1_000_000e6);
         calls[1] = abi.encodeWithSignature("setEndingPrincipal(uint256)", 2_000_000e6);
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, calls);
-        fundsAsset.mint(address(borrower), 20_000e6);  // Amount for origination fees
-        fundsAsset.approve(address(loan), 20_000e6);
-        loan.returnFunds(20_000e6);
-        vm.stopPrank();
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, calls);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, calls, 1_000_000e6);
+        acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, calls, 1_000_000e6);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,                            // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -325,8 +314,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.18e6 * 1e30,
@@ -336,15 +325,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
@@ -365,8 +354,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         2_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,          // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -376,8 +365,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -387,15 +376,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          2_000_000e6,
-            assetsUnderManagement: 2_000_000e6,        // principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start + 2_000_000,
-            domainEnd:             start + 3_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      2_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start + 2_000_000,
+            domainEnd:         start + 3_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 270_000e6);  // Interest + refinance interest
@@ -415,15 +404,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -440,8 +429,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
@@ -451,8 +440,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -462,15 +451,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -479,22 +468,18 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Refinance Assertions ***/
         /****************************/
 
-        bytes[] memory data = encodeWithSignatureAndUint("setInterestRate(uint256)", 6.3072e18);  // 2x
+        bytes[] memory data = encodeWithSignatureAndUint("setInterestRate(uint256)", 6.3072e6);  // 2x
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);
-        vm.stopPrank();
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+
+        acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  300_000e6,               // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -504,8 +489,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.18e6 * 1e30,
@@ -515,15 +500,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -543,8 +528,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 270_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,          // 200_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -554,8 +539,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.18e6 * 1e30,
@@ -565,15 +550,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,        // principal + accrued interest
-            issuanceRate:          0.18e6 * 1e30,
-            domainStart:           start + 2_000_000,
-            domainEnd:             start + 3_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.18e6 * 1e30,
+            domainStart:       start + 2_000_000,
+            domainEnd:         start + 3_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 270_000e6);
@@ -593,15 +578,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -618,8 +603,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  100_000e6,          // 0.1 * 1_000_000 = 100_000
@@ -629,8 +614,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -640,15 +625,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -659,20 +644,16 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setEndingPrincipal(uint256)", 0);
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);
-        vm.stopPrank();
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+
+        acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 302_114_803625,
             incomingInterest:  200_000e6,               // 100_000e6 from second payment period + 100_000e6 from first period (refinanced)
@@ -682,8 +663,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   90_000e6,
             issuanceRate:        0.09e6 * 1e30,
@@ -693,15 +674,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     90_000e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 1_000_000,
-            domainEnd:             start + 2_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 90_000e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 1_000_000,
+            domainEnd:         start + 2_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -721,8 +702,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 180_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         697_885_196375,
             incomingPrincipal: 332_326_283988,
             incomingInterest:  69_788_519637,
@@ -732,8 +713,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 62_809_667673,
             refinanceInterest:   0,
             issuanceRate:        0.062809667673e6 * 1e30,
@@ -743,15 +724,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          697_885_196375,
-            assetsUnderManagement: 697_885_196375,           // principal + accrued interest
-            issuanceRate:          0.062809667673e6 * 1e30,
-            domainStart:           start + 2_000_000,
-            domainEnd:             start + 3_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      697_885_196375,
+            issuanceRate:      0.062809667673e6 * 1e30,
+            domainStart:       start + 2_000_000,
+            domainEnd:         start + 3_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 302_114_803625);
@@ -771,15 +752,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         // PoolDelegate and treasury get their own originationFee
@@ -796,8 +777,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         assertTotalAssets(2_500_000e6 + 90_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  151_840e6,          // Late interest: 6 days: 86400 * 6 * 0.1e6 = 51_840e6
@@ -807,8 +788,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 90_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -818,15 +799,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       90_000e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_090_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   90_000e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -837,37 +818,32 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);
-        vm.stopPrank();
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
 
-        // Principal + interest owed at refinance time (201_840e6 * 0.9 to discount service fees)
-        assertTotalAssets(2_500_000e6 + 181_656e6);
+        acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
-        assertLoanState({
-            loan:              loan,
+        // Principal + interest owed at refinance time (151_840e6 * 0.9 to discount service fees)
+        assertTotalAssets(2_500_000e6 + 136_656e6);
+
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
-            // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
-            // + refinanced period incoming (200_000e6)
-            incomingInterest:  401_840e6,
+            // first period (100_000e6) + late fees for first period (151_840e6)  + refinanced period incoming (200_000e6)
+            incomingInterest:  351_840e6,
             incomingFees:      15_000e6 + 450e6 + 20_000e6 + 300e6,  // 10_000e6 of platform service fees + 300e6 of delegate service fees.
             // first period (100_000e6) + late fees for first period (151_840e6) + second period before refinance (50_000e6)
-            refinanceInterest: 201_840e6,
+            refinanceInterest: 151_840e6,
             paymentDueDate:    start + 3_500_000,
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
-            refinanceInterest:   181_656e6,
+            refinanceInterest:   136_656e6,
             issuanceRate:        0.09e6 * 1e30,
             startDate:           start + 1_500_000,
             paymentDueDate:      start + 3_500_000,
@@ -875,15 +851,15 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     181_656e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_181_656e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 3_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 136_656e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 3_500_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
@@ -902,10 +878,10 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 181_656e6 + 180_000e6);
+        assertTotalAssets(2_500_000e6 + 136_656e6 + 180_000e6);
 
-        assertLoanState({
-            loan:              loan,
+        assertFixedTermLoan({
+            loan:              address(loan),
             principal:         1_000_000e6,
             incomingPrincipal: 0,
             incomingInterest:  200_000e6,
@@ -915,8 +891,8 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             paymentsRemaining: 2
         });
 
-        assertPaymentInfo({
-            loan:                loan,
+        assertFixedTermPaymentInfo({
+            loan:                address(loan),
             incomingNetInterest: 180_000e6,
             refinanceInterest:   0,
             issuanceRate:        0.09e6 * 1e30,
@@ -926,70 +902,485 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,        // principal + accrued interest
-            issuanceRate:          0.09e6 * 1e30,
-            domainStart:           start + 3_500_000,
-            domainEnd:             start + 5_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       address(loanManager),
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.09e6 * 1e30,
+            domainStart:       start + 3_500_000,
+            domainEnd:         start + 5_500_000,
+            unrealizedLosses:  0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 181_656e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6 + 180_000e6 + 136_656e6);
 
-        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 4_000e6)
+        // Pool Delegate fee: 1st period (450e6    + 3_000e6)  + 2nd period after refinance (300e6 flat + 3_000e6)
         //                    + late interest from 1st period (51_840e6 * 0.02 = 1036_800000)
-        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 16_000e6)
+        // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 12_000e6)
         //                    + late interest from 1st period (51_840e6 * 0.08 = 4147_200000)
         assertAssetBalancesIncrease(
             [poolDelegate,        treasury],
-            [7_750e6 + 1_036.8e6, 63_000e6 + 4_147.2e6]
+            [6_750e6 + 1_036.8e6, 59_000e6 + 4_147.2e6]
         );
-    }
-
-    function test_refinance_skimFundAsset() external {
-        bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
-
-        vm.startPrank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
-        fundsAsset.mint(borrower, 10_000e6);
-        fundsAsset.approve(address(loan), 10_000e6);
-        loan.returnFunds(10_000e6);  // Return funds to pay origination fees.
-        vm.stopPrank();
-
-        fundsAsset.mint(address(loan), 1_000e6);  // Fund asset to skim
-
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
-
-        vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
-
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_501_000e6);
     }
 
 }
 
-contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
+contract RefinanceOpenTermLoan is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
-    Loan       internal loan;
-    Refinancer internal refinancer;
+    uint32 gracePeriod     = 200_000;
+    uint32 noticePeriod    = 100_000;
+    uint32 paymentInterval = 1_000_000;
+
+    uint64 interestRate = 0.31536e6;
+
+    uint256 principal = 1_000_000e6;
+
+    // Pool Manager state assertions
+    uint256 expectedCash;
+    uint256 expectedTotalAssets;
+    uint256 expectedTotalSupply;
+
+    IOpenTermLoan        loan;
+    IOpenTermLoanManager loanManager;
 
     function setUp() public override {
         super.setUp();
 
-        borrower   = address(new Address());
-        lp         = address(new Address());
-        refinancer = new Refinancer();
+        deposit(lp, 3_500_000e6);
 
-        depositLiquidity({
-            lp:        lp,
-            liquidity: 2_500_000e6
+        setupFees({
+            delegateOriginationFee:     500e6,
+            delegateServiceFee:         300e6,
+            delegateManagementFeeRate:  0.02e6,
+            platformOriginationFeeRate: 0.001e6,
+            platformServiceFeeRate:     0.031536e6,  // 10k after 1m seconds
+            platformManagementFeeRate:  0.08e6
         });
+
+        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+
+        loan = IOpenTermLoan(createOpenTermLoan(
+            address(borrower),
+            address(loanManager),
+            address(fundsAsset),
+            principal,
+            [gracePeriod, noticePeriod, paymentInterval],
+            [0.015768e6, interestRate, 0.01e6, 0.015768e6]
+        ));
+
+        fundLoan(address(loan));
+
+        expectedCash        = 2_500_000e6;
+        expectedTotalAssets = 3_500_000e6;
+        expectedTotalSupply = 3_500_000e6;
+
+        /**************************/
+        /*** Initial Assertions ***/
+        /**************************/
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.009e6 * 1e27,
+            domainStart:       start,
+            unrealizedLosses:  0
+        });
+    }
+
+    function test_refinance_early_increasePrincipal() external {
+        /********************************/
+        /*** Pre Refinance Assertions ***/
+        /********************************/
+
+        vm.warp(start + 400_000);
+
+        expectedTotalAssets += 3_600e6;
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanPaymentState({
+            loan:               address(loan),
+            paymentTimestamp:   uint40(block.timestamp),
+            principal:          0,
+            interest:           4000e6,
+            lateInterest:       0,
+            delegateServiceFee: 200e6,
+            platformServiceFee: 400e6,
+            paymentDueDate:     start + 1_000_000,
+            defaultDate:        start + 1_200_000
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            issuanceRate:    0.009e6 * 1e27,
+            startDate:       start,
+            platformFeeRate: 0.08e6,
+            delegateFeeRate: 0.02e6
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   3_600e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.009e6 * 1e27,
+            domainStart:       start,
+            unrealizedLosses:  0
+        });
+
+        // Borrower must send enough to cover the principal + interest + fees
+        fundsAsset.mint(address(borrower), 4_000e6 + 400e6 + 200e6);
+
+        vm.prank(borrower);
+        fundsAsset.approve(address(loan), 4_000e6 + 400e6 + 200e6);
+
+        bytes[] memory calls = new bytes[](1);
+        calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  2_000_000e6);
+
+        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+
+        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+
+        /*********************************/
+        /*** Post Refinance Assertions ***/
+        /*********************************/
+
+        expectedCash = expectedCash - 2_000_000e6 + 3_600e6;
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanPaymentState({
+            loan:               address(loan),
+            paymentTimestamp:   uint40(start + 1_400_000),
+            principal:          0,
+            interest:           30_000e6,  // 30k per 1m seconds
+            lateInterest:       0,
+            delegateServiceFee: 1_500e6,
+            platformServiceFee: 3_000e6,
+            paymentDueDate:     start + 1_400_000,
+            defaultDate:        start + 1_600_000
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            issuanceRate:    0.027e6 * 1e27,
+            startDate:       start + 400_000,
+            platformFeeRate: 0.08e6,
+            delegateFeeRate: 0.02e6
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      3_000_000e6,
+            issuanceRate:      0.027e6 * 1e27,
+            domainStart:       start + 400_000,
+            unrealizedLosses:  0
+        });
+
+        assertEq(fundsAsset.balanceOf(address(borrower)), 3_000_000e6);
+
+        // PD:       service fees (400e6)  + management fees (4000 * 0.02)
+        // Treasury: service fees (4000e6) + management fees (4000 * 0.08)
+        assertAssetBalancesIncrease(
+            [address(poolDelegate),          address(treasury)],
+            [uint256(200e6) + uint256(80e6), uint256(400e6) + uint256(320e6)]
+        );
+    }
+
+    function test_refinance_late_decreasePrincipal() external {
+        /********************************/
+        /*** Pre Refinance Assertions ***/
+        /********************************/
+
+        vm.warp(start + 1_400_000);
+
+        expectedTotalAssets += 12_600e6;
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanPaymentState({
+            loan:               address(loan),
+            paymentTimestamp:   uint40(block.timestamp),
+            principal:          0,
+            interest:           14_000e6,
+            lateInterest:       200e6 + 10_000e6, // Flat late fee + 1k per 1m seconds
+            delegateServiceFee: 700e6,
+            platformServiceFee: 1_400e6,
+            paymentDueDate:     start + 1_000_000,
+            defaultDate:        start + 1_200_000
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            issuanceRate:    0.009e6 * 1e27,
+            startDate:       start,
+            platformFeeRate: 0.08e6,
+            delegateFeeRate: 0.02e6
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   12_600e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.009e6 * 1e27,
+            domainStart:       start,
+            unrealizedLosses:  0
+        });
+
+        bytes[] memory calls = new bytes[](1);
+        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",  500_000e6);
+
+        // Borrower must send enough to cover the principal + interest + fees
+        fundsAsset.mint(address(borrower), 26_300e6); // 41_400e6 = interest (14_000e6) + late interest (10_200e6) + serviceFees (2_100e6)
+
+        vm.prank(borrower);
+        fundsAsset.approve(address(loan), 500_000e6 + 26_300e6);
+
+        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+
+        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+
+        /*********************************/
+        /*** Post Refinance Assertions ***/
+        /*********************************/
+
+        expectedTotalAssets += 9_180e6;  // 10_200e6 of late interest net of management fees
+        expectedCash        += 500_000e6 + 12_600e6 + 9_180e6;
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanPaymentState({
+            loan:               address(loan),
+            paymentTimestamp:   uint40(start + 2_400_000),
+            principal:          0,
+            interest:           5_000e6,
+            lateInterest:       0,
+            delegateServiceFee: 250e6,
+            platformServiceFee: 500e6,
+            paymentDueDate:     start + 2_400_000,
+            defaultDate:        start + 2_600_000
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            issuanceRate:    0.0045e6 * 1e27,
+            startDate:       start + 1_400_000,
+            platformFeeRate: 0.08e6,
+            delegateFeeRate: 0.02e6
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      500_000e6,
+            issuanceRate:      0.0045e6 * 1e27,
+            domainStart:       start + 1_400_000,
+            unrealizedLosses:  0
+        });
+
+        assertEq(fundsAsset.balanceOf(address(borrower)), 500_000e6);
+
+        // PD:       service fees (1_400e6)  + management fees (26_000 * 0.02)
+        // Treasury: service fees (14_000e6) + management fees (26_000 * 0.08)
+        assertAssetBalancesIncrease(
+            [address(poolDelegate),           address(treasury)],
+            [uint256(700e6) + uint256(484e6), uint256(1_400e6) + uint256(1_936e6)]
+        );
+    }
+
+    function test_refinance_calledLoan_withoutPrincipalChange() external {
+        /**********************************/
+        /*** Call Loan early and assert ***/
+        /**********************************/
+
+        vm.warp(start + 400_000);
+
+        callLoan(address(loan), 1_000_000e6);
+
+        /********************************/
+        /*** Pre Refinance Assertions ***/
+        /********************************/
+
+        vm.warp(start + 500_000);
+
+        expectedTotalAssets += 4_500e6;
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanPaymentState({
+            loan:               address(loan),
+            paymentTimestamp:   uint40(block.timestamp),
+            principal:          1_000_000e6,
+            interest:           5_000e6,
+            lateInterest:       0,
+            delegateServiceFee: 250e6,
+            platformServiceFee: 500e6,
+            paymentDueDate:     start + 500_000,
+            defaultDate:        start + 500_000  // No grace period on called loan.
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            issuanceRate:    0.009e6 * 1e27,
+            startDate:       start,
+            platformFeeRate: 0.08e6,
+            delegateFeeRate: 0.02e6
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   4_500e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.009e6 * 1e27,
+            domainStart:       start,
+            unrealizedLosses:  0
+        });
+
+        // Borrower must send enough to cover the interest + fees
+        fundsAsset.mint(address(borrower), 5_000e6 + 750e6);
+
+        vm.prank(borrower);
+        fundsAsset.approve(address(loan), 5_000e6 + 750e6);
+
+        // Perform multiple actions, but none changes principal
+        bytes[] memory calls = new bytes[](5);
+        calls[0] = abi.encodeWithSignature("setGracePeriod(uint32)",             500_000);
+        calls[1] = abi.encodeWithSignature("setInterestRate(uint64)",            0.63072e6);
+        calls[2] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", 0.031536e6);
+        calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)",            50_000);
+        calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)",         500_000);
+
+        assertEq(loan.gracePeriod(),             200_000);
+        assertEq(loan.interestRate(),            0.31536e6);
+        assertEq(loan.lateInterestPremiumRate(), 0.015768e6);
+        assertEq(loan.noticePeriod(),            100_000);
+        assertEq(loan.paymentInterval(),         1_000_000);
+        assertEq(loan.dateCalled(),              start + 400_000);
+
+        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+
+        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+
+        /*********************************/
+        /*** Post Refinance Assertions ***/
+        /*********************************/
+
+        assertEq(loan.gracePeriod(),             500_000);
+        assertEq(loan.interestRate(),            0.63072e6);
+        assertEq(loan.lateInterestPremiumRate(), 0.031536e6);
+        assertEq(loan.noticePeriod(),            50_000);
+        assertEq(loan.paymentInterval(),         500_000);
+        assertEq(loan.dateCalled(),              0);           // Resets regardless of principal change.
+
+        expectedCash += 4_500e6;
+
+        assertPoolState({
+            totalSupply:        expectedTotalSupply,
+            totalAssets:        expectedTotalAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: expectedCash
+        });
+
+        assertOpenTermLoanPaymentState({
+            loan:               address(loan),
+            paymentTimestamp:   uint40(start + 1_000_000),
+            principal:          0,
+            interest:           10_000e6,  // 20k interest in 1m seconds
+            lateInterest:       0,
+            delegateServiceFee: 250e6,
+            platformServiceFee: 500e6,
+            paymentDueDate:     start + 1_000_000,
+            defaultDate:        start + 1_500_000
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            issuanceRate:    0.018e6 * 1e27,
+            startDate:       start + 500_000,
+            platformFeeRate: 0.08e6,
+            delegateFeeRate: 0.02e6
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.018e6 * 1e27,
+            domainStart:       start + 500_000,
+            unrealizedLosses:  0
+        });
+
+        assertEq(fundsAsset.balanceOf(address(borrower)), 1_000_000e6);
+
+        // PD:       service fees (400e6)  + management fees (5000 * 0.02)
+        // Treasury: service fees (4000e6) + management fees (5000 * 0.08)
+        assertAssetBalancesIncrease(
+            [address(poolDelegate),          address(treasury)],
+            [uint256(250e6) + uint256(100e6), uint256(500e6) + uint256(400e6)]
+        );
+    }
+}
+
+contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
+
+    address borrower;
+    address lp;
+
+    IFixedTermLoan        loan;
+    IFixedTermLoanManager loanManager;
+
+    function setUp() public override {
+        super.setUp();
+
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
+
+        deposit(lp, 2_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -1000,12 +1391,15 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loan = fundAndDrawdownLoan({
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+
+        loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
-            termDetails: [uint256(5_000), uint256(1_000_000), uint256(3)],
+            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e18), 0, 0, 0]                              // 0.1e6 tokens per second
-        });
+            rates:       [uint256(3.1536e6), 0, 0, 0],
+            loanManager: address(loanManager)
+        }));
     }
 
     function test_acceptNewTerms_failIfProtocolIsPaused() external {
@@ -1013,53 +1407,16 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         globals.setProtocolPause(true);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
-    }
-
-    function test_acceptNewTerms_failIfNotPoolDelegate() external {
-        vm.expectRevert("PM:VAFL:NOT_PD");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        vm.expectRevert("LM:PAUSED");
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function testFail_acceptNewTerms_failIfNotValidLoanManager() external {
-        address fakeLoan = address(new Address());
+        address fakeLoan = makeAddr("fakeLoan");
 
         // NOTE: EVM reverts on factory call.
         vm.prank(poolDelegate);
-        poolManager.acceptNewTerms(fakeLoan, address(refinancer), block.timestamp + 1, new bytes[](0), 0);
-    }
-
-    function test_acceptNewTerms_failIfInvalidBorrower() external {
-        vm.prank(governor);
-        globals.setValidBorrower(borrower, false);
-
-        vm.prank(poolDelegate);
-        vm.expectRevert("PM:VAFL:INVALID_BORROWER");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
-    }
-
-    function test_acceptNewTerms_failIfTotalSupplyIsZero() external {
-        uint256 fullBalance = pool.balanceOf(lp);
-
-        // Close loan so lp can burn full supply. Impossible scenario because refinance would fail on loan.
-        ( uint256 principal, uint256 interest, uint256 fees ) = loan.getClosingPaymentBreakdown();
-
-        fundsAsset.mint(address(loan), principal + interest + fees);
-        loan.closeLoan(0);
-
-        // Burn the supply
-        vm.startPrank(lp);
-        pool.requestRedeem(fullBalance, lp);
-
-        vm.warp(start + 2 weeks);
-
-        pool.redeem(fullBalance, address(lp), address(lp));
-        vm.stopPrank();
-
-        vm.prank(poolDelegate);
-        vm.expectRevert("PM:VAFL:ZERO_SUPPLY");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        loanManager.acceptNewTerms(fakeLoan, address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failIfInsufficientCover() external {
@@ -1069,56 +1426,58 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         fundsAsset.mint(address(poolManager.poolDelegateCover()), 1e6 - 1);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:VAFL:INSUFFICIENT_COVER");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        vm.expectRevert("PM:RF:INSUFFICIENT_COVER");
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 1);
     }
 
     function test_acceptNewTerms_failWithFailedTransfer() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:VAFL:TRANSFER_FAIL");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6 + 1);
+        vm.expectRevert("PM:RF:TRANSFER_FAIL");
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 100_000_000e6);
     }
 
     function test_acceptNewTerms_failIfLockedLiquidity() external {
         // Lock the liquidity
         vm.prank(lp);
-        pool.requestRedeem(500_000e6 + 1, lp);
+        pool.requestRedeem(1_500_000e6, lp);
 
         vm.warp(start + 2 weeks);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 1_500_000e6);
+        vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 1);
     }
 
-    function test_acceptNewTerms_failIfNotPoolManager() external {
-        vm.expectRevert("LM:ANT:NOT_ADMIN");
-        loanManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0));
+    function test_acceptNewTerms_failIfNotPoolDelegate() external {
+        vm.expectRevert("LM:NOT_PD");
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failIfNotLender() external {
-        vm.expectRevert("ML:ANT:NOT_LENDER");
-        loan.acceptNewTerms(address(refinancer), block.timestamp + 1, new bytes[](0));
+        vm.expectRevert("ML:NOT_LENDER");
+        loan.acceptNewTerms(address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0));
     }
 
     function test_acceptNewTerms_failIfRefinanceMismatch() external {
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:COMMITMENT_MISMATCH");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, new bytes[](0), 0);
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
     function test_acceptNewTerms_failWithInvalidRefinancer() external {
         address fakeRefinancer = address(2);
 
+        vm.prank(governor);
+        globals.setValidInstanceOf("FT_REFINANCER", fakeRefinancer, true);
+
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
         // Make commitment
-        vm.prank(borrower);
-        loan.proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
+        proposeRefinance(address(loan), fakeRefinancer, block.timestamp + 1, data);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:INVALID_REFINANCER");
-        poolManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
+        loanManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
     }
 
     function test_acceptNewTerms_failIfDeadlineExpired() external {
@@ -1127,59 +1486,57 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         uint256 deadline = block.timestamp + 1;
 
         // Make commitment
-        vm.prank(borrower);
-        loan.proposeNewTerms(address(refinancer), deadline, data);
+        proposeRefinance(address(loan), address(fixedTermRefinancer), deadline, data);
 
         vm.warp(deadline + 1);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:EXPIRED_COMMITMENT");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), deadline, data, 0);
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), deadline, data, 0);
     }
 
     function test_acceptNewTerms_failIfRefinanceCallFails() external {
-        address fakeRefinancer = address(new Address());
+        address fakeRefinancer = address(new EmptyContract());
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("FT_REFINANCER", fakeRefinancer, true);
 
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
         // Make commitment
-        vm.prank(borrower);
-        loan.proposeNewTerms(fakeRefinancer, block.timestamp + 1, data);
+        proposeRefinance(address(loan), fakeRefinancer, block.timestamp + 1, data);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:FAILED");
-        poolManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
+        loanManager.acceptNewTerms(address(loan), fakeRefinancer, block.timestamp + 1, data, 0);
     }
 
     function test_acceptNewTerms_failWithInsufficientCollateral() external {
         bytes[] memory data = encodeWithSignatureAndUint("setCollateralRequired(uint256)", 1);
 
         // Make commitment
-        vm.prank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
         // Mint fees to cover origination fees
-        fundsAsset.mint(address(loan), 1_000e6);
+        returnFunds(address(loan), 1_000e6);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("MLFM:POF:PD_TRANSFER");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 0);
+        vm.expectRevert("ML:ANT:INSUFFICIENT_COLLATERAL");
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 1);
     }
 
     function test_acceptNewTerms_failWithUnexpectedFunds() external {
         bytes[] memory data = encodeWithSignatureAndUint("setPaymentInterval(uint256)", 2_000_000);
 
         // Make commitment
-        vm.prank(borrower);
-        loan.proposeNewTerms(address(refinancer), block.timestamp + 1, data);
+        proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        // Mint fees to cover origination fees
-        fundsAsset.mint(address(loan), 1_000e6);
-        loan.returnFunds(0);
+        // // Mint fees to cover origination fee
+        returnFunds(address(loan), 1_000e6);
 
         vm.prank(poolDelegate);
         vm.expectRevert("ML:ANT:UNEXPECTED_FUNDS");
-        poolManager.acceptNewTerms(address(loan), address(refinancer), block.timestamp + 1, data, 1);
+        loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 1);
     }
 
 }

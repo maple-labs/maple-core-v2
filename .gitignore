@@ -5,8 +5,9 @@ out/
 # MacOS
 .DS_Store
 
-# Ignore CSV files
-*.csv
 .env
 
 broadcast/
+output/
+
+scenarios/data/json

@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 contract RemoveSharesTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.prank(lp);
         pool.requestRedeem(1_000e6, lp);
@@ -54,7 +52,7 @@ contract RemoveSharesTests is TestBase {
         // Warp to post withdrawal period
         vm.warp(start + 2 weeks + 1);
 
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         vm.prank(lp);
         pool.approve(sender, 1_000e6);
@@ -104,9 +102,9 @@ contract RemoveSharesTests is TestBase {
     }
 
     function test_removeShares_sameAddressCallingTwice() external {
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
-        uint256 senderShares = depositLiquidity(sender, 1_000e6);
+        uint256 senderShares = deposit(sender, 1_000e6);
 
         vm.prank(sender);
         pool.requestRedeem(senderShares, sender);
@@ -163,18 +161,18 @@ contract RemoveSharesTests is TestBase {
 
 contract RemoveSharesFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.prank(lp);
         pool.requestRedeem(1_000e6, lp);
@@ -184,12 +182,12 @@ contract RemoveSharesFailureTests is TestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:CC:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:CC:PAUSED");
         pool.removeShares(1_000e6, lp);
     }
 
     function test_removeShares_failIfNotPool() external {
-        vm.expectRevert("PM:RS:NOT_POOL");
+        vm.expectRevert("PM:NOT_POOL");
         poolManager.removeShares(1_000e6, address(lp));
     }
 
@@ -201,13 +199,13 @@ contract RemoveSharesFailureTests is TestBase {
     function test_removeShares_failIfInsufficientApproval() external {
         vm.warp(start + 2 weeks);
 
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         vm.prank(lp);
         pool.approve(sender, 1_000e6 - 1);
 
         vm.prank(sender);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.removeShares(1_000e6, lp);
 
         // With enough approval
@@ -221,7 +219,7 @@ contract RemoveSharesFailureTests is TestBase {
     function test_removeShares_failIfRemovedTwice() external {
         vm.warp(start + 2 weeks);
 
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         vm.prank(lp);
         pool.approve(sender, 1_000e6);
@@ -231,7 +229,7 @@ contract RemoveSharesFailureTests is TestBase {
 
         // Try removing again, now lp calling directly
         vm.prank(lp);
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.removeShares(1_000e6, lp);
     }
 

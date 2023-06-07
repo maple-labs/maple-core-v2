@@ -3,45 +3,56 @@ pragma solidity 0.8.7;
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
-import { IMapleGlobals }          from "../../modules/globals-v2/contracts/interfaces/IMapleGlobals.sol";
-import { INonTransparentProxied } from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
-import { INonTransparentProxy }   from "../../modules/globals-v2/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
+import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
+import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
+import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
 import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
-import { IMapleLoan }           from "../../modules/loan-v400/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFactory }    from "../../modules/loan-v400/contracts/interfaces/IMapleLoanFactory.sol";
-import { IMapleLoanFeeManager } from "../../modules/loan-v400/contracts/interfaces/IMapleLoanFeeManager.sol";
-import { IRefinancer }          from "../../modules/loan-v400/contracts/interfaces/IRefinancer.sol";
+import { IMapleLoan as IMFTL }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoanFeeManager as IMLFM } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
+import { IRefinancer as IMFTLR }         from "../../modules/fixed-term-loan/contracts/interfaces/IRefinancer.sol";
 
-import { IAccountingChecker } from "../../modules/migration-helpers/contracts/interfaces/IAccountingChecker.sol";
-import { IMigrationHelper }   from "../../modules/migration-helpers/contracts/interfaces/IMigrationHelper.sol";
+import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
 
-import { ILoanManager }            from "../../modules/pool-v2/contracts/interfaces/ILoanManager.sol";
-import { ILoanManagerInitializer } from "../../modules/pool-v2/contracts/interfaces/ILoanManagerInitializer.sol";
-import { IMapleProxied }           from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
-import { IMapleProxyFactory }      from "../../modules/pool-v2/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
-import { IPool }                   from "../../modules/pool-v2/contracts/interfaces/IPool.sol";
-import { IPoolDeployer }           from "../../modules/pool-v2/contracts/interfaces/IPoolDeployer.sol";
-import { IPoolManager }            from "../../modules/pool-v2/contracts/interfaces/IPoolManager.sol";
-import { IPoolManagerInitializer } from "../../modules/pool-v2/contracts/interfaces/IPoolManagerInitializer.sol";
+import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 
-import { IWithdrawalManager }           from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
-import { IWithdrawalManagerInitializer }from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManagerInitializer.sol";
+import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
-interface IDebtLockerLike is IMapleProxied {
+import { IPool }              from "../../modules/pool/contracts/interfaces/IPool.sol";
+import { IPoolDeployer }      from "../../modules/pool/contracts/interfaces/IPoolDeployer.sol";
+import { IPoolManager }       from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
+import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-    function acceptNewTerms(address refinancer, uint256 deadline, bytes[] calldata calls, uint256 amount) external;
+import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
 
-    function lender() external view returns (address lender);
+/******************************************************************************************************************************************/
+/*** Re-Exports                                                                                                                         ***/
+/******************************************************************************************************************************************/
 
-    function loanMigrator() external view returns (address loanMigrator);
+interface IFeeManager is IMLFM { }
 
-    function pool() external view returns (address pool);
+interface IFixedTermLoan is IMFTL { }
 
-    function poolDelegate() external view returns (address poolDelegate);
+interface IFixedTermLoanManager is IMFTLM { }
 
-}
+interface IFixedTermLoanManagerStructs is IMFTLMS { }
+
+interface IFixedTermRefinancer is IMFTLR { }
+
+interface IGlobals is IMG { }
+
+interface IOpenTermLoan is IMOTL { }
+
+interface IOpenTermLoanManager is IMOTLM { }
+
+interface IOpenTermLoanManagerStructs is IMOTLMS { }
+
+/******************************************************************************************************************************************/
+/*** Like Interfaces                                                                                                                    ***/
+/******************************************************************************************************************************************/
 
 interface IERC20Like {
 
@@ -69,182 +80,142 @@ interface IERC20Like {
 
 }
 
-interface IHasGLobalsLike {
+interface ILiquidatorLike {
 
-    function globals() external view returns (address globals);
+    function getExpectedAmount(uint256 swapAmount_) external view returns (uint256 expectedAmount_);
 
-}
-
-interface IMapleGlobalsV1Like {
-
-    function getLatestPrice(address asset) external view returns (uint256 price);
-
-    function globalAdmin() external view returns (address globalAdmin);
-
-    function governor() external view returns (address governor);
-
-    function investorFee() external view returns (uint256 investorFee);
-
-    function protocolPaused() external view returns (bool protocolPaused);
-
-    function setInvestorFee(uint256 investorFee) external;
-
-    function setMaxCoverLiquidationPercent(address poolManager, uint256 maxCoverLiquidationPercent) external;
-
-    function setMinCoverAmount(address poolManager, uint256 minCoverAmount) external;
-
-    function setPriceOracle(address asset, address oracle) external;
-
-    function setProtocolPause(bool pause) external;
-
-    function setStakerCooldownPeriod(uint256 cooldown) external;
-
-    function setTreasuryFee(uint256 treasuryFee) external;
-
-    function stakerCooldownPeriod() external view returns (uint256 stakerCooldownPeriod);
-
-    function treasuryFee() external view returns (uint256 treasuryFee);
+    function liquidatePortion(uint256 swapAmount_, uint256 maxReturnAmount_, bytes calldata data_) external;
 
 }
 
-interface IMapleLoanV3Like is IMapleProxied {
+interface IProxiedLike {
 
-    function borrower() external view returns (address borrower);
+    function implementation() external view returns (address implementation_);
 
-    function claimableFunds() external view returns (uint256 claimableFunds);
-
-    function closeLoan(uint256 amount) external returns (uint256 principal, uint256 interest);
-
-    function collateral() external view returns (uint256 collateral);
-
-    function collateralAsset() external view returns (address collateralAsset);
-
-    function collateralRequired() external view returns (uint256 collateralRequired);
-
-    function delegateFee() external view returns (uint256 delegateFee);
-
-    function drawableFunds() external view returns (uint256 drawableFunds);
-
-    function earlyFeeRate() external view returns (uint256 earlyFeeRate);
-
-    function endingPrincipal() external view returns (uint256 endingPrincipal);
-
-    function feeManager() external view returns (address feeManager);
-
-    function fundsAsset() external view returns (address fundsAsset);
-
-    function getClosingPaymentBreakdown() external view returns (uint256 principal, uint256 interest, uint256 fees);
-
-    function getNextPaymentBreakdown() external view returns (uint256 principal, uint256 interest, uint256 delegateFee, uint256 treasuryFee);
-
-    function gracePeriod() external view returns (uint256 gracePeriod);
-
-    function interestRate() external view returns (uint256 interestRate);
-
-    function isImpaired() external view returns (bool isImpaired);  // Not used yet, but wil be used in complex lifecycle
-
-    function lateFeeRate() external view returns (uint256 lateFeeRate);
-
-    function lateInterestPremium() external view returns (uint256 lateInterestPremium);
-
-    function lender() external view returns (address lender);
-
-    function makePayment(uint256 amount) external returns (uint256 principal, uint256 interest);
-
-    function nextPaymentDueDate() external view returns (uint256 nextPaymentDueDate);
-
-    function paymentInterval() external view returns (uint256 paymentInterval);
-
-    function paymentsRemaining() external view returns (uint256 paymentsRemaining);
-
-    function pendingBorrower() external view returns (address pendingBorrower);
-
-    function pendingLender() external view returns (address pendingLender);
-
-    function principal() external view returns (uint256 principal);
-
-    function principalRequested() external view returns (uint256 principalRequested);
-
-    function proposeNewTerms(address refinancer, uint256 deadline, bytes[] calldata calls) external;
-
-    function refinanceCommitment() external view returns (bytes32 refinanceCommitment);
-
-    function refinanceInterest() external view returns (uint256 refinanceInterest);  // Not used yet, but wil be used in complex lifecycle
-
-    function returnFunds(uint256 amount) external;
-
-    function treasuryFee() external view returns (uint256 treasuryFee);
+    function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
 
 }
 
-interface IMplRewardsLike {
+interface ILoanV4Like {
 
-    function exit() external;
+    function lateInterestPremium() external view returns (uint256 lateInterestPremium_);
+}
 
-    function stake(uint256 amount) external;
+interface ILoanLike is IProxiedLike {
+
+    function acceptBorrower() external;
+
+    function acceptLender() external;
+
+    function acceptNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
+        external returns (bytes32 refinanceCommitment_);
+
+    function borrower() external view returns (address borrower_);
+
+    function fundsAsset() external view returns (address fundsAsset_);
+
+    function globals() external view returns (address globals_);
+
+    function gracePeriod() external view returns (uint256 gracePeriod_);
+
+    function isImpaired() external view returns (bool isImpaired_);
+
+    function lender() external view returns (address lender_);
+
+    function paymentInterval() external view returns (uint256 paymentInterval_);
+
+    function principal() external view returns (uint256 principal_);
+
+    function proposeNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
+        external returns (bytes32 refinanceCommitment_);
+
+    function rejectNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
+        external returns (bytes32 refinanceCommitment_);
+
+    function setPendingBorrower(address pendingBorrower_) external;
+
+    function skim(address token_, address destination_) external returns (uint256 skimmed_);
 
 }
 
-interface IPoolV1Like is IERC20Like {
+interface ILoanManagerLike is IProxiedLike {
 
-    function claim(address loan, address dlFactory) external;
+    function accountedInterest() external view returns (uint112 accountedInterest_);
 
-    function deactivate() external;
+    function accruedInterest() external view returns (uint256 accruedInterest_);
 
-    function deposit(uint256 amount) external;
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
 
-    function fundLoan(address loan, address dlFactory, uint256 amount) external;
+    function domainStart() external view returns (uint48 domainStart_);
 
-    function intendToWithdraw() external;
+    function fund(address loan_) external;
 
-    function interestSum() external view returns (uint256 interestSum);
+    function fundsAsset() external view returns (address fundsAsset_);
 
-    function liquidityAsset() external view returns (address liquidityAsset);
+    function impairLoan(address loan_) external;
 
-    function liquidityCap() external view returns (uint256 liquidityCap);
+    function issuanceRate() external view returns (uint256 issuanceRate_);
 
-    function liquidityLocker() external pure returns (address liquidityLocker);
+    function poolManager() external view returns (address poolManager_);
 
-    function poolAdmins(address poolAdmin) external view returns (bool isPoolAdmin);
+    function principalOut() external view returns (uint128 principalOut_);
 
-    function poolDelegate() external view returns (address poolDelegate);
+    function rejectNewTerms(address loan_, address refinancer_, uint256 deadline_, bytes[] calldata calls_) external;
 
-    function poolLosses() external view returns (uint256 poolLosses);
+    function removeLoanImpairment(address loan_) external;
 
-    function poolState() external returns(uint8 state);
+    function triggerDefault(address loan_, address liquidatorFactory_)
+        external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
 
-    function principalOut() external view returns (uint256 principalOut);
-
-    function recognizableLossesOf(address owner) external view returns (uint256 recognizableLosses);
-
-    function setLiquidityCap(uint256 newLiquidityCap) external;
-
-    function setPoolAdmin(address poolAdmin, bool allowed) external;
-
-    function stakeLocker() external view returns (address stakeLocker);
-
-    function withdrawableFundsOf(address owner) external view returns (uint256 withdrawableFunds);
+    function unrealizedLosses() external view returns (uint128 unrealizedLosses_);
 
 }
 
-interface IStakeLockerLike is IERC20Like {
+// NOTE: Isn't it better to import the interface from the module instead of re-declaring it here?
+interface IProxyFactoryLike {
 
-    function custodyAllowance(address from, address custodian) external view returns (uint256 allowance);
+    function createInstance(bytes calldata arguments_, bytes32 salt_) external returns (address instance_);
 
-    function intendToUnstake() external;
+    function defaultVersion() external view returns (uint256 defaultVersion_);
 
-    function lockupPeriod() external view returns (uint256 lockupPeriod);
+    function enableUpgradePath(uint256 fromVersion_, uint256 toVersion_, address migrator_) external;
 
-    function pool() external view returns (address pool);
+    function implementationOf(uint256 version_) external view returns (address implementation_);
 
-    function recognizableLossesOf(address owner) external view returns (uint256 recognizableLossesOf);
+    function isInstance(address instance_) external view returns (bool isInstance_);
 
-    function setLockupPeriod(uint256 newLockupPeriod) external;
+    function migratorForPath(uint256 oldVersion_, uint256 newVersion_) external view returns (address migrator_);
 
-    function stakeAsset() external view returns (address stakeAsset);
+    function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
 
-    function unstake(uint256 amount) external;
+    function setDefaultVersion(uint256 version_) external;
 
-    function unstakeCooldown(address owner) external view returns (uint256 unstakeCooldown);
+    function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
+
+}
+
+/******************************************************************************************************************************************/
+/*** Test Interfaces                                                                                                                    ***/
+/******************************************************************************************************************************************/
+
+interface IHandlerEntryPoint {
+
+    function entryPoint(uint256 seed_) external;
+
+}
+
+interface IInvariantTest {
+
+    function currentTimestamp() external view returns (uint256 currentTimestamp_);
+
+    function setCurrentTimestamp(uint256 currentTimestamp_) external;
+
+}
+
+interface IMockERC20 is IERC20 {
+
+    function burn(address owner_, uint256 amount_) external;
+
+    function mint(address recipient_, uint256 amount_) external;
 
 }

@@ -1,7 +1,7 @@
 # Maple V2 Core
 
 ![Foundry CI](https://github.com/maple-labs/maple-core-v2/actions/workflows/forge.yaml/badge.svg)
-[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/maple-for-developers/protocol-overview)
+[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/technical-resources/protocol-overview)
 [![Foundry][foundry-badge]][foundry]
 [![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2/blob/main/LICENSE)
 
@@ -15,13 +15,11 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 ## Submodules
 
 Submodules imported:
-- [`maple-labs/contract-test-utils`](https://github.com/maple-labs/contract-test-utils) (for testing)
-- [`maple-labs/debt-locker`](https://github.com/maple-labs/debt-locker) (for v1 migration testing)
+- [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
 - [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
 - [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
 - [`maple-labs/loan`](https://github.com/maple-labs/loan)
-- [`maple-labs/migration-helpers`](https://github.com/maple-labs/migration-helpers)
 - [`maple-labs/pool-v2`](https://github.com/maple-labs/pool-v2)
 - [`maple-labs/withdrawal-manager`](https://github.com/maple-labs/withdrawal-manager)
 
@@ -51,7 +49,7 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 | Command | Description |
 |---|---|
-| `make test`        | Run all tests located in `contracts/tests/` (Must have `ETH_RPC_URL` configured to mainnet). |
+| `make test`        | Run all tests located in `contracts/tests/`. |
 | `make e2e`         | Run all end-to-end tests. |
 | `make fuzz`        | Run all fuzz tests. |
 | `make integration` | Run all integration tests (Must have `ETH_RPC_URL` configured to mainnet). |
@@ -70,11 +68,22 @@ For the following commands, a `$ETH_RPC_URL` environment value needs to be confi
 
 ## Audit Reports
 
+### December 2022 Release
+
 | Auditor | Report Link |
 |---|---|
 | Trail of Bits | [`2022-08-24 - Trail of Bits Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10246688/Maple.Finance.v2.-.Final.Report.-.Fixed.-.2022.pdf) |
 | Spearbit | [`2022-10-17 - Spearbit Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10223545/Maple.Finance.v2.-.Spearbit.pdf) |
 | Three Sigma | [`2022-10-24 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10223541/three-sigma_maple-finance_code-audit_v1.1.1.pdf) |
+
+<br>
+
+### June 2023 Release
+
+| Auditor | Report Link |
+|---|---|
+| Spearbit Auditors via Cantina | [`2023-06-05 - Cantina Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/11667848/cantina-maple.pdf) |
+| Three Sigma | [`2023-04-10 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/11663546/maple-v2-audit_three-sigma_2023.pdf) |
 
 ## Bug Bounty
 

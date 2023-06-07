@@ -1,28 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
-    address internal borrower;
-    address internal lp;
+    address borrower;
+    address lp;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
     }
 
     function test_basicInterestAccrual() external {
-        depositLiquidity({
-            lp:        lp,
-            liquidity: 1_500_000e6
-        });
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,   // 1,000,000 * 0.20% * 3  / 12 = 500
@@ -37,11 +31,14 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /*** Fund and Drawdown Loan ***/
         /******************************/
 
-        Loan loan = fundAndDrawdownLoan({
+        address loanManager = poolManager.loanManagerList(0);
+
+        address loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: loanManager
         });
 
         // +--------------+--------------+--------+--------+
@@ -55,15 +52,15 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_500_000e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          uint256(5_625e6) * 12e30 / ONE_YEAR,
-            domainStart:           start,
-            domainEnd:             start + ONE_MONTH,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      uint256(5_625e6) * 12e30 / ONE_YEAR,
+            domainStart:       start,
+            domainEnd:         start + ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         assertAssetBalances(
@@ -76,7 +73,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /************************/
 
         vm.warp(start + ONE_MONTH);
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +------------+--------+--------+
         // |    POOL    |   PD   |   MT   |
@@ -94,15 +91,15 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_505_625e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          uint256(5_625e6) * 12e30 / ONE_YEAR,
-            domainStart:           start +     ONE_MONTH,
-            domainEnd:             start + 2 * ONE_MONTH,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      uint256(5_625e6) * 12e30 / ONE_YEAR,
+            domainStart:       start +     ONE_MONTH,
+            domainEnd:         start + 2 * ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         /************************/
@@ -110,7 +107,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /************************/
 
         vm.warp(start + 2 * ONE_MONTH);
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +------------+--------+--------+
         // |    POOL    |   PD   |   MT   |
@@ -128,15 +125,15 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_511_250e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_000e6,
-            issuanceRate:          uint256(5_625e6) * 12e30 / ONE_YEAR,
-            domainStart:           start + 2 * ONE_MONTH,
-            domainEnd:             start + 3 * ONE_MONTH,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      uint256(5_625e6) * 12e30 / ONE_YEAR,
+            domainStart:       start + 2 * ONE_MONTH,
+            domainEnd:         start + 3 * ONE_MONTH,
+            unrealizedLosses:  0
         });
 
         /************************/
@@ -145,7 +142,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         vm.warp(start + 3 * ONE_MONTH);
         fundsAsset.mint(borrower, 1_000e6);  // Borrower makes some some money.
-        makePayment(address(loan));
+        makePayment(loan);
 
         // +--------------+--------+--------+
         // |     POOL     |   PD   |   MT   |
@@ -164,15 +161,15 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
 
         assertPoolManager({ totalAssets: 1_516_875e6, unrealizedLosses: 0 });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           block.timestamp,
-            domainEnd:             block.timestamp,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       block.timestamp,
+            domainEnd:         block.timestamp,
+            unrealizedLosses:  0
         });
     }
 

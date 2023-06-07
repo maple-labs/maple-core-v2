@@ -1,22 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import {
+    IFixedTermLoanManager,
+    INonTransparentProxied,
+    INonTransparentProxy,
+    IProxiedLike,
+    IProxyFactoryLike
+} from "../../contracts/interfaces/Interfaces.sol";
 
-import { IMapleProxyFactory, INonTransparentProxy, INonTransparentProxied } from "../../contracts/interfaces/Interfaces.sol";
-
-import { MapleGlobals }      from "../../modules/globals-v2/contracts/MapleGlobals.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
-import { LoanManager }       from "../../modules/pool-v2/contracts/LoanManager.sol";
-import { Liquidator }        from "../../modules/liquidations/contracts/Liquidator.sol";
-import { PoolManager }       from "../../modules/pool-v2/contracts/PoolManager.sol";
-import { WithdrawalManager } from "../../modules/withdrawal-manager/contracts/WithdrawalManager.sol";
+import {
+    FixedTermLoanManager,
+    Globals,
+    Liquidator,
+    PoolManager,
+    WithdrawalManager
+} from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract GlobalsUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new MapleGlobals());
+    address newImplementation = address(new Globals());
 
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
@@ -43,206 +48,208 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract LoanManagerUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new LoanManager());
+    address newImplementation = address(new FixedTermLoanManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    address loanManager;
+
+    bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
 
+        loanManager = poolManager.loanManagerList(0);
+
         vm.startPrank(governor);
 
-        IMapleProxyFactory(loanManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(loanManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
 
     function test_upgradeLoanManager_noTimelock() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Wait for delay duration.
         vm.warp(start + 1 weeks);
 
-        loanManager.upgrade(2, upgradeCallData);
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLoanManager_delayNotPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks);
-        loanManager.upgrade(2, upgradeCallData);
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLoanManager_durationPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Warp to right after duration end.
         vm.warp(start + 1 weeks + 2 days + 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks + 2 days);
-        loanManager.upgrade(2, upgradeCallData);
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLoanManager_timelockExtended() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
 
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs);
+        bool isValid = globals.isValidScheduledCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Should be valid before we change the timelock settings.
         assertTrue(isValid);
 
         vm.prank(governor);
-        globals.setTimelockWindow(address(loanManager), "LM:UPGRADE", 2 weeks, 1 weeks);
+        globals.setTimelockWindow(loanManager, "LM:UPGRADE", 2 weeks, 1 weeks);
 
-        isValid = globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs);
+        isValid = globals.isValidScheduledCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs);
         assertTrue(!isValid);
 
         vm.startPrank(poolDelegate);
 
         // With timelock change, upgrade should now revert.
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 weeks - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 weeks + 1 weeks + 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
         vm.warp(start + 2 weeks + 1 weeks);
 
-        loanManager.upgrade(2, upgradeCallData);
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLoanManager_timelockShortened() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
 
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs);
+        bool isValid = globals.isValidScheduledCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Should be valid before we change the timelock settings.
         assertTrue(isValid);
 
         vm.prank(governor);
-        globals.setTimelockWindow(address(loanManager), "LM:UPGRADE", 2 days, 1 days);
+        globals.setTimelockWindow(loanManager, "LM:UPGRADE", 2 days, 1 days);
 
-        isValid = globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs);
+        isValid = globals.isValidScheduledCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs);
         assertTrue(!isValid);
 
         vm.startPrank(poolDelegate);
 
         // With timelock change, we should be past the duration.
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 days - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 days + 1 days + 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
         vm.warp(start + 2 days + 1 days);
 
-        loanManager.upgrade(2, upgradeCallData);
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLoanManager_governor_noTimelockNeeded() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
-        vm.expectRevert("LM:U:INVALID_SCHED_CALL");
-        loanManager.upgrade(2, upgradeCallData);
+        vm.expectRevert("LM:U:INV_SCHED_CALL");
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
 
         // Call upgrade using governor instead, unaffected by pool delegate's scheduled timelock.
         vm.stopPrank();
 
         vm.prank(governor);
-        loanManager.upgrade(2, upgradeCallData);
+        IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
 }
 
 contract LiquidationUpgradeTests is TestBase {
 
-    address internal borrower          = address(new Address());
-    address internal lp                = address(new Address());
-    address internal newImplementation = address(new LoanManager());
+    address borrower          = makeAddr("borrower");
+    address lp                = makeAddr("lp");
+    address newImplementation = address(new FixedTermLoanManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    address loan;
 
-    Liquidator internal liquidator;
-    Loan       internal loan;
+    bytes upgradeCallData = new bytes(0);
+
+    Liquidator liquidator;
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(liquidatorFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(liquidatorFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(liquidatorFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(liquidatorFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -253,20 +260,22 @@ contract LiquidationUpgradeTests is TestBase {
             platformManagementFeeRate:  0.08e6     // 1,000,000 * 3.1536% * 8% * 1,000,000 / (365 * 86400) = 80
         });
 
+        address loanManager = poolManager.loanManagerList(0);
+
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         // Since we round up days when it comes to late interest, this payment is 6 days late.
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
-        ( , , , , , address liquidatorAddress ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidatorAddress ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         liquidator = Liquidator(liquidatorAddress);
 
@@ -436,17 +445,17 @@ contract LiquidationUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new PoolManager());
+    address newImplementation = address(new PoolManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(poolManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(poolManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(poolManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -612,17 +621,17 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address internal newImplementation = address(new WithdrawalManager());
+    address newImplementation = address(new WithdrawalManager());
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
         super.setUp();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(withdrawalManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(withdrawalManagerFactory).enableUpgradePath(1, 2, address(0));
+        IProxyFactoryLike(withdrawalManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IProxyFactoryLike(withdrawalManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -789,24 +798,26 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
 contract UnscheduleCallTests is TestBase {
 
-    bytes internal upgradeCallData = new bytes(0);
+    bytes upgradeCallData = new bytes(0);
 
     function test_unscheduleCall_governor() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(LoanManager.upgrade.selector, uint256(2), upgradeCallData);
+        address loanManager = poolManager.loanManagerList(0);
+
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         // PD schedules the upgrade call
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(loanManager, "LM:UPGRADE", scheduleArgs);
 
         vm.warp(start + 1 weeks);
 
-        assertTrue(globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs));
+        assertTrue(globals.isValidScheduledCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs));
 
         // Governor unschedule the upgrade call
         vm.prank(governor);
-        globals.unscheduleCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs);
+        globals.unscheduleCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs);
 
-        assertTrue(!globals.isValidScheduledCall(poolDelegate, address(loanManager), "LM:UPGRADE", scheduleArgs));
+        assertTrue(!globals.isValidScheduledCall(poolDelegate, loanManager, "LM:UPGRADE", scheduleArgs));
     }
 
 }

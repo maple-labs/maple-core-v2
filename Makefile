@@ -28,28 +28,19 @@ integration:
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
-local-sim:
-	./test.sh -d simulations/local -p local_simulations
+upgrade:
+	./test.sh -d tests/protocol-upgrade -p $(profile)
 
-mainnet-sim:
-	./simulate.sh -d simulations/mainnet -p mainnet_simulations
+scenario:
+	./scenarios.sh
+
+deploy:
+	./deploy.sh
 
 # Forge scripting
 
-deploy:
-	@scripts/deploy.sh
-
-pay-and-refi-upcoming-loans:
-	@scripts/pay-and-refi-upcoming-loans.sh
-
-upgrade-loans-301:
-	@scripts/upgrade-loans-301.sh
-
-upgrade-dls-400:
-	@scripts/upgrade-dls-400.sh
-
 validate:
-	@FOUNDRY_PROFILE=mainnet_simulations forge script --rpc-url $(ETH_RPC_URL) -vvv simulations/mainnet/ValidationScripts.s.sol:$(step)
+	@FOUNDRY_PROFILE=production forge script Validate$(step)
 
 # Utility
 
@@ -61,5 +52,3 @@ clean:
 
 slither-files:
 	@scripts/generate-slither-files.sh
-
-

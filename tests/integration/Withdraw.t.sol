@@ -1,27 +1,26 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
+import { IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../TestBase.sol";
 
 contract RequestWithdrawTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
     }
 
     function test_requestWithdraw() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
         vm.startPrank(lp);
 
@@ -37,9 +36,9 @@ contract RequestWithdrawTests is TestBase {
     }
 
     function test_requestWithdraw_withApproval() external {
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
 
-        address sender = address(new Address());
+        address sender = makeAddr("sender");
 
         vm.prank(lp);
         pool.approve(sender, 1_000e6);
@@ -59,10 +58,10 @@ contract RequestWithdrawTests is TestBase {
 
 
     function testDeepFuzz_requestWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
-        depositAmount  = constrictToRange(depositAmount,  1, 1e30);
-        withdrawAmount = constrictToRange(withdrawAmount, 1, depositAmount);
+        depositAmount  = bound(depositAmount,  1, 1e30);
+        withdrawAmount = bound(withdrawAmount, 1, depositAmount);
 
-        depositLiquidity(lp, depositAmount);
+        deposit(lp, depositAmount);
 
         vm.startPrank(lp);
 
@@ -82,33 +81,33 @@ contract RequestWithdrawTests is TestBase {
 
 contract RequestWithdrawFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
     }
 
     function test_requestWithdraw_failIfInsufficientApproval() external {
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.requestWithdraw(1_000e6, lp);
 
         vm.prank(lp);
         pool.approve(address(this), 1_000e6 - 1);
 
-        vm.expectRevert(ARITHMETIC_ERROR);
+        vm.expectRevert(arithmeticError);
         pool.requestWithdraw(1_000e6, lp);
     }
 
     function test_requestWithdraw_failIfNotPool() external {
-        vm.expectRevert("PM:RR:NOT_POOL");
+        vm.expectRevert("PM:NOT_POOL");
         poolManager.requestRedeem(0, address(lp), address(lp));
     }
 
@@ -121,22 +120,22 @@ contract RequestWithdrawFailureTests is TestBase {
 
 contract WithdrawFailureTests is TestBase {
 
-    address internal borrower;
-    address internal lp;
-    address internal wm;
+    address borrower;
+    address lp;
+    address wm;
 
     function setUp() public override {
         super.setUp();
 
-        borrower = address(new Address());
-        lp       = address(new Address());
+        borrower = makeAddr("borrower");
+        lp       = makeAddr("lp");
         wm       = address(withdrawalManager);
 
-        depositLiquidity(lp, 1_000e6);
+        deposit(lp, 1_000e6);
     }
 
     function test_withdraw_failIfNotPool() external {
-        vm.expectRevert("PM:PR:NOT_POOL");
+        vm.expectRevert("PM:NOT_POOL");
         poolManager.processRedeem(1, lp, lp);
     }
 
@@ -159,8 +158,12 @@ contract WithdrawFailureTests is TestBase {
 
 contract WithdrawScenarios is TestBase {
 
+    IFixedTermLoanManager loanManager;
+
     function setUp() public override {
         super.setUp();
+
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
         // Remove all fees to make interest calculations easier.
         setupFees({
@@ -177,41 +180,44 @@ contract WithdrawScenarios is TestBase {
 
     function test_withdrawals_withUpdateAccounting() external {
         // Create four liquidity providers.
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
-        address lp3 = address(new Address());
-        address lp4 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
+        address lp3 = makeAddr("lp3");
+        address lp4 = makeAddr("lp4");
 
         // Deposit liquidity into the pool.
-        depositLiquidity(address(lp1), 500_000e6);
-        depositLiquidity(address(lp2), 1_500_000e6);
-        depositLiquidity(address(lp3), 500_000e6);
-        depositLiquidity(address(lp4), 1_000_000e6);
+        deposit(address(lp1), 500_000e6);
+        deposit(address(lp2), 1_500_000e6);
+        deposit(address(lp3), 500_000e6);
+        deposit(address(lp4), 1_000_000e6);
 
         // Fund three loans.
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(12 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.09e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
-            borrower:    address(new Address()),
+            borrower:    makeAddr("borrower"),
             termDetails: [uint256(5 days), uint256(15 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
-            rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.081e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         // Deposit extra liquidity to allow for partial withdrawals.
-        depositLiquidity(address(new Address()), 500_000e6);
+        deposit(makeAddr("depositor"), 500_000e6);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
 
@@ -225,9 +231,9 @@ contract WithdrawScenarios is TestBase {
         vm.warp(start + 14 days);
 
         // Assert only 10 days of interest has accrued, even though 14 days have elapsed.
-        uint256 interest1 = uint256(1_000_000e6) * 0.075e18 * 10 days / 365 days / 1e18;
-        uint256 interest2 = uint256(2_000_000e6) * 0.09e18  * 10 days / 365 days / 1e18;
-        uint256 interest3 = uint256(500_000e6)   * 0.081e18 * 10 days / 365 days / 1e18;
+        uint256 interest1 = uint256(1_000_000e6) * 0.075e6 * 10 days / 365 days / 1e6;
+        uint256 interest2 = uint256(2_000_000e6) * 0.09e6  * 10 days / 365 days / 1e6;
+        uint256 interest3 = uint256(500_000e6)   * 0.081e6 * 10 days / 365 days / 1e6;
 
         assertEq(loanManager.domainEnd(),             start + 10 days);
         assertEq(loanManager.assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 1);
@@ -239,13 +245,13 @@ contract WithdrawScenarios is TestBase {
         uint256 assets2 = redeem(address(lp2), 1_000_000e6);
 
         // Update accounting manually.
-        vm.prank(address(poolDelegate));
+        vm.prank(poolDelegate);
         loanManager.updateAccounting();
 
         // Assert loans have accrued interest up to the latest payment.
-        interest1 = uint256(1_000_000e6) * 0.075e18 * 10 days / 365 days / 1e18;
-        interest2 = uint256(2_000_000e6) * 0.09e18  * 12 days / 365 days / 1e18;  // Account full loan2 amount.
-        interest3 = uint256(500_000e6)   * 0.081e18 * 14 days / 365 days / 1e18;  // 14 days of interest on last loan.
+        interest1 = uint256(1_000_000e6) * 0.075e6 * 10 days / 365 days / 1e6;
+        interest2 = uint256(2_000_000e6) * 0.09e6  * 12 days / 365 days / 1e6;  // Account full loan2 amount.
+        interest3 = uint256(500_000e6)   * 0.081e6 * 14 days / 365 days / 1e6;  // 14 days of interest on last loan.
 
         assertEq(loanManager.domainEnd(),             start + 15 days);
         assertEq(loanManager.assetsUnderManagement(), 3_500_000e6 + interest1 + interest2 + interest3 - 2);
@@ -259,7 +265,7 @@ contract WithdrawScenarios is TestBase {
 
         assertEq(totalWithdrawn, 500_000e6);
 
-        assertWithinDiff(fundsAsset.balanceOf(address(pool)), 0, 1);
+        assertApproxEqAbs(fundsAsset.balanceOf(address(pool)), 0, 1);
 
         // Assert all LP balances.
         assertEq(fundsAsset.balanceOf(address(lp1)), assets1);
@@ -285,36 +291,39 @@ contract WithdrawScenarios is TestBase {
     }
 
     function test_withdrawals_cashInjection() external {
-        address borrower = address(new Address());
+        address borrower = makeAddr("borrower");
 
         // Create two liquidity providers.
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
 
         // Deposit liquidity into the pool.
-        depositLiquidity(address(lp1), 1_500_000e6);
-        depositLiquidity(address(lp2), 2_500_000e6);
+        deposit(address(lp1), 1_500_000e6);
+        deposit(address(lp2), 2_500_000e6);
 
         // Fund three loans.
-        Loan bigLoan = fundAndDrawdownLoan({
+        address bigLoan = fundAndDrawdownLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(15 days), uint256(1)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(100e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(100e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.09e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         fundAndDrawdownLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
-            rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.081e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         // First LP requests a withdrawal.
@@ -333,23 +342,24 @@ contract WithdrawScenarios is TestBase {
         assertEq(withdrawalManager.lockedShares(address(lp1)), 1_500_000e6 - redeemableShares);
         assertEq(withdrawalManager.exitCycleId(address(lp1)),  4);
 
-        Loan loan = createLoan({
+        address loan = createFixedTermLoan({
             borrower:    address(borrower),
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(300_000e6), uint256(300_000e6)],
-            rates:       [uint256(0.055e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.055e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
-        vm.prank(address(poolDelegate));
-        vm.expectRevert("PM:VAFL:LOCKED_LIQUIDITY");
-        poolManager.fund(300_000e6, address(loan), address(loanManager));
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
+        loanManager.fund(address(loan));
 
-        makePayment(address(bigLoan));
+        makePayment(bigLoan);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 1_000_000e6 + 4109589.041095e6 - assets1);
 
         vm.prank(address(poolDelegate));
-        poolManager.fund(300_000e6, address(loan), address(loanManager));
+        loanManager.fund(address(loan));
 
         ( redeemableShares, , partialLiquidity ) = withdrawalManager.getRedeemableAmounts(2_500_000e6, address(lp2));
 
@@ -364,40 +374,43 @@ contract WithdrawScenarios is TestBase {
     }
 
     function test_withdrawals_poorExchangeRates() external {
-        address borrower = address(new Address());
+        address borrower = makeAddr("borrower");
 
         // Create four liquidity providers.
-        address lp1 = address(new Address());
-        address lp2 = address(new Address());
-        address lp3 = address(new Address());
-        address lp4 = address(new Address());
+        address lp1 = makeAddr("lp1");
+        address lp2 = makeAddr("lp2");
+        address lp3 = makeAddr("lp3");
+        address lp4 = makeAddr("lp4");
 
         // Deposit liquidity into the pool.
-        depositLiquidity(address(lp1),   500_000e6);
-        depositLiquidity(address(lp2), 1_500_000e6);
-        depositLiquidity(address(lp3),   500_000e6);
-        depositLiquidity(address(lp4), 1_000_000e6);
+        deposit(address(lp1),   500_000e6);
+        deposit(address(lp2), 1_500_000e6);
+        deposit(address(lp3),   500_000e6);
+        deposit(address(lp4), 1_000_000e6);
 
         // Fund three loans.
-        Loan loan1 = fundAndDrawdownLoan({
+        address loan1 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(10 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
-        Loan loan2 = fundAndDrawdownLoan({
+        address loan2 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(2_000_000e6), uint256(2_000_000e6)],
-            rates:       [uint256(0.09e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.09e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
-        Loan loan3 = fundAndDrawdownLoan({
+        address loan3 = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(30 days), uint256(6)],
             amounts:     [uint256(0), uint256(500_000e6), uint256(500_000e6)],
-            rates:       [uint256(0.081e18), uint256(0), uint256(0), uint256(0)]
+            rates:       [uint256(0.081e6), uint256(0), uint256(0), uint256(0)],
+            loanManager: address(loanManager)
         });
 
         // Request all withdrawals.
@@ -491,6 +504,60 @@ contract WithdrawScenarios is TestBase {
 
         assertEq(pool.balanceOf(address(lp4)),       0);
         assertEq(fundsAsset.balanceOf(address(lp4)), assetsToWithdraw);
+    }
+
+}
+
+contract WithdrawOnPermissionedPool is TestBase {
+
+
+    IFixedTermLoanManager loanManager;
+
+    function setUp() public override {
+        // Manually doing setUp steps so the pool is not open to public.
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createAndConfigurePool(1 weeks, 2 days);
+
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+
+        // Remove all fees to make interest calculations easier.
+        setupFees({
+            delegateOriginationFee:     0,
+            delegateServiceFee:         0,
+            delegateManagementFeeRate:  0,
+            platformOriginationFeeRate: 0,
+            platformServiceFeeRate:     0,
+            platformManagementFeeRate:  0
+        });
+
+        depositCover(2_500_000e6);
+
+        // Since it's a permissioned pool, the withdrawal manager needs to be whitelisted.
+        vm.prank(poolDelegate);
+        poolManager.setAllowedLender(address(withdrawalManager), true);
+    }
+
+    function test_withdraw_withUnwhitelistedUser() external {
+        address lp1 = makeAddr("lp1");
+
+        deposit(address(lp1), 500_000e6);
+
+        // Now, remove the LP from the whitelist.
+        vm.prank(poolDelegate);
+        poolManager.setAllowedLender(lp1, false);
+
+        requestRedeem(address(lp1), 500_000e6);
+
+        uint256 windowStart = withdrawalManager.getWindowStart(withdrawalManager.exitCycleId(address(lp1)));
+
+        vm.warp(windowStart);
+
+        vm.expectRevert("WM:PE:TRANSFER_FAIL");
+        redeem(address(lp1), 500_000e6);         // This fails because recipient is no longer allowed.
     }
 
 }

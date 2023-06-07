@@ -1,30 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { IFixedTermLoanManager, ILiquidator, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
+
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
-
-import { ILiquidator } from "../../contracts/interfaces/Interfaces.sol";
-
-import { Address }           from "../../modules/contract-test-utils/contracts/test.sol";
-import { MapleLoan as Loan } from "../../modules/loan-v400/contracts/MapleLoan.sol";
 
 contract LoanLiquidationTests is TestBaseWithAssertions {
 
-    address internal borrower = address(new Address());
-    address internal lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
-    Loan internal loan;
+    address loan;
+    address loanManager;
 
-    uint256 internal platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
-    uint256 internal platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 constant platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 constant platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
 
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        loanManager = poolManager.loanManagerList(0);
+
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -44,13 +41,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function test_loanDefault_fullCover_withCollateral_noImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -65,7 +63,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -73,7 +71,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -84,15 +82,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       900e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0.0009e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   900e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.0009e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -100,12 +98,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -113,7 +110,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -124,13 +121,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
         uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
         uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -142,15 +139,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     900e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0,
-            domainStart:           start + 1_000_000 + 5 days + 1,
-            domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 900e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 900e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 1_000_000 + 5 days + 1,
+            domainEnd:         start + 1_000_000 + 5 days + 1,
+            unrealizedLosses:  1_000_000e6 + 900e6
         });
 
         assertPoolManager({
@@ -158,7 +155,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 900e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -180,8 +177,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -193,23 +189,23 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 1_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 1_500_000,
+            unrealizedLosses:  0
         });
 
         uint256 coverUsedForPool = 1_000_000e6 + 900e6 + netLateInterest - 150_000e6;
-        assertEq(coverUsedForPool, 851_503_216000);
+        assertEq(coverUsedForPool, 851_923_120000);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 10_000_000e6 - coverUsedForPool - platformFees);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest);
 
         assertPoolManager({
@@ -219,13 +215,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_fullCover_withCollateral_withImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -239,8 +236,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -255,7 +251,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -263,7 +259,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -274,15 +270,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 600_000,
-            unrealizedLosses:      1_000_540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 600_000,
+            unrealizedLosses:  1_000_540e6
         });
 
         assertPoolManager({
@@ -292,12 +288,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -305,7 +300,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -326,15 +321,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000 + 5 days + 1,
-            domainEnd:             start + 600_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000 + 5 days + 1,
+            domainEnd:         start + 600_000 + 5 days + 1,
+            unrealizedLosses:  1_000_000e6 + 540e6
         });
 
         assertPoolManager({
@@ -342,7 +337,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 540e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -364,8 +359,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -377,15 +371,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 1_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 1_500_000,
+            unrealizedLosses:  0
         });
 
         uint256 coverUsedForPool = 1_000_000e6 + 540e6 - 150_000e6;
@@ -401,13 +395,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_fullCover_noCollateral_noImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -422,7 +417,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -430,7 +425,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -441,15 +436,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       900e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0.0009e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   900e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.0009e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -457,12 +452,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -481,7 +475,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -492,33 +486,33 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30; // Default interest rate is double
 
         uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
 
         uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_000_000 + 5 days + 1,
-            domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_000_000 + 5 days + 1,
+            domainEnd:         start + 1_000_000 + 5 days + 1,
+            unrealizedLosses:  0
         });
 
         uint256 coverUsedForPool = 1_000_000e6 + 900e6 + netLateInterest;
-        assertEq(coverUsedForPool, 100_1503_216000);
+        assertEq(coverUsedForPool, 1_001_923_120000);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 10_000_000e6 - coverUsedForPool - platformFees);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest);
 
         assertPoolManager({
@@ -528,13 +522,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_fullCover_noCollateral_withImpairment() external {
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -548,8 +543,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -564,7 +558,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -572,7 +566,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -583,15 +577,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 600_000,
-            unrealizedLosses:      1_000_540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 600_000,
+            unrealizedLosses:  1_000_540e6
         });
 
         assertPoolManager({
@@ -601,12 +595,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -614,7 +607,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -635,15 +628,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 600_000 + 5 days + 1,
-            domainEnd:             start + 600_000 + 5 days + 1,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 600_000 + 5 days + 1,
+            domainEnd:         start + 600_000 + 5 days + 1,
+            unrealizedLosses:  0
         });
 
         uint256 coverUsedForPool = 1_000_000e6 + 540e6;
@@ -663,13 +656,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function test_loanDefault_partialCover_withCollateral_noImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -684,7 +678,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -692,7 +686,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -703,15 +697,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       900e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0.0009e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   900e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.0009e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -719,12 +713,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -732,7 +725,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -743,13 +736,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
         uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
         uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -761,15 +754,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     900e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0,
-            domainStart:           start + 1_000_000 + 5 days + 1,
-            domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 900e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 900e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 1_000_000 + 5 days + 1,
+            domainEnd:         start + 1_000_000 + 5 days + 1,
+            unrealizedLosses:  1_000_000e6 + 900e6
         });
 
         assertPoolManager({
@@ -777,7 +770,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 900e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -799,8 +792,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -812,23 +804,23 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 1_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 1_500_000,
+            unrealizedLosses:  0
         });
 
         uint256 coverUsedForPool = 40_000e6 - platformFees;
-        assertEq(coverUsedForPool, 39_657_096173);
+        assertEq(coverUsedForPool, 39_619_771373);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 150_000e6 + coverUsedForPool);
 
         assertPoolManager({
@@ -838,13 +830,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_partialCover_withCollateral_withImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -858,8 +851,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -874,7 +866,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -882,7 +874,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -893,15 +885,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 600_000,
-            unrealizedLosses:      1_000_540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 600_000,
+            unrealizedLosses:  1_000_540e6
         });
 
         assertPoolManager({
@@ -911,12 +903,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -924,7 +915,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -945,15 +936,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000 + 5 days + 1,
-            domainEnd:             start + 600_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000 + 5 days + 1,
+            domainEnd:         start + 600_000 + 5 days + 1,
+            unrealizedLosses:  1_000_000e6 + 540e6
         });
 
         assertPoolManager({
@@ -961,7 +952,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 540e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -983,8 +974,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -996,15 +986,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 1_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 1_500_000,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
@@ -1018,13 +1008,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_partialCover_noCollateral_noImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1039,7 +1030,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1047,7 +1038,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1058,15 +1049,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       900e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0.0009e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   900e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.0009e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -1074,12 +1065,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1098,7 +1088,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1109,33 +1099,33 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
 
         uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
 
         uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_000_000 + 5 days + 1,
-            domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_000_000 + 5 days + 1,
+            domainEnd:         start + 1_000_000 + 5 days + 1,
+            unrealizedLosses:  0
         });
 
         uint256 coverUsedForPool = 40_000e6 - platformFees;
-        assertEq(coverUsedForPool, 39_657_096173);
+        assertEq(coverUsedForPool, 39_619_771373);
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
         assertEq(fundsAsset.balanceOf(treasury),           platformOriginationFee + platformFees);
-        assertEq(fundsAsset.balanceOf(treasury),           438_033202);
+        assertEq(fundsAsset.balanceOf(treasury),           475_358002);
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + coverUsedForPool);
 
         assertPoolManager({
@@ -1145,13 +1135,14 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
     }
 
     function test_loanDefault_partialCover_noCollateral_withImpairment() external {
-        depositCover({ cover: 100_000e6 });
+        depositCover(100_000e6);
 
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1165,8 +1156,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -1181,7 +1171,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1189,7 +1179,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1200,15 +1190,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 600_000,
-            unrealizedLosses:      1_000_540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 600_000,
+            unrealizedLosses:  1_000_540e6
         });
 
         assertPoolManager({
@@ -1218,12 +1208,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1231,7 +1220,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1252,15 +1241,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 600_000 + 5 days + 1,
-            domainEnd:             start + 600_000 + 5 days + 1,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 600_000 + 5 days + 1,
+            domainEnd:         start + 600_000 + 5 days + 1,
+            unrealizedLosses:  0
         });
 
         assertEq(fundsAsset.balanceOf(address(poolCover)), 60_000e6);
@@ -1279,10 +1268,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_withCollateral_noImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1297,7 +1287,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1305,7 +1295,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1316,15 +1306,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       900e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0.0009e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   900e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.0009e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -1332,12 +1322,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1345,7 +1334,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1356,15 +1345,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e18 / 1e18;
-        uint256 lateInterestPremium = 0.0011e6 * 1e30 * (6 days) / 1e30;
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
 
         uint256 netLateInterest = (flatLateInterest + lateInterestPremium) * 9/10;
 
         uint256 platformFees = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
 
-        assertEq(netLateInterest, 603_216000);
-        assertEq(platformFees,    342_903827);
+        assertEq(netLateInterest, 1023_120000);
+        assertEq(platformFees,    380_228627);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1376,15 +1365,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     900e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0,
-            domainStart:           start + 1_000_000 + 5 days + 1,
-            domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 900e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 900e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 1_000_000 + 5 days + 1,
+            domainEnd:         start + 1_000_000 + 5 days + 1,
+            unrealizedLosses:  1_000_000e6 + 900e6
         });
 
         assertPoolManager({
@@ -1392,7 +1381,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 900e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -1414,8 +1403,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1427,15 +1415,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 1_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 1_500_000,
+            unrealizedLosses:  0
         });
 
         uint256 totalAssets    = 500_000e6 + (150_000e6 - platformFees);  // Platform fees are deducted from collateral liquidation.
@@ -1454,10 +1442,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_withCollateral_withImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1471,8 +1460,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -1487,7 +1475,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1495,7 +1483,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1506,15 +1494,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 600_000,
-            unrealizedLosses:      1_000_540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 600_000,
+            unrealizedLosses:  1_000_540e6
         });
 
         assertPoolManager({
@@ -1524,12 +1512,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1537,7 +1524,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1558,15 +1545,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000 + 5 days + 1,
-            domainEnd:             start + 600_000 + 5 days + 1,
-            unrealizedLosses:      1_000_000e6 + 540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000 + 5 days + 1,
+            domainEnd:         start + 600_000 + 5 days + 1,
+            unrealizedLosses:  1_000_000e6 + 540e6
         });
 
         assertPoolManager({
@@ -1574,7 +1561,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 1_000_000e6 + 540e6
         });
 
-        ( , , , , , address liquidator ) = loanManager.liquidationInfo(address(loan));
+        ( , , , , , address liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         assertEq(fundsAsset.balanceOf(liquidator),              0);
         assertEq(collateralAsset.balanceOf(liquidator),         100e18);
@@ -1596,8 +1583,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        vm.prank(poolDelegate);
-        poolManager.finishCollateralLiquidation(address(loan));
+        finishCollateralLiquidation(loan);
 
         assertLiquidationInfo({
             loan:                loan,
@@ -1609,15 +1595,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_500_000,
-            domainEnd:             start + 1_500_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_500_000,
+            domainEnd:         start + 1_500_000,
+            unrealizedLosses:  0
         });
 
         uint256 totalAssets     = 500_000e6 + 150_000e6 - platformFees;
@@ -1636,10 +1622,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_noCollateral_noImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1654,7 +1641,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1662,7 +1649,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1673,15 +1660,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       900e6,
-            accountedInterest:     0,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_900e6,
-            issuanceRate:          0.0009e6 * 1e30,
-            domainStart:           start,
-            domainEnd:             start + 1_000_000,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   900e6,
+            accountedInterest: 0,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0.0009e6 * 1e30,
+            domainStart:       start,
+            domainEnd:         start + 1_000_000,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -1689,12 +1676,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             unrealizedLosses: 0
         });
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1713,7 +1699,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1724,15 +1710,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 1_000_000 + 5 days + 1,
-            domainEnd:             start + 1_000_000 + 5 days + 1,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 1_000_000 + 5 days + 1,
+            domainEnd:         start + 1_000_000 + 5 days + 1,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -1748,10 +1734,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
     function test_loanDefault_noCover_noCollateral_withImpairment() external {
         loan = fundAndDrawdownLoan({
-            borrower:         borrower,
-            termDetails:      [uint256(5 days), uint256(1_000_000), uint256(3)],
-            amounts:          [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:            [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
         });
 
         /***********************************************/
@@ -1765,8 +1752,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000);
 
-        vm.prank(poolDelegate);
-        poolManager.impairLoan(address(loan));
+        impairLoan(loan);
 
         uint256 platformFees = platformServiceFee + 80e6 * 600_000 / 1_000_000;
         assertEq(platformFees, 257.284627e6);
@@ -1781,7 +1767,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         1_000_000e6,
             refinanceInterest: 0,
@@ -1789,7 +1775,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 3
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 900e6,
             refinanceInterest:   0,
@@ -1800,15 +1786,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             delegateFeeRate:     0.02e6
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     540e6,
-            principalOut:          1_000_000e6,
-            assetsUnderManagement: 1_000_540e6,
-            issuanceRate:          0,
-            domainStart:           start + 600_000,
-            domainEnd:             start + 600_000,
-            unrealizedLosses:      1_000_540e6
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 540e6,
+            principalOut:      1_000_000e6,
+            issuanceRate:      0,
+            domainStart:       start + 600_000,
+            domainEnd:         start + 600_000,
+            unrealizedLosses:  1_000_540e6
         });
 
         assertPoolManager({
@@ -1818,12 +1804,11 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
         vm.warp(start + 600_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
 
         assertLoanInfoWasDeleted(loan);
 
-        assertLoanState({
+        assertFixedTermLoan({
             loan:              loan,
             principal:         0,
             refinanceInterest: 0,
@@ -1831,7 +1816,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             paymentsRemaining: 0
         });
 
-        assertPaymentInfo({
+        assertFixedTermPaymentInfo({
             loan:                loan,
             incomingNetInterest: 0,
             refinanceInterest:   0,
@@ -1852,15 +1837,15 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
             triggeredByGovernor: false
         });
 
-        assertLoanManager({
-            accruedInterest:       0,
-            accountedInterest:     0,
-            principalOut:          0,
-            assetsUnderManagement: 0,
-            issuanceRate:          0,
-            domainStart:           start + 600_000 + 5 days + 1,
-            domainEnd:             start + 600_000 + 5 days + 1,
-            unrealizedLosses:      0
+        assertFixedTermLoanManager({
+            loanManager:       loanManager,
+            accruedInterest:   0,
+            accountedInterest: 0,
+            principalOut:      0,
+            issuanceRate:      0,
+            domainStart:       start + 600_000 + 5 days + 1,
+            domainEnd:         start + 600_000 + 5 days + 1,
+            unrealizedLosses:  0
         });
 
         assertPoolManager({
@@ -1878,21 +1863,18 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
 
 contract FinishLiquidationFailureTests is TestBaseWithAssertions {
 
-    address internal borrower = address(new Address());
-    address internal lp       = address(new Address());
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
 
-    Loan internal loan;
+    address loan;
 
-    uint256 internal platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
-    uint256 internal platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 platformServiceFee     = uint256(1_000_000e6) * 0.0066e6 * 1_000_000 / (365 * 86400) / 1e6;
+    uint256 platformOriginationFee = uint256(1_000_000e6) * 0.001e6 * 3 * 1_000_000 / (365 * 86400) / 1e6;
 
     function setUp() public virtual override {
         super.setUp();
 
-        depositLiquidity({
-            lp: lp,
-            liquidity: 1_500_000e6
-        });
+        deposit(lp, 1_500_000e6);
 
         setupFees({
             delegateOriginationFee:     500e6,
@@ -1906,13 +1888,14 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
 
-        depositCover({ cover: 10_000_000e6 });
+        depositCover(10_000_000e6);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.031536e18), uint256(0), uint256(0.0001e18), uint256(0.031536e18 / 10)]
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: poolManager.loanManagerList(0)
         });
 
         /***********************************************/
@@ -1922,24 +1905,25 @@ contract FinishLiquidationFailureTests is TestBaseWithAssertions {
         // Since we round up days when it comes to late interest, this payment is 6 days late.
         vm.warp(start + 1_000_000 + 5 days + 1);
 
-        vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        triggerDefault(loan, address(liquidatorFactory));
     }
 
     function test_finishLiquidation_failIfNotPD() external {
-        vm.expectRevert("PM:FCL:NOT_AUTHORIZED");
-        poolManager.finishCollateralLiquidation(address(loan));
+        vm.expectRevert("PM:NOT_PD_OR_GOV");
+        poolManager.finishCollateralLiquidation(loan);
     }
 
     function test_finishLiquidation_failIfNotPoolManager() external {
-        vm.expectRevert("LM:FCL:NOT_PM");
-        loanManager.finishCollateralLiquidation(address(loan));
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
+
+        vm.expectRevert("LM:NOT_PM");
+        loanManager.finishCollateralLiquidation(loan);
     }
 
     function test_finishLiquidation_failIfLiquidationNotActive() external {
         vm.prank(poolDelegate);
         vm.expectRevert("LM:FCL:LIQ_ACTIVE");
-        poolManager.finishCollateralLiquidation(address(loan));
+        poolManager.finishCollateralLiquidation(loan);
     }
 
 }

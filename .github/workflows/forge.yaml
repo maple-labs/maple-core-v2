@@ -13,7 +13,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install submodules
+      - name: Checkout submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -31,7 +31,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install submodules
+      - name: Checkout submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -41,7 +41,7 @@ jobs:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
         run: make integration profile=production
 
-  deep_fuzz_tests:
+  fuzz_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -49,7 +49,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install submodules
+      - name: Checkout submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -57,25 +57,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./test.sh -p super_deep -t testDeepFuzz_
-
-  shallow_fuzz_tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-
-      - name: Install submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
-
-      - name: Run Forge tests
-        env:
-          ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./test.sh -p deep -t testShallowFuzz_
+        run: ./test.sh -p super_deep -t Fuzz
 
   invariant_tests:
     runs-on: ubuntu-latest
@@ -85,7 +67,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install submodules
+      - name: Checkout submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -95,7 +77,7 @@ jobs:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
         run: make invariant profile=super_deep
 
-  local_simulations:
+  scenario_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -103,7 +85,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install submodules
+      - uses: actions/setup-node@v3
+
+      - name: Checkout submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -111,9 +95,9 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: make local-sim
+        run: make scenario
 
-  mainnet_simulations:
+  upgrade_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -121,13 +105,14 @@ jobs:
       - name: "Cache RPC Responses"
         uses: "actions/cache@v3"
         with:
-          path: "~/.foundry/cache/rpc/mainnet/16156537"
-          key: "${{ runner.os }}-mainnet-16156537"
+          path: "~/.foundry/cache/rpc/mainnet/16990500"
+          key: "${{ runner.os }}-mainnet-16990500"
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install submodules
+      - name: Checkout submodules
+        env:
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -135,4 +120,4 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: make mainnet-sim
+        run: make upgrade profile=production

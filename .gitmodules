@@ -1,46 +1,34 @@
-[submodule "modules/contract-test-utils"]
-	path = modules/contract-test-utils
-	url = git@github.com:maple-labs/contract-test-utils.git
-	ignore = dirty
-[submodule "modules/withdrawal-manager"]
-	path = modules/withdrawal-manager
-	url = git@github.com:maple-labs/withdrawal-manager.git
-	ignore = dirty
-[submodule "modules/debt-locker-v4"]
-	path = modules/debt-locker-v4
-	url = git@github.com:maple-labs/debt-locker.git
-	ignore = dirty
-[submodule "modules/globals-v2"]
-	path = modules/globals-v2
-	url = git@github.com:maple-labs/globals-v2.git
-	ignore = dirty
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
 	ignore = dirty
-[submodule "modules/migration-helpers"]
-	path = modules/migration-helpers
-	url = git@github.com:maple-labs/migration-helpers.git
-	ignore = dirty
-[submodule "modules/pool-v2"]
-	path = modules/pool-v2
-	url = git@github.com:maple-labs/pool-v2.git
-	ignore = dirty
+[submodule "modules/forge-std"]
+	path = modules/forge-std
+	url = git@github.com:foundry-rs/forge-std
+[submodule "modules/address-registry"]
+	path = modules/address-registry
+	url = git@github.com:maple-labs/address-registry.git
+[submodule "modules/fixed-term-loan"]
+	path = modules/fixed-term-loan
+	url = git@github.com:maple-labs/fixed-term-loan.git
+[submodule "modules/fixed-term-loan-manager"]
+	path = modules/fixed-term-loan-manager
+	url = git@github.com:maple-labs/fixed-term-loan-manager.git
+[submodule "modules/globals"]
+	path = modules/globals
+	url = git@github.com:maple-labs/globals-v2.git
 [submodule "modules/liquidations"]
 	path = modules/liquidations
 	url = git@github.com:maple-labs/liquidations.git
-	ignore = dirty
-[submodule "modules/loan-v301"]
-	branch = v3.01
-	path = modules/loan-v301
-	url = git@github.com:maple-labs/loan.git
-	ignore = dirty
-[submodule "modules/loan-v302"]
-	branch = v3.02
-	path = modules/loan-v302
-	url = git@github.com:maple-labs/loan.git
-	ignore = dirty
-[submodule "modules/loan-v400"]
-	path = modules/loan-v400
-	url = git@github.com:maple-labs/loan.git
-	ignore = dirty
+[submodule "modules/pool"]
+	path = modules/pool
+	url = git@github.com:maple-labs/pool-v2.git
+[submodule "modules/withdrawal-manager"]
+	path = modules/withdrawal-manager
+	url = git@github.com:maple-labs/withdrawal-manager.git
+[submodule "modules/open-term-loan-manager"]
+	path = modules/open-term-loan-manager
+	url = git@github.com:maple-labs/open-term-loan-manager.git
+[submodule "modules/open-term-loan"]
+	path = modules/open-term-loan
+	url = git@github.com:maple-labs/open-term-loan.git
