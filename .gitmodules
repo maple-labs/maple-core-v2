@@ -8,3 +8,27 @@
 [submodule "modules/address-registry"]
 	path = modules/address-registry
 	url = git@github.com:maple-labs/address-registry.git
+[submodule "modules/fixed-term-loan"]
+	path = modules/fixed-term-loan
+	url = git@github.com:maple-labs/fixed-term-loan.git
+[submodule "modules/fixed-term-loan-manager"]
+	path = modules/fixed-term-loan-manager
+	url = git@github.com:maple-labs/fixed-term-loan-manager.git
+[submodule "modules/globals"]
+	path = modules/globals
+	url = git@github.com:maple-labs/globals-v2.git
+[submodule "modules/liquidations"]
+	path = modules/liquidations
+	url = git@github.com:maple-labs/liquidations.git
+[submodule "modules/pool"]
+	path = modules/pool
+	url = git@github.com:maple-labs/pool-v2.git
+[submodule "modules/withdrawal-manager"]
+	path = modules/withdrawal-manager
+	url = git@github.com:maple-labs/withdrawal-manager.git
+[submodule "modules/open-term-loan-manager"]
+	path = modules/open-term-loan-manager
+	url = git@github.com:maple-labs/open-term-loan-manager.git
+[submodule "modules/open-term-loan"]
+	path = modules/open-term-loan
+	url = git@github.com:maple-labs/open-term-loan.git
