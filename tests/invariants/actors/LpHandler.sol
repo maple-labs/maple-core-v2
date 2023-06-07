@@ -88,6 +88,20 @@ contract LpHandler is TestUtils {
         shares_ = pool.deposit(assets_, currentLp);  // TODO: Fuzz receiver
     }
 
+    // function depositWithPermit(uint256 assets_, address receiver_, uint256 deadline_, uint256 ownerSk_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 shares_) {
+        // numCalls++;
+    //     assets_   = constrictToRange(assets_,   1,               1e29);
+    //     deadline_ = constrictToRange(deadline_, block.timestamp, block.timestamp + 1_000_000 days);
+
+    //     address owner_ = vm.addr(ownerSk_);
+
+    //     ( uint8 v_, bytes32 r_, bytes32 s_ ) = _getValidPermitSignature(address(fundsAsset), owner_, currentLp, assets_, fundsAsset.nonces(owner_), deadline_, ownerSk_);
+
+    //     fundsAsset.mint(owner_, assets_);
+
+    //     return pool.depositWithPermit(assets_, receiver_, deadline_, v_, r_, s_);
+    // }
+
     function mint(uint256 shares_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
         numCalls++;
         numberOfCalls["mint"]++;
@@ -101,6 +115,11 @@ contract LpHandler is TestUtils {
 
         assets_ = pool.mint(shares_, currentLp);  // TODO: Fuzz receiver
     }
+
+    // function mintWithPermit(uint256 shares_, address receiver_, uint256 maxAssets_, uint256 deadline_, uint8 v_, bytes32 r_, bytes32 s_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
+        // numCalls++;
+    //     return pool.mintWithPermit(shares_, receiver_, maxAssets_, deadline_, v_, r_, s_);
+    // }
 
     function redeem(uint256 warpSeed_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 assets_) {
         numCalls++;
@@ -137,6 +156,15 @@ contract LpHandler is TestUtils {
         assets_ = pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);  // TODO: Fuzz owner and receiver
     }
 
+    // function requestWithdraw(uint256 assets_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 escrowShares_) {
+        // numCalls++;
+    //     if (pool.balanceOfAssets(currentLp) == 0) return 0;
+
+    //     assets_ = constrictToRange(assets_, 1, pool.balanceOfAssets(currentLp));
+
+    //     return pool.requestWithdraw(assets_, currentLp);  // TODO: Add fuzzing for users
+    // }
+
     function requestRedeem(uint256 shares_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 escrowShares_) {
         numCalls++;
         numberOfCalls["requestRedeem"]++;
@@ -148,9 +176,44 @@ contract LpHandler is TestUtils {
         escrowShares_ = pool.requestRedeem(shares_, currentLp);  // TODO: Add fuzzing for users
     }
 
+    // function withdraw(uint256 assets_, address receiver_, address owner_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (uint256 shares_) {
+        // numCalls++;
+    //     if (pool.balanceOfAssets(currentLp) == 0) return 0;
+
+    //     assets_ = constrictToRange(assets_, 1, pool.balanceOfAssets(currentLp));
+
+    //     return pool.withdraw(assets_, receiver_, owner_);
+    // }
+
     /**************************************************************************************************************************************/
     /*** ERC-20 Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    // function approve(address spender_, uint256 amount_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
+    //     numCalls++;
+    //     numberOfCalls["approve"]++;
+
+    //     return pool.approve(spender_, amount_);
+    // }
+
+    // function decreaseAllowance(address spender_, uint256 subtractedAmount_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
+    //     numCalls++;
+    //     numberOfCalls["decreaseAllowance"]++;
+    //     subtractedAmount_ = constrictToRange(subtractedAmount_, 0, pool.allowance(currentLp, spender_));
+
+    //     return pool.decreaseAllowance(spender_, subtractedAmount_);
+    // }
+
+    // function increaseAllowance(address spender_, uint256 addedAmount_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
+    //     numCalls++;
+    //     numberOfCalls["increaseAllowance"]++;
+
+    //     return pool.increaseAllowance(spender_, addedAmount_);
+    // }
+
+    // function permit(address owner_, address spender_, uint256 amount_, uint256 deadline_, uint8 v_, bytes32 r_, bytes32 s_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) {
+    //     pool.permit(owner_, spender_, amount_, deadline_, v_, r_, s_);
+    // }
 
     function transfer(uint256 amount_, uint256 lpIndex_, uint256 recipientIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
         numCalls++;
@@ -164,5 +227,26 @@ contract LpHandler is TestUtils {
 
         success_ = pool.transfer(recipient_, amount_);
     }
+
+    // function transferFrom(address owner_, address recipient_, uint256 amount_, uint256 lpIndex_) public virtual useTimestamps useRandomLp(lpIndex_) returns (bool success_) {
+        // numCalls++;
+    //     return pool.transferFrom(owner_, recipient_, amount_);
+    // }
+
+    // function _getDigest(address token_, address owner_, address spender_, uint256 amount_, uint256 nonce_, uint256 deadline_) internal view returns (bytes32 digest_) {
+    //     // numCalls++;
+    //     return keccak256(
+    //         abi.encodePacked(
+    //             '\x19\x01',
+    //             fundsAsset.DOMAIN_SEPARATOR(),
+    //             keccak256(abi.encode(fundsAsset.PERMIT_TYPEHASH(), owner_, spender_, amount_, nonce_, deadline_))
+    //         )
+    //     );
+    // }
+
+    // function _getValidPermitSignature(address token_, address owner_, address spender_, uint256 amount_, uint256 nonce_, uint256 deadline_, uint256 ownerSk_) internal returns (uint8 v_, bytes32 r_, bytes32 s_) {
+    //     // numCalls++;
+    //     return vm.sign(ownerSk_, _getDigest(token_, owner_, spender_, amount_, nonce_, deadline_));
+    // }
 
 }
