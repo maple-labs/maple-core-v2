@@ -112,7 +112,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
-        env:
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive

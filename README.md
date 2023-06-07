@@ -63,8 +63,7 @@ For the following commands, a `$ETH_RPC_URL` environment value needs to be confi
 
 | Command | Description |
 |---|---|
-| `make mainnet-sim` | Run the simulations against mainnet |
-| `make local-sim`   | Run the local protocol simulations. |
+| `make upgrade` | Run the upgrade simulations against mainnet |
 
 ## Audit Reports
 
