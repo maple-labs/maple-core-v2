@@ -1,8 +1,6 @@
-name: Forge Tests
+name: Forge Tests (PR)
 
-on:
-  push:
-    branches: [main]
+on: [pull_request]
 
 jobs:
   e2e_tests:
@@ -90,7 +88,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./test.sh -p super_deep -t testDeepFuzz_
+        run: ./test.sh -p deep -t testDeepFuzz_
 
   shallow_fuzz_tests:
     runs-on: ubuntu-latest
@@ -119,7 +117,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./test.sh -p deep -t testShallowFuzz_
+        run: ./test.sh -p shallow -t testShallowFuzz_
 
   invariant_tests:
     runs-on: ubuntu-latest
@@ -148,7 +146,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: make invariant profile=super_deep
+        run: make invariant profile=deep
 
   local_simulations:
     runs-on: ubuntu-latest
