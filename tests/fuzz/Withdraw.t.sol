@@ -23,17 +23,16 @@ contract WithdrawFuzzTests is FuzzBase {
         vm.assume(owner    != address(pool));
         vm.assume(caller   != address(pool));
         vm.assume(receiver != address(pool));
+        vm.assume(receiver != address(this));
 
-        totalSupply      = constrictToRange(totalSupply,      0, 1e29);
-        totalAssets      = constrictToRange(totalAssets,      0, 1e20);
-        unrealizedLosses = constrictToRange(unrealizedLosses, 0, totalAssets);
-        assetsToWithdraw = constrictToRange(assetsToWithdraw, 1, 1e20);
-        receiverAssets   = constrictToRange(receiverAssets,   0, 1e20);
-        availableAssets  = constrictToRange(availableAssets,  0, totalAssets - unrealizedLosses);
+        totalSupply      = bound(totalSupply,      0, 1e29);
+        totalAssets      = bound(totalAssets,      0, 1e20);
+        unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
+        assetsToWithdraw = bound(assetsToWithdraw, 1, 1e20);
+        receiverAssets   = bound(receiverAssets,   0, 1e20);
+        availableAssets  = bound(availableAssets,  0, totalAssets - unrealizedLosses);
 
-        if ((totalAssets - unrealizedLosses) == 0) {
-            return;
-        }
+        if ((totalAssets - unrealizedLosses) == 0) return;
 
         uint256 escrowShares = divRoundUp(assetsToWithdraw * totalSupply, totalAssets - unrealizedLosses);
         uint256 ownerShares  = escrowShares;
@@ -50,7 +49,7 @@ contract WithdrawFuzzTests is FuzzBase {
         pool.approve(caller, type(uint256).max);
 
         if (escrowShares > ownerShares) {
-            vm.expectRevert(ARITHMETIC_ERROR);
+            vm.expectRevert(arithmeticError);
             pool.requestWithdraw(assetsToWithdraw, owner);
             return;
         }

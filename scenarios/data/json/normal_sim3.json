@@ -1,0 +1,132 @@
+{
+    "config": {},
+    "actions": [
+        {
+            "timestamp": 1681160220,
+            "actionType": "createPool",
+            "parameters": {
+                "name": "pool1",
+                "asset": "USDC",
+                "liquidityCap": 29000000000000,
+                "platformServiceFeeRate": 55,
+                "delegateManagementFeeRate": 850,
+                "platformManagementFeeRate": 250,
+                "platformOriginationFeeRate": 0
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 0,
+                "principalOutstanding": 0,
+                "totalAssets": 0,
+                "totalSupply": 0,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1681243020,
+            "actionType": "deposit",
+            "parameters": {
+                "name": "lender1",
+                "assets": 14500000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 14500000000000,
+                "principalOutstanding": 0,
+                "totalAssets": 14500000000000,
+                "totalSupply": 14500000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1681477020,
+            "actionType": "fundLoan",
+            "parameters": {
+                "delegateServiceFeeRate": 45,
+                "gracePeriod": 5,
+                "interestRate": 1350,
+                "isOpenTerm": true,
+                "lateFeeRate": 100,
+                "lateInterestPremiumRate": 400,
+                "name": "loanA",
+                "noticePeriod": 3,
+                "paymentInterval": 30,
+                "principal": 4400000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 10100000000000,
+                "principalOutstanding": 4400000000000,
+                "totalAssets": 14500000000000,
+                "totalSupply": 14500000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1683715077,
+            "actionType": "payLoan",
+            "parameters": {
+                "name": "loanA",
+                "principal": 0,
+                "interest": 42155183219,
+                "delegateServiceFee": 1405172773,
+                "platformServiceFee": 1717433390,
+                "delegateManagementFee": 3583190573,
+                "platformManagementFee": 1053879580
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 10137518110000,
+                "principalOutstanding": 4400000000000,
+                "totalAssets": 14537518110000,
+                "totalSupply": 14500000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1683826677,
+            "actionType": "fundLoan",
+            "parameters": {
+                "delegateServiceFeeRate": 35,
+                "gracePeriod": 5,
+                "interestRate": 850,
+                "isOpenTerm": true,
+                "lateFeeRate": 200,
+                "lateInterestPremiumRate": 300,
+                "name": "loanB",
+                "noticePeriod": 3,
+                "paymentInterval": 30,
+                "principal": 4500000000000
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 5637518113000,
+                "principalOutstanding": 8900000000000,
+                "totalAssets": 14539388940000,
+                "totalSupply": 14500000000000,
+                "unrealizedLosses": 0
+            }
+        },
+        {
+            "timestamp": 1686078833,
+            "actionType": "payLoan",
+            "parameters": {
+                "name": "loanB",
+                "principal": 0,
+                "interest": 27316389840,
+                "delegateServiceFee": 1124792522,
+                "platformServiceFee": 1767531107,
+                "delegateManagementFee": 2321893136,
+                "platformManagementFee": 682909746
+            },
+            "expected": {
+                "accruedInterest": 0,
+                "cash": 5661829700000,
+                "principalOutstanding": 8900000000000,
+                "totalAssets": 14601454990000,
+                "totalSupply": 14500000000000,
+                "unrealizedLosses": 0
+            }
+        }
+    ]
+}

@@ -1,0 +1,6 @@
+Timestamp,Action Type,Parameters,Principal Outstanding,Accrued Interest,Total Assets,Cash,Total Supply,Unrealized Losses
+1681364940,createPool,"{'name': 'pool1', 'asset': 'USDC', 'liquidityCap': 33000000, 'platformServiceFeeRate': 40, 'platformManagementFeeRate': 50, 'delegateManagementFeeRate': 1000}",0,0,0,0,0,0
+1681440540,deposit,"{'name': 'lender1', 'assets': 28500000}",0,0,28500000,28500000,28500000,0
+1681487340,fundLoan,"{'name': 'loanA', 'loanType': 'open', 'principal': 6200000, 'interestRate': 1300, 'paymentCycle': 30, 'noticePeriod': 3, 'gracePeriod': 5, 'lateInterestPremiumRate': 200, 'lateFeeRate': 150, 'delegateServiceFeeRate': 20}",6200000,0,28500000,22300000,28500000,0
+1683581133,callLoan,"{'name': 'loanA', 'principal': 6200000.0}",6200000,47894.45258,28547894.45,22300000,28500000,0
+1684011679,defaultLoan,"{'name': 'loanA', 'principal': 0, 'interest': 0, 'platformServiceFee': 1985.1473617453069, 'platformManagementFee': 790.9551208143075, 'poolLosses': 6341580.966625761}",0,0,22300000,22300000,28500000,0

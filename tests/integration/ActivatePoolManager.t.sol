@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
+import { console2 } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -11,6 +11,7 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
         _createPool(1 weeks, 2 days);
     }
@@ -34,12 +35,13 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         _createAccounts();
         _createAssets();
         _createGlobals();
+        _setTreasury();
         _createFactories();
         _createPool(1 weeks, 2 days);
     }
 
     function test_activatePoolManager_failIfNotGovernor() public {
-        vm.expectRevert("MG:NOT_GOVERNOR");
+        vm.expectRevert("MG:NOT_GOV");
         globals.activatePoolManager(address(poolManager));
     }
 
@@ -47,7 +49,7 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         vm.startPrank(governor);
         globals.setProtocolPause(true);
 
-        vm.expectRevert("PM:PROTOCOL_PAUSED");
+        vm.expectRevert("PM:PAUSED");
         globals.activatePoolManager(address(poolManager));
     }
 

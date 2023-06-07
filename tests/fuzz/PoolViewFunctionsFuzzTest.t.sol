@@ -1,33 +1,31 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { Address } from "../../modules/contract-test-utils/contracts/test.sol";
-
 import { TestBase } from "../TestBase.sol";
 
-import { LoanManagerHarness } from "./harnesses/LoanManagerHarness.sol";
+import { FixedTermLoanManagerHarness } from "./utils/FixedTermLoanManagerHarness.sol";
 
 contract PoolViewFunctionsFuzzTests is TestBase {
 
-    address internal user;
+    address user;
 
-    LoanManagerHarness internal loanManagerHarness;
+    FixedTermLoanManagerHarness loanManagerHarness;
 
     function setUp() public override {
         super.setUp();
 
-        user = address(new Address());
+        user = makeAddr("user");
 
-        loanManagerHarness = new LoanManagerHarness();
+        address loanManager = poolManager.loanManagerList(0);
 
-        vm.etch(address(loanManager), address(loanManagerHarness).code);
+        vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
 
-        loanManagerHarness = LoanManagerHarness(address(loanManager));
+        loanManagerHarness = FixedTermLoanManagerHarness(loanManager);
     }
 
     function testFuzz_getTotalAssetsFromPM(uint256 principalOut_, uint256 accountedInterest_) external {
-        principalOut_      = constrictToRange(principalOut_,      1, 1e29);
-        accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
+        principalOut_      = bound(principalOut_,      1, 1e29);
+        accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
@@ -36,7 +34,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_getUnrealizedLossesFromPM(uint256 unrealizedLosses_) external {
-        unrealizedLosses_ = constrictToRange(unrealizedLosses_, 1, 1e29);
+        unrealizedLosses_ = bound(unrealizedLosses_, 1, 1e29);
 
         loanManagerHarness.__setUnrealizedLosses(unrealizedLosses_);
 
@@ -44,9 +42,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_convertToAssets_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
-        sharesAmount_ = constrictToRange(sharesAmount_, 0, 1e29);
+        sharesAmount_ = bound(sharesAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),                 0);
+        assertEq(pool.totalSupply(),                  0);
         assertEq(pool.convertToAssets(sharesAmount_), sharesAmount_);
     }
 
@@ -58,15 +56,15 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        sharesAmount_      = constrictToRange(sharesAmount_,      0, 1e29);
-        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
-        principalOut_      = constrictToRange(principalOut_,      1, 1e29);
-        accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
+        sharesAmount_      = bound(sharesAmount_,      0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
+        principalOut_      = bound(principalOut_,      1, 1e29);
+        accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -78,9 +76,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_convertToShares_whenTotalSupplyIsZero(uint256 assetAmount_) external {
-        assetAmount_ = constrictToRange(assetAmount_, 0, 1e29);
+        assetAmount_ = bound(assetAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),                0);
+        assertEq(pool.totalSupply(),                 0);
         assertEq(pool.convertToShares(assetAmount_), assetAmount_);
     }
 
@@ -92,16 +90,15 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        assetAmount_       = constrictToRange(assetAmount_,       0, 1e29);
-        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
-        principalOut_      = constrictToRange(principalOut_,      1, 1e29);
-        accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
+        assetAmount_       = bound(assetAmount_,       0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
+        principalOut_      = bound(principalOut_,      1, 1e29);
+        accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -121,17 +118,17 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        assetAmount_       = constrictToRange(assetAmount_,       0, 1e29);
-        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
-        principalOut_      = constrictToRange(principalOut_,      1, 1e29);
-        accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
-        unrealizedLosses_  = constrictToRange(unrealizedLosses_,  1, amountToDeposit_);
+        assetAmount_       = bound(assetAmount_,       0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
+        principalOut_      = bound(principalOut_,      1, 1e29);
+        accountedInterest_ = bound(accountedInterest_, 1, 1e29);
+        unrealizedLosses_  = bound(unrealizedLosses_,  1, amountToDeposit_);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
         loanManagerHarness.__setUnrealizedLosses(unrealizedLosses_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -143,17 +140,17 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_previewDeposit_whenTotalSupplyIsZero(uint256 assetAmount_) external {
-        assetAmount_ = constrictToRange(assetAmount_, 0, 1e29);
+        assetAmount_ = bound(assetAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),               0);
+        assertEq(pool.totalSupply(),                0);
         assertEq(pool.previewDeposit(assetAmount_), assetAmount_);
     }
 
     function testFuzz_previewDeposit_whenTotalSupplyExists(uint256 assetAmount_, uint256 amountToDeposit_) external {
-        assetAmount_     = constrictToRange(assetAmount_,     0, 1e29);
-        amountToDeposit_ = constrictToRange(amountToDeposit_, 1, 1e29);
+        assetAmount_     = bound(assetAmount_,     0, 1e29);
+        amountToDeposit_ = bound(amountToDeposit_, 1, 1e29);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -165,9 +162,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_previewMint_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
-        sharesAmount_ = constrictToRange(sharesAmount_, 0, 1e29);
+        sharesAmount_ = bound(sharesAmount_, 0, 1e29);
 
-        assertEq(pool.totalSupply(),             0);
+        assertEq(pool.totalSupply(),              0);
         assertEq(pool.previewMint(sharesAmount_), sharesAmount_);
     }
 
@@ -179,15 +176,15 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        sharesAmount_      = constrictToRange(sharesAmount_,      0, 1e29);
-        amountToDeposit_   = constrictToRange(amountToDeposit_,   1, 1e29);
-        principalOut_      = constrictToRange(principalOut_,      1, 1e29);
-        accountedInterest_ = constrictToRange(accountedInterest_, 1, 1e29);
+        sharesAmount_      = bound(sharesAmount_,      0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
+        principalOut_      = bound(principalOut_,      1, 1e29);
+        accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
 
-        _mintToUserAndDepositToPool(user, amountToDeposit_);
+        deposit(address(pool), user, amountToDeposit_);
 
         // Check totalSupply increased
         assertEq(pool.totalSupply(), amountToDeposit_);
@@ -196,17 +193,6 @@ contract PoolViewFunctionsFuzzTests is TestBase {
 
         // Calculate the expected amount
         assertEq(assetsAmount, _divRoundUp(sharesAmount_ * pool.totalAssets(), pool.totalSupply()));
-    }
-
-    function _mintToUserAndDepositToPool(address user_, uint256 amountToDeposit_) internal {
-        // Mint to user
-        fundsAsset.mint(user_, amountToDeposit_);
-        vm.startPrank(user_);
-        fundsAsset.approve(address(pool), amountToDeposit_);
-
-        // Deposit in pool to increase totalSupply
-        pool.deposit(amountToDeposit_, user_);
-        vm.stopPrank();
     }
 
     function _divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {

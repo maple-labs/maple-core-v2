@@ -1,7 +1,9 @@
 # Maple V2 Core
 
+![Foundry CI](https://github.com/maple-labs/maple-core-v2-private/actions/workflows/forge.yaml/badge.svg)
+[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/maple-for-developers/protocol-overview)
 [![Foundry][foundry-badge]][foundry]
-![Foundry CI](https://github.com/maple-labs/maple-v2-core/actions/workflows/forge.yaml/badge.svg)
+[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2-private/blob/main/LICENSE)
 
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
@@ -14,12 +16,10 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 
 Submodules imported:
 - [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
-- [`maple-labs/debt-locker` (for V1 Migration testing)](https://github.com/maple-labs/debt-locker)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
 - [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
 - [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
 - [`maple-labs/loan`](https://github.com/maple-labs/loan)
-- [`maple-labs/migration-helpers`](https://github.com/maple-labs/migration-helpers)
 - [`maple-labs/pool-v2`](https://github.com/maple-labs/pool-v2)
 - [`maple-labs/withdrawal-manager`](https://github.com/maple-labs/withdrawal-manager)
 
@@ -30,8 +30,8 @@ Versions of dependencies can be checked with `git submodule status`.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/maple-core-v2.git
-cd maple-core-v2
+git clone git@github.com:maple-labs/maple-core-v2-private.git
+cd maple-core-v2-private
 forge install
 ```
 
@@ -81,8 +81,6 @@ For all information related to the ongoing bug bounty for these contracts run by
 ## About Maple
 
 [Maple Finance](https://maple.finance/) is a decentralized corporate credit market. Maple provides capital to institutional borrowers through globally accessible fixed-income yield opportunities.
-
-For all technical documentation related to the Maple V2 protocol, please refer to the GitHub [wiki](https://github.com/maple-labs/maple-core-v2/wiki).
 
 ---
 

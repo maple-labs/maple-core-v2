@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
+import { IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
+
 import { TestBase } from "../TestBase.sol";
 
 contract GetExpectedAmountTests is TestBase {
 
-    address internal weth           = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address internal wethAggregator = address(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    address weth           = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address wethAggregator = address(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
-    string internal url = vm.envString("ETH_RPC_URL");
+    string url = vm.envString("ETH_RPC_URL");
 
-    uint256 internal blockNumber = 15_588_766;  // WETH price at the time: 1311.75777214e8
+    uint256 blockNumber = 15_588_766;  // WETH price at the time: 1311.75777214e8
+
+    IFixedTermLoanManager loanManager;
 
     function setUp() public virtual override {
         vm.createSelectFork(url, blockNumber);
 
         super.setUp();
+
+        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
     }
 
     function test_getExpectedAmount_oracleNotSet() external {
@@ -53,7 +59,7 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withSlippage() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setAllowedSlippage(address(loanManager), address(weth), 0.113e6);  // Slippage of 11.3%
+        loanManager.setAllowedSlippage(address(weth), 0.113e6);  // Slippage of 11.3%
         vm.stopPrank();
 
         uint256 swapAmount   = 13.7234925e18;
@@ -65,7 +71,7 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withMinRatio() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setMinRatio(address(loanManager), address(weth), 2000e6);  // Minimum price of 2000 USDC
+        loanManager.setMinRatio(address(weth), 2000e6);  // Minimum price of 2000 USDC
         vm.stopPrank();
 
         uint256 swapAmount = 13.7234925e18;
@@ -80,8 +86,8 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withSlippageAndMinRatio_minRatioHigher() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setAllowedSlippage(address(loanManager), address(weth), 0.113e6);  // Slippage of 11.3%
-        poolManager.setMinRatio(address(loanManager), address(weth), 1200e6);          // Minimum price of 1200 USDC
+        loanManager.setAllowedSlippage(address(weth), 0.113e6);  // Slippage of 11.3%
+        loanManager.setMinRatio(address(weth), 1200e6);          // Minimum price of 1200 USDC
         vm.stopPrank();
 
         uint256 swapAmount = 13.7234925e18;
@@ -96,8 +102,8 @@ contract GetExpectedAmountTests is TestBase {
     function test_getExpectedAmount_withSlippageAndMinRatio_slippageHigher() external {
         vm.startPrank(governor);
         globals.setPriceOracle(weth, wethAggregator);
-        poolManager.setAllowedSlippage(address(loanManager), address(weth), 0.013e6);  // Slippage of 1.3%
-        poolManager.setMinRatio(address(loanManager), address(weth), 1200e6);          // Minimum price of 1200 USDC
+        loanManager.setAllowedSlippage(address(weth), 0.013e6);  // Slippage of 1.3%
+        loanManager.setMinRatio(address(weth), 1200e6);          // Minimum price of 1200 USDC
         vm.stopPrank();
 
         uint256 swapAmount = 13.7234925e18;
