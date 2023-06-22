@@ -152,6 +152,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_000e6,
             unrealizedLosses: 0
         });
@@ -160,6 +161,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         // Borrower cash:    1,000,000 - 750 = 999,250
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(250e6)   ]
         );
@@ -193,6 +195,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_000e6 + 5_625e6 - 1,
             unrealizedLosses: 0
         });
@@ -244,11 +247,13 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_000e6 + 5_625e6,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
@@ -301,11 +306,13 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + (5_625e6 / 5 - 1) + 500_000e6 + 5_625e6,
             unrealizedLosses: 1_000_000e6 + (5_625e6 / 5 - 1)
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
@@ -330,6 +337,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + (5_625e6 / 5 - 1) + 500_000e6 + 5_625e6,
             unrealizedLosses: 1_000_000e6 + (5_625e6 / 5 - 1)
         });
@@ -377,11 +385,13 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + 5_625e6 + 5_625e6 * (ONE_MONTH / 5 + ONE_DAY) / ONE_MONTH,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
@@ -406,6 +416,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + (5_625e6 - 1) + 500_000e6 + 5_625e6,
             unrealizedLosses: 0
         });
@@ -453,11 +464,13 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + 2 * 5_625e6,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(511_250e6), uint256(100_000e6), uint256(1300e6),       uint256(2350e6)  ]
         );
@@ -513,6 +526,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
 
         // TODO: Add a late interest premium to illustrate difference in late interest.
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6 + 1_000_000e6 + 2 * 5_625e6 + 2 * uint256(5_625e6) * 12 / 365,  // 5_625e6 * 12 / 365 accounted for twice as part is from late interest and part is from the next interval
             unrealizedLosses: 0
         });
@@ -522,6 +536,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         // Treasury balance:      1,300   + 550 +   500 * (1 + 12 / 365)
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),             address(poolCover), address(poolDelegate),   address(treasury)      ],
             [uint256(999_250e6), uint256(511_434.931507e6), uint256(100_000e6), uint256(1_304.109589e6), uint256(2_366.438356e6)]
         );
@@ -578,11 +593,13 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         // treasury balance:      1,300     + 2 * 550 +   500 * (2 + 12 / 365)
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_517_059.931507e6,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),               address(poolCover), address(poolDelegate),   address(treasury)      ],
             [uint256(999_250e6), uint256(1_517_059.931507e6), uint256(100_000e6), uint256(1_704.109589e6), uint256(3_416.438356e6)]
         );
@@ -696,11 +713,13 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + periodInterest + 500_000e6 + 5_625e6,  // Period interest + previous payment cycle interest
             unrealizedLosses: 1_000_000e6 + periodInterest
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
@@ -770,11 +789,13 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + MONTHLY_INTEREST + expectedNetRefinanceInterest,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(1_400e6),      uint256(1_466.666666e6)]
         );
@@ -815,11 +836,13 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + expectedNetRefinanceInterest + 2 * MONTHLY_INTEREST + 2,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),             address(poolCover), address(poolDelegate),   address(treasury)],
             [uint256(999_250e6), uint256(517_922.945206e6), uint256(100_000e6), uint256(2_268.493150e6), uint256(3_750.228308e6)]
         );
@@ -875,11 +898,13 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + (MONTHLY_INTEREST - 1) + 500_000e6 + 5_625e6,
             unrealizedLosses: 1_000_000e6 + (MONTHLY_INTEREST - 1)
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(900e6),        uint256(1300e6)  ]
         );
@@ -950,11 +975,13 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + expectedNetRefinanceInterest + MONTHLY_INTEREST,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(505_625e6), uint256(100_000e6), uint256(1_400e6),      uint256(1_466.666666e6)]
         );

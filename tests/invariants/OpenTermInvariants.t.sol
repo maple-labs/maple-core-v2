@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
-
-import { console } from "../../contracts/Contracts.sol";
+import { IOpenTermLoan } from "../../contracts/interfaces/Interfaces.sol";
 
 import { DistributionHandler } from "./handlers/DistributionHandler.sol";
 import { GlobalsHandler }      from "./handlers/GlobalsHandler.sol";

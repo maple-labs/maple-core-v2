@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 as console } from "../../modules/forge-std/src/console2.sol";
-
 import {
     IERC20,
     IFixedTermLoan,
@@ -14,6 +12,8 @@ import {
     IPoolManager,
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
+
+import { console2 as console } from "../../contracts/Contracts.sol";
 
 import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 

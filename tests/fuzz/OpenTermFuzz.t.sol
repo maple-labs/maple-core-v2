@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 as console } from "../../modules/forge-std/src/console2.sol";
-
 import { IOpenTermLoan, IOpenTermLoanManager, IOpenTermLoanManagerStructs } from "../../contracts/interfaces/Interfaces.sol";
+
+import { console2 as console } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -110,6 +110,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets + netInterest - accruedUpToImpairment,
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses - (loanStorage.previousPrincipal + accruedUpToImpairment),
@@ -137,6 +138,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets + (netInterest - netOnTimeInterest),
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,
@@ -243,6 +245,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         });
 
         assertPoolStateWithDiff({
+            pool:               address(pool),
             totalAssets:        _subtractWithDiff(
                                     poolManagerStorage.previousTotalAssets + toPool,
                                     loanStorage.previousPrincipal + netInterest,

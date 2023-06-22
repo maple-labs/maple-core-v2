@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IPool, IProxyFactoryLike } from "../../contracts/interfaces/Interfaces.sol";
+import { IProxyFactoryLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 

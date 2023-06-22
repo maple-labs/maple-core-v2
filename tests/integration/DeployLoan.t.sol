@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { FeeManager, FixedTermLoan, FixedTermLoanFactory } from "../../contracts/Contracts.sol";
+import { FixedTermLoanFactory } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 

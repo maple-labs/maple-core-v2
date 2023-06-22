@@ -4,7 +4,6 @@ pragma solidity 0.8.7;
 import {
     IERC20,
     IERC20Like,
-    IFeeManager,
     IFixedTermLoan,
     IFixedTermLoanManager,
     IGlobals,
@@ -21,7 +20,7 @@ import {
     IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
-import { console, Test } from "../contracts/Contracts.sol";
+import { console2 as console, Test } from "../contracts/Contracts.sol";
 
 // TODO: `deployPool`.
 // TODO: `createLoan`.

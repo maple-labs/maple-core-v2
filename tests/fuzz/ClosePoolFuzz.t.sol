@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IOpenTermLoanManager, IFixedTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 import { FuzzedSetup } from "./FuzzedSetup.sol";
@@ -43,6 +41,7 @@ contract ClosePoolFuzz is FuzzedSetup {
         });
 
         assertPoolStateWithDiff({
+            pool:               address(pool),
             totalAssets:        0,
             totalSupply:        0,
             unrealizedLosses:   0,

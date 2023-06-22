@@ -57,14 +57,11 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 Specific tests can be run using `forge test` conventions, specified in more detail in the Foundry [Book](https://book.getfoundry.sh/reference/forge/forge-test#test-options).
 
-### Simulation Commands
-
-For the following commands, a `$ETH_RPC_URL` environment value needs to be configured with a valid rpc url.
+### Scenario Commands
 
 | Command | Description |
 |---|---|
-| `make mainnet-sim` | Run the simulations against mainnet |
-| `make local-sim`   | Run the local protocol simulations. |
+| `make scenario` | Run the scenarios found in `./scenarios/data/csv/` |
 
 ## Audit Reports
 

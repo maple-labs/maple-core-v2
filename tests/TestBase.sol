@@ -85,9 +85,6 @@ contract TestBase is ProtocolActions {
 
     address[] loanManagerFactories;
 
-    // Helper mapping to assert differences in balance
-    mapping(address => uint256) partialAssetBalances;
-
     FeeManager          fixedTermFeeManager;
     FixedTermRefinancer fixedTermRefinancer;
     Globals             globals;

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-// TODO: Should import and interface instead of the MockERC20 contract.
-import { MockERC20 } from "../../contracts/Contracts.sol";
-
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract BootstrapTestBase is TestBaseWithAssertions {
@@ -68,6 +65,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -81,6 +79,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp1, BOOTSTRAP_MINT_AMOUNT + 1);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 1,
             unrealizedLosses:   0,
@@ -96,6 +95,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp1, amount_);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        amount_,
             totalAssets:        amount_,
             unrealizedLosses:   0,
@@ -109,6 +109,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -120,6 +121,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp2, 10_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             unrealizedLosses:   0,
@@ -135,6 +137,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -146,6 +149,7 @@ contract BootstrapDepositTests is BootstrapTestBase {
         deposit(lp2, amount_);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + amount_,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + amount_,
             unrealizedLosses:   0,
@@ -202,6 +206,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -215,6 +220,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT + 1, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 1,
             unrealizedLosses:   0,
@@ -230,6 +236,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp1PK, amount_, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        amount_,
             totalAssets:        amount_,
             unrealizedLosses:   0,
@@ -243,6 +250,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -254,6 +262,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp2PK, 10_000e6, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             unrealizedLosses:   0,
@@ -269,6 +278,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -280,6 +290,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
         depositWithPermit(address(pool), lp2PK, amount_, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + amount_,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + amount_,
             unrealizedLosses:   0,
@@ -325,6 +336,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -338,6 +350,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp1, BOOTSTRAP_MINT_AMOUNT + 1);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 1,
             unrealizedLosses:   0,
@@ -353,6 +366,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp1, amount_);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        amount_,
             totalAssets:        amount_,
             unrealizedLosses:   0,
@@ -366,6 +380,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -377,6 +392,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp2, 10_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             unrealizedLosses:   0,
@@ -392,6 +408,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp1, BOOTSTRAP_MINT_AMOUNT);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -403,6 +420,7 @@ contract BootstrapMintTests is BootstrapTestBase {
         mint(address(pool), lp2, amount_);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + amount_,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + amount_,
             unrealizedLosses:   0,
@@ -459,6 +477,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -472,6 +491,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT + 1, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 1,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 1,
             unrealizedLosses:   0,
@@ -487,6 +507,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp1PK, amount_, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        amount_,
             totalAssets:        amount_,
             unrealizedLosses:   0,
@@ -500,6 +521,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -511,6 +533,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp2PK, 10_000e6, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + 10_000e6,
             unrealizedLosses:   0,
@@ -526,6 +549,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp1PK, BOOTSTRAP_MINT_AMOUNT, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT,
             unrealizedLosses:   0,
@@ -537,6 +561,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
         mintWithPermit(address(pool), lp2PK, amount_, deadline);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        BOOTSTRAP_MINT_AMOUNT + amount_,
             totalAssets:        BOOTSTRAP_MINT_AMOUNT + amount_,
             unrealizedLosses:   0,

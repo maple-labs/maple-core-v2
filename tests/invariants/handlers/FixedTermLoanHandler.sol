@@ -16,7 +16,7 @@ import {
     IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2, MockERC20 } from "../../../contracts/Contracts.sol";
+import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -134,7 +134,7 @@ contract FixedTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function createLoanAndFund(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.createLoanAndFund(%s)", seed_);
+        console.log("ftlHandler.createLoanAndFund(%s)", seed_);
 
         numberOfCalls["createLoanAndFund"]++;
 
@@ -201,7 +201,7 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function makePayment(uint256 seed_) public virtual useTimestamps {
-        console2.log("ftlHandler.makePayment(%s)", seed_);
+        console.log("ftlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["makePayment"]++;
 
@@ -269,7 +269,7 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function impairmentMakePayment(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.impairmentMakePayment(%s)", seed_);
+        console.log("ftlHandler.impairmentMakePayment(%s)", seed_);
 
         numberOfCalls["impairmentMakePayment"]++;
 
@@ -343,7 +343,7 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function defaultMakePayment(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.defaultMakePayment(%s)", seed_);
+        console.log("ftlHandler.defaultMakePayment(%s)", seed_);
 
         numberOfCalls["defaultMakePayment"]++;
 
@@ -357,7 +357,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function impairLoan(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.impairLoan(%s)", seed_);
+        console.log("ftlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["impairLoan"]++;
 
@@ -390,7 +390,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function triggerDefault(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.triggerDefault(%s)", seed_);
+        console.log("ftlHandler.triggerDefault(%s)", seed_);
 
         numberOfCalls["triggerDefault"]++;
 
@@ -439,7 +439,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function finishCollateralLiquidation(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.finishCollateralLiquidation(%s)", seed_);
+        console.log("ftlHandler.finishCollateralLiquidation(%s)", seed_);
 
         numberOfCalls["finishCollateralLiquidation"]++;
 
@@ -481,7 +481,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.refinance(%s)", seed_);
+        console.log("ftlHandler.refinance(%s)", seed_);
 
         numberOfCalls["refinance"]++;
 
@@ -554,13 +554,13 @@ contract FixedTermLoanHandler is HandlerBase {
 
 
     function warp(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.warp(%s)", seed_);
+        console.log("ftlHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;
 
         uint256 warpAmount_ = _bound(seed_, 0, 10 days);
 
-        console2.log("warp():", warpAmount_);
+        console.log("warp():", warpAmount_);
 
         vm.warp(block.timestamp + warpAmount_);
     }

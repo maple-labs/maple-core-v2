@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2, StdStyle } from "../../modules/forge-std/src/Test.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { IOpenTermLoan, IOpenTermLoanManager, ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
+import { console2 as console, StdStyle } from "../../contracts/Contracts.sol";
 
 import { BaseInvariants }       from "../invariants/BaseInvariants.t.sol";
 import { FixedTermLoanHandler } from "../invariants/handlers/FixedTermLoanHandler.sol";
@@ -81,22 +81,22 @@ contract RegressionTest is BaseInvariants {
         uint256 diff = isLoanManagerDiffLarger ?
             assetsUnderManagement - expectedAssetsUnderManagement : expectedAssetsUnderManagement - assetsUnderManagement;
 
-        console2.log(StdStyle.blue("Global Issuance Rate:"));
-        console2.log(StdStyle.red(IOpenTermLoanManager(otlHandler.loanManager()).issuanceRate()));
-        console2.log(StdStyle.blue("Number of active loans:"));
-        console2.log(StdStyle.red(loans_.length));
-        console2.log(StdStyle.blue("Assets under management:"));
-        console2.log(StdStyle.red(assetsUnderManagement));
-        console2.log(StdStyle.blue("Expected assets under management:"));
-        console2.log(StdStyle.red(expectedAssetsUnderManagement));
-        console2.log(StdStyle.blue("Expected net interest from loans:"));
-        console2.log(StdStyle.red(expectedNetInterestFromLoans));
-        console2.log(StdStyle.blue("Difference:"));
-        console2.log(StdStyle.red(diff));
-        console2.log(StdStyle.blue("Is loan manager diff larger:"));
-        console2.log(isLoanManagerDiffLarger ? StdStyle.red(isLoanManagerDiffLarger) : StdStyle.green(isLoanManagerDiffLarger));
-        console2.log(StdStyle.blue("Days passed since domain start:"));
-        console2.log((StdStyle.red(uint256(block.timestamp - IOpenTermLoanManager(otlHandler.loanManager()).domainStart()) / 1 days)));
+        console.log(StdStyle.blue("Global Issuance Rate:"));
+        console.log(StdStyle.red(IOpenTermLoanManager(otlHandler.loanManager()).issuanceRate()));
+        console.log(StdStyle.blue("Number of active loans:"));
+        console.log(StdStyle.red(loans_.length));
+        console.log(StdStyle.blue("Assets under management:"));
+        console.log(StdStyle.red(assetsUnderManagement));
+        console.log(StdStyle.blue("Expected assets under management:"));
+        console.log(StdStyle.red(expectedAssetsUnderManagement));
+        console.log(StdStyle.blue("Expected net interest from loans:"));
+        console.log(StdStyle.red(expectedNetInterestFromLoans));
+        console.log(StdStyle.blue("Difference:"));
+        console.log(StdStyle.red(diff));
+        console.log(StdStyle.blue("Is loan manager diff larger:"));
+        console.log(isLoanManagerDiffLarger ? StdStyle.red(isLoanManagerDiffLarger) : StdStyle.green(isLoanManagerDiffLarger));
+        console.log(StdStyle.blue("Days passed since domain start:"));
+        console.log((StdStyle.red(uint256(block.timestamp - IOpenTermLoanManager(otlHandler.loanManager()).domainStart()) / 1 days)));
     }
 
     function test_otlRegression() public {

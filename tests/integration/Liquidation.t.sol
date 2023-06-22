@@ -59,6 +59,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover),    address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -94,6 +95,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_900e6,
             unrealizedLosses: 0
         });
@@ -151,6 +153,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 900e6 + 500_000e6,
             unrealizedLosses: 1_000_000e6 + 900e6
         });
@@ -209,6 +212,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest,
             unrealizedLosses: 0
         });
@@ -230,6 +234,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         /***********************************************/
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover),    address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -282,6 +287,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_540e6,
             unrealizedLosses: 1_000_540e6
         });
@@ -333,6 +339,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 540e6 + 500_000e6,
             unrealizedLosses: 1_000_000e6 + 540e6
         });
@@ -389,6 +396,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 540e6);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + 540e6,
             unrealizedLosses: 0
         });
@@ -413,6 +421,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover),    address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -448,6 +457,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_900e6,
             unrealizedLosses: 0
         });
@@ -516,6 +526,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + 900e6 + netLateInterest,
             unrealizedLosses: 0
         });
@@ -537,6 +548,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         /***********************************************/
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover),    address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(10_000_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -589,6 +601,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_540e6,
             unrealizedLosses: 1_000_540e6
         });
@@ -646,6 +659,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      1_000_000e6 + 500_000e6 + 540e6);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 500_000e6 + 540e6,
             unrealizedLosses: 0
         });
@@ -674,6 +688,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -709,6 +724,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_900e6,
             unrealizedLosses: 0
         });
@@ -766,6 +782,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 900e6 + 500_000e6,
             unrealizedLosses: 1_000_000e6 + 900e6
         });
@@ -824,6 +841,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 150_000e6 + coverUsedForPool);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6 + 150_000e6 + coverUsedForPool,
             unrealizedLosses: 0
         });
@@ -845,6 +863,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         /***********************************************/
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -897,6 +916,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_540e6,
             unrealizedLosses: 1_000_540e6
         });
@@ -948,6 +968,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 540e6 + 500_000e6,
             unrealizedLosses: 1_000_000e6 + 540e6
         });
@@ -1002,6 +1023,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 150_000e6 + 40_000e6 - platformFees);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6 + 150_000e6 + 40_000e6 - platformFees,
             unrealizedLosses: 0
         });
@@ -1026,6 +1048,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1061,6 +1084,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_900e6,
             unrealizedLosses: 0
         });
@@ -1129,6 +1153,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + coverUsedForPool);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6 + coverUsedForPool,
             unrealizedLosses: 0
         });
@@ -1150,6 +1175,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         /***********************************************/
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(100_000e6), uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1202,6 +1228,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_540e6,
             unrealizedLosses: 1_000_540e6
         });
@@ -1257,6 +1284,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)),      500_000e6 + 40_000e6 - platformFees);
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6 + 40_000e6 - platformFees,
             unrealizedLosses: 0
         });
@@ -1283,6 +1311,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1318,6 +1347,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_900e6,
             unrealizedLosses: 0
         });
@@ -1377,6 +1407,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 900e6 + 500_000e6,
             unrealizedLosses: 1_000_000e6 + 900e6
         });
@@ -1430,11 +1461,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         uint256 treasuryAssets = platformOriginationFee + platformFees;
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      totalAssets,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),        address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(totalAssets), uint256(0),         uint256(500e6),        uint256(treasuryAssets)]
         );
@@ -1454,6 +1487,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         /***********************************************/
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1506,6 +1540,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_540e6,
             unrealizedLosses: 1_000_540e6
         });
@@ -1557,6 +1592,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_000_000e6 + 540e6 + 500_000e6,
             unrealizedLosses: 1_000_000e6 + 540e6
         });
@@ -1610,11 +1646,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         uint256 treasuryAssets  = platformOriginationFee + platformFees;
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      totalAssets,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),        address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(totalAssets), uint256(0),         uint256(500e6),        uint256(treasuryAssets)]
         );
@@ -1637,6 +1675,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         vm.warp(start + 1_000_000 + 5 days + 1);
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1672,6 +1711,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_900e6,
             unrealizedLosses: 0
         });
@@ -1722,11 +1762,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1746,6 +1788,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         /***********************************************/
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );
@@ -1798,6 +1841,7 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      1_500_540e6,
             unrealizedLosses: 1_000_540e6
         });
@@ -1849,11 +1893,13 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         });
 
         assertPoolManager({
+            poolManager:      address(poolManager),
             totalAssets:      500_000e6,
             unrealizedLosses: 0
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolCover), address(poolDelegate), address(treasury)],
             [uint256(500_000e6), uint256(0),         uint256(500e6),        uint256(platformOriginationFee)]
         );

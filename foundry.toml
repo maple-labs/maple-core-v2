@@ -4,13 +4,13 @@ test            = 'tests'                 # The test directory
 libs            = ['modules']             # A list of library directories
 solc_version    = '0.8.7'                 # Override for the solc version (setting this ignores `auto_detect_solc`)
 optimizer       = false                   # Enable or disable the solc optimizer
-optimizer_runs  = 200                     # The number of optimizer runs
 verbosity       = 3                       # The verbosity of tests
 block_timestamp = 1_685_721_539           # Timestamp for tests (non-zero)
 gas_limit       = "18446744073709551615"  # Gas limit for tests
 
 [profile.production]
-optimizer = true
+optimizer      = true  # Enable or disable the solc optimizer
+optimizer_runs = 200   # The number of optimizer runs
 
 [fuzz]
 runs = 100

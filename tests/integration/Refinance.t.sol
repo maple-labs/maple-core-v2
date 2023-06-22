@@ -49,7 +49,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Initial Assertions ***/
         /**************************/
 
-        assertTotalAssets(2_500_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6);
 
         assertFixedTermLoanManager({
             loanManager:       address(loanManager),
@@ -64,6 +64,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // PoolDelegate and treasury get their own originationFee
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -74,7 +75,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 1_000_000);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -123,7 +124,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -165,6 +166,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // During refinance, origination fees are paid again
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        190_258751]
         );
@@ -177,7 +179,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 270_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 270_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -217,6 +219,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (20_00e6 flat + 16_000e6)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [6_600e6,      54_000e6]
         );
@@ -227,7 +230,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Initial Assertions ***/
         /**************************/
 
-        assertTotalAssets(2_500_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6);
 
         assertFixedTermLoanManager({
             loanManager:       address(loanManager),
@@ -242,6 +245,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // PoolDelegate and treasury get their own originationFee
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -252,7 +256,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 1_000_000);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -301,7 +305,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, calls, 1_000_000e6);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -340,6 +344,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // During refinance, origination fees are paid again
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        190_258751]
         );
@@ -352,7 +357,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 270_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 270_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -392,6 +397,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (20_00e6 flat + 16_000e6)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [6_600e6,      54_000e6]
         );
@@ -402,7 +408,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Initial Assertions ***/
         /**************************/
 
-        assertTotalAssets(2_500_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6);
 
         assertFixedTermLoanManager({
             loanManager:       address(loanManager),
@@ -417,6 +423,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // PoolDelegate and treasury get their own originationFee
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -427,7 +434,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 1_000_000);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -476,7 +483,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -514,6 +521,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -526,7 +534,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 270_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 270_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -566,6 +574,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 4_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + 2nd period (10_00e6 flat + 16_000e6)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [6_600e6,      44_000e6]
         );
@@ -576,7 +585,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Initial Assertions ***/
         /**************************/
 
-        assertTotalAssets(2_500_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6);
 
         assertFixedTermLoanManager({
             loanManager:       address(loanManager),
@@ -591,6 +600,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // PoolDelegate and treasury get their own originationFee
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -601,7 +611,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 1_000_000);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -650,7 +660,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -688,6 +698,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 1_500_000e6);
 
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -700,7 +711,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 180_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 180_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -740,6 +751,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         // Pool Delegate fee: 1st period (300e6 flat + 2_000e6)   + 2nd period (300e6 flat + 2_000e6)
         // Treasury fee:      1st period (10_00e6 flat + 8_000e6) + (10_00e6 flat + 8_000e6)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [4_600e6,      36_000e6]
         );
@@ -750,7 +762,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         /*** Initial Assertions ***/
         /**************************/
 
-        assertTotalAssets(2_500_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6);
 
         assertFixedTermLoanManager({
             loanManager:       address(loanManager),
@@ -765,6 +777,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // PoolDelegate and treasury get their own originationFee
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        95_129375]
         );
@@ -775,7 +788,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         vm.warp(start + 1_500_000);
 
-        assertTotalAssets(2_500_000e6 + 90_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 90_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -825,7 +838,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
         // Principal + interest owed at refinance time (151_840e6 * 0.9 to discount service fees)
-        assertTotalAssets(2_500_000e6 + 136_656e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 136_656e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -866,6 +879,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         // During refinance, origination fees are paid again
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate, treasury],
             [500e6,        190_258751]
         );
@@ -878,7 +892,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         makePayment(address(loan));
 
-        assertTotalAssets(2_500_000e6 + 136_656e6 + 180_000e6);
+        assertEq(poolManager.totalAssets(), 2_500_000e6 + 136_656e6 + 180_000e6);
 
         assertFixedTermLoan({
             loan:              address(loan),
@@ -920,6 +934,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
         // Treasury fee:      1st period (15_000e6 + 12_000e6) + 2nd period after refinance (20_00e6   + 12_000e6)
         //                    + late interest from 1st period (51_840e6 * 0.08 = 4147_200000)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [poolDelegate,        treasury],
             [6_750e6 + 1_036.8e6, 59_000e6 + 4_147.2e6]
         );
@@ -984,6 +999,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         /**************************/
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1011,6 +1027,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         expectedTotalAssets += 3_600e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1067,6 +1084,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         expectedCash = expectedCash - 2_000_000e6 + 3_600e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1108,6 +1126,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // PD:       service fees (400e6)  + management fees (4000 * 0.02)
         // Treasury: service fees (4000e6) + management fees (4000 * 0.08)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [address(poolDelegate),          address(treasury)],
             [uint256(200e6) + uint256(80e6), uint256(400e6) + uint256(320e6)]
         );
@@ -1123,6 +1142,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         expectedTotalAssets += 12_600e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1180,6 +1200,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         expectedCash        += 500_000e6 + 12_600e6 + 9_180e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1221,6 +1242,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // PD:       service fees (1_400e6)  + management fees (26_000 * 0.02)
         // Treasury: service fees (14_000e6) + management fees (26_000 * 0.08)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [address(poolDelegate),           address(treasury)],
             [uint256(700e6) + uint256(484e6), uint256(1_400e6) + uint256(1_936e6)]
         );
@@ -1244,6 +1266,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         expectedTotalAssets += 4_500e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1319,6 +1342,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         expectedCash += 4_500e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1360,6 +1384,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // PD:       service fees (400e6)  + management fees (5000 * 0.02)
         // Treasury: service fees (4000e6) + management fees (5000 * 0.08)
         assertAssetBalancesIncrease(
+            address(fundsAsset),
             [address(poolDelegate),          address(treasury)],
             [uint256(250e6) + uint256(100e6), uint256(500e6) + uint256(400e6)]
         );

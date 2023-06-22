@@ -28,13 +28,13 @@
 	ignore = dirty
 [submodule "modules/open-term-loan-manager"]
 	path = modules/open-term-loan-manager
-	url = git@github.com:maple-labs/open-term-loan-manager-private
+	url = git@github.com:maple-labs/open-term-loan-manager-private.git
 [submodule "modules/open-term-loan"]
 	path = modules/open-term-loan
-	url = git@github.com:maple-labs/open-term-loan-private
+	url = git@github.com:maple-labs/open-term-loan-private.git
 [submodule "modules/forge-std"]
 	path = modules/forge-std
-	url = git@github.com:foundry-rs/forge-std
+	url = git@github.com:foundry-rs/forge-std.git
 [submodule "modules/address-registry"]
 	path = modules/address-registry
 	url = git@github.com:maple-labs/address-registry.git

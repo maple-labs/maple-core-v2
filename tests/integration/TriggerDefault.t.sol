@@ -230,6 +230,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         uint256 accruedInterest = (issuanceRate * (defaultTime - start)) / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   0,
@@ -282,6 +283,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,
             totalAssets:        totalAssets,
             unrealizedLosses:   0,
@@ -328,6 +330,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         loanManager.impairLoan(address(loan));
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   principal + accruedInterest,
@@ -373,6 +376,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         vm.warp(defaultTime);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   principal + accruedInterest,
@@ -424,6 +428,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,
             totalAssets:        totalAssets,
             unrealizedLosses:   0,
@@ -476,6 +481,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         loanManager.callPrincipal(address(loan), principal);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   0,
@@ -517,6 +523,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         accruedInterest = (issuanceRate * (defaultTime - start)) / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,                  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   0,
@@ -551,6 +558,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
         assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,
             totalAssets:        totalAssets,
             unrealizedLosses:   0,

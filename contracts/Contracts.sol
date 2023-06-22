@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console, console2, stdJson, StdInvariant, stdMath, StdStyle, Test as T } from "../modules/forge-std/src/Test.sol";
+import { console2, stdJson, StdInvariant, stdMath, StdStyle, Test as T } from "../modules/forge-std/src/Test.sol";
 
 import { MapleAddressRegistry as AR } from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
 

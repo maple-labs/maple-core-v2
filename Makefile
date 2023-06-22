@@ -28,24 +28,10 @@ integration:
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
-upgrade:
-	./test.sh -d tests/protocol-upgrade -p $(profile)
-
 scenario:
 	./scenarios.sh
 
-deploy:
-	./deploy.sh
-
-# Forge scripting
-
-validate:
-	@FOUNDRY_PROFILE=production forge script Validate$(step)
-
 # Utility
-
-addresses:
-	@node scripts/parse-broadcast.js > ./scripts/deploy-addresses-no-name.js
 
 clean:
 	@forge clean

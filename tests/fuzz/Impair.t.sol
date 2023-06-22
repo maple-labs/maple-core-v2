@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IOpenTermLoanManagerStructs
-} from "../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetup }     from "./FuzzedSetup.sol";
 import { StorageSnapshot } from "./StorageSnapshot.sol";
@@ -111,6 +107,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets,
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses + impairedPrincipal + impairedInterest,
@@ -142,6 +139,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets,
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,
@@ -223,6 +221,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalAssets:        poolManagerStorage.previousTotalAssets + extraInterest,
             totalSupply:        poolManagerStorage.previousTotalSupply,
             unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses - impairedPrincipal - impairedInterest,

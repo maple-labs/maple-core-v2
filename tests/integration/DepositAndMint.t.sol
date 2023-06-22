@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-// TODO: Should import an interface instead of the MockERC20 contract.
-import { MockERC20 } from "../../contracts/Contracts.sol";
-
 import { TestBase } from "../TestBase.sol";
 
 // TODO: Revert all changes that have relevant state adjusted within the protocol action during the function that its testing.

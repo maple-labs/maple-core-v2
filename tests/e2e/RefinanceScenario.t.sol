@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { OpenTermLoan, OpenTermLoanManager, Pool, PoolManager } from "../../contracts/Contracts.sol";
+import { OpenTermLoan, OpenTermLoanManager, Pool } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -106,6 +106,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         uint256 otLoan1UnrealizedLosses = principal1 + issuanceRate1 * 15 days / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        initialDeposit,
             totalAssets:        initialDeposit + ((issuanceRate1 + issuanceRate2) * 15 days / 1e27),
             unrealizedLosses:   otLoan1UnrealizedLosses,
@@ -200,6 +201,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         expectedInterest = issuanceRate2 * 20 days / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        initialDeposit,
             totalAssets:        initialDeposit + expectedInterest + cashPaidToPool,
             unrealizedLosses:   0,
@@ -308,6 +310,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         expectedInterest = issuanceRate2 * 20 days / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        initialDeposit,
             totalAssets:        initialDeposit + expectedInterest + cashPaidToPool,
             unrealizedLosses:   0,  // NOTE: Unrealized losses get clamped to zero if risk of underflow
@@ -384,6 +387,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         uint256 otLoan2UnrealizedLosses = principal2 + issuanceRate2 * 15 days / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        initialDeposit,
             totalAssets:        initialDeposit + ((issuanceRate1 + issuanceRate2) * 15 days / 1e27),
             unrealizedLosses:   otLoan1UnrealizedLosses + otLoan2UnrealizedLosses,
@@ -485,6 +489,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
 
         // NOTE: When the bug was present the UL was reduced by the principal + principal increase amount, resulting in a smaller UL.
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        initialDeposit,
             totalAssets:        initialDeposit + expectedInterest + cashPaidToPool,
             unrealizedLosses:   otLoan2UnrealizedLosses,

@@ -4,8 +4,6 @@ pragma solidity 0.8.7;
 import {
     IFixedTermLoan,
     IFixedTermLoanManager,
-    ILoanLike,
-    ILoanManagerLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IProxyFactoryLike

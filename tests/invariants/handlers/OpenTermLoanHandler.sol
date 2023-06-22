@@ -2,18 +2,18 @@
 pragma solidity 0.8.7;
 
 import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
     IGlobals,
     IInvariantTest,
     IMapleProxyFactory,
     IMockERC20,
+    IOpenTermLoan,
+    IOpenTermLoanManager,
     IPool,
     IPoolManager,
     IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 } from "../../../contracts/Contracts.sol";
+import { console2 as console } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -76,7 +76,7 @@ contract OpenTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function callLoan(uint256 seed_) external useTimestamps {
-        console2.log("otlHandler.callLoan(%s)", seed_);
+        console.log("otlHandler.callLoan(%s)", seed_);
 
         numberOfCalls["callLoan"]++;
 
@@ -90,7 +90,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function fundLoan(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.fundLoan(%s)", seed_);
+        console.log("otlHandler.fundLoan(%s)", seed_);
 
         numberOfCalls["fundLoan"]++;
 
@@ -102,7 +102,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function impairLoan(uint256 seed_) external useTimestamps {
-        console2.log("otlHandler.impairLoan(%s)", seed_);
+        console.log("otlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["impairLoan"]++;
 
@@ -116,7 +116,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function makePayment(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.makePayment(%s)", seed_);
+        console.log("otlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["makePayment"]++;
 
@@ -128,7 +128,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.refinance(%s)", seed_);
+        console.log("otlHandler.refinance(%s)", seed_);
 
         numberOfCalls["refinance"]++;
 
@@ -178,13 +178,13 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function warp(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.warp(%s)", seed_);
+        console.log("otlHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;
 
         uint256 warpAmount_ = _bound(seed_, 1 days, 15 days);
 
-        console2.log("warp():", warpAmount_);
+        console.log("warp():", warpAmount_);
 
         vm.warp(block.timestamp + warpAmount_);
     }

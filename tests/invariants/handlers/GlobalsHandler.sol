@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { IGlobals, IInvariantTest, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 } from "../../../contracts/Contracts.sol";
+import { console2 as console } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -31,7 +31,7 @@ contract GlobalsHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function setMaxCoverLiquidationPercent(uint256 seed_) public useTimestamps {
-        console2.log("globalsHandler.setMaxCoverLiquidationPercent(%s)", seed_);
+        console.log("globalsHandler.setMaxCoverLiquidationPercent(%s)", seed_);
 
         uint256 maxCoverLiquidationPercent_ = _bound(seed_, 0, 1e6);
 
@@ -39,7 +39,7 @@ contract GlobalsHandler is HandlerBase {
     }
 
     function setMinCoverAmount(uint256 seed_) public useTimestamps {
-        console2.log("globalsHandler.setMinCoverAmount(%s)", seed_);
+        console.log("globalsHandler.setMinCoverAmount(%s)", seed_);
 
         uint256 minCoverAmount_ = _bound(seed_, 0, 10_000_000e6);
 
@@ -47,7 +47,7 @@ contract GlobalsHandler is HandlerBase {
     }
 
     function setPlatformManagementFeeRate(uint256 seed_) public useTimestamps {
-        console2.log("globalsHandler.setPlatformManagementFeeRate(%s)", seed_);
+        console.log("globalsHandler.setPlatformManagementFeeRate(%s)", seed_);
 
         uint256 platformManagementFeeRate_ = _bound(seed_, 0, 1e6);
 
@@ -55,7 +55,7 @@ contract GlobalsHandler is HandlerBase {
     }
 
     function setPlatformOriginationFeeRate(uint256 seed_) public useTimestamps {
-        console2.log("globalsHandler.setPlatformOriginationFeeRate(%s)", seed_);
+        console.log("globalsHandler.setPlatformOriginationFeeRate(%s)", seed_);
 
         uint256 platformOriginationFeeRate_ = _bound(seed_, 0, 1e6);
 
@@ -63,7 +63,7 @@ contract GlobalsHandler is HandlerBase {
     }
 
     function setPlatformServiceFeeRate(uint256 seed_) public useTimestamps {
-        console2.log("globalsHandler.setPlatformServiceFeeRate(%s)", seed_);
+        console.log("globalsHandler.setPlatformServiceFeeRate(%s)", seed_);
 
         uint256 platformServiceFeeRate_ = _bound(seed_, 0, 1e6);
 

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 }           from "../../../contracts/Contracts.sol";
 import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
 
 // TODO: Rename actors to handlers

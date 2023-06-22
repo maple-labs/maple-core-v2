@@ -50,7 +50,11 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // | =   999,250  | =    500,000 | = 500  | =  250 |
         // +--------------+--------------+--------+--------+
 
-        assertPoolManager({ totalAssets: 1_500_000e6, unrealizedLosses: 0 });
+        assertPoolManager({
+            poolManager:      address(poolManager),
+            totalAssets:      1_500_000e6,
+            unrealizedLosses: 0
+        });
 
         assertFixedTermLoanManager({
             loanManager:       loanManager,
@@ -64,6 +68,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         });
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(borrower),  address(pool),      address(poolDelegate), address(treasury)],
             [uint256(999_250e6), uint256(500_000e6), uint256(500e6),        uint256(250e6)   ]
         );
@@ -85,11 +90,16 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // +------------+--------+--------+
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolDelegate), address(treasury)],
             [uint256(505_625e6), uint256(900e6),        uint256(1300e6)  ]
         );
 
-        assertPoolManager({ totalAssets: 1_505_625e6, unrealizedLosses: 0 });
+        assertPoolManager({
+            poolManager:      address(poolManager),
+            totalAssets:      1_505_625e6,
+            unrealizedLosses: 0
+        });
 
         assertFixedTermLoanManager({
             loanManager:       loanManager,
@@ -119,11 +129,16 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // +------------+--------+--------+
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),      address(poolDelegate), address(treasury)],
             [uint256(511_250e6), uint256(1300e6),       uint256(2350e6)  ]
         );
 
-        assertPoolManager({ totalAssets: 1_511_250e6, unrealizedLosses: 0 });
+        assertPoolManager({
+            poolManager:      address(poolManager),
+            totalAssets:      1_511_250e6,
+            unrealizedLosses: 0
+        });
 
         assertFixedTermLoanManager({
             loanManager:       loanManager,
@@ -155,11 +170,16 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         // +--------------+--------+--------+
 
         assertAssetBalances(
+            address(fundsAsset),
             [address(pool),        address(poolDelegate), address(treasury)],
             [uint256(1_516_875e6), uint256(1700e6),       uint256(3400e6)  ]
         );
 
-        assertPoolManager({ totalAssets: 1_516_875e6, unrealizedLosses: 0 });
+        assertPoolManager({
+            poolManager:      address(poolManager),
+            totalAssets:      1_516_875e6,
+            unrealizedLosses: 0
+        });
 
         assertFixedTermLoanManager({
             loanManager:       loanManager,

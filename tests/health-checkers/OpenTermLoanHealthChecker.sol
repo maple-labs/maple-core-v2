@@ -2,7 +2,6 @@
 pragma solidity 0.8.7;
 
 import {
-    IERC20,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPoolManager

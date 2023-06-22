@@ -2,8 +2,8 @@
 pragma solidity 0.8.7;
 
 import { IHandlerEntryPoint, IInvariantTest } from "../../../contracts/interfaces/Interfaces.sol";
-import { console2 }                           from "../../../contracts/Contracts.sol";
-import { ProtocolActions }                    from "../../../contracts/ProtocolActions.sol";
+
+import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
 contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 

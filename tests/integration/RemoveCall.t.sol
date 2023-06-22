@@ -222,6 +222,7 @@ contract RemoveCallTests is RemoveCallTestsBase {
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   principal + accruedInterest,
@@ -271,6 +272,7 @@ contract RemoveCallTests is RemoveCallTestsBase {
         removeLoanCall(address(loan));
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,  // Same as initial deposit
             totalAssets:        principal + accruedInterest,
             unrealizedLosses:   principal + accruedInterest,

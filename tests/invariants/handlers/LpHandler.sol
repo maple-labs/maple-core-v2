@@ -4,7 +4,7 @@ pragma solidity 0.8.7;
 import { IInvariantTest, IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 // TODO: MockERC20 is not needed if protocol actions are used which handle minting.
-import { console2, MockERC20 } from "../../../contracts/Contracts.sol";
+import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -65,7 +65,7 @@ contract LpHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function deposit(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 shares_) {
-        console2.log("lpHandler.deposit(%s)", seed_);
+        console.log("lpHandler.deposit(%s)", seed_);
 
         numberOfCalls["deposit"]++;
 
@@ -78,7 +78,7 @@ contract LpHandler is HandlerBase {
     }
 
     function mint(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
-        console2.log("lpHandler.mint(%s)", seed_);
+        console.log("lpHandler.mint(%s)", seed_);
 
         numberOfCalls["mint"]++;
 
@@ -94,7 +94,7 @@ contract LpHandler is HandlerBase {
     }
 
     function redeem(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
-        console2.log("lpHandler.redeem(%s)", seed_);
+        console.log("lpHandler.redeem(%s)", seed_);
 
         numberOfCalls["redeem"]++;
 
@@ -113,7 +113,7 @@ contract LpHandler is HandlerBase {
 
     // TODO: Add WM interface
     function removeShares(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
-        console2.log("lpHandler.removeShares(%s)", seed_);
+        console.log("lpHandler.removeShares(%s)", seed_);
 
         numberOfCalls["removeShares"]++;
 
@@ -131,7 +131,7 @@ contract LpHandler is HandlerBase {
     }
 
     function requestRedeem(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 escrowShares_) {
-        console2.log("lpHandler.requestRedeem(%s)", seed_);
+        console.log("lpHandler.requestRedeem(%s)", seed_);
 
         numberOfCalls["requestRedeem"]++;
 
@@ -147,7 +147,7 @@ contract LpHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function transfer(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (bool success_) {
-        console2.log("lpHandler.transfer(%s)", seed_);
+        console.log("lpHandler.transfer(%s)", seed_);
 
         numberOfCalls["transfer"]++;
 
