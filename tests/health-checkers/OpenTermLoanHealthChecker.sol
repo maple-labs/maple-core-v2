@@ -194,7 +194,7 @@ contract OpenTermLoanHealthChecker {
 
     function check_otl_invariant_I(address[] memory loans_) public view returns (bool isMaintained_) {
         for (uint256 i = 0; i < loans_.length; i++) {
-            IOpenTermLoan loan = IOpenTermLoan(loans_[i]);
+            address loan = loans_[i];
 
             (
                 uint256 principal,
@@ -202,7 +202,7 @@ contract OpenTermLoanHealthChecker {
                 uint256 lateInterest,
                 uint256 delegateServiceFee,
                 uint256 platformServiceFee
-            ) = loan.getPaymentBreakdown(block.timestamp);
+            ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
 
             (
                 uint256 expectedPrincipal,
@@ -232,16 +232,14 @@ contract OpenTermLoanHealthChecker {
     function check_otlm_invariant_A(address openTermLoanManager_, address[] memory loans_) public view returns (bool isMaintained_) {
         if (loans_.length == 0) return true;
 
-        IOpenTermLoanManager loanManager_ = IOpenTermLoanManager(openTermLoanManager_);
-
-        uint256 assetsUnderManagement = loanManager_.assetsUnderManagement();
+        uint256 assetsUnderManagement = IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement();
 
         uint256 expectedAssetsUnderManagement;
 
         for (uint256 i; i < loans_.length; ++i) {
-            IOpenTermLoan loan = IOpenTermLoan(loans_[i]);
+            address loan = loans_[i];
 
-            expectedAssetsUnderManagement += loan.principal() + _getExpectedNetInterest(loan, loanManager_);
+            expectedAssetsUnderManagement += IOpenTermLoan(loan).principal() + _getExpectedNetInterest(loan, openTermLoanManager_);
         }
 
         isMaintained_ = _assertApproxEqAbs(
@@ -329,12 +327,10 @@ contract OpenTermLoanHealthChecker {
 
     function check_otlm_invariant_I(address openTermLoanManager_, address[] memory loans_) public view returns (bool isMaintained_) {
         for (uint256 i; i < loans_.length; ++i) {
-            IOpenTermLoan loan = IOpenTermLoan(loans_[i]);
+            address loan = loans_[i];
 
-            IOpenTermLoanManager loanManager_ = IOpenTermLoanManager(openTermLoanManager_);
-
-            ( , , , uint168 issuanceRate ) = loanManager_.paymentFor(address(loan));
-            uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan, loanManager_);
+            ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan);
+            uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan, openTermLoanManager_);
 
             if(issuanceRate != expectedIssuanceRate) return false;
         }
@@ -379,36 +375,39 @@ contract OpenTermLoanHealthChecker {
     /*** Helpers                                                                                                                ***/
     /******************************************************************************************************************************/
 
-    function _getExpectedIssuanceRate(
-        IOpenTermLoan loan,
-        IOpenTermLoanManager loanManager
-    ) internal view returns (uint256 expectedIssuanceRate) {
+    function _getExpectedIssuanceRate(address loan, address loanManager) internal view returns (uint256 expectedIssuanceRate) {
         (
             uint24 platformManagementFeeRate,
             uint24 delegateManagementFeeRate,
             ,
-        ) = loanManager.paymentFor(address(loan));
+        ) = IOpenTermLoanManager(loanManager).paymentFor(loan);
 
-        uint256 grossInterest  = _getProRatedAmount(loan.principal(), loan.interestRate(), loan.paymentInterval());
+        uint256 grossInterest  = _getProRatedAmount(
+            IOpenTermLoan(loan).principal(),
+            IOpenTermLoan(loan).interestRate(),
+            IOpenTermLoan(loan).paymentInterval()
+        );
+
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
-        expectedIssuanceRate = (grossInterest - managementFees) * 1e27 / loan.paymentInterval();
+        expectedIssuanceRate = (grossInterest - managementFees) * 1e27 / IOpenTermLoan(loan).paymentInterval();
     }
 
-    function _getExpectedNetInterest(IOpenTermLoan loan, IOpenTermLoanManager loanManager) internal view returns (uint256 netInterest) {
-        ( , uint256 grossInterest, , , ) = loan.getPaymentBreakdown(block.timestamp);
+    function _getExpectedNetInterest(address loan, address loanManager) internal view returns (uint256 netInterest) {
+        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+
         (
             uint24 platformManagementFeeRate,
             uint24 delegateManagementFeeRate,
             ,
-        ) = loanManager.paymentFor(address(loan));
+        ) = IOpenTermLoanManager(loanManager).paymentFor(loan);
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
         netInterest = grossInterest - managementFees;
     }
 
-    function _getExpectedPaymentBreakdown(IOpenTermLoan loan) internal view
+    function _getExpectedPaymentBreakdown(address loan) internal view
         returns (
             uint256 expectedPrincipal,
             uint256 expectedInterest,
@@ -417,25 +416,27 @@ contract OpenTermLoanHealthChecker {
             uint256 expectedPlatformServiceFee
         )
     {
-        uint256 startTime    = loan.datePaid() == 0 ? loan.dateFunded() : loan.datePaid();
+        uint256 startTime    = IOpenTermLoan(loan).datePaid() == 0 ? IOpenTermLoan(loan).dateFunded() : IOpenTermLoan(loan).datePaid();
         uint256 interval     = block.timestamp - startTime;
         uint256 lateInterval = block.timestamp > IOpenTermLoan(loan).paymentDueDate()
             ? block.timestamp - IOpenTermLoan(loan).paymentDueDate()
             : 0;
 
-        expectedPrincipal          = loan.dateCalled() == 0 ? 0 : loan.calledPrincipal();
-        expectedInterest           = _getProRatedAmount(loan.principal(), loan.interestRate(), interval);
+        uint256 principal = IOpenTermLoan(loan).principal();
+
+        expectedPrincipal          = IOpenTermLoan(loan).dateCalled() == 0 ? 0 : IOpenTermLoan(loan).calledPrincipal();
+        expectedInterest           = _getProRatedAmount(principal, IOpenTermLoan(loan).interestRate(), interval);
         expectedLateInterest       = 0;
-        expectedDelegateServiceFee = _getProRatedAmount(loan.principal(), loan.delegateServiceFeeRate(), interval);
-        expectedPlatformServiceFee = _getProRatedAmount(loan.principal(), loan.platformServiceFeeRate(), interval);
+        expectedDelegateServiceFee = _getProRatedAmount(principal, IOpenTermLoan(loan).delegateServiceFeeRate(), interval);
+        expectedPlatformServiceFee = _getProRatedAmount(principal, IOpenTermLoan(loan).platformServiceFeeRate(), interval);
 
         if (lateInterval > 0) {
-            expectedLateInterest += _getProRatedAmount(loan.principal(), loan.lateInterestPremiumRate(), lateInterval);
-            expectedLateInterest += loan.principal() * loan.lateFeeRate() / 1e6;
+            expectedLateInterest += _getProRatedAmount(principal, IOpenTermLoan(loan).lateInterestPremiumRate(), lateInterval);
+            expectedLateInterest += principal * IOpenTermLoan(loan).lateFeeRate() / 1e6;
         }
     }
 
-    function _getOutstandingValue(address loan_, address loanManager_) internal view returns (uint256) {
+    function _getOutstandingValue(address loan_, address loanManager_) internal view returns (uint256 outstandingValue_) {
         if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
         if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
 
@@ -457,21 +458,15 @@ contract OpenTermLoanHealthChecker {
 
         uint256 netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
 
-        return IOpenTermLoan(loan_).principal() + netInterest_;
+        outstandingValue_ = IOpenTermLoan(loan_).principal() + netInterest_;
     }
 
-    function _assertApproxEqAbs(uint256 a, uint256 b, uint256 maxDelta) internal pure returns (bool) {
-        uint256 delta = _delta(a, b);
-
-        if (delta > maxDelta) {
-            return false;
-        }
-
-        return true;
+    function _assertApproxEqAbs(uint256 a, uint256 b, uint256 maxDelta) internal pure returns (bool isApproxEqAbs_) {
+        isApproxEqAbs_ = _delta(a, b) <= maxDelta;
     }
 
-    function _delta(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a > b ? a - b : b - a;
+    function _delta(uint256 a, uint256 b) internal pure returns (uint256 delta_) {
+        delta_ = a > b ? a - b : b - a;
     }
 
     function _getProRatedAmount(uint256 amount_, uint256 rate_, uint256 interval_) internal pure returns (uint256 proRatedAmount_) {

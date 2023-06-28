@@ -57,22 +57,22 @@ contract RegressionTest is BaseInvariants {
     }
 
     function payOffAllLoans() internal {
-        IOpenTermLoan[] memory loans_ = _getActiveLoans();
+        address[] memory loans_ = _getActiveLoans();
 
         for (uint256 i; i < loans_.length; ++i) {
-            makePaymentOT(address(loans_[i]), loans_[i].principal());
+            makePaymentOT(loans_[i], IOpenTermLoan(loans_[i]).principal());
         }
     }
 
     function logDiff() internal view {
-        IOpenTermLoan[] memory loans_ = _getActiveLoans();
+        address[] memory loans_ = _getActiveLoans();
 
         uint256 assetsUnderManagement = IOpenTermLoanManager(otlHandler.loanManager()).assetsUnderManagement();
         uint256 expectedAssetsUnderManagement;
         uint256 expectedNetInterestFromLoans;
 
         for (uint256 i; i < loans_.length; ++i) {
-            expectedAssetsUnderManagement += loans_[i].principal() + _getExpectedNetInterest(loans_[i]);
+            expectedAssetsUnderManagement += IOpenTermLoan(loans_[i]).principal() + _getExpectedNetInterest(loans_[i]);
             expectedNetInterestFromLoans  += _getExpectedNetInterest(loans_[i]);
         }
 

@@ -72,8 +72,8 @@ contract LPHealthChecker {
     /******************************************************************************************************************************/
 
     function check_pool_invariant_B(
-        address pool_,
-        address withdrawManager_,
+        address          pool_,
+        address          withdrawManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         if (poolLps_.length == 0) return true;
@@ -92,8 +92,8 @@ contract LPHealthChecker {
     }
 
     function check_pool_invariant_G(
-        address pool_,
-        address withdrawManager_,
+        address          pool_,
+        address          withdrawManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         if (poolLps_.length == 0) return true;
@@ -116,8 +116,8 @@ contract LPHealthChecker {
     /******************************************************************************************************************************/
 
     function check_withdrawalManager_invariant_A(
-        address pool_,
-        address withdrawalManager_,
+        address          pool_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         if (poolLps_.length == 0) return true;
@@ -132,7 +132,7 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_B(
-        address withdrawalManager_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         if (poolLps_.length == 0) return true;
@@ -157,8 +157,8 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_F(
-        address pool_,
-        address withdrawalManager_,
+        address          pool_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -173,7 +173,7 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_G(
-        address withdrawalManager_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -188,7 +188,7 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_H(
-        address withdrawalManager_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -203,8 +203,8 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_I(
-        address pool_,
-        address withdrawalManager_,
+        address          pool_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -219,8 +219,8 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_J(
-        address pool_,
-        address withdrawalManager_,
+        address          pool_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -237,8 +237,8 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_K(
-        address pool_,
-        address withdrawalManager_,
+        address          pool_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IPool pool = IPool(pool_);
@@ -260,8 +260,8 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManager_invariant_L(
-        address pool_,
-        address withdrawalManager_,
+        address          pool_,
+        address          withdrawalManager_,
         address[] memory poolLps_
     ) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -291,10 +291,15 @@ contract LPHealthChecker {
 
         if (supply == 0) return 0;
 
-        totalRequestedLiquidity_ = IWithdrawalManager(withdrawalManager_).totalCycleShares(
-            IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_)) *
-            (IPool(pool_).totalAssets() - IPool(pool_).unrealizedLosses())
-            / IPool(pool_).totalSupply();
+        totalRequestedLiquidity_ =
+            (
+                IWithdrawalManager(withdrawalManager_).totalCycleShares(
+                    IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_)
+                ) *
+                (
+                    IPool(pool_).totalAssets() - IPool(pool_).unrealizedLosses()
+                )
+            ) / IPool(pool_).totalSupply();
     }
 
     function _getDiff(uint256 x, uint256 y) internal pure returns (uint256 diff) {

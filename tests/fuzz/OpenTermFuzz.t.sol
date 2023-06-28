@@ -51,10 +51,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         loanManager = IOpenTermLoanManager(loan.lender());
 
         // Save to storage before change
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Save Balances
         borrowerBalance = fundsAsset.balanceOf(loan.borrower());
@@ -168,10 +168,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         if (block.timestamp <= loan.defaultDate()) vm.warp(loan.defaultDate() + 1);  // Warp to default date
 
         // Save to storage before change
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         ( uint256 impairDate , ) = IOpenTermLoanManager(loan.lender()).impairmentFor(address(loan));
 

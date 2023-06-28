@@ -187,7 +187,9 @@ contract ProtocolHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_J(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        if (IFixedTermLoanManager(fixedTermLoanManager_).paymentWithEarliestDueDate() == 0) isMaintained_ = true;
+        if (IFixedTermLoanManager(fixedTermLoanManager_).paymentWithEarliestDueDate() == 0) {
+            isMaintained_ = true;
+        }
 
         if (IFixedTermLoanManager(fixedTermLoanManager_).paymentWithEarliestDueDate() != 0) {
             isMaintained_ = IFixedTermLoanManager(fixedTermLoanManager_).issuanceRate() > 0;
@@ -201,7 +203,9 @@ contract ProtocolHealthChecker {
 
         ( , , uint256 earliestPaymentDueDate ) = loanManager.sortedPayments(paymentWithEarliestDueDate);
 
-        if (paymentWithEarliestDueDate == 0) isMaintained_ = true;
+        if (paymentWithEarliestDueDate == 0) {
+            isMaintained_ = true;
+        }
 
         if (paymentWithEarliestDueDate != 0) {
             isMaintained_ = loanManager.domainEnd() == earliestPaymentDueDate;

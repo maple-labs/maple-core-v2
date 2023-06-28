@@ -100,7 +100,7 @@ contract GovernorBase {
     }
 
     function setTimelockWindows(
-        address contract_,
+        address            contract_,
         bytes32[] calldata functionIds_,
         uint128[] calldata delays_,
         uint128[] calldata durations_

@@ -12,7 +12,6 @@ import {
 import {
     FixedTermLoanManager,
     Globals,
-    Liquidator,
     PoolManager,
     WithdrawalManager
 } from "../../contracts/Contracts.sol";
@@ -233,11 +232,10 @@ contract LiquidationUpgradeTests is TestBase {
     address lp                = makeAddr("lp");
     address newImplementation = address(new FixedTermLoanManager());
 
+    address liquidator;
     address loan;
 
     bytes upgradeCallData = new bytes(0);
-
-    Liquidator liquidator;
 
     function setUp() public override {
         super.setUp();
@@ -275,170 +273,168 @@ contract LiquidationUpgradeTests is TestBase {
 
         triggerDefault(loan, address(liquidatorFactory));
 
-        ( , , , , , address liquidatorAddress ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
-
-        liquidator = Liquidator(liquidatorAddress);
+        ( , , , , , liquidator ) = IFixedTermLoanManager(loanManager).liquidationInfo(loan);
 
         // Resetting start because we had to advance time to trigger default.
         start = block.timestamp;
     }
 
     function test_upgradeLiquidator_noTimelock() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(Liquidator.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
-        globals.scheduleCall(address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        globals.scheduleCall(liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Wait for delay duration.
         vm.warp(start + 1 weeks);
 
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLiquidator_delayNotPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(Liquidator.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        globals.scheduleCall(liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks);
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLiquidator_durationPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(Liquidator.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        globals.scheduleCall(liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Warp to right after duration end.
         vm.warp(start + 1 weeks + 2 days + 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks + 2 days);
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLiquidator_timelockExtended() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(Liquidator.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        globals.scheduleCall(liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
 
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        bool isValid = globals.isValidScheduledCall(poolDelegate, liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Should be valid before we change the timelock settings.
         assertTrue(isValid);
 
         vm.prank(governor);
-        globals.setTimelockWindow(address(liquidator), "LIQ:UPGRADE", 2 weeks, 1 weeks);
+        globals.setTimelockWindow(liquidator, "LIQ:UPGRADE", 2 weeks, 1 weeks);
 
-        isValid = globals.isValidScheduledCall(poolDelegate, address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        isValid = globals.isValidScheduledCall(poolDelegate, liquidator, "LIQ:UPGRADE", scheduleArgs);
         assertTrue(!isValid);
 
         vm.startPrank(poolDelegate);
 
         // With timelock change, upgrade should now revert.
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 weeks - 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 weeks + 1 weeks + 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
         vm.warp(start + 2 weeks + 1 weeks);
 
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLiquidator_timelockShortened() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(Liquidator.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        globals.scheduleCall(liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
 
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        bool isValid = globals.isValidScheduledCall(poolDelegate, liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Should be valid before we change the timelock settings.
         assertTrue(isValid);
 
         vm.prank(governor);
-        globals.setTimelockWindow(address(liquidator), "LIQ:UPGRADE", 2 days, 1 days);
+        globals.setTimelockWindow(liquidator, "LIQ:UPGRADE", 2 days, 1 days);
 
-        isValid = globals.isValidScheduledCall(poolDelegate, address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        isValid = globals.isValidScheduledCall(poolDelegate, liquidator, "LIQ:UPGRADE", scheduleArgs);
         assertTrue(!isValid);
 
         vm.startPrank(poolDelegate);
 
         // With timelock change, we should be past the duration.
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 days - 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 days + 1 days + 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
         vm.warp(start + 2 days + 1 days);
 
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
     }
 
     function test_upgradeLiquidator_governor_noTimelockNeeded() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(Liquidator.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(liquidator), "LIQ:UPGRADE", scheduleArgs);
+        globals.scheduleCall(liquidator, "LIQ:UPGRADE", scheduleArgs);
 
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
         vm.expectRevert("LIQ:U:INVALID_SCHED_CALL");
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
 
         // Call upgrade using governor instead, unaffected by pool delegate's scheduled timelock.
         vm.stopPrank();
 
         vm.prank(governor);
-        liquidator.upgrade(2, upgradeCallData);
+        IProxiedLike(liquidator).upgrade(2, upgradeCallData);
     }
 
 }
@@ -461,7 +457,7 @@ contract PoolManagerUpgradeTests is TestBase {
     }
 
     function test_upgradePoolManager_noTimelock() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(PoolManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -477,7 +473,7 @@ contract PoolManagerUpgradeTests is TestBase {
     }
 
     function test_upgradePoolManager_delayNotPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(PoolManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -494,7 +490,7 @@ contract PoolManagerUpgradeTests is TestBase {
     }
 
     function test_upgradePoolManager_durationPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(PoolManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -511,7 +507,7 @@ contract PoolManagerUpgradeTests is TestBase {
     }
 
     function test_upgradePoolManager_timelockExtended() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(PoolManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
@@ -555,7 +551,7 @@ contract PoolManagerUpgradeTests is TestBase {
     }
 
     function test_upgradePoolManager_timelockShortened() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(PoolManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
@@ -599,7 +595,7 @@ contract PoolManagerUpgradeTests is TestBase {
     }
 
     function test_upgradePoolManager_governor_noTimelockNeeded() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(PoolManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -637,7 +633,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeWithdrawalManager_noTimelock() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(WithdrawalManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -653,7 +649,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeWithdrawalManager_delayNotPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(WithdrawalManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -670,7 +666,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeWithdrawalManager_durationPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(WithdrawalManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 
@@ -687,7 +683,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeWithdrawalManager_timelockExtended() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(WithdrawalManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(withdrawalManager), "WM:UPGRADE", scheduleArgs);
@@ -731,7 +727,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeWithdrawalManager_timelockShortened() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(WithdrawalManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(withdrawalManager), "WM:UPGRADE", scheduleArgs);
@@ -775,7 +771,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     }
 
     function test_upgradeWithdrawalManager_governor_noTimelockNeeded() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(WithdrawalManager.upgrade.selector, uint256(2), upgradeCallData);
+        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
 

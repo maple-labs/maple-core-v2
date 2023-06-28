@@ -109,7 +109,7 @@ contract FixedTermLoanHealthChecker {
     /******************************************************************************************************************************/
 
     function check_fixedTermLoanManager_invariant_D(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         if (loans_.length == 0) return true;
@@ -124,7 +124,7 @@ contract FixedTermLoanHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_E(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         if (loans_.length == 0) return true;
@@ -133,7 +133,7 @@ contract FixedTermLoanHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_M(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         for (uint256 i; i < loans_.length; i++) {
@@ -151,7 +151,7 @@ contract FixedTermLoanHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_N(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         for (uint256 i; i < loans_.length; i++) {

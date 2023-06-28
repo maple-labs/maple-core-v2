@@ -40,10 +40,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         uint256 poolBalance     = fundsAsset.balanceOf(address(pool));
         uint256 treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Perform the action.
         address poolDelegate    = poolManager.poolDelegate();
@@ -115,10 +115,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         uint256 poolBalance     = fundsAsset.balanceOf(address(pool));
         uint256 treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Perform the action.
         vm.prank(poolManager.poolDelegate());

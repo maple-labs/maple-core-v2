@@ -292,11 +292,11 @@ contract TestBase is ProtocolActions {
      *                       [3]: lateInterestPremium
      */
     function createFixedTermLoan(
-        address borrower,
+        address           borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address loanManager             // TODO: Move to top of params.
+        address           loanManager   // TODO: Move to top of params.
     )
         internal returns (address loan)
     {
@@ -320,9 +320,9 @@ contract TestBase is ProtocolActions {
     }
 
     function createFixedTermLoan(
-        address borrower,
-        address lender,
-        address feeManager,
+        address           borrower,
+        address           lender,
+        address           feeManager,
         address[2] memory assets,
         uint256[3] memory terms,
         uint256[3] memory amounts,
@@ -420,11 +420,11 @@ contract TestBase is ProtocolActions {
 
     // TODO: Move all of these to ProtocolActions. Not sure if they belong there because they are "complex" actions that involve many steps.
     function fundAndDrawdownLoan(
-        address borrower,
+        address           borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address loanManager
+        address           loanManager
     )
         internal returns (address loan)
     {

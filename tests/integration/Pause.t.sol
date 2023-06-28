@@ -415,15 +415,7 @@ contract PauseTests is TestBaseWithAssertions {
         assertTrue(keccak256(abi.encode(returnedMessage)) != keccak256(abi.encode(message_)), "Not paused message hash");
     }
 
-    function slice(
-        bytes memory _bytes,
-        uint256 _start,
-        uint256 _length
-    )
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory result_) {
         require(_length + 31 >= _length, "slice_overflow");
         require(_bytes.length >= _start + _length, "slice_outOfBounds");
 
@@ -481,6 +473,7 @@ contract PauseTests is TestBaseWithAssertions {
             }
         }
 
-        return tempBytes;
+        // NOTE: Can probably use `result_` in the above assembly instead.
+        result_ = tempBytes;
     }
 }

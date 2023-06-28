@@ -555,15 +555,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_otl_invariant_I(address loan_) internal {
-        IOpenTermLoan loan = IOpenTermLoan(loan_);
-
         (
             uint256 principal,
             uint256 interest,
             uint256 lateInterest,
             uint256 delegateServiceFee,
             uint256 platformServiceFee
-        ) = loan.getPaymentBreakdown(block.timestamp);
+        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         (
             uint256 expectedPrincipal,
@@ -571,7 +569,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             uint256 expectedLateInterest,
             uint256 expectedDelegateServiceFee,
             uint256 expectedPlatformServiceFee
-        ) = _getExpectedPaymentBreakdown(loan);
+        ) = _getExpectedPaymentBreakdown(loan_);
 
         assertEq(principal,          expectedPrincipal,          "OTL Invariant I (principal)");
         assertEq(interest,           expectedInterest,           "OTL Invariant I (interest)");
@@ -584,12 +582,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** Open Term Loan Manager Invariants                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    function assert_otlm_invariant_A(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_A(address openTermLoanManager_, address[] memory loans_) internal {
         uint256 assetsUnderManagement = IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement();
         uint256 expectedAssetsUnderManagement;
 
         for (uint256 i; i < loans_.length; ++i) {
-            expectedAssetsUnderManagement += loans_[i].principal() + _getExpectedNetInterest(loans_[i]);
+            expectedAssetsUnderManagement += IOpenTermLoan(loans_[i]).principal() + _getExpectedNetInterest(loans_[i]);
         }
 
         assertApproxEqAbs(
@@ -600,13 +598,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         );
     }
 
-    function assert_otlm_invariant_B(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_B(address openTermLoanManager_, address[] memory loans_) internal {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
         uint256 assetsUnderManagement = openTermLoanManager.assetsUnderManagement();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , uint40 startDate, ) = openTermLoanManager.paymentFor(address(loans_[i]));
+            ( , , uint40 startDate, ) = openTermLoanManager.paymentFor(loans_[i]);
 
             if (startDate != 0) return;
         }
@@ -614,25 +612,25 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans(), "OTLM Invariant B");
     }
 
-    function assert_otlm_invariant_C(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_C(address openTermLoanManager_, address[] memory loans_) internal {
         uint256 principalOut = IOpenTermLoanManager(openTermLoanManager_).principalOut();
         uint256 expectedPrincipalOut;
 
         for (uint256 i; i < loans_.length; ++i) {
-            expectedPrincipalOut += loans_[i].principal();
+            expectedPrincipalOut += IOpenTermLoan(loans_[i]).principal();
         }
 
         assertEq(principalOut, expectedPrincipalOut, "OTLM Invariant C");
     }
 
-    function assert_otlm_invariant_D(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_D(address openTermLoanManager_, address[] memory loans_) internal {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
         uint256 issuanceRate = openTermLoanManager.issuanceRate();
         uint256 expectedIssuanceRate;
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(address(loans_[i]));
+            ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(loans_[i]);
             expectedIssuanceRate += issuanceRate_;
         }
 
@@ -648,13 +646,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertLe(unrealizedLosses, assetsUnderManagement, "OTLM Invariant E");
     }
 
-    function assert_otlm_invariant_F(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_F(address openTermLoanManager_, address[] memory loans_) internal {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
         uint256 unrealizedLosses = openTermLoanManager.unrealizedLosses();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(address(loans_[i]));
+            ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(loans_[i]);
 
             if (impairmentDate != 0) return;
         }
@@ -681,10 +679,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_otlm_invariant_I(address loan_, address openTermLoanManager_) internal {
-        IOpenTermLoan loan = IOpenTermLoan(loan_);
-
-        ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
-        uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan);
+        ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan_);
+        uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan_);
 
         assertEq(issuanceRate, expectedIssuanceRate, "OTLM Invariant I");
     }
@@ -700,14 +696,14 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_otlm_invariant_K(address loanManager_, IOpenTermLoan[] memory loans_) internal useCurrentTimestamp {
+    function assert_otlm_invariant_K(address loanManager_, address[] memory loans_) internal useCurrentTimestamp {
         uint256 outstandingValue;
 
         uint256 assetsUnderManagement = IOpenTermLoanManager(loanManager_).assetsUnderManagement();
         uint256 unrealizedLosses      = IOpenTermLoanManager(loanManager_).unrealizedLosses();
 
         for (uint256 i; i < loans_.length; ++i) {
-            outstandingValue += _getOutstandingValue(address(loans_[i]));
+            outstandingValue += _getOutstandingValue(loans_[i]);
         }
 
         assertApproxEqAbs(
@@ -722,7 +718,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** Internal Helpers Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
 
-    function _getActiveLoans() internal view returns (IOpenTermLoan[] memory loans) {
+    function _getActiveLoans() internal view returns (address[] memory loans) {
         uint256 index;
         uint256 length;
 
@@ -730,11 +726,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             if (IOpenTermLoan(otlHandler.loans(i)).dateFunded() != 0) length++;
         }
 
-        loans = new IOpenTermLoan[](length);
+        loans = new address[](length);
 
         for (uint256 i; i < otlHandler.numLoans(); ++i) {
-            IOpenTermLoan loan = IOpenTermLoan(otlHandler.loans(i));
-            if (loan.dateFunded() != 0) {
+            address loan = otlHandler.loans(i);
+
+            if (IOpenTermLoan(loan).dateFunded() != 0) {
                 loans[index++] = loan;
             }
         }
@@ -780,33 +777,39 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         interestAccrued_ = accrued_ + netRefinanceInterest;
     }
 
-    function _getExpectedIssuanceRate(IOpenTermLoan loan) internal view returns (uint256 expectedIssuanceRate) {
+    function _getExpectedIssuanceRate(address loan) internal view returns (uint256 expectedIssuanceRate) {
         (
             uint24 platformManagementFeeRate,
             uint24 delegateManagementFeeRate,
             ,
-        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(address(loan));
+        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
 
-        uint256 grossInterest  = _getProRatedAmount(loan.principal(), loan.interestRate(), loan.paymentInterval());
+        uint256 grossInterest  = _getProRatedAmount(
+            IOpenTermLoan(loan).principal(),
+            IOpenTermLoan(loan).interestRate(),
+            IOpenTermLoan(loan).paymentInterval()
+        );
+
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
-        expectedIssuanceRate = (grossInterest - managementFees) * 1e27 / loan.paymentInterval();
+        expectedIssuanceRate = (grossInterest - managementFees) * 1e27 / IOpenTermLoan(loan).paymentInterval();
     }
 
-    function _getExpectedNetInterest(IOpenTermLoan loan) internal view returns (uint256 netInterest) {
-        ( , uint256 grossInterest, , , ) = loan.getPaymentBreakdown(block.timestamp);
+    function _getExpectedNetInterest(address loan) internal view returns (uint256 netInterest) {
+        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+
         (
             uint24 platformManagementFeeRate,
             uint24 delegateManagementFeeRate,
             ,
-        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(address(loan));
+        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
         netInterest = grossInterest - managementFees;
     }
 
-    function _getExpectedPaymentBreakdown(IOpenTermLoan loan) internal view
+    function _getExpectedPaymentBreakdown(address loan) internal view
         returns (
             uint256 expectedPrincipal,
             uint256 expectedInterest,
@@ -815,21 +818,24 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             uint256 expectedPlatformServiceFee
         )
     {
-        uint256 startTime    = loan.datePaid() == 0 ? loan.dateFunded() : loan.datePaid();
-        uint256 interval     = block.timestamp - startTime;
+        uint256 startTime = IOpenTermLoan(loan).datePaid() == 0 ? IOpenTermLoan(loan).dateFunded() : IOpenTermLoan(loan).datePaid();
+        uint256 interval  = block.timestamp - startTime;
+
         uint256 lateInterval = block.timestamp > IOpenTermLoan(loan).paymentDueDate()
             ? block.timestamp - IOpenTermLoan(loan).paymentDueDate()
             : 0;
 
-        expectedPrincipal          = loan.dateCalled() == 0 ? 0 : loan.calledPrincipal();
-        expectedInterest           = _getProRatedAmount(loan.principal(), loan.interestRate(), interval);
+        uint256 principal = IOpenTermLoan(loan).principal();
+
+        expectedPrincipal          = IOpenTermLoan(loan).dateCalled() == 0 ? 0 : IOpenTermLoan(loan).calledPrincipal();
+        expectedInterest           = _getProRatedAmount(principal, IOpenTermLoan(loan).interestRate(), interval);
         expectedLateInterest       = 0;
-        expectedDelegateServiceFee = _getProRatedAmount(loan.principal(), loan.delegateServiceFeeRate(), interval);
-        expectedPlatformServiceFee = _getProRatedAmount(loan.principal(), loan.platformServiceFeeRate(), interval);
+        expectedDelegateServiceFee = _getProRatedAmount(principal, IOpenTermLoan(loan).delegateServiceFeeRate(), interval);
+        expectedPlatformServiceFee = _getProRatedAmount(principal, IOpenTermLoan(loan).platformServiceFeeRate(), interval);
 
         if (lateInterval > 0) {
-            expectedLateInterest += _getProRatedAmount(loan.principal(), loan.lateInterestPremiumRate(), lateInterval);
-            expectedLateInterest += loan.principal() * loan.lateFeeRate() / 1e6;
+            expectedLateInterest += _getProRatedAmount(principal, IOpenTermLoan(loan).lateInterestPremiumRate(), lateInterval);
+            expectedLateInterest += principal * IOpenTermLoan(loan).lateFeeRate() / 1e6;
         }
     }
 
@@ -841,7 +847,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
     }
 
-    function _getOutstandingValue(address loan_) internal view returns (uint256) {
+    function _getOutstandingValue(address loan_) internal view returns (uint256 outstandingValue_) {
         if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
         if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
 
@@ -865,7 +871,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         uint256 netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
 
-        return IOpenTermLoan(loan_).principal() + netInterest_;
+        outstandingValue_ = IOpenTermLoan(loan_).principal() + netInterest_;
     }
 
     function _getProRatedAmount(uint256 amount_, uint256 rate_, uint256 interval_) internal pure returns (uint256 proRatedAmount_) {

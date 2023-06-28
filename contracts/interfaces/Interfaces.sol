@@ -7,26 +7,26 @@ import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfac
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
-import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
+import { IMapleLiquidator as IML } from "../../modules/liquidations/contracts/interfaces/IMapleLiquidator.sol";
 
 import { IMapleLoan as IMFTL }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
 import { IMapleLoanFeeManager as IMLFM } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
-import { IRefinancer as IMFTLR }         from "../../modules/fixed-term-loan/contracts/interfaces/IRefinancer.sol";
+import { IMapleRefinancer as IMFTLR }    from "../../modules/fixed-term-loan/contracts/interfaces/IMapleRefinancer.sol";
 
-import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
-import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
+import { IMapleLoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
+import { IMapleLoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/IMapleLoanManagerStructs.sol";
 
 import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 
-import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
-import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
+import { IMapleLoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
+import { IMapleLoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
-import { IPool }              from "../../modules/pool/contracts/interfaces/IPool.sol";
-import { IPoolDeployer }      from "../../modules/pool/contracts/interfaces/IPoolDeployer.sol";
-import { IPoolManager }       from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
-import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IMaplePool as IMP }          from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
+import { IMaplePoolDeployer as IMPD } from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
+import { IMaplePoolManager as IMPM }  from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
+import { IMapleProxyFactory }         from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
+import { IMapleWithdrawalManager as IMWM } from "../../modules/withdrawal-manager/contracts/interfaces/IMapleWithdrawalManager.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
@@ -44,11 +44,21 @@ interface IFixedTermRefinancer is IMFTLR { }
 
 interface IGlobals is IMG { }
 
+interface ILiquidator is IML { }
+
 interface IOpenTermLoan is IMOTL { }
 
 interface IOpenTermLoanManager is IMOTLM { }
 
 interface IOpenTermLoanManagerStructs is IMOTLMS { }
+
+interface IPool is IMP { }
+
+interface IPoolDeployer is IMPD { }
+
+interface IPoolManager is IMPM { }
+
+interface IWithdrawalManager is IMWM { }
 
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                    ***/
@@ -96,11 +106,7 @@ interface IProxiedLike {
 
 }
 
-interface ILoanV4Like {
-
-    function lateInterestPremium() external view returns (uint256 lateInterestPremium_);
-}
-
+// NOTE: Needs to be defined after `IProxiedLike`.
 interface ILoanLike is IProxiedLike {
 
     function acceptBorrower() external;
@@ -138,6 +144,7 @@ interface ILoanLike is IProxiedLike {
 
 }
 
+// NOTE: Needs to be defined after `IProxiedLike`.
 interface ILoanManagerLike is IProxiedLike {
 
     function accountedInterest() external view returns (uint112 accountedInterest_);

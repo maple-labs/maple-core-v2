@@ -89,29 +89,33 @@ contract OpenTermInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function invariant_openTermLoan_A_B_C_D_E_F_G_H_I_openTermLoanManager_A_B_C_D_F_H_I_J() external useCurrentTimestamp {
-        IOpenTermLoan[] memory loans = _getActiveLoans();
+        address[] memory loans = _getActiveLoans();
 
-        assert_otlm_invariant_A(address(otlHandler.loanManager()), loans);
-        assert_otlm_invariant_B(address(otlHandler.loanManager()), loans);
-        assert_otlm_invariant_C(address(otlHandler.loanManager()), loans);
-        assert_otlm_invariant_D(address(otlHandler.loanManager()), loans);
-        assert_otlm_invariant_F(address(otlHandler.loanManager()), loans);
-        assert_otlm_invariant_K(address(otlHandler.loanManager()), loans);
+        address loanManager = address(otlHandler.loanManager());
+
+        assert_otlm_invariant_A(loanManager, loans);
+        assert_otlm_invariant_B(loanManager, loans);
+        assert_otlm_invariant_C(loanManager, loans);
+        assert_otlm_invariant_D(loanManager, loans);
+        assert_otlm_invariant_F(loanManager, loans);
+        assert_otlm_invariant_K(loanManager, loans);
 
         for (uint256 i; i < loans.length; ++i) {
-            assert_otl_invariant_A(address(loans[i]));
-            assert_otl_invariant_B(address(loans[i]));
-            assert_otl_invariant_C(address(loans[i]));
-            assert_otl_invariant_D(address(loans[i]));
-            assert_otl_invariant_E(address(loans[i]));
-            assert_otl_invariant_F(address(loans[i]));
-            assert_otl_invariant_G(address(loans[i]));
-            assert_otl_invariant_H(address(loans[i]));
-            assert_otl_invariant_I(address(loans[i]));
+            address loan = loans[i];
 
-            assert_otlm_invariant_H(address(loans[i]), address(otlHandler.loanManager()));
-            assert_otlm_invariant_I(address(loans[i]), address(otlHandler.loanManager()));
-            assert_otlm_invariant_J(address(loans[i]), address(otlHandler.loanManager()));
+            assert_otl_invariant_A(loan);
+            assert_otl_invariant_B(loan);
+            assert_otl_invariant_C(loan);
+            assert_otl_invariant_D(loan);
+            assert_otl_invariant_E(loan);
+            assert_otl_invariant_F(loan);
+            assert_otl_invariant_G(loan);
+            assert_otl_invariant_H(loan);
+            assert_otl_invariant_I(loan);
+
+            assert_otlm_invariant_H(loan, loanManager);
+            assert_otlm_invariant_I(loan, loanManager);
+            assert_otlm_invariant_J(loan, loanManager);
         }
     }
 

@@ -130,11 +130,11 @@ contract ProtocolActions is Test {
     }
 
     function createOpenTermLoan(
-        address factory_,
-        address borrower_,
-        address lender_,
-        address asset_,
-        uint256 principal_,
+        address           factory_,
+        address           borrower_,
+        address           lender_,
+        address           asset_,
+        uint256           principal_,
         uint256[3] memory terms_,
         uint256[4] memory rates_
     )
@@ -324,11 +324,11 @@ contract ProtocolActions is Test {
     }
 
     function acceptRefinance(
-        address loan_,
-        address refinancer_,
-        uint256 expiry_,
+        address        loan_,
+        address        refinancer_,
+        uint256        expiry_,
         bytes[] memory refinanceCalls_,
-        uint256 principalIncrease_
+        uint256        principalIncrease_
     ) internal {
         if (isOpenTermLoan(loan_)) return acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
 
@@ -336,11 +336,11 @@ contract ProtocolActions is Test {
     }
 
     function acceptRefinanceFT(
-        address loan_,
-        address refinancer_,
-        uint256 expiry_,
+        address        loan_,
+        address        refinancer_,
+        uint256        expiry_,
         bytes[] memory refinanceCalls_,
-        uint256 principalIncrease_
+        uint256        principalIncrease_
     ) internal {
         address loanManager_ = ILoanLike(loan_).lender();
 
