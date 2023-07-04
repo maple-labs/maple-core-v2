@@ -7,7 +7,8 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManager,
+    IWithdrawalManagerLike
 } from "../../contracts/interfaces/Interfaces.sol";
 
 // NOTE: This contract only uses onchain calls to check invariants.
@@ -77,7 +78,7 @@ contract ProtocolHealthChecker {
         bool withdrawalManagerInvariantN;
     }
 
-    function checkInvariants(address poolManager_) external returns (Invariants memory invariants_) {
+    function checkInvariants(address poolManager_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
         address fixedTermLoanManager_;
@@ -315,16 +316,16 @@ contract ProtocolHealthChecker {
         isMaintained_ = withdrawalWindowStart <= block.timestamp;
     }
 
-    function check_withdrawalManager_invariant_D(address withdrawalManager_) public returns (bool isMaintained_) {
-        IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
+    function check_withdrawalManager_invariant_D(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerLike withdrawalManager = IWithdrawalManagerLike(withdrawalManager_);
 
         ( , uint256 initialCycleTime , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
 
         isMaintained_ = initialCycleTime <= block.timestamp;
     }
 
-    function check_withdrawalManager_invariant_E(address withdrawalManager_) public returns (bool isMaintained_) {
-        IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
+    function check_withdrawalManager_invariant_E(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerLike withdrawalManager = IWithdrawalManagerLike(withdrawalManager_);
 
         ( uint256 initialCycleId , , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
 

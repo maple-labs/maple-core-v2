@@ -31,6 +31,9 @@ invariant:
 scenario:
 	./scenarios.sh
 
+deploy:
+	./deploy.sh
+
 # Utility
 
 clean:

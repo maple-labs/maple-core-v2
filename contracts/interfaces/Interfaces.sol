@@ -201,6 +201,15 @@ interface IProxyFactoryLike {
 
 }
 
+// NOTE: cycleConfigs() is not defined as a view function in the submodule which needs updating.
+interface IWithdrawalManagerLike {
+
+    function cycleConfigs(uint256 configId_)
+        external view returns (uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration);
+
+    function getCurrentCycleId() external view returns (uint256 cycleId_);
+}
+
 /******************************************************************************************************************************************/
 /*** Test Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
