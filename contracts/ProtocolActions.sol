@@ -20,7 +20,7 @@ import {
     IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
-import { console2 as console, Test } from "../contracts/Contracts.sol";
+import { console2 as console, ERC20Helper, Test } from "../contracts/Contracts.sol";
 
 // TODO: `deployPool`.
 // TODO: `createLoan`.
@@ -32,11 +32,13 @@ contract ProtocolActions is Test {
     address WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     address WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address USDT = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 
     address MPL_SOURCE  = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
     address WBTC_SOURCE = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
     address WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
     address USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
+    address USDT_SOURCE = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -44,13 +46,13 @@ contract ProtocolActions is Test {
 
     function erc20_approve(address asset_, address account_, address spender_, uint256 amount_) internal {
         vm.startPrank(account_);
-        IERC20Like(asset_).approve(spender_, amount_);
+        require(ERC20Helper.approve(asset_, spender_, amount_), "erc20_approve failed");
         vm.stopPrank();
     }
 
     function erc20_transfer(address asset_, address account_, address destination_, uint256 amount_) internal {
         vm.startPrank(account_);
-        IERC20(asset_).transfer(destination_, amount_);
+        require(ERC20Helper.transfer(asset_, destination_, amount_), "erc20_transfer failed");
         vm.stopPrank();
     }
 
@@ -61,6 +63,7 @@ contract ProtocolActions is Test {
         else if (asset_ == WBTC) erc20_transfer(WBTC, WBTC_SOURCE, account_, amount_);
         else if (asset_ == WETH) erc20_transfer(WETH, WETH_SOURCE, account_, amount_);
         else if (asset_ == USDC) erc20_transfer(USDC, USDC_SOURCE, account_, amount_);
+        else if (asset_ == USDT) erc20_transfer(USDT, USDT_SOURCE, account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
@@ -556,9 +559,11 @@ contract ProtocolActions is Test {
     )
         internal returns (address poolManager_)
     {
-        erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
+        if (configParams_[2] > 0) {
+            erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
 
-        erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
+            erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
+        }
 
         // Set Valid PD
         IGlobals globals = IGlobals(globals_);

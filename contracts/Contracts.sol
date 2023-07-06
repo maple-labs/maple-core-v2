@@ -5,6 +5,8 @@ import { console2, stdJson, StdInvariant, stdMath, StdStyle, Test as T } from ".
 
 import { MapleAddressRegistry as AR } from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
 
+import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
+
 import { MapleLoan as MFTL }              from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
 import { MapleLoanFactory as MFTLF }      from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
 import { MapleLoanFeeManager as MFTLFM }  from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";

@@ -38,3 +38,6 @@
 [submodule "modules/address-registry"]
 	path = modules/address-registry
 	url = git@github.com:maple-labs/address-registry.git
+[submodule "modules/erc20-helper"]
+	path = modules/erc20-helper
+	url = git@github.com:maple-labs/erc20-helper.git

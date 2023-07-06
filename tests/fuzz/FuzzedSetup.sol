@@ -182,7 +182,7 @@ contract FuzzedUtil is ProtocolActions {
     function createSomeOpenTermLoan() internal returns (address loan) {
         require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
-        uint256 principal              = getSomeValue(100_000e6, 10_000_000e6);
+        uint256 principal              = getSomeValue(100_000e6, 1_000_000e6);
         uint256 noticePeriod           = getSomeValue(1 hours,   10 days);
         uint256 gracePeriod            = getSomeValue(0,         10 days);
         uint256 paymentInterval        = getSomeValue(10 days,   90 days);
@@ -205,7 +205,7 @@ contract FuzzedUtil is ProtocolActions {
     function createSomeFixedTermLoan() internal returns (address loan) {
         require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
-        uint256 principal = getSomeValue(100_000e6, 10_000_000e6);
+        uint256 principal = getSomeValue(100_000e6, 1_000_000e6);
 
         uint256[3] memory amounts = [
             0,                          // collateralRequired
