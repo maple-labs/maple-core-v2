@@ -8,6 +8,7 @@ import { console2 as console, stdJson, stdMath, StdStyle } from "../contracts/Co
 import { TestBase } from "../tests/TestBase.sol";
 
 // NOTE: All Converting basis points into basis points scaled by 100.
+// NOTE: All `XyzParameters` structs require properties in alphanumerical order to be correctly parsed.
 
 // TODO: Add color logging (eg. `console.log(StdStyle.red("Red Bold String"), StdStyle.blue("Blue Bold String"));`).
 
@@ -142,6 +143,7 @@ contract Scenario is TestBase {
         _createAndConfigurePool(1, 1);
         openPool(address(poolManager));
 
+        // TODO: This needs to be reworked once fees are refactored in `TestBase`.
         setupFees({
             platformOriginationFeeRate: parameters.platformOriginationFeeRate * 100,
             platformServiceFeeRate:     parameters.platformServiceFeeRate * 100,
@@ -572,17 +574,20 @@ contract Scenario is TestBase {
     function runScenario(string memory scenarioId) internal {
         console.log("\nScenario", scenarioId, "\n");
 
+        // Load and parse the json file located at "${root}/scenarios/data/json/${scenarioId}.json".
         string memory json = vm.readFile(concat(vm.projectRoot(), "/scenarios/data/json/", scenarioId, ".json"));
 
         string[] memory actions = json.readStringArray(".actions");
 
-        for (uint256 i; i < actions.length; ++i) {
+        for (uint256 i; i < actions.length; ++i) {  // For each action/row within the json.
             console.log("Action", i);
 
-            vm.warp(json.readUint(concat(".actions[", toString(i), "].timestamp")));
+            vm.warp(json.readUint(concat(".actions[", toString(i), "].timestamp")));  // Warp top the timestamp defined by this action.
 
             console.log("  timestamp:", block.timestamp);
 
+            // Get the internal function handler for the given action, then immediately call it with the parsed raw parameters.
+            // Get the boolean to determine failure, which helps display better error message for test runner/user.
             bool failure_ = getHandler(json, concat(".actions[", toString(i), "]"))(
                 json.parseRaw(concat(".actions[", toString(i), "].parameters"))
             );
@@ -592,6 +597,7 @@ contract Scenario is TestBase {
                 fail();
             }
 
+            // Check that the pool's values are as expected.
             failure_ = checkExpected(json.parseRaw(concat(".actions[", toString(i), "].expected")));
 
             if (failure_) {
@@ -612,7 +618,7 @@ contract Scenario is TestBase {
     }
 
     function test_sim() external {
-        runScenario(vm.envString("SCENARIO"));
+        runScenario(vm.envString("SCENARIO"));  // Run the scenario defined by the json file name stored in the `SCENARIO` env var.
     }
 
 }

@@ -87,6 +87,7 @@ const DEFAULT_DEFAULT_PARAMETERS = {
     poolLosses: 0,
 };
 
+// If a property name is in this array, it's value needs to be interpreted as a decimal.
 const decimalValues = [
     'liquidityCap',
     'accruedInterest',
@@ -105,6 +106,7 @@ const decimalValues = [
     'poolLosses',
 ];
 
+// Properties missing in `parameters` will be set to defaults defined above, for each action type.
 const mergeIntoDefaults = (actionType, parameters) =>
     actionType === 'createPool' ? Object.assign({}, DEFAULT_CREATE_POOL_PARAMETERS, parameters) :
     actionType === 'deposit' ? Object.assign({}, DEFAULT_DEPOSIT_PARAMETERS, parameters) :
@@ -118,26 +120,27 @@ const mergeIntoDefaults = (actionType, parameters) =>
     actionType === 'defaultLoan' ? Object.assign({}, DEFAULT_DEFAULT_PARAMETERS, parameters) :
     parameters;
 
+// TODO: This makes the assumption that all decimals values are for tokens with 6 decimal positions. Some additional indicator.
 const convertToInteger = (decimal) => parseInt(decimal * 1e6);
 
 const CSVToActionsJSON = (data, { omitFirstRow = false } = {}) => {
     const json = data
         .slice(omitFirstRow ? data.indexOf('\n') + 1 : 0)
-        .replaceAll(' ', '')
+        .replaceAll(' ', '')  // replace some common unnecessary formatting to make parsing the CSV easier.
         .replaceAll('\'', '"')
         .replaceAll('\r', '')
         .replaceAll('"{', '{')
         .replaceAll('}"', '}')
-        .replaceAll('capacity', 'liquidityCap')
+        .replaceAll('capacity', 'liquidityCap')  // replace some commonly mis-named properties.
         .replaceAll('paymentCycle', 'paymentInterval')
         .replaceAll('"lateInterestPremium"', '"lateInterestPremiumRate"')
-        .split('\n')
-        .map(x => x.split(',{'))
-        .map(x => x.map(y => y.split('},')))
-        .map(x => x.flat())
-        .map(x => x.map(y => y.includes(':') ? JSON.parse(`{${y}}`) : y.split(',')))
-        .map(x => x.flat())
-        .map(x => ({
+        .split('\n')  // Split by CSV rows
+        .map(x => x.split(',{'))  // Within each row object, split by starts if stringified json
+        .map(x => x.map(y => y.split('},')))  // Within each array above, further split by end if stringified json
+        .map(x => x.flat())  // Flatted the arrays of arrays into a single array of all cells, for each row object
+        .map(x => x.map(y => y.includes(':') ? JSON.parse(`{${y}}`) : y.split(',')))  // For each cell that looks like json, parse as json, else split again using commas as delimiter
+        .map(x => x.flat())  // Flatted the arrays of arrays into a single array of all cells, for each row object
+        .map(x => ({  // Create the normalized action object for each row object
             timestamp: parseInt(x[0]),
             actionType: x[1],
             parameters: Object.assign(
@@ -156,7 +159,7 @@ const CSVToActionsJSON = (data, { omitFirstRow = false } = {}) => {
         }));
 
     json.forEach((action) => {
-        action.parameters = mergeIntoDefaults(action.actionType, action.parameters);
+        action.parameters = mergeIntoDefaults(action.actionType, action.parameters);  // Ensure parameters are fully defined, with at least defaults.
 
         for (const property in action.parameters) {
             if (decimalValues.includes(property)) {
@@ -174,8 +177,9 @@ const CSVToActionsJSON = (data, { omitFirstRow = false } = {}) => {
     return json;
 }
 
-const csv = fs.readFileSync(`./scenarios/data/csv/${process.argv[2]}.csv`, { encoding: 'utf8' });
+const csv = fs.readFileSync(`./scenarios/data/csv/${process.argv[2]}.csv`, { encoding: 'utf8' });  // Read CSV as utf8 encoded.
 
-const json = { config: {}, actions: CSVToActionsJSON(csv, { omitFirstRow: true }) };
+// TODO: Can add some data to `config` to be parsed and interpreted by the solidity scenario runner.
+const json = { config: {}, actions: CSVToActionsJSON(csv, { omitFirstRow: true }) };  // convert to json, omitting header row.
 
-fs.writeFileSync(`./scenarios/data/json/${process.argv[2]}.json`, JSON.stringify(json, null, 4), { encoding: 'utf8' });
+fs.writeFileSync(`./scenarios/data/json/${process.argv[2]}.json`, JSON.stringify(json, null, 4), { encoding: 'utf8' });  // Write JSON as utf8 encoded, with same file name.
