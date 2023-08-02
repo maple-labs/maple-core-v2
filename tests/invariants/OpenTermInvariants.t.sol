@@ -88,7 +88,7 @@ contract OpenTermInvariants is BaseInvariants {
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function invariant_openTermLoan_A_B_C_D_E_F_G_H_I_openTermLoanManager_A_B_C_D_F_H_I_J() external useCurrentTimestamp {
+    function statefulFuzz_openTermLoan_A_B_C_D_E_F_G_H_I_openTermLoanManager_A_B_C_D_F_H_I_J() external useCurrentTimestamp {
         address[] memory loans = _getActiveLoans();
 
         address loanManager = address(otlHandler.loanManager());
@@ -123,11 +123,11 @@ contract OpenTermInvariants is BaseInvariants {
     /*** Open Term Loan Manager Non-Iterative Invariants                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function invariant_openTermLoanManager_E() external useCurrentTimestamp {
+    function statefulFuzz_openTermLoanManager_E() external useCurrentTimestamp {
         assert_otlm_invariant_E(address(otlHandler.loanManager()));
     }
 
-    function invariant_openTermLoanManager_G() external useCurrentTimestamp {
+    function statefulFuzz_openTermLoanManager_G() external useCurrentTimestamp {
         assert_otlm_invariant_G(address(otlHandler.loanManager()));
     }
 
