@@ -84,35 +84,53 @@ contract ProtocolHealthChecker {
         address fixedTermLoanManager_;
         address openTermLoanManager_;
 
-        bool noFixedTermLM;
-        bool noOpenTermLM;
+        {
+            uint256 length = poolManager.loanManagerListLength();
 
-        // Assume indexes for FT/OT LMs are 0 and 1 respectively. This might not be true for some deployed pools.;
-        try poolManager.loanManagerList(0) {
-            fixedTermLoanManager_ = poolManager.loanManagerList(0);
-        } catch {
-            noFixedTermLM = true;
+            // Assume at most two LMs. This require will just help debug in case of future failures.
+            require(length == 1 || length == 2, "PHC:CI:INVALID_LM_LENGTH");
+
+            address loanManagerOne_ = poolManager.loanManagerList(0);
+            address loanManagerTwo_ = length == 2 ? poolManager.loanManagerList(1) : address(0);
+
+            if (_isFixedTermLoanManager(loanManagerOne_)) {
+                bool empty = loanManagerTwo_ == address(0);
+                
+                // Given the 1st LM is fixed term, the 2nd LM must be either empty or open term.
+                require(empty || _isOpenTermLoanManager(loanManagerTwo_), "PHC:CI:INVALID_LM_TYPES");
+
+                fixedTermLoanManager_ = loanManagerOne_;
+                openTermLoanManager_  = empty ? address(0) : loanManagerTwo_;
+            } 
+
+            if (_isOpenTermLoanManager(loanManagerOne_)) {
+                bool empty = loanManagerTwo_ == address(0);
+
+                // Given the 1st LM is open term, the 2nd LM must be either empty or fixed term.
+                require(empty || _isFixedTermLoanManager(loanManagerTwo_), "PHC:CI:INVALID_LM_TYPES");
+
+                fixedTermLoanManager_ = empty ? address(0) : loanManagerTwo_;
+                openTermLoanManager_  = loanManagerOne_;
+            }
         }
 
-        try poolManager.loanManagerList(1) {
-            openTermLoanManager_ = poolManager.loanManagerList(1);
-        } catch {
-            noOpenTermLM = true;
-        }
+        address pool_              = poolManager.pool();
+        address fundsAsset_        = IPool(pool_).asset();
+        address withdrawalManager_ = poolManager.withdrawalManager();
 
-        address pool_                 = poolManager.pool();
-        address fundsAsset_           = IPool(pool_).asset();
-        address withdrawalManager_    = poolManager.withdrawalManager();
+        bool emptyLoanManager = fixedTermLoanManager_ == address(0);
 
-        invariants_.fixedTermLoanManagerInvariantA = noFixedTermLM || check_fixedTermLoanManager_invariant_A(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantB = noFixedTermLM || check_fixedTermLoanManager_invariant_B(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantF = noFixedTermLM || check_fixedTermLoanManager_invariant_F(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantI = noFixedTermLM || check_fixedTermLoanManager_invariant_I(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantA = emptyLoanManager || check_fixedTermLoanManager_invariant_A(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantB = emptyLoanManager || check_fixedTermLoanManager_invariant_B(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantF = emptyLoanManager || check_fixedTermLoanManager_invariant_F(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantI = emptyLoanManager || check_fixedTermLoanManager_invariant_I(fixedTermLoanManager_);
         invariants_.fixedTermLoanManagerInvariantJ = true; // 0 interest loan possible, is this really an invariants as our system allows it
-        invariants_.fixedTermLoanManagerInvariantK = noFixedTermLM || check_fixedTermLoanManager_invariant_K(fixedTermLoanManager_);
+        invariants_.fixedTermLoanManagerInvariantK = emptyLoanManager || check_fixedTermLoanManager_invariant_K(fixedTermLoanManager_);
 
-        invariants_.openTermLoanManagerInvariantE = noOpenTermLM || check_openTermLoanManager_invariant_E(openTermLoanManager_);
-        invariants_.openTermLoanManagerInvariantG = noOpenTermLM || check_openTermLoanManager_invariant_G(openTermLoanManager_);
+        emptyLoanManager = openTermLoanManager_ == address(0);
+
+        invariants_.openTermLoanManagerInvariantE = emptyLoanManager || check_openTermLoanManager_invariant_E(openTermLoanManager_);
+        invariants_.openTermLoanManagerInvariantG = emptyLoanManager || check_openTermLoanManager_invariant_G(openTermLoanManager_);
 
         invariants_.poolInvariantA = check_pool_invariant_A(pool_);
         invariants_.poolInvariantD = check_pool_invariant_D(pool_);
@@ -392,6 +410,18 @@ contract ProtocolHealthChecker {
 
     function _getDiff(uint256 x, uint256 y) internal pure returns (uint256 diff) {
         diff = x > y ? x - y : y - x;
+    }
+
+    function _isFixedTermLoanManager(address loan) internal view returns (bool isFixedTermLoanManager_) {
+        try IFixedTermLoanManager(loan).domainEnd() {
+            isFixedTermLoanManager_ = true;
+        } catch { }
+    }
+
+    function _isOpenTermLoanManager(address loan) internal view returns (bool isOpenTermLoanManager_) {
+        try IOpenTermLoanManager(loan).paymentFor(address(0)) {
+            isOpenTermLoanManager_ = true;
+        } catch { }
     }
 
 }

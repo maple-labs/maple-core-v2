@@ -66,7 +66,8 @@ jobs:
         run: make integration profile=production
 
   fuzz_tests:
-    runs-on: ubuntu-latest
+    runs-on:
+        group: SC-HighMemory
     steps:
       - uses: actions/checkout@v3
 
@@ -97,7 +98,8 @@ jobs:
         run: ./test.sh -p deep -t Fuzz
 
   invariant_tests:
-    runs-on: ubuntu-latest
+    runs-on:
+        group: SC-HighMemory
     steps:
       - uses: actions/checkout@v3
 

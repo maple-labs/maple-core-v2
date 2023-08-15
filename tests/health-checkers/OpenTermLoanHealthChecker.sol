@@ -63,36 +63,42 @@ contract OpenTermLoanHealthChecker {
     function checkInvariants(address poolManager_, address[] memory loans_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        // Assume indexes for FT/OT LMs are 0 and 1 respectively.
-        address openTermLoanManager_;
+        uint256 length = poolManager.loanManagerListLength();
 
-        bool noOpenTermLM;
+        require(length == 1 || length == 2, "OTHC:CI:INVALID_LM_LIST_LENGTH");
 
-        try poolManager.loanManagerList(1) {
-            openTermLoanManager_ = poolManager.loanManagerList(1);
-        } catch {
-            noOpenTermLM = true;
+        // Initializing all to true makes sure that contract returns true if there's no fixed term loan manager.
+        invariants_ = _initStruct();
+
+        for(uint256 i; i < length; ++i) {
+            address loanManager_ = poolManager.loanManagerList(i);
+
+            if (_isOpenTermLoanManager(loanManager_)) {
+
+                // If there're two loan managers, only one can be an open term, otherwise this contract can't properly assert invariants.
+                if (i == 1) require(!_isOpenTermLoanManager(poolManager.loanManagerList(0)), "OTHC:CI:TWO_OTLMs");
+
+                invariants_.openTermLoanInvariantA = check_otl_invariant_A(loans_);
+                invariants_.openTermLoanInvariantB = check_otl_invariant_B(loans_);
+                invariants_.openTermLoanInvariantC = check_otl_invariant_C(loans_);
+                invariants_.openTermLoanInvariantD = check_otl_invariant_D(loans_);
+                invariants_.openTermLoanInvariantE = check_otl_invariant_E(loans_);
+                invariants_.openTermLoanInvariantF = check_otl_invariant_F(loans_);
+                invariants_.openTermLoanInvariantG = check_otl_invariant_G(loans_);
+                invariants_.openTermLoanInvariantH = check_otl_invariant_H(loans_);
+                invariants_.openTermLoanInvariantI = check_otl_invariant_I(loans_);
+
+                invariants_.openTermLoanManagerInvariantA = true; // check_otlm_invariant_A(openTermLoanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantB = check_otlm_invariant_B(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantC = check_otlm_invariant_C(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantD = check_otlm_invariant_D(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantF = check_otlm_invariant_F(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantH = check_otlm_invariant_H(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantI = check_otlm_invariant_I(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantJ = check_otlm_invariant_J(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantK = check_otlm_invariant_K(loanManager_, loans_);
+            }
         }
-
-        invariants_.openTermLoanInvariantA = noOpenTermLM || check_otl_invariant_A(loans_);
-        invariants_.openTermLoanInvariantB = noOpenTermLM || check_otl_invariant_B(loans_);
-        invariants_.openTermLoanInvariantC = noOpenTermLM || check_otl_invariant_C(loans_);
-        invariants_.openTermLoanInvariantD = noOpenTermLM || check_otl_invariant_D(loans_);
-        invariants_.openTermLoanInvariantE = noOpenTermLM || check_otl_invariant_E(loans_);
-        invariants_.openTermLoanInvariantF = noOpenTermLM || check_otl_invariant_F(loans_);
-        invariants_.openTermLoanInvariantG = noOpenTermLM || check_otl_invariant_G(loans_);
-        invariants_.openTermLoanInvariantH = noOpenTermLM || check_otl_invariant_H(loans_);
-        invariants_.openTermLoanInvariantI = noOpenTermLM || check_otl_invariant_I(loans_);
-
-        invariants_.openTermLoanManagerInvariantA = true; //noOpenTermLM || check_otlm_invariant_A(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantB = noOpenTermLM || check_otlm_invariant_B(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantC = noOpenTermLM || check_otlm_invariant_C(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantD = noOpenTermLM || check_otlm_invariant_D(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantF = noOpenTermLM || check_otlm_invariant_F(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantH = noOpenTermLM || check_otlm_invariant_H(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantI = noOpenTermLM || check_otlm_invariant_I(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantJ = noOpenTermLM || check_otlm_invariant_J(openTermLoanManager_, loans_);
-        invariants_.openTermLoanManagerInvariantK = noOpenTermLM || check_otlm_invariant_K(openTermLoanManager_, loans_);
     }
 
     /******************************************************************************************************************************/
@@ -471,6 +477,33 @@ contract OpenTermLoanHealthChecker {
 
     function _getProRatedAmount(uint256 amount_, uint256 rate_, uint256 interval_) internal pure returns (uint256 proRatedAmount_) {
         proRatedAmount_ = (amount_ * rate_ * interval_) / (365 days * 1e6);
+    }
+
+    function _isOpenTermLoanManager(address loan) internal view returns (bool isOpenTermLoanManager_) {
+        try IOpenTermLoanManager(loan).paymentFor(address(0)) {
+            isOpenTermLoanManager_ = true;
+        } catch { }
+    }
+
+    function _initStruct() internal pure returns (Invariants memory invariants_) {
+        invariants_.openTermLoanInvariantA        = true;
+        invariants_.openTermLoanInvariantB        = true;
+        invariants_.openTermLoanInvariantC        = true;
+        invariants_.openTermLoanInvariantD        = true;
+        invariants_.openTermLoanInvariantE        = true;
+        invariants_.openTermLoanInvariantF        = true;
+        invariants_.openTermLoanInvariantG        = true;
+        invariants_.openTermLoanInvariantH        = true;
+        invariants_.openTermLoanInvariantI        = true;
+        invariants_.openTermLoanManagerInvariantA = true;
+        invariants_.openTermLoanManagerInvariantB = true;
+        invariants_.openTermLoanManagerInvariantC = true;
+        invariants_.openTermLoanManagerInvariantD = true;
+        invariants_.openTermLoanManagerInvariantF = true;
+        invariants_.openTermLoanManagerInvariantH = true;
+        invariants_.openTermLoanManagerInvariantI = true;
+        invariants_.openTermLoanManagerInvariantJ = true;
+        invariants_.openTermLoanManagerInvariantK = true;
     }
 
 }
