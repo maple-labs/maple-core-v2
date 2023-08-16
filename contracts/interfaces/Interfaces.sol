@@ -90,6 +90,28 @@ interface IERC20Like {
 
 }
 
+interface IExemptionsManagerLike {
+
+    function admitGlobalExemption(address[] calldata exemptions, string memory description) external;
+
+    function approvePolicyExemptions(uint32 policyId, address[] memory exemptions) external;
+
+    function isPolicyExemption(uint32 policyId, address exemption) external view returns (bool isExempt);
+
+}
+
+interface IKycERC20Like {
+
+    function admissionPolicyId() external view returns (uint32 admissionPolicyId);
+
+    function depositFor(address trader, uint256 amount) external returns (bool success);
+
+    function exemptionsManager() external view returns (address exemptionsManager);
+
+    function policyManager() external view returns (address policyManager);
+
+}
+
 interface ILiquidatorLike {
 
     function getExpectedAmount(uint256 swapAmount_) external view returns (uint256 expectedAmount_);
@@ -178,6 +200,18 @@ interface ILoanManagerLike is IProxiedLike {
 
 }
 
+interface IPolicyManagerLike {
+
+    function getRoleAdmin(bytes32 role) external view returns (bytes32 admin);
+
+    function grantRole(bytes32 role, address account) external;
+
+    function policyDisabled(uint32 policyId) external view returns (bool isDisabled);
+
+    function policyAllowApprovedCounterparties(uint32 policyId) external view returns (bool isAllowed);
+
+}
+
 // NOTE: Isn't it better to import the interface from the module instead of re-declaring it here?
 interface IProxyFactoryLike {
 
@@ -235,3 +269,4 @@ interface IMockERC20 is IERC20 {
     function mint(address recipient_, uint256 amount_) external;
 
 }
+

@@ -4,9 +4,11 @@ pragma solidity 0.8.7;
 import {
     IERC20,
     IERC20Like,
+    IExemptionsManagerLike,
     IFixedTermLoan,
     IFixedTermLoanManager,
     IGlobals,
+    IKycERC20Like,
     ILoanLike,
     ILoanManagerLike,
     IMapleProxyFactory,
@@ -28,17 +30,21 @@ import { console2 as console, ERC20Helper, Test } from "../contracts/Contracts.s
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Test {
 
-    address MPL  = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
-    address WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-    address USDT = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    address MPL     = address(0x33349B282065b0284d756F0577FB39c158F935e6);
+    address WBTC    = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+    address WETH    = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address USDC    = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address USDT    = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    address USDC_K1 = address(0x9Bbc017431DA809D94daB738453CFA0415e78cD8);
 
-    address MPL_SOURCE  = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address WBTC_SOURCE = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
-    address WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
-    address USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
-    address USDT_SOURCE = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address MPL_SOURCE     = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
+    address WBTC_SOURCE    = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
+    address WETH_SOURCE    = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
+    address USDC_SOURCE    = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
+    address USDT_SOURCE    = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address USDC_K1_SOURCE = address(0xE39f66bB9eF7F97bA26E39e5B40b255A9c7C133D);
+
+    address KEYRING_ADMIN = address(0x9CF11CE87a896628E59dAcF48a2E3305Bd13D802);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -59,11 +65,12 @@ contract ProtocolActions is Test {
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
         // TODO: Consider using minters for each token.
 
-        if      (asset_ == MPL)  erc20_transfer(MPL,  MPL_SOURCE,  account_, amount_);
-        else if (asset_ == WBTC) erc20_transfer(WBTC, WBTC_SOURCE, account_, amount_);
-        else if (asset_ == WETH) erc20_transfer(WETH, WETH_SOURCE, account_, amount_);
-        else if (asset_ == USDC) erc20_transfer(USDC, USDC_SOURCE, account_, amount_);
-        else if (asset_ == USDT) erc20_transfer(USDT, USDT_SOURCE, account_, amount_);
+        if      (asset_ == MPL)     erc20_transfer(MPL,     MPL_SOURCE,     account_, amount_);
+        else if (asset_ == WBTC)    erc20_transfer(WBTC,    WBTC_SOURCE,    account_, amount_);
+        else if (asset_ == WETH)    erc20_transfer(WETH,    WETH_SOURCE,    account_, amount_);
+        else if (asset_ == USDC)    erc20_transfer(USDC,    USDC_SOURCE,    account_, amount_);
+        else if (asset_ == USDT)    erc20_transfer(USDT,    USDT_SOURCE,    account_, amount_);
+        else if (asset_ == USDC_K1) erc20_transfer(USDC_K1, USDC_K1_SOURCE, account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
@@ -624,6 +631,14 @@ contract ProtocolActions is Test {
 
         address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
 
+        if (ILoanLike(loan_).fundsAsset() == USDC_K1) {
+            addKeyringExemption(loan_);
+
+            address borrower = ILoanLike(loan_).borrower();
+
+            if (!isKeyringExempt(borrower)) addKeyringExemption(borrower);
+        }
+
         vm.startPrank(poolDelegate_);
         loanManager_.fund(loan_);
         vm.stopPrank();
@@ -760,6 +775,40 @@ contract ProtocolActions is Test {
 
         vm.prank(governor);
         INonTransparentProxy(globals_).setImplementation(newImplementation_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Keyring Functions                                                                                                               **/
+    /**************************************************************************************************************************************/
+
+    function addKeyringExemption(address exemption_) internal {
+        address[] memory exemptions_ = new address[](1);
+        exemptions_[0] = exemption_;
+
+        addKeyringExemptions(exemptions_);
+    }
+
+    function addKeyringExemptions(address[] memory exemptions_) internal {
+        address exemptionsManager_ = IKycERC20Like(USDC_K1).exemptionsManager();
+
+        for (uint i_; i_ < exemptions_.length; ++i_) {
+            assertEq(IExemptionsManagerLike(exemptionsManager_).isPolicyExemption(1, exemptions_[i_]), false);
+        }
+
+        vm.startPrank(KEYRING_ADMIN);
+        IExemptionsManagerLike(exemptionsManager_).admitGlobalExemption(exemptions_, "Maple");
+        IExemptionsManagerLike(exemptionsManager_).approvePolicyExemptions(1, exemptions_);
+        vm.stopPrank();
+
+        for (uint i_; i_ < exemptions_.length; ++i_) {
+            assertEq(IExemptionsManagerLike(exemptionsManager_).isPolicyExemption(1, exemptions_[i_]), true);
+        }
+    }
+
+    function isKeyringExempt(address account_) internal view returns (bool isExempt_) {
+        address exemptionsManager_ = IKycERC20Like(USDC_K1).exemptionsManager();
+
+        isExempt_ = IExemptionsManagerLike(exemptionsManager_).isPolicyExemption(1, account_);
     }
 
     /**************************************************************************************************************************************/
