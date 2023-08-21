@@ -97,7 +97,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./test.sh -p super_deep -t Fuzz
+        run: ./test.sh -p super_deep -t testFuzz
 
   invariant_tests:
     runs-on:
