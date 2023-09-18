@@ -13,6 +13,7 @@ contract GetExpectedAmountTests is TestBase {
     string url = vm.envString("ETH_RPC_URL");
 
     uint256 blockNumber = 15_588_766;  // WETH price at the time: 1311.75777214e8
+    uint96  maxDelay    = 86400 seconds;
 
     IFixedTermLoanManager loanManager;
 
@@ -31,7 +32,7 @@ contract GetExpectedAmountTests is TestBase {
 
     function test_getExpectedAmount_zeroAmount() external {
         vm.prank(governor);
-        globals.setPriceOracle(weth, wethAggregator);
+        globals.setPriceOracle(weth, wethAggregator, maxDelay);
 
         assertEq(loanManager.getExpectedAmount(weth, 0), 0);
     }
@@ -48,7 +49,7 @@ contract GetExpectedAmountTests is TestBase {
 
     function test_getExpectedAmount_currentPrice() external {
         vm.prank(governor);
-        globals.setPriceOracle(weth, wethAggregator);
+        globals.setPriceOracle(weth, wethAggregator, maxDelay);
 
         uint256 swapAmount   = 13.7234925e18;
         uint256 returnAmount = 18001.897947e6;  // 13.7234925 * 1311.75777214
@@ -58,7 +59,7 @@ contract GetExpectedAmountTests is TestBase {
 
     function test_getExpectedAmount_withSlippage() external {
         vm.startPrank(governor);
-        globals.setPriceOracle(weth, wethAggregator);
+        globals.setPriceOracle(weth, wethAggregator, maxDelay);
         loanManager.setAllowedSlippage(address(weth), 0.113e6);  // Slippage of 11.3%
         vm.stopPrank();
 
@@ -70,7 +71,7 @@ contract GetExpectedAmountTests is TestBase {
 
     function test_getExpectedAmount_withMinRatio() external {
         vm.startPrank(governor);
-        globals.setPriceOracle(weth, wethAggregator);
+        globals.setPriceOracle(weth, wethAggregator, maxDelay);
         loanManager.setMinRatio(address(weth), 2000e6);  // Minimum price of 2000 USDC
         vm.stopPrank();
 
@@ -85,7 +86,7 @@ contract GetExpectedAmountTests is TestBase {
 
     function test_getExpectedAmount_withSlippageAndMinRatio_minRatioHigher() external {
         vm.startPrank(governor);
-        globals.setPriceOracle(weth, wethAggregator);
+        globals.setPriceOracle(weth, wethAggregator, maxDelay);
         loanManager.setAllowedSlippage(address(weth), 0.113e6);  // Slippage of 11.3%
         loanManager.setMinRatio(address(weth), 1200e6);          // Minimum price of 1200 USDC
         vm.stopPrank();
@@ -101,7 +102,7 @@ contract GetExpectedAmountTests is TestBase {
 
     function test_getExpectedAmount_withSlippageAndMinRatio_slippageHigher() external {
         vm.startPrank(governor);
-        globals.setPriceOracle(weth, wethAggregator);
+        globals.setPriceOracle(weth, wethAggregator, maxDelay);
         loanManager.setAllowedSlippage(address(weth), 0.013e6);  // Slippage of 1.3%
         loanManager.setMinRatio(address(weth), 1200e6);          // Minimum price of 1200 USDC
         vm.stopPrank();

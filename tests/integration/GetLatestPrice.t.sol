@@ -13,6 +13,7 @@ contract GetLatestPriceTests is TestBase {
 
     uint256 blockNumber = 15_588_766;
     uint256 wethPrice   = 1311.75777214e8;
+    uint96  maxDelay    = 86400 seconds;
 
     function setUp() public virtual override {
         vm.createSelectFork(url, blockNumber);
@@ -34,7 +35,20 @@ contract GetLatestPriceTests is TestBase {
 
     function test_getLatestPrice_currentPrice() external {
         vm.prank(governor);
-        globals.setPriceOracle(weth, chainlinkWethAggregator);
+        globals.setPriceOracle(weth, chainlinkWethAggregator, maxDelay);
+
+        assertEq(globals.getLatestPrice(weth), wethPrice);
+    }
+
+    function test_getLatestPrice_stalePrice() external {
+        vm.prank(governor);
+        globals.setPriceOracle(weth, chainlinkWethAggregator, maxDelay);
+
+        vm.expectRevert("MG:GLP:STALE_PRICE");
+        vm.warp(block.timestamp + maxDelay);
+        globals.getLatestPrice(weth);
+
+        rewind(maxDelay);
 
         assertEq(globals.getLatestPrice(weth), wethPrice);
     }

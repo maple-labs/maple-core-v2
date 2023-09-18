@@ -35,8 +35,8 @@ contract GovernorBase {
         globals.setMigrationAdmin(migrationAdmin_);
     }
 
-    function setPriceOracle(address asset_, address priceOracle_) public virtual {
-        globals.setPriceOracle(asset_, priceOracle_);
+    function setPriceOracle(address asset_, address priceOracle_, uint96 maxDelay_) public virtual {
+        globals.setPriceOracle(asset_, priceOracle_, maxDelay_);
     }
 
     function setSecurityAdmin(address securityAdmin_) public virtual {
