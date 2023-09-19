@@ -11,16 +11,16 @@ contract TransferTests is TestBase {
     address lp       = makeAddr("lp");
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(start, 1 weeks, 2 days);
         // NOTE: As opposed to super.setUp(), do not open the pool,
         // as tests need to validate that only valid lenders are allowed to transfer Pool tokens.
-
-        start = block.timestamp;
     }
 
     function test_transfer_protocolPaused() external {

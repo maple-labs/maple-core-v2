@@ -140,7 +140,7 @@ contract Scenario is TestBase {
 
         // TODO: For now, ignoring name, asset, capacity
 
-        _createAndConfigurePool(1, 1);
+        _createAndConfigurePool(block.timestamp, 1, 1);
         openPool(address(poolManager));
 
         // TODO: This needs to be reworked once fees are refactored in `TestBase`.

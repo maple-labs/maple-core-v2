@@ -65,12 +65,14 @@ contract MaxDepositTests is TestBase {
     address lp2;
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(start, 1 weeks, 2 days);
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -139,12 +141,14 @@ contract MaxMintTests is TestBase {
     address lp2;
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(start, 1 weeks, 2 days);
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");

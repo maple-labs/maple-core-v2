@@ -8,6 +8,8 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 contract DeployPoolTests is TestBaseWithAssertions {
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
@@ -24,7 +26,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -41,7 +43,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -58,7 +60,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -75,7 +77,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -89,7 +91,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(0),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -103,7 +105,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
 
         vm.prank(governor);
@@ -119,7 +121,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool 2",
             symbol_:                   "MP 2",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -136,7 +138,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -154,7 +156,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(asset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -176,10 +178,24 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6]
+            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6, start]
         });
 
         vm.stopPrank();
+    }
+
+    function test_deployPool_failWithInvalidStart() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("MPF:CI:FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: withdrawalManagerFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start - 1 seconds]
+        });
     }
 
     function test_deployPool_failWithZeroWindowDuration() external {
@@ -192,7 +208,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 0, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 0, 0, start]
         });
     }
 
@@ -206,7 +222,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 1 weeks + 1 seconds, 0]
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 1 weeks + 1 seconds, 0, start]
         });
     }
 
@@ -220,7 +236,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 1e6 + 1, 0, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 1e6 + 1, 0, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -234,7 +250,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 1000e6, 1 weeks, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 1000e6, 1 weeks, 2 days, 0, start]
         });
     }
 
@@ -265,7 +281,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 0]
+            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 0, start]
         });
 
         vm.stopPrank();
@@ -287,7 +303,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6]
+            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6, start]
         });
 
         vm.stopPrank();
@@ -310,7 +326,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6]
+            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6, start]
         });
 
         vm.stopPrank();

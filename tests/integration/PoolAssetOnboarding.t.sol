@@ -11,7 +11,7 @@ import {
     IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { AddressRegistry, console2 as console } from "../../contracts/Contracts.sol";
+import { AddressRegistry, console2 as console, PoolDeployer } from "../../contracts/Contracts.sol";
 
 import { FuzzedUtil } from "../fuzz/FuzzedSetup.sol";
 
@@ -27,6 +27,7 @@ contract PoolAssetOnboardingTests is AddressRegistry, FuzzedUtil {
 
     address poolDelegate = makeAddr("poolDelegate");
 
+    address poolDeployer;
     address poolManager;
 
     address[] newLps;
@@ -48,20 +49,15 @@ contract PoolAssetOnboardingTests is AddressRegistry, FuzzedUtil {
     /**************************************************************************************************************************************/
 
     function _configureGlobals(address poolAsset) internal {
-        IGlobals globals = IGlobals(globals);
-
         vm.startPrank(governor);
-
-        // Allow new pool asset
-        globals.setValidPoolAsset(poolAsset, true);
-
-        // Allow PD in Globals
-        globals.setValidPoolDelegate(poolDelegate, true);
-
+        IGlobals(globals).setCanDeployFrom(poolManagerFactory, poolDeployer, true);
+        IGlobals(globals).setCanDeployFrom(withdrawalManagerFactory, poolDeployer, true);
+        IGlobals(globals).setValidPoolAsset(poolAsset, true);
+        IGlobals(globals).setValidPoolDelegate(poolDelegate, true);
         vm.stopPrank();
     }
 
-    function _deployPoolWithNewAsset(address poolAsset, uint256[6] memory configParams) internal returns (address newPoolManager) {
+    function _deployPoolWithNewAsset(address poolAsset, uint256[7] memory configParams) internal returns (address newPoolManager) {
         _configureGlobals(poolAsset);
 
         address[] memory loanMangerFactories = new address[](2);
@@ -69,7 +65,7 @@ contract PoolAssetOnboardingTests is AddressRegistry, FuzzedUtil {
         loanMangerFactories[1] = openTermLoanManagerFactory;
 
         newPoolManager = deployAndActivatePool(
-            poolDeployerV2,
+            poolDeployer,
             poolAsset,
             globals,
             poolDelegate,
@@ -120,7 +116,10 @@ contract PoolAssetOnboardingTests is AddressRegistry, FuzzedUtil {
     function test_USDTPoolLifecycle(uint256 seed) external {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17522400);
 
-        uint256[6] memory configParams = [uint256(10_000_000e6), 0.01e6, 0, 5 days, 2 days, 0];
+        // NOTE: The new version of the PoolDeployer is not deployed on mainnet yet.
+        poolDeployer = address(new PoolDeployer(globals));
+
+        uint256[7] memory configParams = [uint256(10_000_000e6), 0.01e6, 0, 5 days, 2 days, 0, block.timestamp];
 
         poolManager = _deployPoolWithNewAsset(USDT, configParams);
 
@@ -135,26 +134,33 @@ contract KeyringOnboardingTests is AddressRegistry, FuzzedUtil, HealthCheckerAss
 
     address healthChecker;
     address pool;
+    address poolDeployer;
     address poolManager;
     address withdrawalManager;
-
-    uint256 start;
 
     function setUp() external {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17914006);
 
         healthChecker = address(new ProtocolHealthChecker());
 
+        setupPoolDeployer();
         deployPool();
         addPoolExemptions();
         setupFuzzing();
-
-        start = block.timestamp;
     }
 
     /**************************************************************************************************************************************/
     /*** Setup Functions                                                                                                                ***/
     /**************************************************************************************************************************************/
+
+    function setupPoolDeployer() internal {
+        poolDeployer = address(new PoolDeployer(globals));
+
+        vm.startPrank(governor);
+        IGlobals(globals).setCanDeployFrom(poolManagerFactory, poolDeployer, true);
+        IGlobals(globals).setCanDeployFrom(withdrawalManagerFactory, poolDeployer, true);
+        vm.stopPrank();
+    }
 
     function deployPool() internal {
         vm.startPrank(governor);
@@ -168,14 +174,14 @@ contract KeyringOnboardingTests is AddressRegistry, FuzzedUtil, HealthCheckerAss
 
         // TODO: Include pool cover and set bootstrap mint.
         vm.prank(poolDelegate);
-        poolManager = IPoolDeployer(poolDeployerV2).deployPool({
+        poolManager = IPoolDeployer(poolDeployer).deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    USDC_K1,
             name_:                     "Keyring Pool",
             symbol_:                   "KP",
-            configParams_:             [type(uint256).max, 0, 0, 7 days, 2 days, 0]
+            configParams_:             [type(uint256).max, 0, 0, 7 days, 2 days, 0, block.timestamp]
         });
 
         setDelegateManagementFeeRate(poolManager, 0.02e6);

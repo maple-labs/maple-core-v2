@@ -98,15 +98,16 @@ contract TestBase is ProtocolActions {
     WithdrawalManager   withdrawalManager;
 
     function setUp() public virtual {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
-        openPool(address(poolManager));
+        _createAndConfigurePool(start, 1 weeks, 2 days);
 
-        start = block.timestamp;
+        openPool(address(poolManager));
     }
 
     /**************************************************************************************************************************************/
@@ -236,7 +237,7 @@ contract TestBase is ProtocolActions {
     }
 
     // TODO: Add all config params here
-    function _createPool(uint256 withdrawalCycle, uint256 windowDuration) internal {
+    function _createPool(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal {
         vm.prank(poolDelegate);
         poolManager = PoolManager(deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
@@ -245,7 +246,7 @@ contract TestBase is ProtocolActions {
             asset_:                    address(fundsAsset),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0]
+            configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0, startTime]
         }));
 
         withdrawalManager = WithdrawalManager(poolManager.withdrawalManager());
@@ -260,8 +261,8 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    function _createAndConfigurePool(uint256 withdrawalCycle, uint256 windowDuration) internal {
-        _createPool(withdrawalCycle, windowDuration);
+    function _createAndConfigurePool(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal {
+        _createPool(startTime, withdrawalCycle, windowDuration);
         _configurePool();
     }
 

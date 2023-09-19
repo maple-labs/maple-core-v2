@@ -6,12 +6,14 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 contract ActivatePoolManagerTests is TestBaseWithAssertions {
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createPool(1 weeks, 2 days);
+        _createPool(start, 1 weeks, 2 days);
     }
 
     function test_activatePoolManager() external {
@@ -30,12 +32,14 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
 contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createPool(1 weeks, 2 days);
+        _createPool(start, 1 weeks, 2 days);
     }
 
     function test_activatePoolManager_failIfNotGovernor() public {

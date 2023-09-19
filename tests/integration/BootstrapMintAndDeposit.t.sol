@@ -11,6 +11,8 @@ contract BootstrapTestBase is TestBaseWithAssertions {
     address lp2;
 
     function setUp() public virtual override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
@@ -20,7 +22,7 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         globals.setBootstrapMint(address(fundsAsset), BOOTSTRAP_MINT_AMOUNT);
 
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(start, 1 weeks, 2 days);
         openPool(address(poolManager));
 
         lp1 = makeAddr("lp1");

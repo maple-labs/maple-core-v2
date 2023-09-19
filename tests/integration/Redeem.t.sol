@@ -186,6 +186,30 @@ contract RequestRedeemTests is TestBase {
         assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
     }
 
+    function test_requestRedeem_premature() external {
+        deposit(lp, 1_000e6);
+
+        assertEq(pool.balanceOf(lp), 1_000e6);
+        assertEq(pool.balanceOf(wm), 0);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+
+        vm.warp(start - 10 days);
+        vm.prank(lp);
+        uint256 shares = pool.requestRedeem(1_000e6, lp);
+
+        assertEq(shares, 1_000e6);
+
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 1_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+    }
+
     function testDeepFuzz_requestRedeem(uint256 depositAmount, uint256 redeemAmount) external {
         depositAmount = bound(depositAmount, 1, 1e30);
         redeemAmount  = bound(redeemAmount,  1, depositAmount);
@@ -339,6 +363,45 @@ contract RedeemTests is TestBase {
         assertEq(pool.totalSupply(), 0);
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+    }
+
+    function test_redeem_singleUser_fullLiquidity_fullRedeem_prematureRequest() external {
+        deposit(lp, 1_000e6);
+
+        // Transfer cash into pool to increase totalAssets
+        fundsAsset.mint(address(pool), 250e6);
+
+        vm.warp(start - 10 days);
+        vm.prank(lp);
+        pool.requestRedeem(1_000e6, lp);
+
+        assertEq(fundsAsset.balanceOf(address(lp)),   0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_250e6);
+
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 1_000e6);
+        assertEq(pool.totalSupply(), 1_000e6);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        uint256 assets = pool.redeem(1_000e6, lp, lp);
+
+        assertEq(assets, 1_250e6);
+
+        assertEq(fundsAsset.balanceOf(address(lp)),   1_250e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 0);
+        assertEq(pool.totalSupply(), 0);
 
         assertEq(withdrawalManager.exitCycleId(lp),     0);
         assertEq(withdrawalManager.lockedShares(lp),    0);
@@ -510,6 +573,8 @@ contract MultiUserRedeemTests is TestBase {
     address wm;
 
     function setUp() public override {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
@@ -517,10 +582,8 @@ contract MultiUserRedeemTests is TestBase {
         _createFactories();
 
         // Set interval to give round numbers
-        _createAndConfigurePool(ONE_MONTH / 2, 2 days);
+        _createAndConfigurePool(start, ONE_MONTH / 2, 2 days);
         openPool(address(poolManager));
-
-        start = block.timestamp;
 
         borrower = makeAddr("borrower");
         lp1      = makeAddr("lp1");

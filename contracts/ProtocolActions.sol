@@ -562,7 +562,7 @@ contract ProtocolActions is Test {
         string     memory name_,
         string     memory symbol_,
         address[]  memory loanManagerFactories_,
-        uint256[6] memory configParams_
+        uint256[7] memory configParams_
     )
         internal returns (address poolManager_)
     {

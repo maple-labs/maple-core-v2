@@ -76,7 +76,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         /*** Step 1: PD creates pool ***/
         /*******************************/
 
-        _createPool(1 weeks, 2 days);
+        _createPool(start, 1 weeks, 2 days);
 
         loanManager = OpenTermLoanManager(poolManager.loanManagerList(1));
 

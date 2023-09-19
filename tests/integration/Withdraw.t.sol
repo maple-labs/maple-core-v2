@@ -56,6 +56,21 @@ contract RequestWithdrawTests is TestBase {
         pool.requestWithdraw(1_000e6, lp);
     }
 
+    function test_requestWithdraw_premature() external {
+        deposit(lp, 1_000e6);
+
+        assertEq(pool.balanceOf(lp), 1_000e6);
+        assertEq(pool.balanceOf(wm), 0);
+
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.totalCycleShares(3), 0);
+
+        vm.warp(start - 10 days);
+        vm.prank(lp);
+        vm.expectRevert("PM:RW:NOT_ENABLED");
+        pool.requestWithdraw(1_000e6, lp);
+    }
 
     function testDeepFuzz_requestWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
         depositAmount  = bound(depositAmount,  1, 1e30);
@@ -145,6 +160,12 @@ contract WithdrawFailureTests is TestBase {
     }
 
     function test_withdraw_zeroAssetInput() external {
+        vm.expectRevert("PM:PW:NOT_ENABLED");
+        pool.withdraw(0, lp, lp);
+    }
+
+    function test_withdraw_premature() external {
+        vm.warp(start - 10 days);
         vm.expectRevert("PM:PW:NOT_ENABLED");
         pool.withdraw(0, lp, lp);
     }
@@ -510,17 +531,18 @@ contract WithdrawScenarios is TestBase {
 
 contract WithdrawOnPermissionedPool is TestBase {
 
-
     IFixedTermLoanManager loanManager;
 
     function setUp() public override {
+        start = block.timestamp;
+
         // Manually doing setUp steps so the pool is not open to public.
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
+        _createAndConfigurePool(start, 1 weeks, 2 days);
 
         loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 

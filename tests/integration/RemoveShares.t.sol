@@ -78,6 +78,36 @@ contract RemoveSharesTests is TestBase {
         assertEq(withdrawalManager.exitCycleId(lp),     0);
     }
 
+    function test_removeShares_prematurelyAddedShares() public {
+        lp = makeAddr("lp2");
+
+        deposit(lp, 2_000e6);
+
+        vm.warp(start - 10 days);
+        vm.prank(lp);
+        pool.requestRedeem(1_000e6, lp);
+
+        assertEq(pool.balanceOf(lp), 0);
+        assertEq(pool.balanceOf(wm), 2_000e6);
+
+        assertEq(withdrawalManager.totalCycleShares(3), 2_000e6);
+        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
+        assertEq(withdrawalManager.exitCycleId(lp),     3);
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        uint256 sharesReturned = pool.removeShares(1_000e6, lp);
+
+        assertEq(sharesReturned, 1_000e6);
+
+        assertEq(pool.balanceOf(lp), 1_000e6);
+        assertEq(pool.balanceOf(wm), 1_000e6);
+
+        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(withdrawalManager.lockedShares(lp),    0);
+        assertEq(withdrawalManager.exitCycleId(lp),     0);
+    }
+
     function test_removeShares_pastTheRedemptionWindow() public {
         // Warp to way after the period closes
         vm.warp(start + 50 weeks);
