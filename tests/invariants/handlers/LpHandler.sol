@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IInvariantTest, IPool, IPoolManager, IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
+import { 
+    IInvariantTest, 
+    IPool, 
+    IPoolManager, 
+    IWithdrawalManagerCyclical as IWithdrawalManager 
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 // TODO: MockERC20 is not needed if protocol actions are used which handle minting.
 import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";

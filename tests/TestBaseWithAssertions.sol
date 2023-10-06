@@ -13,7 +13,7 @@ import {
     IOpenTermLoanManagerStructs,
     IPool,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../contracts/interfaces/Interfaces.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";

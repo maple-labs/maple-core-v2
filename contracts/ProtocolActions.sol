@@ -19,7 +19,7 @@ import {
     IPoolDeployer,
     IPoolManager,
     IProxiedLike,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
 import { console2 as console, ERC20Helper, Test } from "../contracts/Contracts.sol";

@@ -10,7 +10,7 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../../contracts/Contracts.sol";

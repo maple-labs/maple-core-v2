@@ -5,7 +5,7 @@ import {
     IERC20,
     IPool,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
 contract LPHealthChecker {

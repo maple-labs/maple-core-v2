@@ -7,7 +7,7 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IWithdrawalManager,
+    IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerLike
 } from "../../contracts/interfaces/Interfaces.sol";
 

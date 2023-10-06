@@ -31,9 +31,9 @@ import {
     PoolManager,
     PoolManagerFactory,
     PoolManagerInitializer,
-    WithdrawalManager,
-    WithdrawalManagerFactory,
-    WithdrawalManagerInitializer
+    WithdrawalManagerCyclical as WithdrawalManager,
+    WithdrawalManagerCyclicalFactory as WithdrawalManagerFactory,
+    WithdrawalManagerCyclicalInitializer as WithdrawalManagerInitializer
 } from "../contracts/Contracts.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";

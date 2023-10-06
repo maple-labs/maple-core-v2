@@ -13,7 +13,7 @@ import {
     FixedTermLoanManager,
     Globals,
     PoolManager,
-    WithdrawalManager
+    WithdrawalManagerCyclical
 } from "../../contracts/Contracts.sol";
 
 import { TestBase } from "../TestBase.sol";
@@ -617,7 +617,7 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new WithdrawalManager());
+    address newImplementation = address(new WithdrawalManagerCyclical());
 
     bytes upgradeCallData = new bytes(0);
 

@@ -41,9 +41,12 @@ import { MaplePoolManager as MPM }             from "../modules/pool/contracts/M
 import { MaplePoolManagerFactory as MPMF }     from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
 import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
 
-import { MapleWithdrawalManager as MWM }             from "../modules/withdrawal-manager/contracts/MapleWithdrawalManager.sol";
-import { MapleWithdrawalManagerFactory as MWMF }     from "../modules/withdrawal-manager/contracts/MapleWithdrawalManagerFactory.sol";
-import { MapleWithdrawalManagerInitializer as MWMI } from "../modules/withdrawal-manager/contracts/MapleWithdrawalManagerInitializer.sol";
+import { MapleWithdrawalManager as MWMC } from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManager.sol";
+
+import { MapleWithdrawalManagerFactory as MWMCF }     
+    from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerFactory.sol";
+import { MapleWithdrawalManagerInitializer as MWMCI } 
+    from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerInitializer.sol";
 
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
@@ -176,12 +179,12 @@ contract Test is T {
 
 }
 
-contract WithdrawalManager is MWM { }
+contract WithdrawalManagerCyclical is MWMC { }
 
-contract WithdrawalManagerFactory is MWMF {
+contract WithdrawalManagerCyclicalFactory is MWMCF {
 
-    constructor(address globals_) MWMF(globals_) { }
+    constructor(address globals_) MWMCF(globals_) { }
 
 }
 
-contract WithdrawalManagerInitializer is MWMI { }
+contract WithdrawalManagerCyclicalInitializer is MWMCI { }

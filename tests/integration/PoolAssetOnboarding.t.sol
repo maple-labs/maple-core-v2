@@ -8,7 +8,7 @@ import {
     IPool,
     IPoolDeployer,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { AddressRegistry, console2 as console, PoolDeployer } from "../../contracts/Contracts.sol";
