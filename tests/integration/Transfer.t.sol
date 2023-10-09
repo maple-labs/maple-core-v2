@@ -23,9 +23,9 @@ contract TransferTests is TestBase {
         // as tests need to validate that only valid lenders are allowed to transfer Pool tokens.
     }
 
+
     function test_transfer_protocolPaused() external {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
@@ -39,20 +39,18 @@ contract TransferTests is TestBase {
 
     function test_transfer_privatePoolInvalidLender() external {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp, true);
+        allowLender(address(poolManager), lp);
 
         // LP gets pool tokens.
         uint256 lpShares = deposit(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = makeAddr("recipient");
-        vm.expectRevert("P:T:RECIPIENT_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.transfer(recipient, lpShares);
 
         // Recipient is made a valid lender, lp should now be allowed to transfer to recipient.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(recipient, true);
+        allowLender(address(poolManager), recipient);
 
         vm.prank(lp);
         pool.transfer(recipient, lpShares);
@@ -60,28 +58,25 @@ contract TransferTests is TestBase {
 
     function test_transfer_privatePoolInvalidLender_openPoolToPublic() external {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp, true);
+        allowLender(address(poolManager), lp);
 
         // LP gets pool tokens.
         uint256 lpShares = deposit(lp, 1_000e6);
 
         // LP tries to transfer pool tokens, should fail, as recipient is not a valid lender.
         address recipient = makeAddr("recipient");
-        vm.expectRevert("P:T:RECIPIENT_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.transfer(recipient, lpShares);
 
         // Pool is opened to public, shares may be transferred to anyone.
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         vm.prank(lp);
         pool.transfer(recipient, lpShares);
     }
 
     function test_transfer_publicPool() external {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
@@ -97,8 +92,7 @@ contract TransferTests is TestBase {
     }
 
     function test_transferFrom_protocolPaused() external {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
@@ -116,8 +110,7 @@ contract TransferTests is TestBase {
 
     function test_transferFrom_privatePoolInvalidLender() external {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp, true);
+        allowLender(address(poolManager), lp);
 
         // LP gets pool tokens.
         uint256 lpShares   = deposit(lp, 1_000e6);
@@ -129,12 +122,11 @@ contract TransferTests is TestBase {
 
         // Transferer tries to transfer pool tokens for lp, should fail, as recipient is not a valid lender.
         vm.prank(transferer);
-        vm.expectRevert("P:TF:RECIPIENT_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.transferFrom(lp, recipient, lpShares);
 
         // Recipient is made a valid lender, lp should now be allowed to transfer to recipient.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(recipient, true);
+        allowLender(address(poolManager), recipient);
 
         vm.prank(transferer);
         pool.transferFrom(lp, recipient, lpShares);
@@ -142,8 +134,7 @@ contract TransferTests is TestBase {
 
     function test_transferFrom_privatePoolInvalidLender_openPoolToPublic() external {
         // Make LP a valid lender in pool manager, to allow the LP to deposit to the pool.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp, true);
+        allowLender(address(poolManager), lp);
 
         // LP gets pool tokens.
         uint256 lpShares   = deposit(lp, 1_000e6);
@@ -155,20 +146,18 @@ contract TransferTests is TestBase {
 
         // Transferer tries to transfer pool tokens for lp, should fail, as recipient is not a valid lender.
         vm.prank(transferer);
-        vm.expectRevert("P:TF:RECIPIENT_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.transferFrom(lp, recipient, lpShares);
 
         // Pool is opened to public, shares may be transferred to anyone.
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         vm.prank(transferer);
         pool.transferFrom(lp, recipient, lpShares);
     }
 
     function test_transferFrom_publicPool_noApproval() external {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
@@ -179,8 +168,7 @@ contract TransferTests is TestBase {
     }
 
     function test_transferFrom_publicPool_insufficientApproval() external {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");
@@ -194,8 +182,7 @@ contract TransferTests is TestBase {
     }
 
     function test_transferFrom_publicPool() external {
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         uint256 lpShares  = deposit(lp, 1_000e6);
         address recipient = makeAddr("recipient");

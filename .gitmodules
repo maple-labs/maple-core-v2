@@ -37,6 +37,9 @@
 [submodule "modules/erc20-helper"]
 	path = modules/erc20-helper
 	url = git@github.com:maple-labs/erc20-helper.git
+[submodule "modules/pool-permission-manager"]
+	path = modules/pool-permission-manager
+	url = git@github.com:maple-labs/pool-permission-manager-private.git
 [submodule "modules/withdrawal-manager-cyclical"]
 	path = modules/withdrawal-manager-cyclical
 	url = git@github.com:maple-labs/withdrawal-manager-cyclical-private.git

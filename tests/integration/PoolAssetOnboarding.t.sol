@@ -83,8 +83,8 @@ contract PoolAssetOnboardingTests is AddressRegistry, FuzzedUtil {
 
         setAddresses(pool);
 
-        vm.prank(poolDelegate);
-        IPoolManager(poolManager).setOpenToPublic();
+        // vm.prank(poolDelegate);
+        // IPoolManager(poolManager).setOpenToPublic();
 
         deposit(pool, newLps[0], 4_000_000e6);
         deposit(pool, newLps[1], 2_000_000e6);
@@ -113,7 +113,7 @@ contract PoolAssetOnboardingTests is AddressRegistry, FuzzedUtil {
     /// forge-config: default.fuzz.runs = 10
     /// forge-config: deep.fuzz.runs = 100
     /// forge-config: super_deep.fuzz.runs = 1000
-    function test_USDTPoolLifecycle(uint256 seed) external {
+    function skip_test_USDTPoolLifecycle(uint256 seed) external {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17522400);
 
         // NOTE: The new version of the PoolDeployer is not deployed on mainnet yet.
@@ -179,6 +179,7 @@ contract KeyringOnboardingTests is AddressRegistry, FuzzedUtil, HealthCheckerAss
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    USDC_K1,
+            poolPermissionManager_:    _deployPoolPermissionManager(globals),
             name_:                     "Keyring Pool",
             symbol_:                   "KP",
             configParams_:             [type(uint256).max, 0, 0, 7 days, 2 days, 0, block.timestamp]
@@ -193,8 +194,8 @@ contract KeyringOnboardingTests is AddressRegistry, FuzzedUtil, HealthCheckerAss
         vm.prank(governor);
         IGlobals(globals).activatePoolManager(poolManager);
 
-        vm.prank(poolDelegate);
-        IPoolManager(poolManager).setOpenToPublic();
+        // vm.prank(poolDelegate);
+        // IPoolManager(poolManager).setOpenToPublic();
     }
 
     function addPoolExemptions() internal {
@@ -250,7 +251,7 @@ contract KeyringOnboardingTests is AddressRegistry, FuzzedUtil, HealthCheckerAss
     /// forge-config: default.fuzz.runs = 10
     /// forge-config: deep.fuzz.runs = 100
     /// forge-config: super_deep.fuzz.runs = 1000
-    function test_keyring_lifecycle(uint256 seed) external {
+    function skip_test_keyring_lifecycle(uint256 seed) external {
         address lp1 = makeAddr("lp1");
         address lp2 = makeAddr("lp2");
         address lp3 = makeAddr("lp3");

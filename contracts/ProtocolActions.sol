@@ -22,7 +22,14 @@ import {
     IWithdrawalManagerCyclical as IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
-import { console2 as console, ERC20Helper, Test } from "../contracts/Contracts.sol";
+import { 
+    console2 as console, 
+    ERC20Helper,
+    NonTransparentProxy, 
+    PoolPermissionManager, 
+    PoolPermissionManagerInitializer, 
+    Test 
+} from "../contracts/Contracts.sol";
 
 // TODO: `deployPool`.
 // TODO: `createLoan`.
@@ -421,8 +428,9 @@ contract ProtocolActions is Test {
 
     function deposit(address pool_, address account_, uint256 assets_) internal returns (uint256 shares_) {
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).poolPermissions(poolManager_) == 0) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 
@@ -445,8 +453,9 @@ contract ProtocolActions is Test {
         ) = _getValidPermitSignature(asset_, account_, pool_, assets, deadline_, privateKey_);
 
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).poolPermissions(poolManager_) == 0) allowLender(poolManager_, account_);
 
         erc20_mint(asset_, account_, assets);
 
@@ -456,8 +465,9 @@ contract ProtocolActions is Test {
 
     function mint(address pool_, address account_, uint256 shares_) internal returns (uint256 assets_) {
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).poolPermissions(poolManager_) == 0) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 
@@ -482,8 +492,9 @@ contract ProtocolActions is Test {
         ) = _getValidPermitSignature(asset_, account_, pool_, shares_, deadline_, privateKey_);
 
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).poolPermissions(poolManager_) == 0) allowLender(poolManager_, account_);
 
         assets_ = IPool(pool_).previewMint(shares_);
 
@@ -532,9 +543,16 @@ contract ProtocolActions is Test {
 
     function allowLender(address poolManager_, address lender_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+        address ppm_          = IPoolManager(poolManager_).poolPermissionManager();
+
+        address[] memory lenders = new address[](1);
+        lenders[0] = lender_;
+
+        bool[] memory allows = new bool[](1);
+        allows[0] = true;
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).setAllowedLender(lender_, true);
+        PoolPermissionManager(ppm_).setLenderAllowlist(poolManager_, lenders, allows);
         vm.stopPrank();
     }
 
@@ -573,9 +591,13 @@ contract ProtocolActions is Test {
         }
 
         // Set Valid PD
-        IGlobals globals = IGlobals(globals_);
-        vm.prank(globals.governor());
-        globals.setValidPoolDelegate(poolDelegate_, true);
+        {
+            IGlobals globals = IGlobals(globals_);
+            vm.prank(globals.governor());
+            globals.setValidPoolDelegate(poolDelegate_, true);
+        }
+
+        address ppm_ = _deployPoolPermissionManager(globals_);
 
         // PD deploys pool
         vm.prank(poolDelegate_);
@@ -584,15 +606,16 @@ contract ProtocolActions is Test {
             withdrawalManagerFactory_: withdrawalManagerFactory_,
             loanManagerFactories_:     loanManagerFactories_,
             asset_:                    fundsAsset_,
+            poolPermissionManager_:    ppm_,
             name_:                     name_,
             symbol_:                   symbol_,
             configParams_:             configParams_
         });
 
         // Governor activates the pool
-        vm.startPrank(globals.governor());
-        globals.activatePoolManager(poolManager_);
-        globals.setMaxCoverLiquidationPercent(poolManager_, 1e6);
+        vm.startPrank(IGlobals(globals_).governor());
+        IGlobals(globals_).activatePoolManager(poolManager_);
+        IGlobals(globals_).setMaxCoverLiquidationPercent(poolManager_, 1e6);
         vm.stopPrank();
     }
 
@@ -659,9 +682,10 @@ contract ProtocolActions is Test {
 
     function openPool(address poolManager_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+        address ppm_          = IPoolManager(poolManager_).poolPermissionManager();
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).setOpenToPublic();
+        PoolPermissionManager(ppm_).setPoolPermissionLevel(poolManager_, 3);
         vm.stopPrank();
     }
 
@@ -814,6 +838,21 @@ contract ProtocolActions is Test {
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
+
+    function _deployPoolPermissionManager(address globals_) internal returns (address ppm_) {
+        address poolPermissionManagerImplementation = address(new PoolPermissionManager());
+        address poolPermissionManagerInitializer    = address(new PoolPermissionManagerInitializer());
+
+        address governor = IGlobals(globals_).governor();
+
+        ppm_ = address(new NonTransparentProxy(governor, poolPermissionManagerInitializer));
+
+        vm.prank(governor);
+        PoolPermissionManagerInitializer(address(ppm_)).initialize(poolPermissionManagerImplementation, address(globals_));
+
+        vm.prank(governor);
+        IGlobals(globals_).setValidInstanceOf("POOL_PERMISSION_MANAGER", address(ppm_), true);
+    }
 
     function _getValidPermitSignature(
         address asset_,

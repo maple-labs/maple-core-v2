@@ -255,13 +255,15 @@ contract DepositFailureTests is EnterBase {
         pool.deposit(liquidity, lp);
     }
 
-    function test_deposit_notActive() external {
-        uint256 liquidity = 1_000e6;
+    // TODO: Update Test if possible
+    // NOTE: This test can't be reached with the new permissioning model.
+    // function test_deposit_notActive() external {
+    //     uint256 liquidity = 1_000e6;
 
-        vm.expectRevert("P:D:NOT_ACTIVE");
-        vm.prank(lp);
-        pool.deposit(liquidity, lp);
-    }
+    //     vm.expectRevert("P:D:NOT_ACTIVE");
+    //     vm.prank(lp);
+    //     pool.deposit(liquidity, lp);
+    // }
 
     function test_deposit_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
@@ -269,7 +271,7 @@ contract DepositFailureTests is EnterBase {
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
 
-        vm.expectRevert("P:D:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.deposit(liquidity, lp);
 
@@ -284,7 +286,7 @@ contract DepositFailureTests is EnterBase {
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
 
-        vm.expectRevert("P:D:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.deposit(liquidity, lp);
 
@@ -306,7 +308,7 @@ contract DepositFailureTests is EnterBase {
         // Deposit an initial amount before setting liquidity cap.
         deposit(address(pool), lp, 400e6);
 
-        vm.expectRevert("P:D:DEPOSIT_GT_LIQ_CAP");
+        vm.expectRevert("P:DEPOSIT_GT_LIQ_CAP");
         vm.prank(lp);
         pool.deposit(600e6 + 1, lp);
 
@@ -362,15 +364,17 @@ contract DepositWithPermitFailureTests is EnterBase {
         pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
     }
 
-    function test_depositWithPermit_notActive() external {
-        uint256 liquidity = 1_000e6;
+    // TODO: Update Test if possible
+    // Note: Not reachable
+    // function test_depositWithPermit_notActive() external {
+    //     uint256 liquidity = 1_000e6;
 
-        allowLender(address(poolManager), lp);
+    //     allowLender(address(poolManager), lp);
 
-        vm.expectRevert("P:DWP:NOT_ACTIVE");
-        vm.prank(lp);
-        pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
-    }
+    //     vm.expectRevert("P:DWP:NOT_ACTIVE");
+    //     vm.prank(lp);
+    //     pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
+    // }
 
     function test_depositWithPermit_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
@@ -378,7 +382,7 @@ contract DepositWithPermitFailureTests is EnterBase {
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
 
-        vm.expectRevert("P:DWP:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
 
@@ -393,7 +397,7 @@ contract DepositWithPermitFailureTests is EnterBase {
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
 
-        vm.expectRevert("P:DWP:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
 
@@ -413,7 +417,7 @@ contract DepositWithPermitFailureTests is EnterBase {
         // Deposit an initial amount before setting liquidity cap.
         depositWithPermit(address(pool), lpSk, 400e6, deadline);
 
-        vm.expectRevert("P:DWP:DEPOSIT_GT_LIQ_CAP");
+        vm.expectRevert("P:DEPOSIT_GT_LIQ_CAP");
         vm.prank(lp);
         pool.depositWithPermit(600e6 + 1, lp, deadline, 0, bytes32(0), bytes32(0));
 
@@ -681,17 +685,19 @@ contract MintFailureTests is EnterBase {
         pool.mint(shares, lp);
     }
 
-    function test_mint_notActive() external {
-        uint256 liquidity = 1_000e6;
+    // TODO: Update Test if possible
+    // NOTE: Not reachable
+    // function test_mint_notActive() external {
+    //     uint256 liquidity = 1_000e6;
 
-        allowLender(address(poolManager), lp);
+    //     allowLender(address(poolManager), lp);
 
-        uint256 shares = pool.previewDeposit(liquidity);
+    //     uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("P:M:NOT_ACTIVE");
-        vm.prank(lp);
-        pool.mint(shares, lp);
-    }
+    //     vm.expectRevert("P:M:NOT_ACTIVE");
+    //     vm.prank(lp);
+    //     pool.mint(shares, lp);
+    // }
 
     function test_mint_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
@@ -701,7 +707,7 @@ contract MintFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("P:M:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.mint(shares, lp);
 
@@ -718,7 +724,7 @@ contract MintFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("P:M:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.mint(shares, lp);
 
@@ -745,7 +751,7 @@ contract MintFailureTests is EnterBase {
 
         mint(address(pool), lp, initialMintAmount);
 
-        vm.expectRevert("P:M:DEPOSIT_GT_LIQ_CAP");
+        vm.expectRevert("P:DEPOSIT_GT_LIQ_CAP");
         vm.prank(lp);
         pool.mint(nextMintAmount + 1, lp);
 
@@ -805,17 +811,19 @@ contract MintWithPermitFailureTests is EnterBase {
         pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
     }
 
-    function test_mintWithPermit_notActive() external {
-        uint256 liquidity = 1_000e6;
+    // TODO: Update Test if possible
+    // NOTE: Not reachable
+    // function test_mintWithPermit_notActive() external {
+    //     uint256 liquidity = 1_000e6;
 
-        allowLender(address(poolManager), lp);
+    //     allowLender(address(poolManager), lp);
 
-        uint256 shares = pool.previewDeposit(liquidity);
+    //     uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("P:MWP:NOT_ACTIVE");
-        vm.prank(lp);
-        pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
-    }
+    //     vm.expectRevert("P:MWP:NOT_ACTIVE");
+    //     vm.prank(lp);
+    //     pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
+    // }
 
     function test_mintWithPermit_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
@@ -825,7 +833,7 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("P:MWP:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
 
@@ -842,7 +850,7 @@ contract MintWithPermitFailureTests is EnterBase {
 
         uint256 shares = pool.previewDeposit(liquidity);
 
-        vm.expectRevert("P:MWP:LENDER_NOT_ALLOWED");
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         vm.prank(lp);
         pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
 
@@ -869,7 +877,7 @@ contract MintWithPermitFailureTests is EnterBase {
 
         mintWithPermit(address(pool), lpSk, initialMintAmount, deadline);
 
-        vm.expectRevert("P:MWP:DEPOSIT_GT_LIQ_CAP");
+        vm.expectRevert("P:DEPOSIT_GT_LIQ_CAP");
         vm.prank(lp);
         pool.mintWithPermit(nextMintAmount + 1, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
 

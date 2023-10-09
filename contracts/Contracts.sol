@@ -41,11 +41,14 @@ import { MaplePoolManager as MPM }             from "../modules/pool/contracts/M
 import { MaplePoolManagerFactory as MPMF }     from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
 import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
 
+import { PoolPermissionManager }            from "../modules/pool-permission-manager/contracts/PoolPermissionManager.sol";
+import { PoolPermissionManagerInitializer } from "../modules/pool-permission-manager/contracts/PoolPermissionManagerInitializer.sol";
+
 import { MapleWithdrawalManager as MWMC } from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManager.sol";
 
-import { MapleWithdrawalManagerFactory as MWMCF }     
+import { MapleWithdrawalManagerFactory as MWMCF }
     from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerFactory.sol";
-import { MapleWithdrawalManagerInitializer as MWMCI } 
+import { MapleWithdrawalManagerInitializer as MWMCI }
     from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerInitializer.sol";
 
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";

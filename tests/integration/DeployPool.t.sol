@@ -30,6 +30,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -47,6 +48,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -64,6 +66,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -81,6 +84,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -95,6 +99,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(0),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -109,6 +114,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -125,6 +131,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool 2",
             symbol_:                   "MP 2",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -142,6 +149,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -160,6 +168,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(asset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
@@ -182,6 +191,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6, start]
@@ -198,6 +208,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start - 1 seconds]
@@ -212,6 +223,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 0, 0, start]
@@ -226,6 +238,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 1 weeks, 1 weeks + 1 seconds, 0, start]
@@ -240,6 +253,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 1e6 + 1, 0, 1 weeks, 2 days, 0, start]
@@ -254,6 +268,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 1000e6, 1 weeks, 2 days, 0, start]
@@ -285,6 +300,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 0, start]
@@ -307,6 +323,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6, start]
@@ -330,6 +347,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
             withdrawalManagerFactory_: withdrawalManagerFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
             configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 2_000_000e6, start]

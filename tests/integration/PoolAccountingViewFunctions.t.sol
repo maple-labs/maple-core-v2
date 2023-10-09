@@ -58,7 +58,7 @@ contract BalanceOfAssetsTests is TestBase {
 }
 
 // TODO: Add fuzz tests for all view function success cases.
-
+// TODO: Update to use new permissioning
 contract MaxDepositTests is TestBase {
 
     address lp1;
@@ -66,7 +66,6 @@ contract MaxDepositTests is TestBase {
 
     function setUp() public override {
         start = block.timestamp;
-
         _createAccounts();
         _createAssets();
         _createGlobals();
@@ -85,14 +84,12 @@ contract MaxDepositTests is TestBase {
         assertEq(pool.maxDeposit(lp1), 0);
         assertEq(pool.maxDeposit(lp2), 0);
 
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp1, true);
+        allowLender(address(poolManager), lp1);
 
         assertEq(pool.maxDeposit(lp1), 1_000e6);
         assertEq(pool.maxDeposit(lp2), 0);
 
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         assertEq(pool.maxDeposit(lp1), 1_000e6);
         assertEq(pool.maxDeposit(lp2), 1_000e6);
@@ -102,8 +99,7 @@ contract MaxDepositTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setLiquidityCap(1_000e6);
 
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         assertEq(pool.maxDeposit(lp1), 1_000e6);
         assertEq(pool.maxDeposit(lp2), 1_000e6);
@@ -122,7 +118,7 @@ contract MaxDepositTests is TestBase {
 
         vm.startPrank(poolDelegate);
         poolManager.setLiquidityCap(liquidityCap);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         assertEq(pool.maxDeposit(lp1), liquidityCap);
         assertEq(pool.maxDeposit(lp2), liquidityCap);
@@ -161,14 +157,12 @@ contract MaxMintTests is TestBase {
         assertEq(pool.maxMint(lp1), 0);
         assertEq(pool.maxMint(lp2), 0);
 
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp1, true);
+        allowLender(address(poolManager), lp1);
 
         assertEq(pool.maxMint(lp1), 1_000e6);
         assertEq(pool.maxMint(lp2), 0);
 
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         assertEq(pool.maxMint(lp1), 1_000e6);
         assertEq(pool.maxMint(lp2), 1_000e6);
@@ -178,8 +172,7 @@ contract MaxMintTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setLiquidityCap(1_000e6);
 
-        vm.prank(poolDelegate);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         assertEq(pool.maxMint(lp1), 1_000e6);
         assertEq(pool.maxMint(lp2), 1_000e6);
@@ -198,7 +191,7 @@ contract MaxMintTests is TestBase {
 
         vm.startPrank(poolDelegate);
         poolManager.setLiquidityCap(liquidityCap);
-        poolManager.setOpenToPublic();
+        openPool(address(poolManager));
 
         assertEq(pool.maxMint(lp1), liquidityCap);
         assertEq(pool.maxMint(lp2), liquidityCap);
@@ -210,10 +203,10 @@ contract MaxMintTests is TestBase {
     }
 
     function test_maxMint_exchangeRateGtOne() external {
-        vm.startPrank(poolDelegate);
+        vm.prank(poolDelegate);
         poolManager.setLiquidityCap(10_000e6);
-        poolManager.setOpenToPublic();
-        vm.stopPrank();
+
+        openPool(address(poolManager));
 
         deposit(lp1, 1_000e6);
 
@@ -231,10 +224,10 @@ contract MaxMintTests is TestBase {
         depositAmount  = bound(depositAmount,  1, liquidityCap);
         transferAmount = bound(transferAmount, 1, 1e29);
 
-        vm.startPrank(poolDelegate);
+        vm.prank(poolDelegate);
         poolManager.setLiquidityCap(liquidityCap);
-        poolManager.setOpenToPublic();
-        vm.stopPrank();
+
+        openPool(address(poolManager));
 
         deposit(lp1, depositAmount);
 

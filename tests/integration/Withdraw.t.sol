@@ -558,9 +558,11 @@ contract WithdrawOnPermissionedPool is TestBase {
 
         depositCover(2_500_000e6);
 
-        // Since it's a permissioned pool, the withdrawal manager needs to be whitelisted.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(address(withdrawalManager), true);
+        // Since it's a permissioned pool, the withdrawal manager needs to be allowlisted.
+        allowLender(address(poolManager), address(withdrawalManager));
+
+        // In the callstack, shares are transferred to the PM first, so it also needs to be allowlisted.
+        allowLender(address(poolManager), address(poolManager)); 
     }
 
     function test_withdraw_withUnwhitelistedUser() external {
@@ -568,9 +570,11 @@ contract WithdrawOnPermissionedPool is TestBase {
 
         deposit(address(lp1), 500_000e6);
 
-        // Now, remove the LP from the whitelist.
-        vm.prank(poolDelegate);
-        poolManager.setAllowedLender(lp1, false);
+        address[] memory lenders = new address[](1);
+        lenders[0] = lp1;
+
+        bool[] memory allows = new bool[](1);
+        allows[0] = false;
 
         requestRedeem(address(lp1), 500_000e6);
 
@@ -578,7 +582,11 @@ contract WithdrawOnPermissionedPool is TestBase {
 
         vm.warp(windowStart);
 
-        vm.expectRevert("WM:PE:TRANSFER_FAIL");
+        // Now, remove the LP from the whitelist.
+        vm.prank(poolDelegate);
+        poolPermissionManager.setLenderAllowlist(address(poolManager), lenders, allows);
+
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
         redeem(address(lp1), 500_000e6);         // This fails because recipient is no longer allowed.
     }
 

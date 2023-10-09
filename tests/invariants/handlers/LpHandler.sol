@@ -49,6 +49,8 @@ contract LpHandler is HandlerBase {
             address lp = makeAddr(string(abi.encode("lp", i)));
             lps.push(lp);
             holders.push(lp);
+
+            allowLender(pool.manager(), lp);
         }
 
         holders.push(address(withdrawalManager));
