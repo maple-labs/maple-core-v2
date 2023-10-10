@@ -27,6 +27,7 @@ contract ValidCollateralTests is TestBase {
             [nextDelegateOriginationFee, nextDelegateServiceFee]
         );
 
+        vm.prank(borrower);
         vm.expectRevert("MPF:CI:FAILED");
         IProxyFactoryLike(fixedTermLoanFactory).createInstance({
             arguments_: arguments,
@@ -36,6 +37,7 @@ contract ValidCollateralTests is TestBase {
         vm.prank(governor);
         globals.setValidCollateralAsset(address(collateralAsset), true);
 
+        vm.prank(borrower);
         IProxyFactoryLike(fixedTermLoanFactory).createInstance({
             arguments_: arguments,
             salt_: "SALT"

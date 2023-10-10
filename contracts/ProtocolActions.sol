@@ -126,6 +126,7 @@ contract ProtocolActions is Test {
         vm.prank(governor_);
         IGlobals(globals_).setValidBorrower(borrower_, true);
 
+        vm.prank(borrower_);
         loan_ = IMapleProxyFactory(factory_).createInstance({
             arguments_: abi.encode(
                 borrower_,
@@ -155,10 +156,8 @@ contract ProtocolActions is Test {
         address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
         address governor_ = IGlobals(globals_).governor();
 
-        vm.startPrank(governor_);
+        vm.prank(governor_);
         IGlobals(globals_).setValidBorrower(borrower_, true);
-        IGlobals(globals_).setCanDeployFrom(factory_, address(borrower_), true);
-        vm.stopPrank();
 
         vm.prank(borrower_);
         loan_ = IMapleProxyFactory(factory_).createInstance({

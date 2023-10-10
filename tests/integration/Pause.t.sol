@@ -234,8 +234,9 @@ contract PauseTests is TestBaseWithAssertions {
         caller[liquidatorFactory]           = address(fixedTermLoanManager);
         caller[poolManagerFactory]          = address(deployer);
         caller[fixedTermLoanManagerFactory] = address(poolManager);
-        caller[openTermLoanFactory]         = address(borrower);
+        caller[fixedTermLoanFactory]        = address(borrower);
         caller[openTermLoanManagerFactory]  = address(poolManager);
+        caller[openTermLoanFactory]         = address(borrower);
         caller[withdrawalManagerFactory]    = address(deployer);
     }
 

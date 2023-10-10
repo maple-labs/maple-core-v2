@@ -132,7 +132,7 @@ contract TestBase is ProtocolActions {
     }
 
     function _createFactories() internal {
-        fixedTermLoanFactory        = address(new FixedTermLoanFactory(address(globals)));
+        fixedTermLoanFactory        = address(new FixedTermLoanFactory(address(globals), address(0)));
         fixedTermLoanManagerFactory = address(new FixedTermLoanManagerFactory(address(globals)));
         liquidatorFactory           = address(new LiquidatorFactory(address(globals)));
         openTermLoanFactory         = address(new OpenTermLoanFactory(address(globals)));
@@ -367,10 +367,8 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.startPrank(governor);
+        vm.prank(governor);
         globals.setValidBorrower(borrower, true);
-        globals.setCanDeployFrom(openTermLoanFactory, borrower, true);
-        vm.stopPrank();
 
         vm.prank(borrower);
         loan = OpenTermLoanFactory(openTermLoanFactory).createInstance({

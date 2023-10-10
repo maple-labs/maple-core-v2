@@ -71,7 +71,7 @@ contract FixedTermLoan is MFTL { }
 
 contract FixedTermLoanFactory is MFTLF {
 
-    constructor(address globals_) MFTLF(globals_) { }
+    constructor(address globals_, address oldFactory_) MFTLF(globals_, oldFactory_) { }
 
 }
 

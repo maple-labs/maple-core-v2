@@ -118,10 +118,8 @@ contract FixedTermLoanHandler is HandlerBase {
         for (uint256 i; i < numBorrowers_; ++i) {
             address borrower = makeAddr(string(abi.encode("borrower", i)));
 
-            vm.startPrank(governor);
+            vm.prank(governor);
             IGlobals(globals).setValidBorrower(borrower, true);
-            IGlobals(globals).setCanDeployFrom(loanFactory, borrower, true);
-            vm.stopPrank();
 
             borrowers.push(borrower);
         }
