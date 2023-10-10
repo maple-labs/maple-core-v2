@@ -35,7 +35,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
     }
 
     function test_triggerDefault_notAuthorized() external {
-        vm.expectRevert("PM:NOT_PD_OR_GOV");
+        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
         poolManager.triggerDefault(loan, address(liquidatorFactory));
     }
 
@@ -118,7 +118,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_notAuthorized() external {
-        vm.expectRevert("PM:NOT_PD_OR_GOV");
+        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
 

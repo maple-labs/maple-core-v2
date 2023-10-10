@@ -33,7 +33,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
     }
 
     function test_finishCollateralLiquidation_notAuthorized() external {
-        vm.expectRevert("PM:NOT_PD_OR_GOV");
+        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
         poolManager.finishCollateralLiquidation(loan);
     }
 
