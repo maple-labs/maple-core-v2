@@ -52,7 +52,9 @@ contract TestBase is ProtocolActions {
 
     address governor;
     address migrationAdmin;
+    address operationalAdmin;
     address poolDelegate;
+    address permissionAdmin;
     address securityAdmin;
     address treasury;
 
@@ -119,11 +121,13 @@ contract TestBase is ProtocolActions {
     /**************************************************************************************************************************************/
 
     function _createAccounts() internal {
-        governor       = makeAddr("governor");
-        migrationAdmin = makeAddr("migrationAdmin");
-        poolDelegate   = makeAddr("poolDelegate");
-        securityAdmin  = makeAddr("securityAdmin");
-        treasury       = makeAddr("treasury");
+        governor         = makeAddr("governor");
+        migrationAdmin   = makeAddr("migrationAdmin");
+        operationalAdmin = makeAddr("operationalAdmin");
+        poolDelegate     = makeAddr("poolDelegate");
+        permissionAdmin  = makeAddr("permissionAdmin");
+        securityAdmin    = makeAddr("securityAdmin");
+        treasury         = makeAddr("treasury");
     }
 
     function _createAssets() internal {
@@ -169,6 +173,7 @@ contract TestBase is ProtocolActions {
         vm.startPrank(governor);
 
         PoolPermissionManagerInitializer(address(poolPermissionManager)).initialize(poolPermissionManagerImplementation, address(globals));
+        poolPermissionManager.setPermissionAdmin(permissionAdmin, true);
 
         globals.setValidInstanceOf("LIQUIDATOR_FACTORY",         liquidatorFactory,             true);
         globals.setValidInstanceOf("LOAN_FACTORY",               fixedTermLoanFactory,          true);
@@ -238,6 +243,7 @@ contract TestBase is ProtocolActions {
 
         vm.startPrank(governor);
         globals.setMigrationAdmin(migrationAdmin);
+        globals.setOperationalAdmin(operationalAdmin);
         globals.setSecurityAdmin(governor);
         globals.setValidPoolAsset(address(fundsAsset), true);
         globals.setValidCollateralAsset(address(collateralAsset), true);

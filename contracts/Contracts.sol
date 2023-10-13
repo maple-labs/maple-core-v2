@@ -41,8 +41,10 @@ import { MaplePoolManager as MPM }             from "../modules/pool/contracts/M
 import { MaplePoolManagerFactory as MPMF }     from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
 import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
 
-import { PoolPermissionManager }            from "../modules/pool-permission-manager/contracts/PoolPermissionManager.sol";
-import { PoolPermissionManagerInitializer } from "../modules/pool-permission-manager/contracts/PoolPermissionManagerInitializer.sol";
+import { MaplePoolPermissionManager as MPPM }
+    from "../modules/pool-permission-manager/contracts/MaplePoolPermissionManager.sol";
+import { MaplePoolPermissionManagerInitializer as MPPMI }
+    from "../modules/pool-permission-manager/contracts/MaplePoolPermissionManagerInitializer.sol";
 
 import { MapleWithdrawalManager as MWMC } from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManager.sol";
 
@@ -166,6 +168,10 @@ contract PoolManagerFactory is MPMF {
 }
 
 contract PoolManagerInitializer is MPMI { }
+
+contract PoolPermissionManager is MPPM { }
+
+contract PoolPermissionManagerInitializer is MPPMI { }
 
 // Test does not import stdError which contain the error constants.
 contract Test is T {

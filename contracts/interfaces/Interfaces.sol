@@ -26,7 +26,10 @@ import { IMaplePoolDeployer as IMPD } from "../../modules/pool/contracts/interfa
 import { IMaplePoolManager as IMPM }  from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
 import { IMapleProxyFactory }         from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { IMapleWithdrawalManager as IMWMC } 
+import { IMaplePoolPermissionManager as IMPPM }
+    from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManager.sol";
+
+import { IMapleWithdrawalManager as IMWMC }
     from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
 
 /******************************************************************************************************************************************/
@@ -58,6 +61,8 @@ interface IPool is IMP { }
 interface IPoolDeployer is IMPD { }
 
 interface IPoolManager is IMPM { }
+
+interface IPoolPermissionManager is IMPPM { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
 

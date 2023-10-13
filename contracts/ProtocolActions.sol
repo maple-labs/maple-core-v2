@@ -18,17 +18,18 @@ import {
     IPool,
     IPoolDeployer,
     IPoolManager,
+    IPoolPermissionManager,
     IProxiedLike,
     IWithdrawalManagerCyclical as IWithdrawalManager
 } from "./interfaces/Interfaces.sol";
 
-import { 
-    console2 as console, 
+import {
+    console2 as console,
     ERC20Helper,
-    NonTransparentProxy, 
-    PoolPermissionManager, 
-    PoolPermissionManagerInitializer, 
-    Test 
+    NonTransparentProxy,
+    PoolPermissionManager,
+    PoolPermissionManagerInitializer,
+    Test
 } from "../contracts/Contracts.sol";
 
 // TODO: `deployPool`.
@@ -785,6 +786,81 @@ contract ProtocolActions is Test {
 
         vm.prank(governor);
         INonTransparentProxy(globals_).setImplementation(newImplementation_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Permission Functions                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    function setLenderAllowlist(address poolManager_, address[] calldata lenders_, bool[] calldata booleans_) internal {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ppm_.setLenderAllowlist(poolManager_, lenders_, booleans_);
+    }
+
+    function setLenderBitmaps(
+        address poolPermissionManager_,
+        address permissionAdmin_,
+        address[] calldata lenders_,
+        uint256[] calldata bitmaps_
+    )
+        internal
+    {
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(poolPermissionManager_);
+
+        vm.prank(permissionAdmin_);
+        ppm_.setLenderBitmaps(lenders_, bitmaps_);
+    }
+
+    function setPermissionAdmin(address poolPermissionManager_, address account_, bool isPermissionAdmin_) internal {
+        IPoolPermissionManager ppm_     = IPoolPermissionManager(poolPermissionManager_);
+        IGlobals               globals_ = IGlobals(ppm_.globals());
+
+        address governor_ = globals_.governor();
+
+        vm.prank(governor_);
+        ppm_.setPermissionAdmin(account_, isPermissionAdmin_);
+    }
+
+    function setPermissionConfiguration(
+        address poolManager_,
+        uint256 permissionLevel_,
+        bytes32[] calldata functionIds_,
+        uint256[] calldata poolBitmaps_
+    )
+        internal
+    {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ppm_.configurePool(poolManager_, permissionLevel_, functionIds_, poolBitmaps_);
+    }
+
+    function setPoolBitmaps(address poolManager_, bytes32[] calldata functionIds_, uint256[] calldata bitmaps_) internal {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ppm_.setPoolBitmaps(poolManager_, functionIds_, bitmaps_);
+    }
+
+    function setPoolPermissionLevel(address poolManager_, uint256 permissionLevel_) internal {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ppm_.setPoolPermissionLevel(poolManager_, permissionLevel_);
     }
 
     /**************************************************************************************************************************************/
