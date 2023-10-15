@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { 
-    ILoanManagerLike, 
-    IPool, 
-    IPoolManager, 
-    IProxyFactoryLike, 
+import {
+    ILoanManagerLike,
+    IPool,
+    IPoolManager,
+    IProxyFactoryLike,
     IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -73,9 +73,9 @@ contract DeployPoolTests is TestBaseWithAssertions {
         });
     }
 
-    function test_deployPool_failWithInvalidWMFactory() external {
+    function test_deployPool_failWithInvalidWMCyclicalFactory() external {
         vm.prank(address(governor));
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory, false);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", withdrawalManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_WM_FACTORY");
