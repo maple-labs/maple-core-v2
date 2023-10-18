@@ -36,6 +36,73 @@ contract LoanLiquidationTests is TestBaseWithAssertions {
         globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);  // 40%
     }
 
+    function test_setMaxCoverLiquidationPercent_asOperationalAdmin() external {
+        vm.prank(governor);
+        globals.setMaxCoverLiquidationPercent(address(poolManager), 0);
+
+        assertEq(globals.maxCoverLiquidationPercent(address(poolManager)), 0);
+
+        vm.prank(operationalAdmin);
+        globals.setMaxCoverLiquidationPercent(address(poolManager), 0.4e6);
+
+        assertEq(globals.maxCoverLiquidationPercent(address(poolManager)), 0.4e6);
+    }
+
+    function test_finishCollateralLiquidation_asOperationalAdmin() external {
+        depositCover(10_000_000e6);
+
+        loan = fundAndDrawdownLoan({
+            borrower:    borrower,
+            termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
+            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
+            rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
+            loanManager: loanManager
+        });
+
+        vm.warp(start + 1_000_000 + 5 days + 1);
+
+        triggerDefault(loan, address(liquidatorFactory));
+
+        uint256 flatLateInterest    = 1_000_000e6 * 0.0001e6 / 1e6;
+        uint256 lateInterestPremium = 0.002e6 * 1e30 * (6 days) / 1e30;
+        uint256 netLateInterest     = (flatLateInterest + lateInterestPremium) * 9/10;
+        uint256 platformFees        = platformServiceFee + (1000e6 + flatLateInterest + lateInterestPremium) * 8/100;
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           1_000_000e6,
+            interest:            900e6,
+            lateInterest:        netLateInterest,
+            platformFees:        platformFees,
+            liquidatorExists:    true,
+            triggeredByGovernor: false
+        });
+
+        liquidateCollateral(loan);
+
+        /*************************************/
+        /*** Finish collateral liquidation ***/
+        /*************************************/
+
+        vm.warp(start + 1_500_000);
+
+        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
+        poolManager.finishCollateralLiquidation(loan);
+
+        vm.prank(operationalAdmin);
+        poolManager.finishCollateralLiquidation(loan);
+
+        assertLiquidationInfo({
+            loan:                loan,
+            principal:           0,
+            interest:            0,
+            lateInterest:        0,
+            platformFees:        0,
+            liquidatorExists:    false,
+            triggeredByGovernor: false
+        });
+    }
+
     /**************************************************************************************************************************************/
     /*** Full Cover                                                                                                                     ***/
     /**************************************************************************************************************************************/

@@ -33,6 +33,27 @@ contract BootstrapTestBase is TestBaseWithAssertions {
 
 }
 
+contract SetBootstrapMintTests is BootstrapTestBase {
+
+    function test_setBootstrapMint_failIfNotOperationalAdmin() external {
+        vm.expectRevert("MG:NOT_GOV_OR_OA");
+        globals.setBootstrapMint(address(fundsAsset), BOOTSTRAP_MINT_AMOUNT);
+    }
+
+    function test_setBootstrapMint_success_asOperationalAdmin() external {
+        vm.prank(governor);
+        globals.setBootstrapMint(address(fundsAsset), 0);
+
+        assertEq(globals.bootstrapMint(address(fundsAsset)), 0);
+
+        vm.prank(operationalAdmin);
+        globals.setBootstrapMint(address(fundsAsset), BOOTSTRAP_MINT_AMOUNT);
+
+        assertEq(globals.bootstrapMint(address(fundsAsset)), BOOTSTRAP_MINT_AMOUNT);
+    }
+
+}
+
 contract BootstrapDepositTests is BootstrapTestBase {
 
     function test_deposit_ltBootstrapMintAmount() external {

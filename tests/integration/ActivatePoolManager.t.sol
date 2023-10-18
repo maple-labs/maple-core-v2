@@ -27,6 +27,20 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
         assertEq(globals.ownedPoolManager(address(poolDelegate)), address(poolManager));
     }
 
+    function test_activatePoolManager_asOperationalAdmin() public {
+        vm.expectRevert("MG:NOT_GOV_OR_OA");
+        globals.activatePoolManager(address(poolManager));
+
+        assertTrue(!poolManager.active());
+        assertEq(globals.ownedPoolManager(address(poolDelegate)), address(0));
+
+        vm.prank(operationalAdmin);
+        globals.activatePoolManager(address(poolManager));
+
+        assertTrue(poolManager.active());
+        assertEq(globals.ownedPoolManager(address(poolDelegate)), address(poolManager));
+    }
+
 }
 
 contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {

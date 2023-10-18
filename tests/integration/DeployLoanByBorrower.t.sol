@@ -38,6 +38,18 @@ contract DeployLoanByBorrowerTests is TestBase {
         vm.stopPrank();
     }
 
+    function test_deployLoan_FTL_setCanDeployFromByOA() external {
+        assertEq(globals.canDeployFrom(fixedTermLoanFactory, borrower), false);
+
+        vm.expectRevert("MG:NOT_GOV_OR_OA");
+        globals.setCanDeployFrom(fixedTermLoanFactory, borrower, true);
+
+        vm.prank(operationalAdmin);
+        globals.setCanDeployFrom(fixedTermLoanFactory, borrower, true);
+
+        assertEq(globals.canDeployFrom(fixedTermLoanFactory, borrower), true);
+    }
+
     function test_deployLoan_FTL_invalidBorrower() external {
         vm.prank(governor);
         globals.setValidInstanceOf("LOAN_FACTORY", fixedTermLoanFactory, true);
@@ -51,7 +63,28 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
-        
+
+        vm.prank(borrower);
+        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+            arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
+            salt_:      "SALT"
+        });
+    }
+
+    function test_deployLoan_FTL_validBorrowerSetByOA() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("LOAN_FACTORY", fixedTermLoanFactory, true);
+
+        vm.prank(borrower);
+        vm.expectRevert("MLF:CI:CANNOT_DEPLOY");
+        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+            arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
+            salt_:      "SALT"
+        });
+
+        vm.prank(operationalAdmin);
+        globals.setValidBorrower(borrower, true);
+
         vm.prank(borrower);
         FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
@@ -69,8 +102,29 @@ contract DeployLoanByBorrowerTests is TestBase {
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
-        
+
         vm.prank(governor);
+        globals.setValidInstanceOf("LOAN_FACTORY", fixedTermLoanFactory, true);
+
+        vm.prank(borrower);
+        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+            arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
+            salt_:      "SALT"
+        });
+    }
+
+    function test_deployLoan_FTL_validInstanceSetByOA() external {
+        vm.prank(operationalAdmin);
+        globals.setValidBorrower(borrower, true);
+
+        vm.prank(borrower);
+        vm.expectRevert("MLF:CI:CANNOT_DEPLOY");
+        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+            arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
+            salt_:      "SALT"
+        });
+
+        vm.prank(operationalAdmin);
         globals.setValidInstanceOf("LOAN_FACTORY", fixedTermLoanFactory, true);
 
         vm.prank(borrower);
@@ -93,7 +147,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         });
 
         assertTrue(FixedTermLoanFactory(fixedTermLoanFactory).isLoan(instance_));
-        
+
         assertEq(FixedTermLoan(instance_).factory(), fixedTermLoanFactory);
     }
 
@@ -110,7 +164,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
-        
+
         vm.prank(borrower);
         OpenTermLoanFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
@@ -128,7 +182,7 @@ contract DeployLoanByBorrowerTests is TestBase {
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
             salt_:      "SALT"
         });
-        
+
         vm.prank(governor);
         globals.setValidInstanceOf("LOAN_FACTORY", openTermLoanFactory, true);
 
@@ -152,8 +206,8 @@ contract DeployLoanByBorrowerTests is TestBase {
         });
 
         assertTrue(OpenTermLoanFactory(openTermLoanFactory).isLoan(instance_));
-        
+
         assertEq(OpenTermLoan(instance_).factory(), openTermLoanFactory);
     }
-    
+
 }

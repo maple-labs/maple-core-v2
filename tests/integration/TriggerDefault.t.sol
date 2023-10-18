@@ -596,6 +596,32 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
 
     // TODO: Add test to demo partial fee recovery from Loan.
 
+    function test_triggerDefault_setByOperationalAdmin() external {
+        uint256 defaultTime = start + paymentInterval + gracePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        uint256 platformServiceFee = (principal * 0.04e6       * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 normalInterest     = (principal * interestRate * (defaultTime - start))                     / (365 days * 1e6);
+        uint256 lateInterest       = (principal * interestRate * (defaultTime - (start + paymentInterval))) / (365 days * 1e6);
+
+        uint256 platformManagementFee = (normalInterest + lateInterest) * 0.08e6 / 1e6;
+
+        fundsAsset.burn(address(poolCover), 1_000_000e6);
+        fundsAsset.mint(address(poolCover), (platformServiceFee + platformManagementFee) * 2);
+
+        assertEq(fundsAsset.balanceOf(address(poolCover)), (platformServiceFee + platformManagementFee) * 2);
+        assertEq(fundsAsset.balanceOf(address(treasury)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),      0);
+
+        vm.prank(operationalAdmin);
+        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+
+        assertEq(fundsAsset.balanceOf(address(poolCover)), platformServiceFee + platformManagementFee);
+        assertEq(fundsAsset.balanceOf(address(treasury)),  platformServiceFee + platformManagementFee);
+        assertEq(fundsAsset.balanceOf(address(pool)),      0);
+    }
+
     function test_triggerDefault_onlyFeesRecovered() external {
         uint256 defaultTime = start + paymentInterval + gracePeriod + 1;
 

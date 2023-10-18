@@ -335,6 +335,49 @@ contract DeployPoolTests is TestBaseWithAssertions {
         assertTrue(poolManager_ != address(0));
     }
 
+    function test_deployPool_success_validPDSetByOA() external {
+        vm.prank(operationalAdmin);
+        globals.setValidPoolDelegate(poolDelegate, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PD:DP:INVALID_PD");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: withdrawalManagerFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, 1 weeks, 2 days, 0, start]
+        });
+
+        vm.prank(operationalAdmin);
+        globals.setValidPoolDelegate(poolDelegate, true);
+
+        fundsAsset.mint(poolDelegate, 1_000_000e6);
+
+        vm.startPrank(poolDelegate);
+
+        fundsAsset.approve(address(deployer), 1_000_000e6);
+
+        address poolManager_ = deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: withdrawalManagerFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6, start]
+        });
+
+        vm.stopPrank();
+
+        // Just testing that the deployment succeeded, the full assertion are made in the tests below.
+        assertTrue(poolManager_ != address(0));
+    }
+
     function test_deployPool_success() external {
         fundsAsset.mint(poolDelegate, 1_000_000e6);
 
