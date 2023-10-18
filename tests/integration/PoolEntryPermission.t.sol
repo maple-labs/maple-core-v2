@@ -116,13 +116,6 @@ contract FunctionLevelPermissionTests is PoolEntryPermissionTestBase {
         super.setUp();
 
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
-
-        setPoolBitmap(address(poolManager), "P:deposit",           0);
-        setPoolBitmap(address(poolManager), "P:depositWithPermit", 0);
-        setPoolBitmap(address(poolManager), "P:mint",              0);
-        setPoolBitmap(address(poolManager), "P:mintWithPermit",    0);
-
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, 0);
     }
 
     function test_poolEntry_functionLevel_deposit() external withAssertions {
@@ -225,8 +218,6 @@ contract PoolLevelPermissionTests is PoolEntryPermissionTestBase {
         super.setUp();
 
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
-        setPoolBitmap(address(poolManager), bytes32(0), 0);
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, 0);
     }
 
     function test_poolEntry_poolLevel_deposit() external withAssertions {
