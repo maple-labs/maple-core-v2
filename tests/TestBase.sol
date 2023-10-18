@@ -298,6 +298,18 @@ contract TestBase is ProtocolActions {
     /*** Helper Functions                                                                                                               ***/
     /**************************************************************************************************************************************/
 
+    function createBitmap(uint8[1] memory indices_) internal pure returns (uint256 bitmap_) {
+        for (uint8 i = 0; i < indices_.length; i++) {
+            bitmap_ |= (1 << indices_[i]);
+        }
+    }
+
+    function createBitmap(uint8[2] memory indices_) internal pure returns (uint256 bitmap_) {
+        for (uint8 i = 0; i < indices_.length; i++) {
+            bitmap_ |= (1 << indices_[i]);
+        }
+    }
+
     // TODO: Can be moved into ProtocolActions, but it a bit heavy on arguments if state variables need to be passed in as well.
     /**
      *  @param termDetails Array of loan parameters:

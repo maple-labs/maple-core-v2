@@ -792,7 +792,17 @@ contract ProtocolActions is Test {
     /*** Permission Functions                                                                                                           ***/
     /**************************************************************************************************************************************/
 
-    function setLenderAllowlist(address poolManager_, address[] calldata lenders_, bool[] calldata booleans_) internal {
+    function setLenderAllowlist(address poolManager_, address lender_, bool boolean_) internal {
+        address[] memory lenders_  = new address[](1);
+        bool[]    memory booleans_ = new bool[](1);
+
+        lenders_[0]  = lender_;
+        booleans_[0] = boolean_;
+
+        setLenderAllowlist(poolManager_, lenders_, booleans_);
+    }
+
+    function setLenderAllowlist(address poolManager_, address[] memory lenders_, bool[] memory booleans_) internal {
         IPoolManager           pm_  = IPoolManager(poolManager_);
         IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
 
@@ -802,11 +812,21 @@ contract ProtocolActions is Test {
         ppm_.setLenderAllowlist(poolManager_, lenders_, booleans_);
     }
 
+    function setLenderBitmap(address poolPermissionManager_, address permissionAdmin_, address lender_, uint256 bitmap_) internal {
+        address[] memory lenders_ = new address[](1);
+        uint256[] memory bitmaps_ = new uint256[](1);
+
+        lenders_[0] = lender_;
+        bitmaps_[0] = bitmap_;
+
+        setLenderBitmaps(poolPermissionManager_, permissionAdmin_, lenders_, bitmaps_);
+    }
+
     function setLenderBitmaps(
         address poolPermissionManager_,
         address permissionAdmin_,
-        address[] calldata lenders_,
-        uint256[] calldata bitmaps_
+        address[] memory lenders_,
+        uint256[] memory bitmaps_
     )
         internal
     {
@@ -829,8 +849,8 @@ contract ProtocolActions is Test {
     function setPermissionConfiguration(
         address poolManager_,
         uint256 permissionLevel_,
-        bytes32[] calldata functionIds_,
-        uint256[] calldata poolBitmaps_
+        bytes32[] memory functionIds_,
+        uint256[] memory poolBitmaps_
     )
         internal
     {
@@ -843,7 +863,17 @@ contract ProtocolActions is Test {
         ppm_.configurePool(poolManager_, permissionLevel_, functionIds_, poolBitmaps_);
     }
 
-    function setPoolBitmaps(address poolManager_, bytes32[] calldata functionIds_, uint256[] calldata bitmaps_) internal {
+    function setPoolBitmap(address poolManager_, bytes32 functionId_, uint256 bitmap_) internal {
+        bytes32[] memory functionIds_ = new bytes32[](1);
+        uint256[] memory bitmaps_     = new uint256[](1);
+
+        functionIds_[0] = functionId_;
+        bitmaps_[0]     = bitmap_;
+
+        setPoolBitmaps(poolManager_, functionIds_, bitmaps_);
+    }
+
+    function setPoolBitmaps(address poolManager_, bytes32[] memory functionIds_, uint256[] memory bitmaps_) internal {
         IPoolManager           pm_  = IPoolManager(poolManager_);
         IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
 
