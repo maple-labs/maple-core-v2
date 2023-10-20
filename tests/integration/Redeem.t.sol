@@ -16,7 +16,7 @@ contract RequestRedeemTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
     }
 
     function test_requestRedeem_refresh_notOwnerAndNoApproval() external {
@@ -27,9 +27,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         uint256 shares = pool.requestRedeem(1_000e6, lp);
 
@@ -38,9 +38,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         vm.stopPrank();
 
@@ -58,9 +58,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         uint256 shares = pool.requestRedeem(1_000e6, lp);
 
@@ -69,9 +69,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         vm.warp(start + 2 weeks);
 
@@ -82,10 +82,10 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     5);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.totalCycleShares(5), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     5);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.totalCycleShares(5), 1_000e6);
     }
 
     function test_requestRedeem_refresh_notOwnerWithApproval() external {
@@ -96,9 +96,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         uint256 shares = pool.requestRedeem(1_000e6, lp);
 
@@ -107,9 +107,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         pool.approve(address(this), 1);
 
@@ -126,10 +126,10 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     5);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.totalCycleShares(5), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     5);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.totalCycleShares(5), 1_000e6);
     }
 
     function test_requestRedeem() external {
@@ -140,9 +140,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         uint256 shares = pool.requestRedeem(1_000e6, lp);
 
@@ -151,9 +151,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
     }
 
     function test_requestRedeem_withApproval() external {
@@ -168,9 +168,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(wm),         0);
         assertEq(pool.allowance(lp, sender), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         vm.prank(sender);
         uint256 shares = pool.requestRedeem(1_000e6, lp);
@@ -181,9 +181,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(wm),         1_000e6);
         assertEq(pool.allowance(lp, sender), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
     }
 
     function test_requestRedeem_premature() external {
@@ -192,9 +192,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         vm.warp(start - 10 days);
         vm.prank(lp);
@@ -205,9 +205,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
     }
 
     function testDeepFuzz_requestRedeem(uint256 depositAmount, uint256 redeemAmount) external {
@@ -222,9 +222,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), depositAmount);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         uint256 assets = pool.requestRedeem(redeemAmount, lp);
 
@@ -234,9 +234,9 @@ contract RequestRedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), depositAmount - redeemAmount);
         assertEq(pool.balanceOf(wm), redeemAmount);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    redeemAmount);
-        assertEq(withdrawalManager.totalCycleShares(3), redeemAmount);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    redeemAmount);
+        assertEq(cyclicalWM.totalCycleShares(3), redeemAmount);
     }
 
 }
@@ -252,7 +252,7 @@ contract RedeemTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
     }
 
     function test_redeem_singleUser_fullLiquidity_oneToOne() external {
@@ -271,9 +271,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         uint256 assets = pool.redeem(1_000e6, lp, lp);
 
@@ -286,9 +286,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
     function testDeepFuzz_redeem_singleUser_fullLiquidity_oneToOne(uint256 depositAmount, uint256 redeemAmount) external {
@@ -310,9 +310,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), depositAmount - redeemAmount);
         assertEq(pool.balanceOf(wm), redeemAmount);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    redeemAmount);
-        assertEq(withdrawalManager.totalCycleShares(3), redeemAmount);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    redeemAmount);
+        assertEq(cyclicalWM.totalCycleShares(3), redeemAmount);
 
         uint256 assets = pool.redeem(redeemAmount, lp, lp);
 
@@ -325,9 +325,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), depositAmount - redeemAmount);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
     function test_redeem_singleUser_fullLiquidity_fullRedeem() external {
@@ -349,9 +349,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         uint256 assets = pool.redeem(1_000e6, lp, lp);
 
@@ -364,9 +364,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
     function test_redeem_singleUser_fullLiquidity_fullRedeem_prematureRequest() external {
@@ -386,9 +386,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(wm), 1_000e6);
         assertEq(pool.totalSupply(), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         vm.warp(start + 2 weeks);
         vm.prank(lp);
@@ -403,9 +403,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(wm), 0);
         assertEq(pool.totalSupply(), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
     function test_redeem_singleUser_withApprovals() external {
@@ -434,9 +434,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(wm),         1_000e6);
         assertEq(pool.allowance(lp, sender), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000e6);
 
         // Needs a second approval
         vm.prank(lp);
@@ -457,9 +457,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(wm),         0);
         assertEq(pool.allowance(lp, sender), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
     function test_redeem_singleUser_noLiquidity_notOwner() external {
@@ -486,9 +486,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000_000e6);
 
         assertEq(pool.allowance(lp, address(this)), 0);
 
@@ -509,10 +509,10 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     4);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.totalCycleShares(4), 1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     4);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.totalCycleShares(4), 1_000_000e6);
     }
 
     function test_redeem_singleUser_noLiquidity() external {
@@ -539,9 +539,9 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     3);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     3);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000_000e6);
 
         vm.prank(lp);
         uint256 assets = pool.redeem(1_000_000e6, lp, lp);
@@ -555,10 +555,10 @@ contract RedeemTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 1_000_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     4);
-        assertEq(withdrawalManager.lockedShares(lp),    1_000_000e6);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.totalCycleShares(4), 1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp),     4);
+        assertEq(cyclicalWM.lockedShares(lp),    1_000_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.totalCycleShares(4), 1_000_000e6);
     }
 
 }
@@ -591,7 +591,7 @@ contract MultiUserRedeemTests is TestBase {
         lp3      = makeAddr("lp3");
 
         loanManager = poolManager.loanManagerList(0);
-        wm          = address(withdrawalManager);
+        wm          = address(cyclicalWM);
 
         // NOTE: Available liquidity ratio (AVR) = availableCash / totalRequestedLiquidity
         // Remaining shares = requestedShares * (1 - AVR)
@@ -618,16 +618,16 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(pool.totalAssets(), 10_050_000e6 - 1);  // Exchange rate is 1.005 with rounding error
 
-        assertEq(withdrawalManager.lockedShares(lp1), 1_000_000e6);
-        assertEq(withdrawalManager.lockedShares(lp2), 4_000_000e6);
-        assertEq(withdrawalManager.lockedShares(lp3), 5_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp1), 1_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp2), 4_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp3), 5_000_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp1), 3);
-        assertEq(withdrawalManager.exitCycleId(lp2), 3);
-        assertEq(withdrawalManager.exitCycleId(lp3), 3);
+        assertEq(cyclicalWM.exitCycleId(lp1), 3);
+        assertEq(cyclicalWM.exitCycleId(lp2), 3);
+        assertEq(cyclicalWM.exitCycleId(lp3), 3);
 
-        assertEq(withdrawalManager.totalCycleShares(3), 10_000_000e6);
-        assertEq(withdrawalManager.totalCycleShares(4), 0);
+        assertEq(cyclicalWM.totalCycleShares(3), 10_000_000e6);
+        assertEq(cyclicalWM.totalCycleShares(4), 0);
 
         redeem(lp1, 1_000_000e6);
 
@@ -636,9 +636,9 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares1, 502_487_562190);
 
-        assertEq(withdrawalManager.lockedShares(lp1),   remainingShares1);
-        assertEq(withdrawalManager.totalCycleShares(3), 9_000_000_000000);
-        assertEq(withdrawalManager.totalCycleShares(4), remainingShares1);
+        assertEq(cyclicalWM.lockedShares(lp1),   remainingShares1);
+        assertEq(cyclicalWM.totalCycleShares(3), 9_000_000_000000);
+        assertEq(cyclicalWM.totalCycleShares(4), remainingShares1);
 
         redeem(lp2, 4_000_000e6);
 
@@ -647,9 +647,9 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares2, 2_009_950_248756);
 
-        assertEq(withdrawalManager.lockedShares(lp2),   remainingShares2);
-        assertEq(withdrawalManager.totalCycleShares(3), 5_000_000_000000);
-        assertEq(withdrawalManager.totalCycleShares(4), remainingShares1 + remainingShares2);  // LP1 + LP2 remaining shares
+        assertEq(cyclicalWM.lockedShares(lp2),   remainingShares2);
+        assertEq(cyclicalWM.totalCycleShares(3), 5_000_000_000000);
+        assertEq(cyclicalWM.totalCycleShares(4), remainingShares1 + remainingShares2);  // LP1 + LP2 remaining shares
 
         redeem(lp3, 5_000_000e6);
 
@@ -659,9 +659,9 @@ contract MultiUserRedeemTests is TestBase {
         assertEq(remainingShares3, 2_512_437_810944);
 
         // AVR = 2.5m / (5m * 1.005) (SAME) => 4m * (1 - AVR) = 2_009_950_248760
-        assertEq(withdrawalManager.lockedShares(lp3),   remainingShares3);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.totalCycleShares(4), remainingShares1 + remainingShares2 + remainingShares3);
+        assertEq(cyclicalWM.lockedShares(lp3),   remainingShares3);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.totalCycleShares(4), remainingShares1 + remainingShares2 + remainingShares3);
 
         assertEq(pool.balanceOf(wm), remainingShares1 + remainingShares2 + remainingShares3);
         // Available liquidity ratio: 5m / (10m * 1.01) = 0.495049505 => 5m * (1 - 0.495049505) = remaining shares
@@ -730,16 +730,16 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares, 502_487_562190);
 
-        assertEq(withdrawalManager.lockedShares(lp1),  remainingShares);
-        assertEq(withdrawalManager.lockedShares(lp2),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp3),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp4),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp5),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp6),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp7),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp8),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp9),  remainingShares - 1);
-        assertEq(withdrawalManager.lockedShares(lp10), remainingShares - 2);
+        assertEq(cyclicalWM.lockedShares(lp1),  remainingShares);
+        assertEq(cyclicalWM.lockedShares(lp2),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp3),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp4),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp5),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp6),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp7),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp8),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp9),  remainingShares - 1);
+        assertEq(cyclicalWM.lockedShares(lp10), remainingShares - 2);
 
         assertEq(fundsAsset.balanceOf(lp1),  500_000e6 - 1);
         assertEq(fundsAsset.balanceOf(lp2),  500_000e6);
@@ -774,16 +774,16 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(pool.totalAssets(), 10_050_000e6 - 1);  // Exchange rate is 1.005 with rounding error
 
-        assertEq(withdrawalManager.lockedShares(lp1), 1_000_000e6);
-        assertEq(withdrawalManager.lockedShares(lp2), 4_000_000e6);
-        assertEq(withdrawalManager.lockedShares(lp3), 5_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp1), 1_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp2), 4_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp3), 5_000_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp1), 3);
-        assertEq(withdrawalManager.exitCycleId(lp2), 3);
-        assertEq(withdrawalManager.exitCycleId(lp3), 3);
+        assertEq(cyclicalWM.exitCycleId(lp1), 3);
+        assertEq(cyclicalWM.exitCycleId(lp2), 3);
+        assertEq(cyclicalWM.exitCycleId(lp3), 3);
 
-        assertEq(withdrawalManager.totalCycleShares(3), 10_000_000e6);
-        assertEq(withdrawalManager.totalCycleShares(4), 0);
+        assertEq(cyclicalWM.totalCycleShares(3), 10_000_000e6);
+        assertEq(cyclicalWM.totalCycleShares(4), 0);
 
         uint256 withdrawnAssets1 = redeem(lp1, 1_000_000e6);
 
@@ -794,9 +794,9 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares1, 502_487_562190);
 
-        assertEq(withdrawalManager.lockedShares(lp1),   remainingShares1);
-        assertEq(withdrawalManager.totalCycleShares(3), 9_000_000_000000);
-        assertEq(withdrawalManager.totalCycleShares(4), remainingShares1);
+        assertEq(cyclicalWM.lockedShares(lp1),   remainingShares1);
+        assertEq(cyclicalWM.totalCycleShares(3), 9_000_000_000000);
+        assertEq(cyclicalWM.totalCycleShares(4), remainingShares1);
 
         assertEq(pool.totalSupply(), 9_000_000e6 + remainingShares1);
         assertEq(pool.totalAssets(), 10_050_000e6 - (withdrawnAssets1 + 1));
@@ -818,9 +818,9 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares2, 2_010_054_434388);  // Higher than 2.009m from same exchange rate test
 
-        assertEq(withdrawalManager.lockedShares(lp2),   remainingShares2);
-        assertEq(withdrawalManager.totalCycleShares(3), 5_000_000_000000);
-        assertEq(withdrawalManager.totalCycleShares(4), remainingShares1 + remainingShares2);  // LP1 + LP2 remaining shares
+        assertEq(cyclicalWM.lockedShares(lp2),   remainingShares2);
+        assertEq(cyclicalWM.totalCycleShares(3), 5_000_000_000000);
+        assertEq(cyclicalWM.totalCycleShares(4), remainingShares1 + remainingShares2);  // LP1 + LP2 remaining shares
 
         assertEq(pool.totalSupply(), 5_000_000e6 + remainingShares1 + remainingShares2);
         assertEq(pool.totalAssets(), 10_050_000e6 - 1 - withdrawnAssets1 - withdrawnAssets2 + 500e6);
@@ -841,9 +841,9 @@ contract MultiUserRedeemTests is TestBase {
 
         assertEq(remainingShares3, 2_512_732_751761);  // Higher than 2_512_437_810944 from same exchange rate test
 
-        assertEq(withdrawalManager.lockedShares(lp3),   remainingShares3);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
-        assertEq(withdrawalManager.totalCycleShares(4), remainingShares1 + remainingShares2 + remainingShares3);
+        assertEq(cyclicalWM.lockedShares(lp3),   remainingShares3);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.totalCycleShares(4), remainingShares1 + remainingShares2 + remainingShares3);
 
         assertEq(pool.totalAssets(), 10_050_000e6 - 1 - withdrawnAssets1 - withdrawnAssets2 - withdrawnAssets3 + 1_000e6);
 
@@ -868,7 +868,7 @@ contract RequestRedeemFailureTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
 
         deposit(lp, 1_000e6);
     }
@@ -891,7 +891,7 @@ contract RequestRedeemFailureTests is TestBase {
 
     function test_requestRedeem_failIfNotPM() external {
         vm.expectRevert("WM:AS:NOT_POOL_MANAGER");
-        withdrawalManager.addShares(0, address(lp));
+        cyclicalWM.addShares(0, address(lp));
     }
 
     function test_requestRedeem_failIfAlreadyLockedShares() external {
@@ -916,7 +916,7 @@ contract RedeemFailureTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
 
         deposit(lp, 1_000e6);
     }
@@ -928,7 +928,7 @@ contract RedeemFailureTests is TestBase {
 
     function test_redeem_failIfNotPoolManager() external {
         vm.expectRevert("WM:PE:NOT_PM");
-        withdrawalManager.processExit(1_000e6, address(lp));
+        cyclicalWM.processExit(1_000e6, address(lp));
     }
 
     function test_redeem_failWithInvalidAmountOfShares() external {
@@ -976,7 +976,7 @@ contract RedeemFailureTests is TestBase {
         vm.warp(start + 2 weeks);
 
         // Manually remove tokens from the withdrawal manager.
-        vm.prank(address(withdrawalManager));
+        vm.prank(address(cyclicalWM));
         pool.transfer(address(0), 1_000e6);
 
         vm.prank(lp);
@@ -1035,7 +1035,7 @@ contract RedeemIntegrationTests is TestBase {
         lp1      = makeAddr("lp1");
         lp2      = makeAddr("lp2");
         borrower = makeAddr("borrower");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
 
         deposit(lp1, 3_000_000e6);
         deposit(lp2, 3_000_000e6);
@@ -1087,16 +1087,16 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(pool.totalAssets(), 3_000_000e6 * 2);
 
         // Check locked shares for lp1 and cycles inherent info
-        assertEq(withdrawalManager.lockedShares(lp1),   1_000_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp1),    3);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp1),   1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp1),    3);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000_000e6);
 
         // Losses should be the amount of the loan
         assertEq(poolManager.unrealizedLosses(), IFixedTermLoan(loan).principalRequested());
 
         // When there's enough liquidity to redeem
         uint256 shouldRedeemSC =
-            ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) /
+            ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * cyclicalWM.totalCycleShares(3)) /
             pool.totalSupply();
 
         uint256 shouldRedeemCalculated = (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 1_000_000e6) / (3_000_000e6 * uint256(2));
@@ -1129,9 +1129,9 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(pool.balanceOf(wm),  0);
 
         // Check locked shares for lp1 and cycles inherent info
-        assertEq(withdrawalManager.exitCycleId(lp1),    0);
-        assertEq(withdrawalManager.lockedShares(lp1),   0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp1),    0);
+        assertEq(cyclicalWM.lockedShares(lp1),   0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
 
@@ -1169,20 +1169,20 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(pool.totalAssets(), 3_000_000e6 * 2);
 
         // Check locked shares for lp1 and cycles inherent info
-        assertEq(withdrawalManager.lockedShares(lp1), 1_000_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp1),  3);
+        assertEq(cyclicalWM.lockedShares(lp1), 1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp1),  3);
 
         // Check locked shares for lp2 and cycles inherent info
-        assertEq(withdrawalManager.lockedShares(lp2),   2_000_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp2),    3);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp2),   2_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp2),    3);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
 
         // Losses should be the amount of the loan
         assertEq(poolManager.unrealizedLosses(), IFixedTermLoan(loan).principalRequested());
 
         // When there's enough liquidity to redeem
         uint256 shouldRedeemSC =
-            ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
+            ((poolManager.totalAssets()  - poolManager.unrealizedLosses()) * cyclicalWM.totalCycleShares(3)) / pool.totalSupply();
 
         uint256 shouldRedeemCalculated =
             (((3_000_000e6 * uint256(2)) - 2_000_000e6) * (1_000_000e6 + 2_000_000e6)) / (3_000_000e6 * uint256(2));
@@ -1191,7 +1191,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(shouldRedeemSC, 2_000_000e6);  // 1:2/3 exchange rate, no rounding error
 
         uint256 shouldRedeemSCLP1 =
-            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * cyclicalWM.lockedShares(lp1)) / pool.totalSupply();
 
         uint256 shouldRedeemCalculatedLP1 = (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 1_000_000e6) / (3_000_000e6 * uint256(2));
 
@@ -1199,7 +1199,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(shouldRedeemSCLP1, 666_666.666666e6);
 
         uint256 shouldRedeemSCLP2 =
-            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp2)) / pool.totalSupply();
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * cyclicalWM.lockedShares(lp2)) / pool.totalSupply();
 
         uint256 shouldRedeemCalculatedLP2 = (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 2_000_000e6) / (3_000_000e6 * uint256(2));
 
@@ -1246,11 +1246,11 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(pool.balanceOf(wm),  0);
 
         // Check locked shares for lp1, lp2 and cycles inherent info
-        assertEq(withdrawalManager.exitCycleId(lp1),     0);
-        assertEq(withdrawalManager.lockedShares(lp1),    0);
-        assertEq(withdrawalManager.exitCycleId(lp2),     0);
-        assertEq(withdrawalManager.lockedShares(lp2),    0);
-        assertEq(withdrawalManager.totalCycleShares(3),  0);
+        assertEq(cyclicalWM.exitCycleId(lp1),     0);
+        assertEq(cyclicalWM.lockedShares(lp1),    0);
+        assertEq(cyclicalWM.exitCycleId(lp2),     0);
+        assertEq(cyclicalWM.lockedShares(lp2),    0);
+        assertEq(cyclicalWM.totalCycleShares(3),  0);
     }
 
     function test_redeem_twoLPSWithImpairedLoanAndTriggerDefault() external {
@@ -1287,18 +1287,18 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(pool.totalAssets(), 3_000_000e6 * 2);
 
         // Check locked shares for lp1 and cycles inherent info
-        assertEq(withdrawalManager.lockedShares(lp1),   1_000_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp1),    3);
-        assertEq(withdrawalManager.lockedShares(lp2),   2_000_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp2),    3);
-        assertEq(withdrawalManager.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
+        assertEq(cyclicalWM.lockedShares(lp1),   1_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp1),    3);
+        assertEq(cyclicalWM.lockedShares(lp2),   2_000_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp2),    3);
+        assertEq(cyclicalWM.totalCycleShares(3), 1_000_000e6 + 2_000_000e6);
 
         // Losses should be the amount of the loan
         assertEq(poolManager.unrealizedLosses(), IFixedTermLoan(loan).principalRequested());
 
         // When there's enough liquidity to redeem
         uint256 shouldRedeemSC =
-            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.totalCycleShares(3)) / pool.totalSupply();
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * cyclicalWM.totalCycleShares(3)) / pool.totalSupply();
 
         uint256 shouldRedeemCalculated =
             (((3_000_000e6 * uint256(2)) - 2_000_000e6) * (1_000_000e6 + 2_000_000e6)) / (3_000_000e6 * uint256(2));
@@ -1307,7 +1307,7 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(shouldRedeemSC, 2_000_000e6);
 
         uint256 shouldRedeemSCLP1 =
-            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * withdrawalManager.lockedShares(lp1)) / pool.totalSupply();
+            ((poolManager.totalAssets() - poolManager.unrealizedLosses()) * cyclicalWM.lockedShares(lp1)) / pool.totalSupply();
 
         uint256 shouldRedeemCalculatedLP1 =
             (((3_000_000e6 * uint256(2)) - 2_000_000e6) * 1_000_000e6) / (3_000_000e6 * uint256(2));
@@ -1344,7 +1344,7 @@ contract RedeemIntegrationTests is TestBase {
         uint256 totalSupply = 6_000_000e6 - 1_000_000e6;
         assertEq(pool.totalSupply(), totalSupply);
 
-        uint256 shouldRedeemSCLP2         = ((poolManager.totalAssets()) * withdrawalManager.lockedShares(lp2)) / pool.totalSupply();
+        uint256 shouldRedeemSCLP2         = ((poolManager.totalAssets()) * cyclicalWM.lockedShares(lp2)) / pool.totalSupply();
         uint256 shouldRedeemCalculatedLP2 = (totalAssets * 2_000_000e6)                                         / totalSupply;
         assertEq(shouldRedeemSCLP2, shouldRedeemCalculatedLP2);
         assertEq(shouldRedeemSCLP2, 1_493_333.333333e6);
@@ -1378,11 +1378,11 @@ contract RedeemIntegrationTests is TestBase {
         assertEq(pool.balanceOf(wm),  0);
 
         // Check locked shares for lp1, lp2 and cycles inherent info
-        assertEq(withdrawalManager.exitCycleId(lp1),    0);
-        assertEq(withdrawalManager.lockedShares(lp1),   0);
-        assertEq(withdrawalManager.exitCycleId(lp2),    0);
-        assertEq(withdrawalManager.lockedShares(lp2),   0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp1),    0);
+        assertEq(cyclicalWM.lockedShares(lp1),   0);
+        assertEq(cyclicalWM.exitCycleId(lp2),    0);
+        assertEq(cyclicalWM.lockedShares(lp2),   0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
     }
 
 }

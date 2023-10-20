@@ -34,4 +34,7 @@ git submodule update --init --recursive modules/withdrawal-manager-cyclical
 echo "$SSH_KEY_POOL_PERMISSION_MANAGER" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/pool-permission-manager
 
+echo "$SSH_KEY_WM_QUEUE" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/withdrawal-manager-queue
+
 git submodule update --init --recursive

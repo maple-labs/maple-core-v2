@@ -71,13 +71,13 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
 
         vm.warp(start + 3 weeks);
 
-        assertEq(withdrawalManager.lockedShares(lp1),   1_500_000e6);
-        assertEq(withdrawalManager.totalCycleShares(4), 1_500_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp1),    4);
+        assertEq(cyclicalWM.lockedShares(lp1),   1_500_000e6);
+        assertEq(cyclicalWM.totalCycleShares(4), 1_500_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp1),    4);
 
-        assertEq(pool.balanceOf(address(withdrawalManager)), 1_500_000e6);
-        assertEq(fundsAsset.balanceOf(address(pool)),        6_000_000e6);
-        assertEq(fundsAsset.balanceOf(address(lp1)),         0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 6_000_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp1)),  0);
 
         uint256 fullAssets  = pool.convertToAssets(1_500_000e6);
         uint256 totalAssets = poolManager.totalAssets();
@@ -92,10 +92,10 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         // Total assets (10_003_600e6) - unrealized losses (4_003_600e6) = 6_000_000e6 * lp1 pool share (0.15) = 900_000e6.
         assertEq(withdrawnAssets, 900_000e6);
 
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
-        assertEq(pool.balanceOf(address(lp1)),               0);
-        assertEq(fundsAsset.balanceOf(address(pool)),        5_100_000e6);
-        assertEq(fundsAsset.balanceOf(address(lp1)),         900_000e6);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+        assertEq(pool.balanceOf(address(lp1)),        0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 5_100_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp1)),  900_000e6);
     }
 
     function test_unrealizedLosses_redeemWithUnrealizedLosses_partialLiquidity() external {
@@ -141,13 +141,13 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
 
         vm.warp(start + 3 weeks);
 
-        assertEq(withdrawalManager.lockedShares(lp1),   1_500_000e6);
-        assertEq(withdrawalManager.totalCycleShares(4), 1_500_000e6);
-        assertEq(withdrawalManager.exitCycleId(lp1),    4);
+        assertEq(cyclicalWM.lockedShares(lp1),   1_500_000e6);
+        assertEq(cyclicalWM.totalCycleShares(4), 1_500_000e6);
+        assertEq(cyclicalWM.exitCycleId(lp1),    4);
 
-        assertEq(pool.balanceOf(address(withdrawalManager)), 1_500_000e6);
-        assertEq(fundsAsset.balanceOf(address(pool)),        800_000e6);
-        assertEq(fundsAsset.balanceOf(address(lp1)),         0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 1_500_000e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 800_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp1)),  0);
 
         uint256 fullAssets  = pool.convertToAssets(1_500_000e6);
         uint256 totalAssets = poolManager.totalAssets();
@@ -167,11 +167,11 @@ contract UnrealizedLossesTests is TestBaseWithAssertions {
         // Remaining Shares: 1_500_000e6 - 1_332_294.143901      = 167_705.856099 shares
         assertEq(withdrawnAssets, 800_000e6 - 1);
 
-        assertEq(pool.balanceOf(address(withdrawalManager)), 1_500_000e6 - (1_500_000e6 * uint256(800_000e6) / 900_702e6));
-        assertEq(pool.balanceOf(address(withdrawalManager)), 167_705.856099e6);
-        assertEq(pool.balanceOf(address(lp1)),               0);
-        assertEq(fundsAsset.balanceOf(address(pool)),        1);              // Rounding error
-        assertEq(fundsAsset.balanceOf(address(lp1)),         800_000e6 - 1);  // Rounding error
+        assertEq(pool.balanceOf(address(cyclicalWM)), 1_500_000e6 - (1_500_000e6 * uint256(800_000e6) / 900_702e6));
+        assertEq(pool.balanceOf(address(cyclicalWM)), 167_705.856099e6);
+        assertEq(pool.balanceOf(address(lp1)),        0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 1);              // Rounding error
+        assertEq(fundsAsset.balanceOf(address(lp1)),  800_000e6 - 1);  // Rounding error
     }
 
     function test_unrealizedLosses_depositWithUnrealizedLosses() external {

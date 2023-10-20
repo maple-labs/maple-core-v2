@@ -43,3 +43,6 @@
 [submodule "modules/withdrawal-manager-cyclical"]
 	path = modules/withdrawal-manager-cyclical
 	url = git@github.com:maple-labs/withdrawal-manager-cyclical-private.git
+[submodule "modules/withdrawal-manager-queue"]
+	path = modules/withdrawal-manager-queue
+	url = git@github.com:maple-labs/withdrawal-manager-queue-private.git

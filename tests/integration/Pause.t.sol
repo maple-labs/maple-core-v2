@@ -204,7 +204,7 @@ contract PauseTests is TestBaseWithAssertions {
         functions[fixedTermLoanManagerFactory] = proxyFactoryFunctions;
         functions[openTermLoanFactory]         = proxyFactoryFunctions;
         functions[openTermLoanManagerFactory]  = proxyFactoryFunctions;
-        functions[withdrawalManagerFactory]    = proxyFactoryFunctions;
+        functions[cyclicalWMFactory]           = proxyFactoryFunctions;
         functions[fixedTermLoan]               = fixedTermLoanFunctions;
         functions[fixedTermLoanManager]        = fixedTermLoanManagerFunctions;
         functions[address(liquidator)]         = liquidatorFunctions;
@@ -212,7 +212,7 @@ contract PauseTests is TestBaseWithAssertions {
         functions[openTermLoanManager]         = openTermLoanManagerFunctions;
         functions[address(pool)]               = poolFunctions;
         functions[address(poolManager)]        = poolManagerFunctions;
-        functions[address(withdrawalManager)]  = withdrawalManagerFunctions;
+        functions[address(cyclicalWM)]         = withdrawalManagerFunctions;
 
         messages[liquidatorFactory]           = "MPF:PROTOCOL_PAUSED";
         messages[poolManagerFactory]          = "MPF:PROTOCOL_PAUSED";
@@ -220,7 +220,7 @@ contract PauseTests is TestBaseWithAssertions {
         messages[fixedTermLoanManagerFactory] = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanFactory]         = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanManagerFactory]  = "MPF:PROTOCOL_PAUSED";
-        messages[withdrawalManagerFactory]    = "MPF:PROTOCOL_PAUSED";
+        messages[cyclicalWMFactory]           = "MPF:PROTOCOL_PAUSED";
         messages[fixedTermLoan]               = "L:PAUSED";
         messages[fixedTermLoanManager]        = "LM:PAUSED";
         messages[address(liquidator)]         = "LIQ:PROTOCOL_PAUSED";
@@ -228,7 +228,7 @@ contract PauseTests is TestBaseWithAssertions {
         messages[openTermLoanManager]         = "LM:PAUSED";
         messages[address(pool)]               = "PM:CC:PAUSED";
         messages[address(poolManager)]        = "PM:PAUSED";
-        messages[address(withdrawalManager)]  = "WM:PROTOCOL_PAUSED";
+        messages[address(cyclicalWM)]         = "WM:PROTOCOL_PAUSED";
 
         // Factories contracts check ACL before pause
         caller[liquidatorFactory]           = address(fixedTermLoanManager);
@@ -237,7 +237,7 @@ contract PauseTests is TestBaseWithAssertions {
         caller[fixedTermLoanFactory]        = address(borrower);
         caller[openTermLoanManagerFactory]  = address(poolManager);
         caller[openTermLoanFactory]         = address(borrower);
-        caller[withdrawalManagerFactory]    = address(deployer);
+        caller[cyclicalWMFactory]           = address(deployer);
     }
 
     function test_globalPause() external {
@@ -249,7 +249,7 @@ contract PauseTests is TestBaseWithAssertions {
             address(fixedTermLoanManagerFactory),
             address(openTermLoanFactory),
             address(openTermLoanManagerFactory),
-            address(withdrawalManagerFactory),
+            address(cyclicalWMFactory),
             address(fixedTermLoan),
             address(fixedTermLoanManager),
             address(liquidator),
@@ -257,7 +257,7 @@ contract PauseTests is TestBaseWithAssertions {
             address(openTermLoanManager),
             address(pool),
             address(poolManager),
-            address(withdrawalManager)
+            address(cyclicalWM)
         ];
 
         vm.prank(governor);

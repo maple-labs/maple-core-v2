@@ -27,7 +27,7 @@ contract DeprecateLoanFactoryTest is AddressRegistry, Test {
     /*** Deprecation Tests                                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    function test_deprecateFactory() external {
+    function testFork_deprecateFactory() external {
         // Successfully deploy loan.
         vm.prank(borrower);
         loanFactory.createInstance(args, "salt-1");

@@ -29,9 +29,9 @@ contract PoolExitPermissionTestBase is TestBase {
         erc20_mint(address(fundsAsset), lp, assets);
         erc20_approve(address(fundsAsset), lp, address(pool), assets);
 
-        setLenderAllowlist(address(poolManager), address(lp),                true);
-        setLenderAllowlist(address(poolManager), address(poolManager),       true);
-        setLenderAllowlist(address(poolManager), address(withdrawalManager), true);
+        setLenderAllowlist(address(poolManager), address(lp),          true);
+        setLenderAllowlist(address(poolManager), address(poolManager), true);
+        setLenderAllowlist(address(poolManager), address(cyclicalWM),  true);
 
         vm.prank(lp);
         pool.deposit(assets, lp);
@@ -74,14 +74,14 @@ contract PrivatePermissionTests is PoolExitPermissionTestBase {
 
         setLenderAllowlist(address(poolManager), lp, true);
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         vm.prank(lp);
         pool.requestRedeem(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
     }
 
     function test_poolExit_private_removeShares() external {
@@ -99,14 +99,14 @@ contract PrivatePermissionTests is PoolExitPermissionTestBase {
 
         setLenderAllowlist(address(poolManager), lp, true);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         vm.prank(lp);
         pool.removeShares(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
     }
 
     function test_poolExit_private_redeem() external {
@@ -127,8 +127,8 @@ contract PrivatePermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), assets);
         assertEq(fundsAsset.balanceOf(lp),            0);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         assertEq(poolManager.totalAssets(), assets);
 
@@ -138,8 +138,8 @@ contract PrivatePermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
         assertEq(fundsAsset.balanceOf(lp),            assets);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         assertEq(poolManager.totalAssets(), 0);
     }
@@ -221,14 +221,14 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         vm.prank(lp);
         pool.requestRedeem(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
     }
 
     function test_poolExit_functionLevel_removeShares() external {
@@ -259,14 +259,14 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         vm.prank(lp);
         pool.removeShares(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
     }
 
     function test_poolExit_functionLevel_redeem() external {
@@ -300,8 +300,8 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), assets);
         assertEq(fundsAsset.balanceOf(lp),            0);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         assertEq(poolManager.totalAssets(), assets);
 
@@ -311,8 +311,8 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
         assertEq(fundsAsset.balanceOf(lp),            assets);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         assertEq(poolManager.totalAssets(), 0);
     }
@@ -394,14 +394,14 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         vm.prank(lp);
         pool.requestRedeem(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
     }
 
     function test_poolExit_poolLevel_removeShares() external {
@@ -431,14 +431,14 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                 0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         vm.prank(lp);
         pool.removeShares(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                 shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
     }
 
     function test_poolExit_poolLevel_redeem() external {
@@ -471,8 +471,8 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), assets);
         assertEq(fundsAsset.balanceOf(lp),            0);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         assertEq(poolManager.totalAssets(), assets);
 
@@ -482,8 +482,8 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
         assertEq(fundsAsset.balanceOf(lp),            assets);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         assertEq(poolManager.totalAssets(), 0);
     }
@@ -511,29 +511,29 @@ contract PublicPermissionTests is PoolExitPermissionTestBase {
     }
 
     function test_poolExit_public_requestRedeem() external {
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         vm.prank(lp);
         pool.requestRedeem(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
     }
 
     function test_poolExit_public_removeShares() external {
         vm.prank(lp);
         pool.requestRedeem(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         vm.warp(start + 2 weeks);
         vm.prank(lp);
         pool.removeShares(shares, lp);
 
-        assertEq(pool.balanceOf(lp),                         shares);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
     }
 
     function test_poolExit_public_redeem() external {
@@ -543,8 +543,8 @@ contract PublicPermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), assets);
         assertEq(fundsAsset.balanceOf(lp),            0);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), shares);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
 
         assertEq(poolManager.totalAssets(), assets);
 
@@ -555,8 +555,8 @@ contract PublicPermissionTests is PoolExitPermissionTestBase {
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
         assertEq(fundsAsset.balanceOf(lp),            assets);
 
-        assertEq(pool.balanceOf(lp),                         0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         assertEq(poolManager.totalAssets(), 0);
     }

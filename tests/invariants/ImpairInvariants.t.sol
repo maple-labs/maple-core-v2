@@ -177,17 +177,17 @@ contract ImpairInvariants is BaseInvariants {
         for (uint256 i; i < lpHandler.numLps(); ++i) {
             address lp = lpHandler.lps(i);
 
-            sumLockedShares += withdrawalManager.lockedShares(lp);
+            sumLockedShares += cyclicalWM.lockedShares(lp);
 
             uint256 totalRequestedLiquidity =
-                withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)) * (pool.totalAssets() - pool.unrealizedLosses()) /
+                cyclicalWM.totalCycleShares(cyclicalWM.exitCycleId(lp)) * (pool.totalAssets() - pool.unrealizedLosses()) /
                 pool.totalSupply();
 
             (
                 uint256 shares,
                 uint256 assets,
                 bool partialLiquidity
-            ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(lp), lp);
+            ) = cyclicalWM.getRedeemableAmounts(cyclicalWM.lockedShares(lp), lp);
 
             assert_withdrawalManager_invariant_F(shares);
             assert_withdrawalManager_invariant_G(lp, shares);
@@ -199,7 +199,7 @@ contract ImpairInvariants is BaseInvariants {
             assert_withdrawalManager_invariant_L(partialLiquidity, totalRequestedLiquidity);
         }
 
-        assertTrue(pool.balanceOf(address(withdrawalManager)) == sumLockedShares);
+        assertTrue(pool.balanceOf(address(cyclicalWM)) == sumLockedShares);
     }
 
     function statefulFuzz_withdrawalManager_B() external useCurrentTimestamp { assert_withdrawalManager_invariant_B(); }

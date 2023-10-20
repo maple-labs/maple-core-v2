@@ -471,9 +471,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets -= lp1Assets;
         expectedTotalSupply -= lp1Shares;
 
-        assertEq(pool.balanceOf(lp1),                        0);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
-        assertEq(fundsAsset.balanceOf(lp1),                        lp1Assets);
+        assertEq(pool.balanceOf(lp1),                 0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+        assertEq(fundsAsset.balanceOf(lp1),           lp1Assets);
 
         // Full withdrawal
         assertWithdrawalManagerState({

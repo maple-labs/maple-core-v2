@@ -32,7 +32,7 @@ contract DelayedWithdrawalStartTests is TestBase {
 
         _createAndConfigurePool(withdrawalStart, 1 weeks, 2 days);
 
-        wm = address(withdrawalManager);
+        wm = address(cyclicalWM);
 
         openPool(address(poolManager));
         deposit(address(pool), lp, assets);
@@ -53,8 +53,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  3);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  3);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.redeem(shares, lp, lp);
@@ -73,8 +73,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     function testFuzz_requestRedeem_onStart(uint256 withdrawalDelay) external {
@@ -86,8 +86,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  3);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  3);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.redeem(shares, lp, lp);
@@ -102,8 +102,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     function testFuzz_requestRedeem_afterStart(uint256 withdrawalDelay) external {
@@ -115,8 +115,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  3);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  3);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.redeem(shares, lp, lp);
@@ -127,8 +127,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     function testFuzz_requestRedeem_nextCycle(uint256 withdrawalDelay) external {
@@ -140,8 +140,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  4);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  4);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:PE:NOT_IN_WINDOW");
         pool.redeem(shares, lp, lp);
@@ -152,8 +152,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     /**************************************************************************************************************************************/
@@ -221,8 +221,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  3);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  3);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:RS:WITHDRAWAL_PENDING");
         pool.removeShares(shares, lp);
@@ -241,8 +241,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), shares);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     function testFuzz_removeShares_onStart(uint256 withdrawalDelay) external {
@@ -254,8 +254,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  3);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  3);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:RS:WITHDRAWAL_PENDING");
         pool.removeShares(shares, lp);
@@ -270,8 +270,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), shares);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     function testFuzz_removeShares_afterStart(uint256 withdrawalDelay) external {
@@ -283,8 +283,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  3);
-        assertEq(withdrawalManager.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  3);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
 
         vm.expectRevert("WM:RS:WITHDRAWAL_PENDING");
         pool.removeShares(shares, lp);
@@ -295,8 +295,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), shares);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     function testFuzz_removeShares_nextCycle(uint256 withdrawalDelay) external {
@@ -308,8 +308,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), 0);
         assertEq(pool.balanceOf(wm), shares);
 
-        assertEq(withdrawalManager.lockedShares(lp), shares);
-        assertEq(withdrawalManager.exitCycleId(lp),  4);
+        assertEq(cyclicalWM.lockedShares(lp), shares);
+        assertEq(cyclicalWM.exitCycleId(lp),  4);
 
         vm.expectRevert("WM:RS:WITHDRAWAL_PENDING");
         pool.removeShares(shares, lp);
@@ -320,8 +320,8 @@ contract DelayedWithdrawalStartTests is TestBase {
         assertEq(pool.balanceOf(lp), shares);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),  0);
-        assertEq(withdrawalManager.lockedShares(lp), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),  0);
+        assertEq(cyclicalWM.lockedShares(lp), 0);
     }
 
     /**************************************************************************************************************************************/
@@ -334,9 +334,9 @@ contract DelayedWithdrawalStartTests is TestBase {
         vm.warp(withdrawalStart - 1 days);
         vm.stopPrank();
         vm.prank(poolDelegate);
-        withdrawalManager.setExitConfig(2 weeks, 2 days);
+        cyclicalWM.setExitConfig(2 weeks, 2 days);
 
-        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = withdrawalManager.cycleConfigs(1);
+        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = cyclicalWM.cycleConfigs(1);
 
         assertEq(initialCycleId,   4);
         assertEq(initialCycleTime, withdrawalStart + 3 weeks);
@@ -350,9 +350,9 @@ contract DelayedWithdrawalStartTests is TestBase {
         vm.warp(withdrawalStart);
         vm.stopPrank();
         vm.prank(poolDelegate);
-        withdrawalManager.setExitConfig(2 weeks, 2 days);
+        cyclicalWM.setExitConfig(2 weeks, 2 days);
 
-        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = withdrawalManager.cycleConfigs(1);
+        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = cyclicalWM.cycleConfigs(1);
 
         assertEq(initialCycleId,   4);
         assertEq(initialCycleTime, withdrawalStart + 3 weeks);
@@ -366,9 +366,9 @@ contract DelayedWithdrawalStartTests is TestBase {
         vm.warp(withdrawalStart + 1 days);
         vm.stopPrank();
         vm.prank(poolDelegate);
-        withdrawalManager.setExitConfig(2 weeks, 2 days);
+        cyclicalWM.setExitConfig(2 weeks, 2 days);
 
-        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = withdrawalManager.cycleConfigs(1);
+        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = cyclicalWM.cycleConfigs(1);
 
         assertEq(initialCycleId,   4);
         assertEq(initialCycleTime, withdrawalStart + 3 weeks);
@@ -382,9 +382,9 @@ contract DelayedWithdrawalStartTests is TestBase {
         vm.warp(withdrawalStart + 10 days);
         vm.stopPrank();
         vm.prank(poolDelegate);
-        withdrawalManager.setExitConfig(2 weeks, 2 days);
+        cyclicalWM.setExitConfig(2 weeks, 2 days);
 
-        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = withdrawalManager.cycleConfigs(1);
+        ( uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration ) = cyclicalWM.cycleConfigs(1);
 
         assertEq(initialCycleId,   5);
         assertEq(initialCycleTime, withdrawalStart + 4 weeks);

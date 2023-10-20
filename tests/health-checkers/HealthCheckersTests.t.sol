@@ -17,7 +17,7 @@ contract HealthCheckerMainnetTests is AddressRegistry, Test {
         protocolHealthChecker_ = new ProtocolHealthChecker();
     }
 
-    function test_healthChecker_mainnet() public {
+    function testFork_healthChecker_mainnet() public {
         _checkPool(mapleDirectUSDCPoolManager);
     }
 

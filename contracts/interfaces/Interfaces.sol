@@ -32,6 +32,9 @@ import { IMaplePoolPermissionManager as IMPPM }
 import { IMapleWithdrawalManager as IMWMC }
     from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
 
+import { IMapleWithdrawalManager as IMWMQ } 
+    from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
+
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
@@ -65,6 +68,8 @@ interface IPoolManager is IMPM { }
 interface IPoolPermissionManager is IMPPM { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
+
+interface IWithdrawalManagerQueue is IMWMQ {}
 
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                    ***/

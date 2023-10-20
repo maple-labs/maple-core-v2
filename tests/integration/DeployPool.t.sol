@@ -27,7 +27,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("PD:DP:INVALID_PD");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -45,7 +45,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("PD:DP:INVALID_PM_FACTORY");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -63,7 +63,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("PM:ALM:INVALID_FACTORY");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -75,13 +75,13 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failWithInvalidWMCyclicalFactory() external {
         vm.prank(address(governor));
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", withdrawalManagerFactory, false);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", cyclicalWMFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PD:DP:INVALID_WM_FACTORY");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -96,7 +96,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(0),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -111,7 +111,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         address poolManager = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -128,7 +128,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -146,7 +146,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -165,7 +165,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(asset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -188,7 +188,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -205,7 +205,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -220,7 +220,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -235,7 +235,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -250,7 +250,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("PM:SDMFR:OOB");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -265,7 +265,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("PD:DP:TRANSFER_FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -282,7 +282,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failIfCalledWMFactoryDirectly() external {
         vm.expectRevert("WMF:CI:NOT_DEPLOYER");
-        IProxyFactoryLike(withdrawalManagerFactory).createInstance(new bytes(0), "salt");
+        IProxyFactoryLike(cyclicalWMFactory).createInstance(new bytes(0), "salt");
     }
 
     function test_deployPool_successWithZeroMigrationAdmin() external {
@@ -297,7 +297,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -320,7 +320,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -343,7 +343,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
         vm.expectRevert("PD:DP:INVALID_PD");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -363,7 +363,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -387,7 +387,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
@@ -398,14 +398,14 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         vm.stopPrank();
 
-        IPoolManager       poolManager       = IPoolManager(poolManager_);
-        IPool              pool              = IPool(poolManager.pool());
-        ILoanManagerLike   loanManager       = ILoanManagerLike(poolManager.loanManagerList(0));
-        IWithdrawalManager withdrawalManager = IWithdrawalManager(poolManager.withdrawalManager());
+        IPoolManager       poolManager = IPoolManager(poolManager_);
+        IPool              pool        = IPool(poolManager.pool());
+        ILoanManagerLike   loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+        IWithdrawalManager cyclicalWM  = IWithdrawalManager(poolManager.withdrawalManager());
 
         assertEq(poolManager.poolDelegate(),              poolDelegate);
         assertEq(poolManager.asset(),                     address(fundsAsset));
-        assertEq(poolManager.withdrawalManager(),         address(withdrawalManager));
+        assertEq(poolManager.withdrawalManager(),         address(cyclicalWM));
         assertEq(poolManager.liquidityCap(),              1_500_000e6);
         assertEq(poolManager.delegateManagementFeeRate(), 0.2e6);
         assertEq(poolManager.loanManagerList(0),          address(loanManager));
@@ -428,15 +428,15 @@ contract DeployPoolTests is TestBaseWithAssertions {
         assertEq(loanManager.fundsAsset(),  address(fundsAsset));
         assertEq(loanManager.poolManager(), poolManager_);
 
-        assertEq(withdrawalManager.pool(),        address(pool));
-        assertEq(withdrawalManager.poolManager(), poolManager_);
+        assertEq(cyclicalWM.pool(),        address(pool));
+        assertEq(cyclicalWM.poolManager(), poolManager_);
 
         (
             uint64 initialCycleId_,
             uint64 initialCycleTime_,
             uint64 cycleDuration_,
             uint64 windowDuration_
-        ) = withdrawalManager.cycleConfigs(0);
+        ) = cyclicalWM.cycleConfigs(0);
 
         assertEq(initialCycleId_,   1);
         assertEq(initialCycleTime_, block.timestamp);

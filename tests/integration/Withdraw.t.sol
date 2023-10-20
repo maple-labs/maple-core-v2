@@ -16,7 +16,7 @@ contract RequestWithdrawTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
     }
 
     function test_requestWithdraw() external {
@@ -27,9 +27,9 @@ contract RequestWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         vm.expectRevert("PM:RW:NOT_ENABLED");
         pool.requestWithdraw(1_000e6, lp);
@@ -47,9 +47,9 @@ contract RequestWithdrawTests is TestBase {
         assertEq(pool.balanceOf(wm),         0);
         assertEq(pool.allowance(lp, sender), 1_000e6);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         vm.expectRevert("PM:RW:NOT_ENABLED");
         vm.prank(sender);
@@ -62,9 +62,9 @@ contract RequestWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp), 1_000e6);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         vm.warp(start - 10 days);
         vm.prank(lp);
@@ -84,9 +84,9 @@ contract RequestWithdrawTests is TestBase {
         assertEq(pool.balanceOf(lp), depositAmount);
         assertEq(pool.balanceOf(wm), 0);
 
-        assertEq(withdrawalManager.exitCycleId(lp),     0);
-        assertEq(withdrawalManager.lockedShares(lp),    0);
-        assertEq(withdrawalManager.totalCycleShares(3), 0);
+        assertEq(cyclicalWM.exitCycleId(lp),     0);
+        assertEq(cyclicalWM.lockedShares(lp),    0);
+        assertEq(cyclicalWM.totalCycleShares(3), 0);
 
         vm.expectRevert("PM:RW:NOT_ENABLED");
         pool.requestWithdraw(withdrawAmount, lp);
@@ -105,7 +105,7 @@ contract RequestWithdrawFailureTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
 
         deposit(lp, 1_000e6);
     }
@@ -128,7 +128,7 @@ contract RequestWithdrawFailureTests is TestBase {
 
     function test_requestWithdraw_failIfNotPM() external {
         vm.expectRevert("WM:AS:NOT_POOL_MANAGER");
-        withdrawalManager.addShares(0, address(lp));
+        cyclicalWM.addShares(0, address(lp));
     }
 
 }
@@ -144,7 +144,7 @@ contract WithdrawFailureTests is TestBase {
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
-        wm       = address(withdrawalManager);
+        wm       = address(cyclicalWM);
 
         deposit(lp, 1_000e6);
     }
@@ -156,7 +156,7 @@ contract WithdrawFailureTests is TestBase {
 
     function test_withdraw_failIfNotPoolManager() external {
         vm.expectRevert("WM:PE:NOT_PM");
-        withdrawalManager.processExit(1_000e6, address(lp));
+        cyclicalWM.processExit(1_000e6, address(lp));
     }
 
     function test_withdraw_zeroAssetInput() external {
@@ -305,10 +305,10 @@ contract WithdrawScenarios is TestBase {
         assertEq(assets4, uint256(500_000e6 * 2) / 6 + 3);
 
         // lp3 and lp4 burn less shares than lp2 because of increase in exchange rate.
-        assertEq(withdrawalManager.lockedShares(lp1),   500_000e6 -  83_165.009632e6);
-        assertEq(withdrawalManager.lockedShares(lp2), 1_000_000e6 - 166_330.019265e6);
-        assertEq(withdrawalManager.lockedShares(lp3),   500_000e6 -  83_133.373369e6);
-        assertEq(withdrawalManager.lockedShares(lp4), 1_000_000e6 - 166_266.746740e6);
+        assertEq(cyclicalWM.lockedShares(lp1),   500_000e6 -  83_165.009632e6);
+        assertEq(cyclicalWM.lockedShares(lp2), 1_000_000e6 - 166_330.019265e6);
+        assertEq(cyclicalWM.lockedShares(lp3),   500_000e6 -  83_133.373369e6);
+        assertEq(cyclicalWM.lockedShares(lp4), 1_000_000e6 - 166_266.746740e6);
     }
 
     function test_withdrawals_cashInjection() external {
@@ -354,14 +354,14 @@ contract WithdrawScenarios is TestBase {
         // First LP exits.
         vm.warp(start + 15 days);
 
-        ( uint256 redeemableShares, , bool partialLiquidity ) = withdrawalManager.getRedeemableAmounts(1_500_000e6, address(lp1));
+        ( uint256 redeemableShares, , bool partialLiquidity ) = cyclicalWM.getRedeemableAmounts(1_500_000e6, address(lp1));
 
         assertTrue(partialLiquidity);
 
         uint256 assets1 = redeem(lp1, 1_500_000e6);
 
-        assertEq(withdrawalManager.lockedShares(address(lp1)), 1_500_000e6 - redeemableShares);
-        assertEq(withdrawalManager.exitCycleId(address(lp1)),  4);
+        assertEq(cyclicalWM.lockedShares(address(lp1)), 1_500_000e6 - redeemableShares);
+        assertEq(cyclicalWM.exitCycleId(address(lp1)),  4);
 
         address loan = createFixedTermLoan({
             borrower:    address(borrower),
@@ -382,14 +382,14 @@ contract WithdrawScenarios is TestBase {
         vm.prank(address(poolDelegate));
         loanManager.fund(address(loan));
 
-        ( redeemableShares, , partialLiquidity ) = withdrawalManager.getRedeemableAmounts(2_500_000e6, address(lp2));
+        ( redeemableShares, , partialLiquidity ) = cyclicalWM.getRedeemableAmounts(2_500_000e6, address(lp2));
 
         assertTrue(!partialLiquidity);
 
         uint256 assets2 = redeem(lp2, 2_500_000e6);
 
-        assertEq(withdrawalManager.lockedShares(address(lp2)), 0);
-        assertEq(withdrawalManager.exitCycleId(address(lp2)),  0);
+        assertEq(cyclicalWM.lockedShares(address(lp2)), 0);
+        assertEq(cyclicalWM.exitCycleId(address(lp2)),  0);
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 1_000_000e6 + 4109589.041095e6 - 300_000e6 - assets1 - assets2);
     }
@@ -440,15 +440,15 @@ contract WithdrawScenarios is TestBase {
         requestRedeem(address(lp3),   500_000e6);
         requestRedeem(address(lp4), 1_000_000e6);
 
-        assertEq(withdrawalManager.totalCycleShares(3), 3_500_000e6);
+        assertEq(cyclicalWM.totalCycleShares(3), 3_500_000e6);
 
         // 1st LP withdraws with no liquidity.
         vm.warp(start + 15 days);
         redeem(address(lp1), 500_000e6);
 
-        assertEq(withdrawalManager.totalCycleShares(3),        3_000_000e6);
-        assertEq(withdrawalManager.lockedShares(address(lp1)), 500_000e6);
-        assertEq(withdrawalManager.exitCycleId(address(lp1)),  4);
+        assertEq(cyclicalWM.totalCycleShares(3),        3_000_000e6);
+        assertEq(cyclicalWM.lockedShares(address(lp1)), 500_000e6);
+        assertEq(cyclicalWM.exitCycleId(address(lp1)),  4);
 
         assertEq(pool.balanceOf(address(lp1)),       0);
         assertEq(fundsAsset.balanceOf(address(lp1)), 0);
@@ -465,9 +465,9 @@ contract WithdrawScenarios is TestBase {
         vm.warp(start + 15.56 days);
         redeem(address(lp2), 1_500_000e6);
 
-        assertEq(withdrawalManager.totalCycleShares(3),        1_500_000e6);
-        assertEq(withdrawalManager.lockedShares(address(lp2)), 0);
-        assertEq(withdrawalManager.exitCycleId(address(lp2)),  0);
+        assertEq(cyclicalWM.totalCycleShares(3),        1_500_000e6);
+        assertEq(cyclicalWM.lockedShares(address(lp2)), 0);
+        assertEq(cyclicalWM.exitCycleId(address(lp2)),  0);
 
         assertEq(pool.totalSupply(),                 2_000_000e6);
         assertEq(pool.balanceOf(address(lp2)),       0);
@@ -482,8 +482,8 @@ contract WithdrawScenarios is TestBase {
         vm.warp(start + 15.58 days);
         redeem(address(lp3), 500_000e6);
 
-        assertEq(withdrawalManager.lockedShares(address(lp3)), 0);
-        assertEq(withdrawalManager.exitCycleId(address(lp3)),  0);
+        assertEq(cyclicalWM.lockedShares(address(lp3)), 0);
+        assertEq(cyclicalWM.exitCycleId(address(lp3)),  0);
 
         assertEq(pool.balanceOf(address(lp3)),       0);
         assertEq(fundsAsset.balanceOf(address(lp3)), 500_000e6 * 100_000e6 / 2_000_000e6);
@@ -520,8 +520,8 @@ contract WithdrawScenarios is TestBase {
         vm.warp(start + 15.72 days);
         redeem(address(lp4), 1_000_000e6);
 
-        assertEq(withdrawalManager.lockedShares(address(lp4)), 0);
-        assertEq(withdrawalManager.exitCycleId(address(lp4)),  0);
+        assertEq(cyclicalWM.lockedShares(address(lp4)), 0);
+        assertEq(cyclicalWM.exitCycleId(address(lp4)),  0);
 
         assertEq(pool.balanceOf(address(lp4)),       0);
         assertEq(fundsAsset.balanceOf(address(lp4)), assetsToWithdraw);
@@ -559,7 +559,7 @@ contract WithdrawOnPermissionedPool is TestBase {
         depositCover(2_500_000e6);
 
         // Since it's a permissioned pool, the withdrawal manager needs to be allowlisted.
-        allowLender(address(poolManager), address(withdrawalManager));
+        allowLender(address(poolManager), address(cyclicalWM));
 
         // In the callstack, shares are transferred to the PM first, so it also needs to be allowlisted.
         allowLender(address(poolManager), address(poolManager)); 
@@ -578,7 +578,7 @@ contract WithdrawOnPermissionedPool is TestBase {
 
         requestRedeem(address(lp1), 500_000e6);
 
-        uint256 windowStart = withdrawalManager.getWindowStart(withdrawalManager.exitCycleId(address(lp1)));
+        uint256 windowStart = cyclicalWM.getWindowStart(cyclicalWM.exitCycleId(address(lp1)));
 
         vm.warp(windowStart);
 

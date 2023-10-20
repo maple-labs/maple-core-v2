@@ -137,7 +137,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Update the WM config
-        setExitConfig(address(withdrawalManager), 3 days, 1 days);
+        setExitConfig(address(cyclicalWM), 3 days, 1 days);
 
         // Warp to withdraw window
         vm.warp(start + 2 weeks + 1 days);
@@ -341,7 +341,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Update the WM config
-        setExitConfig(address(withdrawalManager), 3 days, 1 days);
+        setExitConfig(address(cyclicalWM), 3 days, 1 days);
 
         // Warp to withdraw window
         vm.warp(start + 2 weeks + 1 days);
@@ -553,7 +553,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Update the WM config
-        setExitConfig(address(withdrawalManager), 3 days, 1 days);
+        setExitConfig(address(cyclicalWM), 3 days, 1 days);
 
         // Warp to withdraw window
         vm.warp(start + 2 weeks + 1 days);
@@ -1342,7 +1342,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Redeem 30 LPs
         for (uint256 i; i < 30; ++i) {
-            uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
+            uint256 userLockedShares = cyclicalWM.lockedShares(lps[i]);
 
             totalLpTokenAmount -= userLockedShares;
 
@@ -1411,7 +1411,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Redeem the remaining LPs
         for (uint256 i = 30; i < 50; ++i) {
-            uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
+            uint256 userLockedShares = cyclicalWM.lockedShares(lps[i]);
 
             totalLpTokenAmount -= userLockedShares;
 

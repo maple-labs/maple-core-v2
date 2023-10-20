@@ -210,19 +210,19 @@ contract ValidationLifecycle is ValidationLifecycleTestsBase {
         _addLoanManagers();
     }
 
-    function test_validationLifecycle_aqruPool(uint256 seed) external {
+    function testFork_validationLifecycle_aqruPool(uint256 seed) external {
         runLifecycleValidation(seed, aqruPool, aqruLoans);
     }
 
-    function test_validationLifecycle_cashMgmtPool(uint256 seed) external {
+    function testFork_validationLifecycle_cashMgmtPool(uint256 seed) external {
         runLifecycleValidation(seed, cashManagementUSDCPool, cashMgmtLoans);
     }
 
-    function test_validationLifecycle_mavenWethPool(uint256 seed) external {
+    function testFork_validationLifecycle_mavenWethPool(uint256 seed) external {
         runLifecycleValidation(seed, mavenWethPool, mavenWethLoans);
     }
 
-    function test_validationLifecycle_mavenPermissioned(uint256 seed) external {
+    function testFork_validationLifecycle_mavenPermissioned(uint256 seed) external {
         runLifecycleValidation(seed, mavenPermissionedPool, mavenPermissionedLoans);
     }
 

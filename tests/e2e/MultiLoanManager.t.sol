@@ -281,9 +281,9 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
         runningInterest2 += interestToDistribute / 3 * deposit2 / runningDeposits;
         runningInterest3 += interestToDistribute / 3 * deposit3 / runningDeposits;
 
-        redeem(address(pool), lp1, withdrawalManager.lockedShares(lp1));
-        redeem(address(pool), lp2, withdrawalManager.lockedShares(lp2));
-        redeem(address(pool), lp3, withdrawalManager.lockedShares(lp3));
+        redeem(address(pool), lp1, cyclicalWM.lockedShares(lp1));
+        redeem(address(pool), lp2, cyclicalWM.lockedShares(lp2));
+        redeem(address(pool), lp3, cyclicalWM.lockedShares(lp3));
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);

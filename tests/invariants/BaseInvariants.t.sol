@@ -388,53 +388,53 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function assert_withdrawalManager_invariant_A(uint256 sumLockedShares) internal {
-        assertEq(pool.balanceOf(address(withdrawalManager)), sumLockedShares, "WithdrawalManager Invariant A1");
+        assertEq(pool.balanceOf(address(cyclicalWM)), sumLockedShares, "WithdrawalManager Invariant A1");
     }
 
     function assert_withdrawalManager_invariant_B() internal {
-        uint256 currentCycleId = withdrawalManager.getCurrentCycleId();
+        uint256 currentCycleId = cyclicalWM.getCurrentCycleId();
 
         for (uint256 cycleId = 1; cycleId <= currentCycleId; ++cycleId) {
             uint256 sumCycleShares;
 
             for (uint256 i; i < lpHandler.numLps(); ++i) {
-                if (withdrawalManager.exitCycleId(lpHandler.lps(i)) == cycleId) {
-                    sumCycleShares += withdrawalManager.lockedShares(lpHandler.lps(i));
+                if (cyclicalWM.exitCycleId(lpHandler.lps(i)) == cycleId) {
+                    sumCycleShares += cyclicalWM.lockedShares(lpHandler.lps(i));
                 }
             }
 
-            assertEq(withdrawalManager.totalCycleShares(cycleId), sumCycleShares, "WithdrawalManager Invariant B");
+            assertEq(cyclicalWM.totalCycleShares(cycleId), sumCycleShares, "WithdrawalManager Invariant B");
         }
     }
 
     function assert_withdrawalManager_invariant_C() internal {
-        uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(withdrawalManager.getCurrentCycleId());
+        uint256 withdrawalWindowStart = cyclicalWM.getWindowStart(cyclicalWM.getCurrentCycleId());
 
         assertLe(withdrawalWindowStart, block.timestamp, "WithdrawalManager Invariant C");
     }
 
     function assert_withdrawalManager_invariant_D() internal {
-        ( , uint256 initialCycleTime , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
+        ( , uint256 initialCycleTime , , ) = cyclicalWM.cycleConfigs(cyclicalWM.getCurrentCycleId());
 
         assertLe(initialCycleTime, block.timestamp, "WithdrawalManager Invariant D");
     }
 
     function assert_withdrawalManager_invariant_E() internal {
-        ( uint256 initialCycleId , , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
+        ( uint256 initialCycleId , , , ) = cyclicalWM.cycleConfigs(cyclicalWM.getCurrentCycleId());
 
-        assertLe(initialCycleId, withdrawalManager.getCurrentCycleId(), "WithdrawalManager Invariant e");
+        assertLe(initialCycleId, cyclicalWM.getCurrentCycleId(), "WithdrawalManager Invariant e");
     }
 
     function assert_withdrawalManager_invariant_F(uint256 shares) internal {
-        assertLe(shares, pool.balanceOf(address(withdrawalManager)), "WithdrawalManager Invariant F");
+        assertLe(shares, pool.balanceOf(address(cyclicalWM)), "WithdrawalManager Invariant F");
     }
 
     function assert_withdrawalManager_invariant_G(address lp, uint256 shares) internal {
-        assertLe(shares, withdrawalManager.lockedShares(lp), "WithdrawalManager Invariant G");
+        assertLe(shares, cyclicalWM.lockedShares(lp), "WithdrawalManager Invariant G");
     }
 
     function assert_withdrawalManager_invariant_H(address lp, uint256 shares) internal {
-        assertLe(shares, withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)), "WithdrawalManager Invariant H");
+        assertLe(shares, cyclicalWM.totalCycleShares(cyclicalWM.exitCycleId(lp)), "WithdrawalManager Invariant H");
     }
 
     function assert_withdrawalManager_invariant_I(uint256 assets) internal {
@@ -447,7 +447,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_withdrawalManager_invariant_K(address lp, uint256 assets) internal {
         uint256 lpRequestedLiquidity =
-            withdrawalManager.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
+            cyclicalWM.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
 
         assertLe(assets, lpRequestedLiquidity, "WithdrawalManager Invariant K");
     }
@@ -459,32 +459,32 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_withdrawalManager_invariant_M() internal {
         if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
 
-        uint256 cycleId = withdrawalManager.getCurrentCycleId();
+        uint256 cycleId = cyclicalWM.getCurrentCycleId();
 
-        ( uint256 windowStart, uint256 windowEnd ) = withdrawalManager.getWindowAtId(cycleId);
+        ( uint256 windowStart, uint256 windowEnd ) = cyclicalWM.getWindowAtId(cycleId);
 
         if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
-            assertLe(withdrawalManager.lockedLiquidity(), pool.totalAssets(), "WithdrawalManager Invariant M1");
+            assertLe(cyclicalWM.lockedLiquidity(), pool.totalAssets(), "WithdrawalManager Invariant M1");
         } else {
-            assertEq(withdrawalManager.lockedLiquidity(), 0, "WithdrawalManager Invariant M2");
+            assertEq(cyclicalWM.lockedLiquidity(), 0, "WithdrawalManager Invariant M2");
         }
     }
 
     function assert_withdrawalManager_invariant_N() internal {
         if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
 
-        uint256 currentCycle = withdrawalManager.getCurrentCycleId();
+        uint256 currentCycle = cyclicalWM.getCurrentCycleId();
 
-        ( uint256 windowStart, uint256 windowEnd ) = withdrawalManager.getWindowAtId(currentCycle);
+        ( uint256 windowStart, uint256 windowEnd ) = cyclicalWM.getWindowAtId(currentCycle);
 
         if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
             assertLe(
-                withdrawalManager.lockedLiquidity(),
-                withdrawalManager.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(),
+                cyclicalWM.lockedLiquidity(),
+                cyclicalWM.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(),
                 "WithdrawalManager Invariant N1"
             );
         } else {
-            assertEq(withdrawalManager.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
+            assertEq(cyclicalWM.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
         }
     }
 

@@ -538,7 +538,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.warp(start + 2 weeks);
 
-        redeem(address(pool), lp, withdrawalManager.lockedShares(lp));
+        redeem(address(pool), lp, cyclicalWM.lockedShares(lp));
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:ZERO_SUPPLY");

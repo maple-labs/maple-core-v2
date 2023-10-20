@@ -263,7 +263,7 @@ contract MaxRedeemTests is TestBase {
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp));
+        assertTrue(!cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxRedeem(lp), 0);
     }
@@ -278,7 +278,7 @@ contract MaxRedeemTests is TestBase {
 
         vm.warp(start + 2 weeks - 1);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp));
+        assertTrue(!cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxRedeem(lp), 0);
     }
@@ -296,7 +296,7 @@ contract MaxRedeemTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertTrue(withdrawalManager.isInExitWindow(lp));
+        assertTrue(cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxRedeem(lp), shares);
     }
@@ -318,7 +318,7 @@ contract MaxWithdrawTests is TestBase {
 
         assertEq(pool.balanceOf(lp), 1_000e6);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp));
+        assertTrue(!cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxWithdraw(lp), 0);
     }
@@ -333,7 +333,7 @@ contract MaxWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks - 1);
 
-        assertTrue(!withdrawalManager.isInExitWindow(lp));
+        assertTrue(!cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxWithdraw(lp), 0);
     }
@@ -350,7 +350,7 @@ contract MaxWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertTrue(withdrawalManager.isInExitWindow(lp));
+        assertTrue(cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxWithdraw(lp), 0);
     }
@@ -369,7 +369,7 @@ contract MaxWithdrawTests is TestBase {
 
         vm.warp(start + 2 weeks);
 
-        assertTrue(withdrawalManager.isInExitWindow(lp));
+        assertTrue(cyclicalWM.isInExitWindow(lp));
 
         assertEq(pool.maxWithdraw(lp), 0);
     }

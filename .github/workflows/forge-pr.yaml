@@ -25,6 +25,7 @@ jobs:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
           SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           chmod +x ./setup-ci.sh
@@ -57,6 +58,7 @@ jobs:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
           SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           chmod +x ./setup-ci.sh
@@ -90,6 +92,7 @@ jobs:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
           SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           chmod +x ./setup-ci.sh
@@ -123,6 +126,7 @@ jobs:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
           SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           chmod +x ./setup-ci.sh
@@ -156,6 +160,7 @@ jobs:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
           SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           chmod +x ./setup-ci.sh
@@ -190,6 +195,7 @@ jobs:
           SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
           SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
           SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           chmod +x ./setup-ci.sh

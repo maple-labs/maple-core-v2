@@ -54,6 +54,14 @@ import { MapleWithdrawalManagerFactory as MWMCF }
 import { MapleWithdrawalManagerInitializer as MWMCI }
     from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerInitializer.sol";
 
+import { MapleWithdrawalManager as MWMQ } from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
+
+import { MapleWithdrawalManagerFactory as MWMQF }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerFactory.sol";
+import { MapleWithdrawalManagerInitializer as MWMQI }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
+
+
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
 /******************************************************************************************************************************************/
@@ -200,3 +208,13 @@ contract WithdrawalManagerCyclicalFactory is MWMCF {
 }
 
 contract WithdrawalManagerCyclicalInitializer is MWMCI { }
+
+contract WithdrawalManagerQueue is MWMQ { }
+
+contract WithdrawalManagerQueueFactory is MWMQF {
+
+    constructor(address globals_) MWMQF(globals_) { }
+
+}
+
+contract WithdrawalManagerQueueInitializer is MWMQI { }

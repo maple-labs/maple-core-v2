@@ -253,14 +253,14 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(poolManager.totalAssets(), totalAssets);
 
         // Withdraw partial shares for lp1 and lp2.
-        assertTrue( withdrawalManager.isInExitWindow(lp1));
-        assertTrue( withdrawalManager.isInExitWindow(lp2));
-        assertTrue(!withdrawalManager.isInExitWindow(lp3));
+        assertTrue( cyclicalWM.isInExitWindow(lp1));
+        assertTrue( cyclicalWM.isInExitWindow(lp2));
+        assertTrue(!cyclicalWM.isInExitWindow(lp3));
 
         {
-            assertEq(withdrawalManager.totalCycleShares(withdrawalManager.getCurrentCycleId()), 4_000_000e6 + 5_893_909.626719e6);
-            assertEq(pool.totalSupply(),                                                        11_803_930.790178e6);
-            assertEq(fundsAsset.balanceOf(address(pool)),                                       7_558_000e6);
+            assertEq(cyclicalWM.totalCycleShares(cyclicalWM.getCurrentCycleId()), 4_000_000e6 + 5_893_909.626719e6);
+            assertEq(pool.totalSupply(),                                          11_803_930.790178e6);
+            assertEq(fundsAsset.balanceOf(address(pool)),                         7_558_000e6);
 
             // Requested shares * available liquidity / (total cycle shares * total assets / totalSupply)
             uint256 redeemableShares1 =
@@ -280,9 +280,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(poolManager.totalAssets(), totalAssets);
 
         {
-            assertEq(withdrawalManager.totalCycleShares(withdrawalManager.getCurrentCycleId()), 5_893_909.626719e6);
-            assertEq(pool.totalSupply(),                                                        8_958_979.422747e6);
-            assertEq(fundsAsset.balanceOf(address(pool)),                                       4_502_382.843527e6);
+            assertEq(cyclicalWM.totalCycleShares(cyclicalWM.getCurrentCycleId()), 5_893_909.626719e6);
+            assertEq(pool.totalSupply(),                                          8_958_979.422747e6);
+            assertEq(fundsAsset.balanceOf(address(pool)),                         4_502_382.843527e6);
 
             // Requested shares * available liquidity / (total cycle shares * total assets / totalSupply)
             uint256 redeemableShares2 = 5_893_909.626719e6 * 4_502_382.843527e6 / (5_893_909.626719e6 * totalAssets / 8_958_979.422747e6);
@@ -327,15 +327,15 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(poolManager.totalAssets(), totalAssets);
 
         // At this point, both loan 2 and 3 are finalized. Now all LPs will proceed to withdraw their shares.
-        vm.warp(withdrawalManager.getWindowStart(withdrawalManager.exitCycleId(lp3)));
+        vm.warp(cyclicalWM.getWindowStart(cyclicalWM.exitCycleId(lp3)));
 
-        assertTrue(withdrawalManager.isInExitWindow(lp3));
+        assertTrue(cyclicalWM.isInExitWindow(lp3));
 
         {
-            assertEq(withdrawalManager.totalCycleShares(withdrawalManager.getCurrentCycleId()), 4_767_007.859734e6);
-            assertEq(pool.totalSupply(),                                                        4_767_007.859734e6);
-            assertEq(withdrawalManager.lockedShares(lp3),                                       1_910_021.163459e6);
-            assertEq(fundsAsset.balanceOf(address(pool)),                                       4_720_000e6);
+            assertEq(cyclicalWM.totalCycleShares(cyclicalWM.getCurrentCycleId()), 4_767_007.859734e6);
+            assertEq(pool.totalSupply(),                                          4_767_007.859734e6);
+            assertEq(cyclicalWM.lockedShares(lp3),                                1_910_021.163459e6);
+            assertEq(fundsAsset.balanceOf(address(pool)),                         4_720_000e6);
 
             // Requested shares * available liquidity / (total cycle shares * total assets / totalSupply)
             uint256 redeemableShares3 = 1_910_021.163459e6 * 4_720_000e6 / (4_767_007.859734e6 * totalAssets / 4_767_007.859734e6);
@@ -352,9 +352,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(poolManager.totalAssets(), totalAssets);
 
         {
-            assertEq(withdrawalManager.totalCycleShares(withdrawalManager.getCurrentCycleId()), 2_856_986.696275e6);
-            assertEq(pool.totalSupply(),                                                        3_215_321.131417e6);
-            assertEq(fundsAsset.balanceOf(address(pool)),                                       2_828_813.713594e6);
+            assertEq(cyclicalWM.totalCycleShares(cyclicalWM.getCurrentCycleId()), 2_856_986.696275e6);
+            assertEq(pool.totalSupply(),                                          3_215_321.131417e6);
+            assertEq(fundsAsset.balanceOf(address(pool)),                         2_828_813.713594e6);
 
             // Requested shares * available liquidity / (total cycle shares * total assets / totalSupply)
             uint256 redeemableShares1 = 1_155_048.632569e6 * 2_828_813.713594e6 / (2_856_986.696275e6 * totalAssets / 3_215_321.131417e6);
@@ -371,9 +371,9 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(poolManager.totalAssets(), totalAssets);
 
         {
-            assertEq(withdrawalManager.totalCycleShares(withdrawalManager.getCurrentCycleId()), 1_701_938.063706e6);
-            assertEq(pool.totalSupply(),                                                        2_276_968.369674e6);
-            assertEq(fundsAsset.balanceOf(address(pool)),                                       1_685_155.111355e6);
+            assertEq(cyclicalWM.totalCycleShares(cyclicalWM.getCurrentCycleId()), 1_701_938.063706e6);
+            assertEq(pool.totalSupply(),                                          2_276_968.369674e6);
+            assertEq(fundsAsset.balanceOf(address(pool)),                         1_685_155.111355e6);
 
             // Requested shares * available liquidity / (total cycle shares * total assets / totalSupply)
             uint256 redeemableShares2 = 1701938.063706e6 * 1_685_155.111355e6 / (1_701_938.063706e6 * totalAssets / 2_276_968.369674e6);
@@ -396,10 +396,10 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         // Since the loan1 was never finalized, LPS still have a balance greater than 0,
         // but are locked in the withdrawal manager until they remove.
-        assertEq(pool.balanceOf(address(withdrawalManager)), 894_326.775750e6);  // All funds are in WM
-        assertEq(withdrawalManager.lockedShares(lp1),        216_695.870826e6);
-        assertEq(withdrawalManager.lockedShares(lp2),        319_296.469782e6);
-        assertEq(withdrawalManager.lockedShares(lp3),        358_334.435142e6);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 894_326.775750e6);  // All funds are in WM
+        assertEq(cyclicalWM.lockedShares(lp1),        216_695.870826e6);
+        assertEq(cyclicalWM.lockedShares(lp2),        319_296.469782e6);
+        assertEq(cyclicalWM.lockedShares(lp3),        358_334.435142e6);
     }
 
     // Test 12
