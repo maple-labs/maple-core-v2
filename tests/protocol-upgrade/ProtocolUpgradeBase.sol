@@ -77,6 +77,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IGlobals globals_ = IGlobals(globals);
 
         vm.startPrank(governor);
+        globals_.setValidInstanceOf("LOAN_FACTORY",            fixedTermLoanFactoryV502,       true);
         globals_.setValidInstanceOf("FT_LOAN_FACTORY",         fixedTermLoanFactoryV502,       true);
         globals_.setValidInstanceOf("POOL_PERMISSION_MANAGER", address(poolPermissionManager), true);
 
