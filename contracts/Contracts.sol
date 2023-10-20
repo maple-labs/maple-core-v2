@@ -40,6 +40,7 @@ import { MaplePoolDeployer as MPD }            from "../modules/pool/contracts/M
 import { MaplePoolManager as MPM }             from "../modules/pool/contracts/MaplePoolManager.sol";
 import { MaplePoolManagerFactory as MPMF }     from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
 import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
+import { MaplePoolManagerMigrator as MPMM }    from "../modules/pool/contracts/proxy/MaplePoolManagerMigrator.sol";
 
 import { MaplePoolPermissionManager as MPPM }
     from "../modules/pool-permission-manager/contracts/MaplePoolPermissionManager.sol";
@@ -168,6 +169,8 @@ contract PoolManagerFactory is MPMF {
 }
 
 contract PoolManagerInitializer is MPMI { }
+
+contract PoolManagerMigrator is MPMM { }
 
 contract PoolPermissionManager is MPPM { }
 

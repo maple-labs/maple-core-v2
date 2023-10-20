@@ -1015,4 +1015,9 @@ contract ProtocolActions is Test {
         IProxiedLike(poolManager).upgrade(version, data);
     }
 
+    function upgradePoolManagerAsSecurityAdmin(address poolManager, uint256 version, bytes memory data) internal {
+        vm.prank(IGlobals(ILoanLike(poolManager).globals()).securityAdmin());
+        IProxiedLike(poolManager).upgrade(version, data);
+    }
+
 }

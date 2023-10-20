@@ -146,6 +146,8 @@ interface ILoanLike is IProxiedLike {
 
     function borrower() external view returns (address borrower_);
 
+    function factory() external view returns (address factory_);
+
     function fundsAsset() external view returns (address fundsAsset_);
 
     function globals() external view returns (address globals_);
@@ -231,6 +233,8 @@ interface IProxyFactoryLike {
 
     function isInstance(address instance_) external view returns (bool isInstance_);
 
+    function isLoan(address proxy_) external view returns (bool isLoan_);
+
     function migratorForPath(uint256 oldVersion_, uint256 newVersion_) external view returns (address migrator_);
 
     function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
@@ -238,7 +242,6 @@ interface IProxyFactoryLike {
     function setDefaultVersion(uint256 version_) external;
 
     function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
-
 }
 
 // NOTE: cycleConfigs() is not defined as a view function in the submodule which needs updating.
@@ -275,4 +278,3 @@ interface IMockERC20 is IERC20 {
     function mint(address recipient_, uint256 amount_) external;
 
 }
-

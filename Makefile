@@ -28,6 +28,9 @@ integration:
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
+protocol-upgrade:
+	./test.sh -d tests/protocol-upgrade -p $(profile)
+
 scenario:
 	./scenarios.sh
 
