@@ -13,7 +13,8 @@ import {
     IOpenTermLoanManagerStructs,
     IPool,
     IPoolManager,
-    IWithdrawalManagerCyclical as IWithdrawalManager
+    IWithdrawalManagerCyclical,
+    IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
@@ -337,6 +338,24 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IPoolManager(poolManager).unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
     }
 
+    function assertQueue(address poolManager, uint128 nextRequestId, uint128 lastRequestId) internal {
+        address wm = IPoolManager(poolManager).withdrawalManager();
+
+        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = IWithdrawalManagerQueue(wm).queue();
+
+        assertEq(nextRequestId_, nextRequestId);
+        assertEq(lastRequestId_, lastRequestId);
+    }
+
+    function assertRequest(address poolManager, uint128 requestId, address owner, uint256 shares) internal {
+        address wm = IPoolManager(poolManager).withdrawalManager();
+
+        ( address owner_, uint256 shares_ ) = IWithdrawalManagerQueue(wm).requests(requestId);
+
+        assertEq(owner_,  owner);
+        assertEq(shares_, shares);
+    }
+
     function assertWithdrawalManagerState(
         address pool,
         address lp,
@@ -347,7 +366,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 currentCycleTotalShares,
         uint256 withdrawalManagerTotalShares
     ) internal {
-        IWithdrawalManager withdrawalManager = IWithdrawalManager(IPoolManager(IPool(pool).manager()).withdrawalManager());
+        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(IPool(pool).manager()).withdrawalManager());
 
         assertEq(withdrawalManager.lockedShares(lp), lockedShares);
         assertEq(withdrawalManager.exitCycleId(lp),  currentExitCycleId);

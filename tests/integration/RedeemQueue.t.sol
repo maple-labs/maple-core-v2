@@ -10,60 +10,22 @@ import {
 
 import { PoolManagerWMMigrator, PoolManager, WithdrawalManagerQueue } from "../../contracts/Contracts.sol";
 
-import { TestBase } from "../TestBase.sol";
+import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-// TODO: Refactor to deploy pool with new WM via PoolDeployer in TestBase, we don't need _setUpQueueWM
-contract QueueRedeemBase is TestBase {
+contract QueueRedeemBase is TestBaseWithAssertions {
 
     function setUp() public override virtual {
-        super.setUp();
+        start = block.timestamp;
 
-        _setUpQueueWM();
-    }
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createPoolWithQueue();
+        _configurePool();
 
-    // TODO: refactor to make stateless and add to TestBaseWithAssertions
-    function assertRequest(uint128 requestId, address owner, uint256 shares) internal {
-        ( address owner_, uint256 shares_ ) = queueWM.requests(requestId);
-
-        assertEq(owner_,  owner);
-        assertEq(shares_, shares);
-    }
-
-    // TODO: refactor to make stateless and add to TestBaseWithAssertions
-    function assertQueue(uint128 nextRequestId, uint128 lastRequestId) internal {
-        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = queueWM.queue();
-
-        assertEq(nextRequestId_, nextRequestId);
-        assertEq(lastRequestId_, lastRequestId);
-    }
-
-    // TODO: Remove in favour of using PoolDeployer in TestBase
-    function _setUpQueueWM() internal {
-        address deployer = makeAddr("deployer");
-
-        vm.prank(governor);
-        globals.setCanDeployFrom(address(queueWMFactory), deployer, true);
-
-        vm.prank(deployer);
-        queueWM = WithdrawalManagerQueue(
-            IMapleProxyFactory(queueWMFactory).createInstance(abi.encode(address(pool)), "SALT")
-        );
-
-        address migrator          = address(new PoolManagerWMMigrator());
-        address newImplementation = address(new PoolManager());
-
-        vm.startPrank(governor);
-        IMapleProxyFactory(poolManagerFactory).registerImplementation(2, newImplementation, address(queueWMInitializer));
-        IMapleProxyFactory(poolManagerFactory).enableUpgradePath(1, 2, migrator);
-
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", address(queueWM),     true);
-        globals.setValidInstanceOf("QUEUE_POOL_MANAGER",               address(poolManager), true);
-        vm.stopPrank();
-
-        vm.prank(governor);
-        poolManager.upgrade(2, abi.encode(address(queueWM)));
-
-        allowLender(address(poolManager), address(queueWM));
+        openPool(address(poolManager));
     }
 
 }
@@ -118,10 +80,10 @@ contract ManualRedeemTests is QueueRedeemBase {
         requestRedeem(address(pool), lp2, 2_000e6);
 
         // Assert WM State
-        assertRequest({ requestId: 1, owner: lp1, shares: 2_000e6 });
-        assertRequest({ requestId: 2, owner: lp2, shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
 
-        assertQueue({ nextRequestId: 1, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
@@ -136,10 +98,10 @@ contract ManualRedeemTests is QueueRedeemBase {
         vm.prank(poolDelegate);
         queueWM.processRedemptions(4_000e6);
 
-        assertRequest({ requestId: 1, owner: address(0), shares: 0 });
-        assertRequest({ requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
-        assertQueue({ nextRequestId: 3, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 3, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
@@ -151,7 +113,7 @@ contract ManualRedeemTests is QueueRedeemBase {
         // Lp2 does manual redemption
         redeem(address(pool), address(lp2), 2_000e6);
 
-        assertRequest({ requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
@@ -160,7 +122,6 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         assertEq(queueWM.manualSharesAvailable(lp2), 0);
     }
-
     function test_manualRedeem_partialLiquidity() external {
         assertEq(pool.balanceOf(lp1), 2_000e6);
         assertEq(pool.balanceOf(lp2), 2_000e6);
@@ -172,10 +133,10 @@ contract ManualRedeemTests is QueueRedeemBase {
         requestRedeem(address(pool), lp2, 2_000e6);
 
         // Assert WM State
-        assertRequest({ requestId: 1, owner: lp1, shares: 2_000e6 });
-        assertRequest({ requestId: 2, owner: lp2, shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
 
-        assertQueue({ nextRequestId: 1, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
@@ -190,10 +151,10 @@ contract ManualRedeemTests is QueueRedeemBase {
         vm.prank(poolDelegate);
         queueWM.processRedemptions(3_000e6);
 
-        assertRequest({ requestId: 1, owner: address(0), shares: 0 });
-        assertRequest({ requestId: 2, owner: lp2, shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 1_000e6 });
 
-        assertQueue({ nextRequestId: 2, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
@@ -205,9 +166,9 @@ contract ManualRedeemTests is QueueRedeemBase {
         vm.prank(poolDelegate);
         queueWM.processRedemptions(1_000e6);
 
-        assertQueue({ nextRequestId: 3, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 3, lastRequestId: 2 });
 
-        assertRequest({ requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
@@ -218,7 +179,7 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         redeem(address(pool), address(lp2), 2_000e6);
 
-        assertRequest({ requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);

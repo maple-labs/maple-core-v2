@@ -286,6 +286,24 @@ contract TestBase is ProtocolActions {
         poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
     }
 
+    function _createPoolWithQueue() internal {
+        vm.prank(poolDelegate);
+        poolManager = PoolManager(deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, 0]
+        }));
+
+        queueWM    = WithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool       = Pool(poolManager.pool());
+        poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
+    }
+
     function _configurePool() internal {
         vm.startPrank(governor);
         globals.activatePoolManager(address(poolManager));
