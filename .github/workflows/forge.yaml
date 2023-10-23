@@ -139,7 +139,7 @@ jobs:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
         run: make invariant profile=super_deep
 
-  protcol-upgrade:
+  protocol-upgrade:
     runs-on:
         group: SC-HighMemory
     steps:
