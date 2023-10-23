@@ -195,8 +195,8 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",          openTermLoanManagerFactory,    true);
         globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             openTermLoanManagerFactory,    true);
         globals.setValidInstanceOf("POOL_MANAGER_FACTORY",             poolManagerFactory,            true);
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", cyclicalWMFactory,             true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       cyclicalWMFactory,             true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                true);
         globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
@@ -237,18 +237,10 @@ contract TestBase is ProtocolActions {
         PoolManagerFactory(poolManagerFactory).registerImplementation(1, poolManagerImplementation, poolManagerInitializer);
         PoolManagerFactory(poolManagerFactory).setDefaultVersion(1);
 
-        WithdrawalManagerCyclicalFactory(cyclicalWMFactory).registerImplementation(
-            1,
-            cyclicalWMImplementation,
-            cyclicalWMInitializer
-        );
+        WithdrawalManagerCyclicalFactory(cyclicalWMFactory).registerImplementation(1, cyclicalWMImplementation, cyclicalWMInitializer);
         WithdrawalManagerCyclicalFactory(cyclicalWMFactory).setDefaultVersion(1);
 
-        WithdrawalManagerQueueFactory(queueWMFactory).registerImplementation(
-            1,
-            queueWMImplementation,
-            queueWMInitializer
-        );
+        WithdrawalManagerQueueFactory(queueWMFactory).registerImplementation(1, queueWMImplementation, queueWMInitializer);
         WithdrawalManagerQueueFactory(queueWMFactory).setDefaultVersion(1);
 
         vm.stopPrank();

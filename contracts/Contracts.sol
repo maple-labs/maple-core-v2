@@ -34,13 +34,14 @@ import { MapleLiquidatorInitializer as MLI } from "../modules/liquidations/contr
 import { MapleGlobals as MG }  from "../modules/globals/contracts/MapleGlobals.sol";
 import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
-import { MaplePool as MP }                     from "../modules/pool/contracts/MaplePool.sol";
-import { MaplePoolDelegateCover as MPDC }      from "../modules/pool/contracts/MaplePoolDelegateCover.sol";
-import { MaplePoolDeployer as MPD }            from "../modules/pool/contracts/MaplePoolDeployer.sol";
-import { MaplePoolManager as MPM }             from "../modules/pool/contracts/MaplePoolManager.sol";
-import { MaplePoolManagerFactory as MPMF }     from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
-import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
-import { MaplePoolManagerMigrator as MPMM }    from "../modules/pool/contracts/proxy/MaplePoolManagerMigrator.sol";
+import { MaplePool as MP }                      from "../modules/pool/contracts/MaplePool.sol";
+import { MaplePoolDelegateCover as MPDC }       from "../modules/pool/contracts/MaplePoolDelegateCover.sol";
+import { MaplePoolDeployer as MPD }             from "../modules/pool/contracts/MaplePoolDeployer.sol";
+import { MaplePoolManager as MPM }              from "../modules/pool/contracts/MaplePoolManager.sol";
+import { MaplePoolManagerFactory as MPMF }      from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
+import { MaplePoolManagerInitializer as MPMI }  from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
+import { MaplePoolManagerMigrator as MPMM }     from "../modules/pool/contracts/proxy/MaplePoolManagerMigrator.sol";
+import { MaplePoolManagerWMMigrator as MPMWMM } from "../modules/pool/contracts/proxy/MaplePoolManagerWMMigrator.sol";
 
 import { MaplePoolPermissionManager as MPPM }
     from "../modules/pool-permission-manager/contracts/MaplePoolPermissionManager.sol";
@@ -179,6 +180,8 @@ contract PoolManagerFactory is MPMF {
 contract PoolManagerInitializer is MPMI { }
 
 contract PoolManagerMigrator is MPMM { }
+
+contract PoolManagerWMMigrator is MPMWMM { }
 
 contract PoolPermissionManager is MPPM { }
 
