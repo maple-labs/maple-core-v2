@@ -115,8 +115,22 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         poolManager.acceptPoolDelegate();
     }
 
-    function test_setPendingPoolDelegate() external {
+    function test_setPendingPoolDelegate_asPoolDelegate() external {
         vm.prank(poolDelegate);
+        poolManager.setPendingPoolDelegate(newPoolDelegate);
+
+        assertEq(poolManager.pendingPoolDelegate(), newPoolDelegate);
+    }
+
+    function test_setPendingPoolDelegate_asGovernor() external {
+        vm.prank(governor);
+        poolManager.setPendingPoolDelegate(newPoolDelegate);
+
+        assertEq(poolManager.pendingPoolDelegate(), newPoolDelegate);
+    }
+
+    function test_setPendingPoolDelegate_asOperationalAdmin() external {
+        vm.prank(operationalAdmin);
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         assertEq(poolManager.pendingPoolDelegate(), newPoolDelegate);
