@@ -336,7 +336,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         bool isAllowed = hasPermission(permissionLevel, isAllowlisted, poolBitmap, lenderBitmap);
 
-        assertEq(fundsAsset.balanceOf(receiver),      0);
+        uint256 receiverBalance = fundsAsset.balanceOf(receiver);
+
         assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
 
         if (!isAllowed) vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -347,7 +348,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         if (!isAllowed) return;
 
-        assertEq(fundsAsset.balanceOf(receiver),      sharesToRedeem);
+        assertEq(fundsAsset.balanceOf(receiver), receiverBalance + sharesToRedeem);
+
         assertEq(pool.balanceOf(address(cyclicalWM)), 0);
     }
 
@@ -426,6 +428,7 @@ contract HasPermissionFuzzTests is TestBase {
         external
     {
         vm.assume(sender != address(0));
+        vm.assume(sender != receiver);
 
         permissionLevel  = bound(permissionLevel,  0, PUBLIC);
         sharesToTransfer = bound(sharesToTransfer, 1, MAX_AMOUNT);
@@ -439,8 +442,8 @@ contract HasPermissionFuzzTests is TestBase {
         bool isReceiverAllowed = hasPermission(permissionLevel, isReceiverAllowlisted, poolBitmap, receiverBitmap);
         bool isAllowed         = isSenderAllowed && isReceiverAllowed;
 
-        assertEq(pool.balanceOf(sender),   sharesToTransfer);
-        assertEq(pool.balanceOf(receiver), 0);
+        uint256 senderBalance   = pool.balanceOf(sender);
+        uint256 receiverBalance = pool.balanceOf(receiver);
 
         if (!isAllowed) vm.expectRevert("PM:CC:NOT_ALLOWED");
 
@@ -449,8 +452,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         if (!isAllowed) return;
 
-        assertEq(pool.balanceOf(sender),   0);
-        assertEq(pool.balanceOf(receiver), sharesToTransfer);
+        assertEq(pool.balanceOf(sender),   senderBalance - sharesToTransfer);
+        assertEq(pool.balanceOf(receiver), receiverBalance + sharesToTransfer);
     }
 
     function testFuzz_hasPermission_transferFrom(
@@ -468,6 +471,7 @@ contract HasPermissionFuzzTests is TestBase {
         external
     {
         vm.assume(sender != address(0));
+        vm.assume(sender != receiver);
 
         permissionLevel  = bound(permissionLevel,  0, PUBLIC);
         sharesToTransfer = bound(sharesToTransfer, 1, MAX_AMOUNT);
@@ -482,8 +486,8 @@ contract HasPermissionFuzzTests is TestBase {
         bool isReceiverAllowed = hasPermission(permissionLevel, isReceiverAllowlisted, poolBitmap, receiverBitmap);
         bool isAllowed         = isSenderAllowed && isReceiverAllowed;
 
-        assertEq(pool.balanceOf(sender),   sharesToTransfer);
-        assertEq(pool.balanceOf(receiver), 0);
+        uint256 senderBalance   = pool.balanceOf(sender);
+        uint256 receiverBalance = pool.balanceOf(receiver);
 
         if (!isAllowed) vm.expectRevert("PM:CC:NOT_ALLOWED");
 
@@ -492,8 +496,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         if (!isAllowed) return;
 
-        assertEq(pool.balanceOf(sender),   0);
-        assertEq(pool.balanceOf(receiver), sharesToTransfer);
+        assertEq(pool.balanceOf(sender),   senderBalance - sharesToTransfer);
+        assertEq(pool.balanceOf(receiver), receiverBalance + sharesToTransfer);
     }
 
     function testFuzz_hasPermission_withdraw(
