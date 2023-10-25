@@ -46,7 +46,7 @@ import { MaplePoolManagerWMMigrator as MPMWMM } from "../modules/pool/contracts/
 import { MaplePoolPermissionManager as MPPM }
     from "../modules/pool-permission-manager/contracts/MaplePoolPermissionManager.sol";
 import { MaplePoolPermissionManagerInitializer as MPPMI }
-    from "../modules/pool-permission-manager/contracts/MaplePoolPermissionManagerInitializer.sol";
+    from "../modules/pool-permission-manager/contracts/proxy/MaplePoolPermissionManagerInitializer.sol";
 
 import { MapleWithdrawalManager as MWMC } from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManager.sol";
 
