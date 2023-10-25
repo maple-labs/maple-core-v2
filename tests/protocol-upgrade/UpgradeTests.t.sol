@@ -5,16 +5,15 @@ import { IGlobals, IProxyFactoryLike } from "../../contracts/interfaces/Interfac
 
 import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
 
-contract FTLFactoryUpgradeTests is ProtocolUpgradeBase {
+contract UpgradeTests is ProtocolUpgradeBase {
 
-    function testFork_upgradeFTLFactory() external {
+    function testFork_upgradeAssertions() external {
         _performProtocolUpgrade();
 
-        IGlobals globals_ = IGlobals(globals);
-
-        assertTrue(globals_.isInstanceOf("FT_LOAN_FACTORY", fixedTermLoanFactoryV502));
-
-        assertEq(IProxyFactoryLike(fixedTermLoanFactoryV502).defaultVersion(), 502);
+        _assertGlobals();
+        _assertFactories();
+        _assertPoolManagers();
+        _assertPermissions();
 
         _assertIsLoan(aqruLoans);
         _assertIsLoan(cashMgmtLoans);

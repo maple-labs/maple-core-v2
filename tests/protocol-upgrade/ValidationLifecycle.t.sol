@@ -33,7 +33,7 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
         uint256 decimals = pool == mavenWethPool ? 18 : 6;
 
         setLiquidityCap(_poolManager, 500_000_000 * 10 ** decimals);
-        deposit(pool, makeAddr("lp"), decimals == 18 ? 400_000 * 10 ** decimals : 400_000_000 * 10 ** decimals);
+        deposit(pool, makeAddr("lp"), decimals == 18 ? 400_000 * 10 ** decimals : 40_000_000 * 10 ** decimals);
 
         // Add loans to array so they can be paid back at the end of the lifecycle.
         for (uint256 i; i < deployedLoans.length; ++i) {
@@ -80,7 +80,7 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
 
         _collateralAsset      = address(weth);
         _feeManager           = address(fixedTermFeeManagerV1);
-        _fixedTermLoanFactory = address(fixedTermLoanFactoryV502);
+        _fixedTermLoanFactory = address(fixedTermLoanFactoryV2);
         _liquidatorFactory    = address(liquidatorFactory);
 
         // Do the fuzzed transactions
@@ -188,7 +188,7 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
 contract ValidationLifecycle is ValidationLifecycleTestsBase {
 
     function setUp() public override {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18078136);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
 
         // 1. Deploy all the new implementations and factories
         _deployAllNewContracts();
@@ -205,7 +205,7 @@ contract ValidationLifecycle is ValidationLifecycleTestsBase {
         // 5. Upgrade all the existing Pool and Loan Managers
         _upgradePoolContractsAsSecurityAdmin();
 
-        _addWithdrawalManagersToAllowlists();
+        _addWMAndPMToAllowlists();
 
         _addLoanManagers();
     }
