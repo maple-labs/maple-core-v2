@@ -15,10 +15,10 @@ contract UpgradeTests is ProtocolUpgradeBase {
         _assertPoolManagers();
         _assertPermissions();
 
-        _assertIsLoan(aqruLoans);
-        _assertIsLoan(cashMgmtLoans);
-        _assertIsLoan(mavenPermissionedLoans);
-        _assertIsLoan(mavenWethLoans);
+        _assertIsLoan(aqruFixedTermLoans);
+        _assertIsLoan(cashMgmtFixedTermLoans);
+        _assertIsLoan(mavenPermissionedFixedTermLoans);
+        _assertIsLoan(mavenWethFixedTermLoans);
     }
 
 }

@@ -28,20 +28,20 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address queueWMImplementation;
     address queueWMInitializer;
 
-    address[] mavenPermissionedLoans = [
+    address[] mavenPermissionedFixedTermLoans = [
         0x48a89E5267Dd3e22822C99D0bf60a8A4CFd48B48
     ];
 
-    address[] mavenWethLoans = [
+    address[] mavenWethFixedTermLoans = [
         0xE6E0586F009241b7A16EBe05d828d9e8231F3ADe
     ];
 
-    address[] aqruLoans = [
+    address[] aqruFixedTermLoans = [
         0x1F2bCA37106b30C4d72d8E60eBD2bFeAa10BFfE2,
         0x3E36372119f12DEe3De6C260CC7283557C24f471
     ];
 
-    address[] cashMgmtLoans = [
+    address[] cashMgmtFixedTermLoans = [
         0x55c6FfD8637B3D936Ed6F7924DdcE591D013A0fF,
         0xa6b5F3a55596fe8DF52Ca83Dd3aEaF7c2669a25B,
         0xcb8B7968b4b7333fE85e89e802F2a5eD98408320
