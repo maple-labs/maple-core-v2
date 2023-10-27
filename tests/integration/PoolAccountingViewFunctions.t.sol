@@ -303,6 +303,98 @@ contract MaxRedeemTests is TestBase {
 
 }
 
+contract MaxRedeemWMQueueTests is TestBase {
+
+    address lp1;
+    address lp2;
+    address wm;
+
+    uint256 maxShares;
+
+    function setUp() public override {
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _createFactories();
+        _createPoolWithQueue();
+        _configurePool();
+
+        openPool(address(poolManager));
+
+        lp1 = makeAddr("lp1");
+        lp2 = makeAddr("lp2");
+
+        wm = address(queueWM);
+
+        deposit(lp1, 1_000e6);
+        deposit(lp2, 1_000e6);
+
+        fundsAsset.mint(address(pool), 2_000e6);
+
+        vm.prank(poolDelegate);
+        queueWM.setManualWithdrawal(lp1, true);
+
+        requestRedeem(lp1, 1_000e6);
+        requestRedeem(lp2, 1_000e6);
+    }
+
+    function test_maxRedeem_beforeRedeem() external {
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 0);
+    }
+
+    function test_maxRedeem_afterPartialRedeem() external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6 / 2);
+
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 1_000e6 / 2);
+    }
+
+    function test_maxRedeem_afterFullRedeem() external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
+
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 1_000e6);
+    }
+
+    function test_maxRedeem_afterPartialManualRedeem() external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
+
+        redeem(address(pool), lp1, 1_000e6 / 2);
+
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 1_000e6 / 2);
+    }
+
+    function test_maxRedeem_afterFullManualRedeem() external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
+
+        redeem(address(pool), lp1, 1_000e6);
+
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 0);
+    }
+
+    function test_maxRedeem_notManual() external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(2_000e6);
+
+        maxShares = pool.maxRedeem(lp2);
+
+        assertEq(maxShares, 0);
+    }
+
+}
+
 contract MaxWithdrawTests is TestBase {
 
     address lp;
