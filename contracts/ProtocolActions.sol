@@ -20,7 +20,8 @@ import {
     IPoolManager,
     IPoolPermissionManager,
     IProxiedLike,
-    IWithdrawalManagerCyclical as IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager,
+    IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
 
 import {
@@ -529,6 +530,14 @@ contract ProtocolActions is Test {
         vm.stopPrank();
     }
 
+    function activatePoolManager(address poolManager_) internal {
+        address globals_  = IPoolManager(poolManager_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        IGlobals(globals_).activatePoolManager(poolManager_);
+    }
+
     function addLoanManager(address poolManager_, address loanManagerFactory_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -676,6 +685,16 @@ contract ProtocolActions is Test {
         vm.stopPrank();
     }
 
+    // NOTE: Only works for queued withdrawal managers.
+    function processRedemptions(address pool_, uint256 shares_) internal {
+        address poolManager_       = IPool(pool_).manager();
+        address withdrawalManager_ = IPoolManager(poolManager_).withdrawalManager();
+        address governor_          = IPoolManager(poolManager_).governor();
+
+        vm.prank(governor_);
+        IWithdrawalManagerQueue(withdrawalManager_).processRedemptions(shares_);
+    }
+
     function removeLoanCall(address loan_) internal {
         require(isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_FT_LOAN");
 
@@ -806,9 +825,9 @@ contract ProtocolActions is Test {
         IPoolManager           pm_  = IPoolManager(poolManager_);
         IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
 
-        address poolDelegate_ = pm_.poolDelegate();
+        address governor_ = pm_.governor();
 
-        vm.prank(poolDelegate_);
+        vm.prank(governor_);
         ppm_.setLenderAllowlist(poolManager_, lenders_, booleans_);
     }
 
@@ -834,6 +853,18 @@ contract ProtocolActions is Test {
 
         vm.prank(permissionAdmin_);
         ppm_.setLenderBitmaps(lenders_, bitmaps_);
+    }
+
+    // NOTE: Only works for queued withdrawal managers.
+    function setManualWithdrawal(address poolManager_, address account_, bool isManual_) internal {
+        IPoolManager pm_      = IPoolManager(poolManager_);
+        IGlobals     globals_ = IGlobals(pm_.globals());
+
+        address governor_ = globals_.governor();
+        address wm_       = pm_.withdrawalManager();
+
+        vm.prank(governor_);
+        IWithdrawalManagerQueue(wm_).setManualWithdrawal(account_, isManual_);
     }
 
     function setPermissionAdmin(address poolPermissionManager_, address account_, bool isPermissionAdmin_) internal {
@@ -877,9 +908,9 @@ contract ProtocolActions is Test {
         IPoolManager           pm_  = IPoolManager(poolManager_);
         IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
 
-        address poolDelegate_ = pm_.poolDelegate();
+        address governor_ = pm_.governor();
 
-        vm.prank(poolDelegate_);
+        vm.prank(governor_);
         ppm_.setPoolBitmaps(poolManager_, functionIds_, bitmaps_);
     }
 
@@ -887,9 +918,9 @@ contract ProtocolActions is Test {
         IPoolManager           pm_  = IPoolManager(poolManager_);
         IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
 
-        address poolDelegate_ = pm_.poolDelegate();
+        address governor_ = pm_.governor();
 
-        vm.prank(poolDelegate_);
+        vm.prank(governor_);
         ppm_.setPoolPermissionLevel(poolManager_, permissionLevel_);
     }
 

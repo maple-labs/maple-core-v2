@@ -268,7 +268,17 @@ contract TestBase is ProtocolActions {
     }
 
     // TODO: Add all config params here
-    function _createPool(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal {
+    function _createPool(
+        uint256 startTime,
+        uint256 withdrawalCycle,
+        uint256 windowDuration
+    )
+        internal returns (
+            address pool_,
+            address pm_,
+            address wm_
+        )
+    {
         vm.prank(poolDelegate);
         poolManager = PoolManager(deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
@@ -284,6 +294,32 @@ contract TestBase is ProtocolActions {
         cyclicalWM = WithdrawalManagerCyclical(poolManager.withdrawalManager());
         pool       = Pool(poolManager.pool());
         poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
+
+        pool_ = address(pool);
+        pm_   = address(poolManager);
+        wm_   = address(cyclicalWM);
+    }
+
+    function _createPool(address poolDelegate_, string memory poolName_) internal returns (address pool_, address pm_, address wm_) {
+        vm.prank(poolDelegate_);
+        poolManager = PoolManager(deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     poolName_,
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, 0]
+        }));
+
+        queueWM    = WithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool       = Pool(poolManager.pool());
+        poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
+
+        pool_ = address(pool);
+        pm_   = address(poolManager);
+        wm_   = address(queueWM);
     }
 
     function _createPoolWithQueue() internal {
