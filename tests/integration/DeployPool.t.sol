@@ -6,10 +6,12 @@ import {
     IPool,
     IPoolManager,
     IProxyFactoryLike,
-    IWithdrawalManagerCyclical as IWithdrawalManager
+    IPoolPermissionManager,
+    IWithdrawalManagerCyclical as IWithdrawalManager,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
+import { TestBase, TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract DeployPoolTests is TestBaseWithAssertions {
 
@@ -442,6 +444,400 @@ contract DeployPoolTests is TestBaseWithAssertions {
         assertEq(initialCycleTime_, block.timestamp);
         assertEq(cycleDuration_,    1 weeks);
         assertEq(windowDuration_,   2 days);
+    }
+
+}
+
+contract DeployPoolWMQueueTests is TestBase {
+
+    function setUp() public override {
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _createFactories();
+
+        fundsAsset.mint(poolDelegate, 10e6);
+    }
+
+    function test_deployPoolWMQueue_success() external {
+        vm.startPrank(poolDelegate);
+        fundsAsset.approve(address(deployer), 10e6);
+
+        address poolManager_ = deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 10e6, 1_000e6]
+        });
+
+        vm.stopPrank();
+
+        IPoolManager            poolManager          = IPoolManager(poolManager_);
+        IPool                   pool                 = IPool(poolManager.pool());
+        IPoolPermissionManager  ppm                  = IPoolPermissionManager(poolManager.poolPermissionManager());
+        ILoanManagerLike        fixedTermLoanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+        ILoanManagerLike        openTermLoanManager  = ILoanManagerLike(poolManager.loanManagerList(1));
+        IWithdrawalManagerQueue withdrawalManager    = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+
+        assertEq(poolManager.asset(),                 address(fundsAsset));
+        assertEq(poolManager.globals(),               address(globals));
+        assertEq(poolManager.poolDelegate(),          poolDelegate);
+        assertEq(poolManager.poolPermissionManager(), address(ppm));
+        assertEq(poolManager.withdrawalManager(),     address(withdrawalManager));
+
+        assertEq(poolManager.delegateManagementFeeRate(), 0.1e6);
+        assertEq(poolManager.liquidityCap(),              1_000_000e6);
+
+        assertTrue(!poolManager.active());
+        assertTrue(poolManager.configured());
+        assertTrue(poolManager.hasSufficientCover());
+        assertTrue(poolManager.isLoanManager(poolManager.loanManagerList(0)));
+        assertTrue(poolManager.isLoanManager(poolManager.loanManagerList(1)));
+
+        assertEq(pool.asset(),       address(fundsAsset));
+        assertEq(pool.name(),        "Maple Pool");
+        assertEq(pool.manager(),     poolManager_);
+        assertEq(pool.symbol(),      "MP");
+        assertEq(pool.totalSupply(), 1_000e6);
+
+        assertEq(fundsAsset.allowance(poolDelegate, address(deployer)), 0);
+        assertEq(fundsAsset.balanceOf(poolManager.poolDelegateCover()), 10e6);
+
+        assertEq(fixedTermLoanManager.fundsAsset(),  address(fundsAsset));
+        assertEq(fixedTermLoanManager.poolManager(), poolManager_);
+
+        assertEq(openTermLoanManager.fundsAsset(),  address(fundsAsset));
+        assertEq(openTermLoanManager.poolManager(), poolManager_);
+
+        assertEq(withdrawalManager.asset(),       address(fundsAsset));
+        assertEq(withdrawalManager.pool(),        address(pool));
+        assertEq(withdrawalManager.poolManager(), poolManager_);
+    }
+
+    function test_deployPoolWMQueue_withoutCoverAmount() external {
+        vm.prank(poolDelegate);
+        address poolManager_ = deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        assertEq(IPoolManager(poolManager_).poolDelegate(), poolDelegate);
+    }
+
+}
+
+contract DeployPoolWMQueueFailureTests is TestBase {
+
+    function setUp() public override {
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _createFactories();
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidPD() external {
+        vm.expectRevert("PD:DP:INVALID_PD");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 10e6, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidPMFactory() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PD:DP:INVALID_PM_FACTORY");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, true);
+
+        vm.prank(poolDelegate);
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidWMFactory() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PD:DP:INVALID_WM_FACTORY");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory, true);
+
+        vm.prank(poolDelegate);
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidWMQFactory() external {
+        assertTrue(globals.isInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", cyclicalWMFactory));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PD:DP:INVALID_WM_FACTORY");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidPPM() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER", address(poolPermissionManager), false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("PD:DP:INVALID_PPM");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER", address(poolPermissionManager), true);
+
+        vm.prank(poolDelegate);
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidPoolAsset() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("MPF:CI:FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(1),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        vm.prank(governor);
+        globals.setValidPoolAsset(address(1), true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MPF:CI:FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(1),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfPoolAssetNotAllowed() external {
+        vm.prank(governor);
+        globals.setValidPoolAsset(address(fundsAsset), false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MPF:CI:FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfInsufficientApproval() external {
+        fundsAsset.mint(poolDelegate, 10e6);
+
+        vm.startPrank(poolDelegate);
+        fundsAsset.approve(address(deployer), 10e4);
+
+        vm.expectRevert("PD:DP:TRANSFER_FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 10e6, 1_000e6]
+        });
+
+        vm.stopPrank();
+    }
+
+    function test_deployPoolWMQueue_failIfInsufficientAmount() external {
+        fundsAsset.mint(poolDelegate, 10e4);
+
+        vm.startPrank(poolDelegate);
+        fundsAsset.approve(address(deployer), 10e4);
+
+        vm.expectRevert("PD:DP:TRANSFER_FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 10e6, 1_000e6]
+        });
+
+        vm.stopPrank();
+    }
+
+    function test_deployPoolWMQueue_failIfInvalidManagementFeeRate() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:SDMFR:OOB");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 1e6 + 1, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfSaltCollision() external {
+        vm.prank(poolDelegate);
+        address poolManager_ = deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        assertTrue(IPoolManager(poolManager_).configured());
+
+        vm.prank(poolDelegate);
+        vm.expectRevert();
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+    }
+
+    function test_deployPoolWMQueue_failIfAlreadyOwned() external {
+        vm.prank(poolDelegate);
+        address poolManager_ = deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool 1",
+            symbol_:                   "MP1",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
+
+        vm.prank(governor);
+        globals.activatePoolManager(poolManager_);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MPF:CI:FAILED");
+        deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool 2",
+            symbol_:                   "MP2",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+        });
     }
 
 }
