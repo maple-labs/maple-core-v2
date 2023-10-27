@@ -325,6 +325,7 @@ contract HasPermissionFuzzTests is TestBase {
         external
     {
         vm.assume(receiver != address(0));
+        vm.assume(receiver != address(pool));
 
         permissionLevel = bound(permissionLevel, 0, PUBLIC);
         sharesToRedeem  = bound(sharesToRedeem,  1, MAX_AMOUNT);

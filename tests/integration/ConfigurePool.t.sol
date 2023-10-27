@@ -103,13 +103,18 @@ contract ConfigurePoolTests is TestBase {
     function testFuzz_configurePool(
         uint256 oldPermissionLevel,
         uint256 newPermissionLevel,
-        bytes32[] memory functionIds_,
         uint256[] memory bitmaps_
     )
         external
     {
         oldPermissionLevel = bound(oldPermissionLevel, 0, PUBLIC);
         newPermissionLevel = bound(newPermissionLevel, 0, PUBLIC + 1);
+
+        // NOTE: The function identifiers are set manually because the fuzzer can generate duplicates.
+        bytes32[] memory functionIds_ = new bytes32[](bitmaps_.length);
+        for (uint i; i < functionIds_.length; ++i) {
+            functionIds_[i] = bytes32(i);
+        }
 
         setPoolPermissionLevel(address(poolManager), oldPermissionLevel);
 
