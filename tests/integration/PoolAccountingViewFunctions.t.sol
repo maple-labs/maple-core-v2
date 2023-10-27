@@ -424,6 +424,147 @@ contract PreviewRedeemTests is TestBase {
 
 }
 
+contract PreviewRedeemWithQueueWMTests is TestBase {
+
+    address lender = makeAddr("lender");
+
+    uint256 shares = 1_000e6;
+
+    function setUp() public override virtual {
+        start = block.timestamp;
+
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createPoolWithQueue();
+        _configurePool();
+
+        openPool(address(poolManager));
+        deposit(lender, shares);
+
+        vm.prank(poolDelegate);
+        queueWM.setManualWithdrawal(lender, true);
+
+        vm.prank(lender);
+        pool.requestRedeem(shares, lender);
+
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(shares);
+    }
+
+    function test_previewRedeem_insufficientShares() external {
+        vm.prank(lender);
+        vm.expectRevert("WM:PR:TOO_MANY_SHARES");
+        pool.previewRedeem(shares + 1);
+    }
+
+    function test_previewRedeem_emptyRedemption_fullLiquidity() external {
+        // Set the exchange rate to 1:2
+        fundsAsset.mint(address(pool), shares);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(0);
+
+        assertEq(assets, 0);
+    }
+
+    function test_previewRedeem_partialRedemption_fullLiquidity() external {
+        // Set the exchange rate to 1:2
+        fundsAsset.mint(address(pool), shares);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(shares * 3 / 4);
+
+        assertEq(assets, shares * 6 / 4);
+    }
+
+    function test_previewRedeem_fullRedemption_fullLiquidity() external {
+        // Set the exchange rate to 1:2
+        fundsAsset.mint(address(pool), shares);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(shares);
+
+        assertEq(assets, shares * 2);
+    }
+
+    function test_previewRedeem_emptyRedemption_partialLiquidity() external {
+        // Set the exchange rate to 2:1
+        fundsAsset.burn(address(pool), shares / 2);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(0);
+
+        assertEq(assets, 0);
+    }
+
+    function test_previewRedeem_partialRedemption_partialLiquidity() external {
+        // Set the exchange rate to 2:1
+        fundsAsset.burn(address(pool), shares / 2);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(shares * 3 / 4);
+
+        assertEq(assets, shares * 3 / 8);
+    }
+
+    function test_previewRedeem_fullRedemption_partialLiquidity() external {
+        // Set the exchange rate to 2:1
+        fundsAsset.burn(address(pool), shares / 2);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(shares);
+
+        assertEq(assets, shares / 2);
+    }
+
+}
+
+contract AutomatedPreviewRedeemWithQueueWMTests is TestBase {
+
+    address lender = makeAddr("lender");
+
+    uint256 shares = 1_000e6;
+
+    function setUp() public override virtual {
+        start = block.timestamp;
+
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createPoolWithQueue();
+        _configurePool();
+
+        openPool(address(poolManager));
+        deposit(lender, shares);
+
+        vm.prank(lender);
+        pool.requestRedeem(shares, lender);
+    }
+
+    function testFuzz_previewRedeem_notProcessed(uint256 sharesToRedeem) external {
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(sharesToRedeem);
+
+        assertEq(assets, 0);
+    }
+
+    function testFuzz_previewRedeem_processed(uint256 sharesToRedeem) external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(shares);
+
+        vm.prank(lender);
+        uint256 assets = pool.previewRedeem(sharesToRedeem);
+
+        assertEq(assets, 0);
+    }
+
+}
+
 contract PreviewWithdrawTests is TestBase {
 
     address lp;
@@ -482,6 +623,59 @@ contract PreviewWithdrawTests is TestBase {
     function testDeepFuzz_previewWithdraw(uint256 assets_) external {
         vm.prank(lp);
         assertEq(pool.previewWithdraw(assets_), 0);
+    }
+
+}
+
+contract PreviewWithdrawWithQueueWMTests is TestBase {
+
+    function setUp() public override virtual {
+        start = block.timestamp;
+
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createPoolWithQueue();
+        _configurePool();
+
+        openPool(address(poolManager));
+    }
+
+    function testFuzz_previewWithdraw(
+        address lender,
+        bool    isManual,
+        uint256 amountToRequest,
+        uint256 amountToProcess,
+        uint256 amountToWithdraw
+    )
+        external
+    {
+        vm.assume(lender != address(0));
+
+        amountToRequest = bound(amountToRequest,  0, 1e30);
+        amountToProcess = bound(amountToProcess,  0, amountToRequest);
+
+        vm.prank(poolDelegate);
+        queueWM.setManualWithdrawal(lender, isManual);
+
+        if (amountToRequest > 0) {
+            deposit(lender, amountToRequest);
+
+            vm.prank(lender);
+            pool.requestRedeem(amountToRequest, lender);
+        }
+
+        if (amountToProcess > 0) {
+            vm.prank(poolDelegate);
+            queueWM.processRedemptions(amountToProcess);
+        }
+
+        vm.prank(lender);
+        uint256 sharesToBurn = pool.previewWithdraw(amountToWithdraw);
+
+        assertEq(sharesToBurn, 0);
     }
 
 }
