@@ -744,6 +744,17 @@ contract ProtocolActions is Test {
         vm.stopPrank();
     }
 
+    // NOTE: Only works for queued withdrawal managers.
+    function setManualWithdrawal(address poolManager_, address lender_, bool isManual_) internal {
+        IPoolManager pm_            = IPoolManager(poolManager_);
+        IWithdrawalManagerQueue wm_ = IWithdrawalManagerQueue(pm_.withdrawalManager());
+
+        address governor_ = pm_.governor();
+
+        vm.prank(governor_);
+        wm_.setManualWithdrawal(lender_, isManual_);
+    }
+
     function setPendingPoolDelegate(address poolManager_, address newPoolDelegate_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -853,18 +864,6 @@ contract ProtocolActions is Test {
 
         vm.prank(permissionAdmin_);
         ppm_.setLenderBitmaps(lenders_, bitmaps_);
-    }
-
-    // NOTE: Only works for queued withdrawal managers.
-    function setManualWithdrawal(address poolManager_, address account_, bool isManual_) internal {
-        IPoolManager pm_      = IPoolManager(poolManager_);
-        IGlobals     globals_ = IGlobals(pm_.globals());
-
-        address governor_ = globals_.governor();
-        address wm_       = pm_.withdrawalManager();
-
-        vm.prank(governor_);
-        IWithdrawalManagerQueue(wm_).setManualWithdrawal(account_, isManual_);
     }
 
     function setPermissionAdmin(address poolPermissionManager_, address account_, bool isPermissionAdmin_) internal {
