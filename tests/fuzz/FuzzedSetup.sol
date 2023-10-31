@@ -186,20 +186,22 @@ contract FuzzedUtil is ProtocolActions {
 
         uint256 totalShares = withdrawalManager.totalShares();
 
-        vm.prank(poolManager.poolDelegate());
-        withdrawalManager.processRedemptions(totalShares - 100);
-
-        // Redeem all LP tokens.
-        for (uint256 i; i < lps.length; ++i) {
-            if (withdrawalManager.manualSharesAvailable(lps[i]) > 0) {
-                redeem(address(_pool), lps[i], escrowedShares[i]);
+        // There's some rounding in the pools that prevent the last hundred or so shares from being redeemed.
+        if (totalShares > 100) {
+            vm.prank(poolManager.poolDelegate());
+            withdrawalManager.processRedemptions(totalShares - 100);
+            // Redeem all LP tokens.
+            for (uint256 i; i < lps.length; ++i) {
+                if (withdrawalManager.manualSharesAvailable(lps[i]) > 0) {
+                    redeem(address(_pool), lps[i], escrowedShares[i]);
+                }
             }
         }
+
     }
 
     function createAndFundLoan(function() returns (address) createLoan_) internal returns (address loan) {
         loan = createLoan_();
-
         loans.push(loan);
         fundLoan(loan);
     }
@@ -215,7 +217,6 @@ contract FuzzedUtil is ProtocolActions {
         uint256 interestRate           = getSomeValue(0.01e6,    0.25e6);
         uint256 lateFeeRate            = getSomeValue(0,         0.1e6);
         uint256 lateInterestPremium    = getSomeValue(0,         0.1e6);
-
         loan = createOpenTermLoan(
             address(_openTermLoanFactory),
             makeAddr("borrower"),
@@ -535,8 +536,23 @@ contract FuzzedUtil is ProtocolActions {
         _poolManager = IPool(pool).manager();
         _fundsAsset  = IPool(pool).asset();
 
-        _fixedTermLoanManager = IPoolManager(_poolManager).loanManagerList(0);
-        _openTermLoanManager  = IPoolManager(_poolManager).loanManagerList(1);
+        address lm1 = IPoolManager(_poolManager).loanManagerList(0);
+        address lm2 = IPoolManager(_poolManager).loanManagerList(1);
+
+        if (_isOpenTermLoanManager(lm1)) {
+            _openTermLoanManager  = lm1;
+            _fixedTermLoanManager = lm2;
+        } else {
+            _openTermLoanManager  = lm2;
+            _fixedTermLoanManager = lm1;
+        }
+
+    }
+
+    function _isOpenTermLoanManager(address loanManager_) internal view returns (bool isOpenTermLoanManager_) {
+        try IOpenTermLoanManager(loanManager_).paymentFor(address(0)) {
+            isOpenTermLoanManager_ = true;
+        } catch { }
     }
 
 }

@@ -16,9 +16,25 @@ contract UpgradeTests is ProtocolUpgradeBase {
         _assertPermissions();
 
         _assertIsLoan(aqruFixedTermLoans);
-        _assertIsLoan(cashMgmtFixedTermLoans);
+        _assertIsLoan(cashMgmtUSDCFixedTermLoans);
         _assertIsLoan(mavenPermissionedFixedTermLoans);
         _assertIsLoan(mavenWethFixedTermLoans);
+    }
+
+}
+
+contract UpgradeToQueueWMTests is ProtocolUpgradeBase {
+
+    function testFork_upgradeToQueueWM() external {
+        _performProtocolUpgrade();
+
+        _upgradeToQueueWM(cashManagementUSDCPoolManager);
+        _upgradeToQueueWM(cashManagementUSDTPoolManager);
+
+        _assertGlobals();
+        _assertFactories();
+        _assertCashPoolManagers();
+        _assertPermissions();
     }
 
 }

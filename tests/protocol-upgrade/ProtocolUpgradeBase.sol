@@ -141,6 +141,18 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         );
     }
 
+    function _deployQueueWM(address pool_) internal returns (address queueWM) {
+        address deployer = makeAddr("deployer");
+
+        vm.prank(governor);
+        IGlobals(globals).setCanDeployFrom(address(queueWMFactory), deployer, true);
+
+        vm.prank(deployer);
+        queueWM = address(WithdrawalManagerQueue(
+            IProxyFactoryLike(queueWMFactory).createInstance(abi.encode(address(pool_)), "SALT")
+        ));
+    }
+
     function _enableGlobalsKeys() internal {
         IGlobals globals_ = IGlobals(globals);
 
@@ -219,6 +231,14 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradePoolManagerAsSecurityAdmin(mavenUsdcPoolManager,          300, arguments);
         upgradePoolManagerAsSecurityAdmin(mavenWethPoolManager,          300, arguments);
         upgradePoolManagerAsSecurityAdmin(orthogonalPoolManager,         300, arguments);
+    }
+
+    function _upgradeToQueueWM(address poolManager) internal {
+        address wm = _deployQueueWM(IPoolManager(poolManager).pool());
+
+        bytes memory arguments = abi.encode(wm);
+
+        upgradePoolManagerAsSecurityAdmin(poolManager, 301, arguments);
     }
 
     function _performProtocolUpgrade() internal {
@@ -348,6 +368,11 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         assertEq(IProxiedLike(mavenUsdcPoolManager).implementation(),          poolManagerImplementationV300);
         assertEq(IProxiedLike(mavenWethPoolManager).implementation(),          poolManagerImplementationV300);
         assertEq(IProxiedLike(orthogonalPoolManager).implementation(),         poolManagerImplementationV300);
+    }
+
+    function _assertCashPoolManagers() internal {
+        assertEq(IProxiedLike(cashManagementUSDCPoolManager).implementation(), poolManagerImplementationV301);
+        assertEq(IProxiedLike(cashManagementUSDTPoolManager).implementation(), poolManagerImplementationV301);
     }
 
     function _assertOracles() internal {

@@ -4,6 +4,7 @@ pragma solidity 0.8.7;
 import {
     IERC20,
     IFixedTermLoanManager,
+    IOpenTermLoanManager,
     IPool,
     IPoolManager,
     ILoanLike
@@ -12,11 +13,12 @@ import {
 import { FuzzedUtil } from "../fuzz/FuzzedSetup.sol";
 
 import { FixedTermLoanHealthChecker } from "../health-checkers/FixedTermLoanHealthChecker.sol";
+import { OpenTermLoanHealthChecker }  from "../health-checkers/OpenTermLoanHealthChecker.sol";
 import { ProtocolHealthChecker }      from "../health-checkers/ProtocolHealthChecker.sol";
 
 import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
 
-// TODO: Add OTL Healthchecker and assert invariants
+// TODO: Need to uncouple cycle wm from protocolHealthChecker and add back
 contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
 
     uint256 constant ALLOWED_DIFF = 1000;
@@ -26,53 +28,32 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
     uint256 otlLoanCount = 3;
 
     FixedTermLoanHealthChecker fixedTermLoanHealthChecker;
+    OpenTermLoanHealthChecker  openTermLoanHealthChecker;
     ProtocolHealthChecker      protocolHealthChecker_;
 
     // Overriding fuzzed setups to work well with the deployed contracts.
-    function fuzzedSetup(address pool, address[] storage deployedLoans) internal {
+    function fuzzedSetup(address pool, address[] storage deployedFTLs, address[] storage deployedOTLs) internal {
         uint256 decimals = pool == mavenWethPool ? 18 : 6;
 
         setLiquidityCap(_poolManager, 500_000_000 * 10 ** decimals);
         deposit(pool, makeAddr("lp"), decimals == 18 ? 400_000 * 10 ** decimals : 40_000_000 * 10 ** decimals);
 
         // Add loans to array so they can be paid back at the end of the lifecycle.
-        for (uint256 i; i < deployedLoans.length; ++i) {
-            loans.push(deployedLoans[i]);
+        for (uint256 i; i < deployedFTLs.length; ++i) {
+            loans.push(deployedFTLs[i]);
         }
 
-        // There's a need for more fixed term loans
-        if (deployedLoans.length < ftlLoanCount) {
-            // Create and fund fixed loans.
-            for (uint256 i = deployedLoans.length ; i < ftlLoanCount; ++i) {
-                vm.warp(block.timestamp + 1 days);
-                createAndFundLoan(createSomeFixedTermLoan);
-            }
+        for (uint256 i; i < deployedOTLs.length; ++i) {
+            loans.push(deployedOTLs[i]);
         }
 
-        // Perform random loan actions.
-        for (uint256 i; i < actionCount; ++i) {
-            // Get loan and due date of active loan with earliest due date.
-            ( address loan, uint256 dueDate ) = getEarliestDueDate();
+        uint256 remainingFTLs = deployedFTLs.length > ftlLoanCount ? 0 : ftlLoanCount - deployedFTLs.length;
+        uint256 remainingOTLs = deployedOTLs.length > otlLoanCount ? 0 : otlLoanCount - deployedOTLs.length;
 
-            // If no active loans are remaining: no further actions can be performed.
-            if (loan == address(0)) return;
-
-            uint256 maxDate = dueDate < block.timestamp
-                ? 1 days
-                : (dueDate - block.timestamp) + 10 days;
-
-            // Warp to anytime from 1 day from now to 11 days past the loan's due date.
-            vm.warp(block.timestamp + 1 days + getSomeValue(0, maxDate));
-
-            performSomeLoanAction(loan);
-
-            if (ILoanLike(loan).principal() == 0) {
-                removeLoan(loan);
-            }
-        }
+        super.fuzzedSetup(remainingFTLs, remainingOTLs, actionCount, seed);
     }
 
-    function runLifecycleValidation(uint256 seed_, address pool, address[] storage loans) internal {
+    function runLifecycleValidation(uint256 seed_, address pool, address[] storage deployedFTLs, address[] storage deployedOTLs) internal {
         seed = seed_;
 
         // For each pool, setUp the necessary addresses
@@ -81,24 +62,29 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
         _collateralAsset      = address(weth);
         _feeManager           = address(fixedTermFeeManagerV1);
         _fixedTermLoanFactory = address(fixedTermLoanFactoryV2);
+        _openTermLoanFactory  = address(openTermLoanFactory);
         _liquidatorFactory    = address(liquidatorFactory);
 
         // Do the fuzzed transactions
-        fuzzedSetup(_pool, loans);
+        fuzzedSetup(_pool, deployedFTLs, deployedOTLs);
 
         // Assert the invariants
         fixedTermLoanHealthChecker = new FixedTermLoanHealthChecker();
-        protocolHealthChecker_     = new ProtocolHealthChecker();
-
+        openTermLoanHealthChecker  = new OpenTermLoanHealthChecker();
+        // protocolHealthChecker_     = new ProtocolHealthChecker();
         FixedTermLoanHealthChecker.Invariants memory FTLInvariants =
             fixedTermLoanHealthChecker.checkInvariants(address(_poolManager), getAllActiveFixedTermLoans());
 
-        ProtocolHealthChecker.Invariants memory protocolInvariants = protocolHealthChecker_.checkInvariants(address(_poolManager));
+        OpenTermLoanHealthChecker.Invariants memory OTLInvariants =
+            openTermLoanHealthChecker.checkInvariants(address(_poolManager), getAllActiveOpenTermLoans());
+
+        // ProtocolHealthChecker.Invariants memory protocolInvariants = protocolHealthChecker_.checkInvariants(address(_poolManager));
 
         assertFixedTermLoanHealthChecker(FTLInvariants);
-        assertProtocolHealthChecker(protocolInvariants);
+        assertOpenTermLoanHealthChecker(OTLInvariants);
+        // assertProtocolHealthChecker(protocolInvariants);
 
-        ( uint256 lastDomainStartFTLM, ) = payOffLoansAndRedeemAllLps();
+        ( uint256 lastDomainStartFTLM, uint256 lastDomainStartOTLM ) = payOffLoansAndRedeemAllLps();
 
         for (uint256 i = 0; i < lps.length; i++) {
             assertEq(IERC20(address(_pool)).balanceOf(lps[i]), 0);
@@ -112,6 +98,17 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
             issuanceRate:      0,
             domainStart:       lastDomainStartFTLM,
             domainEnd:         lastDomainStartFTLM,
+            unrealizedLosses:  0,
+            diff:              ALLOWED_DIFF
+        });
+
+        assertOpenTermLoanManagerWithDiff({
+            loanManager:       _openTermLoanManager,
+            accountedInterest: 0,
+            accruedInterest:   0,
+            domainStart:       lastDomainStartOTLM,
+            issuanceRate:      0,
+            principalOut:      0,
             unrealizedLosses:  0,
             diff:              ALLOWED_DIFF
         });
@@ -130,6 +127,27 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
         assertTrue(invariants_.fixedTermLoanManagerInvariantE, "FTLHealthChecker FTLM Invariant E");
         assertTrue(invariants_.fixedTermLoanManagerInvariantM, "FTLHealthChecker FTLM Invariant M");
         assertTrue(invariants_.fixedTermLoanManagerInvariantN, "FTLHealthChecker FTLM Invariant N");
+    }
+
+    function assertOpenTermLoanHealthChecker(OpenTermLoanHealthChecker.Invariants memory invariants_) internal {
+        assertTrue(invariants_.openTermLoanInvariantA,        "OTLHealthChecker OTL Invariant A");
+        assertTrue(invariants_.openTermLoanInvariantB,        "OTLHealthChecker OTL Invariant B");
+        assertTrue(invariants_.openTermLoanInvariantC,        "OTLHealthChecker OTL Invariant C");
+        assertTrue(invariants_.openTermLoanInvariantD,        "OTLHealthChecker OTL Invariant D");
+        assertTrue(invariants_.openTermLoanInvariantE,        "OTLHealthChecker OTL Invariant E");
+        assertTrue(invariants_.openTermLoanInvariantF,        "OTLHealthChecker OTL Invariant F");
+        assertTrue(invariants_.openTermLoanInvariantG,        "OTLHealthChecker OTL Invariant G");
+        assertTrue(invariants_.openTermLoanInvariantH,        "OTLHealthChecker OTL Invariant H");
+        assertTrue(invariants_.openTermLoanInvariantI,        "OTLHealthChecker OTL Invariant I");
+        assertTrue(invariants_.openTermLoanManagerInvariantA, "OTLHealthChecker OTLM Invariant A");
+        assertTrue(invariants_.openTermLoanManagerInvariantB, "OTLHealthChecker OTLM Invariant B");
+        assertTrue(invariants_.openTermLoanManagerInvariantC, "OTLHealthChecker OTLM Invariant C");
+        assertTrue(invariants_.openTermLoanManagerInvariantD, "OTLHealthChecker OTLM Invariant D");
+        assertTrue(invariants_.openTermLoanManagerInvariantF, "OTLHealthChecker OTLM Invariant F");
+        assertTrue(invariants_.openTermLoanManagerInvariantH, "OTLHealthChecker OTLM Invariant H");
+        assertTrue(invariants_.openTermLoanManagerInvariantI, "OTLHealthChecker OTLM Invariant I");
+        assertTrue(invariants_.openTermLoanManagerInvariantJ, "OTLHealthChecker OTLM Invariant J");
+        assertTrue(invariants_.openTermLoanManagerInvariantK, "OTLHealthChecker OTLM Invariant K");
     }
 
     function assertProtocolHealthChecker(ProtocolHealthChecker.Invariants memory invariants_) internal {
@@ -183,6 +201,31 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
         );
     }
 
+    function assertOpenTermLoanManagerWithDiff(
+        address loanManager,
+        uint256 accountedInterest,
+        uint256 accruedInterest,
+        uint256 domainStart,
+        uint256 issuanceRate,
+        uint256 principalOut,
+        uint256 unrealizedLosses,
+        uint256 diff
+    ) internal {
+        assertApproxEqAbs(IOpenTermLoanManager(loanManager).accountedInterest(), accountedInterest, diff, "accountedInterest");
+        assertApproxEqAbs(IOpenTermLoanManager(loanManager).accruedInterest(),   accruedInterest,   diff, "accruedInterest");
+        assertApproxEqAbs(IOpenTermLoanManager(loanManager).domainStart(),       domainStart,       diff, "domainStart");
+        assertApproxEqAbs(IOpenTermLoanManager(loanManager).issuanceRate(),      issuanceRate,      diff, "issuanceRate");
+        assertApproxEqAbs(IOpenTermLoanManager(loanManager).principalOut(),      principalOut,      diff, "principalOut");
+        assertApproxEqAbs(IOpenTermLoanManager(loanManager).unrealizedLosses(),  unrealizedLosses,  diff, "unrealizedLosses");
+
+        assertApproxEqAbs(
+            IOpenTermLoanManager(loanManager).assetsUnderManagement(),
+            principalOut + accountedInterest + accruedInterest,
+            diff,
+            "assetsUnderManagement"
+        );
+    }
+
 }
 
 contract ValidationLifecycle is ValidationLifecycleTestsBase {
@@ -210,20 +253,54 @@ contract ValidationLifecycle is ValidationLifecycleTestsBase {
         _addLoanManagers();
     }
 
-    function testFork_validationLifecycle_aqruPool(uint256 seed) external {
-        runLifecycleValidation(seed, aqruPool, aqruFixedTermLoans);
+    function testFork_validationLifecycle_aqruPool(uint256 seed_) external {
+        runLifecycleValidation(seed_, aqruPool, aqruFixedTermLoans, aqruOpenTermLoans);
     }
 
-    function testFork_validationLifecycle_cashMgmtPool(uint256 seed) external {
-        runLifecycleValidation(seed, cashManagementUSDCPool, cashMgmtFixedTermLoans);
+    function testFork_validationLifecycle_cashMgmtUSDCPool(uint256 seed_) external {
+        runLifecycleValidation(seed_, cashManagementUSDCPool, cashMgmtUSDCFixedTermLoans, cashMgmtUSDCOpenTermLoans);
     }
 
-    function testFork_validationLifecycle_mavenWethPool(uint256 seed) external {
-        runLifecycleValidation(seed, mavenWethPool, mavenWethFixedTermLoans);
+    function testFork_validationLifecycle_cashMgmtUSDTPool(uint256 seed_) external {
+        runLifecycleValidation(seed_, cashManagementUSDTPool, cashMgmtUSDTFixedTermLoans, cashMgmtUSDTOpenTermLoans);
     }
 
-    function testFork_validationLifecycle_mavenPermissioned(uint256 seed) external {
-        runLifecycleValidation(seed, mavenPermissionedPool, mavenPermissionedFixedTermLoans);
+    function testFork_validationLifecycle_cicadaPool(uint256 seed_) external {
+        ftlLoanCount = 0;
+        runLifecycleValidation(seed_, cicadaPool, cicadaFixedTermLoans, cicadaOpenTermLoans);
+    }
+
+    function testFork_validationLifecycle_mapleDirectPool(uint256 seed_) external {
+        runLifecycleValidation(seed_, mapleDirectUSDCPool, mapleDirectFixedTermLoans, mapleDirectOpenTermLoans);
+    }
+
+    function testFork_validationLifecycle_mavenWethPool(uint256 seed_) external {
+        runLifecycleValidation(seed_, mavenWethPool, mavenWethFixedTermLoans, mavenWethOpenTermLoans);
+    }
+
+    function testFork_validationLifecycle_mavenPermissioned(uint256 seed_) external {
+        runLifecycleValidation(seed_, mavenPermissionedPool, mavenPermissionedFixedTermLoans, mavenPermissionedOpenTermLoans);
+    }
+
+}
+
+contract ValidationLifecycleForCashMgt is ValidationLifecycleTestsBase {
+
+    function setUp() public override {
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
+
+        _performProtocolUpgrade();
+
+        _upgradeToQueueWM(cashManagementUSDCPoolManager);
+        _upgradeToQueueWM(cashManagementUSDTPoolManager);
+    }
+
+    function testFork_validationLifecycle_cash_USDC(uint256 seed_) external {
+        runLifecycleValidation(seed_, cashManagementUSDCPool, cashMgmtUSDCFixedTermLoans, cashMgmtUSDCOpenTermLoans);
+    }
+
+    function testFork_validationLifecycle_cash_USDT(uint256 seed_) external {
+        runLifecycleValidation(seed_, cashManagementUSDTPool, cashMgmtUSDTFixedTermLoans, cashMgmtUSDTOpenTermLoans);
     }
 
 }
