@@ -7,12 +7,13 @@ import { MapleAddressRegistry as AR } from "../modules/address-registry/contract
 
 import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
-import { MapleLoan as MFTL }              from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory as MFTLF }      from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as MFTLFM }  from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as MFTLI }  from "../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
-import { MapleLoanV5Migrator as MFTLV5M } from "../modules/fixed-term-loan/contracts/MapleLoanV5Migrator.sol";
-import { MapleRefinancer as MFTLR }       from "../modules/fixed-term-loan/contracts/MapleRefinancer.sol";
+import { MapleLoan as MFTL }                  from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
+import { MapleLoanFactory as MFTLF }          from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanFeeManager as MFTLFM }      from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";
+import { MapleLoanInitializer as MFTLI }      from "../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
+import { MapleLoanV5Migrator as MFTLV5M }     from "../modules/fixed-term-loan/contracts/MapleLoanV5Migrator.sol";
+import { MapleLoanV502Migrator as MFTLV502M } from "../modules/fixed-term-loan/contracts/MapleLoanV502Migrator.sol";
+import { MapleRefinancer as MFTLR }           from "../modules/fixed-term-loan/contracts/MapleRefinancer.sol";
 
 import { MapleLoanManager as MFTLM }             from "../modules/fixed-term-loan-manager/contracts/MapleLoanManager.sol";
 import { MapleLoanManagerFactory as MFTLMF }     from "../modules/fixed-term-loan-manager/contracts/proxy/MapleLoanManagerFactory.sol";
@@ -100,6 +101,8 @@ contract FixedTermLoanManagerFactory is MFTLMF {
 contract FixedTermLoanManagerInitializer is MFTLMI { }
 
 contract FixedTermLoanV5Migrator is MFTLV5M { }
+
+contract FixedTermLoanV502Migrator is MFTLV502M { }
 
 contract FixedTermRefinancer is MFTLR { }
 

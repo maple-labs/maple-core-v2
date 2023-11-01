@@ -39,21 +39,21 @@ contract SetPoolPermissionLevelTests is TestBase {
         vm.prank(poolDelegate);
         poolPermissionManager.setPoolPermissionLevel(address(poolManager), PUBLIC);
 
-        assertEq(poolPermissionManager.poolPermissions(address(poolManager)), PUBLIC);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), PUBLIC);
     }
 
     function test_setPoolPermissionLevel_governor() external {
         vm.prank(governor);
         poolPermissionManager.setPoolPermissionLevel(address(poolManager), PUBLIC);
 
-        assertEq(poolPermissionManager.poolPermissions(address(poolManager)), PUBLIC);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), PUBLIC);
     }
 
     function test_setPoolPermissionLevel_operationalAdmin() external {
         vm.prank(operationalAdmin);
         poolPermissionManager.setPoolPermissionLevel(address(poolManager), PUBLIC);
 
-        assertEq(poolPermissionManager.poolPermissions(address(poolManager)), PUBLIC);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), PUBLIC);
     }
 
     function testFuzz_setPoolPermissionLevel_publicPool(uint256 permissionLevel) external {
@@ -87,7 +87,7 @@ contract SetPoolPermissionLevelTests is TestBase {
         poolPermissionManager.setPoolPermissionLevel(address(poolManager), newPermissionLevel);
 
         if (oldPermissionLevel != PUBLIC && newPermissionLevel <= PUBLIC) {
-            assertEq(poolPermissionManager.poolPermissions(address(poolManager)), newPermissionLevel);
+            assertEq(poolPermissionManager.permissionLevels(address(poolManager)), newPermissionLevel);
         }
     }
 

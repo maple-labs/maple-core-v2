@@ -71,7 +71,7 @@ contract ConfigurePoolTests is TestBase {
         vm.prank(poolDelegate);
         poolPermissionManager.configurePool(address(poolManager), FUNCTION_LEVEL, functionIds, bitmaps);
 
-        assertEq(poolPermissionManager.poolPermissions(address(poolManager)), FUNCTION_LEVEL);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), FUNCTION_LEVEL);
 
         for (uint i; i < functionIds.length; ++i) {
             assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds[i]), bitmaps[i]);
@@ -82,7 +82,7 @@ contract ConfigurePoolTests is TestBase {
         vm.prank(governor);
         poolPermissionManager.configurePool(address(poolManager), FUNCTION_LEVEL, functionIds, bitmaps);
 
-        assertEq(poolPermissionManager.poolPermissions(address(poolManager)), FUNCTION_LEVEL);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), FUNCTION_LEVEL);
 
         for (uint i; i < functionIds.length; ++i) {
             assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds[i]), bitmaps[i]);
@@ -93,7 +93,7 @@ contract ConfigurePoolTests is TestBase {
         vm.prank(operationalAdmin);
         poolPermissionManager.configurePool(address(poolManager), FUNCTION_LEVEL, functionIds, bitmaps);
 
-        assertEq(poolPermissionManager.poolPermissions(address(poolManager)), FUNCTION_LEVEL);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), FUNCTION_LEVEL);
 
         for (uint i; i < functionIds.length; ++i) {
             assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds[i]), bitmaps[i]);
@@ -120,13 +120,19 @@ contract ConfigurePoolTests is TestBase {
 
         if (oldPermissionLevel == PUBLIC) vm.expectRevert("PPM:CP:PUBLIC_POOL");
         else if (newPermissionLevel > PUBLIC) vm.expectRevert("PPM:CP:INVALID_LEVEL");
+        else if (functionIds_.length == 0) vm.expectRevert("PPM:CP:NO_FUNCTIONS");
         else if (functionIds_.length != bitmaps_.length) vm.expectRevert("PPM:CP:LENGTH_MISMATCH");
 
         vm.prank(poolDelegate);
         poolPermissionManager.configurePool(address(poolManager), newPermissionLevel, functionIds_, bitmaps_);
 
-        if (oldPermissionLevel != PUBLIC && newPermissionLevel <= PUBLIC && functionIds_.length == bitmaps_.length) {
-            assertEq(poolPermissionManager.poolPermissions(address(poolManager)), newPermissionLevel);
+        if (
+            oldPermissionLevel != PUBLIC &&
+            newPermissionLevel <= PUBLIC &&
+            functionIds_.length > 0 &&
+            functionIds_.length == bitmaps_.length
+        ) {
+            assertEq(poolPermissionManager.permissionLevels(address(poolManager)), newPermissionLevel);
 
             for (uint i; i < functionIds_.length; ++i) {
                 assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds_[i]), bitmaps_[i]);

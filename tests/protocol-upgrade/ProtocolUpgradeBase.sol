@@ -14,6 +14,7 @@ import {
     FixedTermLoan,
     FixedTermLoanFactory,
     FixedTermLoanInitializer,
+    FixedTermLoanV502Migrator,
     Globals,
     NonTransparentProxy,
     PoolDeployer,
@@ -105,6 +106,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         fixedTermLoanFactoryV2          = address(new FixedTermLoanFactory(globals, fixedTermLoanFactory));
         fixedTermLoanImplementationV502 = address(new FixedTermLoan());
         fixedTermLoanInitializerV500    = address(IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(501, 501));
+        fixedTermLoanV502Migrator       = address(new FixedTermLoanV502Migrator());
 
         // Upgrade contract for Globals
         globalsImplementationV3 = address(new Globals());
@@ -190,7 +192,14 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IProxyFactoryLike(poolManagerFactory).setDefaultVersion(300);
         IProxyFactoryLike(poolManagerFactory).enableUpgradePath(200, 300, poolManagerMigrator);
         IProxyFactoryLike(poolManagerFactory).enableUpgradePath(201, 300, poolManagerMigrator);     // For Aqru pool
-        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(300, 301, poolManagerWMMigrator);  // For Cash Management pools
+        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(300, 301, poolManagerWMMigrator);  //  For Cash Management pools
+
+        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(
+            502,
+            fixedTermLoanImplementationV502,
+            fixedTermLoanInitializerV500
+        );
+        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(501, 502, fixedTermLoanV502Migrator);
 
         IProxyFactoryLike(fixedTermLoanFactoryV2).registerImplementation(
             502,
@@ -214,6 +223,18 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IProxyFactoryLike(queueWMFactory).setDefaultVersion(100);
 
         vm.stopPrank();
+    }
+
+    function _upgradeFixedTermLoansAsSecurityAdmin() internal {
+        bytes memory arguments = abi.encode(fixedTermLoanFactoryV2);
+
+        upgradeLoansAsSecurityAdmin(aqruFixedTermLoans,              502, arguments);
+        upgradeLoansAsSecurityAdmin(cashMgmtUSDCFixedTermLoans,      502, arguments);
+        upgradeLoansAsSecurityAdmin(cashMgmtUSDTFixedTermLoans,      502, arguments);
+        upgradeLoansAsSecurityAdmin(cicadaFixedTermLoans,            502, arguments);
+        upgradeLoansAsSecurityAdmin(mapleDirectFixedTermLoans,       502, arguments);
+        upgradeLoansAsSecurityAdmin(mavenPermissionedFixedTermLoans, 502, arguments);
+        upgradeLoansAsSecurityAdmin(mavenWethFixedTermLoans,         502, arguments);
     }
 
     function _upgradePoolContractsAsSecurityAdmin() internal {
@@ -255,6 +276,8 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
         _upgradePoolContractsAsSecurityAdmin();
 
+        _upgradeFixedTermLoansAsSecurityAdmin();
+
         _addWMAndPMToAllowlists();
 
         _addLoanManagers();
@@ -273,6 +296,12 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         assertEq(poolManagerFactory.migratorForPath(200, 300), poolManagerMigrator);
         assertEq(poolManagerFactory.migratorForPath(201, 300), poolManagerMigrator);
         assertEq(poolManagerFactory.migratorForPath(300, 301), poolManagerWMMigrator);
+
+        IProxyFactoryLike fixedTermLoanFactory = IProxyFactoryLike(fixedTermLoanFactory);
+
+        assertEq(fixedTermLoanFactory.defaultVersion(),          501);
+        assertEq(fixedTermLoanFactory.implementationOf(502),     fixedTermLoanImplementationV502);
+        assertEq(fixedTermLoanFactory.migratorForPath(501, 502), fixedTermLoanV502Migrator);
 
         IProxyFactoryLike fixedTermLoanFactoryV2 = IProxyFactoryLike(fixedTermLoanFactoryV2);
 
@@ -313,6 +342,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
     function _assertIsLoan(address[] memory loans) internal {
         for (uint256 i; i < loans.length; ++i) {
+            assertEq(ILoanLike(loans[i]).factory(), fixedTermLoanFactoryV2);
             assertEq(IProxyFactoryLike(fixedTermLoanFactoryV2).isLoan(loans[i]), true);
         }
     }

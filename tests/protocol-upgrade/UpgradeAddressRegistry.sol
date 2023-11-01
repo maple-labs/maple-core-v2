@@ -8,6 +8,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address fixedTermLoanImplementationV502;
     address fixedTermLoanInitializerV500;
     address fixedTermLoanFactoryV2;
+    address fixedTermLoanV502Migrator;
 
     address globalsImplementationV3;
 

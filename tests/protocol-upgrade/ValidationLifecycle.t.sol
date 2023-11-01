@@ -253,31 +253,38 @@ contract ValidationLifecycle is ValidationLifecycleTestsBase {
         _addLoanManagers();
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_aqruPool(uint256 seed_) external {
         runLifecycleValidation(seed_, aqruPool, aqruFixedTermLoans, aqruOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cashMgmtUSDCPool(uint256 seed_) external {
         runLifecycleValidation(seed_, cashManagementUSDCPool, cashMgmtUSDCFixedTermLoans, cashMgmtUSDCOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cashMgmtUSDTPool(uint256 seed_) external {
         runLifecycleValidation(seed_, cashManagementUSDTPool, cashMgmtUSDTFixedTermLoans, cashMgmtUSDTOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cicadaPool(uint256 seed_) external {
         ftlLoanCount = 0;
         runLifecycleValidation(seed_, cicadaPool, cicadaFixedTermLoans, cicadaOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_mapleDirectPool(uint256 seed_) external {
         runLifecycleValidation(seed_, mapleDirectUSDCPool, mapleDirectFixedTermLoans, mapleDirectOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_mavenWethPool(uint256 seed_) external {
         runLifecycleValidation(seed_, mavenWethPool, mavenWethFixedTermLoans, mavenWethOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_mavenPermissioned(uint256 seed_) external {
         runLifecycleValidation(seed_, mavenPermissionedPool, mavenPermissionedFixedTermLoans, mavenPermissionedOpenTermLoans);
     }
@@ -295,10 +302,12 @@ contract ValidationLifecycleForCashMgt is ValidationLifecycleTestsBase {
         _upgradeToQueueWM(cashManagementUSDTPoolManager);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cash_USDC(uint256 seed_) external {
         runLifecycleValidation(seed_, cashManagementUSDCPool, cashMgmtUSDCFixedTermLoans, cashMgmtUSDCOpenTermLoans);
     }
 
+    /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cash_USDT(uint256 seed_) external {
         runLifecycleValidation(seed_, cashManagementUSDTPool, cashMgmtUSDTFixedTermLoans, cashMgmtUSDTOpenTermLoans);
     }
