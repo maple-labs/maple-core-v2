@@ -102,6 +102,24 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         vm.stopPrank();
     }
 
+    function _allowLenders(address poolManager, address[] memory lenders) internal {
+        for (uint256 i = 0; i < lenders.length; ++i) {
+            allowLender(poolManager, lenders[i]);
+        }
+    }
+
+    function _allowAllLenders() internal {
+        _allowLenders(aqruPoolManager,               aqruAllowedLenders);
+        _allowLenders(cashManagementUSDCPoolManager, cashMgmtUSDCAllowedLenders);
+        _allowLenders(cashManagementUSDTPoolManager, cashMgmtUSDTAllowedLenders);
+        _allowLenders(cicadaPoolManager,             cicadaAllowedLenders);
+        _allowLenders(icebreakerPoolManager,         icebreakerAllowedLenders);
+        _allowLenders(laserPoolManager,              laserAllowedLenders);
+        _allowLenders(mapleDirectUSDCPoolManager,    mapleDirectAllowedLenders);
+        _allowLenders(mavenPermissionedPoolManager,  mavenPermissionedAllowedLenders);
+        _allowLenders(mavenUsdc3PoolManager,         mavenUsdc3AllowedLenders);
+    }
+
     function _deployAllNewContracts() internal {
         fixedTermLoanFactoryV2          = address(new FixedTermLoanFactory(globals, fixedTermLoanFactory));
         fixedTermLoanImplementationV502 = address(new FixedTermLoan());
@@ -117,7 +135,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         // Upgrade contracts for PoolManager
         poolManagerImplementationV300 = address(new PoolManager());
         poolManagerImplementationV301 = address(new PoolManager());
-        poolManagerInitializer        = address(IProxyFactoryLike(poolManagerFactory).migratorForPath(200, 200));
+        poolManagerInitializer        = address(new PoolManagerInitializer());
         poolManagerMigrator           = address(new PoolManagerMigrator());
         poolManagerWMMigrator         = address(new PoolManagerWMMigrator());
 
@@ -294,6 +312,8 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
         _addWMAndPMToAllowlists();
 
+        _allowAllLenders();
+
         _addLoanManagers();
     }
 
@@ -366,7 +386,25 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
             address expectedImplementation = IProxyFactoryLike(fixedTermLoanFactoryV2).implementationOf(version);
             assertEq(ILoanLike(loans[i]).implementation(), expectedImplementation);
         }
-    } 
+    }
+
+    function _assertLendersPermission(address poolManager, address[] memory lenders) internal {
+        for (uint256 i = 0; i < lenders.length; i++) {
+            assertTrue(poolPermissionManager.lenderAllowlist(poolManager, lenders[i]));
+        }
+    }
+
+    function _assertAllowedLenders() internal {
+        _assertLendersPermission(aqruPoolManager,               aqruAllowedLenders);
+        _assertLendersPermission(cashManagementUSDCPoolManager, cashMgmtUSDCAllowedLenders);
+        _assertLendersPermission(cashManagementUSDTPoolManager, cashMgmtUSDTAllowedLenders);
+        _assertLendersPermission(cicadaPoolManager,             cicadaAllowedLenders);
+        _assertLendersPermission(icebreakerPoolManager,         icebreakerAllowedLenders);
+        _assertLendersPermission(laserPoolManager,              laserAllowedLenders);
+        _assertLendersPermission(mapleDirectUSDCPoolManager,    mapleDirectAllowedLenders);
+        _assertLendersPermission(mavenPermissionedPoolManager,  mavenPermissionedAllowedLenders);
+        _assertLendersPermission(mavenUsdc3PoolManager,         mavenUsdc3AllowedLenders);
+    }
 
     function _assertPermissions() internal {
         assertTrue(poolPermissionManager.lenderAllowlist(aqruPoolManager, aqruWithdrawalManager));

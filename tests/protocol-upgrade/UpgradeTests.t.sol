@@ -14,6 +14,7 @@ contract UpgradeTests is ProtocolUpgradeBase {
         _assertFactories();
         _assertPoolManagers();
         _assertPermissions();
+        _assertAllowedLenders();
 
         _assertIsLoan(aqruFixedTermLoans);
         _assertIsLoan(cashMgmtUSDCFixedTermLoans);
@@ -35,6 +36,7 @@ contract UpgradeToQueueWMTests is ProtocolUpgradeBase {
         _assertFactories();
         _assertCashPoolManagers();
         _assertPermissions();
+        _assertAllowedLenders();
     }
 
 }
