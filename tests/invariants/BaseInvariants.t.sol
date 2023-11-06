@@ -8,7 +8,10 @@ import {
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
-    IOpenTermLoanManager
+    IOpenTermLoanManager,
+    IPool,
+    IPoolPermissionManager,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { StdInvariant } from "../../contracts/Contracts.sol";
@@ -26,6 +29,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
+    uint256 constant ALLOWED_DIFF        = 100;
+    uint256 constant UNDERFLOW_THRESHOLD = 10;
+    uint256 constant PUBLIC              = 3;
+    uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
+
     FixedTermLoanHandler ftlHandler;
     GlobalsHandler       globalsHandler;
     LpHandler            lpHandler;
@@ -33,14 +41,14 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     uint256 setTimestamps;
 
+    uint256 public currentTimestamp;
+
     address[] public borrowers;
 
     uint256[] timestamps;
 
-    uint256 public currentTimestamp;
-
-    uint256 constant ALLOWED_DIFF        = 100;
-    uint256 constant UNDERFLOW_THRESHOLD = 10;
+    mapping(address => bool) existingOwners;
+    mapping(uint128 => bool) existingRequestIds;
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -111,11 +119,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant J: unrealizedLosses == poolManager.unrealizedLosses()
         * Invariant K: convertToExitShares == poolManager.convertToExitShares()
 
-     PoolManager (non-liquidating)
+     * PoolManager (non-liquidating)
         * Invariant A: totalAssets == cash + ∑assetsUnderManagement[loanManager]
         * Invariant B: hasSufficientCover == fundsAsset balance of cover > globals.minCoverAmount
 
-     Withdrawal Manager
+     * Withdrawal Manager (Cyclical)
         * Invariant A: WM LP balance == ∑lockedShares(user)
         * Invariant B: totalCycleShares == ∑lockedShares(user)[cycle] (for all cycles)
         * Invariant C: windowStart[currentCycle] <= block.timestamp
@@ -130,6 +138,24 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant L: getRedeemableAmounts.partialLiquidity == (lockedShares[user] * exchangeRate < fundsAsset balance of pool)
         * Invariant M: lockedLiquidity <= pool.totalAssets()
         * Invariant N: lockedLiquidity <= totalCycleShares[exitCycleId[user]] * exchangeRate
+
+     * Pool Permission Manager
+        * Invariant A: pool.permissionLevel ∈ [0, 3]
+        * Invariant B: pool.bitmap ∈ [0, MAX]
+        * Invariant C: lender.bitmap ∈ [0, MAX]
+        * Invariant D: pool.permissionLevel == public -> permanently public
+
+     * Withdrawal Manager (Queue)
+        * Invariant A: ∑request.shares + ∑owner.manualShares == totalShares
+        * Invariant B: balanceOf(this) >= totalShares
+        * Invariant C: lastRequestId == max(requestIds)
+        * Invariant D: ∀ requestId(owner) != 0 -> request.shares > 0 && request.owner == owner
+        * Invariant E: nextRequestId <= lastRequestId
+        * Invariant F: nextRequestId != 0
+        * Invariant G: requests(0) == (0, 0)
+        * Invariant H: ∀ requestId[lender] ∈ [0, lastRequestId]
+        * Invariant I: requestId is unique
+        * Invariant J: lender is unique
 
     ftlHandler requires (WIP)
         makePayment
@@ -150,8 +176,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * domainStart == block.timestamp
         * domainEnd   == paymentWithEarliestDueDate
         * issuanceRate > 0
-
-    ***************************************************************************************************************************************/
 
     /**************************************************************************************************************************************/
     /*** Fixed Term Loan Invariants                                                                                                     ***/
@@ -712,6 +736,192 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             ALLOWED_DIFF,
             "OTLM Invariant K"
         );
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Pool Permission Manager Invariants                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    function assert_ppm_invariant_A(address poolPermissionManager_, address poolManager_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        uint256 permissionLevel = ppm.permissionLevels(poolManager_);
+
+        assertLe(permissionLevel, 3, "PPM Invariant A");
+    }
+
+    function assert_ppm_invariant_B(address poolPermissionManager_, address poolManager_, bytes32[] memory functionIds_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        for (uint i; i < functionIds_.length; ++i) {
+            assertLe(ppm.poolBitmaps(poolManager_, functionIds_[i]), MAXIMUM_BITMAP, "PPM Invariant B");
+        }
+    }
+
+    function assert_ppm_invariant_C(address poolPermissionManager_, address[] memory lenders_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        for (uint i; i < lenders_.length; ++i) {
+            assertLe(ppm.lenderBitmaps(lenders_[i]), MAXIMUM_BITMAP, "PPM Invariant C");
+        }
+    }
+
+    // NOTE: Pass in PoolManagers that have already been set public only.
+    function assert_ppm_invariant_D(address poolPermissionManager_, address[] memory poolManagers_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        for (uint i; i < poolManagers_.length; i++) {
+            assertEq(ppm.permissionLevels(poolManagers_[i]), PUBLIC, "PPM Invariant D");
+        }
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Withdrawal Manager (Queue) Invariants                                                                                          ***/
+    /**************************************************************************************************************************************/
+
+    function assert_wmq_invariant_A(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = wm.queue();
+
+        uint256 countedShares;
+        uint256 totalShares = wm.totalShares();
+
+        for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
+            ( , uint256 shares ) = wm.requests(requestId);
+
+            countedShares += shares;
+        }
+
+        // NOTE: If the request is manual but is processed, the link to the owner address is lost.
+        //       That's why the lenders addresses are passed in manually.
+        for (uint256 i; i < lenders_.length; i++) {
+            address owner = lenders_[i];
+
+            countedShares += wm.manualSharesAvailable(owner);
+        }
+
+        assertEq(countedShares, totalShares, "WMQ Invariant A");
+    }
+
+    function assert_wmq_invariant_B(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+        IPool pool                 = IPool(wm.pool());
+
+        uint256 balance     = pool.balanceOf(withdrawalManager_);
+        uint256 totalShares = wm.totalShares();
+
+        assertGe(balance, totalShares, "WMQ Invariant B");
+    }
+
+    function assert_wmq_invariant_C(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( , uint128 lastRequestId ) = wm.queue();
+        uint128 maximumRequestId = 0;
+
+        for (uint i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            if (requestId > maximumRequestId) maximumRequestId = requestId;
+        }
+
+        assertEq(lastRequestId, maximumRequestId, "WMQ Invariant C");
+    }
+
+    function assert_wmq_invariant_D(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        for (uint i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            if (requestId == 0) continue;
+
+            ( address owner, uint256 shares ) = wm.requests(requestId);
+
+            assertTrue(shares > 0 && owner == lenders_[i], "WMQ Invariant D");
+        }
+    }
+
+    function assert_wmq_invariant_E(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = wm.queue();
+
+        assertLe(nextRequestId, lastRequestId, "WMQ Invariant E");
+    }
+
+    function assert_wmq_invariant_F(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, ) = wm.queue();
+
+        assertTrue(nextRequestId != 0, "WMQ Invariant F");
+    }
+
+    function assert_wmq_invariant_G(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( address owner, uint256 shares ) = wm.requests(0);
+
+        assertEq(owner,  address(0), "WMQ Invariant G");
+        assertEq(shares, uint256(0), "WMQ Invariant G");
+    }
+
+    function assert_wmq_invariant_H(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( , uint128 lastRequestId ) = wm.queue();
+
+        for (uint i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            assertLe(requestId, lastRequestId, "WMQ Invariant H");
+        }
+    }
+
+    function assert_wmq_invariant_I(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        for (uint i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            if (requestId == 0) continue;
+
+            assertFalse(existingRequestIds[requestId], "WMQ Invariant I");
+
+            existingRequestIds[requestId] = true;
+        }
+
+        // NOTE: Clean up storage for future assertion calls.
+        for (uint i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            existingRequestIds[requestId] = false;
+        }
+    }
+
+    function assert_wmq_invariant_J(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 firstRequestId, uint128 lastRequestId ) = wm.queue();
+
+        for (uint128 requestId = firstRequestId; requestId <= lastRequestId; requestId++) {
+            ( address owner, ) = wm.requests(requestId);
+
+            if (owner == address(0)) continue;
+
+            assertFalse(existingOwners[owner], "WMQ Invariant J");
+
+            existingOwners[owner] = true;
+        }
+
+        // NOTE: Clean up storage for future assertion calls.
+        for (uint128 requestId = firstRequestId; requestId <= lastRequestId; requestId++) {
+            ( address owner, ) = wm.requests(requestId);
+
+            existingOwners[owner] = false;
+        }
     }
 
     /**************************************************************************************************************************************/
