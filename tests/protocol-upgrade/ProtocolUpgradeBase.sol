@@ -143,6 +143,20 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         );
     }
 
+    function _deployNewLoan() internal {
+        address newImplementation = address(new FixedTermLoan());
+
+        vm.startPrank(governor);
+        IProxyFactoryLike(fixedTermLoanFactoryV2).registerImplementation(
+            503,
+            newImplementation,
+            fixedTermLoanInitializerV500
+        );
+
+        IProxyFactoryLike(fixedTermLoanFactoryV2).enableUpgradePath(502, 503, address(0));
+        vm.stopPrank();
+    }
+
     function _deployQueueWM(address pool_) internal returns (address queueWM) {
         address deployer = makeAddr("deployer");
 
@@ -346,6 +360,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
             assertEq(IProxyFactoryLike(fixedTermLoanFactoryV2).isLoan(loans[i]), true);
         }
     }
+
+    function _assertLoanVersion(address[] memory loans, uint256 version) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            address expectedImplementation = IProxyFactoryLike(fixedTermLoanFactoryV2).implementationOf(version);
+            assertEq(ILoanLike(loans[i]).implementation(), expectedImplementation);
+        }
+    } 
 
     function _assertPermissions() internal {
         assertTrue(poolPermissionManager.lenderAllowlist(aqruPoolManager, aqruWithdrawalManager));
