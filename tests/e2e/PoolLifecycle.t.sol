@@ -5,9 +5,6 @@ import { OpenTermLoan, OpenTermLoanManager, Pool, PoolManager } from "../../cont
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-// TODO: Add assertOpenTermLoanPaymentState after creation.
-// TODO: Add explicit asserts for all `expected*` variables at end of each section.
-
 contract PoolLifecycleTest is TestBaseWithAssertions {
 
     address borrower1;
@@ -86,7 +83,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         setupFees({
             delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,  // TODO: Irrelevant
+            delegateServiceFee:         300e6,
             delegateManagementFeeRate:  0.12e6,
             platformOriginationFeeRate: 0.001e6,
             platformServiceFeeRate:     0.02e6,
@@ -384,8 +381,6 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             startDate:       start + 3 days,
             issuanceRate:    loan2IssuanceRate
         });
-
-        // TODO: Add a block of assertions that asserts all the `expected` state variables with explicit numbers.
 
         /******************************************/
         /*** Step 10: LP3 deposits 5m at ER > 1 ***/

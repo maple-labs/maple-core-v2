@@ -118,7 +118,6 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
     /*** Assertion Helpers                                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Make Test Base with Assertions Stateless and move all assertion helpers together
     function assertFixedTermLoanHealthChecker(FixedTermLoanHealthChecker.Invariants memory invariants_) internal {
         assertTrue(invariants_.fixedTermLoanInvariantA,        "FTLHealthChecker FTL Invariant A");
         assertTrue(invariants_.fixedTermLoanInvariantB,        "FTLHealthChecker FTL Invariant B");

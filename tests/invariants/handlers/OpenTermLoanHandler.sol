@@ -198,7 +198,7 @@ contract OpenTermLoanHandler is HandlerBase {
         uint256 length_;
 
         for (uint256 i; i < loans.length; ++i) {
-            if (!_filterLoan(loans[i], onlyOverdue_)) continue;
+            if (!_isActive(loans[i], onlyOverdue_)) continue;
 
             length_++;
         }
@@ -206,7 +206,7 @@ contract OpenTermLoanHandler is HandlerBase {
         activeLoans_ = new address[](length_);
 
         for (uint256 i; i < loans.length; ++i) {
-            if (!_filterLoan(loans[i], onlyOverdue_)) continue;
+            if (!_isActive(loans[i], onlyOverdue_)) continue;
 
             activeLoans_[index_++] = loans[i];
         }
@@ -241,8 +241,7 @@ contract OpenTermLoanHandler is HandlerBase {
         numLoans++;
     }
 
-    // TODO: Rename this function as the filter criteria is unclear.
-    function _filterLoan(address loan_, bool onlyOverdue_) internal view returns (bool filter_) {
+    function _isActive(address loan_, bool onlyOverdue_) internal view returns (bool filter_) {
         // Don't include loans that are not active.
         if (IOpenTermLoan(loan_).dateFunded() == 0) return false;
 

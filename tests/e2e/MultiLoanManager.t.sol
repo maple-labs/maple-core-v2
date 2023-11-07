@@ -84,9 +84,6 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
     IOpenTermLoan  otLoan3;
     IOpenTermLoan  otLoan4;
 
-    // TODO: Pay off and Call all loans, compare cash balance to total assets.
-    // TODO: Revisit this test as a whole, update theoretical values, and add more assertions.
-
     function setUp() public override {
         super.setUp();
 

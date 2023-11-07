@@ -20,7 +20,6 @@ import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-// TODO: Add refinancing.
 enum LoanAction {
     Call,
     Close,

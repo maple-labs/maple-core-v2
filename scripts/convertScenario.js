@@ -120,7 +120,6 @@ const mergeIntoDefaults = (actionType, parameters) =>
     actionType === 'defaultLoan' ? Object.assign({}, DEFAULT_DEFAULT_PARAMETERS, parameters) :
     parameters;
 
-// TODO: This makes the assumption that all decimals values are for tokens with 6 decimal positions. Some additional indicator.
 const convertToInteger = (decimal) => parseInt(decimal * 1e6);
 
 const CSVToActionsJSON = (data, { omitFirstRow = false } = {}) => {
@@ -179,7 +178,6 @@ const CSVToActionsJSON = (data, { omitFirstRow = false } = {}) => {
 
 const csv = fs.readFileSync(`./scenarios/data/csv/${process.argv[2]}.csv`, { encoding: 'utf8' });  // Read CSV as utf8 encoded.
 
-// TODO: Can add some data to `config` to be parsed and interpreted by the solidity scenario runner.
 const json = { config: {}, actions: CSVToActionsJSON(csv, { omitFirstRow: true }) };  // convert to json, omitting header row.
 
 fs.writeFileSync(`./scenarios/data/json/${process.argv[2]}.json`, JSON.stringify(json, null, 4), { encoding: 'utf8' });  // Write JSON as utf8 encoded, with same file name.

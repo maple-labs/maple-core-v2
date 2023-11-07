@@ -19,7 +19,6 @@ contract OpenTermInvariants is BaseInvariants {
     function setUp() public override {
         super.setUp();
 
-        // TODO: Check if all timestamp accounting can be removed.
         currentTimestamp = block.timestamp;
 
         vm.startPrank(governor);

@@ -64,7 +64,6 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
             if (value_ <= range_ && weight_ != 0) {
                 ( bool success, ) = address(this).call(abi.encodeWithSelector(selectors[i], seed_));
 
-                // TODO: Parse error from low-level call and revert with it
                 require(success, "HB:CALL_FAILED");
                 break;
             }

@@ -108,7 +108,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanManager.paymentIdOf(loan), 0);
     }
 
-    // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertFixedTermPaymentInfo(
         address loan,
         uint256 incomingNetInterest,
@@ -135,7 +134,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate,     "loanInfo.delegateFeeRate");
     }
 
-    // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertOpenTermPaymentInfo(
         address loan,
         uint256 platformFeeRate,

@@ -258,7 +258,6 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
     function test_fund_twoLoans() external {
         fundLoan(address(loan1));
 
-        // TODO: Consider replacing with `assertFixedTermLoanManager`.
         assertEq(loanManager.paymentIdOf(address(loan1)),  1);
         assertEq(loanManager.accountedInterest(),          0);
         assertEq(loanManager.domainEnd(),                  start + 1_000_000);
@@ -602,23 +601,6 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         loanManager.fund(address(loan));
     }
 
-    // TODO: Unreachable due to the loan manager checking for the same error condition first.
-    // function test_fund_loanClosed() external {
-    //     deposit(address(pool), lp, 2 * principal);
-    //
-    //     vm.prank(poolDelegate);
-    //     loanManager.fund(address(loan));
-    //
-    //     vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
-    //
-    //     vm.prank(poolDelegate);
-    //     poolManager.triggerDefault(address(loan), address(liquidatorFactory));
-    //
-    //     vm.prank(poolDelegate);
-    //     vm.expectRevert("ML:F:LOAN_CLOSED");
-    //     loanManager.fund(address(loan));
-    // }
-
     function test_fund_loanTransferFailure() external {
         deposit(address(pool), lp, principal);
 
@@ -628,13 +610,6 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         vm.expectRevert("ML:F:TRANSFER_FROM_FAILED");
         loanManager.fund(address(loan));
     }
-
-    // TODO: Check if this error condition can ever occur.
-    // function test_fund_fundingMismatch() external {
-    //     vm.prank(poolDelegate);
-    //     vm.expectRevert("LM:F:FUNDING_MISMATCH");
-    //     loanManager.fund(address(loan));
-    // }
 
     function test_fund_success() external {
         uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e6;

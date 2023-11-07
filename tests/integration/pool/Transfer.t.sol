@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { TestBase } from "../../TestBase.sol";
 
-// TODO: instead of putting this into its own file, maybe consider putting all tests that manipulate basic LP token functionality
-//       (transfer, deposit, redeem, etc) into the same file.
 contract TransferTests is TestBase {
 
     address borrower = makeAddr("borrower");
@@ -200,5 +198,4 @@ contract TransferTests is TestBase {
         assertEq(pool.balanceOf(recipient), lpShares);
     }
 
-    // TODO: what if transferer and/or is made an invalid lender? Should this be possible? If yes, should they be able to transfer?
 }

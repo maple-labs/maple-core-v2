@@ -120,7 +120,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
@@ -479,7 +479,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
@@ -656,7 +656,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
@@ -833,7 +833,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
 
         proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(address(loan), 10_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 

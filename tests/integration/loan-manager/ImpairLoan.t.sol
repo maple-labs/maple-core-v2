@@ -68,7 +68,6 @@ contract FixedTermLoanManagerImpairFailureTests is TestBaseWithAssertions {
         loan.impairLoan();
     }
 
-    // TODO: Check if impairing an impaired loan should be a valid use case.
     function test_impairLoan_alreadyImpaired() external {
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(loan));
@@ -524,7 +523,6 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
             unrealizedLosses:  0
         });
 
-        // TODO: Add a late interest premium to illustrate difference in late interest.
         assertPoolManager({
             poolManager:      address(poolManager),
             totalAssets:      500_000e6 + 1_000_000e6 + 2 * 5_625e6 + 2 * uint256(5_625e6) * 12 / 365,  // 5_625e6 * 12 / 365 accounted for twice as part is from late interest and part is from the next interval
@@ -732,7 +730,7 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
 
         proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(loan, 10_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
@@ -921,7 +919,7 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
 
         proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(loan, 10_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(loan, 10_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
@@ -1065,7 +1063,6 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
     }
 
     function testFail_impairLoan_notLoanContract() external {
-        // vm.expectRevert();  TODO: Update to use forge-std
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(1));
     }

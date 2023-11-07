@@ -3,9 +3,6 @@ pragma solidity 0.8.7;
 
 import { TestBase } from "../../TestBase.sol";
 
-// TODO: Revert all changes that have relevant state adjusted within the protocol action during the function that its testing.
-//       E.g., approval on `deposit` should be isolated.
-
 contract EnterBase is TestBase {
 
     address lp;
@@ -255,16 +252,6 @@ contract DepositFailureTests is EnterBase {
         pool.deposit(liquidity, lp);
     }
 
-    // TODO: Update Test if possible
-    // NOTE: This test can't be reached with the new permissioning model.
-    // function test_deposit_notActive() external {
-    //     uint256 liquidity = 1_000e6;
-
-    //     vm.expectRevert("P:D:NOT_ACTIVE");
-    //     vm.prank(lp);
-    //     pool.deposit(liquidity, lp);
-    // }
-
     function test_deposit_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
 
@@ -363,18 +350,6 @@ contract DepositWithPermitFailureTests is EnterBase {
         vm.prank(lp);
         pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
     }
-
-    // TODO: Update Test if possible
-    // Note: Not reachable
-    // function test_depositWithPermit_notActive() external {
-    //     uint256 liquidity = 1_000e6;
-
-    //     allowLender(address(poolManager), lp);
-
-    //     vm.expectRevert("P:DWP:NOT_ACTIVE");
-    //     vm.prank(lp);
-    //     pool.depositWithPermit(liquidity, lp, deadline, 0, bytes32(0), bytes32(0));
-    // }
 
     function test_depositWithPermit_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
@@ -685,20 +660,6 @@ contract MintFailureTests is EnterBase {
         pool.mint(shares, lp);
     }
 
-    // TODO: Update Test if possible
-    // NOTE: Not reachable
-    // function test_mint_notActive() external {
-    //     uint256 liquidity = 1_000e6;
-
-    //     allowLender(address(poolManager), lp);
-
-    //     uint256 shares = pool.previewDeposit(liquidity);
-
-    //     vm.expectRevert("P:M:NOT_ACTIVE");
-    //     vm.prank(lp);
-    //     pool.mint(shares, lp);
-    // }
-
     function test_mint_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;
 
@@ -810,20 +771,6 @@ contract MintWithPermitFailureTests is EnterBase {
         vm.prank(lp);
         pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
     }
-
-    // TODO: Update Test if possible
-    // NOTE: Not reachable
-    // function test_mintWithPermit_notActive() external {
-    //     uint256 liquidity = 1_000e6;
-
-    //     allowLender(address(poolManager), lp);
-
-    //     uint256 shares = pool.previewDeposit(liquidity);
-
-    //     vm.expectRevert("P:MWP:NOT_ACTIVE");
-    //     vm.prank(lp);
-    //     pool.mintWithPermit(shares, lp, liquidity, deadline, 0, bytes32(0), bytes32(0));
-    // }
 
     function test_mintWithPermit_privatePoolInvalidRecipient() external {
         uint256 liquidity = 1_000e6;

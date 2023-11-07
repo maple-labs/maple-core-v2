@@ -20,8 +20,6 @@ import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol
 
 import { HandlerBase } from "./HandlerBase.sol";
 
-// TODO: Reorder functions alphabetically
-
 contract FixedTermLoanHandler is HandlerBase {
 
     /**************************************************************************************************************************************/
@@ -107,7 +105,7 @@ contract FixedTermLoanHandler is HandlerBase {
         poolManager       = IPoolManager(poolManager_);
         fundsAsset        = MockERC20(poolManager.asset());
         liquidatorFactory = liquidatorFactory_;
-        loanManager       = IFixedTermLoanManager(poolManager.loanManagerList(0));  // TODO: May need to be constructor arg.
+        loanManager       = IFixedTermLoanManager(poolManager.loanManagerList(0));
         pool              = IPool(poolManager.pool());
         testContract      = IInvariantTest(testContract_);
 

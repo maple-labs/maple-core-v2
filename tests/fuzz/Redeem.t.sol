@@ -79,7 +79,6 @@ contract RedeemFuzzTests is FuzzBase {
         vm.prank(owner);
         pool.approve(caller, sharesToRedeem);
 
-        // TODO: Fuzz durations of withdrawal cycle and window.
         if (withdrawalDelay < 2 weeks || withdrawalDelay >= 2 weeks + 2 days) {
             vm.prank(caller);
             vm.expectRevert("WM:PE:NOT_IN_WINDOW");

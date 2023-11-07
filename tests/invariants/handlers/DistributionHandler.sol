@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
 
-// TODO: Rename actors to handlers
-
 contract DistributionHandler {
 
     uint256 constant internal WEIGHTS_RANGE = 100;

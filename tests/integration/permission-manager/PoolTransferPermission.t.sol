@@ -3,7 +3,6 @@ pragma solidity 0.8.7;
 
 import { TestBase } from "../../TestBase.sol";
 
-// TODO: Add fuzz tests (random permission level, random entry function, random assets)
 contract PoolTransferPermissionTestBase is TestBase {
 
     uint256 constant PRIVATE        = 0;

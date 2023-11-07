@@ -57,7 +57,6 @@ contract BalanceOfAssetsTests is TestBase {
 
 }
 
-// TODO: Add fuzz tests for all view function success cases.
 // TODO: Update to use new permissioning
 contract MaxDepositTests is TestBase {
 

@@ -27,10 +27,9 @@ contract BasicInvariants is BaseInvariants {
 
         currentTimestamp = block.timestamp;
 
-        // TODO: Add to handler
         setupFees({
-            delegateOriginationFee:     500e6,    // TODO: Remove as not used
-            delegateServiceFee:         300e6,    // TODO: Remove as not used
+            delegateOriginationFee:     500e6,
+            delegateServiceFee:         300e6,
             delegateManagementFeeRate:  0.02e6,
             platformOriginationFeeRate: 0.001e6,
             platformServiceFeeRate:     0.005e6,  // 10k after 1m seconds

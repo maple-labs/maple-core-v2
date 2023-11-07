@@ -56,7 +56,6 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
     OpenTermLoan otLoan1;
     OpenTermLoan otLoan2;
 
-    // TODO: Add tests for payments to increase/reduce principal after impairment
     function setUp() override public {
         super.setUp();
 

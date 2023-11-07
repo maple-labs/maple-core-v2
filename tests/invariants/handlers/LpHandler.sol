@@ -8,7 +8,6 @@ import {
     IWithdrawalManagerCyclical as IWithdrawalManager 
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-// TODO: MockERC20 is not needed if protocol actions are used which handle minting.
 import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
@@ -61,7 +60,7 @@ contract LpHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     modifier useRandomLp(uint256 lpIndex_) {
-        currentLp = lps[_bound(lpIndex_, 0, lps.length - 1)];  // TODO: Investigate why this is happening
+        currentLp = lps[_bound(lpIndex_, 0, lps.length - 1)];
         vm.startPrank(currentLp);
         _;
         vm.stopPrank();
@@ -81,7 +80,7 @@ contract LpHandler is HandlerBase {
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
 
-        shares_ = pool.deposit(assets_, currentLp);  // TODO: Fuzz receiver
+        shares_ = pool.deposit(assets_, currentLp);
     }
 
     function mint(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
@@ -97,7 +96,7 @@ contract LpHandler is HandlerBase {
         fundsAsset.mint(currentLp, assets_);
         fundsAsset.approve(address(pool), assets_);
 
-        assets_ = pool.mint(shares_, currentLp);  // TODO: Fuzz receiver
+        assets_ = pool.mint(shares_, currentLp);
     }
 
     function redeem(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
@@ -115,10 +114,9 @@ contract LpHandler is HandlerBase {
 
         vm.warp(_bound(_randomize(seed_, "warp"), windowStart_, windowEnd_ - 1 seconds));
 
-        assets_ = pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);  // TODO: Fuzz owner and receiver
+        assets_ = pool.redeem(withdrawalManager.lockedShares(currentLp), currentLp, currentLp);
     }
 
-    // TODO: Add WM interface
     function removeShares(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 assets_) {
         console.log("lpHandler.removeShares(%s)", seed_);
 
@@ -134,7 +132,7 @@ contract LpHandler is HandlerBase {
 
         vm.warp(_bound(_randomize(seed_, "warp"), windowStart_, windowStart_ + 1 days));
 
-        assets_ = pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);  // TODO: Fuzz owner and receiver
+        assets_ = pool.removeShares(withdrawalManager.lockedShares(currentLp), currentLp);
     }
 
     function requestRedeem(uint256 seed_) public virtual useTimestamps useRandomLp(seed_) returns (uint256 escrowShares_) {
@@ -146,7 +144,7 @@ contract LpHandler is HandlerBase {
 
         uint256 shares_ = _bound(_randomize(seed_, "shares"), 1, pool.balanceOf(currentLp));
 
-        escrowShares_ = pool.requestRedeem(shares_, currentLp);  // TODO: Add fuzzing for users
+        escrowShares_ = pool.requestRedeem(shares_, currentLp);
     }
 
     /**************************************************************************************************************************************/
@@ -162,7 +160,6 @@ contract LpHandler is HandlerBase {
 
         uint256 amount_ = _bound(_randomize(seed_, "amount"), 1, pool.balanceOf(currentLp));
 
-        // TODO: Investigate why this is happening
         address recipient_ = lps[_bound(_randomize(seed_, "recipient"), 0, lps.length - 1)];
 
         success_ = pool.transfer(recipient_, amount_);

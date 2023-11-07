@@ -106,7 +106,6 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
 }
 
-// TODO: To consider if transfer fails are possible/worth doing.
 contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTestsBase {
 
     function test_triggerDefault_protocolPaused_poolManager() external {
@@ -190,8 +189,6 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
         vm.expectRevert("LM:DLF:TRANSFER_MT");
         poolManager.triggerDefault(address(loan), address(liquidatorFactory));
     }
-
-    // TODO: Add transfer failure and other zero address tests.
 
 }
 
@@ -593,8 +590,6 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
             principal:       0
         });
     }
-
-    // TODO: Add test to demo partial fee recovery from Loan.
 
     function test_triggerDefault_setByOperationalAdmin() external {
         uint256 defaultTime = start + paymentInterval + gracePeriod + 1;

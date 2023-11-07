@@ -170,7 +170,6 @@ contract TestBase is ProtocolActions {
         cyclicalWMInitializer           = address(new WithdrawalManagerCyclicalInitializer());
         queueWMInitializer              = address(new WithdrawalManagerQueueInitializer());
 
-        // TODO: Update to addresses
         fixedTermFeeManager = new FeeManager(address(globals));
         fixedTermRefinancer = new FixedTermRefinancer();
         openTermRefinancer  = new OpenTermRefinancer();
@@ -267,7 +266,6 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    // TODO: Add all config params here
     function _createPool(
         uint256 startTime,
         uint256 withdrawalCycle,
@@ -376,7 +374,6 @@ contract TestBase is ProtocolActions {
         }
     }
 
-    // TODO: Can be moved into ProtocolActions, but it a bit heavy on arguments if state variables need to be passed in as well.
     /**
      *  @param termDetails Array of loan parameters:
      *                       [0]: gracePeriod
@@ -397,7 +394,7 @@ contract TestBase is ProtocolActions {
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address           loanManager   // TODO: Move to top of params.
+        address           loanManager
     )
         internal returns (address loan)
     {
@@ -517,7 +514,6 @@ contract TestBase is ProtocolActions {
         shares = deposit(address(pool), lp, liquidity);
     }
 
-    // TODO: Move all of these to ProtocolActions. Not sure if they belong there because they are "complex" actions that involve many steps.
     function fundAndDrawdownLoan(
         address           borrower,
         uint256[3] memory termDetails,
@@ -527,7 +523,7 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);  // TODO: Remove create from this function.
+        loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);
 
         fundLoan(address(loan));
 

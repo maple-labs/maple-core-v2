@@ -33,9 +33,6 @@ import {
     Test
 } from "../contracts/Contracts.sol";
 
-// TODO: `deployPool`.
-// TODO: `createLoan`.
-
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Test {
 
@@ -68,7 +65,6 @@ contract ProtocolActions is Test {
     }
 
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
-        // TODO: Consider using minters for each token.
 
         if      (asset_ == MPL)  erc20_transfer(MPL,     MPL_SOURCE,     account_, amount_);
         else if (asset_ == WBTC) erc20_transfer(WBTC,    WBTC_SOURCE,    account_, amount_);

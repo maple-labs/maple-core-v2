@@ -858,7 +858,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 

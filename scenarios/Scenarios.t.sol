@@ -10,11 +10,7 @@ import { TestBase } from "../tests/TestBase.sol";
 // NOTE: All Converting basis points into basis points scaled by 100.
 // NOTE: All `XyzParameters` structs require properties in alphanumerical order to be correctly parsed.
 
-// TODO: Add color logging (eg. `console.log(StdStyle.red("Red Bold String"), StdStyle.blue("Blue Bold String"));`).
-
 contract Scenario is TestBase {
-
-    // TODO: Withdraw.
 
     struct CreatePoolParameters {
         string  asset;
@@ -138,12 +134,9 @@ contract Scenario is TestBase {
     function handleCreatePool(bytes memory rawParameters_) internal returns (bool failure_) {
         CreatePoolParameters memory parameters = abi.decode(rawParameters_, (CreatePoolParameters));
 
-        // TODO: For now, ignoring name, asset, capacity
-
         _createAndConfigurePool(block.timestamp, 1, 1);
         openPool(address(poolManager));
 
-        // TODO: This needs to be reworked once fees are refactored in `TestBase`.
         setupFees({
             platformOriginationFeeRate: parameters.platformOriginationFeeRate * 100,
             platformServiceFeeRate:     parameters.platformServiceFeeRate * 100,
@@ -427,8 +420,6 @@ contract Scenario is TestBase {
                     revert("UNSUPPORTED");
                 }
 
-                // TODO: `updateDelegateFeeTerms` takes 2 arguments.
-
                 refinancer_ = address(fixedTermRefinancer);
             }
         }
@@ -450,8 +441,6 @@ contract Scenario is TestBase {
 
     function handleDefaultLoan(bytes memory rawParameters_) internal returns (bool failure_) {
         DefaultLoanParameters memory parameters = abi.decode(rawParameters_, (DefaultLoanParameters));
-
-        // TODO: Check other parameters.
 
         triggerDefault(loanNamed[parameters.name], liquidatorFactory);
 
@@ -480,7 +469,6 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        // TODO: Reduce `3e4` to 3.
         if (stdMath.delta(fundsAsset.balanceOf(address(pool)), parameters.cash) > 3e4) {
             console.log(
                 "    Expected cash is",
@@ -496,7 +484,6 @@ contract Scenario is TestBase {
             ILoanManagerLike(poolManager.loanManagerList(0)).principalOut() +
             ILoanManagerLike(poolManager.loanManagerList(1)).principalOut();
 
-        // TODO: Reduce `3e4` to 3.
         if (stdMath.delta(principalOut, parameters.principalOutstanding) > 3e4) {
             console.log(
                 "    Expected principalOutstanding is",
@@ -508,7 +495,6 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        // TODO: Reduce `1e4` to 1.
         if (stdMath.delta(poolManager.totalAssets(), parameters.totalAssets) > 1e4) {
             console.log(
                 "    Expected totalAssets is",
@@ -520,13 +506,11 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        // TODO: Reduce `1e4` to 1.
         if (stdMath.delta(pool.totalSupply(), parameters.totalSupply) > 1e4) {
             console.log("    Expected totalSupply is", toString(parameters.totalSupply), "but actually is", toString(pool.totalSupply()));
             failure_ = true;
         }
 
-        // TODO: Reduce `1e4` to 1.
         if (stdMath.delta(poolManager.unrealizedLosses(), parameters.unrealizedLosses) > 1e4) {
             console.log(
                 "    Expected unrealizedLosses is",

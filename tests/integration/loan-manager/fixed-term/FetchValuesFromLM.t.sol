@@ -53,6 +53,4 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
         assertTrue(!loanManager.isLiquidationActive(loan));
     }
 
-    // TODO: Add test_isLiquidationActive_afterLiquidation
-
 }

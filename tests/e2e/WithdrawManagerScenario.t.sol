@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-// TODO: Add Pool Delegate cover for liquidation related test cases
-
 contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
     address borrower;
@@ -1670,7 +1668,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 

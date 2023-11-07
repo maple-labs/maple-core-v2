@@ -67,7 +67,6 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
         IFixedTermLoan(loan).makePayment(0);
     }
 
-    // TODO: Should this be called `test_claim_failIfNotLoan`?
     function test_makePayment_failIfNotLoan() external {
         IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
 
@@ -2404,8 +2403,6 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
     }
 
 }
-
-// TODO: Add closeLoan coverage
 
 contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 

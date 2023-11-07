@@ -93,7 +93,6 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         addLoanManager(mavenWethPoolManager,         openTermLoanManagerFactory);
     }
 
-    // TODO: Need to confirm delay length
     function _addDelayToOracles() internal {
         vm.startPrank(governor);
         IGlobals(globals).setPriceOracle(usdc, usdUsdOracle, 1 days);
