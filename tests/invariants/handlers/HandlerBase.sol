@@ -7,7 +7,7 @@ import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
 contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 
-    uint256 constant internal WEIGHTS_RANGE = 100;
+    uint256 constant internal WEIGHTS_RANGE = 10_000;
 
     uint256 public numCalls;
     uint256 public totalWeight;
@@ -26,7 +26,9 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 
     modifier useTimestamps {
         vm.warp(testContract.currentTimestamp());
+
         _;
+
         testContract.setCurrentTimestamp(block.timestamp);
     }
 
@@ -55,7 +57,7 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 
         uint256 range_;
 
-        uint256 value_ = uint256(keccak256(abi.encodePacked(seed_))) % WEIGHTS_RANGE + 1;  // 1 - 100
+        uint256 value_ = uint256(keccak256(abi.encodePacked(seed_))) % WEIGHTS_RANGE + 1;
 
         for (uint256 i = 0; i < selectors.length; i++) {
             uint256 weight_ = weights[selectors[i]];
@@ -68,6 +70,14 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
                 break;
             }
         }
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Utility Functions                                                                                                              ***/
+    /**************************************************************************************************************************************/
+
+    function _randomize(uint256 seed, string memory salt) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(seed, salt)));
     }
 
 }
