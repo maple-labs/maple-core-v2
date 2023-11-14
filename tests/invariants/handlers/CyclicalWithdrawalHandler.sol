@@ -12,7 +12,7 @@ import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol
 
 import { HandlerBase } from "./HandlerBase.sol";
 
-contract WithdrawalHandler is HandlerBase {
+contract CyclicalWithdrawalHandler is HandlerBase {
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -42,8 +42,8 @@ contract WithdrawalHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function redeem(uint256 seed_) external useTimestamps {
-        console.log("withdrawalHandler.redeem(%s)", seed_);
-        numberOfCalls["withdrawalHandler.redeem"]++;
+        console.log("cwm.redeem(%s)", seed_);
+        numberOfCalls["cwm.redeem"]++;
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
         uint256 exitCycleId_ = wm.exitCycleId(lp_);
@@ -62,8 +62,8 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function removeShares(uint256 seed_) external useTimestamps {
-        console.log("withdrawalHandler.removeShares(%s)", seed_);
-        numberOfCalls["withdrawalHandler.removeShares"]++;
+        console.log("cwm.removeShares(%s)", seed_);
+        numberOfCalls["cwm.removeShares"]++;
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
         uint256 exitCycleId_ = wm.exitCycleId(lp_);
@@ -77,13 +77,13 @@ contract WithdrawalHandler is HandlerBase {
         vm.warp(_bound(_randomize(seed_, "warp"), windowStart_, windowStart_ + 1 days));
 
         vm.startPrank(lp_);
-        pool.removeShares(wm.lockedShares(lp_), lp_);
+        pool.removeShares(wm.lockedShares(lp_), lp_);  // TODO: Fuzz owner and receiver
         vm.stopPrank();
     }
 
     function requestRedeem(uint256 seed_) external useTimestamps {
-        console.log("withdrawalHandler.requestRedeem(%s)", seed_);
-        numberOfCalls["withdrawalHandler.requestRedeem"]++;
+        console.log("cwm.requestRedeem(%s)", seed_);
+        numberOfCalls["cwm.requestRedeem"]++;
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 

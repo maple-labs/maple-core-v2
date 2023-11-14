@@ -36,7 +36,7 @@ contract TransferHandler is HandlerBase {
         console.log("transferHandler.transfer(%s)", seed_);
         numberOfCalls["transferHandler.transfer"]++;
 
-        address sender_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
+        address sender_ = lps[_bound(_randomize(seed_, "sender"), 0, lps.length - 1)];
 
         if (pool.balanceOf(sender_) == 0) return;
 

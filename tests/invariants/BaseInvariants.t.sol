@@ -14,16 +14,17 @@ import {
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { StdInvariant } from "../../contracts/Contracts.sol";
+import { console2 as console, StdInvariant } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { DepositHandler }       from "./handlers/DepositHandler.sol";
-import { FixedTermLoanHandler } from "./handlers/FixedTermLoanHandler.sol";
-import { GlobalsHandler }       from "./handlers/GlobalsHandler.sol";
-import { OpenTermLoanHandler }  from "./handlers/OpenTermLoanHandler.sol";
-import { TransferHandler }      from "./handlers/TransferHandler.sol";
-import { WithdrawalHandler }    from "./handlers/WithdrawalHandler.sol";
+import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
+import { DepositHandler }            from "./handlers/DepositHandler.sol";
+import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
+import { GlobalsHandler }            from "./handlers/GlobalsHandler.sol";
+import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
+import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
+import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
@@ -36,12 +37,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant PUBLIC              = 3;
     uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
 
-    DepositHandler       depositHandler;
-    FixedTermLoanHandler ftlHandler;
-    GlobalsHandler       globalsHandler;
-    OpenTermLoanHandler  otlHandler;
-    TransferHandler      transferHandler;
-    WithdrawalHandler    withdrawalHandler;
+    DepositHandler            depositHandler;
+    FixedTermLoanHandler      ftlHandler;
+    GlobalsHandler            globalsHandler;
+    OpenTermLoanHandler       otlHandler;
+    TransferHandler           transferHandler;
+    CyclicalWithdrawalHandler cyclicalWithdrawalHandler;
+    QueueWithdrawalHandler    queueWithdrawalHandler;
 
     uint256 setTimestamps;
 
@@ -154,7 +156,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant B: balanceOf(this) >= totalShares
         * Invariant C: lastRequestId == max(requestIds)
         * Invariant D: ∀ requestId(owner) != 0 -> request.shares > 0 && request.owner == owner
-        * Invariant E: nextRequestId <= lastRequestId
+        * Invariant E: nextRequestId <= lastRequestId + 1
         * Invariant F: nextRequestId != 0
         * Invariant G: requests(0) == (0, 0)
         * Invariant H: ∀ requestId[lender] ∈ [0, lastRequestId]
@@ -821,21 +823,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_C(address withdrawalManager_, address[] memory lenders_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( , uint128 lastRequestId ) = wm.queue();
-        uint128 maximumRequestId = 0;
-
-        for (uint i; i < lenders_.length; i++) {
-            uint128 requestId = wm.requestIds(lenders_[i]);
-
-            if (requestId > maximumRequestId) maximumRequestId = requestId;
-        }
-
-        assertEq(lastRequestId, maximumRequestId, "WMQ Invariant C");
-    }
-
-    function assert_wmq_invariant_D(address withdrawalManager_, address[] memory lenders_) internal {
-        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
-
         for (uint i; i < lenders_.length; i++) {
             uint128 requestId = wm.requestIds(lenders_[i]);
 
@@ -847,15 +834,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_wmq_invariant_E(address withdrawalManager_) internal {
+    function assert_wmq_invariant_D(address withdrawalManager_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
         ( uint128 nextRequestId, uint128 lastRequestId ) = wm.queue();
 
-        assertLe(nextRequestId, lastRequestId, "WMQ Invariant E");
+        assertLe(nextRequestId, lastRequestId + 1, "WMQ Invariant E");
     }
 
-    function assert_wmq_invariant_F(address withdrawalManager_) internal {
+    function assert_wmq_invariant_E(address withdrawalManager_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
         ( uint128 nextRequestId, ) = wm.queue();
@@ -863,7 +850,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertTrue(nextRequestId != 0, "WMQ Invariant F");
     }
 
-    function assert_wmq_invariant_G(address withdrawalManager_) internal {
+    function assert_wmq_invariant_F(address withdrawalManager_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
         ( address owner, uint256 shares ) = wm.requests(0);
@@ -872,7 +859,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertEq(shares, uint256(0), "WMQ Invariant G");
     }
 
-    function assert_wmq_invariant_H(address withdrawalManager_, address[] memory lenders_) internal {
+    function assert_wmq_invariant_G(address withdrawalManager_, address[] memory lenders_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
         ( , uint128 lastRequestId ) = wm.queue();
@@ -884,7 +871,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_wmq_invariant_I(address withdrawalManager_, address[] memory lenders_) internal {
+    function assert_wmq_invariant_H(address withdrawalManager_, address[] memory lenders_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
         for (uint i; i < lenders_.length; i++) {
@@ -905,7 +892,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_wmq_invariant_J(address withdrawalManager_) internal {
+    function assert_wmq_invariant_I(address withdrawalManager_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
         ( uint128 firstRequestId, uint128 lastRequestId ) = wm.queue();

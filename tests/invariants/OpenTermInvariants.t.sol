@@ -3,12 +3,12 @@ pragma solidity 0.8.7;
 
 import { IOpenTermLoan } from "../../contracts/interfaces/Interfaces.sol";
 
-import { DepositHandler }      from "./handlers/DepositHandler.sol";
-import { DistributionHandler } from "./handlers/DistributionHandler.sol";
-import { GlobalsHandler }      from "./handlers/GlobalsHandler.sol";
-import { OpenTermLoanHandler } from "./handlers/OpenTermLoanHandler.sol";
-import { TransferHandler }     from "./handlers/TransferHandler.sol";
-import { WithdrawalHandler }   from "./handlers/WithdrawalHandler.sol";
+import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
+import { DepositHandler }            from "./handlers/DepositHandler.sol";
+import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
+import { GlobalsHandler }            from "./handlers/GlobalsHandler.sol";
+import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
+import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -47,9 +47,9 @@ contract OpenTermInvariants is BaseInvariants {
         vm.prank(poolDelegate);
         poolManager.setDelegateManagementFeeRate(0.02e6);
 
-        depositHandler    = new DepositHandler(address(pool), lps);
-        transferHandler   = new TransferHandler(address(pool), lps);
-        withdrawalHandler = new WithdrawalHandler(address(pool), lps);
+        depositHandler            = new DepositHandler(address(pool), lps);
+        transferHandler           = new TransferHandler(address(pool), lps);
+        cyclicalWithdrawalHandler = new CyclicalWithdrawalHandler(address(pool), lps);
 
         otlHandler = new OpenTermLoanHandler({
             loanFactory_:       address(openTermLoanFactory),
@@ -65,11 +65,10 @@ contract OpenTermInvariants is BaseInvariants {
 
         transferHandler.setSelectorWeight("transfer(uint256)", 10_000);
 
-        withdrawalHandler.setSelectorWeight("redeem(uint256)",        3_300);
-        withdrawalHandler.setSelectorWeight("removeShares(uint256)",  3_300);
-        withdrawalHandler.setSelectorWeight("requestRedeem(uint256)", 3_400);
+        cyclicalWithdrawalHandler.setSelectorWeight("redeem(uint256)",        3_300);
+        cyclicalWithdrawalHandler.setSelectorWeight("removeShares(uint256)",  3_300);
+        cyclicalWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)", 3_400);
 
-        // TODO: Add new test suite for impairments as certain invariants like OTLM B and OTLM D are not valid for impaired loans
         otlHandler.setSelectorWeight("callLoan(uint256)",             500);
         otlHandler.setSelectorWeight("fundLoan(uint256)",             1_500);
         otlHandler.setSelectorWeight("impairLoan(uint256)",           0);
@@ -83,7 +82,7 @@ contract OpenTermInvariants is BaseInvariants {
         address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);
         targetContracts[1] = address(depositHandler);
-        targetContracts[2] = address(withdrawalHandler);
+        targetContracts[2] = address(cyclicalWithdrawalHandler);
         targetContracts[3] = address(otlHandler);
 
         uint256[] memory weightsDistributorHandler = new uint256[](4);

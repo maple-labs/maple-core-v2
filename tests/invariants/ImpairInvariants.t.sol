@@ -3,11 +3,11 @@ pragma solidity 0.8.7;
 
 import { IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { DepositHandler }       from "./handlers/DepositHandler.sol";
-import { DistributionHandler }  from "./handlers/DistributionHandler.sol";
-import { FixedTermLoanHandler } from "./handlers/FixedTermLoanHandler.sol";
-import { TransferHandler }      from "./handlers/TransferHandler.sol";
-import { WithdrawalHandler }    from "./handlers/WithdrawalHandler.sol";
+import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
+import { DepositHandler }            from "./handlers/DepositHandler.sol";
+import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
+import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
+import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -36,9 +36,9 @@ contract ImpairInvariants is BaseInvariants {
             allowLender(address(poolManager), lp);
         }
 
-        depositHandler    = new DepositHandler(address(pool), lps);
-        transferHandler   = new TransferHandler(address(pool), lps);
-        withdrawalHandler = new WithdrawalHandler(address(pool), lps);
+        depositHandler            = new DepositHandler(address(pool), lps);
+        transferHandler           = new TransferHandler(address(pool), lps);
+        cyclicalWithdrawalHandler = new CyclicalWithdrawalHandler(address(pool), lps);
 
         ftlHandler = new FixedTermLoanHandler({
             collateralAsset_:   address(collateralAsset),
@@ -57,9 +57,9 @@ contract ImpairInvariants is BaseInvariants {
 
         transferHandler.setSelectorWeight("transfer(uint256)", 10_000);
 
-        withdrawalHandler.setSelectorWeight("redeem(uint256)",        3_300);
-        withdrawalHandler.setSelectorWeight("removeShares(uint256)",  3_300);
-        withdrawalHandler.setSelectorWeight("requestRedeem(uint256)", 3_400);
+        cyclicalWithdrawalHandler.setSelectorWeight("redeem(uint256)",        3_300);
+        cyclicalWithdrawalHandler.setSelectorWeight("removeShares(uint256)",  3_300);
+        cyclicalWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)", 3_400);
 
         ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           3_000);
         ftlHandler.setSelectorWeight("makePayment(uint256)",                 0);
@@ -74,7 +74,7 @@ contract ImpairInvariants is BaseInvariants {
         address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);
         targetContracts[1] = address(depositHandler);
-        targetContracts[2] = address(withdrawalHandler);
+        targetContracts[2] = address(cyclicalWithdrawalHandler);
         targetContracts[3] = address(ftlHandler);
 
         uint256[] memory weightsDistributorHandler = new uint256[](4);
