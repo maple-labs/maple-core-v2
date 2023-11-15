@@ -29,6 +29,10 @@ contract BasicInvariants is BaseInvariants {
 
         currentTimestamp = block.timestamp;
 
+        for (uint i; i < NUM_LPS; i++) {
+            lps.push(makeAddr(string(abi.encode("lp", i))));
+        }
+
         setupFees({
             delegateOriginationFee:     500e6,
             delegateServiceFee:         300e6,
@@ -37,13 +41,6 @@ contract BasicInvariants is BaseInvariants {
             platformServiceFeeRate:     0.005e6,  // 10k after 1m seconds
             platformManagementFeeRate:  0.08e6
         });
-
-        for (uint i; i < NUM_LPS; i++) {
-            address lp = makeAddr(string(abi.encode("lp", i)));
-
-            lps.push(lp);
-            allowLender(address(poolManager), lp);
-        }
 
         depositHandler            = new DepositHandler(address(pool), lps);
         transferHandler           = new TransferHandler(address(pool), lps);

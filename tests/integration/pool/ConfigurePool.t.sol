@@ -8,8 +8,6 @@ contract ConfigurePoolTests is TestBase {
     uint256 constant FUNCTION_LEVEL = 1;
     uint256 constant PUBLIC         = 3;
 
-    bytes32[] functionIds;
-
     uint256[] bitmaps;
 
     function setUp() public override {

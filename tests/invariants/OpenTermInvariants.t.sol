@@ -33,10 +33,7 @@ contract OpenTermInvariants is BaseInvariants {
         currentTimestamp = block.timestamp;
 
         for (uint i; i < NUM_LPS; i++) {
-            address lp = makeAddr(string(abi.encode("lp", i)));
-
-            lps.push(lp);
-            allowLender(address(poolManager), lp);
+            lps.push(makeAddr(string(abi.encode("lp", i))));
         }
 
         vm.startPrank(governor);

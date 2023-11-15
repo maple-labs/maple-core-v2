@@ -95,6 +95,9 @@ contract TestBase is ProtocolActions {
     uint256 start;
 
     address[] loanManagerFactories;
+    address[] poolManagers;
+
+    bytes32[] functionIds;
 
     FeeManager                fixedTermFeeManager;
     FixedTermRefinancer       fixedTermRefinancer;
@@ -288,6 +291,7 @@ contract TestBase is ProtocolActions {
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0, startTime]
         }));
+        poolManagers.push(address(poolManager));
 
         cyclicalWM = WithdrawalManagerCyclical(poolManager.withdrawalManager());
         pool       = Pool(poolManager.pool());
@@ -310,6 +314,7 @@ contract TestBase is ProtocolActions {
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 0]
         }));
+        poolManagers.push(address(poolManager));
 
         queueWM    = WithdrawalManagerQueue(poolManager.withdrawalManager());
         pool       = Pool(poolManager.pool());
@@ -332,6 +337,7 @@ contract TestBase is ProtocolActions {
             symbol_:                   "MP",
             configParams_:             [type(uint256).max, 0, 0, 0]
         }));
+        poolManagers.push(address(poolManager));
 
         queueWM    = WithdrawalManagerQueue(poolManager.withdrawalManager());
         pool       = Pool(poolManager.pool());

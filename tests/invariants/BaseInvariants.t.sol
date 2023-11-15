@@ -23,6 +23,7 @@ import { DepositHandler }            from "./handlers/DepositHandler.sol";
 import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
 import { GlobalsHandler }            from "./handlers/GlobalsHandler.sol";
 import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
+import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
 import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
@@ -37,13 +38,14 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant PUBLIC              = 3;
     uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
 
+    CyclicalWithdrawalHandler cyclicalWithdrawalHandler;
     DepositHandler            depositHandler;
     FixedTermLoanHandler      ftlHandler;
     GlobalsHandler            globalsHandler;
     OpenTermLoanHandler       otlHandler;
-    TransferHandler           transferHandler;
-    CyclicalWithdrawalHandler cyclicalWithdrawalHandler;
+    PermissionHandler         permissionHandler;
     QueueWithdrawalHandler    queueWithdrawalHandler;
+    TransferHandler           transferHandler;
 
     uint256 setTimestamps;
 
@@ -760,6 +762,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
 
         for (uint i; i < functionIds_.length; ++i) {
+
             assertLe(ppm.poolBitmaps(poolManager_, functionIds_[i]), MAXIMUM_BITMAP, "PPM Invariant B");
         }
     }
@@ -772,7 +775,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    // NOTE: Pass in PoolManagers that have already been set public only.
+    // TODO: Currently unused.
     function assert_ppm_invariant_D(address poolPermissionManager_, address[] memory poolManagers_) internal {
         IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
 
