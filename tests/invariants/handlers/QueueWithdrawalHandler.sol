@@ -53,15 +53,16 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         if (sharesToProcess_ == 0) return;
 
-        address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
+        // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
+        address depositLp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
         uint256 assetsRequired_ = pool.previewMint(sharesToProcess_);
 
-        vm.startPrank(lp_);
-        asset.mint(lp_, assetsRequired_);
+        vm.startPrank(depositLp_);
+        asset.mint(depositLp_, assetsRequired_);
         asset.approve(address(pool), assetsRequired_);
 
-        pool.deposit(assetsRequired_, lp_);
+        pool.deposit(assetsRequired_, depositLp_);
         vm.stopPrank();
 
         vm.prank(pm.poolDelegate());
@@ -79,6 +80,18 @@ contract QueueWithdrawalHandler is HandlerBase {
         if (sharesAvailable_ == 0) return;
 
         uint256 sharesToRedeem_ = _bound(_randomize(seed_, "shares"), 1, sharesAvailable_);
+
+        // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
+        address depositLp_ = lps[_bound(_randomize(seed_, "depositLp"), 0, lps.length - 1)];
+
+        uint256 assetsRequired_ = pool.previewMint(sharesToRedeem_);
+
+        vm.startPrank(depositLp_);
+        asset.mint(depositLp_, assetsRequired_);
+        asset.approve(address(pool), assetsRequired_);
+
+        pool.deposit(assetsRequired_, depositLp_);
+        vm.stopPrank();
 
         vm.prank(lp_);
         pool.redeem(sharesToRedeem_, lp_, lp_);

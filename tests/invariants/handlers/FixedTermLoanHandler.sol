@@ -565,8 +565,6 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256 warpAmount_ = _bound(seed_, 0, 10 days);
 
-        console.log("warp():", warpAmount_);
-
         vm.warp(block.timestamp + warpAmount_);
     }
 
