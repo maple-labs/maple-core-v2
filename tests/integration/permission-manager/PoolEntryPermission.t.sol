@@ -118,17 +118,13 @@ contract FunctionLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_functionLevel_deposit() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:deposit", createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.deposit(assets, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.deposit(assets, lp);
-
-        setPoolBitmap(address(poolManager), "P:deposit", createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -141,17 +137,13 @@ contract FunctionLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_functionLevel_depositWithPermit() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:depositWithPermit", createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.depositWithPermit(assets, lp, deadline, v, r, s);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.depositWithPermit(assets, lp, deadline, v, r, s);
-
-        setPoolBitmap(address(poolManager), "P:depositWithPermit", createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -164,17 +156,13 @@ contract FunctionLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_functionLevel_mint() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:mint", createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.mint(shares, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.mint(shares, lp);
-
-        setPoolBitmap(address(poolManager), "P:mint", createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -187,17 +175,13 @@ contract FunctionLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_functionLevel_mintWithPermit() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:mintWithPermit", createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.mintWithPermit(shares, lp, assets, deadline, v, r, s);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.mintWithPermit(shares, lp, assets, deadline, v, r, s);
-
-        setPoolBitmap(address(poolManager), "P:mintWithPermit", createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -220,17 +204,13 @@ contract PoolLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_poolLevel_deposit() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.deposit(assets, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.deposit(assets, lp);
-
-        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -243,17 +223,13 @@ contract PoolLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_poolLevel_depositWithPermit() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.depositWithPermit(assets, lp, deadline, v, r, s);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.depositWithPermit(assets, lp, deadline, v, r, s);
-
-        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -266,17 +242,13 @@ contract PoolLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_poolLevel_mint() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.mint(shares, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.mint(shares, lp);
-
-        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -289,17 +261,13 @@ contract PoolLevelPermissionTests is PoolEntryPermissionTestBase {
     }
 
     function test_poolEntry_poolLevel_mintWithPermit() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.mintWithPermit(shares, lp, assets, deadline, v, r, s);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
-
-        vm.prank(lp);
-        vm.expectRevert("PM:CC:NOT_ALLOWED");
-        pool.mintWithPermit(shares, lp, assets, deadline, v, r, s);
-
-        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
         vm.prank(lp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");

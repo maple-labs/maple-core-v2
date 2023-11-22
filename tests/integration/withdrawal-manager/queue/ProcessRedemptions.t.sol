@@ -8,7 +8,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
     address lp1 = makeAddr("lp1");
     address lp2 = makeAddr("lp2");
     address lp3 = makeAddr("lp3");
-    address lp4 = makeAddr("lp4");     
+    address lp4 = makeAddr("lp4");
 
     address wm;  // Helper to avoid casting
 
@@ -37,12 +37,6 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         vm.expectRevert("WM:PR:ZERO_SHARES");
         queueWM.processRedemptions(0);
-    }
-
-    function test_processRedemptions_lowShares() external {
-        vm.prank(poolDelegate);
-        vm.expectRevert("WM:PR:LOW_SHARES");
-        queueWM.processRedemptions(1);
     }
 
     function test_processRedemptions_lowLiquidity() external {
@@ -79,7 +73,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         requestRedeem(lp4, 4_000e6);
 
         // Transfer funds into the pool so exchange rate is different than 1
-        // 10_000e6 shares for 11_000e6 assets -> Exchange = 11_000e6 / 10_000e6 = 1.1 
+        // 10_000e6 shares for 11_000e6 assets -> Exchange = 11_000e6 / 10_000e6 = 1.1
         fundsAsset.mint(address(pool), 1_000e6);
 
         // Pre-assertions
@@ -138,7 +132,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         requestRedeem(lp3, 3_000e6);
         requestRedeem(lp4, 4_000e6);
 
-        // Exchange rate = 10_000e6 shares for 11_000e6 assets = 11_000e6 / 10_000e6 = 1.1 
+        // Exchange rate = 10_000e6 shares for 11_000e6 assets = 11_000e6 / 10_000e6 = 1.1
         fundsAsset.mint(address(pool), 1_000e6);
 
         // Pre-assertions
@@ -181,7 +175,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(wm),    8_000e6);
         assertEq(queueWM.totalShares(), 8_000e6);
 
-        assertEq(fundsAsset.balanceOf(lp1),           1_100e6);  // 1_000e6 * 1.1 
+        assertEq(fundsAsset.balanceOf(lp1),           1_100e6);  // 1_000e6 * 1.1
         assertEq(fundsAsset.balanceOf(lp2),           1_100e6);  // 1_000e6 * 1.1
         assertEq(fundsAsset.balanceOf(lp3),           0);
         assertEq(fundsAsset.balanceOf(lp4),           0);
@@ -238,8 +232,8 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(queueWM.totalShares(), 0);
 
         assertEq(fundsAsset.balanceOf(lp1),           1_100e6);
-        assertEq(fundsAsset.balanceOf(lp2),           2_310e6); 
-        assertEq(fundsAsset.balanceOf(lp3),           3_630e6); 
+        assertEq(fundsAsset.balanceOf(lp2),           2_310e6);
+        assertEq(fundsAsset.balanceOf(lp3),           3_630e6);
         assertEq(fundsAsset.balanceOf(lp4),           5_720e6);  // 2_420e6 + (2_000e6 * 1.65)
         assertEq(fundsAsset.balanceOf(wm),            0);
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
@@ -304,16 +298,16 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp3),           2_700e6);  // shares * 0.9
         assertEq(fundsAsset.balanceOf(lp4),           3_600e6);  // shares * 0.9
         assertEq(fundsAsset.balanceOf(wm),            0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 1_800e6); 
+        assertEq(fundsAsset.balanceOf(address(pool)), 1_800e6);
 
         assertEq(queueWM.manualSharesAvailable(lp2), 2_000e6);
 
         // Change the exchange rate after requests have been processed
         // Exchange rate = 2_000e6 shares for 1_800e6 + 1_000e6 assets = 2_800e6 / 2_000e6 = 1.4
-        fundsAsset.mint(address(pool), 1_000e6); 
+        fundsAsset.mint(address(pool), 1_000e6);
 
         redeem(lp2, 2_000e6);
-        
+
         assertEq(queueWM.manualSharesAvailable(lp2),  0);
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
         assertEq(fundsAsset.balanceOf(lp2),           2_800e6);  // 2_000e6 * 1.4
@@ -352,7 +346,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         requestRedeem(lp3, 3_000e6);
         requestRedeem(lp4, 4_000e6);
 
-        // 10_000e6 shares for 11_000e6 assets -> Exchange = 11_000e6 / 10_000e6 = 1.1 
+        // 10_000e6 shares for 11_000e6 assets -> Exchange = 11_000e6 / 10_000e6 = 1.1
         fundsAsset.mint(address(pool), 1_000e6);
 
         // Pre-assertions
@@ -405,8 +399,8 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(queueWM.totalShares(), 2_000e6);
 
         assertEq(fundsAsset.balanceOf(lp1),           1_100e6);  // assets = shares * 1.1 (exchange rate) = 1_000e6 * 1.1
-        assertEq(fundsAsset.balanceOf(lp2),           0);        
-        assertEq(fundsAsset.balanceOf(lp3),           0);        
+        assertEq(fundsAsset.balanceOf(lp2),           0);
+        assertEq(fundsAsset.balanceOf(lp3),           0);
         assertEq(fundsAsset.balanceOf(lp4),           4_400e6);  // assets = shares * 1.1 (exchange rate) = 4_000e6 * 1.1
         assertEq(fundsAsset.balanceOf(wm),            0);
         assertEq(fundsAsset.balanceOf(address(pool)), 5_500e6);

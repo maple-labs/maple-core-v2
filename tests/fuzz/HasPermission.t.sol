@@ -46,7 +46,7 @@ contract HasPermissionFuzzTests is TestBase {
         if (permissionLevel == PUBLIC || isAllowlisted) return true;
         if (permissionLevel == PRIVATE) return false;
 
-        return (poolBitmap != 0) && (poolBitmap & lenderBitmap == poolBitmap);
+        return poolBitmap & lenderBitmap == poolBitmap;
     }
 
     function setupApproval(address owner, address caller, uint256 amount) internal {
