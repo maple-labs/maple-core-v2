@@ -123,6 +123,35 @@ contract FunctionLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transfer(to, shares);
     }
 
+    function test_poolTransfer_functionLevel_transfer_zeroPoolBitmap_zeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:transfer", createBitmap([2]));
+
+        vm.prank(from);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transfer(to, shares);
+
+        setPoolBitmap(address(poolManager), "P:transfer", 0);
+
+        vm.prank(from);
+        pool.transfer(to, shares);
+    }
+
+    function test_poolTransfer_functionLevel_transfer_zeroPoolBitmap_nonZeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:transfer", createBitmap([2]));
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+
+        vm.prank(from);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transfer(to, shares);
+
+        setPoolBitmap(address(poolManager), "P:transfer", 0);
+
+        vm.prank(from);
+        pool.transfer(to, shares);
+    }
+
     function test_poolTransfer_functionLevel_transferFrom() external withAssertions {
         setPoolBitmap(address(poolManager), "P:transferFrom", createBitmap([2]));
 
@@ -144,6 +173,35 @@ contract FunctionLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transferFrom(from, to, shares);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([2, 3]));
+
+        vm.prank(caller);
+        pool.transferFrom(from, to, shares);
+    }
+
+    function test_poolTransfer_functionLevel_transferFrom_zeroPoolBitmap_zeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:transferFrom", createBitmap([2]));
+
+        vm.prank(caller);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transferFrom(from, to, shares);
+
+        setPoolBitmap(address(poolManager), "P:transferFrom", 0);
+
+        vm.prank(caller);
+        pool.transferFrom(from, to, shares);
+    }
+
+    function test_poolTransfer_functionLevel_transferFrom_zeroPoolBitmap_nonZeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), "P:transferFrom", createBitmap([2]));
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+
+        vm.prank(caller);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transferFrom(from, to, shares);
+
+        setPoolBitmap(address(poolManager), "P:transferFrom", 0);
 
         vm.prank(caller);
         pool.transferFrom(from, to, shares);
@@ -185,6 +243,35 @@ contract PoolLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transfer(to, shares);
     }
 
+    function test_poolTransfer_poolLevel_transfer_zeroPoolBitmap_zeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.prank(from);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transfer(to, shares);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(from);
+        pool.transfer(to, shares);
+    }
+
+    function test_poolTransfer_poolLevel_transfer_zeroPoolBitmap_nonZeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+
+        vm.prank(from);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transfer(to, shares);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(from);
+        pool.transfer(to, shares);
+    }
+
     function test_poolTransfer_poolLevel_transferFrom() external withAssertions {
         setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
@@ -206,6 +293,35 @@ contract PoolLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transferFrom(from, to, shares);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([2, 3]));
+
+        vm.prank(caller);
+        pool.transferFrom(from, to, shares);
+    }
+
+    function test_poolTransfer_poolLevel_transferFrom_zeroPoolBitmap_zeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.prank(caller);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transferFrom(from, to, shares);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(caller);
+        pool.transferFrom(from, to, shares);
+    }
+
+    function test_poolTransfer_poolLevel_transferFrom_zeroPoolBitmap_nonZeroLenderBitmaps() external withAssertions {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+
+        vm.prank(caller);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.transferFrom(from, to, shares);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
 
         vm.prank(caller);
         pool.transferFrom(from, to, shares);

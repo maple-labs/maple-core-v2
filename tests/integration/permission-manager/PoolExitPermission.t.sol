@@ -173,6 +173,35 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         pool.requestWithdraw(assets, lp);
     }
 
+    function test_poolExit_functionLevel_requestWithdraw_zeroPoolBitmap_zeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), "P:requestWithdraw", createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestWithdraw(assets, lp);
+
+        setPoolBitmap(address(poolManager), "P:requestWithdraw", 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:RW:NOT_ENABLED");
+        pool.requestWithdraw(assets, lp);
+    }
+
+    function test_poolExit_functionLevel_requestWithdraw_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), "P:requestWithdraw", createBitmap([2]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestWithdraw(assets, lp);
+
+        setPoolBitmap(address(poolManager), "P:requestWithdraw", 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:RW:NOT_ENABLED");
+        pool.requestWithdraw(assets, lp);
+    }
+
     function test_poolExit_functionLevel_withdraw() external {
         setPoolBitmap(address(poolManager), "P:withdraw", createBitmap([2]));
 
@@ -193,6 +222,35 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         pool.withdraw(assets, lp, lp);
     }
 
+    function test_poolExit_functionLevel_withdraw_zeroPoolBitmap_zeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), "P:withdraw", createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.withdraw(assets, lp, lp);
+
+        setPoolBitmap(address(poolManager), "P:withdraw", 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:PW:NOT_ENABLED");
+        pool.withdraw(assets, lp, lp);
+    }
+
+    function test_poolExit_functionLevel_withdraw_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), "P:withdraw", createBitmap([2]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.withdraw(assets, lp, lp);
+
+        setPoolBitmap(address(poolManager), "P:withdraw", 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:PW:NOT_ENABLED");
+        pool.withdraw(assets, lp, lp);
+    }
+
     function test_poolExit_functionLevel_requestRedeem() external {
         setPoolBitmap(address(poolManager), "P:requestRedeem", createBitmap([2]));
 
@@ -207,6 +265,45 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         pool.requestRedeem(shares, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
+
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+    }
+
+    function test_poolExit_functionLevel_requestRedeem_zeroPoolBitmap_zeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), "P:requestRedeem", createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestRedeem(shares, lp);
+
+        setPoolBitmap(address(poolManager), "P:requestRedeem", 0);
+
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+    }
+
+    function test_poolExit_functionLevel_requestRedeem_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), "P:requestRedeem", createBitmap([2]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestRedeem(shares, lp);
+
+        setPoolBitmap(address(poolManager), "P:requestRedeem", 0);
 
         assertEq(pool.balanceOf(lp),                  shares);
         assertEq(pool.balanceOf(address(cyclicalWM)), 0);
@@ -241,6 +338,65 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         pool.removeShares(shares, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        vm.prank(lp);
+        pool.removeShares(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+    }
+
+    function test_poolExit_functionLevel_removeShares_zeroPoolBitmap_zeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+
+        setPoolBitmap(address(poolManager), "P:removeShares", createBitmap([2]));
+        setPoolBitmap(address(poolManager), "P:transfer",     createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.removeShares(shares, lp);
+
+        setPoolBitmap(address(poolManager), "P:removeShares", 0);
+        setPoolBitmap(address(poolManager), "P:transfer",     0);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        vm.prank(lp);
+        pool.removeShares(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+    }
+
+    function test_poolExit_functionLevel_removeShares_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        setPoolBitmap(address(poolManager), "P:removeShares", createBitmap([2]));
+        setPoolBitmap(address(poolManager), "P:transfer",     createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.removeShares(shares, lp);
+
+        setPoolBitmap(address(poolManager), "P:removeShares", 0);
+        setPoolBitmap(address(poolManager), "P:transfer",     0);
 
         assertEq(pool.balanceOf(lp),                  0);
         assertEq(pool.balanceOf(address(cyclicalWM)), shares);
@@ -296,6 +452,85 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
         assertEq(poolManager.totalAssets(), 0);
     }
 
+    function test_poolExit_functionLevel_redeem_zeroPoolBitmap_zeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+
+        setPoolBitmap(address(poolManager), "P:redeem",   createBitmap([2]));
+        setPoolBitmap(address(poolManager), "P:transfer", createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.redeem(shares, lp, lp);
+
+        setPoolBitmap(address(poolManager), "P:redeem",   0);
+        setPoolBitmap(address(poolManager), "P:transfer", 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), assets);
+        assertEq(fundsAsset.balanceOf(lp),            0);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        assertEq(poolManager.totalAssets(), assets);
+
+        vm.prank(lp);
+        pool.redeem(shares, lp, lp);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+        assertEq(fundsAsset.balanceOf(lp),            assets);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        assertEq(poolManager.totalAssets(), 0);
+    }
+
+    function test_poolExit_functionLevel_redeem_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        setPoolBitmap(address(poolManager), "P:redeem",   createBitmap([2]));
+        setPoolBitmap(address(poolManager), "P:transfer", createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.redeem(shares, lp, lp);
+
+        setPoolBitmap(address(poolManager), "P:redeem",   0);
+        setPoolBitmap(address(poolManager), "P:transfer", 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), assets);
+        assertEq(fundsAsset.balanceOf(lp),            0);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        assertEq(poolManager.totalAssets(), assets);
+
+        vm.prank(lp);
+        pool.redeem(shares, lp, lp);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+        assertEq(fundsAsset.balanceOf(lp),            assets);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        assertEq(poolManager.totalAssets(), 0);
+    }
+
 }
 
 contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
@@ -326,6 +561,35 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         pool.requestWithdraw(assets, lp);
     }
 
+    function test_poolExit_poolLevel_requestWithdraw_zeroPoolBitmap_zeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestWithdraw(assets, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:RW:NOT_ENABLED");
+        pool.requestWithdraw(assets, lp);
+    }
+
+    function test_poolExit_poolLevel_requestWithdraw_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestWithdraw(assets, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:RW:NOT_ENABLED");
+        pool.requestWithdraw(assets, lp);
+    }
+
     function test_poolExit_poolLevel_withdraw() external {
         setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
@@ -346,6 +610,35 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         pool.withdraw(assets, lp, lp);
     }
 
+    function test_poolExit_poolLevel_withdraw_zeroPoolBitmap_zeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.withdraw(assets, lp, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:PW:NOT_ENABLED");
+        pool.withdraw(assets, lp, lp);
+    }
+
+    function test_poolExit_poolLevel_withdraw_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.withdraw(assets, lp, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        vm.prank(lp);
+        vm.expectRevert("PM:PW:NOT_ENABLED");
+        pool.withdraw(assets, lp, lp);
+    }
+
     function test_poolExit_poolLevel_requestRedeem() external {
         setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
@@ -360,6 +653,45 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         pool.requestRedeem(shares, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
+
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+    }
+
+    function test_poolExit_poolLevel_requestRedeem_zeroPoolBitmap_zeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestRedeem(shares, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        assertEq(pool.balanceOf(lp),                  shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+    }
+
+    function test_poolExit_poolLevel_requestRedeem_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.requestRedeem(shares, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
 
         assertEq(pool.balanceOf(lp),                  shares);
         assertEq(pool.balanceOf(address(cyclicalWM)), 0);
@@ -403,6 +735,59 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         assertEq(pool.balanceOf(address(cyclicalWM)), 0);
     }
 
+    function test_poolExit_poolLevel_removeShares_zeroPoolBitmap_zeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.removeShares(shares, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        assertEq(pool.balanceOf(lp),                 0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        vm.prank(lp);
+        pool.removeShares(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                 shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+    }
+
+    function test_poolExit_poolLevel_removeShares_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.removeShares(shares, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        assertEq(pool.balanceOf(lp),                 0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        vm.prank(lp);
+        pool.removeShares(shares, lp);
+
+        assertEq(pool.balanceOf(lp),                 shares);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+    }
+
     function test_poolExit_poolLevel_redeem() external {
         setLenderAllowlist(address(poolManager), lp, true);
 
@@ -424,6 +809,79 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
         pool.redeem(shares, lp, lp);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
+
+        assertEq(fundsAsset.balanceOf(address(pool)), assets);
+        assertEq(fundsAsset.balanceOf(lp),            0);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        assertEq(poolManager.totalAssets(), assets);
+
+        vm.prank(lp);
+        pool.redeem(shares, lp, lp);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+        assertEq(fundsAsset.balanceOf(lp),            assets);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        assertEq(poolManager.totalAssets(), 0);
+    }
+
+    function test_poolExit_poolLevel_redeem_zeroPoolBitmap_zeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.redeem(shares, lp, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), assets);
+        assertEq(fundsAsset.balanceOf(lp),            0);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), shares);
+
+        assertEq(poolManager.totalAssets(), assets);
+
+        vm.prank(lp);
+        pool.redeem(shares, lp, lp);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);
+        assertEq(fundsAsset.balanceOf(lp),            assets);
+
+        assertEq(pool.balanceOf(lp),                  0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+
+        assertEq(poolManager.totalAssets(), 0);
+    }
+
+    function test_poolExit_poolLevel_redeem_zeroPoolBitmap_nonZeroLenderBitmap() external {
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        pool.requestRedeem(shares, lp);
+
+        setLenderAllowlist(address(poolManager), lp, false);
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+        setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
+
+        vm.warp(start + 2 weeks);
+        vm.prank(lp);
+        vm.expectRevert("PM:CC:NOT_ALLOWED");
+        pool.redeem(shares, lp, lp);
+
+        setPoolBitmap(address(poolManager), bytes32(0), 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)), assets);
         assertEq(fundsAsset.balanceOf(lp),            0);
