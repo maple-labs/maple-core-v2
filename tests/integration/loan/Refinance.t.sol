@@ -1556,7 +1556,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         // Make commitment
         proposeRefinance(address(loan), address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        // // Mint fees to cover origination fee
+        // Mint fees to cover origination fee
         returnFunds(address(loan), 1_000e6);
 
         vm.prank(poolDelegate);

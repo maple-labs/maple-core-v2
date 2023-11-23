@@ -242,6 +242,8 @@ interface IProxyFactoryLike {
 
     function migratorForPath(uint256 oldVersion_, uint256 newVersion_) external view returns (address migrator_);
 
+    function mapleGlobals() external view returns (address globals_);
+
     function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
 
     function setDefaultVersion(uint256 version_) external;

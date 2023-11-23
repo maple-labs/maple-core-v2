@@ -39,66 +39,69 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
     PoolPermissionManager poolPermissionManager;
 
-    function setUp() public virtual {
-        // Block fixed based on subgraph query results for UpgradeAddressRegistry.
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
+    /**************************************************************************************************************************************/
+    /*** Upgrade Procedure                                                                                                              ***/
+    /**************************************************************************************************************************************/
+
+    function _performProtocolUpgrade() internal {
+        address governor = protocol.governor;
+        address globals  = protocol.globals;
+
+        _deployAllNewContracts(governor, globals, protocol.fixedTermLoanFactory);
+
+        upgradeGlobals(globals, globalsImplementationV3);
+
+        _enableGlobalsSetInstance(governor, globals, fixedTermLoanFactoryV2,            true, "LOAN_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, fixedTermLoanFactoryV2,            true, "FT_LOAN_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, address(poolPermissionManager),    true, "POOL_PERMISSION_MANAGER");
+        _enableGlobalsSetInstance(governor, globals, protocol.withdrawalManagerFactory, true, "WITHDRAWAL_MANAGER_CYCLE_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, queueWMFactory,                    true, "WITHDRAWAL_MANAGER_QUEUE_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, queueWMFactory,                    true, "WITHDRAWAL_MANAGER_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, poolDeployerV3,                    true, "POOL_DEPLOYER");
+
+        _enableGlobalsSetCanDeploy(governor, globals, protocol.poolManagerFactory,       poolDeployerV3, true);
+        _enableGlobalsSetCanDeploy(governor, globals, protocol.withdrawalManagerFactory, poolDeployerV3, true);
+        _enableGlobalsSetCanDeploy(governor, globals, queueWMFactory,                    poolDeployerV3, true);
+
+        if (protocol.assets.length > 0) {
+            for (uint i = 0; i < protocol.assets.length; i++) {
+                _addDelayToOracles(governor, globals, protocol.assets[i].asset, protocol.assets[i].oracle, 1 days);
+            }
+        }
+
+        _setupFactories(
+            governor,
+            protocol.poolManagerFactory,
+            protocol.fixedTermLoanFactory,
+            protocol.withdrawalManagerFactory,
+            queueWMFactory
+        );
+
+        for (uint i = 0; i < pools.length; i++) {
+            Pool storage p = pools[i];
+
+            _upgradePoolContractsAsSecurityAdmin(poolPermissionManager, p.poolManager, 300);
+
+            if (p.ftLoans.length > 0) _upgradeFixedTermLoansAsSecurityAdmin(p.ftLoans, 502, abi.encode(fixedTermLoanFactoryV2));
+
+            _addWMAndPMToAllowlists(p.poolManager, p.withdrawalManager);
+            _addWMAndPMToAllowlists(p.poolManager, p.poolManager);
+
+            _allowLenders(p.poolManager, p.lps);
+        }
     }
 
     /**************************************************************************************************************************************/
     /*** Deployment Helper Functions                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function _addWMAndPMToAllowlists() internal {
-        allowLender(aqruPoolManager, aqruWithdrawalManager);
-        allowLender(aqruPoolManager, aqruPoolManager);
-
-        allowLender(cashManagementUSDCPoolManager, cashManagementUSDCWithdrawalManager);
-        allowLender(cashManagementUSDCPoolManager, cashManagementUSDCPoolManager);
-
-        allowLender(cashManagementUSDTPoolManager, cashManagementUSDTWithdrawalManager);
-        allowLender(cashManagementUSDTPoolManager, cashManagementUSDTPoolManager);
-
-        allowLender(cicadaPoolManager, cicadaWithdrawalManager);
-        allowLender(cicadaPoolManager, cicadaPoolManager);
-
-        allowLender(icebreakerPoolManager, icebreakerWithdrawalManager);
-        allowLender(icebreakerPoolManager, icebreakerPoolManager);
-
-        allowLender(laserPoolManager, laserWithdrawalManager);
-        allowLender(laserPoolManager, laserPoolManager);
-
-        allowLender(mapleDirectUSDCPoolManager, mapleDirectUSDCWithdrawalManager);
-        allowLender(mapleDirectUSDCPoolManager, mapleDirectUSDCPoolManager);
-
-        allowLender(mavenPermissionedPoolManager, mavenPermissionedWithdrawalManager);
-        allowLender(mavenPermissionedPoolManager, mavenPermissionedPoolManager);
-
-        allowLender(mavenUsdc3PoolManager, mavenUsdc3WithdrawalManager);
-        allowLender(mavenUsdc3PoolManager, mavenUsdc3PoolManager);
-
-        allowLender(mavenUsdcPoolManager, mavenUsdcWithdrawalManager);
-        allowLender(mavenUsdcPoolManager, mavenUsdcPoolManager);
-
-        allowLender(mavenWethPoolManager, mavenWethWithdrawalManager);
-        allowLender(mavenWethPoolManager, mavenWethPoolManager);
-
-        allowLender(orthogonalPoolManager, orthogonalWithdrawalManager);
-        allowLender(orthogonalPoolManager, orthogonalPoolManager);
+    function _addWMAndPMToAllowlists(address poolManager, address addrToAllow) internal {
+        allowLender(poolManager, addrToAllow);
     }
 
-    // NOTE: This is done to help facilitate lifecycle testing.
-    function _addLoanManagers() internal {
-        // Not needed for Aqru and cash management, its already added
-        addLoanManager(mavenPermissionedPoolManager, openTermLoanManagerFactory);
-        addLoanManager(mavenWethPoolManager,         openTermLoanManagerFactory);
-    }
-
-    function _addDelayToOracles() internal {
-        vm.startPrank(governor);
-        IGlobals(globals).setPriceOracle(usdc, usdUsdOracle, 1 days);
-        IGlobals(globals).setPriceOracle(weth, ethUsdOracle, 1 days);
-        IGlobals(globals).setPriceOracle(wbtc, btcUsdOracle, 1 days);
-        vm.stopPrank();
+    function _addDelayToOracles(address governor, address globals, address asset, address priceOracle, uint96 delay) internal {
+        vm.prank(governor);
+        IGlobals(globals).setPriceOracle(asset, priceOracle, delay);
     }
 
     function _allowLenders(address poolManager, address[] memory lenders) internal {
@@ -107,19 +110,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         }
     }
 
-    function _allowAllLenders() internal {
-        _allowLenders(aqruPoolManager,               aqruAllowedLenders);
-        _allowLenders(cashManagementUSDCPoolManager, cashMgmtUSDCAllowedLenders);
-        _allowLenders(cashManagementUSDTPoolManager, cashMgmtUSDTAllowedLenders);
-        _allowLenders(cicadaPoolManager,             cicadaAllowedLenders);
-        _allowLenders(icebreakerPoolManager,         icebreakerAllowedLenders);
-        _allowLenders(laserPoolManager,              laserAllowedLenders);
-        _allowLenders(mapleDirectUSDCPoolManager,    mapleDirectAllowedLenders);
-        _allowLenders(mavenPermissionedPoolManager,  mavenPermissionedAllowedLenders);
-        _allowLenders(mavenUsdc3PoolManager,         mavenUsdc3AllowedLenders);
-    }
-
-    function _deployAllNewContracts() internal {
+    function _deployAllNewContracts(address governor, address globals, address fixedTermLoanFactory) internal {
         fixedTermLoanFactoryV2          = address(new FixedTermLoanFactory(globals, fixedTermLoanFactory));
         fixedTermLoanImplementationV502 = address(new FixedTermLoan());
         fixedTermLoanInitializerV500    = address(IProxyFactoryLike(fixedTermLoanFactory).migratorForPath(501, 501));
@@ -160,7 +151,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         );
     }
 
-    function _deployNewLoan() internal {
+    function _deployNewLoan(address governor) internal {
         address newImplementation = address(new FixedTermLoan());
 
         vm.startPrank(governor);
@@ -174,7 +165,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         vm.stopPrank();
     }
 
-    function _deployQueueWM(address pool_) internal returns (address queueWM) {
+    function _deployQueueWM(address governor, address globals, address pool_) internal returns (address queueWM) {
         address deployer = makeAddr("deployer");
 
         vm.prank(governor);
@@ -186,51 +177,45 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         ));
     }
 
-    function _enableGlobalsKeys() internal {
+    function _enableGlobalsSetInstance(address governor, address globals, address instance, bool isInstance, bytes32 instanceKey) internal {
         IGlobals globals_ = IGlobals(globals);
 
-        vm.startPrank(governor);
-        globals_.setValidInstanceOf("LOAN_FACTORY",                     fixedTermLoanFactoryV2,         true);
-        globals_.setValidInstanceOf("FT_LOAN_FACTORY",                  fixedTermLoanFactoryV2,         true);
-        globals_.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager), true);
-        globals_.setValidInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", withdrawalManagerFactory,       true);
-        globals_.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                 true);
-        globals_.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                 true);
-        globals_.setValidInstanceOf("POOL_DEPLOYER",                    poolDeployerV3,                 true);
-        globals_.setValidInstanceOf("QUEUE_POOL_MANAGER",               cashManagementUSDCPoolManager,  true);
-        globals_.setValidInstanceOf("QUEUE_POOL_MANAGER",               cashManagementUSDTPoolManager,  true);
-
-        globals_.setCanDeployFrom(poolManagerFactory,       poolDeployerV3, true);
-        globals_.setCanDeployFrom(withdrawalManagerFactory, poolDeployerV3, true);
-        globals_.setCanDeployFrom(queueWMFactory,           poolDeployerV3, true);
-        vm.stopPrank();
+        vm.prank(governor);
+        globals_.setValidInstanceOf(instanceKey, instance, isInstance);
     }
 
-    function _setupFactories() internal {
+    function _enableGlobalsSetCanDeploy(address governor, address globals, address factory, address deployer, bool isInstance) internal {
+        IGlobals globals_ = IGlobals(globals);
+
+        vm.prank(governor);
+        globals_.setCanDeployFrom(factory, deployer, isInstance);
+    }
+
+    function _setupFactories(address governor, address pmFactory, address ftlFactory, address cyclicalWMFactory, address queueWMFactory) internal {
         vm.startPrank(governor);
 
         // PoolManager upgrade 200 => 300
-        IProxyFactoryLike(poolManagerFactory).registerImplementation(
+        IProxyFactoryLike(pmFactory).registerImplementation(
             300,
             poolManagerImplementationV300,
             poolManagerInitializer
         );
-        IProxyFactoryLike(poolManagerFactory).registerImplementation(
+        IProxyFactoryLike(pmFactory).registerImplementation(
             301,
             poolManagerImplementationV301,
             poolManagerInitializer
         );
-        IProxyFactoryLike(poolManagerFactory).setDefaultVersion(300);
-        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(200, 300, poolManagerMigrator);
-        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(201, 300, poolManagerMigrator);     // For Aqru pool
-        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(300, 301, poolManagerWMMigrator);  //  For Cash Management pools
+        IProxyFactoryLike(pmFactory).setDefaultVersion(300);
+        IProxyFactoryLike(pmFactory).enableUpgradePath(200, 300, poolManagerMigrator);
+        IProxyFactoryLike(pmFactory).enableUpgradePath(201, 300, poolManagerMigrator);    // For Aqru pool
+        IProxyFactoryLike(pmFactory).enableUpgradePath(300, 301, poolManagerWMMigrator);  // For Cash Management pools
 
-        IProxyFactoryLike(fixedTermLoanFactory).registerImplementation(
+        IProxyFactoryLike(ftlFactory).registerImplementation(
             502,
             fixedTermLoanImplementationV502,
             fixedTermLoanInitializerV500
         );
-        IProxyFactoryLike(fixedTermLoanFactory).enableUpgradePath(501, 502, fixedTermLoanV502Migrator);
+        IProxyFactoryLike(ftlFactory).enableUpgradePath(501, 502, fixedTermLoanV502Migrator);
 
         IProxyFactoryLike(fixedTermLoanFactoryV2).registerImplementation(
             502,
@@ -239,12 +224,12 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         );
         IProxyFactoryLike(fixedTermLoanFactoryV2).setDefaultVersion(502);
 
-        IProxyFactoryLike(withdrawalManagerFactory).registerImplementation(
+        IProxyFactoryLike(cyclicalWMFactory).registerImplementation(
             110,
             cyclicalWMImplementation,
             cyclicalWMInitializer
         );
-        IProxyFactoryLike(withdrawalManagerFactory).setDefaultVersion(110);
+        IProxyFactoryLike(cyclicalWMFactory).setDefaultVersion(110);
 
         IProxyFactoryLike(queueWMFactory).registerImplementation(
             100,
@@ -256,72 +241,40 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         vm.stopPrank();
     }
 
-    function _upgradeFixedTermLoansAsSecurityAdmin() internal {
-        bytes memory arguments = abi.encode(fixedTermLoanFactoryV2);
+    function _upgradePoolContractsAsSecurityAdmin(PoolPermissionManager poolPermissionManager_, address poolManager, uint256 version) internal {
+        bytes memory arguments = abi.encode(poolPermissionManager_);
 
-        upgradeLoansAsSecurityAdmin(aqruFixedTermLoans,              502, arguments);
-        upgradeLoansAsSecurityAdmin(cashMgmtUSDCFixedTermLoans,      502, arguments);
-        upgradeLoansAsSecurityAdmin(cashMgmtUSDTFixedTermLoans,      502, arguments);
-        upgradeLoansAsSecurityAdmin(cicadaFixedTermLoans,            502, arguments);
-        upgradeLoansAsSecurityAdmin(mapleDirectFixedTermLoans,       502, arguments);
-        upgradeLoansAsSecurityAdmin(mavenPermissionedFixedTermLoans, 502, arguments);
-        upgradeLoansAsSecurityAdmin(mavenWethFixedTermLoans,         502, arguments);
+        upgradePoolManagerAsSecurityAdmin(poolManager, version, arguments);
     }
 
-    function _upgradePoolContractsAsSecurityAdmin() internal {
-        bytes memory arguments = abi.encode(poolPermissionManager);
-
-        upgradePoolManagerAsSecurityAdmin(aqruPoolManager,               300, arguments);
-        upgradePoolManagerAsSecurityAdmin(cashManagementUSDCPoolManager, 300, arguments);
-        upgradePoolManagerAsSecurityAdmin(cashManagementUSDTPoolManager, 300, arguments);
-        upgradePoolManagerAsSecurityAdmin(cicadaPoolManager,             300, arguments);
-        upgradePoolManagerAsSecurityAdmin(icebreakerPoolManager,         300, arguments);
-        upgradePoolManagerAsSecurityAdmin(laserPoolManager,              300, arguments);
-        upgradePoolManagerAsSecurityAdmin(mapleDirectUSDCPoolManager,    300, arguments);
-        upgradePoolManagerAsSecurityAdmin(mavenPermissionedPoolManager,  300, arguments);
-        upgradePoolManagerAsSecurityAdmin(mavenUsdc3PoolManager,         300, arguments);
-        upgradePoolManagerAsSecurityAdmin(mavenUsdcPoolManager,          300, arguments);
-        upgradePoolManagerAsSecurityAdmin(mavenWethPoolManager,          300, arguments);
-        upgradePoolManagerAsSecurityAdmin(orthogonalPoolManager,         300, arguments);
+    function _upgradeFixedTermLoansAsSecurityAdmin(address[] memory loans, uint256 version, bytes memory arguments) internal {
+        upgradeLoansAsSecurityAdmin(loans, version, arguments);
     }
 
-    function _upgradeToQueueWM(address poolManager) internal {
-        address wm = _deployQueueWM(IPoolManager(poolManager).pool());
+    function _upgradeToQueueWM(address governor, address globals, address poolManager) internal {
+        _enableGlobalsSetInstance(governor, globals, poolManager, true, "QUEUE_POOL_MANAGER");
+
+        address wm = _deployQueueWM(governor, globals, IPoolManager(poolManager).pool());
 
         bytes memory arguments = abi.encode(wm);
 
         upgradePoolManagerAsSecurityAdmin(poolManager, 301, arguments);
     }
 
-    function _performProtocolUpgrade() internal {
-
-        _deployAllNewContracts();
-
-        upgradeGlobals(globals, globalsImplementationV3);
-
-        _enableGlobalsKeys();
-
-        _addDelayToOracles();
-
-        _setupFactories();
-
-        _upgradePoolContractsAsSecurityAdmin();
-
-        _upgradeFixedTermLoansAsSecurityAdmin();
-
-        _addWMAndPMToAllowlists();
-
-        _allowAllLenders();
-
-        _addLoanManagers();
-    }
-
     /**************************************************************************************************************************************/
     /*** Assertion Helper Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
 
-    function _assertFactories() internal {
-        IProxyFactoryLike poolManagerFactory = IProxyFactoryLike(poolManagerFactory);
+    function _assertAllowedLenders() internal {
+        for (uint i = 0; i < pools.length; i++) {
+            Pool storage pool = pools[i];
+
+            _assertLendersPermission(pool.poolManager, pool.lps);
+        }
+    }
+
+    function _assertFactories(address pmFactory, address ftlFactory, address cyclicalWMFactory, address queueWMFactory_) internal {
+        IProxyFactoryLike poolManagerFactory = IProxyFactoryLike(pmFactory);
 
         assertEq(poolManagerFactory.defaultVersion(),          300);
         assertEq(poolManagerFactory.implementationOf(300),     poolManagerImplementationV300);
@@ -330,7 +283,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         assertEq(poolManagerFactory.migratorForPath(201, 300), poolManagerMigrator);
         assertEq(poolManagerFactory.migratorForPath(300, 301), poolManagerWMMigrator);
 
-        IProxyFactoryLike fixedTermLoanFactory = IProxyFactoryLike(fixedTermLoanFactory);
+        IProxyFactoryLike fixedTermLoanFactory = IProxyFactoryLike(ftlFactory);
 
         assertEq(fixedTermLoanFactory.defaultVersion(),          501);
         assertEq(fixedTermLoanFactory.implementationOf(502),     fixedTermLoanImplementationV502);
@@ -342,13 +295,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         assertEq(fixedTermLoanFactoryV2.implementationOf(502),     fixedTermLoanImplementationV502);
         assertEq(fixedTermLoanFactoryV2.migratorForPath(502, 502), fixedTermLoanInitializerV500);
 
-        IProxyFactoryLike withdrawalManagerFactory = IProxyFactoryLike(withdrawalManagerFactory);
+        IProxyFactoryLike withdrawalManagerFactory = IProxyFactoryLike(cyclicalWMFactory);
 
         assertEq(withdrawalManagerFactory.defaultVersion(),          110);
         assertEq(withdrawalManagerFactory.migratorForPath(110, 110), cyclicalWMInitializer);
         assertEq(withdrawalManagerFactory.implementationOf(110),     cyclicalWMImplementation);
 
-        IProxyFactoryLike queueWMFactory = IProxyFactoryLike(queueWMFactory);
+        IProxyFactoryLike queueWMFactory = IProxyFactoryLike(queueWMFactory_);
 
         assertEq(queueWMFactory.defaultVersion(),          100);
         assertEq(queueWMFactory.migratorForPath(100, 100), queueWMInitializer);
@@ -356,21 +309,29 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     }
 
     function _assertGlobals() internal {
+        _assertGlobalsIsInstanceOf(protocol.globals, fixedTermLoanFactoryV2,            "LOAN_FACTORY");
+        _assertGlobalsIsInstanceOf(protocol.globals, fixedTermLoanFactoryV2,            "FT_LOAN_FACTORY");
+        _assertGlobalsIsInstanceOf(protocol.globals, address(poolPermissionManager),    "POOL_PERMISSION_MANAGER");
+        _assertGlobalsIsInstanceOf(protocol.globals, protocol.withdrawalManagerFactory, "WITHDRAWAL_MANAGER_CYCLE_FACTORY");
+        _assertGlobalsIsInstanceOf(protocol.globals, queueWMFactory,                    "WITHDRAWAL_MANAGER_QUEUE_FACTORY");
+        _assertGlobalsIsInstanceOf(protocol.globals, queueWMFactory,                    "WITHDRAWAL_MANAGER_FACTORY");
+        _assertGlobalsIsInstanceOf(protocol.globals, poolDeployerV3,                    "POOL_DEPLOYER");
+
+        _assertGlobalsCanDeployFrom(protocol.globals, protocol.poolManagerFactory,       poolDeployerV3);
+        _assertGlobalsCanDeployFrom(protocol.globals, protocol.withdrawalManagerFactory, poolDeployerV3);
+        _assertGlobalsCanDeployFrom(protocol.globals, queueWMFactory,                    poolDeployerV3);
+    }
+
+    function _assertGlobalsIsInstanceOf(address globals, address instance, bytes32 instanceKey) internal {
         IGlobals globals_ = IGlobals(globals);
 
-        assertTrue(globals_.isInstanceOf("LOAN_FACTORY",                     fixedTermLoanFactoryV2));
-        assertTrue(globals_.isInstanceOf("FT_LOAN_FACTORY",                  fixedTermLoanFactoryV2));
-        assertTrue(globals_.isInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager)));
-        assertTrue(globals_.isInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", withdrawalManagerFactory));
-        assertTrue(globals_.isInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory));
-        assertTrue(globals_.isInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory));
-        assertTrue(globals_.isInstanceOf("POOL_DEPLOYER",                    poolDeployerV3));
-        assertTrue(globals_.isInstanceOf("QUEUE_POOL_MANAGER",               cashManagementUSDCPoolManager));
-        assertTrue(globals_.isInstanceOf("QUEUE_POOL_MANAGER",               cashManagementUSDTPoolManager));
+        assertTrue(globals_.isInstanceOf(instanceKey, instance));
+    }
 
-        assertTrue(globals_.canDeployFrom(poolManagerFactory,       poolDeployerV3));
-        assertTrue(globals_.canDeployFrom(withdrawalManagerFactory, poolDeployerV3));
-        assertTrue(globals_.canDeployFrom(queueWMFactory,           poolDeployerV3));
+    function _assertGlobalsCanDeployFrom(address globals, address factory, address poolDeployer) internal {
+        IGlobals globals_ = IGlobals(globals);
+
+        assertTrue(globals_.canDeployFrom(factory, poolDeployer));
     }
 
     function _assertIsLoan(address[] memory loans) internal {
@@ -380,10 +341,23 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         }
     }
 
-    function _assertLoanVersion(address[] memory loans, uint256 version) internal {
-        for (uint256 i; i < loans.length; ++i) {
-            address expectedImplementation = IProxyFactoryLike(fixedTermLoanFactoryV2).implementationOf(version);
-            assertEq(ILoanLike(loans[i]).implementation(), expectedImplementation);
+    function _assertFTLs() internal {
+         for (uint i = 0; i < pools.length; i++) {
+            Pool storage pool = pools[i];
+
+            if (pool.ftLoans.length > 0) _assertIsLoan(pool.ftLoans);
+        }
+    }
+
+    function _assertLoanVersion(uint256 version) internal {
+
+        for (uint i = 0; i < pools.length; i++) {
+            Pool storage pool = pools[i];
+
+            for (uint256 j; j < pool.ftLoans.length; ++j) {
+                address expectedImplementation = IProxyFactoryLike(fixedTermLoanFactoryV2).implementationOf(version);
+                assertEq(ILoanLike(pool.ftLoans[j]).implementation(), expectedImplementation);
+            }
         }
     }
 
@@ -393,91 +367,34 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         }
     }
 
-    function _assertAllowedLenders() internal {
-        _assertLendersPermission(aqruPoolManager,               aqruAllowedLenders);
-        _assertLendersPermission(cashManagementUSDCPoolManager, cashMgmtUSDCAllowedLenders);
-        _assertLendersPermission(cashManagementUSDTPoolManager, cashMgmtUSDTAllowedLenders);
-        _assertLendersPermission(cicadaPoolManager,             cicadaAllowedLenders);
-        _assertLendersPermission(icebreakerPoolManager,         icebreakerAllowedLenders);
-        _assertLendersPermission(laserPoolManager,              laserAllowedLenders);
-        _assertLendersPermission(mapleDirectUSDCPoolManager,    mapleDirectAllowedLenders);
-        _assertLendersPermission(mavenPermissionedPoolManager,  mavenPermissionedAllowedLenders);
-        _assertLendersPermission(mavenUsdc3PoolManager,         mavenUsdc3AllowedLenders);
-    }
-
-    function _assertPermissions() internal {
-        assertTrue(poolPermissionManager.lenderAllowlist(aqruPoolManager, aqruWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(aqruPoolManager, aqruPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(cashManagementUSDCPoolManager, cashManagementUSDCWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(cashManagementUSDCPoolManager, cashManagementUSDCPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(cashManagementUSDTPoolManager, cashManagementUSDTWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(cashManagementUSDTPoolManager, cashManagementUSDTPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(cicadaPoolManager, cicadaWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(cicadaPoolManager, cicadaPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(icebreakerPoolManager, icebreakerWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(icebreakerPoolManager, icebreakerPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(laserPoolManager, laserWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(laserPoolManager, laserPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(mapleDirectUSDCPoolManager, mapleDirectUSDCWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(mapleDirectUSDCPoolManager, mapleDirectUSDCPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenPermissionedPoolManager, mavenPermissionedWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenPermissionedPoolManager, mavenPermissionedPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenUsdc3PoolManager, mavenUsdc3WithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenUsdc3PoolManager, mavenUsdc3PoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenUsdcPoolManager, mavenUsdcWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenUsdcPoolManager, mavenUsdcPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenWethPoolManager, mavenWethWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(mavenWethPoolManager, mavenWethPoolManager));
-
-        assertTrue(poolPermissionManager.lenderAllowlist(orthogonalPoolManager, orthogonalWithdrawalManager));
-        assertTrue(poolPermissionManager.lenderAllowlist(orthogonalPoolManager, orthogonalPoolManager));
+    function _assertPoolManager(address poolManager, address implementation) internal {
+        assertEq(IProxiedLike(poolManager).implementation(), implementation);
     }
 
     function _assertPoolManagers() internal {
-        assertEq(IProxiedLike(aqruPoolManager).implementation(),               poolManagerImplementationV300);
-        assertEq(IProxiedLike(cashManagementUSDCPoolManager).implementation(), poolManagerImplementationV300);
-        assertEq(IProxiedLike(cashManagementUSDTPoolManager).implementation(), poolManagerImplementationV300);
-        assertEq(IProxiedLike(cicadaPoolManager).implementation(),             poolManagerImplementationV300);
-        assertEq(IProxiedLike(icebreakerPoolManager).implementation(),         poolManagerImplementationV300);
-        assertEq(IProxiedLike(laserPoolManager).implementation(),              poolManagerImplementationV300);
-        assertEq(IProxiedLike(mapleDirectUSDCPoolManager).implementation(),    poolManagerImplementationV300);
-        assertEq(IProxiedLike(mavenPermissionedPoolManager).implementation(),  poolManagerImplementationV300);
-        assertEq(IProxiedLike(mavenUsdc3PoolManager).implementation(),         poolManagerImplementationV300);
-        assertEq(IProxiedLike(mavenUsdcPoolManager).implementation(),          poolManagerImplementationV300);
-        assertEq(IProxiedLike(mavenWethPoolManager).implementation(),          poolManagerImplementationV300);
-        assertEq(IProxiedLike(orthogonalPoolManager).implementation(),         poolManagerImplementationV300);
+        for (uint i = 0; i < pools.length; i++) {
+            Pool storage pool = pools[i];
+
+            _assertPoolManager(pool.poolManager, poolManagerImplementationV300);
+        }
     }
 
-    function _assertCashPoolManagers() internal {
-        assertEq(IProxiedLike(cashManagementUSDCPoolManager).implementation(), poolManagerImplementationV301);
-        assertEq(IProxiedLike(cashManagementUSDTPoolManager).implementation(), poolManagerImplementationV301);
+    function _assertPermission(PoolPermissionManager poolPermissionManager_, address poolManager, address addrWithPermission) internal {
+        assertTrue(poolPermissionManager_.lenderAllowlist(poolManager, addrWithPermission));
     }
 
-    function _assertOracles() internal {
-        ( address oracle, uint256 maxDelay ) = IGlobals(globals).priceOracleOf(usdc);
+    function  _assertPermissions() internal {
+        for (uint i = 0; i < pools.length; i++) {
+            Pool storage pool = pools[i];
 
-        assertEq(oracle,   usdUsdOracle);
-        assertEq(maxDelay, 1 days);
+            _assertPermission(poolPermissionManager, pool.poolManager, pool.poolManager);
+            _assertPermission(poolPermissionManager, pool.poolManager, pool.withdrawalManager);
+        }
+    }
 
-        ( oracle, maxDelay ) = IGlobals(globals).priceOracleOf(weth);
-
-        assertEq(oracle,   ethUsdOracle);
-        assertEq(maxDelay, 1 days);
-
-        ( oracle, maxDelay ) = IGlobals(globals).priceOracleOf(wbtc);
-
-        assertEq(oracle,   btcUsdOracle);
-        assertEq(maxDelay, 1 days);
+    function _assertQueuePoolManager(address cashMgtPoolManager_) internal {
+        _assertGlobalsIsInstanceOf(protocol.globals, cashMgtPoolManager_,  "QUEUE_POOL_MANAGER");
+        assertEq(IProxiedLike(cashMgtPoolManager_).implementation(), poolManagerImplementationV301);
     }
 
 }

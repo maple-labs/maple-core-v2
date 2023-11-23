@@ -7,10 +7,15 @@ import { Test } from "../../contracts/Contracts.sol";
 
 import { ProtocolHealthChecker } from "./ProtocolHealthChecker.sol";
 
+import { OpenTermLoanHealthChecker } from "./OpenTermLoanHealthChecker.sol";
+
+import { FixedTermLoanHealthChecker } from "./FixedTermLoanHealthChecker.sol";
+
 contract HealthCheckerMainnetTests is AddressRegistry, Test {
 
-    ProtocolHealthChecker protocolHealthChecker_;
-
+    ProtocolHealthChecker      protocolHealthChecker_;
+    OpenTermLoanHealthChecker  openTermHC;
+    FixedTermLoanHealthChecker fixedTermHC;
     function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17879220);
 

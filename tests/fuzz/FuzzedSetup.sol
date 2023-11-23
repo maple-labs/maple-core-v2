@@ -5,7 +5,9 @@ import {
     IERC20,
     IFixedTermLoan,
     IFixedTermLoanManager,
+    IGlobals,
     ILoanLike,
+    IProxyFactoryLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
@@ -255,6 +257,13 @@ contract FuzzedUtil is ProtocolActions {
             getSomeValue(0, principal * 0.025e6 / 1e6),  // delegateOriginationFee
             getSomeValue(0, 100_000e6)                   // delegateServiceFee
         ];
+
+        IGlobals globals = IGlobals(IProxyFactoryLike(_fixedTermLoanFactory).mapleGlobals());
+
+        if (!globals.isCollateralAsset(_collateralAsset)) {
+            vm.prank(globals.governor());
+            globals.setValidCollateralAsset(_collateralAsset, true);
+        }
 
         loan = createFixedTermLoan(
             address(_fixedTermLoanFactory),

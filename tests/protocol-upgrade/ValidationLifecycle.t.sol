@@ -10,16 +10,18 @@ import {
     ILoanLike
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedUtil } from "../fuzz/FuzzedSetup.sol";
+import { console, FuzzedUtil } from "../fuzz/FuzzedSetup.sol";
 
 import { FixedTermLoanHealthChecker } from "../health-checkers/FixedTermLoanHealthChecker.sol";
 import { OpenTermLoanHealthChecker }  from "../health-checkers/OpenTermLoanHealthChecker.sol";
 import { ProtocolHealthChecker }      from "../health-checkers/ProtocolHealthChecker.sol";
 
-import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
+import { ProtocolUpgradeBase }          from "./ProtocolUpgradeBase.sol";
+import { UpgradeAddressRegistryETH }    from "./UpgradeAddressRegistryETH.sol";
+import { UpgradeAddressRegistryBASEL2 } from "./UpgradeAddressRegistryBASEL2.sol";
 
 // TODO: Need to uncouple cycle wm from protocolHealthChecker and add back
-contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
+contract ValidationLifecycleTestsRoot is ProtocolUpgradeBase, FuzzedUtil {
 
     uint256 constant ALLOWED_DIFF = 1000;
 
@@ -32,9 +34,7 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
     ProtocolHealthChecker      protocolHealthChecker_;
 
     // Overriding fuzzed setups to work well with the deployed contracts.
-    function fuzzedSetup(address pool, address[] storage deployedFTLs, address[] storage deployedOTLs) internal {
-        uint256 decimals = pool == mavenWethPool ? 18 : 6;
-
+    function fuzzedSetup(address pool, address[] storage deployedFTLs, address[] storage deployedOTLs, uint256 decimals) internal {
         setLiquidityCap(_poolManager, 500_000_000 * 10 ** decimals);
         deposit(pool, makeAddr("lp"), decimals == 18 ? 400_000 * 10 ** decimals : 40_000_000 * 10 ** decimals);
 
@@ -47,26 +47,31 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
             loans.push(deployedOTLs[i]);
         }
 
-        uint256 remainingFTLs = deployedFTLs.length > ftlLoanCount ? 0 : ftlLoanCount - deployedFTLs.length;
-        uint256 remainingOTLs = deployedOTLs.length > otlLoanCount ? 0 : otlLoanCount - deployedOTLs.length;
+        uint256 remainingFTLs = (deployedFTLs.length > ftlLoanCount) || (deployedFTLs.length == 0) ? 0 : ftlLoanCount - deployedFTLs.length;
+        uint256 remainingOTLs = (deployedOTLs.length > otlLoanCount) || (deployedOTLs.length == 0) ? 0 : otlLoanCount - deployedOTLs.length;
 
         super.fuzzedSetup(remainingFTLs, remainingOTLs, actionCount, seed);
     }
 
-    function runLifecycleValidation(uint256 seed_, address pool, address[] storage deployedFTLs, address[] storage deployedOTLs) internal {
+    function runLifecycleValidation(
+        uint256 seed_,
+        address pool,
+        address[] storage deployedFTLs,
+        address[] storage deployedOTLs,
+        Protocol  storage protocolAddresses) internal {
         seed = seed_;
 
         // For each pool, setUp the necessary addresses
         setAddresses(pool);
 
-        _collateralAsset      = address(weth);
-        _feeManager           = address(fixedTermFeeManagerV1);
+        _collateralAsset      = address(protocolAddresses.usdc);
+        _feeManager           = address(protocolAddresses.fixedTermFeeManagerV1);
         _fixedTermLoanFactory = address(fixedTermLoanFactoryV2);
-        _openTermLoanFactory  = address(openTermLoanFactory);
-        _liquidatorFactory    = address(liquidatorFactory);
+        _openTermLoanFactory  = address(protocolAddresses.openTermLoanFactory);
+        _liquidatorFactory    = address(protocolAddresses.liquidatorFactory);
 
         // Do the fuzzed transactions
-        fuzzedSetup(_pool, deployedFTLs, deployedOTLs);
+        fuzzedSetup(_pool, deployedFTLs, deployedOTLs, IPool(_pool).decimals());
 
         // Assert the invariants
         fixedTermLoanHealthChecker = new FixedTermLoanHealthChecker();
@@ -118,6 +123,7 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
     /*** Assertion Helpers                                                                                                              ***/
     /**************************************************************************************************************************************/
 
+    // TODO: Make Test Base with Assertions Stateless and move all assertion helpers together
     function assertFixedTermLoanHealthChecker(FixedTermLoanHealthChecker.Invariants memory invariants_) internal {
         assertTrue(invariants_.fixedTermLoanInvariantA,        "FTLHealthChecker FTL Invariant A");
         assertTrue(invariants_.fixedTermLoanInvariantB,        "FTLHealthChecker FTL Invariant B");
@@ -227,88 +233,143 @@ contract ValidationLifecycleTestsBase is ProtocolUpgradeBase, FuzzedUtil {
 
 }
 
-contract ValidationLifecycle is ValidationLifecycleTestsBase {
+contract ValidationLifecycleETH is UpgradeAddressRegistryETH, ValidationLifecycleTestsRoot {
 
-    function setUp() public override {
+    function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
 
-        // 1. Deploy all the new implementations and factories
-        _deployAllNewContracts();
-
-        // 2. Upgrade Globals, as the new version is needed to setup all the factories accordingly
-        upgradeGlobals(globals, globalsImplementationV3);
-
-        // 3. Configure globals factories, instances, and deployer.
-        _enableGlobalsKeys();
-
-        // 4. Register the factories on globals and set the default versions.
-        _setupFactories();
-
-        // 5. Upgrade all the existing Pool and Loan Managers
-        _upgradePoolContractsAsSecurityAdmin();
-
-        _addWMAndPMToAllowlists();
-
-        _addLoanManagers();
+        _performProtocolUpgrade();
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_aqruPool(uint256 seed_) external {
-        runLifecycleValidation(seed_, aqruPool, aqruFixedTermLoans, aqruOpenTermLoans);
+        address pool = pools[0].pool;
+        address[] storage ftLoans = pools[0].ftLoans;
+        address[] storage otLoans = pools[0].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cashMgmtUSDCPool(uint256 seed_) external {
-        runLifecycleValidation(seed_, cashManagementUSDCPool, cashMgmtUSDCFixedTermLoans, cashMgmtUSDCOpenTermLoans);
+        address pool = pools[1].pool;
+        address[] storage ftLoans = pools[1].ftLoans;
+        address[] storage otLoans = pools[1].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cashMgmtUSDTPool(uint256 seed_) external {
-        runLifecycleValidation(seed_, cashManagementUSDTPool, cashMgmtUSDTFixedTermLoans, cashMgmtUSDTOpenTermLoans);
+        address pool = pools[2].pool;
+        address[] storage ftLoans = pools[2].ftLoans;
+        address[] storage otLoans = pools[2].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cicadaPool(uint256 seed_) external {
         ftlLoanCount = 0;
-        runLifecycleValidation(seed_, cicadaPool, cicadaFixedTermLoans, cicadaOpenTermLoans);
+        address pool = pools[3].pool;
+        address[] storage ftLoans = pools[3].ftLoans;
+        address[] storage otLoans = pools[3].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_mapleDirectPool(uint256 seed_) external {
-        runLifecycleValidation(seed_, mapleDirectUSDCPool, mapleDirectFixedTermLoans, mapleDirectOpenTermLoans);
+        address pool = pools[4].pool;
+        address[] storage ftLoans = pools[4].ftLoans;
+        address[] storage otLoans = pools[4].otLoans;
+
+        addLoanManager(pools[4].poolManager, protocol.openTermLoanManagerFactory);
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_mavenWethPool(uint256 seed_) external {
-        runLifecycleValidation(seed_, mavenWethPool, mavenWethFixedTermLoans, mavenWethOpenTermLoans);
+        address pool = pools[10].pool;
+        address[] storage ftLoans = pools[10].ftLoans;
+        address[] storage otLoans = pools[10].otLoans;
+
+        addLoanManager(pools[10].poolManager, protocol.openTermLoanManagerFactory);
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_mavenPermissioned(uint256 seed_) external {
-        runLifecycleValidation(seed_, mavenPermissionedPool, mavenPermissionedFixedTermLoans, mavenPermissionedOpenTermLoans);
+        address pool = pools[7].pool;
+        address[] storage ftLoans = pools[7].ftLoans;
+        address[] storage otLoans = pools[7].otLoans;
+
+        addLoanManager(pools[7].poolManager, protocol.openTermLoanManagerFactory);
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
 }
 
-contract ValidationLifecycleForCashMgt is ValidationLifecycleTestsBase {
+contract ValidationLifecycleForCashMgtETH is UpgradeAddressRegistryETH, ValidationLifecycleTestsRoot {
 
-    function setUp() public override {
+    function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
 
         _performProtocolUpgrade();
 
-        _upgradeToQueueWM(cashManagementUSDCPoolManager);
-        _upgradeToQueueWM(cashManagementUSDTPoolManager);
+        _upgradeToQueueWM(governor, globals, cashManagementUSDCPoolManager);
+        _upgradeToQueueWM(governor, globals, cashManagementUSDTPoolManager);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cash_USDC(uint256 seed_) external {
-        runLifecycleValidation(seed_, cashManagementUSDCPool, cashMgmtUSDCFixedTermLoans, cashMgmtUSDCOpenTermLoans);
+        address pool = pools[1].pool;
+        address[] storage ftLoans = pools[1].ftLoans;
+        address[] storage otLoans = pools[1].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
     /// forge-config: default.fuzz.runs = 10
     function testFork_validationLifecycle_cash_USDT(uint256 seed_) external {
-        runLifecycleValidation(seed_, cashManagementUSDTPool, cashMgmtUSDTFixedTermLoans, cashMgmtUSDTOpenTermLoans);
+        address pool = pools[2].pool;
+        address[] storage ftLoans = pools[2].ftLoans;
+        address[] storage otLoans = pools[2].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+}
+
+contract ValidationLifecycleBASEL2 is UpgradeAddressRegistryBASEL2, ValidationLifecycleTestsRoot {
+
+    function setUp() public {
+        vm.createSelectFork(vm.envString("BASE_RPC_URL"), 6667400);
+
+        _performProtocolUpgrade();
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_cashMgmtUSDCPool_BASEL2(uint256 seed_) external {
+        address pool = pools[0].pool;
+        address[] storage ftLoans = pools[0].ftLoans;
+        address[] storage otLoans = pools[0].otLoans;
+        
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+}
+
+contract ValidationLifecycleForCashMgtBASEL2 is UpgradeAddressRegistryBASEL2, ValidationLifecycleTestsRoot {
+
+    function setUp() public {
+        vm.createSelectFork(vm.envString("BASE_RPC_URL"),  6667400);
+
+        _performProtocolUpgrade();
+
+        _upgradeToQueueWM(governor, globals, cashManagementUSDCPoolManager);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_cash_USDC_BASEL2(uint256 seed_) external {
+        address pool = pools[0].pool;
+        address[] storage ftLoans = pools[0].ftLoans;
+        address[] storage otLoans = pools[0].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 
 }

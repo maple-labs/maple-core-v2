@@ -1212,7 +1212,7 @@ contract RedeemIntegrationTests is TestBase {
         uint256 redeemedLP1       = pool.redeem(1_000_000e6, lp1, lp1);
         vm.stopPrank();
 
-        // // Redeem and check amount LP2
+        // Redeem and check amount LP2
         vm.startPrank(lp2);
         uint256 amountToRedeemLP2 = pool.previewRedeem(2_000_000e6);
         uint256 redeemedLP2       = pool.redeem(2_000_000e6, lp2, lp2);

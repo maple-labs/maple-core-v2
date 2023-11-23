@@ -36,17 +36,19 @@ import {
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Test {
 
-    address MPL     = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address WBTC    = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
-    address WETH    = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address USDC    = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-    address USDT    = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
+    address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+    address WETH      = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address USDC      = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address USDT      = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    address USDC_BASE = address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
 
-    address MPL_SOURCE     = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address WBTC_SOURCE    = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
-    address WETH_SOURCE    = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
-    address USDC_SOURCE    = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
-    address USDT_SOURCE    = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address MPL_SOURCE       = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
+    address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
+    address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
+    address USDC_SOURCE      = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
+    address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -65,12 +67,12 @@ contract ProtocolActions is Test {
     }
 
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
-
-        if      (asset_ == MPL)  erc20_transfer(MPL,     MPL_SOURCE,     account_, amount_);
-        else if (asset_ == WBTC) erc20_transfer(WBTC,    WBTC_SOURCE,    account_, amount_);
-        else if (asset_ == WETH) erc20_transfer(WETH,    WETH_SOURCE,    account_, amount_);
-        else if (asset_ == USDC) erc20_transfer(USDC,    USDC_SOURCE,    account_, amount_);
-        else if (asset_ == USDT) erc20_transfer(USDT,    USDT_SOURCE,    account_, amount_);
+        if      (asset_ == MPL)       erc20_transfer(MPL,       MPL_SOURCE,       account_, amount_);
+        else if (asset_ == WBTC)      erc20_transfer(WBTC,      WBTC_SOURCE,      account_, amount_);
+        else if (asset_ == WETH)      erc20_transfer(WETH,      WETH_SOURCE,      account_, amount_);
+        else if (asset_ == USDC)      erc20_transfer(USDC,      USDC_SOURCE,      account_, amount_);
+        else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
+        else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
