@@ -9,6 +9,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
     address lp2 = makeAddr("lp2");
     address lp3 = makeAddr("lp3");
     address lp4 = makeAddr("lp4");
+    address lp5 = makeAddr("lp5");
 
     address wm;  // Helper to avoid casting
 
@@ -406,6 +407,67 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 5_500e6);
 
         assertEq(queueWM.manualSharesAvailable(lp2), 2_000e6);
+    }
+
+    function test_processRedemptions_overkill() external {
+        // Request all withdrawals.
+        requestRedeem(lp1, 1_000e6);
+        requestRedeem(lp2, 2_000e6);
+        requestRedeem(lp3, 3_000e6);
+        requestRedeem(lp4, 4_000e6);
+
+        // Deposit extra liquidity.
+        deposit(lp5, 100_000e6);
+
+        // Pre assertions.
+        assertEq(fundsAsset.balanceOf(lp1),           0);
+        assertEq(fundsAsset.balanceOf(lp2),           0);
+        assertEq(fundsAsset.balanceOf(lp3),           0);
+        assertEq(fundsAsset.balanceOf(lp4),           0);
+        assertEq(fundsAsset.balanceOf(wm),            0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 110_000e6);
+
+        assertEq(pool.balanceOf(lp1), 0);
+        assertEq(pool.balanceOf(lp2), 0);
+        assertEq(pool.balanceOf(lp3), 0);
+        assertEq(pool.balanceOf(lp4), 0);
+        assertEq(pool.balanceOf(wm),  10_000e6);
+
+        assertEq(queueWM.totalShares(), 10_000e6);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4, shares: 4_000e6 });
+
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
+
+        // Process more than the total shares.
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(10_000e6 + 1_500e6);
+
+        // Post assertions.
+        assertEq(fundsAsset.balanceOf(lp1),           1_000e6);
+        assertEq(fundsAsset.balanceOf(lp2),           2_000e6);
+        assertEq(fundsAsset.balanceOf(lp3),           3_000e6);
+        assertEq(fundsAsset.balanceOf(lp4),           4_000e6);
+        assertEq(fundsAsset.balanceOf(wm),            0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 100_000e6);
+
+        assertEq(pool.balanceOf(lp1), 0);
+        assertEq(pool.balanceOf(lp2), 0);
+        assertEq(pool.balanceOf(lp3), 0);
+        assertEq(pool.balanceOf(lp4), 0);
+        assertEq(pool.balanceOf(wm),  0);
+
+        assertEq(queueWM.totalShares(), 0);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
+
+        assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
     }
 
 }
