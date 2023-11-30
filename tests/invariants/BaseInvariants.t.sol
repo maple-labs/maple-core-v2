@@ -156,34 +156,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
      * Withdrawal Manager (Queue)
         * Invariant A: ∑request.shares + ∑owner.manualShares == totalShares
         * Invariant B: balanceOf(this) >= totalShares
-        * Invariant C: lastRequestId == max(requestIds)
-        * Invariant D: ∀ requestId(owner) != 0 -> request.shares > 0 && request.owner == owner
-        * Invariant E: nextRequestId <= lastRequestId + 1
-        * Invariant F: nextRequestId != 0
-        * Invariant G: requests(0) == (0, 0)
-        * Invariant H: ∀ requestId[lender] ∈ [0, lastRequestId]
-        * Invariant I: requestId is unique
-        * Invariant J: lender is unique
-
-    ftlHandler requires (WIP)
-        makePayment
-        * totalAssets increases
-        * Treasury balance increases
-        * PD balance increases if cover
-        * payment management rates equal current rates
-        * domainStart == block.timestamp
-        * domainEnd   == paymentWithEarliestDueDate
-        * loan balance == 0
-        * loan PDD increases by paymentInterval if not last payment
-        * refinanceInterest
-
-        fund
-        * Treasury balance increases
-        * PD balance increases if cover
-        * payment management rates equal current rates
-        * domainStart == block.timestamp
-        * domainEnd   == paymentWithEarliestDueDate
-        * issuanceRate > 0
+        * Invariant C: ∀ requestId(owner) != 0 -> request.shares > 0 && request.owner == owner
+        * Invariant D: nextRequestId <= lastRequestId + 1
+        * Invariant E: nextRequestId != 0
+        * Invariant F: requests(0) == (0, 0)
+        * Invariant G: ∀ requestId[lender] ∈ [0, lastRequestId]
+        * Invariant H: requestId is unique
+        * Invariant I: lender is unique
 
     /**************************************************************************************************************************************/
     /*** Fixed Term Loan Invariants                                                                                                     ***/
@@ -833,7 +812,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
             ( address owner, uint256 shares ) = wm.requests(requestId);
 
-            assertTrue(shares > 0 && owner == lenders_[i], "WMQ Invariant D");
+            assertTrue(shares > 0 && owner == lenders_[i], "WMQ Invariant C");
         }
     }
 
@@ -842,7 +821,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         ( uint128 nextRequestId, uint128 lastRequestId ) = wm.queue();
 
-        assertLe(nextRequestId, lastRequestId + 1, "WMQ Invariant E");
+        assertLe(nextRequestId, lastRequestId + 1, "WMQ Invariant D");
     }
 
     function assert_wmq_invariant_E(address withdrawalManager_) internal {
@@ -850,7 +829,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         ( uint128 nextRequestId, ) = wm.queue();
 
-        assertTrue(nextRequestId != 0, "WMQ Invariant F");
+        assertTrue(nextRequestId != 0, "WMQ Invariant E");
     }
 
     function assert_wmq_invariant_F(address withdrawalManager_) internal {
@@ -858,8 +837,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         ( address owner, uint256 shares ) = wm.requests(0);
 
-        assertEq(owner,  address(0), "WMQ Invariant G");
-        assertEq(shares, uint256(0), "WMQ Invariant G");
+        assertEq(owner,  address(0), "WMQ Invariant F");
+        assertEq(shares, uint256(0), "WMQ Invariant F");
     }
 
     function assert_wmq_invariant_G(address withdrawalManager_, address[] memory lenders_) internal {
@@ -870,7 +849,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         for (uint i; i < lenders_.length; i++) {
             uint128 requestId = wm.requestIds(lenders_[i]);
 
-            assertLe(requestId, lastRequestId, "WMQ Invariant H");
+            assertLe(requestId, lastRequestId, "WMQ Invariant G");
         }
     }
 
@@ -882,7 +861,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
             if (requestId == 0) continue;
 
-            assertFalse(existingRequestIds[requestId], "WMQ Invariant I");
+            assertFalse(existingRequestIds[requestId], "WMQ Invariant H");
 
             existingRequestIds[requestId] = true;
         }
@@ -905,7 +884,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
             if (owner == address(0)) continue;
 
-            assertFalse(existingOwners[owner], "WMQ Invariant J");
+            assertFalse(existingOwners[owner], "WMQ Invariant I");
 
             existingOwners[owner] = true;
         }
