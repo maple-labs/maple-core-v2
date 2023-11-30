@@ -131,6 +131,21 @@ interface ILiquidatorLike {
 
 }
 
+interface IPoolDeployerV2Like {
+
+    function deployPool(
+        address           poolManagerFactory_,
+        address           withdrawalManagerFactory_,
+        address[]  memory loanManagerFactories_,
+        address           asset_,
+        string     memory name_,
+        string     memory symbol_,
+        uint256[6] memory configParams_
+    )
+        external
+        returns (address poolManager_);
+}
+
 interface IProxiedLike {
 
     function implementation() external view returns (address implementation_);

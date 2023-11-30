@@ -298,6 +298,14 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         upgradePoolManagerAsSecurityAdmin(poolManager, 301, arguments);
     }
 
+    function _deprecatePoolDeployerV2() internal {
+        address _globals  = protocol.globals;
+        address _governor = protocol.governor;
+
+        _enableGlobalsSetCanDeploy(_governor, _globals, protocol.poolManagerFactory,       protocol.poolDeployerV2, false);
+        _enableGlobalsSetCanDeploy(_governor, _globals, protocol.withdrawalManagerFactory, protocol.poolDeployerV2, false);
+    }
+
     /**************************************************************************************************************************************/
     /*** Assertion Helper Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
@@ -369,6 +377,13 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         IGlobals globals_ = IGlobals(globals);
 
         assertTrue(globals_.canDeployFrom(factory, poolDeployer));
+    }
+
+    function _assertPoolDeployerV2Deprecated() internal {
+        IGlobals globals_ = IGlobals(protocol.globals);
+
+        assertFalse(globals_.canDeployFrom(protocol.poolManagerFactory, protocol.poolDeployerV2));
+        assertFalse(globals_.canDeployFrom(protocol.withdrawalManagerFactory, protocol.poolDeployerV2));
     }
 
     function _assertIsLoan(address[] memory loans) internal {
