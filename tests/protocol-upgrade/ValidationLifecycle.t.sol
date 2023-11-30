@@ -348,7 +348,7 @@ contract ValidationLifecycleBASEL2 is UpgradeAddressRegistryBASEL2, ValidationLi
         address pool = pools[0].pool;
         address[] storage ftLoans = pools[0].ftLoans;
         address[] storage otLoans = pools[0].otLoans;
-        
+
         runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
     }
 

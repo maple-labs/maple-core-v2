@@ -82,13 +82,50 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
             _upgradePoolContractsAsSecurityAdmin(poolPermissionManager, p.poolManager, 300);
 
-            if (p.ftLoans.length > 0) _upgradeFixedTermLoansAsSecurityAdmin(p.ftLoans, 502, abi.encode(fixedTermLoanFactoryV2));
+            if (p.ftLoans.length > 0) {
+                _upgradeFixedTermLoansAsSecurityAdmin(p.ftLoans, 502, abi.encode(fixedTermLoanFactoryV2));
+            }
 
             _addWMAndPMToAllowlists(p.poolManager, p.withdrawalManager);
             _addWMAndPMToAllowlists(p.poolManager, p.poolManager);
 
             _allowLenders(p.poolManager, p.lps);
         }
+    }
+
+    function _performPartialProtocolUpgrade() internal {
+        address governor = protocol.governor;
+        address globals  = protocol.globals;
+
+        _deployAllNewContracts(governor, globals, protocol.fixedTermLoanFactory);
+
+        upgradeGlobals(globals, globalsImplementationV3);
+
+        _enableGlobalsSetInstance(governor, globals, fixedTermLoanFactoryV2,            true, "LOAN_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, fixedTermLoanFactoryV2,            true, "FT_LOAN_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, address(poolPermissionManager),    true, "POOL_PERMISSION_MANAGER");
+        _enableGlobalsSetInstance(governor, globals, protocol.withdrawalManagerFactory, true, "WITHDRAWAL_MANAGER_CYCLE_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, queueWMFactory,                    true, "WITHDRAWAL_MANAGER_QUEUE_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, queueWMFactory,                    true, "WITHDRAWAL_MANAGER_FACTORY");
+        _enableGlobalsSetInstance(governor, globals, poolDeployerV3,                    true, "POOL_DEPLOYER");
+
+        _enableGlobalsSetCanDeploy(governor, globals, protocol.poolManagerFactory,       poolDeployerV3, true);
+        _enableGlobalsSetCanDeploy(governor, globals, protocol.withdrawalManagerFactory, poolDeployerV3, true);
+        _enableGlobalsSetCanDeploy(governor, globals, queueWMFactory,                    poolDeployerV3, true);
+
+        if (protocol.assets.length > 0) {
+            for (uint i = 0; i < protocol.assets.length; i++) {
+                _addDelayToOracles(governor, globals, protocol.assets[i].asset, protocol.assets[i].oracle, 1 days);
+            }
+        }
+
+        _setupFactories(
+            governor,
+            protocol.poolManagerFactory,
+            protocol.fixedTermLoanFactory,
+            protocol.withdrawalManagerFactory,
+            queueWMFactory
+        );
     }
 
     /**************************************************************************************************************************************/
