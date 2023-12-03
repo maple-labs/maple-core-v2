@@ -3,6 +3,8 @@ pragma solidity 0.8.7;
 
 import { IOpenTermLoan } from "../../contracts/interfaces/Interfaces.sol";
 
+import { console2 as console } from "../../contracts/Contracts.sol";
+
 import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
 import { DepositHandler }            from "./handlers/DepositHandler.sol";
 import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
@@ -22,6 +24,8 @@ contract OpenTermInvariants is BaseInvariants {
     uint256 constant NUM_LPS       = 10;
     uint256 constant NUM_OT_LOANS  = 10;
     uint256 constant NUM_BORROWERS = 5;
+
+    DistributionHandler distributionHandler;
 
     /**************************************************************************************************************************************/
     /*** Setup Function                                                                                                                 ***/
@@ -88,16 +92,16 @@ contract OpenTermInvariants is BaseInvariants {
         weightsDistributorHandler[2] = 10;
         weightsDistributorHandler[3] = 75;
 
-        address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
+        distributionHandler = new DistributionHandler(targetContracts, weightsDistributorHandler);
 
-        targetContract(distributionHandler);
+        targetContract(address(distributionHandler));
     }
 
     /**************************************************************************************************************************************/
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_openTermLoan_A_B_C_D_E_F_G_H_I_openTermLoanManager_A_B_C_D_F_H_I_J() external useCurrentTimestamp {
+    function statefulFuzz_openTermLoan_A_B_C_D_E_F_G_H_I_openTermLoanManager_A_B_C_D_F_H_I_J_K() external useCurrentTimestamp {
         address[] memory loans = _getActiveLoans();
 
         address loanManager = address(otlHandler.loanManager());
@@ -107,7 +111,7 @@ contract OpenTermInvariants is BaseInvariants {
         assert_otlm_invariant_C(loanManager, loans);
         assert_otlm_invariant_D(loanManager, loans);
         assert_otlm_invariant_F(loanManager, loans);
-        // assert_otlm_invariant_K(loanManager, loans);  // TODO: Explore why this fails
+        assert_otlm_invariant_K(loanManager, loans);
 
         for (uint256 i; i < loans.length; ++i) {
             address loan = loans[i];

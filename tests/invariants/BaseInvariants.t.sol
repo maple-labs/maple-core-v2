@@ -34,7 +34,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     uint256 constant ALLOWED_DIFF        = 100;
-    uint256 constant UNDERFLOW_THRESHOLD = 10;
     uint256 constant PUBLIC              = 3;
     uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
 
@@ -707,23 +706,22 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    // function assert_otlm_invariant_K(address loanManager_, address[] memory loans_) internal useCurrentTimestamp {
-    //     uint256 outstandingValue;
+    function assert_otlm_invariant_K(address loanManager_, address[] memory loans_) internal useCurrentTimestamp {
+        uint256 outstandingValue;
 
-    //     uint256 assetsUnderManagement = IOpenTermLoanManager(loanManager_).assetsUnderManagement();
-    //     uint256 unrealizedLosses      = IOpenTermLoanManager(loanManager_).unrealizedLosses();
+        uint256 assetsUnderManagement = IOpenTermLoanManager(loanManager_).assetsUnderManagement();
+        uint256 unrealizedLosses      = IOpenTermLoanManager(loanManager_).unrealizedLosses();
 
-    //     for (uint256 i; i < loans_.length; ++i) {
-    //         outstandingValue += _getOutstandingValue(loans_[i]);
-    //     }
+        for (uint256 i; i < loans_.length; ++i) {
+            outstandingValue += _getOutstandingValue(loans_[i]);
+        }
 
-    //     assertApproxEqAbs(
-    //         assetsUnderManagement + UNDERFLOW_THRESHOLD - unrealizedLosses - outstandingValue,
-    //         0,
-    //         ALLOWED_DIFF,
-    //         "OTLM Invariant K"
-    //     );
-    // }
+        uint256 a = assetsUnderManagement;
+        uint256 b = unrealizedLosses + outstandingValue;
+        uint256 diff = a > b ? a - b : b - a;
+
+        assertApproxEqAbs(diff, 0, ALLOWED_DIFF, "OTLM Invariant K");
+    }
 
     /**************************************************************************************************************************************/
     /*** Pool Permission Manager Invariants                                                                                             ***/
