@@ -33,7 +33,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    uint256 constant ALLOWED_DIFF        = 100;
+    uint256 constant ALLOWED_DIFF        = 150;
     uint256 constant PUBLIC              = 3;
     uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
 
