@@ -12,12 +12,15 @@ contract UpgradeAddressRegistryBASEL2 is AddressRegistryBaseL2, UpgradeAddressRe
     ];
 
     address[] cashManagementUSDCAllowedLenders = [
-        0xD1A9FfeFe76ee44Ca724BEf30e16Ead1BA039601
+        0x6495F96B89904F574817a3b191c7817D91FE96eb,
+        0xD84C0427fA38E12B4ff9b3897EF0e7dab7251746,
+        0xFCEfe182bD1316D664E6f4073aa7CfB6b761BFb9
     ];
 
     constructor() {
         protocol.governor                    = governor;
         protocol.mapleTreasury               = mapleTreasury;
+        protocol.operationalAdmin            = operationalAdmin;
         protocol.securityAdmin               = securityAdmin;
         protocol.usdc                        = usdc;
         protocol.fixedTermFeeManagerV1       = fixedTermFeeManagerV1;
@@ -34,6 +37,8 @@ contract UpgradeAddressRegistryBASEL2 is AddressRegistryBaseL2, UpgradeAddressRe
         protocol.poolManagerFactory          = poolManagerFactory;
         protocol.withdrawalManagerFactory    = withdrawalManagerFactory;
 
+        fixedTermLoanInitializerV500 = 0x42F53CDF5D74aCa6A62BAD32C97Cd460449090dC;
+
         pools.push(Pool({
             name:                 "cashMgmtUSDC",
             pool:                 cashManagementUSDCPool,
@@ -45,6 +50,9 @@ contract UpgradeAddressRegistryBASEL2 is AddressRegistryBaseL2, UpgradeAddressRe
             otLoans:              cashManagementUSDCOpenTermLoans,
             ftLoans:              new address[](0)
         }));
+
+        cashPools.push(0);
+
     }
 
 }

@@ -37,8 +37,6 @@ import { UpgradeAddressRegistry as AddressRegistry } from "./UpgradeAddressRegis
 
 contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
-    PoolPermissionManager poolPermissionManager;
-
     /**************************************************************************************************************************************/
     /*** Upgrade Procedure                                                                                                              ***/
     /**************************************************************************************************************************************/
@@ -57,7 +55,6 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         _enableGlobalsSetInstance(governor, globals, protocol.withdrawalManagerFactory, true, "WITHDRAWAL_MANAGER_CYCLE_FACTORY");
         _enableGlobalsSetInstance(governor, globals, queueWMFactory,                    true, "WITHDRAWAL_MANAGER_QUEUE_FACTORY");
         _enableGlobalsSetInstance(governor, globals, queueWMFactory,                    true, "WITHDRAWAL_MANAGER_FACTORY");
-        _enableGlobalsSetInstance(governor, globals, poolDeployerV3,                    true, "POOL_DEPLOYER");
 
         _enableGlobalsSetCanDeploy(governor, globals, protocol.poolManagerFactory,       poolDeployerV3, true);
         _enableGlobalsSetCanDeploy(governor, globals, protocol.withdrawalManagerFactory, poolDeployerV3, true);
@@ -80,7 +77,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         for (uint i = 0; i < pools.length; i++) {
             Pool storage p = pools[i];
 
-            _upgradePoolContractsAsSecurityAdmin(poolPermissionManager, p.poolManager, 300);
+            _upgradePoolContractsAsSecurityAdmin(PoolPermissionManager(poolPermissionManager), p.poolManager, 300);
 
             if (p.ftLoans.length > 0) {
                 _upgradeFixedTermLoansAsSecurityAdmin(p.ftLoans, 502, abi.encode(fixedTermLoanFactoryV2));
@@ -170,9 +167,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         poolPermissionManagerImplementation = address(new PoolPermissionManager());
         poolPermissionManagerInitializer    = address(new PoolPermissionManagerInitializer());
 
-        poolPermissionManager = PoolPermissionManager(
-            address(new NonTransparentProxy(governor, poolPermissionManagerInitializer))
-        );
+        poolPermissionManager = address(new NonTransparentProxy(governor, poolPermissionManagerInitializer));
 
         cyclicalWMImplementation = address(new WithdrawalManagerCyclical());
         cyclicalWMInitializer    = address(new WithdrawalManagerCyclicalInitializer());
@@ -360,7 +355,6 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         _assertGlobalsIsInstanceOf(protocol.globals, protocol.withdrawalManagerFactory, "WITHDRAWAL_MANAGER_CYCLE_FACTORY");
         _assertGlobalsIsInstanceOf(protocol.globals, queueWMFactory,                    "WITHDRAWAL_MANAGER_QUEUE_FACTORY");
         _assertGlobalsIsInstanceOf(protocol.globals, queueWMFactory,                    "WITHDRAWAL_MANAGER_FACTORY");
-        _assertGlobalsIsInstanceOf(protocol.globals, poolDeployerV3,                    "POOL_DEPLOYER");
 
         _assertGlobalsCanDeployFrom(protocol.globals, protocol.poolManagerFactory,       poolDeployerV3);
         _assertGlobalsCanDeployFrom(protocol.globals, protocol.withdrawalManagerFactory, poolDeployerV3);
@@ -415,7 +409,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
     function _assertLendersPermission(address poolManager, address[] memory lenders) internal {
         for (uint256 i = 0; i < lenders.length; i++) {
-            assertTrue(poolPermissionManager.lenderAllowlist(poolManager, lenders[i]));
+            assertTrue(PoolPermissionManager(poolPermissionManager).lenderAllowlist(poolManager, lenders[i]));
         }
     }
 
@@ -439,8 +433,8 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         for (uint i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
-            _assertPermission(poolPermissionManager, pool.poolManager, pool.poolManager);
-            _assertPermission(poolPermissionManager, pool.poolManager, pool.withdrawalManager);
+            _assertPermission(PoolPermissionManager(poolPermissionManager), pool.poolManager, pool.poolManager);
+            _assertPermission(PoolPermissionManager(poolPermissionManager), pool.poolManager, pool.withdrawalManager);
         }
     }
 

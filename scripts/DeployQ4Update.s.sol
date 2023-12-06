@@ -34,8 +34,8 @@ import { MapleWithdrawalManagerInitializer as WithdrawalManagerQueueInitializer 
 import { MapleWithdrawalManager as WithdrawalManagerQueue }
     from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
 
-import { MapleAddressRegistry }     from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
-import { MapleAddressRegistryBase } from "../modules/address-registry/contracts/MapleAddressRegistryBase.sol";
+import { MapleAddressRegistry }       from "../modules/address-registry/contracts/MapleAddressRegistry.sol";
+import { MapleAddressRegistryBaseL2 } from "../modules/address-registry/contracts/MapleAddressRegistryBase.sol";
 
 
 import { IProxyFactoryLike } from "../contracts/interfaces/Interfaces.sol";
@@ -112,7 +112,7 @@ contract DeployQ4UpdateETH is MapleAddressRegistry, Script {
 
 }
 
-contract DeployQ4UpdateBASEL2 is MapleAddressRegistryBase, Script {
+contract DeployQ4UpdateBASEL2 is MapleAddressRegistryBaseL2, Script {
 
     function run() external {
         address ETH_SENDER = vm.envAddress("ETH_SENDER");

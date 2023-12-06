@@ -236,7 +236,7 @@ contract ValidationLifecycleTestsRoot is ProtocolUpgradeBase, FuzzedUtil {
 contract ValidationLifecycleETH is UpgradeAddressRegistryETH, ValidationLifecycleTestsRoot {
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18648830);
 
         _performProtocolUpgrade();
     }
@@ -309,7 +309,7 @@ contract ValidationLifecycleETH is UpgradeAddressRegistryETH, ValidationLifecycl
 contract ValidationLifecycleForCashMgtETH is UpgradeAddressRegistryETH, ValidationLifecycleTestsRoot {
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18421300);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18648830);
 
         _performProtocolUpgrade();
 

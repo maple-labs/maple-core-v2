@@ -39,6 +39,9 @@ deploy:
 
 # Utility
 
+validate:
+	@FOUNDRY_PROFILE=production forge script Validate$(step)$(network)
+
 clean:
 	@forge clean
 
