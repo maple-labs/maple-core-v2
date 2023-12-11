@@ -30,10 +30,10 @@ contract HealthCheckerAssertions is Test {
         assertTrue(results.poolInvariantK);
         assertTrue(results.poolManagerInvariantA);
         assertTrue(results.poolManagerInvariantB);
-        assertTrue(results.withdrawalManagerInvariantC);
-        assertTrue(results.withdrawalManagerInvariantD);
-        assertTrue(results.withdrawalManagerInvariantE);
-        assertTrue(results.withdrawalManagerInvariantM);
+        assertTrue(results.withdrawalManagerCyclicalInvariantC);
+        assertTrue(results.withdrawalManagerCyclicalInvariantD);
+        assertTrue(results.withdrawalManagerCyclicalInvariantE);
+        assertTrue(results.withdrawalManagerCyclicalInvariantM);
     }
 
 }

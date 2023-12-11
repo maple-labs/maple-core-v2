@@ -6,6 +6,7 @@ import {
     ILoanLike,
     IProxiedLike,
     IProxyFactoryLike,
+    IPool,
     IPoolManager,
     IPoolPermissionManager
 } from "../../contracts/interfaces/Interfaces.sol";
@@ -299,6 +300,21 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
         _enableGlobalsSetCanDeploy(_governor, _globals, protocol.poolManagerFactory,       protocol.poolDeployerV2, false);
         _enableGlobalsSetCanDeploy(_governor, _globals, protocol.withdrawalManagerFactory, protocol.poolDeployerV2, false);
+    }
+
+    function _approveAndAddLpsToQueueWM(address poolManager_) internal {
+        address lp;
+        address pool_ = IPoolManager(poolManager_).pool();
+
+        allowLender(poolManager_, IPoolManager(poolManager_).withdrawalManager());
+
+        for (uint i = 1; i <= 5; i++) {
+            lp = makeAddr(string(abi.encode("lp", i)));
+
+            deposit(pool_, lp, 10e6 * i);
+
+            requestRedeem(pool_, lp, IPool(pool_).balanceOf(lp));
+        }
     }
 
     /**************************************************************************************************************************************/

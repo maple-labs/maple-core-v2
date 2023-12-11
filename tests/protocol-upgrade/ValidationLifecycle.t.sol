@@ -156,27 +156,27 @@ contract ValidationLifecycleTestsRoot is ProtocolUpgradeBase, FuzzedUtil {
     }
 
     function assertProtocolHealthChecker(ProtocolHealthChecker.Invariants memory invariants_) internal {
-        assertTrue(invariants_.fixedTermLoanManagerInvariantA, "ProtocolHealthChecker FTLM Invariant A");
-        assertTrue(invariants_.fixedTermLoanManagerInvariantB, "ProtocolHealthChecker FTLM Invariant B");
-        assertTrue(invariants_.fixedTermLoanManagerInvariantF, "ProtocolHealthChecker FTLM Invariant F");
-        assertTrue(invariants_.fixedTermLoanManagerInvariantI, "ProtocolHealthChecker FTLM Invariant I");
-        assertTrue(invariants_.fixedTermLoanManagerInvariantJ, "ProtocolHealthChecker FTLM Invariant J");
-        assertTrue(invariants_.fixedTermLoanManagerInvariantK, "ProtocolHealthChecker FTLM Invariant K");
-        assertTrue(invariants_.openTermLoanManagerInvariantE,  "ProtocolHealthChecker OTLM Invariant E");
-        assertTrue(invariants_.openTermLoanManagerInvariantG,  "ProtocolHealthChecker OTLM Invariant G");
-        assertTrue(invariants_.poolInvariantA,                 "ProtocolHealthChecker Pool Invariant A");
-        assertTrue(invariants_.poolInvariantD,                 "ProtocolHealthChecker Pool Invariant D");
-        assertTrue(invariants_.poolInvariantE,                 "ProtocolHealthChecker Pool Invariant E");
-        assertTrue(invariants_.poolInvariantI,                 "ProtocolHealthChecker Pool Invariant I");
-        assertTrue(invariants_.poolInvariantJ,                 "ProtocolHealthChecker Pool Invariant J");
-        assertTrue(invariants_.poolInvariantK,                 "ProtocolHealthChecker Pool Invariant K");
-        assertTrue(invariants_.poolManagerInvariantA,          "ProtocolHealthChecker PM Invariant A");
-        assertTrue(invariants_.poolManagerInvariantB,          "ProtocolHealthChecker PM Invariant B");
-        assertTrue(invariants_.withdrawalManagerInvariantC,    "ProtocolHealthChecker WM Invariant C");
-        assertTrue(invariants_.withdrawalManagerInvariantD,    "ProtocolHealthChecker WM Invariant D");
-        assertTrue(invariants_.withdrawalManagerInvariantE,    "ProtocolHealthChecker WM Invariant E");
-        assertTrue(invariants_.withdrawalManagerInvariantM,    "ProtocolHealthChecker WM Invariant M");
-        assertTrue(invariants_.withdrawalManagerInvariantN,    "ProtocolHealthChecker WM Invariant N");
+        assertTrue(invariants_.fixedTermLoanManagerInvariantA,      "ProtocolHealthChecker FTLM Invariant A");
+        assertTrue(invariants_.fixedTermLoanManagerInvariantB,      "ProtocolHealthChecker FTLM Invariant B");
+        assertTrue(invariants_.fixedTermLoanManagerInvariantF,      "ProtocolHealthChecker FTLM Invariant F");
+        assertTrue(invariants_.fixedTermLoanManagerInvariantI,      "ProtocolHealthChecker FTLM Invariant I");
+        assertTrue(invariants_.fixedTermLoanManagerInvariantJ,      "ProtocolHealthChecker FTLM Invariant J");
+        assertTrue(invariants_.fixedTermLoanManagerInvariantK,      "ProtocolHealthChecker FTLM Invariant K");
+        assertTrue(invariants_.openTermLoanManagerInvariantE,       "ProtocolHealthChecker OTLM Invariant E");
+        assertTrue(invariants_.openTermLoanManagerInvariantG,       "ProtocolHealthChecker OTLM Invariant G");
+        assertTrue(invariants_.poolInvariantA,                      "ProtocolHealthChecker Pool Invariant A");
+        assertTrue(invariants_.poolInvariantD,                      "ProtocolHealthChecker Pool Invariant D");
+        assertTrue(invariants_.poolInvariantE,                      "ProtocolHealthChecker Pool Invariant E");
+        assertTrue(invariants_.poolInvariantI,                      "ProtocolHealthChecker Pool Invariant I");
+        assertTrue(invariants_.poolInvariantJ,                      "ProtocolHealthChecker Pool Invariant J");
+        assertTrue(invariants_.poolInvariantK,                      "ProtocolHealthChecker Pool Invariant K");
+        assertTrue(invariants_.poolManagerInvariantA,               "ProtocolHealthChecker PM Invariant A");
+        assertTrue(invariants_.poolManagerInvariantB,               "ProtocolHealthChecker PM Invariant B");
+        assertTrue(invariants_.withdrawalManagerCyclicalInvariantC, "ProtocolHealthChecker WM Invariant C");
+        assertTrue(invariants_.withdrawalManagerCyclicalInvariantD, "ProtocolHealthChecker WM Invariant D");
+        assertTrue(invariants_.withdrawalManagerCyclicalInvariantE, "ProtocolHealthChecker WM Invariant E");
+        assertTrue(invariants_.withdrawalManagerCyclicalInvariantM, "ProtocolHealthChecker WM Invariant M");
+        assertTrue(invariants_.withdrawalManagerCyclicalInvariantN, "ProtocolHealthChecker WM Invariant N");
     }
 
     function assertFixedTermLoanManagerWithDiff(

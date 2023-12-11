@@ -7,8 +7,10 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
+    IPoolPermissionManager,
     IWithdrawalManagerCyclical as IWithdrawalManager,
-    IWithdrawalManagerLike
+    IWithdrawalManagerLike,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
 // NOTE: This contract only uses onchain calls to check invariants.
@@ -44,12 +46,23 @@ contract ProtocolHealthChecker {
         * Invariant A: totalAssets == cash + ∑assetsUnderManagement[loanManager]
         * Invariant B: hasSufficientCover == fundsAsset balance of cover > globals.minCoverAmount
 
-     * Withdrawal Manager
+     * Pool Permission Manager
+        * Invariant A: pool.permissionLevel ∈ [0, 3]
+
+     * Withdrawal Manager (Cyclical)
         * Invariant C: windowStart[currentCycle] <= block.timestamp
         * Invariant D: initialCycleTime[currentConfig] <= block.timestamp
         * Invariant E: initialCycleId[currentConfig] <= currentCycle
         * Invariant M: lockedLiquidity <= pool.totalAssets()
         * Invariant N: lockedLiquidity <= totalCycleShares[exitCycleId[user]] * exchangeRate
+
+     * Withdrawal Manager (Queue)
+        * Invariant A: ∑request.shares + ∑owner.manualShares == totalShares
+        * Invariant B: balanceOf(this) >= totalShares
+        * Invariant D: nextRequestId <= lastRequestId + 1
+        * Invariant E: nextRequestId != 0
+        * Invariant F: requests(0) == (0, 0)
+        * Invariant I: lender is unique
 
     *******************************************************************************************************************************/
 
@@ -71,11 +84,18 @@ contract ProtocolHealthChecker {
         bool poolInvariantK;
         bool poolManagerInvariantA;
         bool poolManagerInvariantB;
-        bool withdrawalManagerInvariantC;
-        bool withdrawalManagerInvariantD;
-        bool withdrawalManagerInvariantE;
-        bool withdrawalManagerInvariantM;
-        bool withdrawalManagerInvariantN;
+        bool poolPermissionManagerInvariantA;
+        bool withdrawalManagerCyclicalInvariantC;
+        bool withdrawalManagerCyclicalInvariantD;
+        bool withdrawalManagerCyclicalInvariantE;
+        bool withdrawalManagerCyclicalInvariantM;
+        bool withdrawalManagerCyclicalInvariantN;
+        bool withdrawalManagerQueueInvariantA;
+        bool withdrawalManagerQueueInvariantB;
+        bool withdrawalManagerQueueInvariantD;
+        bool withdrawalManagerQueueInvariantE;
+        bool withdrawalManagerQueueInvariantF;
+        bool withdrawalManagerQueueInvariantI;
     }
 
     function checkInvariants(address poolManager_) external view returns (Invariants memory invariants_) {
@@ -95,13 +115,13 @@ contract ProtocolHealthChecker {
 
             if (_isFixedTermLoanManager(loanManagerOne_)) {
                 bool empty = loanManagerTwo_ == address(0);
-                
+
                 // Given the 1st LM is fixed term, the 2nd LM must be either empty or open term.
                 require(empty || _isOpenTermLoanManager(loanManagerTwo_), "PHC:CI:INVALID_LM_TYPES");
 
                 fixedTermLoanManager_ = loanManagerOne_;
                 openTermLoanManager_  = empty ? address(0) : loanManagerTwo_;
-            } 
+            }
 
             if (_isOpenTermLoanManager(loanManagerOne_)) {
                 bool empty = loanManagerTwo_ == address(0);
@@ -124,7 +144,7 @@ contract ProtocolHealthChecker {
         invariants_.fixedTermLoanManagerInvariantB = emptyLoanManager || check_fixedTermLoanManager_invariant_B(fixedTermLoanManager_);
         invariants_.fixedTermLoanManagerInvariantF = emptyLoanManager || check_fixedTermLoanManager_invariant_F(fixedTermLoanManager_);
         invariants_.fixedTermLoanManagerInvariantI = emptyLoanManager || check_fixedTermLoanManager_invariant_I(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantJ = true; // 0 interest loan possible, is this really an invariants as our system allows it
+        invariants_.fixedTermLoanManagerInvariantJ = true;  // 0 interest loan possible, consider removing.
         invariants_.fixedTermLoanManagerInvariantK = emptyLoanManager || check_fixedTermLoanManager_invariant_K(fixedTermLoanManager_);
 
         emptyLoanManager = openTermLoanManager_ == address(0);
@@ -149,11 +169,33 @@ contract ProtocolHealthChecker {
 
         invariants_.poolManagerInvariantB = check_poolManager_invariant_B(poolManager_);
 
-        invariants_.withdrawalManagerInvariantC = check_withdrawalManager_invariant_C(withdrawalManager_);
-        invariants_.withdrawalManagerInvariantD = check_withdrawalManager_invariant_D(withdrawalManager_);
-        invariants_.withdrawalManagerInvariantE = check_withdrawalManager_invariant_E(withdrawalManager_);
-        invariants_.withdrawalManagerInvariantM = check_withdrawalManager_invariant_M(pool_, withdrawalManager_);
-        invariants_.withdrawalManagerInvariantN = check_withdrawalManager_invariant_N(pool_, withdrawalManager_);
+        invariants_.poolPermissionManagerInvariantA = check_poolPermissionManager_invariant_A(poolManager_);
+
+        bool isWithdrawalManagerCyclical_ = isWithdrawalManagerCyclical(withdrawalManager_);
+
+        invariants_.withdrawalManagerCyclicalInvariantC =
+            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_C(withdrawalManager_);
+        invariants_.withdrawalManagerCyclicalInvariantD =
+            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_D(withdrawalManager_);
+        invariants_.withdrawalManagerCyclicalInvariantE =
+            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_E(withdrawalManager_);
+        invariants_.withdrawalManagerCyclicalInvariantM =
+            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_M(pool_, withdrawalManager_);
+        invariants_.withdrawalManagerCyclicalInvariantN =
+            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_N(pool_, withdrawalManager_);
+
+        invariants_.withdrawalManagerQueueInvariantA =
+            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_A(withdrawalManager_);
+        invariants_.withdrawalManagerQueueInvariantB =
+            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_B(withdrawalManager_);
+        invariants_.withdrawalManagerQueueInvariantD =
+            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_D(withdrawalManager_);
+        invariants_.withdrawalManagerQueueInvariantE =
+            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_E(withdrawalManager_);
+        invariants_.withdrawalManagerQueueInvariantF =
+            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_F(withdrawalManager_);
+        invariants_.withdrawalManagerQueueInvariantI =
+            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_I(withdrawalManager_);
     }
 
     /******************************************************************************************************************************/
@@ -323,10 +365,22 @@ contract ProtocolHealthChecker {
     }
 
     /******************************************************************************************************************************/
-    /*** Withdrawal Manager Invariants                                                                                          ***/
+    /*** Pool Permission Manager Invariants                                                                                     ***/
     /******************************************************************************************************************************/
 
-    function check_withdrawalManager_invariant_C(address withdrawalManager_) public view returns (bool isMaintained_) {
+    function check_poolPermissionManager_invariant_A(address poolManager_) public view returns (bool isMaintained_) {
+        IPoolPermissionManager ppm = IPoolPermissionManager(IPoolManager(poolManager_).poolPermissionManager());
+
+        uint256 permissionLevel = ppm.permissionLevels(poolManager_);
+
+        isMaintained_ = permissionLevel >= 0 && permissionLevel <= 3;
+    }
+
+    /******************************************************************************************************************************/
+    /*** Withdrawal Manager Invariants (Cyclical)                                                                               ***/
+    /******************************************************************************************************************************/
+
+    function check_withdrawalManagerCyclical_invariant_C(address withdrawalManager_) public view returns (bool isMaintained_) {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(withdrawalManager.getCurrentCycleId());
@@ -334,7 +388,7 @@ contract ProtocolHealthChecker {
         isMaintained_ = withdrawalWindowStart <= block.timestamp;
     }
 
-    function check_withdrawalManager_invariant_D(address withdrawalManager_) public view returns (bool isMaintained_) {
+    function check_withdrawalManagerCyclical_invariant_D(address withdrawalManager_) public view returns (bool isMaintained_) {
         IWithdrawalManagerLike withdrawalManager = IWithdrawalManagerLike(withdrawalManager_);
 
         ( , uint256 initialCycleTime , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
@@ -342,7 +396,7 @@ contract ProtocolHealthChecker {
         isMaintained_ = initialCycleTime <= block.timestamp;
     }
 
-    function check_withdrawalManager_invariant_E(address withdrawalManager_) public view returns (bool isMaintained_) {
+    function check_withdrawalManagerCyclical_invariant_E(address withdrawalManager_) public view returns (bool isMaintained_) {
         IWithdrawalManagerLike withdrawalManager = IWithdrawalManagerLike(withdrawalManager_);
 
         ( uint256 initialCycleId , , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
@@ -350,7 +404,10 @@ contract ProtocolHealthChecker {
         isMaintained_ = initialCycleId <= withdrawalManager.getCurrentCycleId();
     }
 
-    function check_withdrawalManager_invariant_M(address pool_, address withdrawalManager_) public view returns (bool isMaintained_) {
+    function check_withdrawalManagerCyclical_invariant_M(
+        address pool_,
+        address withdrawalManager_
+    ) public view returns (bool isMaintained_) {
         IPool pool = IPool(pool_);
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
@@ -369,7 +426,10 @@ contract ProtocolHealthChecker {
         }
     }
 
-    function check_withdrawalManager_invariant_N(address pool_, address withdrawalManager_) public view returns (bool isMaintained_) {
+    function check_withdrawalManagerCyclical_invariant_N(
+        address pool_,
+        address withdrawalManager_
+    ) public view returns (bool isMaintained_) {
         IPool pool = IPool(pool_);
 
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -388,6 +448,95 @@ contract ProtocolHealthChecker {
         } else {
             isMaintained_ = withdrawalManager.lockedLiquidity() == 0;
         }
+    }
+
+    /******************************************************************************************************************************/
+    /*** Withdrawal Manager Invariants (Queue)                                                                                  ***/
+    /******************************************************************************************************************************/
+
+    function check_withdrawalManagerQueue_invariant_A(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
+
+        address owner;
+
+        uint256 shares;
+        uint256 sumOfShares;
+        uint256 totalShares = withdrawalManager.totalShares();
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+
+        for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
+            ( owner, shares ) = withdrawalManager.requests(requestId);
+
+            if (withdrawalManager.isManualWithdrawal(owner)) {
+                sumOfShares += withdrawalManager.manualSharesAvailable(owner);
+            } else {
+                sumOfShares += shares;
+            }
+        }
+
+        isMaintained_ = sumOfShares == totalShares;
+    }
+
+    function check_withdrawalManagerQueue_invariant_B(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
+        IPool                   pool              = IPool(withdrawalManager.pool());
+
+        uint256 totalShares = withdrawalManager.totalShares();
+        uint256 balance     = pool.balanceOf(withdrawalManager_);
+
+        isMaintained_ = balance >= totalShares;
+    }
+
+    function check_withdrawalManagerQueue_invariant_D(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+
+        isMaintained_ = nextRequestId <= lastRequestId + 1;
+    }
+
+    function check_withdrawalManagerQueue_invariant_E(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, ) = withdrawalManager.queue();
+
+        isMaintained_ = nextRequestId != 0;
+    }
+
+    function check_withdrawalManagerQueue_invariant_F(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( address owner, uint256 shares ) = withdrawalManager.requests(0);
+
+        isMaintained_ = shares == 0 && owner == address(0);
+    }
+
+    function check_withdrawalManagerQueue_invariant_I(address withdrawalManager_) public view returns (bool isMaintained_) {
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+
+        uint256 arrayLength = lastRequestId - nextRequestId + 1;
+
+        // Dynamic array to store encountered lenders
+        address[] memory lenderExists = new address[](arrayLength);
+
+        for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
+            ( address owner, ) = withdrawalManager.requests(requestId);
+
+            // Check if the lender has been encountered before
+            for (uint128 i; i < arrayLength; i++) {
+                if (lenderExists[i] == owner) {
+                    return false;
+                }
+            }
+
+            // Add the lender to the array
+            lenderExists[requestId - nextRequestId] = owner;
+        }
+
+        return isMaintained_ = true;
     }
 
     /******************************************************************************************************************************/
@@ -421,6 +570,12 @@ contract ProtocolHealthChecker {
     function _isOpenTermLoanManager(address loan) internal view returns (bool isOpenTermLoanManager_) {
         try IOpenTermLoanManager(loan).paymentFor(address(0)) {
             isOpenTermLoanManager_ = true;
+        } catch { }
+    }
+
+    function isWithdrawalManagerCyclical(address wm) internal view returns (bool isWithdrawalManagerCyclical_) {
+        try IWithdrawalManager(wm).getCurrentCycleId() {
+            isWithdrawalManagerCyclical_ = true;
         } catch { }
     }
 
