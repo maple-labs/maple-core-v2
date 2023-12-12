@@ -57,13 +57,13 @@ abstract contract UpgradeAddressRegistry {
     bytes32 constant expectedPoolManagerMigratorCodeHash              = 0xe75fc744c70e95a3465ccc462b3533e454113b898bf724ebf925495dc4162eb5;
     bytes32 constant expectedPoolManagerWMMigratorCodeHash            = 0x7745d1b777612c3e91ad3b57c145dd0d9af416c549b290918bb06c25c35c13fd;
     bytes32 constant expectedPoolPermissionManagerCodeHash            = 0xfc4b542b98e65e308447b9e52ec457622b749a3a19b65f827640310f1a34134c;
-    bytes32 constant expectedPoolPermissionManagerImplCodeHash        = 0x5b13364a741b2496cac16e25e737dec7dbbf0f5cdf6ab8b4eab5efe59b09f201;
+    bytes32 constant expectedPoolPermissionManagerImplCodeHash        = 0xea0b5815daa4b77bc3f77396c96a07de82bde7b78ab964bb0352552c0496cba7;
     bytes32 constant expectedPoolPermissionManagerInitializerCodeHash = 0x67450c06ff1102c2a983d046f8ef5d18e2bec15606e1f721f1be9ff7d41b58ee;
-    bytes32 constant expectedCyclicalWMImplementationCodeHash         = 0x37c9ab1efb3b8ed5b422ac5b475a3b1d770fea3c33d86abb50906713d2ae2cfa;
-    bytes32 constant expectedCyclicalWMInitializerCodeHash            = 0xb59105bb4cf229a32cc106a168157c6cc4dc14ddd0f59d87bffcb02f9b840f77;
+    bytes32 constant expectedCyclicalWMImplementationCodeHash         = 0x8cbd8884f151f64ff45301fae725fe398e9cfe63838b1b96ab450f8e21ddba2e;
+    bytes32 constant expectedCyclicalWMInitializerCodeHash            = 0x804cae990f3b1dcb3d64ce83cf00076ef2fb1ab8034c1a2cfda8bc23766f2633;
     bytes32 constant expectedQueueWMFactoryCodeHash                   = 0x0311f920ff8482a36b92112aea9804a4f23e7dd03db6042215f049f59d46b603;
-    bytes32 constant expectedQueueWMImplementationCodeHash            = 0xfe6515923728df94725da20f95dbb684b885f7db48a876c38598ff0a04a2ce8c;
-    bytes32 constant expectedQueueWMInitializerCodeHash               = 0x2819fc721ce337ff7d03e8fbee38c31d21c4e8a3dd140cc8da73d178382b892c;
+    bytes32 constant expectedQueueWMImplementationCodeHash            = 0x23ad98ef36d4838be32a56e9c768e1d6895940efb8567963405e923f1f49525a;
+    bytes32 constant expectedQueueWMInitializerCodeHash               = 0xab7108ab9c448cac9fc8bdb6b9e9111c7b07f89862f7b0185325880c7cc36f4c;
 
     address fixedTermLoanInitializerV500;
 
