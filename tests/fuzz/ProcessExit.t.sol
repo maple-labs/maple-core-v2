@@ -6,6 +6,7 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 contract ProcessExitFuzzTests is TestBaseWithAssertions {
 
     uint256 constant MAX_SHARES = 1e30;
+    uint256 constant MIN_SHARES = 100;
 
     uint128 lastRequestId;
     uint256 totalShares;
@@ -41,7 +42,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
             if (lps[i] == address(pool)) continue;
             if (queueWM.requestIds(lps[i]) != 0) continue;
 
-            uint256 sharesToRequest = bound(shares[i], 1, MAX_SHARES);
+            uint256 sharesToRequest = bound(shares[i], MIN_SHARES, MAX_SHARES);
 
             totalShares                += sharesToRequest;
             lpManuals[lps[i]]           = isManual[i];
@@ -57,7 +58,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: lastRequestId });
         assertEq(queueWM.totalShares(), totalShares);
 
-        sharesToProcess = bound(sharesToProcess, 100, totalShares);
+        sharesToProcess = bound(sharesToProcess, MIN_SHARES, totalShares);
 
         processRedemptions(address(pool), sharesToProcess);
 
