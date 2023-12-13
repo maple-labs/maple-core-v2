@@ -24,7 +24,7 @@ contract PermissionInvariants is BaseInvariants {
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
-        for (uint i; i < NUM_LPS; i++) {
+        for (uint256 i; i < NUM_LPS; i++) {
             lps.push(makeAddr(string(abi.encode("lp", i))));
         }
 

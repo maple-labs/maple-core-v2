@@ -71,7 +71,7 @@ contract ConfigurePoolTests is TestBase {
 
         assertEq(poolPermissionManager.permissionLevels(address(poolManager)), FUNCTION_LEVEL);
 
-        for (uint i; i < functionIds.length; ++i) {
+        for (uint256 i; i < functionIds.length; ++i) {
             assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds[i]), bitmaps[i]);
         }
     }
@@ -82,7 +82,7 @@ contract ConfigurePoolTests is TestBase {
 
         assertEq(poolPermissionManager.permissionLevels(address(poolManager)), FUNCTION_LEVEL);
 
-        for (uint i; i < functionIds.length; ++i) {
+        for (uint256 i; i < functionIds.length; ++i) {
             assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds[i]), bitmaps[i]);
         }
     }
@@ -93,7 +93,7 @@ contract ConfigurePoolTests is TestBase {
 
         assertEq(poolPermissionManager.permissionLevels(address(poolManager)), FUNCTION_LEVEL);
 
-        for (uint i; i < functionIds.length; ++i) {
+        for (uint256 i; i < functionIds.length; ++i) {
             assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds[i]), bitmaps[i]);
         }
     }
@@ -110,7 +110,7 @@ contract ConfigurePoolTests is TestBase {
 
         // NOTE: The function identifiers are set manually because the fuzzer can generate duplicates.
         bytes32[] memory functionIds_ = new bytes32[](bitmaps_.length);
-        for (uint i; i < functionIds_.length; ++i) {
+        for (uint256 i; i < functionIds_.length; ++i) {
             functionIds_[i] = bytes32(i);
         }
 
@@ -132,7 +132,7 @@ contract ConfigurePoolTests is TestBase {
         ) {
             assertEq(poolPermissionManager.permissionLevels(address(poolManager)), newPermissionLevel);
 
-            for (uint i; i < functionIds_.length; ++i) {
+            for (uint256 i; i < functionIds_.length; ++i) {
                 assertEq(poolPermissionManager.poolBitmaps(address(poolManager), functionIds_[i]), bitmaps_[i]);
             }
         }

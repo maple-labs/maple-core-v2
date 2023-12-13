@@ -36,7 +36,7 @@ contract OpenTermInvariants is BaseInvariants {
 
         currentTimestamp = block.timestamp;
 
-        for (uint i; i < NUM_LPS; i++) {
+        for (uint256 i; i < NUM_LPS; i++) {
             lps.push(makeAddr(string(abi.encode("lp", i))));
         }
 

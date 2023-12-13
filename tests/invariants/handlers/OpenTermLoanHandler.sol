@@ -311,7 +311,7 @@ contract OpenTermLoanHandler is HandlerBase {
         uint256 principalIncreased;
         uint256 principalDecreased;
 
-        for (uint i = 0; i < numberOfCalls; i++) {
+        for (uint256 i = 0; i < numberOfCalls; i++) {
             // Get a random index, so calls happen in different orders every time. Can cause repeated calls, but that's ok.
             uint256 index = _hash(seed_, string(abi.encode(i))) % calls.length;
 

@@ -62,7 +62,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         _enableGlobalsSetCanDeploy(governor, globals, queueWMFactory,                    poolDeployerV3, true);
 
         if (protocol.assets.length > 0) {
-            for (uint i = 0; i < protocol.assets.length; i++) {
+            for (uint256 i = 0; i < protocol.assets.length; i++) {
                 _addDelayToOracles(governor, globals, protocol.assets[i].asset, protocol.assets[i].oracle, 1 days);
             }
         }
@@ -75,7 +75,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
             queueWMFactory
         );
 
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage p = pools[i];
 
             _upgradePoolContractsAsSecurityAdmin(PoolPermissionManager(poolPermissionManager), p.poolManager, 300);
@@ -112,7 +112,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         _enableGlobalsSetCanDeploy(governor, globals, queueWMFactory,                    poolDeployerV3, true);
 
         if (protocol.assets.length > 0) {
-            for (uint i = 0; i < protocol.assets.length; i++) {
+            for (uint256 i = 0; i < protocol.assets.length; i++) {
                 _addDelayToOracles(governor, globals, protocol.assets[i].asset, protocol.assets[i].oracle, 1 days);
             }
         }
@@ -308,7 +308,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
         allowLender(poolManager_, IPoolManager(poolManager_).withdrawalManager());
 
-        for (uint i = 1; i <= 5; i++) {
+        for (uint256 i = 1; i <= 5; i++) {
             lp = makeAddr(string(abi.encode("lp", i)));
 
             deposit(pool_, lp, 10e6 * i);
@@ -322,7 +322,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     /**************************************************************************************************************************************/
 
     function _assertAllowedLenders() internal {
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             _assertLendersPermission(pool.poolManager, pool.lps);
@@ -404,7 +404,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     }
 
     function _assertFTLs() internal {
-         for (uint i = 0; i < pools.length; i++) {
+         for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             if (pool.ftLoans.length > 0) _assertIsLoan(pool.ftLoans);
@@ -413,7 +413,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
 
     function _assertLoanVersion(uint256 version) internal {
 
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             for (uint256 j; j < pool.ftLoans.length; ++j) {
@@ -434,7 +434,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     }
 
     function _assertPoolManagers() internal {
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             _assertPoolManager(pool.poolManager, poolManagerImplementationV300);
@@ -446,7 +446,7 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
     }
 
     function  _assertPermissions() internal {
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             _assertPermission(PoolPermissionManager(poolPermissionManager), pool.poolManager, pool.poolManager);

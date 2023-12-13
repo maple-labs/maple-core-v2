@@ -46,7 +46,7 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
             platformManagementFeeRate:  0.08e6
         });
 
-        for (uint i; i < NUM_LPS; i++) {
+        for (uint256 i; i < NUM_LPS; i++) {
             address lp = makeAddr(string(abi.encode("lp", i)));
 
             lps.push(lp);

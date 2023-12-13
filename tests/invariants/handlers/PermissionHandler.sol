@@ -102,7 +102,7 @@ contract PermissionHandler is HandlerBase {
     function selectBitmaps(uint256 seed_, uint256 size_) internal pure returns (uint256[] memory bitmaps) {
         bitmaps = new uint256[](size_);
 
-        for (uint i; i < size_; i++) {
+        for (uint256 i; i < size_; i++) {
             bitmaps[i] = _bound(uint256(keccak256(abi.encode(seed_, i))), 0, MAX_BITMAP);
         }
     }

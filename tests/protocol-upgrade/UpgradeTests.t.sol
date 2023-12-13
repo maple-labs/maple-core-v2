@@ -53,7 +53,7 @@ contract UpgradeTestsETH is ProtocolUpgradeBase, UpgradeAddressRegistryETH {
         _deployNewLoan(governor);
 
         // Upgrade old loans to new implementation
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             if (pool.ftLoans.length == 0) continue;
@@ -69,10 +69,10 @@ contract UpgradeTestsETH is ProtocolUpgradeBase, UpgradeAddressRegistryETH {
 
         address securityAdmin = Globals(globals).securityAdmin();
 
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
-            for (uint j = 0; j < pool.ftLoans.length; j++) {
+            for (uint256 j = 0; j < pool.ftLoans.length; j++) {
                 FixedTermLoan        loan    = FixedTermLoan(pool.ftLoans[j]);
                 FixedTermLoanFactory factory = FixedTermLoanFactory(loan.factory());
 
@@ -129,7 +129,7 @@ contract UpgradeTestsBASEL2 is ProtocolUpgradeBase, UpgradeAddressRegistryBASEL2
         _deployNewLoan(governor);
 
         // Upgrade old loans to new implementation
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
             if (pool.ftLoans.length == 0) continue;
@@ -145,10 +145,10 @@ contract UpgradeTestsBASEL2 is ProtocolUpgradeBase, UpgradeAddressRegistryBASEL2
 
         address securityAdmin = Globals(globals).securityAdmin();
 
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length; i++) {
             Pool storage pool = pools[i];
 
-            for (uint j = 0; j < pool.ftLoans.length; j++) {
+            for (uint256 j = 0; j < pool.ftLoans.length; j++) {
                 FixedTermLoan        loan    = FixedTermLoan(pool.ftLoans[j]);
                 FixedTermLoanFactory factory = FixedTermLoanFactory(loan.factory());
 
