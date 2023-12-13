@@ -470,4 +470,54 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
     }
 
+     function test_processRedemptions_withImpairment() external {
+        uint32 gracePeriod     = 200_000;
+        uint32 noticePeriod    = 100_000;
+        uint32 paymentInterval = 1_000_000;
+        uint64 interestRate    = 0.31536e6;
+
+        // Need to fund a loan so the exchange rate isn't affected by funds in the pool
+        address loan = createOpenTermLoan(
+            address(makeAddr("borrower")),
+            address(poolManager.loanManagerList(1)),
+            address(fundsAsset),
+            1_000e6,
+            [gracePeriod, noticePeriod, paymentInterval],
+            [0.015768e6, interestRate, 0.01e6, 0.015768e6]
+        );
+
+        fundLoan(address(loan));
+
+        // Request redemptions
+        requestRedeem(lp1, 1_000e6);
+        requestRedeem(lp2, 2_000e6);
+        requestRedeem(lp3, 3_000e6);
+
+        // Impair loan
+        impairLoan(address(loan));
+
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(6_000e6);
+
+        // Post assertions.
+        assertEq(fundsAsset.balanceOf(lp1),           900e6);
+        assertEq(fundsAsset.balanceOf(lp2),           1_800e6);
+        assertEq(fundsAsset.balanceOf(lp3),           2_700e6);
+        assertEq(fundsAsset.balanceOf(wm),            0);
+        assertEq(fundsAsset.balanceOf(address(pool)), 3_600e6);
+
+        assertEq(pool.balanceOf(lp1), 0);
+        assertEq(pool.balanceOf(lp2), 0);
+        assertEq(pool.balanceOf(lp3), 0);
+        assertEq(pool.balanceOf(wm),  0);
+
+        assertEq(queueWM.totalShares(), 0);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
+
+        assertQueue({poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 3 });
+    }
+
 }
