@@ -363,16 +363,12 @@ contract FixedTermLoanHandler is HandlerBase {
 
         if (activeLoans.length == 0) return;
 
-        // TODO: Why is this selecting loans that are not active?
-        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_  = _bound(seed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
+        uint24  paymentId   = loanManager.paymentIdOf(address(loanAddress));
 
-        if (loanImpaired[loanAddress]) return;
-
-        uint24 paymentId = loanManager.paymentIdOf(address(loanAddress));
-
-        // TODO: Why is this check needed? Is selection of active loans invalid?
         if (paymentId == 0) return;
+        if (loanImpaired[loanAddress]) return;
 
         ( , , , , , , uint256 issuanceRate ) = loanManager.payments(paymentId);
 
