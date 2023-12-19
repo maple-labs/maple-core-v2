@@ -302,9 +302,11 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
         _enableGlobalsSetCanDeploy(_governor, _globals, protocol.withdrawalManagerFactory, protocol.poolDeployerV2, false);
     }
 
-    function _approveAndAddLpsToQueueWM(address poolManager_) internal {
+    function _approveAndAddLpsToQueueWM(address poolManager_) internal returns (address[] memory lps) {
         address lp;
         address pool_ = IPoolManager(poolManager_).pool();
+
+        lps = new address[](5);
 
         allowLender(poolManager_, IPoolManager(poolManager_).withdrawalManager());
 
@@ -314,7 +316,11 @@ contract ProtocolUpgradeBase is AddressRegistry, ProtocolActions {
             deposit(pool_, lp, 10e6 * i);
 
             requestRedeem(pool_, lp, IPool(pool_).balanceOf(lp));
+
+            lps[i - 1] = lp;
         }
+
+        return lps;
     }
 
     /**************************************************************************************************************************************/
