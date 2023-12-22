@@ -97,8 +97,8 @@ jobs:
       - name: Checkout submodules
         shell: bash
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
