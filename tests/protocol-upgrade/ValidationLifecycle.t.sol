@@ -238,6 +238,8 @@ contract ValidationLifecycleETH is UpgradeAddressRegistryETH, ValidationLifecycl
     function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18648830);
 
+        pools.pop(); // Remove Opportunistic Pool as it was deployed after contracts were deployed.
+
         _performProtocolUpgrade();
     }
 
@@ -311,6 +313,8 @@ contract ValidationLifecycleForCashMgtETH is UpgradeAddressRegistryETH, Validati
     function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18648830);
 
+        pools.pop(); // Remove Opportunistic Pool as it was deployed after contracts were deployed.
+
         _performProtocolUpgrade();
 
         _upgradeToQueueWM(governor, globals, cashManagementUSDCPoolManager);
@@ -362,6 +366,102 @@ contract ValidationLifecycleForCashMgtBASEL2 is UpgradeAddressRegistryBASEL2, Va
         _performProtocolUpgrade();
 
         _upgradeToQueueWM(governor, globals, cashManagementUSDCPoolManager);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_cash_USDC_BASEL2(uint256 seed_) external {
+        address pool = pools[0].pool;
+        address[] storage ftLoans = pools[0].ftLoans;
+        address[] storage otLoans = pools[0].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+}
+
+contract ValidationLifecycleAfterProcedureETH is UpgradeAddressRegistryETH, ValidationLifecycleTestsRoot {
+
+    function setUp() public {
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 18821776);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_aqruPool(uint256 seed_) external {
+        address pool = pools[0].pool;
+        address[] storage ftLoans = pools[0].ftLoans;
+        address[] storage otLoans = pools[0].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_cashMgmtUSDCPool(uint256 seed_) external {
+        address pool = pools[1].pool;
+        address[] storage ftLoans = pools[1].ftLoans;
+        address[] storage otLoans = pools[1].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_cashMgmtUSDTPool(uint256 seed_) external {
+        address pool = pools[2].pool;
+        address[] storage ftLoans = pools[2].ftLoans;
+        address[] storage otLoans = pools[2].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_cicadaPool(uint256 seed_) external {
+        ftlLoanCount = 0;
+        address pool = pools[3].pool;
+        address[] storage ftLoans = pools[3].ftLoans;
+        address[] storage otLoans = pools[3].otLoans;
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_mapleDirectPool(uint256 seed_) external {
+        address pool = pools[4].pool;
+        address[] storage ftLoans = pools[4].ftLoans;
+        address[] storage otLoans = pools[4].otLoans;
+
+        addLoanManager(pools[4].poolManager, protocol.openTermLoanManagerFactory);
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_mavenWethPool(uint256 seed_) external {
+        address pool = pools[10].pool;
+        address[] storage ftLoans = pools[10].ftLoans;
+        address[] storage otLoans = pools[10].otLoans;
+
+        addLoanManager(pools[10].poolManager, protocol.openTermLoanManagerFactory);
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_mavenPermissioned(uint256 seed_) external {
+        address pool = pools[7].pool;
+        address[] storage ftLoans = pools[7].ftLoans;
+        address[] storage otLoans = pools[7].otLoans;
+
+        addLoanManager(pools[7].poolManager, protocol.openTermLoanManagerFactory);
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+    /// forge-config: default.fuzz.runs = 10
+    function testFork_validationLifecycle_opportunisticPool(uint256 seed_) external {
+        address pool = pools[12].pool;
+        address[] storage ftLoans = pools[12].ftLoans;
+        address[] storage otLoans = pools[12].otLoans;
+
+        runLifecycleValidation(seed_, pool, ftLoans, otLoans, protocol);
+    }
+
+}
+
+contract ValidationLifecycleAfterProcedureBASEL2 is UpgradeAddressRegistryBASEL2, ValidationLifecycleTestsRoot {
+
+    function setUp() public {
+        vm.createSelectFork(vm.envString("BASE_RPC_URL"), 8065745);
     }
 
     /// forge-config: default.fuzz.runs = 10

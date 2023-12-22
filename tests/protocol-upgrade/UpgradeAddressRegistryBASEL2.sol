@@ -14,7 +14,9 @@ contract UpgradeAddressRegistryBASEL2 is AddressRegistryBaseL2, UpgradeAddressRe
     address[] cashManagementUSDCAllowedLenders = [
         0x6495F96B89904F574817a3b191c7817D91FE96eb,
         0xD84C0427fA38E12B4ff9b3897EF0e7dab7251746,
-        0xFCEfe182bD1316D664E6f4073aa7CfB6b761BFb9
+        0xFCEfe182bD1316D664E6f4073aa7CfB6b761BFb9,
+        0x51040d72Cf1ee780FFA5F7C7e9eDAb6E6091BCaA,
+        0xe55D44783D8DB0684fe992e87d4703632f66cBB3
     ];
 
     constructor() {
@@ -51,7 +53,7 @@ contract UpgradeAddressRegistryBASEL2 is AddressRegistryBaseL2, UpgradeAddressRe
             ftLoans:              new address[](0)
         }));
 
-        cashPools.push(0);
+        queueUpgradePools.push(0);
 
     }
 

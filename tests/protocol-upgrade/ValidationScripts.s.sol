@@ -698,8 +698,8 @@ contract ValidateMegaProcedureETH is ValidationBaseETH {
         require(globals_.isInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory),                    "WMQF not added");
         require(globals_.isInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory),                    "WMF not added");
 
-        for (uint256 i; i < cashPools.length; i++) {
-            require(globals_.isInstanceOf("QUEUE_POOL_MANAGER", pools[cashPools[i]].poolManager), "QPM1 not added");
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            require(globals_.isInstanceOf("QUEUE_POOL_MANAGER", pools[queueUpgradePools[i]].poolManager), "QPM1 not added");
         }
 
         require(globals_.canDeployFrom(protocol.poolManagerFactory,       poolDeployerV3), "PMF can't deploy");
@@ -749,8 +749,8 @@ contract ValidateMegaProcedureBASEL2 is ValidationBaseBASEL2 {
         require(globals_.isInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory),                    "WMQF not added");
         require(globals_.isInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory),                    "WMF not added");
 
-        for (uint256 i; i < cashPools.length; i++) {
-            require(globals_.isInstanceOf("QUEUE_POOL_MANAGER", pools[cashPools[i]].poolManager), "QPM1 not added");
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            require(globals_.isInstanceOf("QUEUE_POOL_MANAGER", pools[queueUpgradePools[i]].poolManager), "QPM1 not added");
         }
 
         require(globals_.canDeployFrom(protocol.poolManagerFactory,       poolDeployerV3), "PMF can't deploy");
@@ -785,8 +785,8 @@ contract ValidateMegaProcedureBASEL2 is ValidationBaseBASEL2 {
 contract ValidatePoolManagerPauseETH is ValidationBaseETH {
 
     function run() external view {
-        for (uint256 i; i < cashPools.length; i++) {
-            validatePMPause(pools[cashPools[i]].poolManager);
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            validatePMPause(pools[queueUpgradePools[i]].poolManager);
         }
     }
 
@@ -820,8 +820,8 @@ contract ValidatePoolManagerPauseETH is ValidationBaseETH {
 contract ValidatePoolManagerPauseBASEL2 is ValidationBaseBASEL2 {
 
     function run() external view {
-        for (uint256 i; i < cashPools.length; i++) {
-            validatePMPause(pools[cashPools[i]].poolManager);
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            validatePMPause(pools[queueUpgradePools[i]].poolManager);
         }
     }
 
@@ -855,8 +855,8 @@ contract ValidatePoolManagerPauseBASEL2 is ValidationBaseBASEL2 {
 contract ValidateEmptyCashWMETH is ValidationBaseETH {
 
     function run() external view {
-        for (uint256 i; i < cashPools.length; i++) {
-            require(IPool(pools[cashPools[i]].pool).balanceOf(pools[cashPools[i]].withdrawalManager) == 0, "WM has shares");
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            require(IPool(pools[queueUpgradePools[i]].pool).balanceOf(pools[queueUpgradePools[i]].withdrawalManager) == 0, "WM has shares");
         }
     }
 
@@ -865,8 +865,8 @@ contract ValidateEmptyCashWMETH is ValidationBaseETH {
 contract ValidateEmptyCashWMBASEL2 is ValidationBaseBASEL2 {
 
     function run() external view {
-        for (uint256 i; i < cashPools.length; i++) {
-            require(IPool(pools[cashPools[i]].pool).balanceOf(pools[cashPools[i]].withdrawalManager) == 0, "WM has shares");
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            require(IPool(pools[queueUpgradePools[i]].pool).balanceOf(pools[queueUpgradePools[i]].withdrawalManager) == 0, "WM has shares");
         }
     }
 
@@ -875,9 +875,9 @@ contract ValidateEmptyCashWMBASEL2 is ValidationBaseBASEL2 {
 contract ValidateUpgradePoolManagerContractsForQueueWMETH is ValidationBaseETH {
 
     function run() external view {
-        for (uint256 i; i < cashPools.length; i++) {
-            validatePoolManager(pools[cashPools[i]].poolManager, poolManagerImplementationV301);
-            validatePMPause(pools[cashPools[i]].poolManager);
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            validatePoolManager(pools[queueUpgradePools[i]].poolManager, poolManagerImplementationV301);
+            validatePMPause(pools[queueUpgradePools[i]].poolManager);
         }
 
     }
@@ -912,9 +912,9 @@ contract ValidateUpgradePoolManagerContractsForQueueWMETH is ValidationBaseETH {
 contract ValidateUpgradePoolManagerContractsForQueueWMBASEL2 is ValidationBaseBASEL2 {
 
     function run() external view {
-        for (uint256 i; i < cashPools.length; i++) {
-            validatePoolManager(pools[cashPools[i]].poolManager, poolManagerImplementationV301);
-            validatePMPause(pools[cashPools[i]].poolManager);
+        for (uint256 i; i < queueUpgradePools.length; i++) {
+            validatePoolManager(pools[queueUpgradePools[i]].poolManager, poolManagerImplementationV301);
+            validatePMPause(pools[queueUpgradePools[i]].poolManager);
         }
 
     }

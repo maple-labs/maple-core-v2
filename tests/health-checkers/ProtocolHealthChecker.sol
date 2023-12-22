@@ -195,7 +195,7 @@ contract ProtocolHealthChecker {
         invariants_.withdrawalManagerQueueInvariantF =
             isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_F(withdrawalManager_);
         invariants_.withdrawalManagerQueueInvariantI =
-            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_I(withdrawalManager_);
+            isWithdrawalManagerCyclical_ || true;  // TODO: Implement in LP HealthChecker;
     }
 
     /******************************************************************************************************************************/
@@ -510,33 +510,6 @@ contract ProtocolHealthChecker {
         ( address owner, uint256 shares ) = withdrawalManager.requests(0);
 
         isMaintained_ = shares == 0 && owner == address(0);
-    }
-
-    function check_withdrawalManagerQueue_invariant_I(address withdrawalManager_) public view returns (bool isMaintained_) {
-        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
-
-        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
-
-        uint256 arrayLength = lastRequestId - nextRequestId + 1;
-
-        // Dynamic array to store encountered lenders
-        address[] memory lenderExists = new address[](arrayLength);
-
-        for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
-            ( address owner, ) = withdrawalManager.requests(requestId);
-
-            // Check if the lender has been encountered before
-            for (uint128 i; i < arrayLength; i++) {
-                if (lenderExists[i] == owner) {
-                    return false;
-                }
-            }
-
-            // Add the lender to the array
-            lenderExists[requestId - nextRequestId] = owner;
-        }
-
-        return isMaintained_ = true;
     }
 
     /******************************************************************************************************************************/

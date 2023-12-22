@@ -19,6 +19,8 @@ contract UpgradeTestsETH is ProtocolUpgradeBase, UpgradeAddressRegistryETH {
     }
 
     function testFork_upgradeAssertions_ETH() external {
+        pools.pop(); // Remove Opportunistic Pool as it was deployed after contracts were deployed.
+
         _performProtocolUpgrade();
 
         _assertGlobals();
@@ -31,6 +33,8 @@ contract UpgradeTestsETH is ProtocolUpgradeBase, UpgradeAddressRegistryETH {
     }
 
     function testFork_upgradeToQueueWM_ETH() external {
+        pools.pop(); // Remove Opportunistic Pool as it was deployed after contracts were deployed.
+
         _performProtocolUpgrade();
 
         _upgradeToQueueWM(governor, globals, cashManagementUSDCPoolManager);
@@ -47,6 +51,8 @@ contract UpgradeTestsETH is ProtocolUpgradeBase, UpgradeAddressRegistryETH {
     }
 
     function testFork_upgradeFTL_fromNewFactory_ETH() external {
+        pools.pop(); // Remove Opportunistic Pool as it was deployed after contracts were deployed.
+        
         _performProtocolUpgrade();
 
         // Deploy a new implementation of loan

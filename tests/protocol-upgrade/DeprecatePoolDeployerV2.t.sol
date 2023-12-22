@@ -25,6 +25,8 @@ contract DeprecatePoolDeployerV2TestsETH is ProtocolUpgradeBase, UpgradeAddressR
 
         IPoolDeployer poolDeployerV3_;
 
+        pools.pop(); // Remove Opportunistic Pool as it was deployed after contracts were deployed.
+
         _performProtocolUpgrade();
 
         _deprecatePoolDeployerV2();

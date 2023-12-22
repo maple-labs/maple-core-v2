@@ -95,5 +95,5 @@ abstract contract UpgradeAddressRegistry {
 
     Pool[] pools;
 
-    uint256[] cashPools;
+    uint256[] queueUpgradePools;
 }

@@ -61,7 +61,8 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
         0x28D79103D8A4a9152023e7D4f5321bEA78f5BD24,
         0xc337C76158c131beDf95a5D4e0C27EC8eFdb7f02,
         0x5C33e4e0e7920fC8FA25A51c05D00a6FA87B4C5c,
-        0xd06aD84C39CE95CA3C2c3285f08E10cB2B4A1A76
+        0xd06aD84C39CE95CA3C2c3285f08E10cB2B4A1A76,
+        0x0aA726b70a79219A4F3127Bb1510bb05FE053AeC
     ];
 
     address[] cashManagementUSDCFixedTermLoans = [
@@ -132,7 +133,11 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
         0x9928C2751aff664Cec0a100F36bf2A31c5dcd8c7,
         0xd8FfCcacA136580308117fEac2dD0aCe7C67447D,
         0x35C18B4Ef07F3133a3E257A893BAc013eBCc113F,
-        0xe79cC5853Ea333B6f71599E091a6ae5906B33f7B
+        0xe79cC5853Ea333B6f71599E091a6ae5906B33f7B,
+        0xa67F2d1833e7e57dBFB353FCb669c00d549e2A70,
+        0xdA33A7fCE9998e9418744D72B6e8358dE06ABCfa,
+        0x03969341cd113Fb53b18414673fa24200CAFeb66,
+        0xdc21a6BfcBD5B520B59C0cED9fe8231278706045
     ];
 
     address[] cashManagementUSDTOpenTermLoans = [
@@ -203,7 +208,8 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
         0x28D79103D8A4a9152023e7D4f5321bEA78f5BD24,
         0x6D7F31cDbE68e947fAFaCad005f6495eDA04cB12,
         0x0c209Cc80faA42031484621788Ef97CB1A9C917e,
-        0x9928C2751aff664Cec0a100F36bf2A31c5dcd8c7
+        0x9928C2751aff664Cec0a100F36bf2A31c5dcd8c7,
+        0xdA33A7fCE9998e9418744D72B6e8358dE06ABCfa
     ];
 
     address[] mavenPermissionedFixedTermLoans = new address[](0);
@@ -232,8 +238,17 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
 
     address[] mavenWethFixedTermLoans = new address[](0);
 
-    constructor() {
+    address[] opportunisticHighYieldAllowedLenders = [
+        0xad4645dF2aF7B9bC79042aA7ec8D88ddd7933f8A,
+        0x7674C0ad7Cc25B1003104399F1Da46ebdEF787D5,
+        0x6a4d361B7d0daDF8146DcfE6258A8699ea35eB81,
+        0x94F98416CA0DC0310Bcaeda0e16903e19307539F,
+        0x40d739cD73fb4BBE90998321FA408e85e99C7868
+    ];
 
+    address[] opportunisticHighYieldOpenTermLoans = new address[](0);
+
+    constructor() {
         // Set Protocol Contracts
         protocol.governor                    = governor;
         protocol.mapleTreasury               = mapleTreasury;
@@ -286,7 +301,7 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
             ftLoans:              cashManagementUSDCFixedTermLoans
         }));
 
-        cashPools.push(1);
+        queueUpgradePools.push(1);
 
         pools.push(Pool({
             name:                 "cashManagementUSDT",
@@ -300,7 +315,7 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
             ftLoans:              new address[](0)
         }));
 
-        cashPools.push(2);
+        queueUpgradePools.push(2);
 
         pools.push(Pool({
             name:                 "cicada",
@@ -409,6 +424,20 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
             otLoans:              new address[](0),
             ftLoans:              new address[](0)
         }));
+
+        pools.push(Pool({
+            name:                 "Opportunistic High Yield",
+            pool:                 OpportunisticHighYieldPool,
+            poolManager:          OpportunisticHighYieldPoolPoolManager,
+            withdrawalManager:    OpportunisticHighYieldPoolWithdrawalManager,
+            fixedTermLoanManager: OpportunisticHighYieldPoolFixedTermLoanManager,
+            openTermLoanManager:  OpportunisticHighYieldPoolOpenTermLoanManager,
+            lps:                  opportunisticHighYieldAllowedLenders,
+            otLoans:              opportunisticHighYieldOpenTermLoans,
+            ftLoans:              new address[](0)
+        }));
+
+        queueUpgradePools.push(12);
     }
 
 }
