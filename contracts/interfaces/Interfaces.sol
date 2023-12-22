@@ -7,19 +7,19 @@ import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfac
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
-import { IMapleLiquidator as IML } from "../../modules/liquidations/contracts/interfaces/IMapleLiquidator.sol";
+import { ILiquidator as IML } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
 import { IMapleLoan as IMFTL }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
 import { IMapleLoanFeeManager as IMLFM } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
 import { IMapleRefinancer as IMFTLR }    from "../../modules/fixed-term-loan/contracts/interfaces/IMapleRefinancer.sol";
 
-import { IMapleLoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
-import { IMapleLoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/IMapleLoanManagerStructs.sol";
+import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
 
 import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 
-import { IMapleLoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
-import { IMapleLoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
+import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
 import { IMaplePool as IMP }          from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
 import { IMaplePoolDeployer as IMPD } from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";

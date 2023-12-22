@@ -14,20 +14,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
-        env:
-          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
-          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-          SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -48,20 +34,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
-        env:
-          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
-          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-          SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -83,20 +55,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
-        env:
-          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
-          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-          SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -118,20 +76,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
-        env:
-          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
-          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-          SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -153,24 +97,10 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
-        env:
-          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
-          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-          SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
-          chmod +x ./setup-ci.sh
-          ./setup-ci.sh
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
 
       - name: Run Forge tests
         env:
@@ -189,20 +119,6 @@ jobs:
       - uses: actions/setup-node@v3
 
       - name: Checkout submodules
-        env:
-          SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-          SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-          SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
-          SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
-          SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
-          SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-          SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-          SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-          SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-          SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-          SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-          SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-          SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
         shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"

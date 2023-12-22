@@ -57,44 +57,6 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 Specific tests can be run using `forge test` conventions, specified in more detail in the Foundry [Book](https://book.getfoundry.sh/reference/forge/forge-test#test-options).
 
-### Scenario Commands
-
-| Command | Description |
-|---|---|
-| `make scenario` | Run the scenarios found in `./scenarios/data/csv/` |
-
-### Contract Verification Script
-
-```shell
-$ ./verify.sh -i "NETWORK_NAME" -k "ETHERSCAN_API_KEY" -a "CONTRACT_ADDRESS" -c "RELATIVE_PATH_TO_CONTRACT_FILE:CONTRACT_NAME" -s "CONSTRUCTOR_SIGNATURE" -g "CONSTRUCTOR_ARGUMENTS_SPACE_DELIMITED"
-```
-
-```shell
-$ ./verify.sh -i "goerli" -k "ETHERSCAN_API_KEY_HERE" -a "0xA756055900D13d62350a882334e5BD196987adcb" -c "./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory" -s "constructor(address)" -g "0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6"
-Profile: production
-Compiler: v0.8.7+commit.e28d00a7
-Address: 0xA756055900D13d62350a882334e5BD196987adcb
-Path To Contract: ./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory
-Optimzations: 200
-Chain: goerli
-constructorSignature: constructor(address)
-constructorArguments: 0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6
-Start verifying contract `0xa756055900d13d62350a882334e5bd196987adcb` deployed on goerli
-
-Submitting verification for [modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory] "0xA756055900D13d62350a882334e5BD196987adcb".
-Submitted contract for verification:
-	Response: `OK`
-	GUID: `mkes8fusv3yzajjwd11nzrifefwwh4pam1br739rlfxn7y4igt`
-	URL:
-        https://goerli.etherscan.io/address/0xa756055900d13d62350a882334e5bd196987adcb
-Contract verification status:
-Response: `NOTOK`
-Details: `Pending in queue`
-Contract verification status:
-Response: `OK`
-Details: `Pass - Verified`
-Contract successfully verified
-```
 
 ## Audit Reports
 
@@ -114,6 +76,14 @@ Contract successfully verified
 |---|---|
 | Spearbit Auditors via Cantina | [`2023-06-05 - Cantina Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/11667848/cantina-maple.pdf) |
 | Three Sigma | [`2023-04-10 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/11663546/maple-v2-audit_three-sigma_2023.pdf) |
+
+<br>
+
+### December 2023 Release
+| Auditor | Report Link |
+|---|---|
+| Three Sigma | [`2023-11-06 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/13707288/Maple-Q4-Three-Sigma-Audit.pdf) |
+| 0xMacro | [`2023-11-27 - 0xMacro Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/13707291/Maple-Q4-0xMacro-Audit.pdf) |
 
 ## Bug Bounty
 
