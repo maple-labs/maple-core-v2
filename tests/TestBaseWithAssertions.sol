@@ -2,6 +2,7 @@
 pragma solidity 0.8.7;
 
 import {
+    IERC20,
     IFixedTermLoan,
     IFixedTermLoanManager,
     IFixedTermLoanManagerStructs,
@@ -9,10 +10,12 @@ import {
     ILoanManagerLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
-    IOpenTermLoanManagerStructs
+    IOpenTermLoanManagerStructs,
+    IPool,
+    IPoolManager,
+    IWithdrawalManagerCyclical,
+    IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
-
-import { Pool, PoolManager, WithdrawalManager } from "../contracts/Contracts.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
 import { TestBase }          from "./TestBase.sol";
@@ -105,7 +108,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanManager.paymentIdOf(loan), 0);
     }
 
-    // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertFixedTermPaymentInfo(
         address loan,
         uint256 incomingNetInterest,
@@ -132,7 +134,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate,     "loanInfo.delegateFeeRate");
     }
 
-    // TODO: Investigate reverting back to tuples to expose changes easier.
     function assertOpenTermPaymentInfo(
         address loan,
         uint256 platformFeeRate,
@@ -160,7 +161,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(issuanceRate_, issuanceRate);
     }
 
-    // TODO: Revisit usage of interfaces here.
     function assertFixedTermLoanManager(
         address loanManager,
         uint256 accountedInterest,
@@ -292,17 +292,26 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertTrue(liquidationInfo.triggeredByGovernor == triggeredByGovernor,     "triggeredByGovernor");
     }
 
-    // TODO: Take `poolManager` as argument to be more functional.
-    function assertPoolState(uint256 totalAssets, uint256 totalSupply, uint256 unrealizedLosses, uint256 availableLiquidity) internal {
-        assertEq(pool.totalAssets(),                  totalAssets,        "totalAssets");
-        assertEq(pool.totalSupply(),                  totalSupply,        "totalSupply");
-        assertEq(pool.unrealizedLosses(),             unrealizedLosses,   "unrealizedLosses");
-        assertEq(poolManager.totalAssets(),           totalAssets,        "totalAssets");
-        assertEq(poolManager.unrealizedLosses(),      unrealizedLosses,   "unrealizedLosses");
-        assertEq(fundsAsset.balanceOf(address(pool)), availableLiquidity, "availableLiquidity");
+    function assertPoolState(
+        address pool,
+        uint256 totalAssets,
+        uint256 totalSupply,
+        uint256 unrealizedLosses,
+        uint256 availableLiquidity
+    ) internal {
+        IPoolManager poolManager = IPoolManager(IPool(pool).manager());
+        IERC20       asset       = IERC20(IPool(pool).asset());
+
+        assertEq(IPool(pool).totalAssets(),      totalAssets,        "totalAssets");
+        assertEq(IPool(pool).totalSupply(),      totalSupply,        "totalSupply");
+        assertEq(IPool(pool).unrealizedLosses(), unrealizedLosses,   "unrealizedLosses");
+        assertEq(poolManager.totalAssets(),      totalAssets,        "totalAssets");
+        assertEq(poolManager.unrealizedLosses(), unrealizedLosses,   "unrealizedLosses");
+        assertEq(asset.balanceOf(pool),          availableLiquidity, "availableLiquidity");
     }
 
     function assertPoolStateWithDiff(
+        address pool,
         uint256 totalAssets,
         uint256 totalSupply,
         uint256 unrealizedLosses,
@@ -311,28 +320,42 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     )
         internal
     {
-        assertApproxEqAbs(pool.totalAssets(),                  totalAssets,        diff, "totalAssets");
-        assertApproxEqAbs(pool.totalSupply(),                  totalSupply,        diff, "totalSupply");
-        assertApproxEqAbs(pool.unrealizedLosses(),             unrealizedLosses,   diff, "unrealizedLosses");
-        assertApproxEqAbs(poolManager.totalAssets(),           totalAssets,        diff, "totalAssets");
-        assertApproxEqAbs(poolManager.unrealizedLosses(),      unrealizedLosses,   diff, "unrealizedLosses");
-        assertApproxEqAbs(fundsAsset.balanceOf(address(pool)), availableLiquidity, diff, "availableLiquidity");
+        IPoolManager poolManager = IPoolManager(IPool(pool).manager());
+        IERC20       asset       = IERC20(IPool(pool).asset());
+
+        assertApproxEqAbs(IPool(pool).totalAssets(),      totalAssets,        diff, "totalAssets");
+        assertApproxEqAbs(IPool(pool).totalSupply(),      totalSupply,        diff, "totalSupply");
+        assertApproxEqAbs(IPool(pool).unrealizedLosses(), unrealizedLosses,   diff, "unrealizedLosses");
+        assertApproxEqAbs(poolManager.totalAssets(),      totalAssets,        diff, "totalAssets");
+        assertApproxEqAbs(poolManager.unrealizedLosses(), unrealizedLosses,   diff, "unrealizedLosses");
+        assertApproxEqAbs(asset.balanceOf(pool),          availableLiquidity, diff, "availableLiquidity");
     }
 
-    // TODO: Take `poolManager` as argument to be more functional.
-    function assertPoolManager(uint256 totalAssets, uint256 unrealizedLosses) internal {
-        assertEq(poolManager.totalAssets(),      totalAssets,      "totalAssets");
-        assertEq(poolManager.unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
+    function assertPoolManager(address poolManager, uint256 totalAssets, uint256 unrealizedLosses) internal {
+        assertEq(IPoolManager(poolManager).totalAssets(),      totalAssets,      "totalAssets");
+        assertEq(IPoolManager(poolManager).unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
     }
 
-    // TODO: Take `poolManager` as argument to be more functional.
-    // TODO: Remove as it is entirely unnecessary, both because it already is one line, and because it's captured in `assertPoolState`.
-    function assertTotalAssets(uint256 totalAssets) internal {
-        assertEq(poolManager.totalAssets(), totalAssets);
+    function assertQueue(address poolManager, uint128 nextRequestId, uint128 lastRequestId) internal {
+        address wm = IPoolManager(poolManager).withdrawalManager();
+
+        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = IWithdrawalManagerQueue(wm).queue();
+
+        assertEq(nextRequestId_, nextRequestId);
+        assertEq(lastRequestId_, lastRequestId);
     }
 
-    // TODO: Take `poolManager` as argument to be more functional.
+    function assertRequest(address poolManager, uint128 requestId, address owner, uint256 shares) internal {
+        address wm = IPoolManager(poolManager).withdrawalManager();
+
+        ( address owner_, uint256 shares_ ) = IWithdrawalManagerQueue(wm).requests(requestId);
+
+        assertEq(owner_,  owner);
+        assertEq(shares_, shares);
+    }
+
     function assertWithdrawalManagerState(
+        address pool,
         address lp,
         uint256 lockedShares,
         uint256 previousExitCycleId,
@@ -341,13 +364,15 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 currentCycleTotalShares,
         uint256 withdrawalManagerTotalShares
     ) internal {
+        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(IPool(pool).manager()).withdrawalManager());
+
         assertEq(withdrawalManager.lockedShares(lp), lockedShares);
         assertEq(withdrawalManager.exitCycleId(lp),  currentExitCycleId);
 
         assertEq(withdrawalManager.totalCycleShares(previousExitCycleId), previousCycleTotalShares);
         assertEq(withdrawalManager.totalCycleShares(currentExitCycleId),  currentCycleTotalShares);
 
-        assertEq(pool.balanceOf(address(withdrawalManager)), withdrawalManagerTotalShares);
+        assertEq(IPool(pool).balanceOf(address(withdrawalManager)), withdrawalManagerTotalShares);
     }
 
 }

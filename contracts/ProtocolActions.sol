@@ -4,10 +4,11 @@ pragma solidity 0.8.7;
 import {
     IERC20,
     IERC20Like,
-    IFeeManager,
+    IExemptionsManagerLike,
     IFixedTermLoan,
     IFixedTermLoanManager,
     IGlobals,
+    IKycERC20Like,
     ILoanLike,
     ILoanManagerLike,
     IMapleProxyFactory,
@@ -17,27 +18,37 @@ import {
     IPool,
     IPoolDeployer,
     IPoolManager,
+    IPoolPermissionManager,
     IProxiedLike,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager,
+    IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
 
-import { console, Test } from "../contracts/Contracts.sol";
-
-// TODO: `deployPool`.
-// TODO: `createLoan`.
+import {
+    console2 as console,
+    ERC20Helper,
+    NonTransparentProxy,
+    PoolPermissionManager,
+    PoolPermissionManagerInitializer,
+    Test
+} from "../contracts/Contracts.sol";
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Test {
 
-    address MPL  = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
-    address WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    address USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
+    address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+    address WETH      = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address USDC      = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address USDT      = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    address USDC_BASE = address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
 
-    address MPL_SOURCE  = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address WBTC_SOURCE = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
-    address WETH_SOURCE = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
-    address USDC_SOURCE = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
+    address MPL_SOURCE       = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
+    address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
+    address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
+    address USDC_SOURCE      = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
+    address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -45,23 +56,23 @@ contract ProtocolActions is Test {
 
     function erc20_approve(address asset_, address account_, address spender_, uint256 amount_) internal {
         vm.startPrank(account_);
-        IERC20Like(asset_).approve(spender_, amount_);
+        require(ERC20Helper.approve(asset_, spender_, amount_), "erc20_approve failed");
         vm.stopPrank();
     }
 
     function erc20_transfer(address asset_, address account_, address destination_, uint256 amount_) internal {
         vm.startPrank(account_);
-        IERC20(asset_).transfer(destination_, amount_);
+        require(ERC20Helper.transfer(asset_, destination_, amount_), "erc20_transfer failed");
         vm.stopPrank();
     }
 
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
-        // TODO: Consider using minters for each token.
-
-        if      (asset_ == MPL)  erc20_transfer(MPL,  MPL_SOURCE,  account_, amount_);
-        else if (asset_ == WBTC) erc20_transfer(WBTC, WBTC_SOURCE, account_, amount_);
-        else if (asset_ == WETH) erc20_transfer(WETH, WETH_SOURCE, account_, amount_);
-        else if (asset_ == USDC) erc20_transfer(USDC, USDC_SOURCE, account_, amount_);
+        if      (asset_ == MPL)       erc20_transfer(MPL,       MPL_SOURCE,       account_, amount_);
+        else if (asset_ == WBTC)      erc20_transfer(WBTC,      WBTC_SOURCE,      account_, amount_);
+        else if (asset_ == WETH)      erc20_transfer(WETH,      WETH_SOURCE,      account_, amount_);
+        else if (asset_ == USDC)      erc20_transfer(USDC,      USDC_SOURCE,      account_, amount_);
+        else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
+        else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
@@ -115,6 +126,7 @@ contract ProtocolActions is Test {
         vm.prank(governor_);
         IGlobals(globals_).setValidBorrower(borrower_, true);
 
+        vm.prank(borrower_);
         loan_ = IMapleProxyFactory(factory_).createInstance({
             arguments_: abi.encode(
                 borrower_,
@@ -131,11 +143,11 @@ contract ProtocolActions is Test {
     }
 
     function createOpenTermLoan(
-        address factory_,
-        address borrower_,
-        address lender_,
-        address asset_,
-        uint256 principal_,
+        address           factory_,
+        address           borrower_,
+        address           lender_,
+        address           asset_,
+        uint256           principal_,
         uint256[3] memory terms_,
         uint256[4] memory rates_
     )
@@ -144,10 +156,8 @@ contract ProtocolActions is Test {
         address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
         address governor_ = IGlobals(globals_).governor();
 
-        vm.startPrank(governor_);
+        vm.prank(governor_);
         IGlobals(globals_).setValidBorrower(borrower_, true);
-        IGlobals(globals_).setCanDeployFrom(factory_, address(borrower_), true);
-        vm.stopPrank();
 
         vm.prank(borrower_);
         loan_ = IMapleProxyFactory(factory_).createInstance({
@@ -325,11 +335,11 @@ contract ProtocolActions is Test {
     }
 
     function acceptRefinance(
-        address loan_,
-        address refinancer_,
-        uint256 expiry_,
+        address        loan_,
+        address        refinancer_,
+        uint256        expiry_,
         bytes[] memory refinanceCalls_,
-        uint256 principalIncrease_
+        uint256        principalIncrease_
     ) internal {
         if (isOpenTermLoan(loan_)) return acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
 
@@ -337,11 +347,11 @@ contract ProtocolActions is Test {
     }
 
     function acceptRefinanceFT(
-        address loan_,
-        address refinancer_,
-        uint256 expiry_,
+        address        loan_,
+        address        refinancer_,
+        uint256        expiry_,
         bytes[] memory refinanceCalls_,
-        uint256 principalIncrease_
+        uint256        principalIncrease_
     ) internal {
         address loanManager_ = ILoanLike(loan_).lender();
 
@@ -412,8 +422,9 @@ contract ProtocolActions is Test {
 
     function deposit(address pool_, address account_, uint256 assets_) internal returns (uint256 shares_) {
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 
@@ -436,8 +447,9 @@ contract ProtocolActions is Test {
         ) = _getValidPermitSignature(asset_, account_, pool_, assets, deadline_, privateKey_);
 
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         erc20_mint(asset_, account_, assets);
 
@@ -447,8 +459,9 @@ contract ProtocolActions is Test {
 
     function mint(address pool_, address account_, uint256 shares_) internal returns (uint256 assets_) {
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 
@@ -473,8 +486,9 @@ contract ProtocolActions is Test {
         ) = _getValidPermitSignature(asset_, account_, pool_, shares_, deadline_, privateKey_);
 
         address poolManager_ = IPool(pool_).manager();
+        address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (!IPoolManager(poolManager_).openToPublic()) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         assets_ = IPool(pool_).previewMint(shares_);
 
@@ -514,6 +528,14 @@ contract ProtocolActions is Test {
         vm.stopPrank();
     }
 
+    function activatePoolManager(address poolManager_) internal {
+        address globals_  = IPoolManager(poolManager_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        IGlobals(globals_).activatePoolManager(poolManager_);
+    }
+
     function addLoanManager(address poolManager_, address loanManagerFactory_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -523,9 +545,16 @@ contract ProtocolActions is Test {
 
     function allowLender(address poolManager_, address lender_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+        address ppm_          = IPoolManager(poolManager_).poolPermissionManager();
+
+        address[] memory lenders = new address[](1);
+        lenders[0] = lender_;
+
+        bool[] memory allows = new bool[](1);
+        allows[0] = true;
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).setAllowedLender(lender_, true);
+        PoolPermissionManager(ppm_).setLenderAllowlist(poolManager_, lenders, allows);
         vm.stopPrank();
     }
 
@@ -553,18 +582,24 @@ contract ProtocolActions is Test {
         string     memory name_,
         string     memory symbol_,
         address[]  memory loanManagerFactories_,
-        uint256[6] memory configParams_
+        uint256[7] memory configParams_
     )
         internal returns (address poolManager_)
     {
-        erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
+        if (configParams_[2] > 0) {
+            erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
 
-        erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
+            erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
+        }
 
         // Set Valid PD
-        IGlobals globals = IGlobals(globals_);
-        vm.prank(globals.governor());
-        globals.setValidPoolDelegate(poolDelegate_, true);
+        {
+            IGlobals globals = IGlobals(globals_);
+            vm.prank(globals.governor());
+            globals.setValidPoolDelegate(poolDelegate_, true);
+        }
+
+        address ppm_ = _deployPoolPermissionManager(globals_);
 
         // PD deploys pool
         vm.prank(poolDelegate_);
@@ -573,15 +608,16 @@ contract ProtocolActions is Test {
             withdrawalManagerFactory_: withdrawalManagerFactory_,
             loanManagerFactories_:     loanManagerFactories_,
             asset_:                    fundsAsset_,
+            poolPermissionManager_:    ppm_,
             name_:                     name_,
             symbol_:                   symbol_,
             configParams_:             configParams_
         });
 
         // Governor activates the pool
-        vm.startPrank(globals.governor());
-        globals.activatePoolManager(poolManager_);
-        globals.setMaxCoverLiquidationPercent(poolManager_, 1e6);
+        vm.startPrank(IGlobals(globals_).governor());
+        IGlobals(globals_).activatePoolManager(poolManager_);
+        IGlobals(globals_).setMaxCoverLiquidationPercent(poolManager_, 1e6);
         vm.stopPrank();
     }
 
@@ -640,10 +676,21 @@ contract ProtocolActions is Test {
 
     function openPool(address poolManager_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+        address ppm_          = IPoolManager(poolManager_).poolPermissionManager();
 
         vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).setOpenToPublic();
+        PoolPermissionManager(ppm_).setPoolPermissionLevel(poolManager_, 3);
         vm.stopPrank();
+    }
+
+    // NOTE: Only works for queued withdrawal managers.
+    function processRedemptions(address pool_, uint256 shares_) internal {
+        address poolManager_       = IPool(pool_).manager();
+        address withdrawalManager_ = IPoolManager(poolManager_).withdrawalManager();
+        address governor_          = IPoolManager(poolManager_).governor();
+
+        vm.prank(governor_);
+        IWithdrawalManagerQueue(withdrawalManager_).processRedemptions(shares_);
     }
 
     function removeLoanCall(address loan_) internal {
@@ -693,6 +740,17 @@ contract ProtocolActions is Test {
         vm.startPrank(poolDelegate_);
         IPoolManager(poolManager_).setLiquidityCap(amount_);
         vm.stopPrank();
+    }
+
+    // NOTE: Only works for queued withdrawal managers.
+    function setManualWithdrawal(address poolManager_, address lender_, bool isManual_) internal {
+        IPoolManager pm_            = IPoolManager(poolManager_);
+        IWithdrawalManagerQueue wm_ = IWithdrawalManagerQueue(pm_.withdrawalManager());
+
+        address governor_ = pm_.governor();
+
+        vm.prank(governor_);
+        wm_.setManualWithdrawal(lender_, isManual_);
     }
 
     function setPendingPoolDelegate(address poolManager_, address newPoolDelegate_) internal {
@@ -759,8 +817,128 @@ contract ProtocolActions is Test {
     }
 
     /**************************************************************************************************************************************/
+    /*** Permission Functions                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    function setLenderAllowlist(address poolManager_, address lender_, bool boolean_) internal {
+        address[] memory lenders_  = new address[](1);
+        bool[]    memory booleans_ = new bool[](1);
+
+        lenders_[0]  = lender_;
+        booleans_[0] = boolean_;
+
+        setLenderAllowlist(poolManager_, lenders_, booleans_);
+    }
+
+    function setLenderAllowlist(address poolManager_, address[] memory lenders_, bool[] memory booleans_) internal {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address governor_ = pm_.governor();
+
+        vm.prank(governor_);
+        ppm_.setLenderAllowlist(poolManager_, lenders_, booleans_);
+    }
+
+    function setLenderBitmap(address poolPermissionManager_, address permissionAdmin_, address lender_, uint256 bitmap_) internal {
+        address[] memory lenders_ = new address[](1);
+        uint256[] memory bitmaps_ = new uint256[](1);
+
+        lenders_[0] = lender_;
+        bitmaps_[0] = bitmap_;
+
+        setLenderBitmaps(poolPermissionManager_, permissionAdmin_, lenders_, bitmaps_);
+    }
+
+    function setLenderBitmaps(
+        address poolPermissionManager_,
+        address permissionAdmin_,
+        address[] memory lenders_,
+        uint256[] memory bitmaps_
+    )
+        internal
+    {
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(poolPermissionManager_);
+
+        vm.prank(permissionAdmin_);
+        ppm_.setLenderBitmaps(lenders_, bitmaps_);
+    }
+
+    function setPermissionAdmin(address poolPermissionManager_, address account_, bool isPermissionAdmin_) internal {
+        IPoolPermissionManager ppm_     = IPoolPermissionManager(poolPermissionManager_);
+        IGlobals               globals_ = IGlobals(ppm_.globals());
+
+        address governor_ = globals_.governor();
+
+        vm.prank(governor_);
+        ppm_.setPermissionAdmin(account_, isPermissionAdmin_);
+    }
+
+    function setPermissionConfiguration(
+        address poolManager_,
+        uint256 permissionLevel_,
+        bytes32[] memory functionIds_,
+        uint256[] memory poolBitmaps_
+    )
+        internal
+    {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ppm_.configurePool(poolManager_, permissionLevel_, functionIds_, poolBitmaps_);
+    }
+
+    function setPoolBitmap(address poolManager_, bytes32 functionId_, uint256 bitmap_) internal {
+        bytes32[] memory functionIds_ = new bytes32[](1);
+        uint256[] memory bitmaps_     = new uint256[](1);
+
+        functionIds_[0] = functionId_;
+        bitmaps_[0]     = bitmap_;
+
+        setPoolBitmaps(poolManager_, functionIds_, bitmaps_);
+    }
+
+    function setPoolBitmaps(address poolManager_, bytes32[] memory functionIds_, uint256[] memory bitmaps_) internal {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address governor_ = pm_.governor();
+
+        vm.prank(governor_);
+        ppm_.setPoolBitmaps(poolManager_, functionIds_, bitmaps_);
+    }
+
+    function setPoolPermissionLevel(address poolManager_, uint256 permissionLevel_) internal {
+        IPoolManager           pm_  = IPoolManager(poolManager_);
+        IPoolPermissionManager ppm_ = IPoolPermissionManager(pm_.poolPermissionManager());
+
+        address governor_ = pm_.governor();
+
+        vm.prank(governor_);
+        ppm_.setPoolPermissionLevel(poolManager_, permissionLevel_);
+    }
+
+    /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
+
+    function _deployPoolPermissionManager(address globals_) internal returns (address ppm_) {
+        address poolPermissionManagerImplementation = address(new PoolPermissionManager());
+        address poolPermissionManagerInitializer    = address(new PoolPermissionManagerInitializer());
+
+        address governor = IGlobals(globals_).governor();
+
+        ppm_ = address(new NonTransparentProxy(governor, poolPermissionManagerInitializer));
+
+        vm.prank(governor);
+        PoolPermissionManagerInitializer(address(ppm_)).initialize(poolPermissionManagerImplementation, address(globals_));
+
+        vm.prank(governor);
+        IGlobals(globals_).setValidInstanceOf("POOL_PERMISSION_MANAGER", address(ppm_), true);
+    }
 
     function _getValidPermitSignature(
         address asset_,
@@ -862,6 +1040,11 @@ contract ProtocolActions is Test {
 
     function upgradePoolManagerAsGovernor(address poolManager, uint256 version, bytes memory data) internal {
         vm.prank(IPoolManager(poolManager).governor());
+        IProxiedLike(poolManager).upgrade(version, data);
+    }
+
+    function upgradePoolManagerAsSecurityAdmin(address poolManager, uint256 version, bytes memory data) internal {
+        vm.prank(IGlobals(ILoanLike(poolManager).globals()).securityAdmin());
         IProxiedLike(poolManager).upgrade(version, data);
     }
 

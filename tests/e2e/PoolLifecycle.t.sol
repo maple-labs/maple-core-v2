@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.7;
 
-import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
-
 import { OpenTermLoan, OpenTermLoanManager, Pool, PoolManager } from "../../contracts/Contracts.sol";
 
-// TODO: Add assertOpenTermLoanPaymentState after creation.
-// TODO: Add explicit asserts for all `expected*` variables at end of each section.
+import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 contract PoolLifecycleTest is TestBaseWithAssertions {
 
@@ -76,7 +73,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         /*** Step 1: PD creates pool ***/
         /*******************************/
 
-        _createPool(1 weeks, 2 days);
+        _createPool(start, 1 weeks, 2 days);
 
         loanManager = OpenTermLoanManager(poolManager.loanManagerList(1));
 
@@ -86,7 +83,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         setupFees({
             delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,  // TODO: Irrelevant
+            delegateServiceFee:         300e6,
             delegateManagementFeeRate:  0.12e6,
             platformOriginationFeeRate: 0.001e6,
             platformServiceFeeRate:     0.02e6,
@@ -134,10 +131,11 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets = 10_000_000e6;
         expectedTotalSupply = 10_000_000e6;
 
-        assertEq(Pool(pool).balanceOf(lp1), 5_000_000e6);
-        assertEq(Pool(pool).balanceOf(lp2), 5_000_000e6);
+        assertEq(pool.balanceOf(lp1), 5_000_000e6);
+        assertEq(pool.balanceOf(lp2), 5_000_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -172,6 +170,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -232,6 +231,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -293,6 +293,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -356,6 +357,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -380,8 +382,6 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan2IssuanceRate
         });
 
-        // TODO: Add a block of assertions that asserts all the `expected` state variables with explicit numbers.
-
         /******************************************/
         /*** Step 10: LP3 deposits 5m at ER > 1 ***/
         /******************************************/
@@ -404,6 +404,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets += 5_000_000e6;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,  // LP3 gets less shares compared to LP1/LP2 as exchange rate has updated
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -417,13 +418,14 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         vm.warp(start + 6 days);
 
         // LP1 requests to withdraw full liquidity before cycle 1 finishes to hit cycle 3
-        uint256 lp1Shares = Pool(pool).balanceOf(lp1);
+        uint256 lp1Shares = pool.balanceOf(lp1);
 
         requestRedeem(address(pool), lp1, lp1Shares);
 
-        assertEq(Pool(pool).balanceOf(lp1), 0);
+        assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 lp1Shares,
             previousExitCycleId:          0,
@@ -449,6 +451,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets += expectedTotalAccruedInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -463,12 +466,13 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets -= lp1Assets;
         expectedTotalSupply -= lp1Shares;
 
-        assertEq(Pool(pool).balanceOf(lp1),                        0);
-        assertEq(Pool(pool).balanceOf(address(withdrawalManager)), 0);
-        assertEq(fundsAsset.balanceOf(lp1),                        lp1Assets);
+        assertEq(pool.balanceOf(lp1),                 0);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+        assertEq(fundsAsset.balanceOf(lp1),           lp1Assets);
 
         // Full withdrawal
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -479,6 +483,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -523,6 +528,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -586,6 +592,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -638,6 +645,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -689,6 +697,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         // NOTE: No accounting state changes during a call.
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -742,6 +751,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -812,6 +822,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -864,6 +875,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -915,6 +927,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         // NOTE: No accounting state changes during a call.
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -968,6 +981,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,
@@ -1019,6 +1033,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         // NOTE: No accounting state changes during a call removal.
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        expectedTotalSupply,
             totalAssets:        expectedTotalAssets,
             unrealizedLosses:   0,

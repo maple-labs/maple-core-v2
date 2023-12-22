@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 as console } from "../../modules/forge-std/src/console2.sol";
-
 import { IOpenTermLoan, IOpenTermLoanManager, IOpenTermLoanManagerStructs } from "../../contracts/interfaces/Interfaces.sol";
+
+import { console2 as console } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -51,10 +51,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         loanManager = IOpenTermLoanManager(loan.lender());
 
         // Save to storage before change
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Save Balances
         borrowerBalance = fundsAsset.balanceOf(loan.borrower());
@@ -110,6 +110,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets + netInterest - accruedUpToImpairment,
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses - (loanStorage.previousPrincipal + accruedUpToImpairment),
@@ -137,6 +138,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets + (netInterest - netOnTimeInterest),
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,
@@ -166,10 +168,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         if (block.timestamp <= loan.defaultDate()) vm.warp(loan.defaultDate() + 1);  // Warp to default date
 
         // Save to storage before change
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         ( uint256 impairDate , ) = IOpenTermLoanManager(loan.lender()).impairmentFor(address(loan));
 
@@ -243,6 +245,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         });
 
         assertPoolStateWithDiff({
+            pool:               address(pool),
             totalAssets:        _subtractWithDiff(
                                     poolManagerStorage.previousTotalAssets + toPool,
                                     loanStorage.previousPrincipal + netInterest,

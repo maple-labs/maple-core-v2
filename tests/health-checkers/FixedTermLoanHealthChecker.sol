@@ -40,17 +40,30 @@ contract FixedTermLoanHealthChecker {
     function checkInvariants(address poolManager_, address[] memory loans_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        // Assume indexes for FT/OT LMs are 0 and 1 respectively.
-        address fixedTermLoanManager_ = poolManager.loanManagerList(0);
+        uint256 length = poolManager.loanManagerListLength();
 
-        invariants_.fixedTermLoanInvariantA = check_fixedTermLoan_invariant_A(loans_);
-        invariants_.fixedTermLoanInvariantB = check_fixedTermLoan_invariant_B(loans_);
-        invariants_.fixedTermLoanInvariantC = check_fixedTermLoan_invariant_C(loans_);
+        require(length == 1 || length == 2, "FTHC:CI:INVALID_LM_LIST_LENGTH");
 
-        invariants_.fixedTermLoanManagerInvariantD = check_fixedTermLoanManager_invariant_D(fixedTermLoanManager_, loans_);
-        invariants_.fixedTermLoanManagerInvariantE = check_fixedTermLoanManager_invariant_E(fixedTermLoanManager_, loans_);
-        invariants_.fixedTermLoanManagerInvariantM = check_fixedTermLoanManager_invariant_M(fixedTermLoanManager_, loans_);
-        invariants_.fixedTermLoanManagerInvariantN = check_fixedTermLoanManager_invariant_N(fixedTermLoanManager_, loans_);
+        // Initializing all to true makes sure that contract returns true if there's no fixed term loan manager.
+        invariants_ = _initStruct();
+
+        for(uint256 i; i < length; ++i) {
+            address loanManager_ = poolManager.loanManagerList(i);
+            if (_isFixedTermLoanManager(loanManager_)) {
+                
+                // If there're two loan managers, only one can be a fixed term, otherwise this contract can't properly assert invariants.
+                if (i == 1) require(!_isFixedTermLoanManager(poolManager.loanManagerList(0)), "FTHC:CI:TWO_FTLMs");
+
+                invariants_.fixedTermLoanInvariantA = check_fixedTermLoan_invariant_A(loans_);
+                invariants_.fixedTermLoanInvariantB = check_fixedTermLoan_invariant_B(loans_);
+                invariants_.fixedTermLoanInvariantC = check_fixedTermLoan_invariant_C(loans_);
+
+                invariants_.fixedTermLoanManagerInvariantD = check_fixedTermLoanManager_invariant_D(loanManager_, loans_);
+                invariants_.fixedTermLoanManagerInvariantE = check_fixedTermLoanManager_invariant_E(loanManager_, loans_);
+                invariants_.fixedTermLoanManagerInvariantM = check_fixedTermLoanManager_invariant_M(loanManager_, loans_);
+                invariants_.fixedTermLoanManagerInvariantN = check_fixedTermLoanManager_invariant_N(loanManager_, loans_);
+            }
+        }
     }
 
     /******************************************************************************************************************************/
@@ -109,7 +122,7 @@ contract FixedTermLoanHealthChecker {
     /******************************************************************************************************************************/
 
     function check_fixedTermLoanManager_invariant_D(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         if (loans_.length == 0) return true;
@@ -124,7 +137,7 @@ contract FixedTermLoanHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_E(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         if (loans_.length == 0) return true;
@@ -133,7 +146,7 @@ contract FixedTermLoanHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_M(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         for (uint256 i; i < loans_.length; i++) {
@@ -151,7 +164,7 @@ contract FixedTermLoanHealthChecker {
     }
 
     function check_fixedTermLoanManager_invariant_N(
-        address loanManager_,
+        address          loanManager_,
         address[] memory loans_
     ) public view returns (bool isMaintained_) {
         for (uint256 i; i < loans_.length; i++) {
@@ -183,6 +196,22 @@ contract FixedTermLoanHealthChecker {
                 sumIssuanceRate_ -= issuanceRate;  // If the loan is impaired the issuance rate is 0
             }
         }
+    }
+
+    function _isFixedTermLoanManager(address loan) internal view returns (bool isFixedTermLoanManager_) {
+        try IFixedTermLoanManager(loan).domainEnd() {
+            isFixedTermLoanManager_ = true;
+        } catch { }
+    }
+
+    function _initStruct() internal pure returns (Invariants memory invariants_) {
+        invariants_.fixedTermLoanInvariantA        = true;
+        invariants_.fixedTermLoanInvariantB        = true;
+        invariants_.fixedTermLoanInvariantC        = true;
+        invariants_.fixedTermLoanManagerInvariantD = true;
+        invariants_.fixedTermLoanManagerInvariantE = true;
+        invariants_.fixedTermLoanManagerInvariantM = true;
+        invariants_.fixedTermLoanManagerInvariantN = true;
     }
 
 }

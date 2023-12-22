@@ -1,25 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 as console } from "../../modules/forge-std/src/console2.sol";
-
 import {
     IERC20,
     IFixedTermLoan,
     IFixedTermLoanManager,
+    IGlobals,
     ILoanLike,
+    IProxyFactoryLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
+
+import { console2 as console } from "../../contracts/Contracts.sol";
 
 import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-// TODO: Add refinancing.
 enum LoanAction {
     Call,
     Close,
@@ -42,7 +44,7 @@ contract FuzzedUtil is ProtocolActions {
     uint256 constant REMOVE_CALL_FACTOR       = 100;
     uint256 constant REMOVE_IMPAIRMENT_FACTOR = 100;
 
-    // Local addresses that will be overriden by implementers
+    // Local addresses that will be overridden by implementers
     address _collateralAsset;
     address _feeManager;
     address _fixedTermLoanManager;
@@ -154,27 +156,53 @@ contract FuzzedUtil is ProtocolActions {
     }
 
     function redeemAllLps() internal {
-        for (uint256 i; i < lps.length; ++i) {
-            address lp = lps[i];
-
-            IWithdrawalManager withdrawalManager = IWithdrawalManager(IPoolManager(_poolManager).withdrawalManager());
-
-            uint256 exitCycleId = withdrawalManager.exitCycleId(lp);
-
-            uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(exitCycleId);
-
-            if (withdrawalWindowStart > block.timestamp) {
-                vm.warp(withdrawalWindowStart);
-            }
-
-            // Redeem all LP tokens.
-            redeem(address(_pool), lp, escrowedShares[i]);
+        if (isWMQueue(_poolManager)) {
+            redeemFromQueue();
+            return;
         }
+
+        for (uint256 i; i < lps.length; ++i) {
+            redeemFromCyclical(lps[i], escrowedShares[i]);
+        }
+    }
+
+    function redeemFromCyclical(address lp, uint256 shares) internal {
+        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(_poolManager).withdrawalManager());
+
+        uint256 exitCycleId = withdrawalManager.exitCycleId(lp);
+
+        uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(exitCycleId);
+
+        if (withdrawalWindowStart > block.timestamp) {
+            vm.warp(withdrawalWindowStart);
+        }
+
+        // Redeem all LP tokens.
+        redeem(address(_pool), lp, shares);
+    }
+
+    function redeemFromQueue() internal {
+        IPoolManager            poolManager       = IPoolManager(_poolManager);
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+
+        uint256 totalShares = withdrawalManager.totalShares();
+
+        // There's some rounding in the pools that prevent the last hundred or so shares from being redeemed.
+        if (totalShares > 100) {
+            vm.prank(poolManager.poolDelegate());
+            withdrawalManager.processRedemptions(totalShares - 100);
+            // Redeem all LP tokens.
+            for (uint256 i; i < lps.length; ++i) {
+                if (withdrawalManager.manualSharesAvailable(lps[i]) > 0) {
+                    redeem(address(_pool), lps[i], escrowedShares[i]);
+                }
+            }
+        }
+
     }
 
     function createAndFundLoan(function() returns (address) createLoan_) internal returns (address loan) {
         loan = createLoan_();
-
         loans.push(loan);
         fundLoan(loan);
     }
@@ -182,7 +210,7 @@ contract FuzzedUtil is ProtocolActions {
     function createSomeOpenTermLoan() internal returns (address loan) {
         require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
-        uint256 principal              = getSomeValue(100_000e6, 10_000_000e6);
+        uint256 principal              = getSomeValue(100_000e6, 1_000_000e6);
         uint256 noticePeriod           = getSomeValue(1 hours,   10 days);
         uint256 gracePeriod            = getSomeValue(0,         10 days);
         uint256 paymentInterval        = getSomeValue(10 days,   90 days);
@@ -190,7 +218,6 @@ contract FuzzedUtil is ProtocolActions {
         uint256 interestRate           = getSomeValue(0.01e6,    0.25e6);
         uint256 lateFeeRate            = getSomeValue(0,         0.1e6);
         uint256 lateInterestPremium    = getSomeValue(0,         0.1e6);
-
         loan = createOpenTermLoan(
             address(_openTermLoanFactory),
             makeAddr("borrower"),
@@ -205,7 +232,7 @@ contract FuzzedUtil is ProtocolActions {
     function createSomeFixedTermLoan() internal returns (address loan) {
         require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
-        uint256 principal = getSomeValue(100_000e6, 10_000_000e6);
+        uint256 principal = getSomeValue(100_000e6, 1_000_000e6);
 
         uint256[3] memory amounts = [
             0,                          // collateralRequired
@@ -230,6 +257,13 @@ contract FuzzedUtil is ProtocolActions {
             getSomeValue(0, principal * 0.025e6 / 1e6),  // delegateOriginationFee
             getSomeValue(0, 100_000e6)                   // delegateServiceFee
         ];
+
+        IGlobals globals = IGlobals(IProxyFactoryLike(_fixedTermLoanFactory).mapleGlobals());
+
+        if (!globals.isCollateralAsset(_collateralAsset)) {
+            vm.prank(globals.governor());
+            globals.setValidCollateralAsset(_collateralAsset, true);
+        }
 
         loan = createFixedTermLoan(
             address(_fixedTermLoanFactory),
@@ -455,6 +489,14 @@ contract FuzzedUtil is ProtocolActions {
         isImpairedOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isImpaired();
     }
 
+    function isWMQueue(address poolManager_) internal view returns (bool isWMQueue_) {
+        address wm = IPoolManager(poolManager_).withdrawalManager();
+
+        try IWithdrawalManagerQueue(wm).queue() {
+            isWMQueue_ = true;
+        } catch { }
+    }
+
     function getAllActiveFixedTermLoans() internal returns (address[] memory loans_) {
         for (uint256 i; i < loans.length; ++i) {
             if (isActiveFixedTermLoan(loans[i])) {
@@ -502,8 +544,23 @@ contract FuzzedUtil is ProtocolActions {
         _poolManager = IPool(pool).manager();
         _fundsAsset  = IPool(pool).asset();
 
-        _fixedTermLoanManager = IPoolManager(_poolManager).loanManagerList(0);
-        _openTermLoanManager  = IPoolManager(_poolManager).loanManagerList(1);
+        address lm1 = IPoolManager(_poolManager).loanManagerList(0);
+        address lm2 = IPoolManager(_poolManager).loanManagerList(1);
+
+        if (_isOpenTermLoanManager(lm1)) {
+            _openTermLoanManager  = lm1;
+            _fixedTermLoanManager = lm2;
+        } else {
+            _openTermLoanManager  = lm2;
+            _fixedTermLoanManager = lm1;
+        }
+
+    }
+
+    function _isOpenTermLoanManager(address loanManager_) internal view returns (bool isOpenTermLoanManager_) {
+        try IOpenTermLoanManager(loanManager_).paymentFor(address(0)) {
+            isOpenTermLoanManager_ = true;
+        } catch { }
     }
 
 }

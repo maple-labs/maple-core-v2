@@ -57,13 +57,6 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 Specific tests can be run using `forge test` conventions, specified in more detail in the Foundry [Book](https://book.getfoundry.sh/reference/forge/forge-test#test-options).
 
-### Simulation Commands
-
-For the following commands, a `$ETH_RPC_URL` environment value needs to be configured with a valid rpc url.
-
-| Command | Description |
-|---|---|
-| `make upgrade` | Run the upgrade simulations against mainnet |
 
 ## Audit Reports
 
@@ -83,6 +76,14 @@ For the following commands, a `$ETH_RPC_URL` environment value needs to be confi
 |---|---|
 | Spearbit Auditors via Cantina | [`2023-06-05 - Cantina Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/11667848/cantina-maple.pdf) |
 | Three Sigma | [`2023-04-10 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/11663546/maple-v2-audit_three-sigma_2023.pdf) |
+
+<br>
+
+### December 2023 Release
+| Auditor | Report Link |
+|---|---|
+| Three Sigma | [`2023-11-06 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/13707288/Maple-Q4-Three-Sigma-Audit.pdf) |
+| 0xMacro | [`2023-11-27 - 0xMacro Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/13707291/Maple-Q4-0xMacro-Audit.pdf) |
 
 ## Bug Bounty
 

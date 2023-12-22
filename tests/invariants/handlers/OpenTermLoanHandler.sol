@@ -2,18 +2,18 @@
 pragma solidity 0.8.7;
 
 import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
     IGlobals,
     IInvariantTest,
     IMapleProxyFactory,
     IMockERC20,
+    IOpenTermLoan,
+    IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 } from "../../../contracts/Contracts.sol";
+import { console2 as console } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -30,6 +30,8 @@ contract OpenTermLoanHandler is HandlerBase {
 
     address[] public borrowers;
     address[] public loans;
+
+    mapping(uint256 => bool) public refinanceCallUsed;
 
     IGlobals             public globals;
     IMapleProxyFactory   public liquidatorFactory;
@@ -76,7 +78,7 @@ contract OpenTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function callLoan(uint256 seed_) external useTimestamps {
-        console2.log("otlHandler.callLoan(%s)", seed_);
+        console.log("otlHandler.callLoan(%s)", seed_);
 
         numberOfCalls["callLoan"]++;
 
@@ -90,7 +92,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function fundLoan(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.fundLoan(%s)", seed_);
+        console.log("otlHandler.fundLoan(%s)", seed_);
 
         numberOfCalls["fundLoan"]++;
 
@@ -102,7 +104,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function impairLoan(uint256 seed_) external useTimestamps {
-        console2.log("otlHandler.impairLoan(%s)", seed_);
+        console.log("otlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["impairLoan"]++;
 
@@ -116,7 +118,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function makePayment(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.makePayment(%s)", seed_);
+        console.log("otlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["makePayment"]++;
 
@@ -128,7 +130,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.refinance(%s)", seed_);
+        console.log("otlHandler.refinance(%s)", seed_);
 
         numberOfCalls["refinance"]++;
 
@@ -136,7 +138,26 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (loan_ == address(0)) return;
 
-        bytes[] memory calls_ = _generateRefinanceCalls(_hash(seed_, "refinance"), loan_);
+        ( bytes[] memory calls_, int256 principalDelta_ ) = _generateRefinanceCalls(_hash(seed_, "refinance"), loan_);
+
+        (
+            ,
+            uint256 interest_,
+            uint256 lateInterest_,
+            uint256 delegateServiceFee_,
+            uint256 platformServiceFee_
+        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
+
+        uint256 principalToReturn_ = principalDelta_ < 0 ? uint256(principalDelta_ * - 1) : 0;
+        uint256 amountToReturn_    = principalToReturn_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
+
+        address borrower_ = IOpenTermLoan(loan_).borrower();
+
+        // Borrower must send enough to cover the principal + interest + fees
+        asset.mint(borrower_, amountToReturn_);
+
+        vm.prank(borrower_);
+        asset.approve(loan_, amountToReturn_);
 
         proposeRefinance(loan_, refinancer, block.timestamp, calls_);
 
@@ -160,9 +181,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         if (loan_ == address(0)) return;
 
-        address caller_ = _selectCaller(seed_);
-
-        removeLoanImpairment(loan_, caller_);
+        removeLoanImpairment(loan_, globals.governor());
     }
 
     function triggerDefault(uint256 seed_) external useTimestamps {
@@ -178,13 +197,11 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function warp(uint256 seed_) public useTimestamps {
-        console2.log("otlHandler.warp(%s)", seed_);
+        console.log("otlHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;
 
         uint256 warpAmount_ = _bound(seed_, 1 days, 15 days);
-
-        console2.log("warp():", warpAmount_);
 
         vm.warp(block.timestamp + warpAmount_);
     }
@@ -198,7 +215,7 @@ contract OpenTermLoanHandler is HandlerBase {
         uint256 length_;
 
         for (uint256 i; i < loans.length; ++i) {
-            if (!_filterLoan(loans[i], onlyOverdue_)) continue;
+            if (!_isActive(loans[i], onlyOverdue_)) continue;
 
             length_++;
         }
@@ -206,7 +223,7 @@ contract OpenTermLoanHandler is HandlerBase {
         activeLoans_ = new address[](length_);
 
         for (uint256 i; i < loans.length; ++i) {
-            if (!_filterLoan(loans[i], onlyOverdue_)) continue;
+            if (!_isActive(loans[i], onlyOverdue_)) continue;
 
             activeLoans_[index_++] = loans[i];
         }
@@ -241,8 +258,7 @@ contract OpenTermLoanHandler is HandlerBase {
         numLoans++;
     }
 
-    // TODO: Rename this function as the filter criteria is unclear.
-    function _filterLoan(address loan_, bool onlyOverdue_) internal view returns (bool filter_) {
+    function _isActive(address loan_, bool onlyOverdue_) internal view returns (bool filter_) {
         // Don't include loans that are not active.
         if (IOpenTermLoan(loan_).dateFunded() == 0) return false;
 
@@ -264,9 +280,12 @@ contract OpenTermLoanHandler is HandlerBase {
         rates_ = [delegateServiceFeeRate_, interestRate_, lateFeeRate_, lateInterestPremium_];
     }
 
-    function _generateRefinanceCalls(uint256 seed_, address loan_) internal view returns (bytes[] memory data_) {
+    function _generateRefinanceCalls(
+        uint256 seed_,
+        address loan_
+    ) internal returns (bytes[] memory data_, int256 principalDelta_) {
         // Get how many calls will be done
-        uint256 numberOfCalls = _hash(seed_, "numberOfCalls") % 10; // 9 functions on refi contract (0 - 9)
+        uint256 numberOfCalls = _hash(seed_, "numberOfCalls") % 9 + 1; // 9 functions on refi contract (1 - 9)
 
         // Generate completely new loan parameters
         ( uint256[3] memory terms_, uint256[4] memory rates_ ) = _getLoanParams(seed_);
@@ -277,8 +296,8 @@ contract OpenTermLoanHandler is HandlerBase {
         bytes[] memory calls = new bytes[](9);
 
         // Create an array of arguments, even if not all will be used
-        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",         principalIncrease);
-        calls[1] = abi.encodeWithSignature("increasePrincipal(uint256)",         principalDecrease);
+        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",         principalDecrease);
+        calls[1] = abi.encodeWithSignature("increasePrincipal(uint256)",         principalIncrease);
         calls[2] = abi.encodeWithSignature("setGracePeriod(uint32)",             terms_[0]);
         calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)",            terms_[1]);
         calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)",         terms_[2]);
@@ -289,16 +308,30 @@ contract OpenTermLoanHandler is HandlerBase {
 
         data_ = new bytes[](numberOfCalls);
 
-        for (uint i = 0; i < numberOfCalls; i++) {
+        uint256 principalIncreased;
+        uint256 principalDecreased;
+
+        for (uint256 i = 0; i < numberOfCalls; i++) {
             // Get a random index, so calls happen in different orders every time. Can cause repeated calls, but that's ok.
             uint256 index = _hash(seed_, string(abi.encode(i))) % calls.length;
 
+            // TODO: Find a long term fix
+            // If index is already used for decrease or increase principal find another.
+            if (refinanceCallUsed[index] && (index == 0 || index == 1)) index = _bound(_hash(seed_, string(abi.encode(i))), 2, 8);
+
+            // If index is 0 or 1, we need to update the principalIncrease and Decrease
+            if (index == 0 && !refinanceCallUsed[0]) principalDecreased += principalDecrease;
+            if (index == 1 && !refinanceCallUsed[1]) principalIncreased += principalIncrease;
+
             data_[i] = calls[index];
+            refinanceCallUsed[index] = true;
         }
+
+        principalDelta_ = int256(principalIncreased) - int256(principalDecreased);
     }
 
     function _getPrincipalIncrease(uint256 seed_) internal view returns (uint256 principal_) {
-        uint256 availableAssets_ = asset.balanceOf(address(pool));
+        uint256 availableAssets_ = asset.balanceOf(address(pool)) / 2;
         uint256 lockedLiquidity_ = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();
 
         // Do nothing if there are no assets available for utilization.

@@ -63,23 +63,22 @@ contract RedeemFuzzTests is FuzzBase {
         vm.prank(owner);
         pool.approve(caller, sharesToRedeem);
 
-        assertEq(pool.allowance(owner, caller),              sharesToRedeem);
-        assertEq(pool.balanceOf(address(owner)),             lpStartingBalance);
-        assertEq(pool.balanceOf(address(withdrawalManager)), 0);
+        assertEq(pool.allowance(owner, caller),       sharesToRedeem);
+        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance);
+        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
 
         vm.prank(caller);
         pool.requestRedeem(sharesToRedeem, owner);
 
-        assertEq(pool.allowance(owner, caller),              sameCaller ? sharesToRedeem : 0);
-        assertEq(pool.balanceOf(address(owner)),             lpStartingBalance - sharesToRedeem);
-        assertEq(pool.balanceOf(address(withdrawalManager)), sharesToRedeem);
+        assertEq(pool.allowance(owner, caller),       sameCaller ? sharesToRedeem : 0);
+        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance - sharesToRedeem);
+        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
 
         vm.warp(start + withdrawalDelay);
 
         vm.prank(owner);
         pool.approve(caller, sharesToRedeem);
 
-        // TODO: Fuzz durations of withdrawal cycle and window.
         if (withdrawalDelay < 2 weeks || withdrawalDelay >= 2 weeks + 2 days) {
             vm.prank(caller);
             vm.expectRevert("WM:PE:NOT_IN_WINDOW");
@@ -98,13 +97,13 @@ contract RedeemFuzzTests is FuzzBase {
 
         assertEq(pool.allowance(owner, caller), sharesToRedeem);
 
-        assertEq(pool.totalSupply(),                         totalSupply);
-        assertEq(pool.balanceOf(address(owner)),             lpStartingBalance - sharesToRedeem);
-        assertEq(pool.balanceOf(address(withdrawalManager)), sharesToRedeem);
-        assertEq(fundsAsset.balanceOf(receiver),             receiverAssets);
+        assertEq(pool.totalSupply(),                  totalSupply);
+        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance - sharesToRedeem);
+        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
+        assertEq(fundsAsset.balanceOf(receiver),      receiverAssets);
 
-        assertEq(withdrawalManager.lockedShares(owner), sharesToRedeem);
-        assertEq(withdrawalManager.exitCycleId(owner),  3);
+        assertEq(cyclicalWM.lockedShares(owner), sharesToRedeem);
+        assertEq(cyclicalWM.exitCycleId(owner),  3);
 
         vm.prank(caller);
         uint256 withdrawnAssets = pool.redeem(sharesToRedeem, receiver, owner);
@@ -113,13 +112,13 @@ contract RedeemFuzzTests is FuzzBase {
 
         assertEq(pool.allowance(owner, caller), sameCaller ? sharesToRedeem : sharesToRedeem - redeemableShares);
 
-        assertEq(pool.totalSupply(),                         totalSupply       - redeemableShares);
-        assertEq(pool.balanceOf(address(owner)),             lpStartingBalance - sharesToRedeem);
-        assertEq(pool.balanceOf(address(withdrawalManager)), sharesToRedeem    - redeemableShares);
-        assertEq(fundsAsset.balanceOf(receiver),             receiverAssets    + withdrawnAssets);
+        assertEq(pool.totalSupply(),                  totalSupply       - redeemableShares);
+        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance - sharesToRedeem);
+        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem    - redeemableShares);
+        assertEq(fundsAsset.balanceOf(receiver),      receiverAssets    + withdrawnAssets);
 
-        assertEq(withdrawalManager.lockedShares(owner), sharesToRedeem - redeemableShares);
-        assertEq(withdrawalManager.exitCycleId(owner),  redeemableShares < sharesToRedeem ? 4 : 0);
+        assertEq(cyclicalWM.lockedShares(owner), sharesToRedeem - redeemableShares);
+        assertEq(cyclicalWM.exitCycleId(owner),  redeemableShares < sharesToRedeem ? 4 : 0);
     }
 
 }

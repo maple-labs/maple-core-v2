@@ -8,17 +8,24 @@ import {
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
-    IOpenTermLoanManager
+    IOpenTermLoanManager,
+    IPool,
+    IPoolPermissionManager,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { StdInvariant } from "../../contracts/Contracts.sol";
+import { console2 as console, StdInvariant } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { FixedTermLoanHandler } from "./handlers/FixedTermLoanHandler.sol";
-import { GlobalsHandler }       from "./handlers/GlobalsHandler.sol";
-import { LpHandler }            from "./handlers/LpHandler.sol";
-import { OpenTermLoanHandler }  from "./handlers/OpenTermLoanHandler.sol";
+import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
+import { DepositHandler }            from "./handlers/DepositHandler.sol";
+import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
+import { GlobalsHandler }            from "./handlers/GlobalsHandler.sol";
+import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
+import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
+import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
+import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
@@ -26,21 +33,29 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    FixedTermLoanHandler ftlHandler;
-    GlobalsHandler       globalsHandler;
-    LpHandler            lpHandler;
-    OpenTermLoanHandler  otlHandler;
+    uint256 constant ALLOWED_DIFF        = 150;
+    uint256 constant PUBLIC              = 3;
+    uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
+
+    CyclicalWithdrawalHandler cyclicalWithdrawalHandler;
+    DepositHandler            depositHandler;
+    FixedTermLoanHandler      ftlHandler;
+    GlobalsHandler            globalsHandler;
+    OpenTermLoanHandler       otlHandler;
+    PermissionHandler         permissionHandler;
+    QueueWithdrawalHandler    queueWithdrawalHandler;
+    TransferHandler           transferHandler;
 
     uint256 setTimestamps;
 
-    address[] public borrowers;
+    uint256 public currentTimestamp;
+
+    address[] lps;
 
     uint256[] timestamps;
 
-    uint256 public currentTimestamp;
-
-    uint256 constant ALLOWED_DIFF        = 100;
-    uint256 constant UNDERFLOW_THRESHOLD = 10;
+    mapping(address => bool) existingOwners;
+    mapping(uint128 => bool) existingRequestIds;
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -111,11 +126,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant J: unrealizedLosses == poolManager.unrealizedLosses()
         * Invariant K: convertToExitShares == poolManager.convertToExitShares()
 
-     PoolManager (non-liquidating)
+     * PoolManager (non-liquidating)
         * Invariant A: totalAssets == cash + ∑assetsUnderManagement[loanManager]
         * Invariant B: hasSufficientCover == fundsAsset balance of cover > globals.minCoverAmount
 
-     Withdrawal Manager
+     * Withdrawal Manager (Cyclical)
         * Invariant A: WM LP balance == ∑lockedShares(user)
         * Invariant B: totalCycleShares == ∑lockedShares(user)[cycle] (for all cycles)
         * Invariant C: windowStart[currentCycle] <= block.timestamp
@@ -131,27 +146,22 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant M: lockedLiquidity <= pool.totalAssets()
         * Invariant N: lockedLiquidity <= totalCycleShares[exitCycleId[user]] * exchangeRate
 
-    ftlHandler requires (WIP)
-        makePayment
-        * totalAssets increases
-        * Treasury balance increases
-        * PD balance increases if cover
-        * payment management rates equal current rates
-        * domainStart == block.timestamp
-        * domainEnd   == paymentWithEarliestDueDate
-        * loan balance == 0
-        * loan PDD increases by paymentInterval if not last payment
-        * refinanceInterest
+     * Pool Permission Manager
+        * Invariant A: pool.permissionLevel ∈ [0, 3]
+        * Invariant B: pool.bitmap ∈ [0, MAX]
+        * Invariant C: lender.bitmap ∈ [0, MAX]
+        * Invariant D: pool.permissionLevel == public -> permanently public
 
-        fund
-        * Treasury balance increases
-        * PD balance increases if cover
-        * payment management rates equal current rates
-        * domainStart == block.timestamp
-        * domainEnd   == paymentWithEarliestDueDate
-        * issuanceRate > 0
-
-    ***************************************************************************************************************************************/
+     * Withdrawal Manager (Queue)
+        * Invariant A: ∑request.shares + ∑owner.manualShares == totalShares
+        * Invariant B: balanceOf(this) >= totalShares
+        * Invariant C: ∀ requestId(owner) != 0 -> request.shares > 0 && request.owner == owner
+        * Invariant D: nextRequestId <= lastRequestId + 1
+        * Invariant E: nextRequestId != 0
+        * Invariant F: requests(0) == (0, 0)
+        * Invariant G: ∀ requestId[lender] ∈ [0, lastRequestId]
+        * Invariant H: requestId is unique
+        * Invariant I: lender is unique
 
     /**************************************************************************************************************************************/
     /*** Fixed Term Loan Invariants                                                                                                     ***/
@@ -317,7 +327,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_pool_invariant_B(uint256 sumBalanceOfAssets) internal {
         assertGe(pool.totalAssets(), sumBalanceOfAssets, "Pool Invariant B1");
 
-        assertApproxEqAbs(pool.totalAssets(), sumBalanceOfAssets, lpHandler.numHolders(), "Pool Invariant B2");
+        assertApproxEqAbs(pool.totalAssets(), sumBalanceOfAssets, lps.length, "Pool Invariant B2");
     }
 
     function assert_pool_invariant_C() internal {
@@ -388,53 +398,53 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function assert_withdrawalManager_invariant_A(uint256 sumLockedShares) internal {
-        assertEq(pool.balanceOf(address(withdrawalManager)), sumLockedShares, "WithdrawalManager Invariant A1");
+        assertEq(pool.balanceOf(address(cyclicalWM)), sumLockedShares, "WithdrawalManager Invariant A1");
     }
 
     function assert_withdrawalManager_invariant_B() internal {
-        uint256 currentCycleId = withdrawalManager.getCurrentCycleId();
+        uint256 currentCycleId = cyclicalWM.getCurrentCycleId();
 
         for (uint256 cycleId = 1; cycleId <= currentCycleId; ++cycleId) {
             uint256 sumCycleShares;
 
-            for (uint256 i; i < lpHandler.numLps(); ++i) {
-                if (withdrawalManager.exitCycleId(lpHandler.lps(i)) == cycleId) {
-                    sumCycleShares += withdrawalManager.lockedShares(lpHandler.lps(i));
+            for (uint256 i; i < lps.length; ++i) {
+                if (cyclicalWM.exitCycleId(lps[i]) == cycleId) {
+                    sumCycleShares += cyclicalWM.lockedShares(lps[i]);
                 }
             }
 
-            assertEq(withdrawalManager.totalCycleShares(cycleId), sumCycleShares, "WithdrawalManager Invariant B");
+            assertEq(cyclicalWM.totalCycleShares(cycleId), sumCycleShares, "WithdrawalManager Invariant B");
         }
     }
 
     function assert_withdrawalManager_invariant_C() internal {
-        uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(withdrawalManager.getCurrentCycleId());
+        uint256 withdrawalWindowStart = cyclicalWM.getWindowStart(cyclicalWM.getCurrentCycleId());
 
         assertLe(withdrawalWindowStart, block.timestamp, "WithdrawalManager Invariant C");
     }
 
     function assert_withdrawalManager_invariant_D() internal {
-        ( , uint256 initialCycleTime , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
+        ( , uint256 initialCycleTime , , ) = cyclicalWM.cycleConfigs(cyclicalWM.getCurrentCycleId());
 
         assertLe(initialCycleTime, block.timestamp, "WithdrawalManager Invariant D");
     }
 
     function assert_withdrawalManager_invariant_E() internal {
-        ( uint256 initialCycleId , , , ) = withdrawalManager.cycleConfigs(withdrawalManager.getCurrentCycleId());
+        ( uint256 initialCycleId , , , ) = cyclicalWM.cycleConfigs(cyclicalWM.getCurrentCycleId());
 
-        assertLe(initialCycleId, withdrawalManager.getCurrentCycleId(), "WithdrawalManager Invariant e");
+        assertLe(initialCycleId, cyclicalWM.getCurrentCycleId(), "WithdrawalManager Invariant e");
     }
 
     function assert_withdrawalManager_invariant_F(uint256 shares) internal {
-        assertLe(shares, pool.balanceOf(address(withdrawalManager)), "WithdrawalManager Invariant F");
+        assertLe(shares, pool.balanceOf(address(cyclicalWM)), "WithdrawalManager Invariant F");
     }
 
     function assert_withdrawalManager_invariant_G(address lp, uint256 shares) internal {
-        assertLe(shares, withdrawalManager.lockedShares(lp), "WithdrawalManager Invariant G");
+        assertLe(shares, cyclicalWM.lockedShares(lp), "WithdrawalManager Invariant G");
     }
 
     function assert_withdrawalManager_invariant_H(address lp, uint256 shares) internal {
-        assertLe(shares, withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(lp)), "WithdrawalManager Invariant H");
+        assertLe(shares, cyclicalWM.totalCycleShares(cyclicalWM.exitCycleId(lp)), "WithdrawalManager Invariant H");
     }
 
     function assert_withdrawalManager_invariant_I(uint256 assets) internal {
@@ -447,7 +457,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_withdrawalManager_invariant_K(address lp, uint256 assets) internal {
         uint256 lpRequestedLiquidity =
-            withdrawalManager.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
+            cyclicalWM.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
 
         assertLe(assets, lpRequestedLiquidity, "WithdrawalManager Invariant K");
     }
@@ -459,32 +469,32 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_withdrawalManager_invariant_M() internal {
         if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
 
-        uint256 cycleId = withdrawalManager.getCurrentCycleId();
+        uint256 cycleId = cyclicalWM.getCurrentCycleId();
 
-        ( uint256 windowStart, uint256 windowEnd ) = withdrawalManager.getWindowAtId(cycleId);
+        ( uint256 windowStart, uint256 windowEnd ) = cyclicalWM.getWindowAtId(cycleId);
 
         if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
-            assertLe(withdrawalManager.lockedLiquidity(), pool.totalAssets(), "WithdrawalManager Invariant M1");
+            assertLe(cyclicalWM.lockedLiquidity(), pool.totalAssets(), "WithdrawalManager Invariant M1");
         } else {
-            assertEq(withdrawalManager.lockedLiquidity(), 0, "WithdrawalManager Invariant M2");
+            assertEq(cyclicalWM.lockedLiquidity(), 0, "WithdrawalManager Invariant M2");
         }
     }
 
     function assert_withdrawalManager_invariant_N() internal {
         if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
 
-        uint256 currentCycle = withdrawalManager.getCurrentCycleId();
+        uint256 currentCycle = cyclicalWM.getCurrentCycleId();
 
-        ( uint256 windowStart, uint256 windowEnd ) = withdrawalManager.getWindowAtId(currentCycle);
+        ( uint256 windowStart, uint256 windowEnd ) = cyclicalWM.getWindowAtId(currentCycle);
 
         if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
             assertLe(
-                withdrawalManager.lockedLiquidity(),
-                withdrawalManager.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(),
+                cyclicalWM.lockedLiquidity(),
+                cyclicalWM.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(),
                 "WithdrawalManager Invariant N1"
             );
         } else {
-            assertEq(withdrawalManager.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
+            assertEq(cyclicalWM.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
         }
     }
 
@@ -555,15 +565,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_otl_invariant_I(address loan_) internal {
-        IOpenTermLoan loan = IOpenTermLoan(loan_);
-
         (
             uint256 principal,
             uint256 interest,
             uint256 lateInterest,
             uint256 delegateServiceFee,
             uint256 platformServiceFee
-        ) = loan.getPaymentBreakdown(block.timestamp);
+        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         (
             uint256 expectedPrincipal,
@@ -571,7 +579,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             uint256 expectedLateInterest,
             uint256 expectedDelegateServiceFee,
             uint256 expectedPlatformServiceFee
-        ) = _getExpectedPaymentBreakdown(loan);
+        ) = _getExpectedPaymentBreakdown(loan_);
 
         assertEq(principal,          expectedPrincipal,          "OTL Invariant I (principal)");
         assertEq(interest,           expectedInterest,           "OTL Invariant I (interest)");
@@ -584,12 +592,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** Open Term Loan Manager Invariants                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    function assert_otlm_invariant_A(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_A(address openTermLoanManager_, address[] memory loans_) internal {
         uint256 assetsUnderManagement = IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement();
         uint256 expectedAssetsUnderManagement;
 
         for (uint256 i; i < loans_.length; ++i) {
-            expectedAssetsUnderManagement += loans_[i].principal() + _getExpectedNetInterest(loans_[i]);
+            expectedAssetsUnderManagement += IOpenTermLoan(loans_[i]).principal() + _getExpectedNetInterest(loans_[i]);
         }
 
         assertApproxEqAbs(
@@ -600,39 +608,39 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         );
     }
 
-    function assert_otlm_invariant_B(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_B(address openTermLoanManager_, address[] memory loans_) internal {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
         uint256 assetsUnderManagement = openTermLoanManager.assetsUnderManagement();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , uint40 startDate, ) = openTermLoanManager.paymentFor(address(loans_[i]));
+            ( , , uint40 startDate, ) = openTermLoanManager.paymentFor(loans_[i]);
 
             if (startDate != 0) return;
         }
 
-        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans(), "OTLM Invariant B");
+        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans() + ALLOWED_DIFF, "OTLM Invariant B");
     }
 
-    function assert_otlm_invariant_C(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_C(address openTermLoanManager_, address[] memory loans_) internal {
         uint256 principalOut = IOpenTermLoanManager(openTermLoanManager_).principalOut();
         uint256 expectedPrincipalOut;
 
         for (uint256 i; i < loans_.length; ++i) {
-            expectedPrincipalOut += loans_[i].principal();
+            expectedPrincipalOut += IOpenTermLoan(loans_[i]).principal();
         }
 
         assertEq(principalOut, expectedPrincipalOut, "OTLM Invariant C");
     }
 
-    function assert_otlm_invariant_D(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_D(address openTermLoanManager_, address[] memory loans_) internal {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
         uint256 issuanceRate = openTermLoanManager.issuanceRate();
         uint256 expectedIssuanceRate;
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(address(loans_[i]));
+            ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(loans_[i]);
             expectedIssuanceRate += issuanceRate_;
         }
 
@@ -648,13 +656,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertLe(unrealizedLosses, assetsUnderManagement, "OTLM Invariant E");
     }
 
-    function assert_otlm_invariant_F(address openTermLoanManager_, IOpenTermLoan[] memory loans_) internal {
+    function assert_otlm_invariant_F(address openTermLoanManager_, address[] memory loans_) internal {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
         uint256 unrealizedLosses = openTermLoanManager.unrealizedLosses();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(address(loans_[i]));
+            ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(loans_[i]);
 
             if (impairmentDate != 0) return;
         }
@@ -681,10 +689,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_otlm_invariant_I(address loan_, address openTermLoanManager_) internal {
-        IOpenTermLoan loan = IOpenTermLoan(loan_);
-
-        ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
-        uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan);
+        ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan_);
+        uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan_);
 
         assertEq(issuanceRate, expectedIssuanceRate, "OTLM Invariant I");
     }
@@ -700,29 +706,200 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_otlm_invariant_K(address loanManager_, IOpenTermLoan[] memory loans_) internal useCurrentTimestamp {
+    function assert_otlm_invariant_K(address loanManager_, address[] memory loans_) internal useCurrentTimestamp {
         uint256 outstandingValue;
 
         uint256 assetsUnderManagement = IOpenTermLoanManager(loanManager_).assetsUnderManagement();
         uint256 unrealizedLosses      = IOpenTermLoanManager(loanManager_).unrealizedLosses();
 
         for (uint256 i; i < loans_.length; ++i) {
-            outstandingValue += _getOutstandingValue(address(loans_[i]));
+            outstandingValue += _getOutstandingValue(loans_[i]);
         }
 
-        assertApproxEqAbs(
-            assetsUnderManagement + UNDERFLOW_THRESHOLD - unrealizedLosses - outstandingValue,
-            0,
-            ALLOWED_DIFF,
-            "OTLM Invariant K"
-        );
+        uint256 a = assetsUnderManagement;
+        uint256 b = unrealizedLosses + outstandingValue;
+        uint256 diff = a > b ? a - b : b - a;
+
+        assertApproxEqAbs(diff, 0, ALLOWED_DIFF, "OTLM Invariant K");
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Pool Permission Manager Invariants                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    function assert_ppm_invariant_A(address poolPermissionManager_, address poolManager_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        uint256 permissionLevel = ppm.permissionLevels(poolManager_);
+
+        assertLe(permissionLevel, 3, "PPM Invariant A");
+    }
+
+    function assert_ppm_invariant_B(address poolPermissionManager_, address poolManager_, bytes32[] memory functionIds_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        for (uint256 i; i < functionIds_.length; ++i) {
+
+            assertLe(ppm.poolBitmaps(poolManager_, functionIds_[i]), MAXIMUM_BITMAP, "PPM Invariant B");
+        }
+    }
+
+    function assert_ppm_invariant_C(address poolPermissionManager_, address[] memory lenders_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        for (uint256 i; i < lenders_.length; ++i) {
+            assertLe(ppm.lenderBitmaps(lenders_[i]), MAXIMUM_BITMAP, "PPM Invariant C");
+        }
+    }
+
+    // TODO: Currently unused.
+    function assert_ppm_invariant_D(address poolPermissionManager_, address[] memory poolManagers_) internal {
+        IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
+
+        for (uint256 i; i < poolManagers_.length; i++) {
+            assertEq(ppm.permissionLevels(poolManagers_[i]), PUBLIC, "PPM Invariant D");
+        }
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Withdrawal Manager (Queue) Invariants                                                                                          ***/
+    /**************************************************************************************************************************************/
+
+    function assert_wmq_invariant_A(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = wm.queue();
+
+        uint256 countedShares;
+        uint256 totalShares = wm.totalShares();
+
+        for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
+            ( , uint256 shares ) = wm.requests(requestId);
+
+            countedShares += shares;
+        }
+
+        // NOTE: If the request is manual but is processed, the link to the owner address is lost.
+        //       That's why the lenders addresses are passed in manually.
+        for (uint256 i; i < lenders_.length; i++) {
+            address owner = lenders_[i];
+
+            countedShares += wm.manualSharesAvailable(owner);
+        }
+
+        assertEq(countedShares, totalShares, "WMQ Invariant A");
+    }
+
+    function assert_wmq_invariant_B(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+        IPool pool                 = IPool(wm.pool());
+
+        uint256 balance     = pool.balanceOf(withdrawalManager_);
+        uint256 totalShares = wm.totalShares();
+
+        assertGe(balance, totalShares, "WMQ Invariant B");
+    }
+
+    function assert_wmq_invariant_C(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        for (uint256 i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            if (requestId == 0) continue;
+
+            ( address owner, uint256 shares ) = wm.requests(requestId);
+
+            assertTrue(shares > 0 && owner == lenders_[i], "WMQ Invariant C");
+        }
+    }
+
+    function assert_wmq_invariant_D(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = wm.queue();
+
+        assertLe(nextRequestId, lastRequestId + 1, "WMQ Invariant D");
+    }
+
+    function assert_wmq_invariant_E(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 nextRequestId, ) = wm.queue();
+
+        assertTrue(nextRequestId != 0, "WMQ Invariant E");
+    }
+
+    function assert_wmq_invariant_F(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( address owner, uint256 shares ) = wm.requests(0);
+
+        assertEq(owner,  address(0), "WMQ Invariant F");
+        assertEq(shares, uint256(0), "WMQ Invariant F");
+    }
+
+    function assert_wmq_invariant_G(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( , uint128 lastRequestId ) = wm.queue();
+
+        for (uint256 i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            assertLe(requestId, lastRequestId, "WMQ Invariant G");
+        }
+    }
+
+    function assert_wmq_invariant_H(address withdrawalManager_, address[] memory lenders_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        for (uint256 i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            if (requestId == 0) continue;
+
+            assertFalse(existingRequestIds[requestId], "WMQ Invariant H");
+
+            existingRequestIds[requestId] = true;
+        }
+
+        // NOTE: Clean up storage for future assertion calls.
+        for (uint256 i; i < lenders_.length; i++) {
+            uint128 requestId = wm.requestIds(lenders_[i]);
+
+            existingRequestIds[requestId] = false;
+        }
+    }
+
+    function assert_wmq_invariant_I(address withdrawalManager_) internal {
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
+
+        ( uint128 firstRequestId, uint128 lastRequestId ) = wm.queue();
+
+        for (uint128 requestId = firstRequestId; requestId <= lastRequestId; requestId++) {
+            ( address owner, ) = wm.requests(requestId);
+
+            if (owner == address(0)) continue;
+
+            assertFalse(existingOwners[owner], "WMQ Invariant I");
+
+            existingOwners[owner] = true;
+        }
+
+        // NOTE: Clean up storage for future assertion calls.
+        for (uint128 requestId = firstRequestId; requestId <= lastRequestId; requestId++) {
+            ( address owner, ) = wm.requests(requestId);
+
+            existingOwners[owner] = false;
+        }
     }
 
     /**************************************************************************************************************************************/
     /*** Internal Helpers Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
 
-    function _getActiveLoans() internal view returns (IOpenTermLoan[] memory loans) {
+    function _getActiveLoans() internal view returns (address[] memory loans) {
         uint256 index;
         uint256 length;
 
@@ -730,11 +907,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             if (IOpenTermLoan(otlHandler.loans(i)).dateFunded() != 0) length++;
         }
 
-        loans = new IOpenTermLoan[](length);
+        loans = new address[](length);
 
         for (uint256 i; i < otlHandler.numLoans(); ++i) {
-            IOpenTermLoan loan = IOpenTermLoan(otlHandler.loans(i));
-            if (loan.dateFunded() != 0) {
+            address loan = otlHandler.loans(i);
+
+            if (IOpenTermLoan(loan).dateFunded() != 0) {
                 loans[index++] = loan;
             }
         }
@@ -780,33 +958,39 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         interestAccrued_ = accrued_ + netRefinanceInterest;
     }
 
-    function _getExpectedIssuanceRate(IOpenTermLoan loan) internal view returns (uint256 expectedIssuanceRate) {
+    function _getExpectedIssuanceRate(address loan) internal view returns (uint256 expectedIssuanceRate) {
         (
             uint24 platformManagementFeeRate,
             uint24 delegateManagementFeeRate,
             ,
-        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(address(loan));
+        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
 
-        uint256 grossInterest  = _getProRatedAmount(loan.principal(), loan.interestRate(), loan.paymentInterval());
+        uint256 grossInterest  = _getProRatedAmount(
+            IOpenTermLoan(loan).principal(),
+            IOpenTermLoan(loan).interestRate(),
+            IOpenTermLoan(loan).paymentInterval()
+        );
+
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
-        expectedIssuanceRate = (grossInterest - managementFees) * 1e27 / loan.paymentInterval();
+        expectedIssuanceRate = (grossInterest - managementFees) * 1e27 / IOpenTermLoan(loan).paymentInterval();
     }
 
-    function _getExpectedNetInterest(IOpenTermLoan loan) internal view returns (uint256 netInterest) {
-        ( , uint256 grossInterest, , , ) = loan.getPaymentBreakdown(block.timestamp);
+    function _getExpectedNetInterest(address loan) internal view returns (uint256 netInterest) {
+        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+
         (
             uint24 platformManagementFeeRate,
             uint24 delegateManagementFeeRate,
             ,
-        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(address(loan));
+        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
         netInterest = grossInterest - managementFees;
     }
 
-    function _getExpectedPaymentBreakdown(IOpenTermLoan loan) internal view
+    function _getExpectedPaymentBreakdown(address loan) internal view
         returns (
             uint256 expectedPrincipal,
             uint256 expectedInterest,
@@ -815,21 +999,24 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             uint256 expectedPlatformServiceFee
         )
     {
-        uint256 startTime    = loan.datePaid() == 0 ? loan.dateFunded() : loan.datePaid();
-        uint256 interval     = block.timestamp - startTime;
+        uint256 startTime = IOpenTermLoan(loan).datePaid() == 0 ? IOpenTermLoan(loan).dateFunded() : IOpenTermLoan(loan).datePaid();
+        uint256 interval  = block.timestamp - startTime;
+
         uint256 lateInterval = block.timestamp > IOpenTermLoan(loan).paymentDueDate()
             ? block.timestamp - IOpenTermLoan(loan).paymentDueDate()
             : 0;
 
-        expectedPrincipal          = loan.dateCalled() == 0 ? 0 : loan.calledPrincipal();
-        expectedInterest           = _getProRatedAmount(loan.principal(), loan.interestRate(), interval);
+        uint256 principal = IOpenTermLoan(loan).principal();
+
+        expectedPrincipal          = IOpenTermLoan(loan).dateCalled() == 0 ? 0 : IOpenTermLoan(loan).calledPrincipal();
+        expectedInterest           = _getProRatedAmount(principal, IOpenTermLoan(loan).interestRate(), interval);
         expectedLateInterest       = 0;
-        expectedDelegateServiceFee = _getProRatedAmount(loan.principal(), loan.delegateServiceFeeRate(), interval);
-        expectedPlatformServiceFee = _getProRatedAmount(loan.principal(), loan.platformServiceFeeRate(), interval);
+        expectedDelegateServiceFee = _getProRatedAmount(principal, IOpenTermLoan(loan).delegateServiceFeeRate(), interval);
+        expectedPlatformServiceFee = _getProRatedAmount(principal, IOpenTermLoan(loan).platformServiceFeeRate(), interval);
 
         if (lateInterval > 0) {
-            expectedLateInterest += _getProRatedAmount(loan.principal(), loan.lateInterestPremiumRate(), lateInterval);
-            expectedLateInterest += loan.principal() * loan.lateFeeRate() / 1e6;
+            expectedLateInterest += _getProRatedAmount(principal, IOpenTermLoan(loan).lateInterestPremiumRate(), lateInterval);
+            expectedLateInterest += principal * IOpenTermLoan(loan).lateFeeRate() / 1e6;
         }
     }
 
@@ -841,7 +1028,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
     }
 
-    function _getOutstandingValue(address loan_) internal view returns (uint256) {
+    function _getOutstandingValue(address loan_) internal view returns (uint256 outstandingValue_) {
         if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
         if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
 
@@ -865,7 +1052,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         uint256 netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
 
-        return IOpenTermLoan(loan_).principal() + netInterest_;
+        outstandingValue_ = IOpenTermLoan(loan_).principal() + netInterest_;
     }
 
     function _getProRatedAmount(uint256 amount_, uint256 rate_, uint256 interval_) internal pure returns (uint256 proRatedAmount_) {

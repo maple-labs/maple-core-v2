@@ -1,0 +1,124 @@
+# {{contractName}}
+
+{{#if description}}{{description}}{{/if}}
+
+<br />
+
+{{#if constructor}}
+## Constructor
+
+{{#constructor}}
+
+{{#if description}}{{description}}{{/if}}
+
+```solidity
+    {{#if inputs.length}}
+    constructor(
+        {{#inputs}}
+        {{type}}{{#if name}} {{name}}{{/if}}{{#if @last}}{{else}},{{/if}}
+        {{/inputs}}
+    );
+    {{else}}
+    constructor();
+    {{/if}}
+```
+
+{{#if inputs}}
+#### Parameters:
+| Index | Name | Type | Internal Type | Description |
+| :---: | :--: | :--: | :-----------: | :---------- |
+{{#inputs}}
+| {{@index}} | `{{name}}` | `{{type}}` | `{{internalType}}` | {{ description }} |
+{{/inputs}}
+{{/if}}
+
+{{/constructor}}
+
+<br />
+
+{{/if}}
+
+{{#if functions.length}}
+## Functions
+{{/if}}
+
+{{#functions}}
+### `{{name}}` {{#if isStateVariable}}_[state variable]_{{/if}}
+
+{{#if description}}{{description}}{{/if}}
+
+```solidity
+    {{#if inputs.length}}
+    function {{name}}(
+        {{#inputs}}
+        {{type}}{{#if name}} {{name}}{{/if}}{{#if @last}}{{else}},{{/if}}
+        {{/inputs}}
+    )
+    {{else}}
+    function {{name}}()
+    {{/if}}
+        {{stateMutability}}{{#unless outputs}};{{else}}
+        returns (
+            {{#outputs}}
+            {{type}}{{#if name}} {{name}}{{/if}}{{#if @last}}{{else}},{{/if}}
+            {{/outputs}}
+        );{{/unless}}
+```
+
+{{#if inputs}}
+#### Parameters:
+| Index | Name | Type | Internal Type | Description |
+| :---: | :--: | :--: | :-----------: | :---------- |
+{{#inputs}}
+| {{@index}} | `{{name}}` | `{{type}}` | `{{internalType}}` | {{ description }} |
+{{/inputs}}
+{{/if}}
+
+{{#if outputs}}
+
+#### Return Values:
+| Index | Name | Type | Internal Type | Description |
+| :---: | :--: | :--: | :-----------: | :---------- |
+{{#outputs}}
+| {{@index}} | {{#if name}}`{{name}}`{{/if}} | `{{type}}` | `{{internalType}}` | {{ description }} |
+{{/outputs}}
+
+{{/if}}
+
+<br />
+
+{{/functions}}
+
+{{#if events.length}}
+## Events
+{{/if}}
+
+{{#events}}
+### `{{name}}`
+
+{{#if description}}{{description}}{{/if}}
+
+```solidity
+    {{#if inputs.length}}
+    event {{name}}(
+        {{#inputs}}
+        {{type}} {{name}}{{#if @last}}{{else}},{{/if}}
+        {{/inputs}}
+    );
+    {{else}}
+    event {{name}}();
+    {{/if}}
+```
+
+{{#if inputs}}
+#### Parameters:
+| Index | Name | Type | Internal Type | Description |
+| :---: | :--: | :--: | :-----------: | :---------- |
+{{#inputs}}
+| {{@index}} | `{{name}}` | `{{type}}` | `{{internalType}}` | {{ description }} |
+{{/inputs}}
+{{/if}}
+
+<br />
+
+{{/events}}

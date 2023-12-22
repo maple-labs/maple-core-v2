@@ -3,8 +3,6 @@ pragma solidity 0.8.7;
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-// TODO: Add Pool Delegate cover for liquidation related test cases
-
 contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
     address borrower;
@@ -79,6 +77,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -96,6 +95,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -106,6 +106,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -123,6 +124,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -133,7 +135,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Update the WM config
-        setExitConfig(address(withdrawalManager), 3 days, 1 days);
+        setExitConfig(address(cyclicalWM), 3 days, 1 days);
 
         // Warp to withdraw window
         vm.warp(start + 2 weeks + 1 days);
@@ -141,6 +143,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 loanInterestAccrued = 15 * dailyLoanInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -152,6 +155,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         impairLoan(loan);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -165,6 +169,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -196,6 +201,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(closeLoanInterest, 45_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_000_000e6,
             totalAssets:        500_000e6 + loanPrincipal + closeLoanInterest,
             unrealizedLosses:   0,
@@ -212,6 +218,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -225,6 +232,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp2), 1_545_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        0,
             totalAssets:        0,
             unrealizedLosses:   0,
@@ -273,6 +281,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -290,6 +299,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -300,6 +310,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -317,6 +328,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -327,7 +339,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Update the WM config
-        setExitConfig(address(withdrawalManager), 3 days, 1 days);
+        setExitConfig(address(cyclicalWM), 3 days, 1 days);
 
         // Warp to withdraw window
         vm.warp(start + 2 weeks + 1 days);
@@ -335,6 +347,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 loanInterestAccrued = 15 * dailyLoanInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -357,6 +370,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -370,6 +384,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -398,6 +413,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_000_000e6,
             totalAssets:        500_000e6,
             unrealizedLosses:   0,
@@ -414,6 +430,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -427,6 +444,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp2), 500_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        0,
             totalAssets:        0,
             unrealizedLosses:   0,
@@ -475,6 +493,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -492,6 +511,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -502,6 +522,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -519,6 +540,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -529,7 +551,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         // Update the WM config
-        setExitConfig(address(withdrawalManager), 3 days, 1 days);
+        setExitConfig(address(cyclicalWM), 3 days, 1 days);
 
         // Warp to withdraw window
         vm.warp(start + 2 weeks + 1 days);
@@ -537,6 +559,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 loanInterestAccrued = 15 * dailyLoanInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -559,6 +582,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -572,6 +596,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -597,6 +622,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_000_000e6,
             totalAssets:        1_500_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -629,6 +655,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertApproxEqAbs(lp2RemainingShares, 666_942.917333e6, 1);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 666_942.917334e6,
             previousExitCycleId:          0,
@@ -643,6 +670,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertApproxEqAbs(fundsAsset.balanceOf(lp2), 500_000e6, 1);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        666_942.917334e6,
             totalAssets:        1_000_000e6 + loanInterestAccrued + 1,
             unrealizedLosses:   0,
@@ -693,6 +721,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -710,6 +739,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -720,6 +750,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -737,6 +768,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -747,6 +779,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -764,6 +797,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp3), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -779,6 +813,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 loanInterestAccrued = 15 * dailyLoanInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        3_000_000e6,
             totalAssets:        3_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -801,6 +836,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        3_000_000e6,
             totalAssets:        3_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -817,6 +853,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -829,6 +866,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp1), 666_666.666666e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        3_000_000e6 + loanInterestAccrued - fundsAsset.balanceOf(lp1),
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -852,6 +890,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        3_000_000e6 + loanInterestAccrued - fundsAsset.balanceOf(lp1),
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -866,6 +905,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -878,6 +918,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp2), 666_666.666667e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_000_000e6,
             totalAssets:        3_000_000e6 + loanInterestAccrued - fundsAsset.balanceOf(lp1) - fundsAsset.balanceOf(lp2),
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -935,6 +976,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_000_000e6,
             totalAssets:        2_000_000e6 - fundsAsset.balanceOf(lp1) - fundsAsset.balanceOf(lp2) + expectedAssetsReturnedFromLiquidation,
             unrealizedLosses:   0,
@@ -949,6 +991,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp3), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -962,6 +1005,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp3), 790_642.986667e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        0,
             totalAssets:        0,
             unrealizedLosses:   0,
@@ -1010,6 +1054,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1027,6 +1072,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -1037,6 +1083,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1054,6 +1101,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -1069,6 +1117,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 loanInterestAccrued = 15 * dailyLoanInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -1091,6 +1140,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   1_000_000e6 + loanInterestAccrued,
@@ -1105,6 +1155,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1136,6 +1187,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(closeLoanInterest, 45_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_000_000e6,
             totalAssets:        2_000_000e6 + closeLoanInterest,
             unrealizedLosses:   0,
@@ -1152,6 +1204,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1165,6 +1218,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp2), 1_022_500e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_000_000e6,
             totalAssets:        1_000_000e6 + 22_500e6,
             unrealizedLosses:   0,
@@ -1218,6 +1272,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             uint256 lpTokenAmount = pool.balanceOf(lps[i]);
 
             assertWithdrawalManagerState({
+                pool:                         address(pool),
                 lp:                           lps[i],
                 lockedShares:                 0,
                 previousExitCycleId:          0,
@@ -1236,6 +1291,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             totalLpTokenAmount += lpTokenAmount;
 
             assertWithdrawalManagerState({
+                pool:                         address(pool),
                 lp:                           lps[i],
                 lockedShares:                 lpTokenAmount,
                 previousExitCycleId:          0,
@@ -1252,6 +1308,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 loanInterestAccrued = 15 * dailyLoanInterest;
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        50_000_000e6,
             totalAssets:        50_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -1272,6 +1329,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        50_000_000e6,
             totalAssets:        50_000_000e6 + loanInterestAccrued,
             unrealizedLosses:   25_000_000e6 + loanInterestAccrued,
@@ -1282,7 +1340,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Redeem 30 LPs
         for (uint256 i; i < 30; ++i) {
-            uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
+            uint256 userLockedShares = cyclicalWM.lockedShares(lps[i]);
 
             totalLpTokenAmount -= userLockedShares;
 
@@ -1291,6 +1349,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             assertEq(pool.balanceOf(lps[i]), 0);
 
             assertWithdrawalManagerState({
+                pool:                         address(pool),
                 lp:                           lps[i],
                 lockedShares:                 0,
                 previousExitCycleId:          0,
@@ -1308,6 +1367,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(totalAssetRedemptionsFirst30Lps, 15_000_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        20_000_000e6,
             totalAssets:        50_000_000e6 + loanInterestAccrued - totalAssetRedemptionsFirst30Lps,
             unrealizedLosses:   25_000_000e6 + loanInterestAccrued,
@@ -1336,6 +1396,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(closeLoanInterest, 1_125_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        20_000_000e6,
             totalAssets:        50_000_000e6 + closeLoanInterest - totalAssetRedemptionsFirst30Lps,
             unrealizedLosses:   0,
@@ -1348,7 +1409,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         // Redeem the remaining LPs
         for (uint256 i = 30; i < 50; ++i) {
-            uint256 userLockedShares = withdrawalManager.lockedShares(lps[i]);
+            uint256 userLockedShares = cyclicalWM.lockedShares(lps[i]);
 
             totalLpTokenAmount -= userLockedShares;
 
@@ -1359,6 +1420,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             assertEq(pool.balanceOf(lps[i]), 0);
 
             assertWithdrawalManagerState({
+                pool:                         address(pool),
                 lp:                           lps[i],
                 lockedShares:                 0,
                 previousExitCycleId:          0,
@@ -1372,6 +1434,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         }
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        0,
             totalAssets:        0,
             unrealizedLosses:   0,
@@ -1390,6 +1453,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp3), 1_000_000e6);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1407,6 +1471,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 500_000e6);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 500_000e6,
             previousExitCycleId:          0,
@@ -1417,6 +1482,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1434,6 +1500,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 500_000e6);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 500_000e6,
             previousExitCycleId:          0,
@@ -1444,6 +1511,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1458,6 +1526,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp3), 0);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 1_000_000e6,
             previousExitCycleId:          0,
@@ -1468,6 +1537,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        3_000_000e6,
             totalAssets:        3_000_000e6,
             unrealizedLosses:   0,
@@ -1509,6 +1579,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        3_000_000e6,
             totalAssets:        3_000_000e6,
             unrealizedLosses:   0,
@@ -1539,6 +1610,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(interestInPool, 2_332.8e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        3_000_000e6,
             totalAssets:        3_000_000e6 + interestInPool,
             unrealizedLosses:   0,
@@ -1553,6 +1625,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(loanInterestAccrued, 505.44e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        3_000_000e6,
             totalAssets:        3_000_000e6 + interestInPool + loanInterestAccrued,
             unrealizedLosses:   0,
@@ -1572,6 +1645,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         uint256 interestWithdrawn = 473.04e6;
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp1,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1582,6 +1656,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_500_000e6,
             totalAssets:        2_500_000e6 + interestInPool + loanInterestAccrued - interestWithdrawn,
             unrealizedLosses:   0,
@@ -1593,7 +1668,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
 
         proposeRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data);
 
-        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees. TODO: determine exact amount.
+        returnFunds(loan, 30_000e6);  // Return funds to pay origination fees.
 
         acceptRefinance(loan, address(fixedTermRefinancer), block.timestamp + 1, data, 0);
 
@@ -1613,6 +1688,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_500_000e6,
             totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn,
             unrealizedLosses:   0,
@@ -1625,6 +1701,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 1_000_000e6);
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp2,
             lockedShares:                 0,
             previousExitCycleId:          0,
@@ -1635,6 +1712,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_500_000e6,
             totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn,
             unrealizedLosses:   0,
@@ -1653,6 +1731,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(closeLoanInterest, 45_000e6);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        2_500_000e6,
             totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest,
             unrealizedLosses:   0,
@@ -1671,6 +1750,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(lp3), lp3FullWithdrawal);
 
         assertPoolState({
+            pool:               address(pool),
             totalSupply:        1_500_000e6,
             totalAssets:        2_500_000e6 + interestInPool - interestWithdrawn + closeLoanInterest - lp3FullWithdrawal,
             unrealizedLosses:   0,
@@ -1678,6 +1758,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         });
 
         assertWithdrawalManagerState({
+            pool:                         address(pool),
             lp:                           lp3,
             lockedShares:                 0,
             previousExitCycleId:          0,

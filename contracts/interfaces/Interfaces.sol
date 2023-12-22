@@ -7,11 +7,11 @@ import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfac
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
-import { ILiquidator } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
+import { ILiquidator as IML } from "../../modules/liquidations/contracts/interfaces/ILiquidator.sol";
 
 import { IMapleLoan as IMFTL }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
 import { IMapleLoanFeeManager as IMLFM } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
-import { IRefinancer as IMFTLR }         from "../../modules/fixed-term-loan/contracts/interfaces/IRefinancer.sol";
+import { IMapleRefinancer as IMFTLR }    from "../../modules/fixed-term-loan/contracts/interfaces/IMapleRefinancer.sol";
 
 import { ILoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/ILoanManager.sol";
 import { ILoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/ILoanManagerStructs.sol";
@@ -21,12 +21,19 @@ import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/inte
 import { ILoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
 import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
-import { IPool }              from "../../modules/pool/contracts/interfaces/IPool.sol";
-import { IPoolDeployer }      from "../../modules/pool/contracts/interfaces/IPoolDeployer.sol";
-import { IPoolManager }       from "../../modules/pool/contracts/interfaces/IPoolManager.sol";
-import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IMaplePool as IMP }          from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
+import { IMaplePoolDeployer as IMPD } from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
+import { IMaplePoolManager as IMPM }  from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
+import { IMapleProxyFactory }         from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { IWithdrawalManager } from "../../modules/withdrawal-manager/contracts/interfaces/IWithdrawalManager.sol";
+import { IMaplePoolPermissionManager as IMPPM }
+    from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManager.sol";
+
+import { IMapleWithdrawalManager as IMWMC }
+    from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
+
+import { IMapleWithdrawalManager as IMWMQ }
+    from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
@@ -44,11 +51,25 @@ interface IFixedTermRefinancer is IMFTLR { }
 
 interface IGlobals is IMG { }
 
+interface ILiquidator is IML { }
+
 interface IOpenTermLoan is IMOTL { }
 
 interface IOpenTermLoanManager is IMOTLM { }
 
 interface IOpenTermLoanManagerStructs is IMOTLMS { }
+
+interface IPool is IMP { }
+
+interface IPoolDeployer is IMPD { }
+
+interface IPoolManager is IMPM { }
+
+interface IPoolPermissionManager is IMPPM { }
+
+interface IWithdrawalManagerCyclical is IMWMC { }
+
+interface IWithdrawalManagerQueue is IMWMQ {}
 
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                    ***/
@@ -80,12 +101,49 @@ interface IERC20Like {
 
 }
 
+interface IExemptionsManagerLike {
+
+    function admitGlobalExemption(address[] calldata exemptions, string memory description) external;
+
+    function approvePolicyExemptions(uint32 policyId, address[] memory exemptions) external;
+
+    function isPolicyExemption(uint32 policyId, address exemption) external view returns (bool isExempt);
+
+}
+
+interface IKycERC20Like {
+
+    function admissionPolicyId() external view returns (uint32 admissionPolicyId);
+
+    function depositFor(address trader, uint256 amount) external returns (bool success);
+
+    function exemptionsManager() external view returns (address exemptionsManager);
+
+    function policyManager() external view returns (address policyManager);
+
+}
+
 interface ILiquidatorLike {
 
     function getExpectedAmount(uint256 swapAmount_) external view returns (uint256 expectedAmount_);
 
     function liquidatePortion(uint256 swapAmount_, uint256 maxReturnAmount_, bytes calldata data_) external;
 
+}
+
+interface IPoolDeployerV2Like {
+
+    function deployPool(
+        address           poolManagerFactory_,
+        address           withdrawalManagerFactory_,
+        address[]  memory loanManagerFactories_,
+        address           asset_,
+        string     memory name_,
+        string     memory symbol_,
+        uint256[6] memory configParams_
+    )
+        external
+        returns (address poolManager_);
 }
 
 interface IProxiedLike {
@@ -96,11 +154,7 @@ interface IProxiedLike {
 
 }
 
-interface ILoanV4Like {
-
-    function lateInterestPremium() external view returns (uint256 lateInterestPremium_);
-}
-
+// NOTE: Needs to be defined after `IProxiedLike`.
 interface ILoanLike is IProxiedLike {
 
     function acceptBorrower() external;
@@ -111,6 +165,8 @@ interface ILoanLike is IProxiedLike {
         external returns (bytes32 refinanceCommitment_);
 
     function borrower() external view returns (address borrower_);
+
+    function factory() external view returns (address factory_);
 
     function fundsAsset() external view returns (address fundsAsset_);
 
@@ -138,6 +194,7 @@ interface ILoanLike is IProxiedLike {
 
 }
 
+// NOTE: Needs to be defined after `IProxiedLike`.
 interface ILoanManagerLike is IProxiedLike {
 
     function accountedInterest() external view returns (uint112 accountedInterest_);
@@ -171,6 +228,18 @@ interface ILoanManagerLike is IProxiedLike {
 
 }
 
+interface IPolicyManagerLike {
+
+    function getRoleAdmin(bytes32 role) external view returns (bytes32 admin);
+
+    function grantRole(bytes32 role, address account) external;
+
+    function policyDisabled(uint32 policyId) external view returns (bool isDisabled);
+
+    function policyAllowApprovedCounterparties(uint32 policyId) external view returns (bool isAllowed);
+
+}
+
 // NOTE: Isn't it better to import the interface from the module instead of re-declaring it here?
 interface IProxyFactoryLike {
 
@@ -184,14 +253,26 @@ interface IProxyFactoryLike {
 
     function isInstance(address instance_) external view returns (bool isInstance_);
 
+    function isLoan(address proxy_) external view returns (bool isLoan_);
+
     function migratorForPath(uint256 oldVersion_, uint256 newVersion_) external view returns (address migrator_);
+
+    function mapleGlobals() external view returns (address globals_);
 
     function registerImplementation(uint256 version_, address implementationAddress_, address initializer_) external;
 
     function setDefaultVersion(uint256 version_) external;
 
     function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
+}
 
+// NOTE: cycleConfigs() is not defined as a view function in the submodule which needs updating.
+interface IWithdrawalManagerLike {
+
+    function cycleConfigs(uint256 configId_)
+        external view returns (uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration);
+
+    function getCurrentCycleId() external view returns (uint256 cycleId_);
 }
 
 /******************************************************************************************************************************************/

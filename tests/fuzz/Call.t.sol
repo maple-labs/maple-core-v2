@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IOpenTermLoanManagerStructs
-} from "../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetup }     from "./FuzzedSetup.sol";
 import { StorageSnapshot } from "./StorageSnapshot.sol";
@@ -44,10 +40,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         uint256 poolBalance     = fundsAsset.balanceOf(address(pool));
         uint256 treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Perform the action.
         address poolDelegate    = poolManager.poolDelegate();
@@ -97,6 +93,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalAssets:        poolManagerStorage.previousTotalAssets,
             totalSupply:        poolManagerStorage.previousTotalSupply,
             unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,
@@ -118,10 +115,10 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         uint256 poolBalance     = fundsAsset.balanceOf(address(pool));
         uint256 treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Perform the action.
         vm.prank(poolManager.poolDelegate());
@@ -168,6 +165,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalAssets:        poolManagerStorage.previousTotalAssets,
             totalSupply:        poolManagerStorage.previousTotalSupply,
             unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,

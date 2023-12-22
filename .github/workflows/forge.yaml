@@ -14,6 +14,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
+        shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -21,6 +22,7 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+          BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
         run: make e2e profile=production
 
   integration_tests:
@@ -32,6 +34,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
+        shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -39,10 +42,12 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+          BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
         run: make integration profile=production
 
   fuzz_tests:
-    runs-on: ubuntu-latest
+    runs-on:
+        group: SC-HighMemory
     steps:
       - uses: actions/checkout@v3
 
@@ -50,6 +55,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
+        shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -57,10 +63,12 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: ./test.sh -p super_deep -t Fuzz
+          BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
+        run: ./test.sh -p super_deep -t testFuzz
 
   invariant_tests:
-    runs-on: ubuntu-latest
+    runs-on:
+        group: SC-HighMemory
     steps:
       - uses: actions/checkout@v3
 
@@ -68,6 +76,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Checkout submodules
+        shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -75,7 +84,29 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+          BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
         run: make invariant profile=super_deep
+
+  protocol-upgrade:
+    runs-on:
+        group: SC-HighMemory
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
+
+      - name: Run Forge tests
+        env:
+          ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+          BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
+        run: make protocol-upgrade
 
   scenario_tests:
     runs-on: ubuntu-latest
@@ -88,6 +119,7 @@ jobs:
       - uses: actions/setup-node@v3
 
       - name: Checkout submodules
+        shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule update --init --recursive
@@ -95,28 +127,5 @@ jobs:
       - name: Run Forge tests
         env:
           ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+          BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
         run: make scenario
-
-  upgrade_tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: "Cache RPC Responses"
-        uses: "actions/cache@v3"
-        with:
-          path: "~/.foundry/cache/rpc/mainnet/16990500"
-          key: "${{ runner.os }}-mainnet-16990500"
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-
-      - name: Checkout submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
-
-      - name: Run Forge tests
-        env:
-          ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
-        run: make upgrade profile=production

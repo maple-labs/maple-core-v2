@@ -13,14 +13,12 @@ import {
     IPool,
     IPoolManager,
     IProxyFactoryLike,
-    IWithdrawalManager
+    IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2, MockERC20 } from "../../../contracts/Contracts.sol";
+import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
-
-// TODO: Reorder functions alphabetically
 
 contract FixedTermLoanHandler is HandlerBase {
 
@@ -107,7 +105,7 @@ contract FixedTermLoanHandler is HandlerBase {
         poolManager       = IPoolManager(poolManager_);
         fundsAsset        = MockERC20(poolManager.asset());
         liquidatorFactory = liquidatorFactory_;
-        loanManager       = IFixedTermLoanManager(poolManager.loanManagerList(0));  // TODO: May need to be constructor arg.
+        loanManager       = IFixedTermLoanManager(poolManager.loanManagerList(0));
         pool              = IPool(poolManager.pool());
         testContract      = IInvariantTest(testContract_);
 
@@ -118,10 +116,8 @@ contract FixedTermLoanHandler is HandlerBase {
         for (uint256 i; i < numBorrowers_; ++i) {
             address borrower = makeAddr(string(abi.encode("borrower", i)));
 
-            vm.startPrank(governor);
+            vm.prank(governor);
             IGlobals(globals).setValidBorrower(borrower, true);
-            IGlobals(globals).setCanDeployFrom(loanFactory, borrower, true);
-            vm.stopPrank();
 
             borrowers.push(borrower);
         }
@@ -134,9 +130,9 @@ contract FixedTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function createLoanAndFund(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.createLoanAndFund(%s)", seed_);
+        console.log("ftlHandler.createLoanAndFund(%s)", seed_);
 
-        numberOfCalls["createLoanAndFund"]++;
+        numberOfCalls["ftlHandler.createLoanAndFund"]++;
 
         if (numLoans > MAX_LOANS) return;
 
@@ -201,9 +197,9 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function makePayment(uint256 seed_) public virtual useTimestamps {
-        console2.log("ftlHandler.makePayment(%s)", seed_);
+        console.log("ftlHandler.makePayment(%s)", seed_);
 
-        numberOfCalls["makePayment"]++;
+        numberOfCalls["ftlHandler.makePayment"]++;
 
         if (activeLoans.length == 0) return;
 
@@ -269,9 +265,9 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function impairmentMakePayment(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.impairmentMakePayment(%s)", seed_);
+        console.log("ftlHandler.impairmentMakePayment(%s)", seed_);
 
-        numberOfCalls["impairmentMakePayment"]++;
+        numberOfCalls["ftlHandler.impairmentMakePayment"]++;
 
         if (activeLoans.length == 0) return;
 
@@ -343,9 +339,9 @@ contract FixedTermLoanHandler is HandlerBase {
 
     // NOTE: Only keep one makePayment function active via the weights.
     function defaultMakePayment(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.defaultMakePayment(%s)", seed_);
+        console.log("ftlHandler.defaultMakePayment(%s)", seed_);
 
-        numberOfCalls["defaultMakePayment"]++;
+        numberOfCalls["ftlHandler.defaultMakePayment"]++;
 
         if (activeLoans.length == 0) return;
 
@@ -353,22 +349,28 @@ contract FixedTermLoanHandler is HandlerBase {
 
         if (loanDefaulted[activeLoans[loanIndex_]]) return;  // Loan defaulted
 
-        this.makePayment(seed_);
+        if (loanImpaired[activeLoans[loanIndex_]]) {
+            this.impairmentMakePayment(seed_);
+        } else {
+            this.makePayment(seed_);
+        }
     }
 
     function impairLoan(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.impairLoan(%s)", seed_);
+        console.log("ftlHandler.impairLoan(%s)", seed_);
 
-        numberOfCalls["impairLoan"]++;
+        numberOfCalls["ftlHandler.impairLoan"]++;
 
         if (activeLoans.length == 0) return;
 
-        uint256 loanIndex_ = _bound(seed_, 0, activeLoans.length - 1);
+        uint256 loanIndex_  = _bound(seed_, 0, activeLoans.length - 1);
         address loanAddress = activeLoans[loanIndex_];
+        uint24  paymentId   = loanManager.paymentIdOf(address(loanAddress));
 
+        if (paymentId == 0) return;
         if (loanImpaired[loanAddress]) return;
 
-        ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loanAddress)));
+        ( , , , , , , uint256 issuanceRate ) = loanManager.payments(paymentId);
 
         sum_loanManager_paymentIssuanceRate -= issuanceRate;
 
@@ -390,9 +392,9 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function triggerDefault(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.triggerDefault(%s)", seed_);
+        console.log("ftlHandler.triggerDefault(%s)", seed_);
 
-        numberOfCalls["triggerDefault"]++;
+        numberOfCalls["ftlHandler.triggerDefault"]++;
 
         if (activeLoans.length == 0) return;
 
@@ -439,9 +441,9 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function finishCollateralLiquidation(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.finishCollateralLiquidation(%s)", seed_);
+        console.log("ftlh.finishCollateralLiquidation(%s)", seed_);
 
-        numberOfCalls["finishCollateralLiquidation"]++;
+        numberOfCalls["ftlh.finishCollateralLiquidation"]++;
 
         if (activeLoans.length == 0) return;
 
@@ -481,9 +483,9 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.refinance(%s)", seed_);
+        console.log("ftlHandler.refinance(%s)", seed_);
 
-        numberOfCalls["refinance"]++;
+        numberOfCalls["ftlHandler.refinance"]++;
 
         if (activeLoans.length == 0) return;
 
@@ -552,15 +554,12 @@ contract FixedTermLoanHandler is HandlerBase {
         collateralAsset.burn(borrower, collateralAsset.balanceOf(borrower));
     }
 
-
     function warp(uint256 seed_) public useTimestamps {
-        console2.log("ftlHandler.warp(%s)", seed_);
+        console.log("ftlHandler.warp(%s)", seed_);
 
-        numberOfCalls["warp"]++;
+        numberOfCalls["ftlHandler.warp"]++;
 
         uint256 warpAmount_ = _bound(seed_, 0, 10 days);
-
-        console2.log("warp():", warpAmount_);
 
         vm.warp(block.timestamp + warpAmount_);
     }
@@ -573,7 +572,7 @@ contract FixedTermLoanHandler is HandlerBase {
         if (pool.totalSupply() == 0) return 0;
 
         uint256 lockedLiquidity = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();
-        uint256 assetBalance    = fundsAsset.balanceOf(address(pool));
+        uint256 assetBalance    = fundsAsset.balanceOf(address(pool)) / 2;
 
         availableLiquidity = lockedLiquidity > assetBalance ? 0 : assetBalance - lockedLiquidity;
     }
@@ -590,7 +589,7 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256[3] memory termDetails = _getLoanTerms(_randomize(seed_, "termDetails"));
         uint256[4] memory rates       = _getLoanRates(_randomize(seed_, "rates"));
-        uint256[2] memory fees        = _getLoanFees(_randomize(seed_, "fees"), currentPrincipal);
+        uint256[2] memory fees        = _getLoanFees(_randomize(seed_,  "fees"), currentPrincipal);
 
         // Create an array of arguments, even if not all will be used
         bytes[] memory calls = new bytes[](11);
@@ -677,7 +676,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     function _getLoanRates(uint256 seed_) internal pure returns(uint256[4] memory rates_) {
-        rates_[0] = _bound(_randomize(seed_, "interestRate"),            0, 1.0e6);
+        rates_[0] = _bound(_randomize(seed_, "interestRate"),            0, 0.3e6);
         rates_[1] = _bound(_randomize(seed_, "closingFeeRate"),          0, 1.0e6);
         rates_[2] = _bound(_randomize(seed_, "lateFeeRate"),             0, 0.6e6);
         rates_[3] = _bound(_randomize(seed_, "lateInterestPremiumRate"), 0, 0.2e6);
@@ -687,10 +686,6 @@ contract FixedTermLoanHandler is HandlerBase {
         termDetails_[0] = _bound(_randomize(seed_, "gracePeriod"),      12 hours,  30 days);
         termDetails_[1] = _bound(_randomize(seed_, "paymentInterval"),  5 minutes, 730 days);
         termDetails_[2] = _bound(_randomize(seed_, "numberOfPayments"), 1,         30);
-    }
-
-    function _randomize(uint256 seed, string memory salt) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(seed, salt)));
     }
 
     function max(uint256 a_, uint256 b_) internal pure returns (uint256 maximum_) {

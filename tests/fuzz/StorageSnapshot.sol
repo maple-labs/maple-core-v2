@@ -65,51 +65,51 @@ contract StorageSnapshot {
         uint256 previousFundsAssetBalance;
     }
 
-    function _snapshotOpenTermLoan(IOpenTermLoan loan) internal view returns (OpenTermLoanStorage memory loanStorage) {
-        loanStorage.previousFundsAsset               = loan.fundsAsset();
-        loanStorage.previousBorrower                 = loan.borrower();
-        loanStorage.previousLender                   = loan.lender();
-        loanStorage.previousRefinanceCommitment      = loan.refinanceCommitment();
-        loanStorage.previousGracePeriod              = loan.gracePeriod();
-        loanStorage.previousNoticePeriod             = loan.noticePeriod();
-        loanStorage.previousPaymentInterval          = loan.paymentInterval();
-        loanStorage.previousDateCalled               = loan.dateCalled();
-        loanStorage.previousDateFunded               = loan.dateFunded();
-        loanStorage.previousDateImpaired             = loan.dateImpaired();
-        loanStorage.previousDatePaid                 = loan.datePaid();
-        loanStorage.previousCalledPrincipal          = loan.calledPrincipal();
-        loanStorage.previousPrincipal                = loan.principal();
-        loanStorage.previousDelegateServiceFeeRate   = loan.delegateServiceFeeRate();
-        loanStorage.previousInterestRate             = loan.interestRate();
-        loanStorage.previousLateFeeRate              = loan.lateFeeRate();
-        loanStorage.previousLateInterestPremiumRate  = loan.lateInterestPremiumRate();
-        loanStorage.previousPlatformServiceFeeRate   = loan.platformServiceFeeRate();
+    function _snapshotOpenTermLoan(address loan) internal view returns (OpenTermLoanStorage memory loanStorage) {
+        loanStorage.previousFundsAsset               = IOpenTermLoan(loan).fundsAsset();
+        loanStorage.previousBorrower                 = IOpenTermLoan(loan).borrower();
+        loanStorage.previousLender                   = IOpenTermLoan(loan).lender();
+        loanStorage.previousRefinanceCommitment      = IOpenTermLoan(loan).refinanceCommitment();
+        loanStorage.previousGracePeriod              = IOpenTermLoan(loan).gracePeriod();
+        loanStorage.previousNoticePeriod             = IOpenTermLoan(loan).noticePeriod();
+        loanStorage.previousPaymentInterval          = IOpenTermLoan(loan).paymentInterval();
+        loanStorage.previousDateCalled               = IOpenTermLoan(loan).dateCalled();
+        loanStorage.previousDateFunded               = IOpenTermLoan(loan).dateFunded();
+        loanStorage.previousDateImpaired             = IOpenTermLoan(loan).dateImpaired();
+        loanStorage.previousDatePaid                 = IOpenTermLoan(loan).datePaid();
+        loanStorage.previousCalledPrincipal          = IOpenTermLoan(loan).calledPrincipal();
+        loanStorage.previousPrincipal                = IOpenTermLoan(loan).principal();
+        loanStorage.previousDelegateServiceFeeRate   = IOpenTermLoan(loan).delegateServiceFeeRate();
+        loanStorage.previousInterestRate             = IOpenTermLoan(loan).interestRate();
+        loanStorage.previousLateFeeRate              = IOpenTermLoan(loan).lateFeeRate();
+        loanStorage.previousLateInterestPremiumRate  = IOpenTermLoan(loan).lateInterestPremiumRate();
+        loanStorage.previousPlatformServiceFeeRate   = IOpenTermLoan(loan).platformServiceFeeRate();
 
-        loanStorage.previousFundsAssetBalance = IERC20(loan.fundsAsset()).balanceOf(address(loan));
+        loanStorage.previousFundsAssetBalance = IERC20(IOpenTermLoan(loan).fundsAsset()).balanceOf(loan);
     }
 
-    function _snapshotOpenTermImpairment(IOpenTermLoan loan) internal view returns (OpenTermLoanImpairmentStorage memory impairmentStorage) {
-        IOpenTermLoanManager loanManager = IOpenTermLoanManager(loan.lender());
+    function _snapshotOpenTermImpairment(address loan) internal view returns (OpenTermLoanImpairmentStorage memory impairmentStorage) {
+        IOpenTermLoanManager loanManager = IOpenTermLoanManager(IOpenTermLoan(loan).lender());
 
-        ( uint40 dateImpaired, bool impairedByGovernor ) = loanManager.impairmentFor(address(loan));
+        ( uint40 dateImpaired, bool impairedByGovernor ) = loanManager.impairmentFor(loan);
 
         impairmentStorage.previousDateImpaired       = dateImpaired;
         impairmentStorage.previousImpairedByGovernor = impairedByGovernor;
     }
 
-    function _snapshotOpenTermLoanManager(IOpenTermLoanManager loanManager)
+    function _snapshotOpenTermLoanManager(address loanManager)
         internal view returns(OpenTermLoanManagerStorage memory loanManagerStorage)
     {
-        loanManagerStorage.previousDomainStart       = loanManager.domainStart();
-        loanManagerStorage.previousAccountedInterest = loanManager.accountedInterest();
-        loanManagerStorage.previousAccruedInterest   = loanManager.accruedInterest();
-        loanManagerStorage.previousPrincipalOut      = loanManager.principalOut();
-        loanManagerStorage.previousUnrealizedLosses  = loanManager.unrealizedLosses();
-        loanManagerStorage.previousIssuanceRate      = loanManager.issuanceRate();
+        loanManagerStorage.previousDomainStart       = IOpenTermLoanManager(loanManager).domainStart();
+        loanManagerStorage.previousAccountedInterest = IOpenTermLoanManager(loanManager).accountedInterest();
+        loanManagerStorage.previousAccruedInterest   = IOpenTermLoanManager(loanManager).accruedInterest();
+        loanManagerStorage.previousPrincipalOut      = IOpenTermLoanManager(loanManager).principalOut();
+        loanManagerStorage.previousUnrealizedLosses  = IOpenTermLoanManager(loanManager).unrealizedLosses();
+        loanManagerStorage.previousIssuanceRate      = IOpenTermLoanManager(loanManager).issuanceRate();
     }
 
-    function _snapshotOpenTermPayment(IOpenTermLoan loan) internal view returns (OpenTermPaymentStorage memory paymentStorage) {
-        IOpenTermLoanManagerStructs.Payment memory loanInfo = IOpenTermLoanManagerStructs(loan.lender()).paymentFor(address(loan));
+    function _snapshotOpenTermPayment(address loan) internal view returns (OpenTermPaymentStorage memory paymentStorage) {
+        IOpenTermLoanManagerStructs.Payment memory loanInfo = IOpenTermLoanManagerStructs(IOpenTermLoan(loan).lender()).paymentFor(loan);
 
         paymentStorage.previousPlatformManagementFeeRate = loanInfo.platformManagementFeeRate;
         paymentStorage.previousDelegateManagementFeeRate = loanInfo.delegateManagementFeeRate;
@@ -117,12 +117,12 @@ contract StorageSnapshot {
         paymentStorage.previousIssuanceRate              = loanInfo.issuanceRate;
     }
 
-    function _snapshotPoolManager(IPoolManager poolManager) internal view returns (PoolManagerStorage memory poolManagerStorage) {
-        IPool pool = IPool(poolManager.pool());
+    function _snapshotPoolManager(address poolManager) internal view returns (PoolManagerStorage memory poolManagerStorage) {
+        IPool pool = IPool(IPoolManager(poolManager).pool());
 
         poolManagerStorage.previousTotalSupply        = pool.totalSupply();
-        poolManagerStorage.previousTotalAssets        = poolManager.totalAssets();
-        poolManagerStorage.previousUnrealizedLosses   = poolManager.unrealizedLosses();
+        poolManagerStorage.previousTotalAssets        = IPoolManager(poolManager).totalAssets();
+        poolManagerStorage.previousUnrealizedLosses   = IPoolManager(poolManager).unrealizedLosses();
         poolManagerStorage.previousFundsAssetBalance  = IERC20(pool.asset()).balanceOf(address(pool));
     }
 

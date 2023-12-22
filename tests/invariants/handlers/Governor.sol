@@ -35,8 +35,8 @@ contract GovernorBase {
         globals.setMigrationAdmin(migrationAdmin_);
     }
 
-    function setPriceOracle(address asset_, address priceOracle_) public virtual {
-        globals.setPriceOracle(asset_, priceOracle_);
+    function setPriceOracle(address asset_, address priceOracle_, uint96 maxDelay_) public virtual {
+        globals.setPriceOracle(asset_, priceOracle_, maxDelay_);
     }
 
     function setSecurityAdmin(address securityAdmin_) public virtual {
@@ -100,7 +100,7 @@ contract GovernorBase {
     }
 
     function setTimelockWindows(
-        address contract_,
+        address            contract_,
         bytes32[] calldata functionIds_,
         uint128[] calldata delays_,
         uint128[] calldata durations_

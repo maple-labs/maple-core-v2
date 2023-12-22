@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IERC20, ILoanLike, ILoanManagerLike, IOpenTermLoan } from "../contracts/interfaces/Interfaces.sol";
+import { ILoanLike, ILoanManagerLike } from "../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console, stdJson, stdMath, StdStyle } from "../contracts/Contracts.sol";
 
 import { TestBase } from "../tests/TestBase.sol";
 
 // NOTE: All Converting basis points into basis points scaled by 100.
-
-// TODO: Add color logging (eg. `console.log(StdStyle.red("Red Bold String"), StdStyle.blue("Blue Bold String"));`).
+// NOTE: All `XyzParameters` structs require properties in alphanumerical order to be correctly parsed.
 
 contract Scenario is TestBase {
-
-    // TODO: Withdraw.
 
     struct CreatePoolParameters {
         string  asset;
@@ -137,9 +134,7 @@ contract Scenario is TestBase {
     function handleCreatePool(bytes memory rawParameters_) internal returns (bool failure_) {
         CreatePoolParameters memory parameters = abi.decode(rawParameters_, (CreatePoolParameters));
 
-        // TODO: For now, ignoring name, asset, capacity
-
-        _createAndConfigurePool(1, 1);
+        _createAndConfigurePool(block.timestamp, 1, 1);
         openPool(address(poolManager));
 
         setupFees({
@@ -425,8 +420,6 @@ contract Scenario is TestBase {
                     revert("UNSUPPORTED");
                 }
 
-                // TODO: `updateDelegateFeeTerms` takes 2 arguments.
-
                 refinancer_ = address(fixedTermRefinancer);
             }
         }
@@ -448,8 +441,6 @@ contract Scenario is TestBase {
 
     function handleDefaultLoan(bytes memory rawParameters_) internal returns (bool failure_) {
         DefaultLoanParameters memory parameters = abi.decode(rawParameters_, (DefaultLoanParameters));
-
-        // TODO: Check other parameters.
 
         triggerDefault(loanNamed[parameters.name], liquidatorFactory);
 
@@ -478,7 +469,6 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        // TODO: Reduce `3e4` to 3.
         if (stdMath.delta(fundsAsset.balanceOf(address(pool)), parameters.cash) > 3e4) {
             console.log(
                 "    Expected cash is",
@@ -494,7 +484,6 @@ contract Scenario is TestBase {
             ILoanManagerLike(poolManager.loanManagerList(0)).principalOut() +
             ILoanManagerLike(poolManager.loanManagerList(1)).principalOut();
 
-        // TODO: Reduce `3e4` to 3.
         if (stdMath.delta(principalOut, parameters.principalOutstanding) > 3e4) {
             console.log(
                 "    Expected principalOutstanding is",
@@ -506,7 +495,6 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        // TODO: Reduce `1e4` to 1.
         if (stdMath.delta(poolManager.totalAssets(), parameters.totalAssets) > 1e4) {
             console.log(
                 "    Expected totalAssets is",
@@ -518,13 +506,11 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        // TODO: Reduce `1e4` to 1.
         if (stdMath.delta(pool.totalSupply(), parameters.totalSupply) > 1e4) {
             console.log("    Expected totalSupply is", toString(parameters.totalSupply), "but actually is", toString(pool.totalSupply()));
             failure_ = true;
         }
 
-        // TODO: Reduce `1e4` to 1.
         if (stdMath.delta(poolManager.unrealizedLosses(), parameters.unrealizedLosses) > 1e4) {
             console.log(
                 "    Expected unrealizedLosses is",
@@ -572,17 +558,20 @@ contract Scenario is TestBase {
     function runScenario(string memory scenarioId) internal {
         console.log("\nScenario", scenarioId, "\n");
 
+        // Load and parse the json file located at "${root}/scenarios/data/json/${scenarioId}.json".
         string memory json = vm.readFile(concat(vm.projectRoot(), "/scenarios/data/json/", scenarioId, ".json"));
 
         string[] memory actions = json.readStringArray(".actions");
 
-        for (uint256 i; i < actions.length; ++i) {
+        for (uint256 i; i < actions.length; ++i) {  // For each action/row within the json.
             console.log("Action", i);
 
-            vm.warp(json.readUint(concat(".actions[", toString(i), "].timestamp")));
+            vm.warp(json.readUint(concat(".actions[", toString(i), "].timestamp")));  // Warp top the timestamp defined by this action.
 
             console.log("  timestamp:", block.timestamp);
 
+            // Get the internal function handler for the given action, then immediately call it with the parsed raw parameters.
+            // Get the boolean to determine failure, which helps display better error message for test runner/user.
             bool failure_ = getHandler(json, concat(".actions[", toString(i), "]"))(
                 json.parseRaw(concat(".actions[", toString(i), "].parameters"))
             );
@@ -592,6 +581,7 @@ contract Scenario is TestBase {
                 fail();
             }
 
+            // Check that the pool's values are as expected.
             failure_ = checkExpected(json.parseRaw(concat(".actions[", toString(i), "].expected")));
 
             if (failure_) {
@@ -612,7 +602,7 @@ contract Scenario is TestBase {
     }
 
     function test_sim() external {
-        runScenario(vm.envString("SCENARIO"));
+        runScenario(vm.envString("SCENARIO"));  // Run the scenario defined by the json file name stored in the `SCENARIO` env var.
     }
 
 }

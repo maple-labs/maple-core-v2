@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { console2 }           from "../../../contracts/Contracts.sol";
-import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
+import { console2 as console } from "../../../contracts/Contracts.sol";
 
-// TODO: Rename actors to handlers
+import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract DistributionHandler {
 
@@ -38,8 +37,7 @@ contract DistributionHandler {
         numOfCallsTotal++;
 
         uint256 range_;
-
-        uint256 value_ = uint256(keccak256(abi.encodePacked(seed_))) % WEIGHTS_RANGE + 1;  // 1 - 100
+        uint256 value_ = uint256(keccak256(abi.encodePacked(seed_))) % WEIGHTS_RANGE + 1;
 
         for (uint256 i = 0; i < targetContracts.length; i++) {
             range_ += weights[i];

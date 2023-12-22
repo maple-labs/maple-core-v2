@@ -31,9 +31,14 @@ import {
     PoolManager,
     PoolManagerFactory,
     PoolManagerInitializer,
-    WithdrawalManager,
-    WithdrawalManagerFactory,
-    WithdrawalManagerInitializer
+    PoolPermissionManager,
+    PoolPermissionManagerInitializer,
+    WithdrawalManagerCyclical,
+    WithdrawalManagerCyclicalFactory,
+    WithdrawalManagerCyclicalInitializer,
+    WithdrawalManagerQueue,
+    WithdrawalManagerQueueFactory,
+    WithdrawalManagerQueueInitializer
 } from "../contracts/Contracts.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
@@ -50,7 +55,9 @@ contract TestBase is ProtocolActions {
 
     address governor;
     address migrationAdmin;
+    address operationalAdmin;
     address poolDelegate;
+    address permissionAdmin;
     address securityAdmin;
     address treasury;
 
@@ -60,7 +67,8 @@ contract TestBase is ProtocolActions {
     address openTermLoanFactory;
     address openTermLoanManagerFactory;
     address poolManagerFactory;
-    address withdrawalManagerFactory;
+    address cyclicalWMFactory;
+    address queueWMFactory;
 
     address fixedTermLoanImplementation;
     address fixedTermLoanManagerImplementation;
@@ -68,7 +76,8 @@ contract TestBase is ProtocolActions {
     address openTermLoanImplementation;
     address openTermLoanManagerImplementation;
     address poolManagerImplementation;
-    address withdrawalManagerImplementation;
+    address cyclicalWMImplementation;
+    address queueWMImplementation;
 
     address fixedTermLoanInitializer;
     address fixedTermLoanManagerInitializer;
@@ -76,7 +85,9 @@ contract TestBase is ProtocolActions {
     address openTermLoanInitializer;
     address openTermLoanManagerInitializer;
     address poolManagerInitializer;
-    address withdrawalManagerInitializer;
+    address poolPermissionManagerInitializer;
+    address cyclicalWMInitializer;
+    address queueWMInitializer;
 
     uint256 nextDelegateOriginationFee;
     uint256 nextDelegateServiceFee;
@@ -84,32 +95,35 @@ contract TestBase is ProtocolActions {
     uint256 start;
 
     address[] loanManagerFactories;
+    address[] poolManagers;
 
-    // Helper mapping to assert differences in balance
-    mapping(address => uint256) partialAssetBalances;
+    bytes32[] functionIds;
 
-    FeeManager          fixedTermFeeManager;
-    FixedTermRefinancer fixedTermRefinancer;
-    Globals             globals;
-    MockERC20           collateralAsset;
-    MockERC20           fundsAsset;
-    OpenTermRefinancer  openTermRefinancer;
-    Pool                pool;
-    PoolDelegateCover   poolCover;
-    PoolDeployer        deployer;
-    PoolManager         poolManager;
-    WithdrawalManager   withdrawalManager;
+    FeeManager                fixedTermFeeManager;
+    FixedTermRefinancer       fixedTermRefinancer;
+    Globals                   globals;
+    MockERC20                 collateralAsset;
+    MockERC20                 fundsAsset;
+    OpenTermRefinancer        openTermRefinancer;
+    Pool                      pool;
+    PoolDelegateCover         poolCover;
+    PoolDeployer              deployer;
+    PoolManager               poolManager;
+    PoolPermissionManager     poolPermissionManager;
+    WithdrawalManagerCyclical cyclicalWM;
+    WithdrawalManagerQueue    queueWM;
 
     function setUp() public virtual {
+        start = block.timestamp;
+
         _createAccounts();
         _createAssets();
         _createGlobals();
         _setTreasury();
         _createFactories();
-        _createAndConfigurePool(1 weeks, 2 days);
-        openPool(address(poolManager));
+        _createAndConfigurePool(start, 1 weeks, 2 days);
 
-        start = block.timestamp;
+        openPool(address(poolManager));
     }
 
     /**************************************************************************************************************************************/
@@ -117,11 +131,13 @@ contract TestBase is ProtocolActions {
     /**************************************************************************************************************************************/
 
     function _createAccounts() internal {
-        governor       = makeAddr("governor");
-        migrationAdmin = makeAddr("migrationAdmin");
-        poolDelegate   = makeAddr("poolDelegate");
-        securityAdmin  = makeAddr("securityAdmin");
-        treasury       = makeAddr("treasury");
+        governor         = makeAddr("governor");
+        migrationAdmin   = makeAddr("migrationAdmin");
+        operationalAdmin = makeAddr("operationalAdmin");
+        poolDelegate     = makeAddr("poolDelegate");
+        permissionAdmin  = makeAddr("permissionAdmin");
+        securityAdmin    = makeAddr("securityAdmin");
+        treasury         = makeAddr("treasury");
     }
 
     function _createAssets() internal {
@@ -130,13 +146,14 @@ contract TestBase is ProtocolActions {
     }
 
     function _createFactories() internal {
-        fixedTermLoanFactory        = address(new FixedTermLoanFactory(address(globals)));
+        fixedTermLoanFactory        = address(new FixedTermLoanFactory(address(globals), address(0)));
         fixedTermLoanManagerFactory = address(new FixedTermLoanManagerFactory(address(globals)));
         liquidatorFactory           = address(new LiquidatorFactory(address(globals)));
         openTermLoanFactory         = address(new OpenTermLoanFactory(address(globals)));
         openTermLoanManagerFactory  = address(new OpenTermLoanManagerFactory(address(globals)));
         poolManagerFactory          = address(new PoolManagerFactory(address(globals)));
-        withdrawalManagerFactory    = address(new WithdrawalManagerFactory(address(globals)));
+        cyclicalWMFactory           = address(new WithdrawalManagerCyclicalFactory(address(globals)));
+        queueWMFactory              = address(new WithdrawalManagerQueueFactory(address(globals)));
 
         fixedTermLoanImplementation        = address(new FixedTermLoan());
         fixedTermLoanManagerImplementation = address(new FixedTermLoanManager());
@@ -144,7 +161,8 @@ contract TestBase is ProtocolActions {
         openTermLoanImplementation         = address(new OpenTermLoan());
         openTermLoanManagerImplementation  = address(new OpenTermLoanManager());
         poolManagerImplementation          = address(new PoolManager());
-        withdrawalManagerImplementation    = address(new WithdrawalManager());
+        cyclicalWMImplementation           = address(new WithdrawalManagerCyclical());
+        queueWMImplementation              = address(new WithdrawalManagerQueue());
 
         fixedTermLoanInitializer        = address(new FixedTermLoanInitializer());
         fixedTermLoanManagerInitializer = address(new FixedTermLoanManagerInitializer());
@@ -152,35 +170,48 @@ contract TestBase is ProtocolActions {
         openTermLoanInitializer         = address(new OpenTermLoanInitializer());
         openTermLoanManagerInitializer  = address(new OpenTermLoanManagerInitializer());
         poolManagerInitializer          = address(new PoolManagerInitializer());
-        withdrawalManagerInitializer    = address(new WithdrawalManagerInitializer());
+        cyclicalWMInitializer           = address(new WithdrawalManagerCyclicalInitializer());
+        queueWMInitializer              = address(new WithdrawalManagerQueueInitializer());
 
-        // TODO: Update to addresses
         fixedTermFeeManager = new FeeManager(address(globals));
         fixedTermRefinancer = new FixedTermRefinancer();
         openTermRefinancer  = new OpenTermRefinancer();
 
+        address poolPermissionManagerImplementation = address(new PoolPermissionManager());
+        poolPermissionManagerInitializer            = address(new PoolPermissionManagerInitializer());
+
+        poolPermissionManager = PoolPermissionManager(address(new NonTransparentProxy(governor, poolPermissionManagerInitializer)));
+
         vm.startPrank(governor);
 
-        globals.setValidInstanceOf("LIQUIDATOR_FACTORY",         liquidatorFactory,            true);
-        globals.setValidInstanceOf("LOAN_FACTORY",               fixedTermLoanFactory,         true);
-        globals.setValidInstanceOf("FT_LOAN_FACTORY",            fixedTermLoanFactory,         true);
-        globals.setValidInstanceOf("LOAN_FACTORY",               openTermLoanFactory,          true);
-        globals.setValidInstanceOf("OT_LOAN_FACTORY",            openTermLoanFactory,          true);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       fixedTermLoanManagerFactory,  true);
-        globals.setValidInstanceOf("FT_LOAN_MANAGER_FACTORY",    fixedTermLoanManagerFactory,  true);
-        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",    openTermLoanManagerFactory,   true);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",       openTermLoanManagerFactory,   true);
-        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",       poolManagerFactory,           true);
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerFactory,     true);
-        globals.setValidInstanceOf("REFINANCER",                 address(openTermRefinancer),  true);
-        globals.setValidInstanceOf("OT_REFINANCER",              address(openTermRefinancer),  true);
-        globals.setValidInstanceOf("REFINANCER",                 address(fixedTermRefinancer), true);
-        globals.setValidInstanceOf("FT_REFINANCER",              address(fixedTermRefinancer), true);
-        globals.setValidInstanceOf("FEE_MANAGER",                address(fixedTermFeeManager), true);
+        PoolPermissionManagerInitializer(address(poolPermissionManager)).initialize(poolPermissionManagerImplementation, address(globals));
+        poolPermissionManager.setPermissionAdmin(permissionAdmin, true);
+
+        globals.setValidInstanceOf("LIQUIDATOR_FACTORY",               liquidatorFactory,             true);
+        globals.setValidInstanceOf("LOAN_FACTORY",                     fixedTermLoanFactory,          true);
+        globals.setValidInstanceOf("FT_LOAN_FACTORY",                  fixedTermLoanFactory,          true);
+        globals.setValidInstanceOf("LOAN_FACTORY",                     openTermLoanFactory,           true);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY",                  openTermLoanFactory,           true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             fixedTermLoanManagerFactory,   true);
+        globals.setValidInstanceOf("FT_LOAN_MANAGER_FACTORY",          fixedTermLoanManagerFactory,   true);
+        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",          openTermLoanManagerFactory,    true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             openTermLoanManagerFactory,    true);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",             poolManagerFactory,            true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_CYCLE_FACTORY", cyclicalWMFactory,             true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       cyclicalWMFactory,             true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                true);
+        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
+        globals.setValidInstanceOf("REFINANCER",                       address(openTermRefinancer),   true);
+        globals.setValidInstanceOf("OT_REFINANCER",                    address(openTermRefinancer),   true);
+        globals.setValidInstanceOf("REFINANCER",                       address(fixedTermRefinancer),  true);
+        globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
+        globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
 
         globals.setCanDeployFrom(fixedTermLoanManagerFactory, address(deployer), true);
         globals.setCanDeployFrom(poolManagerFactory,          address(deployer), true);
-        globals.setCanDeployFrom(withdrawalManagerFactory,    address(deployer), true);
+        globals.setCanDeployFrom(cyclicalWMFactory,           address(deployer), true);
+        globals.setCanDeployFrom(queueWMFactory,              address(deployer), true);
 
         LiquidatorFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         LiquidatorFactory(liquidatorFactory).setDefaultVersion(1);
@@ -208,12 +239,11 @@ contract TestBase is ProtocolActions {
         PoolManagerFactory(poolManagerFactory).registerImplementation(1, poolManagerImplementation, poolManagerInitializer);
         PoolManagerFactory(poolManagerFactory).setDefaultVersion(1);
 
-        WithdrawalManagerFactory(withdrawalManagerFactory).registerImplementation(
-            1,
-            withdrawalManagerImplementation,
-            withdrawalManagerInitializer
-        );
-        WithdrawalManagerFactory(withdrawalManagerFactory).setDefaultVersion(1);
+        WithdrawalManagerCyclicalFactory(cyclicalWMFactory).registerImplementation(1, cyclicalWMImplementation, cyclicalWMInitializer);
+        WithdrawalManagerCyclicalFactory(cyclicalWMFactory).setDefaultVersion(1);
+
+        WithdrawalManagerQueueFactory(queueWMFactory).registerImplementation(1, queueWMImplementation, queueWMInitializer);
+        WithdrawalManagerQueueFactory(queueWMFactory).setDefaultVersion(1);
 
         vm.stopPrank();
 
@@ -228,6 +258,7 @@ contract TestBase is ProtocolActions {
 
         vm.startPrank(governor);
         globals.setMigrationAdmin(migrationAdmin);
+        globals.setOperationalAdmin(operationalAdmin);
         globals.setSecurityAdmin(governor);
         globals.setValidPoolAsset(address(fundsAsset), true);
         globals.setValidCollateralAsset(address(collateralAsset), true);
@@ -238,22 +269,79 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    // TODO: Add all config params here
-    function _createPool(uint256 withdrawalCycle, uint256 windowDuration) internal {
+    function _createPool(
+        uint256 startTime,
+        uint256 withdrawalCycle,
+        uint256 windowDuration
+    )
+        internal returns (
+            address pool_,
+            address pm_,
+            address wm_
+        )
+    {
         vm.prank(poolDelegate);
         poolManager = PoolManager(deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: withdrawalManagerFactory,
+            withdrawalManagerFactory_: cyclicalWMFactory,
             loanManagerFactories_:     loanManagerFactories,
             asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0]
+            configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0, startTime]
         }));
+        poolManagers.push(address(poolManager));
 
-        withdrawalManager = WithdrawalManager(poolManager.withdrawalManager());
-        pool              = Pool(poolManager.pool());
-        poolCover         = PoolDelegateCover(poolManager.poolDelegateCover());
+        cyclicalWM = WithdrawalManagerCyclical(poolManager.withdrawalManager());
+        pool       = Pool(poolManager.pool());
+        poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
+
+        pool_ = address(pool);
+        pm_   = address(poolManager);
+        wm_   = address(cyclicalWM);
+    }
+
+    function _createPool(address poolDelegate_, string memory poolName_) internal returns (address pool_, address pm_, address wm_) {
+        vm.prank(poolDelegate_);
+        poolManager = PoolManager(deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     poolName_,
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, 0]
+        }));
+        poolManagers.push(address(poolManager));
+
+        queueWM    = WithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool       = Pool(poolManager.pool());
+        poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
+
+        pool_ = address(pool);
+        pm_   = address(poolManager);
+        wm_   = address(queueWM);
+    }
+
+    function _createPoolWithQueue() internal {
+        vm.prank(poolDelegate);
+        poolManager = PoolManager(deployer.deployPool({
+            poolManagerFactory_:       poolManagerFactory,
+            withdrawalManagerFactory_: queueWMFactory,
+            loanManagerFactories_:     loanManagerFactories,
+            asset_:                    address(fundsAsset),
+            poolPermissionManager_:    address(poolPermissionManager),
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
+            configParams_:             [type(uint256).max, 0, 0, 0]
+        }));
+        poolManagers.push(address(poolManager));
+
+        queueWM    = WithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool       = Pool(poolManager.pool());
+        poolCover  = PoolDelegateCover(poolManager.poolDelegateCover());
     }
 
     function _configurePool() internal {
@@ -261,10 +349,12 @@ contract TestBase is ProtocolActions {
         globals.activatePoolManager(address(poolManager));
         globals.setMaxCoverLiquidationPercent(address(poolManager), globals.HUNDRED_PERCENT());
         vm.stopPrank();
+
+        allowLender(address(poolManager), address(cyclicalWM));
     }
 
-    function _createAndConfigurePool(uint256 withdrawalCycle, uint256 windowDuration) internal {
-        _createPool(withdrawalCycle, windowDuration);
+    function _createAndConfigurePool(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal {
+        _createPool(startTime, withdrawalCycle, windowDuration);
         _configurePool();
     }
 
@@ -278,7 +368,18 @@ contract TestBase is ProtocolActions {
     /*** Helper Functions                                                                                                               ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Can be moved into ProtocolActions, but it a bit heavy on arguments if state variables need to be passed in as well.
+    function createBitmap(uint8[1] memory indices_) internal pure returns (uint256 bitmap_) {
+        for (uint8 i = 0; i < indices_.length; i++) {
+            bitmap_ |= (1 << indices_[i]);
+        }
+    }
+
+    function createBitmap(uint8[2] memory indices_) internal pure returns (uint256 bitmap_) {
+        for (uint8 i = 0; i < indices_.length; i++) {
+            bitmap_ |= (1 << indices_[i]);
+        }
+    }
+
     /**
      *  @param termDetails Array of loan parameters:
      *                       [0]: gracePeriod
@@ -295,11 +396,11 @@ contract TestBase is ProtocolActions {
      *                       [3]: lateInterestPremium
      */
     function createFixedTermLoan(
-        address borrower,
+        address           borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address loanManager             // TODO: Move to top of params.
+        address           loanManager
     )
         internal returns (address loan)
     {
@@ -323,9 +424,9 @@ contract TestBase is ProtocolActions {
     }
 
     function createFixedTermLoan(
-        address borrower,
-        address lender,
-        address feeManager,
+        address           borrower,
+        address           lender,
+        address           feeManager,
         address[2] memory assets,
         uint256[3] memory terms,
         uint256[3] memory amounts,
@@ -354,10 +455,8 @@ contract TestBase is ProtocolActions {
     )
         internal returns (address loan)
     {
-        vm.startPrank(governor);
+        vm.prank(governor);
         globals.setValidBorrower(borrower, true);
-        globals.setCanDeployFrom(openTermLoanFactory, borrower, true);
-        vm.stopPrank();
 
         vm.prank(borrower);
         loan = OpenTermLoanFactory(openTermLoanFactory).createInstance({
@@ -421,17 +520,16 @@ contract TestBase is ProtocolActions {
         shares = deposit(address(pool), lp, liquidity);
     }
 
-    // TODO: Move all of these to ProtocolActions. Not sure if they belong there because they are "complex" actions that involve many steps.
     function fundAndDrawdownLoan(
-        address borrower,
+        address           borrower,
         uint256[3] memory termDetails,
         uint256[3] memory amounts,
         uint256[4] memory rates,
-        address loanManager
+        address           loanManager
     )
         internal returns (address loan)
     {
-        loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);  // TODO: Remove create from this function.
+        loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);
 
         fundLoan(address(loan));
 

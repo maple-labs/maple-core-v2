@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IOpenTermLoanManagerStructs
-} from "../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetup }     from "./FuzzedSetup.sol";
 import { StorageSnapshot } from "./StorageSnapshot.sol";
@@ -51,11 +47,11 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
         // Cache the contract states.
-        impairmentStorage  = _snapshotOpenTermImpairment(loan);
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        impairmentStorage  = _snapshotOpenTermImpairment(address(loan));
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Decide if the delegate or governor will perform the impairment.
         address caller = seed % 2 == 0 ? poolManager.poolDelegate() : globals.governor();
@@ -111,6 +107,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets,
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses + impairedPrincipal + impairedInterest,
@@ -142,6 +139,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
             });
 
             assertPoolStateWithDiff({
+                pool:               address(pool),
                 totalAssets:        poolManagerStorage.previousTotalAssets,
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,
@@ -165,11 +163,11 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         poolBalance     = fundsAsset.balanceOf(address(pool));
         treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
-        impairmentStorage  = _snapshotOpenTermImpairment(loan);
-        loanManagerStorage = _snapshotOpenTermLoanManager(loanManager);
-        loanStorage        = _snapshotOpenTermLoan(loan);
-        paymentStorage     = _snapshotOpenTermPayment(loan);
-        poolManagerStorage = _snapshotPoolManager(poolManager);
+        impairmentStorage  = _snapshotOpenTermImpairment(address(loan));
+        loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
+        loanStorage        = _snapshotOpenTermLoan(address(loan));
+        paymentStorage     = _snapshotOpenTermPayment(address(loan));
+        poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Perform the action.
         vm.prank(globals.governor());
@@ -223,6 +221,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
         });
 
         assertPoolState({
+            pool:               address(pool),
             totalAssets:        poolManagerStorage.previousTotalAssets + extraInterest,
             totalSupply:        poolManagerStorage.previousTotalSupply,
             unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses - impairedPrincipal - impairedInterest,
