@@ -14,16 +14,7 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 
 ## Submodules
 
-Submodules imported:
-- [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
-- [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
-- [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
-- [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
-- [`maple-labs/loan`](https://github.com/maple-labs/loan)
-- [`maple-labs/pool-v2`](https://github.com/maple-labs/pool-v2)
-- [`maple-labs/withdrawal-manager`](https://github.com/maple-labs/withdrawal-manager)
-
-Versions of dependencies can be checked with `git submodule status`.
+This repository uses git submodules to manage dependencies which can be checked with `git submodule status`.
 
 ## Setup
 
