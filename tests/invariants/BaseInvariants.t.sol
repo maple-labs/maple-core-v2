@@ -257,7 +257,10 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 aum    = ILoanManagerLike(loanManager).assetsUnderManagement();
 
         if (losses > aum) {
-            assertApproxEqAbs(losses, aum, ftlHandler.numPayments() + 1);
+            // NOTE: the correct rounding acceptance needs to be the amount of loans contributing to the unrealizedLosses(),
+            // which are the defaulted but not liquidated and the impaired but not defaulted. Since this value is not tracked in the ftlh,
+            // the number of active loans is used instead.
+            assertApproxEqAbs(losses, aum, ftlHandler.numLoans() + 1);
         } else {
             assertLe(losses, aum + 1, "LoanManager Invariant F");
         }
