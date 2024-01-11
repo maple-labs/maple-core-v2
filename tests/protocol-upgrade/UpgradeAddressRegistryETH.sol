@@ -365,6 +365,8 @@ contract UpgradeAddressRegistryETH is AddressRegistry, UpgradeAddressRegistry {
             ftLoans:              new address[](0)
         }));
 
+        queueUpgradePools.push(6);
+
         pools.push(Pool({
             name:                 "mavenPermissioned",
             pool:                 mavenPermissionedPool,

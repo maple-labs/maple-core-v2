@@ -7,6 +7,7 @@ import {
     IGlobals,
     ILoanLike,
     IPool,
+    IPoolManager,
     IPoolPermissionManager,
     IProxiedLike,
     IProxyFactoryLike
@@ -976,6 +977,113 @@ contract ValidatePostUpgradeCleanUpBASEL2 is ValidationBaseBASEL2 {
 
         // Validate that operational admin has been set
         require(IGlobals(globals).operationalAdmin() == protocol.operationalAdmin, "operational admin not set");
+    }
+
+}
+
+contract ValidateDirectPMWMSetupETH is ValidationBaseETH {
+
+    // NOTE: Index 2 corresponds to the direct pool
+    function run() external view {
+        IGlobals globals_ = IGlobals(protocol.globals);
+
+        require(globals_.isInstanceOf("QUEUE_POOL_MANAGER", pools[queueUpgradePools[2]].poolManager), "QPM not added");
+
+        require(globals_.canDeployFrom(queueWMFactory, operationalAdmin), "QMF can't deploy");
+    }
+
+}
+
+contract ValidateDirectPMPauseETH is ValidationBaseETH {
+
+    // NOTE: Index 2 corresponds to the direct pool
+    function run() external view {
+        validatePMPause(pools[queueUpgradePools[2]].poolManager);
+    }
+
+    function validatePMPause(address poolManager) internal view {
+        IGlobals globals_ = IGlobals(protocol.globals);
+
+        // Check functions that should be Unpaused
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.migrate.selector),                      "migrate");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setImplementation.selector),            "setImplementation");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.upgrade.selector),                      "upgrade");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.requestFunds.selector),                 "requestFunds");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setDelegateManagementFeeRate.selector), "setDelegateManagementFeeRate");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.triggerDefault.selector),               "triggerDefault");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.finishCollateralLiquidation.selector),  "finishCollateralLiquidation");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.canCall.selector),                      "canCall");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.processRedeem.selector),                "processRedeem");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.processWithdraw.selector),              "processWithdraw");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.removeShares.selector),                 "removeShares");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setIsLoanManager.selector),             "setIsLoanManager");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setLiquidityCap.selector),              "setLiquidityCap");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.depositCover.selector),                 "depositCover");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.withdrawCover.selector),                "withdrawCover");
+
+        // Check functions that should be Paused
+        require(globals_.isFunctionPaused(poolManager, PoolManager.requestRedeem.selector),   "requestRedeem");
+        require(globals_.isFunctionPaused(poolManager, PoolManager.requestWithdraw.selector), "requestWithdraw");
+    }
+
+}
+
+contract ValidateEmptyDirectWMETH is ValidationBaseETH {
+
+    // NOTE: Index 2 corresponds to the direct pool
+    function run() external view {
+        require(IPool(pools[queueUpgradePools[2]].pool).balanceOf(pools[queueUpgradePools[2]].withdrawalManager) == 0, "WM has shares");
+    }
+
+}
+
+contract ValidateDirectPMUpgradeAndUnpauseETH is ValidationBaseETH {
+
+    address newWithdrawalManagerInstance = 0xf18066Db3A9590C401e1841598ad90663B4C6d23;
+
+    // NOTE: Index 2 corresponds to the direct pool
+    function run() external view {
+        validatePoolManager(pools[queueUpgradePools[2]].poolManager, poolManagerImplementationV301);
+
+        validatePMPause(pools[queueUpgradePools[2]].poolManager);
+
+        address upgradedWithdrawalManager = IPoolManager(pools[queueUpgradePools[2]].poolManager).withdrawalManager();
+
+        require(upgradedWithdrawalManager == newWithdrawalManagerInstance, "WM instance not correct");
+    }
+
+    function validatePMPause(address poolManager) internal view {
+        IGlobals globals_ = IGlobals(protocol.globals);
+
+        // Check functions that should be Unpaused
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.migrate.selector),                      "migrate");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setImplementation.selector),            "setImplementation");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.upgrade.selector),                      "upgrade");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.requestFunds.selector),                 "requestFunds");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setDelegateManagementFeeRate.selector), "setDelegateManagementFeeRate");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.triggerDefault.selector),               "triggerDefault");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.finishCollateralLiquidation.selector),  "finishCollateralLiquidation");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.canCall.selector),                      "canCall");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.processRedeem.selector),                "processRedeem");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.processWithdraw.selector),              "processWithdraw");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.removeShares.selector),                 "removeShares");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setIsLoanManager.selector),             "setIsLoanManager");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.setLiquidityCap.selector),              "setLiquidityCap");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.depositCover.selector),                 "depositCover");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.withdrawCover.selector),                "withdrawCover");
+
+        // Check functions that were paused but should be unpaused
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.requestRedeem.selector),   "requestRedeem");
+        require(!globals_.isFunctionPaused(poolManager, PoolManager.requestWithdraw.selector), "requestWithdraw");
+    }
+
+}
+
+contract ValidateDirectPMCleanupETH is ValidationBaseETH {
+
+    // NOTE: Index 2 corresponds to the direct pool
+    function run() external view {
+        require(!IGlobals(protocol.globals).canDeployFrom(queueWMFactory, operationalAdmin), "OA can deploy");
     }
 
 }
