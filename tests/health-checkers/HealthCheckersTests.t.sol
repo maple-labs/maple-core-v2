@@ -28,7 +28,7 @@ contract HealthCheckerMainnetTests is AddressRegistry, Test {
         0xc6971260EfDfd0fFfC4fB6E9Fe18Faf2e2dE56d5,
         0xdc21a6BfcBD5B520B59C0cED9fe8231278706045,
         0x0000000000000000000000000000000000000000,  // bootstrap mint
-        cashManagementUSDCWithdrawalManager
+        0x1146691782c089bCF0B19aCb8620943a35eebD12
     ];
 
     address[] mapleDirectUSDCLps = [
@@ -62,15 +62,15 @@ contract HealthCheckerMainnetTests is AddressRegistry, Test {
     }
 
     function testFork_lpHealthChecker_mainnet() public {
-        _checkLPInvariants(cashManagementUSDCPoolManager, cashManagementUSDCLps);
+        _checkLPInvariants(cashUSDCPoolManager, cashManagementUSDCLps);
         _checkLPInvariants(mapleDirectUSDCPoolManager, mapleDirectUSDCLps);
 
-        _checkProtocolInvariants(cashManagementUSDCPoolManager);
+        _checkProtocolInvariants(cashUSDCPoolManager);
         _checkProtocolInvariants(mapleDirectUSDCPoolManager);
     }
 
     function testFork_protocolHealthChecker_mainnet() public {
-        _checkProtocolInvariants(cashManagementUSDCPoolManager);
+        _checkProtocolInvariants(cashUSDCPoolManager);
         _checkProtocolInvariants(mapleDirectUSDCPoolManager);
     }
 
