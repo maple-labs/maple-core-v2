@@ -276,6 +276,75 @@ interface IWithdrawalManagerLike {
 }
 
 /******************************************************************************************************************************************/
+/*** Smart Account Interfaces                                                                                                           ***/
+/******************************************************************************************************************************************/
+
+struct UserOperation {
+    address sender;
+    uint256 nonce;
+    bytes initCode;
+    bytes callData;
+    uint256 callGasLimit;
+    uint256 verificationGasLimit;
+    uint256 preVerificationGas;
+    uint256 maxFeePerGas;
+    uint256 maxPriorityFeePerGas;
+    bytes paymasterAndData;
+    bytes signature;
+}
+
+struct Call {
+    address target;
+    uint256 value;
+    bytes data;
+}
+
+interface IEntryPointLike {
+
+    function depositTo(address) external payable;
+
+    function addStake(uint32) external payable;
+
+    function unlockStake() external;
+
+    function withdrawStake(address payable) external;
+
+    function handleOps(UserOperation[] calldata, address payable) external;
+
+    function getNonce(address, uint192) external view returns (uint256);
+
+    function getUserOpHash(UserOperation calldata) external view returns (bytes32);
+
+}
+
+interface IMultiOwnerModularAccountFactoryLike {
+
+    function createAccount(uint256 salt, address[] calldata owners) external returns (address addr);
+
+    function getAddress(uint256 salt, address[] calldata owners) external view returns (address);
+
+}
+
+interface IModularAccountLike {
+
+    function execute(address target, uint256 value, bytes calldata data) external payable returns (bytes memory result);
+
+    function executeBatch(Call[] calldata calls) external payable returns (bytes[] memory results);
+
+    function getInstalledPlugins() external view returns (address[] memory pluginAddresses);
+
+    function getNonce() external view returns (uint256);
+
+    function installPlugin(
+        address plugin,
+        bytes32 manifestHash,
+        bytes calldata pluginInstallData,
+        bytes21[] calldata dependencies
+    ) external;
+
+}
+
+/******************************************************************************************************************************************/
 /*** Test Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
 
