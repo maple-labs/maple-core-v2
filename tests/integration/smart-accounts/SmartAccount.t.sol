@@ -48,7 +48,17 @@ contract SmartAccountETHTests is TestBase {
         depositAmount = 1_500_000e6;
         gasFeeAmount  = 1e18;
 
-        super.setUp();
+        start = block.timestamp;
+
+        _createAccounts();
+        _createAssets();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+        _createPoolWithQueue();
+        _configurePool();
+
+        openPool(address(poolManager));
     }
 
     /**************************************************************************************************************************************/
@@ -111,6 +121,72 @@ contract SmartAccountETHTests is TestBase {
 
         assertEq(pool.balanceOf(owner),        0);
         assertEq(pool.balanceOf(smartAccount), depositAmount);
+    }
+
+    function testFork_withdraw() external {
+        // Create the smart account.
+        address smartAccount = createSmartAccount(salt, owner);
+
+        // Fund the smart account with ETH.
+        deal(smartAccount, gasFeeAmount);
+
+        // Deposit assets into the pool.
+        deposit(address(pool), smartAccount, depositAmount);
+
+        // Assert balances.
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(owner),         0);
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(smartAccount),  0);
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(address(pool)), depositAmount);
+
+        assertEq(pool.balanceOf(owner),        0);
+        assertEq(pool.balanceOf(smartAccount), depositAmount);
+
+        // Request a withdrawal of assets.
+        Call[] memory calls = new Call[](1);
+
+        calls[0] = Call({
+            target: address(pool),
+            value: 0,
+            data: abi.encodeWithSignature("requestRedeem(uint256,address)", depositAmount, smartAccount)
+        });
+
+        // Send the transaction.
+        sendUserOp(smartAccount, calls);
+
+        // Assert queue state.
+        ( uint128 nextRequestId, uint128 lastRequestId ) = queueWM.queue();
+
+        assertEq(nextRequestId, 1);
+        assertEq(lastRequestId, 1);
+
+        // Process withdrawals.
+        processRedemptions(address(pool), depositAmount);
+
+        // Assert balances.
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(owner),         0);
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(smartAccount),  depositAmount);
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(address(pool)), 0);
+
+        assertEq(pool.balanceOf(owner),        0);
+        assertEq(pool.balanceOf(smartAccount), 0);
+
+        // Transfer assets back to the owner.
+        calls[0] = Call({
+            target: address(fundsAsset),
+            value: 0,
+            data: abi.encodeWithSignature("transfer(address,uint256)", owner, depositAmount)
+        });
+
+        // Send the transaction.
+        sendUserOp(smartAccount, calls);
+
+        // Assert balances.
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(owner),         depositAmount);
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(smartAccount),  0);
+        assertEq(IERC20Like(address(fundsAsset)).balanceOf(address(pool)), 0);
+
+        assertEq(pool.balanceOf(owner),        0);
+        assertEq(pool.balanceOf(smartAccount), 0);
     }
 
     /**************************************************************************************************************************************/
