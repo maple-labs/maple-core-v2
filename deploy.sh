@@ -35,3 +35,15 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
 #     scripts/DeployHealthChecker.s.sol:DeployHealthChecker
+
+# For SyrupRouter
+forge script \
+    --rpc-url $ETH_RPC_URL \
+    -vvvv \
+    --mnemonic-indexes 2 \
+    --ledger \
+    --slow \
+    --sender $ETH_SENDER \
+    --gas-estimate-multiplier 150 \
+    --broadcast \
+    scripts/DeployRouter.s.sol:DeployRouter
