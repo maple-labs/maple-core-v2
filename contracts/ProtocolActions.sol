@@ -891,6 +891,10 @@ contract ProtocolActions is Test {
         ppm_.configurePool(poolManager_, permissionLevel_, functionIds_, poolBitmaps_);
     }
 
+    function setPoolBitmap(address poolManager_, uint256 bitmap_) internal {
+        setPoolBitmap(poolManager_, bytes32(0), bitmap_);
+    }
+
     function setPoolBitmap(address poolManager_, bytes32 functionId_, uint256 bitmap_) internal {
         bytes32[] memory functionIds_ = new bytes32[](1);
         uint256[] memory bitmaps_     = new uint256[](1);
