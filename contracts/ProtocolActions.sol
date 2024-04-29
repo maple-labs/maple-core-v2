@@ -960,7 +960,7 @@ contract ProtocolActions is Test {
 
     // Returns an ERC-2612 `permit` digest for the `owner` to sign
     function _getDigest(address asset_, address owner_, address spender_, uint256 value_, uint256 deadline_)
-        private view
+        internal view
         returns (bytes32 digest_)
     {
         digest_ = keccak256(

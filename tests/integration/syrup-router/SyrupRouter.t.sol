@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { TestBase } from "../../TestBase.sol";
+import { Vm } from "../../../modules/forge-std/src/Vm.sol";
 
 import { SyrupRouter } from "../../../modules/syrup-router/contracts/SyrupRouter.sol";
 
-contract SyrupRouterTests is TestBase {
+import { TestBase } from "../../TestBase.sol";
+
+contract SyrupRouterIntegrationTests is TestBase {
 
     uint256 constant FUNCTION_LEVEL = 1;
     uint256 constant POOL_LEVEL     = 2;
@@ -23,6 +25,8 @@ contract SyrupRouterTests is TestBase {
 
     SyrupRouter public syrupRouter;
 
+    Vm.Wallet liquidityProviderWallet;
+
     function setUp() public virtual override {
         start = block.timestamp;
 
@@ -36,6 +40,8 @@ contract SyrupRouterTests is TestBase {
 
         syrupRouter = new SyrupRouter(address(pool));
 
+        liquidityProviderWallet = vm.createWallet("liquidityProvider");
+
         allowLender(address(poolManager), address(syrupRouter));
     }
 
@@ -43,13 +49,29 @@ contract SyrupRouterTests is TestBase {
     /*** Private Pool - Router Tests                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function test_route_private_unauthorized() external {
+    function test_deposit_private_unauthorized() external {
         vm.prank(liquidityProvider);
         vm.expectRevert("SR:D:NOT_AUTHORIZED");
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_private_insufficientApproval() external {
+    function test_depositWithPermit_private_unauthorized() external {
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("SR:D:NOT_AUTHORIZED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_private_insufficientApproval() external {
         allowLender(address(poolManager), liquidityProvider);
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
@@ -60,7 +82,7 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_private_insufficientAmount() external {
+    function test_deposit_private_insufficientAmount() external {
         allowLender(address(poolManager), liquidityProvider);
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount - 1);
@@ -71,7 +93,43 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_private_zeroShares() external {
+    function test_depositWithPermit_private_invalidSignature() external {
+        allowLender(address(poolManager), liquidityProvider);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 1 seconds // Different signature
+            )
+        );
+
+        vm.expectRevert("ERC20:P:INVALID_SIGNATURE");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_depositWithPermit_private_expiredDeadline() external {
+        allowLender(address(poolManager), liquidityProvider);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 2 seconds
+            )
+        );
+
+        vm.expectRevert("ERC20:P:EXPIRED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp - 2 seconds, v, r, s);
+    }
+
+    function test_deposit_private_zeroShares() external {
         allowLender(address(poolManager), liquidityProvider);
 
         vm.prank(liquidityProvider);
@@ -79,7 +137,25 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(0);
     }
 
-    function test_route_private_approval() external {
+    function test_depositWithPermit_private_zeroShares() external {
+        allowLender(address(poolManager), liquidityProvider);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                0,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("P:M:ZERO_SHARES");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, 0, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_private_approval() external {
         allowLender(address(poolManager), liquidityProvider);
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
@@ -95,7 +171,7 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
-    function test_route_private_infiniteApproval() external {
+    function test_deposit_private_infiniteApproval() external {
         allowLender(address(poolManager), liquidityProvider);
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
@@ -106,6 +182,31 @@ contract SyrupRouterTests is TestBase {
 
         vm.prank(liquidityProvider);
         syrupRouter.deposit(depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
+        assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
+    }
+
+    function test_depositWithPermit_private_allowListed() external {
+        allowLender(address(poolManager), liquidityProvider);
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
+        assertEq(pool.balanceOf(liquidityProvider),       0);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
 
         assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
@@ -115,7 +216,7 @@ contract SyrupRouterTests is TestBase {
     /*** Function Level Pool - Router Tests                                                                                             ***/
     /**************************************************************************************************************************************/
 
-    function test_route_function_zeroBitmap() external {
+    function test_deposit_functionLevel_zeroBitmap() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -126,7 +227,28 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_function_insufficientPermission() external {
+    function test_depositWithPermit_functionLevel_zeroBitmap() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, zeroBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("SR:D:NOT_AUTHORIZED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_functionLevel_insufficientPermission() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -137,7 +259,28 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_function_insufficientApproval() external {
+    function test_depositWithPermit_functionLevel_insufficientPermission() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, insufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("SR:D:NOT_AUTHORIZED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_functionLevel_insufficientApproval() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -151,7 +294,7 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_function_insufficientAmount() external {
+    function test_deposit_functionLevel_insufficientAmount() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -165,7 +308,49 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_function_zeroShares() external {
+    function test_depositWithPermit_functionLevel_invalidSignature() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 1 seconds  // Different signature
+            )
+        );
+
+        vm.expectRevert("ERC20:P:INVALID_SIGNATURE");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_depositWithPermit_functionLevel_expiredDeadline() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 2 seconds
+            )
+        );
+
+        vm.expectRevert("ERC20:P:EXPIRED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp - 2 seconds, v, r, s);
+    }
+
+    function test_deposit_functionLevel_zeroShares() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -176,7 +361,28 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(0);
     }
 
-    function test_route_function_approval() external {
+    function test_depositWithPermit_functionLevel_zeroShares() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                0,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("P:M:ZERO_SHARES");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, 0, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_functionLevel_approval() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -195,7 +401,7 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
-    function test_route_function_infiniteApproval() external {
+    function test_deposit_functionLevel_infiniteApproval() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -214,7 +420,35 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
-    function test_route_function_allowlisted() external {
+    function test_depositWithPermit_functionLevel_sufficientPermission() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
+        assertEq(pool.balanceOf(liquidityProvider),       0);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
+        assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
+    }
+
+    function test_deposit_functionLevel_allowlisted() external {
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), functionId, requiredBitmap);
 
@@ -228,6 +462,34 @@ contract SyrupRouterTests is TestBase {
 
         vm.prank(liquidityProvider);
         syrupRouter.deposit(depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
+        assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
+    }
+
+    function test_depositWithPermit_functionLevel_allowListed() external {
+        setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
+        setPoolBitmap(address(poolManager), functionId, requiredBitmap);
+
+        allowLender(address(poolManager), liquidityProvider);
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
+        assertEq(pool.balanceOf(liquidityProvider),       0);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
 
         assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
@@ -237,7 +499,7 @@ contract SyrupRouterTests is TestBase {
     /*** Pool Level Pool - Router Tests                                                                                                 ***/
     /**************************************************************************************************************************************/
 
-    function test_route_pool_zeroBitmap() external {
+    function test_deposit_poolLevel_zeroBitmap() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -248,7 +510,28 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_pool_insufficientPermission() external {
+    function test_depositWithPermit_poolLevel_zeroBitmap() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, zeroBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("SR:D:NOT_AUTHORIZED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_poolLevel_insufficientPermission() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -259,7 +542,28 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_pool_insufficientApproval() external {
+    function test_depositWithPermit_poolLevel_insufficientPermission() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, insufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("SR:D:NOT_AUTHORIZED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_poolLevel_insufficientApproval() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -273,7 +577,7 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_pool_insufficientAmount() external {
+    function test_deposit_poolLevel_insufficientAmount() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -287,7 +591,49 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_pool_zeroShares() external {
+    function test_depositWithPermit_poolLevel_invalidSignature() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 1 seconds  // Different signature
+            )
+        );
+
+        vm.expectRevert("ERC20:P:INVALID_SIGNATURE");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_depositWithPermit_poolLevel_expiredDeadline() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 2 seconds
+            )
+        );
+
+        vm.expectRevert("ERC20:P:EXPIRED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp - 2 seconds, v, r, s);
+    }
+
+    function test_deposit_poolLevel_zeroShares() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -298,7 +644,28 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(0);
     }
 
-    function test_route_pool_approval() external {
+    function test_depositWithPermit_poolLevel_zeroShares() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                0,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("P:M:ZERO_SHARES");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, 0, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_poolLevel_approval() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -317,7 +684,7 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
-    function test_route_pool_infiniteApproval() external {
+    function test_deposit_poolLevel_infiniteApproval() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -336,7 +703,35 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
-    function test_route_pool_allowlisted() external {
+    function test_depositWithPermit_poolLevel_sufficientPermission() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
+        assertEq(pool.balanceOf(liquidityProvider),       0);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
+        assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
+    }
+
+    function test_deposit_poolLevel_allowlisted() external {
         setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
         setPoolBitmap(address(poolManager), requiredBitmap);
 
@@ -355,11 +750,39 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
+    function test_depositWithPermit_poolLevel_allowListed() external {
+        setPoolPermissionLevel(address(poolManager), POOL_LEVEL);
+        setPoolBitmap(address(poolManager), requiredBitmap);
+
+        allowLender(address(poolManager), liquidityProvider);
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
+        assertEq(pool.balanceOf(liquidityProvider),       0);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
+        assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
+    }
+
     /**************************************************************************************************************************************/
     /*** Public Pool - Router Tests                                                                                                     ***/
     /**************************************************************************************************************************************/
 
-    function test_route_public_insufficientApproval() external {
+    function test_deposit_public_insufficientApproval() external {
         openPool(address(poolManager));
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
@@ -370,7 +793,7 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_public_insufficientAmount() external {
+    function test_deposit_public_insufficientAmount() external {
         openPool(address(poolManager));
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount - 1);
@@ -381,7 +804,47 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(depositAmount);
     }
 
-    function test_route_public_zeroShares() external {
+    function test_depositWithPermit_public_invalidSignature() external {
+        openPool(address(poolManager));
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 1 seconds  // Different signature
+            )
+        );
+
+        vm.expectRevert("ERC20:P:INVALID_SIGNATURE");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
+    }
+
+    function test_depositWithPermit_public_expiredDeadline() external {
+        openPool(address(poolManager));
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp - 2 seconds
+            )
+        );
+
+        vm.expectRevert("ERC20:P:EXPIRED");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp - 2 seconds, v, r, s);
+    }
+
+    function test_deposit_public_zeroShares() external {
         openPool(address(poolManager));
 
         vm.prank(liquidityProvider);
@@ -389,7 +852,27 @@ contract SyrupRouterTests is TestBase {
         syrupRouter.deposit(0);
     }
 
-    function test_route_public_approval() external {
+    function test_depositWithPermit_public_zeroShares() external {
+        openPool(address(poolManager));
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                0,
+                block.timestamp
+            )
+        );
+
+        vm.expectRevert("P:M:ZERO_SHARES");
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, 0, block.timestamp, v, r, s);
+    }
+
+    function test_deposit_public_approval() external {
         openPool(address(poolManager));
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
@@ -405,7 +888,7 @@ contract SyrupRouterTests is TestBase {
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
     }
 
-    function test_route_public_infiniteApproval() external {
+    function test_deposit_public_infiniteApproval() external {
         openPool(address(poolManager));
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
@@ -416,6 +899,31 @@ contract SyrupRouterTests is TestBase {
 
         vm.prank(liquidityProvider);
         syrupRouter.deposit(depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
+        assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
+    }
+
+    function test_depositWithPermit_public_success() external {
+        openPool(address(poolManager));
+
+        erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
+
+        assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
+        assertEq(pool.balanceOf(liquidityProvider),       0);
+
+        (uint8 v , bytes32 r, bytes32 s ) = vm.sign(
+            liquidityProviderWallet,
+            _getDigest(
+                address(fundsAsset),
+                liquidityProviderWallet.addr,
+                address(syrupRouter),
+                depositAmount,
+                block.timestamp
+            )
+        );
+
+        syrupRouter.depositWithPermit(liquidityProviderWallet.addr, depositAmount, block.timestamp, v, r, s);
 
         assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
         assertEq(pool.balanceOf(liquidityProvider),       depositAmount);
