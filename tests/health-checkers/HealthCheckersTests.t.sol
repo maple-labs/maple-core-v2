@@ -63,15 +63,15 @@ contract HealthCheckerMainnetTests is AddressRegistry, Test {
 
     function testFork_lpHealthChecker_mainnet() public {
         _checkLPInvariants(cashUSDCPoolManager, cashManagementUSDCLps);
-        _checkLPInvariants(mapleDirectUSDCPoolManager, mapleDirectUSDCLps);
+        _checkLPInvariants(blueChipSecuredUSDCPoolManager, mapleDirectUSDCLps);
 
         _checkProtocolInvariants(cashUSDCPoolManager);
-        _checkProtocolInvariants(mapleDirectUSDCPoolManager);
+        _checkProtocolInvariants(blueChipSecuredUSDCPoolManager);
     }
 
     function testFork_protocolHealthChecker_mainnet() public {
         _checkProtocolInvariants(cashUSDCPoolManager);
-        _checkProtocolInvariants(mapleDirectUSDCPoolManager);
+        _checkProtocolInvariants(blueChipSecuredUSDCPoolManager);
     }
 
     /**************************************************************************************************************************************/
