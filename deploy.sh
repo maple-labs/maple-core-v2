@@ -47,3 +47,15 @@ forge script \
     --gas-estimate-multiplier 150 \
     --broadcast \
     scripts/DeployRouter.s.sol:DeployRouter
+
+# For SyrupRateProvider
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 2 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     --broadcast \
+#     scripts/DeployBalancerRateProvider.s.sol:DeployRateProvider
