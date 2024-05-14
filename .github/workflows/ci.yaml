@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
+  SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
+  SSH_KEY_LIQUIDATIONS: ${{secrets.SSH_KEY_LIQUIDATIONS}}
+  SSH_KEY_FIXED_TERM_LOAN: ${{secrets.SSH_KEY_FIXED_TERM_LOAN}}
+  SSH_KEY_FIXED_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_FIXED_TERM_LOAN_MANAGER}}
+  SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
+  SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+  SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+  SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
+  SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
+  SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
+  SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+  SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
+  SSH_KEY_SYRUP_ROUTER: ${{secrets.SSH_KEY_SYRUP_ROUTER}}
+
+  BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
+  ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+
+  FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'production' || 'default' }}
+  FUZZ_PROFILE: ${{ github.event_name == 'push' && 'super_deep' || 'deep' }}
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Update submodules
+        run: ./setup-ci.sh
+      - name: Run integration tests
+        run: ./test.sh -d tests/integration -p $FOUNDRY_PROFILE
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Update submodules
+        run: ./setup-ci.sh
+      - name: Run end to end tests
+        run: ./test.sh -d tests/e2e -p $FOUNDRY_PROFILE
+
+  fuzz-tests:
+    runs-on:
+      group: SC-HighMemory
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Update submodules
+        run: ./setup-ci.sh
+      - name: Run fuzz tests
+        run: ./test.sh -t testFuzz -p $FUZZ_PROFILE
+
+  invariant-tests:
+    runs-on:
+        group: SC-HighMemory
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Update submodules
+        run: ./setup-ci.sh
+      - name: Run invariant tests
+        run: ./test.sh -d tests/invariants -p $FUZZ_PROFILE
+
+  scenario-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install Node
+        uses: actions/setup-node@v4
+      - name: Update submodules
+        run: ./setup-ci.sh
+      - name: Run Scenarios
+        run: ./scenarios.sh
