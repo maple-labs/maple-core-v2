@@ -60,7 +60,7 @@ contract SyrupRouterForkTests is ProtocolActions, MapleAddressRegistryETH {
 
         // Perform the deposit.
         vm.prank(lp.addr);
-        uint256 shares = ISyrupRouter(router).deposit(assets);
+        uint256 shares = ISyrupRouter(router).deposit(assets, bytes32(0));
 
         // Check the asset and share balances.
         assertEq(IERC20(usdc).balanceOf(lp.addr), 0);
@@ -76,7 +76,8 @@ contract SyrupRouterForkTests is ProtocolActions, MapleAddressRegistryETH {
         ( uint8 v, bytes32 r, bytes32 s ) = vm.sign(lp, _getDigest(usdc, lp.addr, router, assets, block.timestamp));
 
         // Perform the deposit.
-        uint256 shares = ISyrupRouter(router).depositWithPermit(lp.addr, assets, block.timestamp, v, r, s);
+        vm.prank(lp.addr);
+        uint256 shares = ISyrupRouter(router).depositWithPermit(assets, block.timestamp, v, r, s, bytes32(0));
 
         // Check the asset and share balances.
         assertEq(IERC20(usdc).balanceOf(lp.addr), 0);
