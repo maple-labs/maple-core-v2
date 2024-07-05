@@ -11,7 +11,7 @@ import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
 import { MapleAddressRegistryETH } from "../../../modules/address-registry/contracts/MapleAddressRegistryETH.sol";
 import { Vm }                      from "../../../modules/forge-std/src/Vm.sol";
-import { SyrupRouter }             from "../../../modules/syrup-router/contracts/SyrupRouter.sol";
+import { SyrupRouter }             from "../../../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 contract SyrupRouterForkTests is ProtocolActions, MapleAddressRegistryETH {
 

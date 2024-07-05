@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { console2 as console, Script } from "../modules/forge-std/src/Script.sol";
 
-import { SyrupRouter } from "../modules/syrup-router/contracts/SyrupRouter.sol";
+import { SyrupRouter } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 contract DeployRouter is Script {
 

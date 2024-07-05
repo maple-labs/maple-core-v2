@@ -37,7 +37,7 @@ git submodule update --init --recursive modules/pool-permission-manager
 echo "$SSH_KEY_WM_QUEUE" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/withdrawal-manager-queue
 
-echo "$SSH_KEY_SYRUP_ROUTER" > $HOME/.ssh/id_rsa
-git submodule update --init --recursive modules/syrup-router
+echo "$SSH_KEY_SYRUP_UTILS" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/syrup-utils
 
 git submodule update --init --recursive

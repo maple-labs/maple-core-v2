@@ -46,6 +46,6 @@
 [submodule "modules/withdrawal-manager-queue"]
 	path = modules/withdrawal-manager-queue
 	url = git@github.com:maple-labs/withdrawal-manager-queue-private.git
-[submodule "modules/syrup-router"]
-	path = modules/syrup-router
-	url = git@github.com:maple-labs/syrup-router-private.git
+[submodule "modules/syrup-utils"]
+	path = modules/syrup-utils
+	url = git@github.com:maple-labs/syrup-utils-private.git

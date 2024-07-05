@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import { Vm } from "../../../modules/forge-std/src/Vm.sol";
 
-import { SyrupRouter } from "../../../modules/syrup-router/contracts/SyrupRouter.sol";
+import { SyrupRouter } from "../../../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 import { TestBase } from "../../TestBase.sol";
 

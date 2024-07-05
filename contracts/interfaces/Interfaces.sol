@@ -29,7 +29,7 @@ import { IMapleProxyFactory }         from "../../modules/pool/modules/maple-pro
 import { IMaplePoolPermissionManager as IMPPM }
     from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManager.sol";
 
-import { ISyrupRouter as ISR } from "../../modules/syrup-router/contracts/interfaces/ISyrupRouter.sol";
+import { ISyrupRouter as ISR } from "../../modules/syrup-utils/contracts/interfaces/ISyrupRouter.sol";
 
 import { IMapleWithdrawalManager as IMWMC }
     from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
