@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IFixedTermLoanManager } from "../../../../contracts/interfaces/Interfaces.sol";
+import { IFixedTermLoan, IFixedTermLoanManager } from "../../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../../../TestBase.sol";
 
@@ -370,6 +370,9 @@ contract WithdrawScenarios is TestBase {
             rates:       [uint256(0.055e6), uint256(0), uint256(0), uint256(0)],
             loanManager: address(loanManager)
         });
+
+        vm.prank(borrower);
+        IFixedTermLoan(loan).acceptLoanTerms();
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");

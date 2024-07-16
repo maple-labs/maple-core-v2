@@ -119,6 +119,9 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             loanManager: address(loanManager)
         });
 
+        vm.prank(IFixedTermLoan(loan).borrower());
+        IFixedTermLoan(loan).acceptLoanTerms();
+
         // Lock the liquidity
         vm.prank(lp);
         pool.requestRedeem(500_000e6 + 1, lp);
@@ -138,8 +141,17 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         loanManager.fund(address(loan));
     }
 
+    function test_func_failIfTermsNotAccepted() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:FL:TERMS_NOT_ACCEPTED");
+        loanManager.fund(address(loan1));
+    }
+
     function test_fund_failIfLoanActive() external {
         deposit(lp, 1_500_000e6);  // Deposit again
+
+        vm.prank(IFixedTermLoan(loan1).borrower());
+        IFixedTermLoan(loan1).acceptLoanTerms();
 
         vm.prank(poolDelegate);
         loanManager.fund(address(loan1));
@@ -495,6 +507,9 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     function test_fund_loanNotActive() external {
         deposit(address(pool), lp, 2 * principal);
 
+        vm.prank(borrower);
+        loan.acceptLoanTerms();
+
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
 
@@ -593,6 +608,9 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     function test_fund_loanActive() external {
         deposit(address(pool), lp, 2 * principal);
 
+        vm.prank(borrower);
+        loan.acceptLoanTerms();
+
         vm.prank(poolDelegate);
         loanManager.fund(address(loan));
 
@@ -603,6 +621,9 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
     function test_fund_loanTransferFailure() external {
         deposit(address(pool), lp, principal);
+
+        vm.prank(borrower);
+        loan.acceptLoanTerms();
 
         fundsAsset.__failWhenCalledBy(address(loan));
 
@@ -617,6 +638,9 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         uint256 issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
         deposit(address(pool), lp, principal);
+
+        vm.prank(borrower);
+        loan.acceptLoanTerms();
 
         assertOpenTermLoanManager({
             loanManager:       address(loanManager),

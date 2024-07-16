@@ -165,6 +165,8 @@ interface ILoanLike is IProxiedLike {
 
     function acceptLender() external;
 
+    function acceptLoanTerms() external;
+
     function acceptNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
         external returns (bytes32 refinanceCommitment_);
 

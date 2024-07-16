@@ -165,6 +165,7 @@ contract FixedTermLoanHandler is HandlerBase {
         vm.startPrank(borrower_);
         collateralAsset.mint(borrower_, amounts_[0]);
         collateralAsset.approve(loan_, amounts_[0]);
+        IFixedTermLoan(loan_).acceptLoanTerms();
         IFixedTermLoan(loan_).postCollateral(amounts_[0]);
         vm.stopPrank();
 

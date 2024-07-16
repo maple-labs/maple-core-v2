@@ -652,6 +652,11 @@ contract ProtocolActions is Test {
     }
 
     function fundLoan(address loan_) internal {
+        address borrower = ILoanLike(loan_).borrower();
+
+        vm.prank(borrower);
+        ILoanLike(loan_).acceptLoanTerms();
+
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 
         address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();

@@ -86,6 +86,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: "nightly-0dceb536da7129c8e58b2c30c7059e247467838f"
       - name: Install Node
         uses: actions/setup-node@v4
       - name: Update submodules

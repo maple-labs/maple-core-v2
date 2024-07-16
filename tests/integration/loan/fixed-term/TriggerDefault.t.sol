@@ -102,6 +102,9 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
             [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
             [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
         ));
+
+        vm.prank(borrower);
+        loan.acceptLoanTerms();
     }
 
 }
