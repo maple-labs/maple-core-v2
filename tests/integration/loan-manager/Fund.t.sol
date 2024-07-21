@@ -141,7 +141,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
         loanManager.fund(address(loan));
     }
 
-    function test_func_failIfTermsNotAccepted() external {
+    function test_fund_failIfTermsNotAccepted() external {
         vm.prank(poolDelegate);
         vm.expectRevert("ML:FL:TERMS_NOT_ACCEPTED");
         loanManager.fund(address(loan1));
@@ -603,6 +603,14 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     function test_fund_notLender() external {
         vm.expectRevert("ML:NOT_LENDER");
         loan.fund();
+    }
+
+    function test_fund_failIfTermsNotAccepted() external {
+        deposit(address(pool), lp, principal);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("ML:F:TERMS_NOT_ACCEPTED");
+        loanManager.fund(address(loan));
     }
 
     function test_fund_loanActive() external {
