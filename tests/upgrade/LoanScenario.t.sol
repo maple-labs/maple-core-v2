@@ -21,6 +21,10 @@ contract LoanScenarioTests is ProtocolUpgradeBase {
 
         _setUpAddresses();
 
+        _activatePoolManager(_poolManager);
+
+        deposit(_pool, makeAddr("lp"), 90_000_000e6);
+
         // Perform the upgrade
         _upgradeAndAssert();
 
@@ -28,7 +32,7 @@ contract LoanScenarioTests is ProtocolUpgradeBase {
         FixedTermLoan ftLoan = FixedTermLoan(createSomeFixedTermLoan());
 
         address borrower_ = ftLoan.borrower();
-        uint256 amount_   = getSomeValue(10_000e6, 1_000_000e6);
+        uint256 amount_   = getSomeValue(10_000e6, 100_000e6);
 
         erc20_mint(_fundsAsset, borrower_, amount_);
         erc20_approve(_fundsAsset, borrower_, address(ftLoan), amount_);
@@ -66,6 +70,10 @@ contract LoanScenarioTests is ProtocolUpgradeBase {
 
         _setUpAddresses();
 
+        _activatePoolManager(_poolManager);
+
+        deposit(_pool, makeAddr("lp"), 90_000_000e6);
+
         // Perform the upgrade
         _upgradeAndAssert();
 
@@ -73,7 +81,7 @@ contract LoanScenarioTests is ProtocolUpgradeBase {
         OpenTermLoan otLoan = OpenTermLoan(createSomeOpenTermLoan());
 
         address borrower_ = otLoan.borrower();
-        uint256 amount_   = getSomeValue(10_000e6, 1_000_000e6);
+        uint256 amount_   = getSomeValue(10_000e6, 100_000e6);
 
         erc20_mint(_fundsAsset, borrower_, amount_);
         erc20_approve(_fundsAsset, borrower_, address(otLoan), amount_);

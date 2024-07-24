@@ -654,8 +654,9 @@ contract ProtocolActions is Test {
     function fundLoan(address loan_) internal {
         address borrower = ILoanLike(loan_).borrower();
 
+        // Fund loans can be called on both old and new loans, therefore this can fail.
         vm.prank(borrower);
-        ILoanLike(loan_).acceptLoanTerms();
+        try ILoanLike(loan_).acceptLoanTerms() { } catch { }
 
         ILoanManagerLike loanManager_ = ILoanManagerLike(ILoanLike(loan_).lender());
 

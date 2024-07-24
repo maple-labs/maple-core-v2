@@ -24,8 +24,7 @@ contract LoanLifecycleTest is ProtocolUpgradeBase {
 
         _setUpAddresses();
 
-        activatePoolManager(_poolManager);
-        setLiquidityCap(_poolManager, 100_000_000e6);
+        _activatePoolManager(_poolManager);
 
         deposit(_pool, makeAddr("lp"), 90_000_000e6);
 
@@ -35,6 +34,41 @@ contract LoanLifecycleTest is ProtocolUpgradeBase {
         fuzzedSetup(10,10,10, seed_);
 
         // Assert the invariants
+        _checkInvariants();
+
+        payOffAllLoans();
+    }
+
+    function testForkFuzz_lifecycle_newAndOldLoans(uint256 seed_) external {
+        seed = seed_;
+
+        _setUpAddresses();
+
+        _activatePoolManager(_poolManager);
+
+        deposit(_pool, makeAddr("lp"), 90_000_000e6);
+
+        // Create 3 loans of each type
+        for (uint256 i = 0; i < 3; i++) {
+            vm.warp(block.timestamp + 1 days);
+            createAndFundLoan(createSomeOpenTermLoan);
+            vm.warp(block.timestamp + 1 days);
+            createAndFundLoan(createSomeFixedTermLoan);
+        }
+        vm.warp(block.timestamp + 1 days);
+
+        // Perform the upgrade
+        _upgradeAndAssert();
+
+        // Create remaining loans
+        fuzzedSetup(7,7,10, seed);
+
+        _checkInvariants();
+
+        payOffAllLoans();
+    }
+
+    function _checkInvariants() internal {
         fixedTermLoanHC = new FixedTermLoanHealthChecker();
         openTermLoanHC  = new OpenTermLoanHealthChecker();
 
@@ -52,8 +86,6 @@ contract LoanLifecycleTest is ProtocolUpgradeBase {
         assertFixedTermLoanHealthChecker(FTLInvariants);
         assertOpenTermLoanHealthChecker(OTLInvariants);
         assertProtocolHealthChecker(protocolInvariants);
-
-        payOffAllLoans();
     }
 
 }

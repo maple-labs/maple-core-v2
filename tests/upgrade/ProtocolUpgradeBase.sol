@@ -39,6 +39,11 @@ contract ProtocolUpgradeBase is AddressRegistry, FuzzedUtil {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 19920370);
     }
 
+    function _activatePoolManager(address poolManager_) internal {
+        activatePoolManager(poolManager_);
+        setLiquidityCap(poolManager_, 100_000_000e6);
+    }
+
     function _upgradeAndAssert() internal {
         fixedTermLoanV600Implementation = address(new FixedTermLoan());
         openTermLoanV200Implementation  = address(new OpenTermLoan());
