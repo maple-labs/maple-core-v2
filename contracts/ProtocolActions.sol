@@ -424,7 +424,7 @@ contract ProtocolActions is Test {
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
+        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) < 3) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 

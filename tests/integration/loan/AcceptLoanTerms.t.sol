@@ -6,7 +6,7 @@ import { IFixedTermLoan, IOpenTermLoan } from "../../../contracts/interfaces/Int
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract AcceptLoanTermsTestBase is TestBaseWithAssertions {
-    
+
     uint32 constant gracePeriod     = 5 days;
     uint32 constant noticePeriod    = 100_000 seconds;
     uint32 constant paymentInterval = 1_000_000 seconds;
@@ -51,7 +51,7 @@ contract AcceptLoanTermsOTLTests is AcceptLoanTermsTestBase {
     function test_acceptLoanTerms_OTL_failIfPaused() external {
         vm.prank(governor);
         globals.setProtocolPause(true);
-        
+
         vm.expectRevert("ML:PAUSED");
         vm.prank(borrower);
         IOpenTermLoan(loan).acceptLoanTerms();
@@ -105,7 +105,7 @@ contract AcceptLoanTermsFTLTests is AcceptLoanTermsTestBase {
     function test_acceptLoanTerms_FTL_failIfPaused() external {
         vm.prank(governor);
         globals.setProtocolPause(true);
-        
+
         vm.expectRevert("L:PAUSED");
         vm.prank(borrower);
         IFixedTermLoan(loan).acceptLoanTerms();
