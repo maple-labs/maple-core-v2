@@ -4,25 +4,16 @@
 export FOUNDRY_PROFILE=production
 echo Using profile: $FOUNDRY_PROFILE
 
-# # For Testing
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/DeployQ4Update.s.sol:DeployQ4UpdateETH
+# For Testing
+forge script \
+    --rpc-url $ETH_RPC_URL \
+    -vvvv \
+    --unlocked \
+    --slow \
+    --sender $ETH_SENDER \
+    scripts/DeployQ3Loans.s.sol:DeployQ32024Loans
 
 # For Production
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 6 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/DeployQ4Update.s.sol:DeployQ4UpdateETH
 
 # For Healthchecker
 # forge script \
@@ -36,19 +27,7 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --broadcast \
 #     scripts/DeployHealthChecker.s.sol:DeployHealthChecker
 
-# For SyrupRouter
-forge script \
-    --rpc-url $ETH_RPC_URL \
-    -vvvv \
-    --mnemonic-indexes 2 \
-    --ledger \
-    --slow \
-    --sender $ETH_SENDER \
-    --gas-estimate-multiplier 150 \
-    --broadcast \
-    scripts/DeployRouter.s.sol:DeployRouter
-
-# For SyrupRateProvider
+# For Q3 Loans
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
@@ -58,4 +37,4 @@ forge script \
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
-#     scripts/DeployBalancerRateProvider.s.sol:DeployRateProvider
+#     scripts/DeployQ3Loans.s.sol:DeployQ32024Loans
