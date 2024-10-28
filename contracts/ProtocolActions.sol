@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import {
     IERC20,
@@ -19,22 +19,17 @@ import {
     IPoolDeployer,
     IPoolManager,
     IPoolPermissionManager,
+    IPoolPermissionManagerInitializer,
     IProxiedLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
 
-import {
-    console2 as console,
-    ERC20Helper,
-    NonTransparentProxy,
-    PoolPermissionManager,
-    PoolPermissionManagerInitializer,
-    Test
-} from "../contracts/Contracts.sol";
+
+import { Runner, ERC20Helper, console2 as console } from "./Runner.sol";
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
-contract ProtocolActions is Test {
+contract ProtocolActions is Runner {
 
     address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
     address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
@@ -424,7 +419,7 @@ contract ProtocolActions is Test {
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) < 3) allowLender(poolManager_, account_);
+        if (IPoolPermissionManager(ppm_).permissionLevels(poolManager_) < 3) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 
@@ -449,7 +444,7 @@ contract ProtocolActions is Test {
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
+        if (IPoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         erc20_mint(asset_, account_, assets);
 
@@ -461,7 +456,7 @@ contract ProtocolActions is Test {
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
+        if (IPoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         address asset_ = IPool(pool_).asset();
 
@@ -488,7 +483,7 @@ contract ProtocolActions is Test {
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
 
-        if (PoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
+        if (IPoolPermissionManager(ppm_).permissionLevels(poolManager_) == 0) allowLender(poolManager_, account_);
 
         assets_ = IPool(pool_).previewMint(shares_);
 
@@ -554,7 +549,7 @@ contract ProtocolActions is Test {
         allows[0] = true;
 
         vm.startPrank(poolDelegate_);
-        PoolPermissionManager(ppm_).setLenderAllowlist(poolManager_, lenders, allows);
+        IPoolPermissionManager(ppm_).setLenderAllowlist(poolManager_, lenders, allows);
         vm.stopPrank();
     }
 
@@ -685,7 +680,7 @@ contract ProtocolActions is Test {
         address ppm_          = IPoolManager(poolManager_).poolPermissionManager();
 
         vm.startPrank(poolDelegate_);
-        PoolPermissionManager(ppm_).setPoolPermissionLevel(poolManager_, 3);
+        IPoolPermissionManager(ppm_).setPoolPermissionLevel(poolManager_, 3);
         vm.stopPrank();
     }
 
@@ -936,15 +931,15 @@ contract ProtocolActions is Test {
     /**************************************************************************************************************************************/
 
     function _deployPoolPermissionManager(address globals_) internal returns (address ppm_) {
-        address poolPermissionManagerImplementation = address(new PoolPermissionManager());
-        address poolPermissionManagerInitializer    = address(new PoolPermissionManagerInitializer());
+        address poolPermissionManagerImplementation = deploy("PoolPermissionManager");
+        address poolPermissionManagerInitializer    = deploy("PoolPermissionManagerInitializer");
 
         address governor = IGlobals(globals_).governor();
 
-        ppm_ = address(new NonTransparentProxy(governor, poolPermissionManagerInitializer));
+        ppm_ = deploy("NonTransparentProxy", abi.encode(governor, poolPermissionManagerInitializer));
 
         vm.prank(governor);
-        PoolPermissionManagerInitializer(address(ppm_)).initialize(poolPermissionManagerImplementation, address(globals_));
+        IPoolPermissionManagerInitializer(address(ppm_)).initialize(poolPermissionManagerImplementation, address(globals_));
 
         vm.prank(governor);
         IGlobals(globals_).setValidInstanceOf("POOL_PERMISSION_MANAGER", address(ppm_), true);

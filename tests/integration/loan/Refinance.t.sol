@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import { IFixedTermLoan, IFixedTermLoanManager, IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { EmptyContract } from "../../../contracts/Contracts.sol";
+import { EmptyContract } from "../../../contracts/Runner.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 

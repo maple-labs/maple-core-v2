@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-import { FixedTermLoanFactory } from "../../../../contracts/Contracts.sol";
+import { IMapleProxyFactory } from "../../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
 
@@ -35,7 +35,7 @@ contract DeployFixedTermLoanTests is TestBaseWithAssertions {
 
         vm.prank(borrower);
         vm.expectRevert("MPF:CI:FAILED");
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManager, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -45,7 +45,7 @@ contract DeployFixedTermLoanTests is TestBaseWithAssertions {
 
         // Success
         vm.prank(borrower);
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManager, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-import { AddressRegistry, Test } from "../../contracts/Contracts.sol";
+import { MapleAddressRegistryETH as AddressRegistry, Test } from "../../contracts/Runner.sol";
 
 import { FixedTermLoanHealthChecker } from "./FixedTermLoanHealthChecker.sol";
 import { LPHealthChecker }            from "./LPHealthChecker.sol";

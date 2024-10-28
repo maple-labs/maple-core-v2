@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import { ILoanManagerLike, IOpenTermLoan, IOpenTermLoanManager } from "../../../../contracts/interfaces/Interfaces.sol";
-
-import { OpenTermLoan } from "../../../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
 
@@ -131,7 +129,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_invalidLoanManager() external {
-        address invalidLoan = address(new OpenTermLoan());
+        address invalidLoan = address(deployFromFile("Contracts","OpenTermLoan"));
 
         vm.prank(address(poolDelegate));
         vm.expectRevert("PM:GLM:INVALID_LOAN_MANAGER");

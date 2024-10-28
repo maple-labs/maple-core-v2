@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console, PoolManager } from "../../contracts/Contracts.sol";
+import { console2 as console } from "../../contracts/Runner.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -36,7 +36,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         assertEq(poolManager.totalAssets(), 4_000_000e6);
         assertEq(pool.balanceOf(lp1),       4_000_000e6);
 
-        address loanManager = PoolManager(poolManager).loanManagerList(0);
+        address loanManager = IPoolManager(poolManager).loanManagerList(0);
 
         // This loan will be funded and then never interacted with again.
         address loan1 = fundAndDrawdownLoan({
@@ -1397,7 +1397,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         deposit(lp1, 20_000_000_000e18);
 
-        address loanManager = PoolManager(poolManager).loanManagerList(1);
+        address loanManager = IPoolManager(poolManager).loanManagerList(1);
 
         // Create a loan
         IOpenTermLoan loan = IOpenTermLoan(createOpenTermLoan({
@@ -1441,7 +1441,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
         lateFeeRate_             = bound(lateFeeRate_,             0.1e6, 0.2e6);
         lateInterestPremiumRate_ = bound(lateInterestPremiumRate_, 0.1e6, 0.2e6);
 
-        address loanManager = PoolManager(poolManager).loanManagerList(1);
+        address loanManager = IPoolManager(poolManager).loanManagerList(1);
 
         // Have 50 LPs deposit
         for (uint256 i = 0; i < 50; i++) {
@@ -1529,7 +1529,7 @@ contract PoolScenarioTests is TestBaseWithAssertions {
 
         deposit(lp1, 4_000_000e6);
 
-        address loanManager = PoolManager(poolManager).loanManagerList(1);
+        address loanManager = IPoolManager(poolManager).loanManagerList(1);
 
         // Create a loan
         IOpenTermLoan loan1 = IOpenTermLoan(createOpenTermLoan({

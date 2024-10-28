@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import {
     IInvariantTest,
+    IMockERC20,
     IPool,
     IPoolManager,
     IWithdrawalManagerQueue as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";
+import { console2 as console } from "../../../contracts/Runner.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -20,7 +21,7 @@ contract QueueWithdrawalHandler is HandlerBase {
 
     address[] public lps;
 
-    MockERC20          asset;
+    IMockERC20         asset;
     IPool              pool;
     IPoolManager       pm;
     IWithdrawalManager wm;
@@ -33,7 +34,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         testContract = IInvariantTest(msg.sender);
 
         pool  = IPool(pool_);
-        asset = MockERC20(pool.asset());
+        asset = IMockERC20(pool.asset());
 
         pm = IPoolManager(pool.manager());
         wm = IWithdrawalManager(pm.withdrawalManager());

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import {
     IFeeManager,
@@ -10,13 +10,14 @@ import {
     ILiquidator,
     ILoanLike,
     IMapleProxyFactory,
+    IMockERC20,
     IPool,
     IPoolManager,
     IProxyFactoryLike,
     IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console, MockERC20 } from "../../../contracts/Contracts.sol";
+import { console2 as console } from "../../../contracts/Runner.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -54,8 +55,8 @@ contract FixedTermLoanHandler is HandlerBase {
     mapping (address => bool) public loanImpaired;
 
     // Contract instances
-    MockERC20 collateralAsset;
-    MockERC20 fundsAsset;
+    IMockERC20 collateralAsset;
+    IMockERC20 fundsAsset;
 
     IFixedTermLoanManager loanManager;   // Liquidation interfaces prevent this from being ILoanManagerLike. Consider an address.
     IPool                 pool;
@@ -101,9 +102,9 @@ contract FixedTermLoanHandler is HandlerBase {
         governor    = governor_;
         refinancer  = refinancer_;
 
-        collateralAsset   = MockERC20(collateralAsset_);
+        collateralAsset   = IMockERC20(collateralAsset_);
         poolManager       = IPoolManager(poolManager_);
-        fundsAsset        = MockERC20(poolManager.asset());
+        fundsAsset        = IMockERC20(poolManager.asset());
         liquidatorFactory = liquidatorFactory_;
         loanManager       = IFixedTermLoanManager(poolManager.loanManagerList(0));
         pool              = IPool(poolManager.pool());

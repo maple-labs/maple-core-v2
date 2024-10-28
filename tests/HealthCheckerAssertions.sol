@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import { IERC20 } from "../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console, Test } from "../contracts/Contracts.sol";
+import { console2 as console, Runner } from "../contracts/Runner.sol";
 
 import { ProtocolHealthChecker } from "./health-checkers/ProtocolHealthChecker.sol";
 
-contract HealthCheckerAssertions is Test {
+contract HealthCheckerAssertions is Runner {
 
     function assertProtocolInvariants(address poolManager_, address healthChecker_) internal {
         ProtocolHealthChecker.Invariants memory results;

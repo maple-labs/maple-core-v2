@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import { console2, stdJson, StdInvariant, stdMath, StdStyle, Test as T } from "../modules/forge-std/src/Test.sol";
 
@@ -192,21 +192,6 @@ contract PoolManagerWMMigrator is MPMWMM { }
 contract PoolPermissionManager is MPPM { }
 
 contract PoolPermissionManagerInitializer is MPPMI { }
-
-// Test does not import stdError which contain the error constants.
-contract Test is T {
-
-    bytes public constant assertionError      = abi.encodeWithSignature("Panic(uint256)", 0x01);
-    bytes public constant arithmeticError     = abi.encodeWithSignature("Panic(uint256)", 0x11);
-    bytes public constant divisionError       = abi.encodeWithSignature("Panic(uint256)", 0x12);
-    bytes public constant enumConversionError = abi.encodeWithSignature("Panic(uint256)", 0x21);
-    bytes public constant encodeStorageError  = abi.encodeWithSignature("Panic(uint256)", 0x22);
-    bytes public constant popError            = abi.encodeWithSignature("Panic(uint256)", 0x31);
-    bytes public constant indexOOBError       = abi.encodeWithSignature("Panic(uint256)", 0x32);
-    bytes public constant memOverflowError    = abi.encodeWithSignature("Panic(uint256)", 0x41);
-    bytes public constant zeroVarError        = abi.encodeWithSignature("Panic(uint256)", 0x51);
-
-}
 
 contract WithdrawalManagerCyclical is MWMC { }
 

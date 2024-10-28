@@ -1,26 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import {
     IFixedTermLoanManager,
+    IMapleProxyFactory,
     INonTransparentProxied,
     INonTransparentProxy,
-    IProxiedLike,
-    IProxyFactoryLike
+    IProxiedLike
 } from "../../../contracts/interfaces/Interfaces.sol";
-
-import {
-    FixedTermLoanManager,
-    Globals,
-    PoolManager,
-    WithdrawalManagerCyclical
-} from "../../../contracts/Contracts.sol";
 
 import { TestBase } from "../../TestBase.sol";
 
 contract GlobalsUpgradeTests is TestBase {
 
-    address newImplementation = address(new Globals());
+    address newImplementation = deployFromFile("Contracts","Globals");
 
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
@@ -47,7 +40,7 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract LoanManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new FixedTermLoanManager());
+    address newImplementation = deployFromFile("Contracts","FixedTermLoanManager");
 
     address loanManager;
 
@@ -60,8 +53,8 @@ contract LoanManagerUpgradeTests is TestBase {
 
         vm.startPrank(governor);
 
-        IProxyFactoryLike(fixedTermLoanManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IProxyFactoryLike(fixedTermLoanManagerFactory).enableUpgradePath(1, 2, address(0));
+        IMapleProxyFactory(fixedTermLoanManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IMapleProxyFactory(fixedTermLoanManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -230,7 +223,7 @@ contract LiquidationUpgradeTests is TestBase {
 
     address borrower          = makeAddr("borrower");
     address lp                = makeAddr("lp");
-    address newImplementation = address(new FixedTermLoanManager());
+    address newImplementation = deployFromFile("Contracts","Liquidator");
 
     address liquidator;
     address loan;
@@ -242,8 +235,8 @@ contract LiquidationUpgradeTests is TestBase {
 
         vm.startPrank(governor);
 
-        IProxyFactoryLike(liquidatorFactory).registerImplementation(2, newImplementation, address(0));
-        IProxyFactoryLike(liquidatorFactory).enableUpgradePath(1, 2, address(0));
+        IMapleProxyFactory(liquidatorFactory).registerImplementation(2, newImplementation, address(0));
+        IMapleProxyFactory(liquidatorFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
 
@@ -441,7 +434,7 @@ contract LiquidationUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new PoolManager());
+    address newImplementation = deployFromFile("Contracts","PoolManager");
 
     bytes upgradeCallData = new bytes(0);
 
@@ -450,8 +443,8 @@ contract PoolManagerUpgradeTests is TestBase {
 
         vm.startPrank(governor);
 
-        IProxyFactoryLike(poolManagerFactory).registerImplementation(2, newImplementation, address(0));
-        IProxyFactoryLike(poolManagerFactory).enableUpgradePath(1, 2, address(0));
+        IMapleProxyFactory(poolManagerFactory).registerImplementation(2, newImplementation, address(0));
+        IMapleProxyFactory(poolManagerFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -617,7 +610,7 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address newImplementation = address(new WithdrawalManagerCyclical());
+    address newImplementation = deployFromFile("Contracts","WithdrawalManagerCyclical");
 
     bytes upgradeCallData = new bytes(0);
 
@@ -626,8 +619,8 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
         vm.startPrank(governor);
 
-        IProxyFactoryLike(cyclicalWMFactory).registerImplementation(2, newImplementation, address(0));
-        IProxyFactoryLike(cyclicalWMFactory).enableUpgradePath(1, 2, address(0));
+        IMapleProxyFactory(cyclicalWMFactory).registerImplementation(2, newImplementation, address(0));
+        IMapleProxyFactory(cyclicalWMFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }

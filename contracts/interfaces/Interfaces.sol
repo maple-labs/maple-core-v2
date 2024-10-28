@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
@@ -16,18 +16,23 @@ import { IMapleRefinancer as IMFTLR }    from "../../modules/fixed-term-loan/con
 import { IMapleLoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
 import { IMapleLoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/IMapleLoanManagerStructs.sol";
 
-import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleLoan as IMOTL }        from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
+import { IMapleRefinancer as IMOTLR } from "../../modules/open-term-loan/contracts/interfaces/IMapleRefinancer.sol";
 
 import { IMapleLoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
 import { IMapleLoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
-import { IMaplePool as IMP }          from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
-import { IMaplePoolDeployer as IMPD } from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
-import { IMaplePoolManager as IMPM }  from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
-import { IMapleProxyFactory }         from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IMaplePool as IMP }                from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
+import { IMaplePoolDelegateCover as IMPDC } from "../../modules/pool/contracts/interfaces/IMaplePoolDelegateCover.sol";
+import { IMaplePoolDeployer as IMPD }       from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
+import { IMaplePoolManager as IMPM }        from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
+import { IMapleProxyFactory }               from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
 import { IMaplePoolPermissionManager as IMPPM }
     from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManager.sol";
+
+import { IMaplePoolPermissionManagerInitializer as IMPPMI }
+    from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManagerInitializer.sol";
 
 import { ISyrupRouter as ISR } from "../../modules/syrup-utils/contracts/interfaces/ISyrupRouter.sol";
 
@@ -57,17 +62,23 @@ interface ILiquidator is IML { }
 
 interface IOpenTermLoan is IMOTL { }
 
+interface IOpenTermRefinancer is IMOTLR { }
+
 interface IOpenTermLoanManager is IMOTLM { }
 
 interface IOpenTermLoanManagerStructs is IMOTLMS { }
 
 interface IPool is IMP { }
 
+interface IPoolDelegateCover is IMPDC { }
+
 interface IPoolDeployer is IMPD { }
 
 interface IPoolManager is IMPM { }
 
 interface IPoolPermissionManager is IMPPM { }
+
+interface IPoolPermissionManagerInitializer is IMPPMI { }
 
 interface ISyrupRouter is ISR { }
 
@@ -246,6 +257,12 @@ interface IPolicyManagerLike {
 
 }
 
+interface IFixedTermLoanFactory is IMapleProxyFactory {
+
+    function isLoan(address proxy_) external view returns (bool isLoan_);
+
+ }
+
 // NOTE: Isn't it better to import the interface from the module instead of re-declaring it here?
 interface IProxyFactoryLike {
 
@@ -373,5 +390,8 @@ interface IMockERC20 is IERC20 {
     function burn(address owner_, uint256 amount_) external;
 
     function mint(address recipient_, uint256 amount_) external;
+
+    // NOTE: Implemented by `ConfigurableMockERC20`, might not be available for all instances.
+    function __failWhenCalledBy(address caller_) external;
 
 }

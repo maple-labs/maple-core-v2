@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-import { OpenTermLoan, OpenTermLoanManager, Pool, PoolManager } from "../../contracts/Contracts.sol";
+
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -46,7 +47,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
     uint256 expectedTotalAccruedInterest;
     uint256 expectedTotalPaidInterest;
 
-    OpenTermLoanManager loanManager;
+    IOpenTermLoanManager loanManager;
 
     function setUp() public override {
         _createAccounts();
@@ -75,7 +76,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         _createPool(start, 1 weeks, 2 days);
 
-        loanManager = OpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
         /****************************************/
         /*** Step 2: Governor and PD set fees ***/
@@ -670,7 +671,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan2IssuanceRate
         });
 
-        callLoan(loan2, OpenTermLoan(loan2).principal());
+        callLoan(loan2, IOpenTermLoan(loan2).principal());
 
         assertOpenTermLoanPaymentState({
             loan:               loan2,
@@ -900,7 +901,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             issuanceRate:    loan3IssuanceRate
         });
 
-        callLoan(loan3, OpenTermLoan(loan3).principal());
+        callLoan(loan3, IOpenTermLoan(loan3).principal());
 
         assertOpenTermLoanPaymentState({
             loan:               loan3,

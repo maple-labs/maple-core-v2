@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-import { FixedTermLoanFactory, OpenTermLoanFactory, FixedTermLoan, OpenTermLoan } from "../../../contracts/Contracts.sol";
+import { IFixedTermLoan, IMapleProxyFactory, IOpenTermLoan } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../../TestBase.sol";
 
@@ -56,7 +56,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(borrower);
         vm.expectRevert("MLF:CI:CANNOT_DEPLOY");
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -65,7 +65,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         globals.setValidBorrower(borrower, true);
 
         vm.prank(borrower);
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -77,7 +77,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(borrower);
         vm.expectRevert("MLF:CI:CANNOT_DEPLOY");
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -86,7 +86,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         globals.setValidBorrower(borrower, true);
 
         vm.prank(borrower);
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -98,7 +98,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(borrower);
         vm.expectRevert("MLF:CI:CANNOT_DEPLOY");
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -107,7 +107,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         globals.setValidInstanceOf("LOAN_FACTORY", fixedTermLoanFactory, true);
 
         vm.prank(borrower);
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -119,7 +119,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(borrower);
         vm.expectRevert("MLF:CI:CANNOT_DEPLOY");
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -128,7 +128,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         globals.setValidInstanceOf("LOAN_FACTORY", fixedTermLoanFactory, true);
 
         vm.prank(borrower);
-        FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
@@ -141,14 +141,14 @@ contract DeployLoanByBorrowerTests is TestBase {
         vm.stopPrank();
 
         vm.prank(borrower);
-        address instance_ = FixedTermLoanFactory(fixedTermLoanFactory).createInstance({
+        address instance_ = IMapleProxyFactory(fixedTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerFTL, address(fixedTermFeeManager), assets, terms, amounts, rates, fees),
             salt_:      "SALT"
         });
 
-        assertTrue(FixedTermLoanFactory(fixedTermLoanFactory).isLoan(instance_));
+        assertTrue(IMapleProxyFactory(fixedTermLoanFactory).isInstance(instance_));
 
-        assertEq(FixedTermLoan(instance_).factory(), fixedTermLoanFactory);
+        assertEq(IFixedTermLoan(instance_).factory(), fixedTermLoanFactory);
     }
 
     function test_deployLoan_OTL_invalidBorrower() external {
@@ -157,7 +157,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(borrower);
         vm.expectRevert("LF:CI:CANNOT_DEPLOY");
-        OpenTermLoanFactory(openTermLoanFactory).createInstance({
+        IMapleProxyFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
             salt_:      "SALT"
         });
@@ -166,7 +166,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         globals.setValidBorrower(borrower, true);
 
         vm.prank(borrower);
-        OpenTermLoanFactory(openTermLoanFactory).createInstance({
+        IMapleProxyFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
             salt_:      "SALT"
         });
@@ -178,7 +178,7 @@ contract DeployLoanByBorrowerTests is TestBase {
 
         vm.prank(borrower);
         vm.expectRevert("LF:CI:CANNOT_DEPLOY");
-        OpenTermLoanFactory(openTermLoanFactory).createInstance({
+        IMapleProxyFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
             salt_:      "SALT"
         });
@@ -187,7 +187,7 @@ contract DeployLoanByBorrowerTests is TestBase {
         globals.setValidInstanceOf("LOAN_FACTORY", openTermLoanFactory, true);
 
         vm.prank(borrower);
-        OpenTermLoanFactory(openTermLoanFactory).createInstance({
+        IMapleProxyFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
             salt_:      "SALT"
         });
@@ -200,14 +200,14 @@ contract DeployLoanByBorrowerTests is TestBase {
         vm.stopPrank();
 
         vm.prank(borrower);
-        address instance_ = OpenTermLoanFactory(openTermLoanFactory).createInstance({
+        address instance_ = IMapleProxyFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, loanManagerOTL, assets[1], amounts[1], terms, rates),
             salt_:      "SALT"
         });
 
-        assertTrue(OpenTermLoanFactory(openTermLoanFactory).isLoan(instance_));
+        assertTrue(IMapleProxyFactory(openTermLoanFactory).isInstance(instance_));
 
-        assertEq(OpenTermLoan(instance_).factory(), openTermLoanFactory);
+        assertEq(IOpenTermLoan(instance_).factory(), openTermLoanFactory);
     }
 
 }

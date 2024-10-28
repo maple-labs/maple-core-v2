@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-import { OpenTermLoan, OpenTermLoanManager, Pool } from "../../contracts/Contracts.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
@@ -51,10 +51,10 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
     uint256 delegateManagementFee;
     uint256 platformManagementFee;
 
-    OpenTermLoanManager otLoanManager;
+    IOpenTermLoanManager otLoanManager;
 
-    OpenTermLoan otLoan1;
-    OpenTermLoan otLoan2;
+    IOpenTermLoan otLoan1;
+    IOpenTermLoan otLoan2;
 
     function setUp() override public {
         super.setUp();
@@ -66,10 +66,10 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        otLoanManager = OpenTermLoanManager(poolManager.loanManagerList(1));
+        otLoanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
 
         // NOTE: No lateFeeRate and lateInterestPremiumRate is the same as the interestRate
-        otLoan1 = OpenTermLoan(createOpenTermLoan({
+        otLoan1 = IOpenTermLoan(createOpenTermLoan({
             borrower:  address(borrower1),
             lender:    address(otLoanManager),
             asset:     address(fundsAsset),
@@ -78,7 +78,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
             rates:     [uint64(delegateServiceFeeRate), uint64(interestRate1), uint64(0), uint64(lateInterestPremiumRate1)]
         }));
 
-        otLoan2 = OpenTermLoan(createOpenTermLoan({
+        otLoan2 = IOpenTermLoan(createOpenTermLoan({
             borrower:  address(borrower2),
             lender:    address(otLoanManager),
             asset:     address(fundsAsset),

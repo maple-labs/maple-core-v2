@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import {
     IMapleProxyFactory,
@@ -7,8 +7,6 @@ import {
     IFixedTermLoanManager,
     ILoanLike
 } from "../../../../contracts/interfaces/Interfaces.sol";
-
-import { PoolManagerWMMigrator, PoolManager, WithdrawalManagerQueue } from "../../../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
 

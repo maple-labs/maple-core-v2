@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
+
+import { console2 as console, StdInvariant } from "../../modules/forge-std/src/Test.sol";
 
 import {
     IFeeManager,
@@ -13,8 +15,6 @@ import {
     IPoolPermissionManager,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
-
-import { console2 as console, StdInvariant } from "../../contracts/Contracts.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 

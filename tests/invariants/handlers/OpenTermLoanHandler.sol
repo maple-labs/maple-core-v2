@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import {
     IGlobals,
@@ -13,7 +13,7 @@ import {
     IWithdrawalManagerCyclical as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console } from "../../../contracts/Contracts.sol";
+import { console2 as console } from "../../../contracts/Runner.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
