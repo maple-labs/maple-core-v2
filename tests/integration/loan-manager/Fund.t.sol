@@ -41,7 +41,7 @@ contract FixedTermLoanManagerFundTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6      // 150,000 * 0.08 = 12,000
         });
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         loan1 = IFixedTermLoan(createFixedTermLoan({
             borrower:    borrower1,
@@ -451,7 +451,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,
             borrower,
@@ -525,7 +525,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
     function test_fund_invalidLoanManagerFactory() external {
         vm.prank(governor);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY", openTermLoanManagerFactory, false);
+        globals.setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:INVALID_FACTORY");
@@ -542,7 +542,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         );
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:RF:NOT_LM");
+        vm.expectRevert("PM:RF:NOT_STRATEGY");
         fakeLoanManager.fund(address(loan));
     }
 

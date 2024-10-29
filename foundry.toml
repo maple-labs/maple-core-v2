@@ -2,7 +2,6 @@
 contracts       = 'contracts'             # The source directory
 test            = 'tests'                 # The test directory
 libs            = ['modules']             # A list of library directories
-solc_version    = '0.8.7'                 # Override for the solc version (setting this ignores `auto_detect_solc`)
 optimizer       = false                   # Enable or disable the solc optimizer
 verbosity       = 3                       # The verbosity of tests
 block_timestamp = 1_685_721_539           # Timestamp for tests (non-zero)

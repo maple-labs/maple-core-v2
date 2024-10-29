@@ -184,7 +184,7 @@ contract WithdrawScenarios is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         // Remove all fees to make interest calculations easier.
         setupFees({
@@ -547,7 +547,7 @@ contract WithdrawOnPermissionedPool is TestBase {
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         // Remove all fees to make interest calculations easier.
         setupFees({

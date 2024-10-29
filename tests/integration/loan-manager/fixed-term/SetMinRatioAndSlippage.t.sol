@@ -14,7 +14,7 @@ contract SetMinRatioTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
     }
 
     function test_setMinRatio_notAuthorized() external {
@@ -52,7 +52,7 @@ contract SetSlippageTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
     }
 
     function test_setAllowedSlippage_notAuthorized() external {

@@ -544,8 +544,8 @@ contract FuzzedUtil is ProtocolActions {
         _poolManager = IPool(pool).manager();
         _fundsAsset  = IPool(pool).asset();
 
-        address lm1 = IPoolManager(_poolManager).loanManagerList(0);
-        address lm2 = IPoolManager(_poolManager).loanManagerList(1);
+        address lm1 = IPoolManager(_poolManager).strategyList(0);
+        address lm2 = IPoolManager(_poolManager).strategyList(1);
 
         if (_isOpenTermLoanManager(lm1)) {
             _openTermLoanManager  = lm1;

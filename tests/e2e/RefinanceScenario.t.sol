@@ -66,7 +66,7 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        otLoanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        otLoanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         // NOTE: No lateFeeRate and lateInterestPremiumRate is the same as the interestRate
         otLoan1 = IOpenTermLoan(createOpenTermLoan({

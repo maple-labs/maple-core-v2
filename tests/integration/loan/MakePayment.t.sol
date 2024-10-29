@@ -33,7 +33,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
             termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
 
         vm.warp(start + 1_000_000);
@@ -68,7 +68,7 @@ contract MakePaymentFailureTests is TestBaseWithAssertions {
     }
 
     function test_makePayment_failIfNotLoan() external {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         vm.expectRevert("LM:DCF:NOT_LOAN");
         loanManager.claim(0, 10, start, start + 1_000_000);
@@ -107,7 +107,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
@@ -250,7 +250,7 @@ contract MakePaymentTestsSingleLoanInterestOnly is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
@@ -651,7 +651,7 @@ contract MakePaymentTestsSingleLoanAmortized is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
@@ -1116,7 +1116,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
@@ -1655,7 +1655,7 @@ contract MakePaymentTestsTwoLoans is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         loan1 = fundAndDrawdownLoan({
             borrower:    borrower1,
@@ -2420,7 +2420,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
         borrower2 = makeAddr("borrower2");
         lp        = makeAddr("lp");
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         deposit(lp, 3_500_000e6);
 
@@ -2891,7 +2891,7 @@ contract MakePaymentTestsPastDomainEnd is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         loan1 = fundAndDrawdownLoan({
             borrower:    borrower1,

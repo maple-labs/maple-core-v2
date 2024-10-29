@@ -13,7 +13,7 @@ import { TestBase } from "../../TestBase.sol";
 
 contract GlobalsUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts","Globals");
+    address newImplementation = deployFromFile("Contracts@7","Globals");
 
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
@@ -40,7 +40,7 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract LoanManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts","FixedTermLoanManager");
+    address newImplementation = deployFromFile("Contracts@7","FixedTermLoanManager");
 
     address loanManager;
 
@@ -49,7 +49,7 @@ contract LoanManagerUpgradeTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         vm.startPrank(governor);
 
@@ -223,7 +223,7 @@ contract LiquidationUpgradeTests is TestBase {
 
     address borrower          = makeAddr("borrower");
     address lp                = makeAddr("lp");
-    address newImplementation = deployFromFile("Contracts","Liquidator");
+    address newImplementation = deployFromFile("Contracts@7","Liquidator");
 
     address liquidator;
     address loan;
@@ -251,7 +251,7 @@ contract LiquidationUpgradeTests is TestBase {
             platformManagementFeeRate:  0.08e6     // 1,000,000 * 3.1536% * 8% * 1,000,000 / (365 * 86400) = 80
         });
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,
@@ -434,7 +434,7 @@ contract LiquidationUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts","PoolManager");
+    address newImplementation = deployFromFile("Contracts@25","PoolManager");
 
     bytes upgradeCallData = new bytes(0);
 
@@ -610,7 +610,7 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts","WithdrawalManagerCyclical");
+    address newImplementation = deployFromFile("Contracts@7","WithdrawalManagerCyclical");
 
     bytes upgradeCallData = new bytes(0);
 
@@ -790,7 +790,7 @@ contract UnscheduleCallTests is TestBase {
     bytes upgradeCallData = new bytes(0);
 
     function test_unscheduleCall_governor() external {
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 

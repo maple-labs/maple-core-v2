@@ -15,7 +15,7 @@ contract LoanManagerGetterTests is TestBase {
 
         deposit(makeAddr("depositor"), 1_500_000e6);
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         loan = fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),

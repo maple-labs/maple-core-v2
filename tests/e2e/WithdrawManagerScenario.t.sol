@@ -44,7 +44,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
         assertEq(pool.balanceOf(lp2), 1_000_000e6);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
@@ -248,7 +248,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
         assertEq(pool.balanceOf(lp2), 1_000_000e6);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
@@ -460,7 +460,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
         assertEq(pool.balanceOf(lp2), 1_000_000e6);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
@@ -688,7 +688,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2), 1_000_000e6);
         assertEq(pool.balanceOf(lp3), 1_000_000e6);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
@@ -1021,7 +1021,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp1), 1_000_000e6);
         assertEq(pool.balanceOf(lp2), 1_000_000e6);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         // Fund a new loan
         loan = fundAndDrawdownLoan({
@@ -1233,7 +1233,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
             assertEq(pool.balanceOf(lps[i]), 1_000_000e6);
         }
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         // Fund a new loan at 50% of pool liquidity
         loan = fundAndDrawdownLoan({
@@ -1547,7 +1547,7 @@ contract WithdrawalManagerScenarioTests is TestBaseWithAssertions {
         // Warp to fund new loan a day after initial redemption requests
         vm.warp(start + 1 days);
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         loan = fundAndDrawdownLoan({
             borrower:    borrower,

@@ -1023,7 +1023,7 @@ contract TotalAssetsTests is TestBase {
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 0);  // Funds moved out of pool
@@ -1038,7 +1038,7 @@ contract TotalAssetsTests is TestBase {
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool
@@ -1065,7 +1065,7 @@ contract TotalAssetsTests is TestBase {
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
 
         assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool

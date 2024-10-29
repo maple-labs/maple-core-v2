@@ -24,7 +24,7 @@ contract DeployFixedTermLoanTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
 
         assets = [address(collateralAsset), address(fundsAsset)];
     }

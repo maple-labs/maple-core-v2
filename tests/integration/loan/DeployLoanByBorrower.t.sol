@@ -22,8 +22,8 @@ contract DeployLoanByBorrowerTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManagerFTL = poolManager.loanManagerList(0);
-        loanManagerOTL = poolManager.loanManagerList(1);
+        loanManagerFTL = poolManager.strategyList(0);
+        loanManagerOTL = poolManager.strategyList(1);
 
         assets = [address(collateralAsset), address(fundsAsset)];
 

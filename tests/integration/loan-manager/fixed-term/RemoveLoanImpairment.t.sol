@@ -24,7 +24,7 @@ contract RemoveLoanImpairmentFailureTests is TestBase {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    makeAddr("borrower"),

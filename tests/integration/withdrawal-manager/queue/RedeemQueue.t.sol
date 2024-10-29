@@ -202,7 +202,7 @@ contract ManualRedeemTests is QueueRedeemBase {
         // Need to fund a loan so the exchange rate isn't affected by funds in the pool
         address loan = createOpenTermLoan(
             address(makeAddr("borrower")),
-            address(poolManager.loanManagerList(1)),
+            address(poolManager.strategyList(1)),
             address(fundsAsset),
             4_000e6,
             [gracePeriod, noticePeriod, paymentInterval],

@@ -128,43 +128,43 @@ contract ImpairInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_A() external useCurrentTimestamp {
-        assert_ftlm_invariant_A(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_A(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_B() external useCurrentTimestamp {
-        assert_ftlm_invariant_B(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_B(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_C() external useCurrentTimestamp {
-        assert_ftlm_invariant_C(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_C(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_D() external useCurrentTimestamp {
-        assert_ftlm_invariant_D(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_D(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_E() external useCurrentTimestamp {
-        assert_ftlm_invariant_E(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_E(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_F() external useCurrentTimestamp {
-        assert_ftlm_invariant_F(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_F(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_H() external useCurrentTimestamp {
-        assert_ftlm_invariant_H(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_H(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_I() external useCurrentTimestamp {
-        assert_ftlm_invariant_I(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_I(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_J() external useCurrentTimestamp {
-        assert_ftlm_invariant_J(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_J(poolManager.strategyList(0));
     }
 
     function statefulFuzz_impairInvariants_fixedTermLoanManager_K() external useCurrentTimestamp {
-        assert_ftlm_invariant_K(poolManager.loanManagerList(0));
+        assert_ftlm_invariant_K(poolManager.strategyList(0));
     }
 
     /**************************************************************************************************************************************/

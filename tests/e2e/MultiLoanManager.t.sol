@@ -94,8 +94,8 @@ contract MultiLoanManagerTests is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        ftLoanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
-        otLoanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        ftLoanManager = IFixedTermLoanManager(poolManager.strategyList(0));
+        otLoanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         ftLoan1 = IFixedTermLoan(createFixedTermLoan({
             borrower:   address(borrower1),

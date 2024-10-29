@@ -11,7 +11,7 @@ contract FuzzBase is TestBase {
     function setUp() public override {
         super.setUp();
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
 

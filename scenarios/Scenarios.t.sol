@@ -158,7 +158,7 @@ contract Scenario is TestBase {
 
         address loan = loanNamed[parameters.name] = createFixedTermLoan(
             makeAddr("borrower"),
-            poolManager.loanManagerList(0),
+            poolManager.strategyList(0),
             address(fixedTermFeeManager),
             [address(collateralAsset), address(fundsAsset)],
             [
@@ -191,7 +191,7 @@ contract Scenario is TestBase {
 
         address loan = loanNamed[parameters.name] = createOpenTermLoan(
             makeAddr("borrower"),
-            poolManager.loanManagerList(1),
+            poolManager.strategyList(1),
             address(fundsAsset),
             parameters.principal,
             [
@@ -455,8 +455,8 @@ contract Scenario is TestBase {
         ExpectedValues memory parameters = abi.decode(rawExpected_, (ExpectedValues));
 
         uint256 accruedInterest =
-            ILoanManagerLike(poolManager.loanManagerList(0)).accruedInterest() +
-            ILoanManagerLike(poolManager.loanManagerList(1)).accruedInterest();
+            ILoanManagerLike(poolManager.strategyList(0)).accruedInterest() +
+            ILoanManagerLike(poolManager.strategyList(1)).accruedInterest();
 
         if (stdMath.delta(accruedInterest, parameters.accruedInterest) > 5) {
             console.log(
@@ -481,8 +481,8 @@ contract Scenario is TestBase {
         }
 
         uint256 principalOut =
-            ILoanManagerLike(poolManager.loanManagerList(0)).principalOut() +
-            ILoanManagerLike(poolManager.loanManagerList(1)).principalOut();
+            ILoanManagerLike(poolManager.strategyList(0)).principalOut() +
+            ILoanManagerLike(poolManager.strategyList(1)).principalOut();
 
         if (stdMath.delta(principalOut, parameters.principalOutstanding) > 3e4) {
             console.log(

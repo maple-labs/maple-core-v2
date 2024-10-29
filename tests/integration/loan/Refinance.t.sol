@@ -32,7 +32,7 @@ contract RefinanceTestsSingleLoan is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
@@ -977,7 +977,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             address(borrower),
@@ -1416,7 +1416,7 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,

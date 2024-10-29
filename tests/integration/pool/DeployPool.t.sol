@@ -3,17 +3,41 @@ pragma solidity ^0.8.7;
 
 import {
     ILoanManagerLike,
+    IMapleProxyFactory,
     IPool,
     IPoolManager,
-    IProxyFactoryLike,
     IPoolPermissionManager,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBase, TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
-contract DeployPoolTests is TestBaseWithAssertions {
+contract DeployPoolTestsBase is TestBaseWithAssertions {
+    bytes[] defaultStrategyDeploymentData;
+
+    function _getStrategyDeploymentData(
+        address poolManagerFactory_,
+        address poolDelegate_,
+        address fundsAsset_,
+        uint256 initialSupply_,
+        string memory poolName_,
+        string memory symbol_
+    ) internal view returns (bytes[] memory strategyDeploymentData_) {
+        address pmAddress_ = IMapleProxyFactory(poolManagerFactory_).getInstanceAddress(
+            abi.encode(poolDelegate_, fundsAsset_, initialSupply_, poolName_, symbol_),
+            keccak256(abi.encode(poolDelegate_))
+        );
+
+        strategyDeploymentData_ = new bytes[](strategyFactories.length);
+        for (uint256 i = 0; i < strategyFactories.length; i++) {
+            strategyDeploymentData_[i] = abi.encode(pmAddress_);
+        }
+    }
+
+}
+
+contract DeployPoolTests is DeployPoolTestsBase {
 
     function setUp() public override {
         start = block.timestamp;
@@ -23,6 +47,15 @@ contract DeployPoolTests is TestBaseWithAssertions {
         _createGlobals();
         _setTreasury();
         _createFactories();
+
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            0,
+            "Maple Pool",
+            "MP"
+        );
     }
 
     function test_deployPool_failWithInvalidPD() external {
@@ -30,7 +63,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -48,7 +82,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -59,14 +94,15 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failWithInvalidLMFactory() external {
         vm.prank(address(governor));
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY", fixedTermLoanManagerFactory, false);
+        globals.setValidInstanceOf("STRATEGY_FACTORY", fixedTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:ALM:INVALID_FACTORY");
+        vm.expectRevert("PM:AS:INVALID_FACTORY");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -84,7 +120,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -99,7 +136,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(0),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -114,7 +152,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         address poolManager = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -131,7 +170,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool 2",
@@ -149,7 +189,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -168,7 +209,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(asset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -191,7 +233,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -208,7 +251,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -223,7 +267,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -238,7 +283,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -253,7 +299,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -268,7 +315,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -279,12 +327,12 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
     function test_deployPool_failIfCalledPMFactoryDirectly() external {
         vm.expectRevert("PMF:CI:NOT_DEPLOYER");
-        IProxyFactoryLike(poolManagerFactory).createInstance(new bytes(0), "salt");
+        IMapleProxyFactory(poolManagerFactory).createInstance(new bytes(0), "salt");
     }
 
     function test_deployPool_failIfCalledWMFactoryDirectly() external {
         vm.expectRevert("WMF:CI:NOT_DEPLOYER");
-        IProxyFactoryLike(cyclicalWMFactory).createInstance(new bytes(0), "salt");
+        IMapleProxyFactory(cyclicalWMFactory).createInstance(new bytes(0), "salt");
     }
 
     function test_deployPool_successWithZeroMigrationAdmin() external {
@@ -300,7 +348,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -314,6 +363,15 @@ contract DeployPoolTests is TestBaseWithAssertions {
     }
 
     function test_deployPool_successWithInitialSupply() external {
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            1_000_000e6,
+            "Maple Pool",
+            "MP"
+        );
+
         fundsAsset.mint(poolDelegate, 1_000_000e6);
 
         vm.startPrank(poolDelegate);
@@ -323,7 +381,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -346,7 +405,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -366,12 +426,13 @@ contract DeployPoolTests is TestBaseWithAssertions {
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
             symbol_:                   "MP",
-            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 1_000_000e6, start]
+            configParams_:             [uint256(1_500_000e6), 0.2e6, 1_000_000e6, 1 weeks, 2 days, 0, start]
         });
 
         vm.stopPrank();
@@ -381,6 +442,15 @@ contract DeployPoolTests is TestBaseWithAssertions {
     }
 
     function test_deployPool_success() external {
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            2_000_000e6,
+            "Maple Pool",
+            "MP"
+        );
+
         fundsAsset.mint(poolDelegate, 1_000_000e6);
 
         vm.startPrank(poolDelegate);
@@ -390,7 +460,8 @@ contract DeployPoolTests is TestBaseWithAssertions {
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -402,7 +473,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
         IPoolManager       poolManager = IPoolManager(poolManager_);
         IPool              pool        = IPool(poolManager.pool());
-        ILoanManagerLike   loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+        ILoanManagerLike   loanManager = ILoanManagerLike(poolManager.strategyList(0));
         IWithdrawalManager cyclicalWM  = IWithdrawalManager(poolManager.withdrawalManager());
 
         assertEq(poolManager.poolDelegate(),              poolDelegate);
@@ -410,10 +481,10 @@ contract DeployPoolTests is TestBaseWithAssertions {
         assertEq(poolManager.withdrawalManager(),         address(cyclicalWM));
         assertEq(poolManager.liquidityCap(),              1_500_000e6);
         assertEq(poolManager.delegateManagementFeeRate(), 0.2e6);
-        assertEq(poolManager.loanManagerList(0),          address(loanManager));
+        assertEq(poolManager.strategyList(0),             address(loanManager));
 
         assertTrue(poolManager.configured());
-        assertTrue(poolManager.isLoanManager(address(loanManager)));
+        assertTrue(poolManager.isStrategy(address(loanManager)));
         assertTrue(poolManager.pool().code.length              > 0);
         assertTrue(poolManager.poolDelegateCover().code.length > 0);
 
@@ -448,7 +519,7 @@ contract DeployPoolTests is TestBaseWithAssertions {
 
 }
 
-contract DeployPoolWMQueueTests is TestBase {
+contract DeployPoolWMQueueTests is DeployPoolTestsBase {
 
     function setUp() public override {
         _createAccounts();
@@ -457,16 +528,35 @@ contract DeployPoolWMQueueTests is TestBase {
         _createFactories();
 
         fundsAsset.mint(poolDelegate, 10e6);
+
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            0,
+            "Maple Pool",
+            "MP"
+        );
     }
 
     function test_deployPoolWMQueue_success() external {
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            1_000e6,
+            "Maple Pool",
+            "MP"
+        );
+
         vm.startPrank(poolDelegate);
         fundsAsset.approve(address(deployer), 10e6);
 
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -479,8 +569,8 @@ contract DeployPoolWMQueueTests is TestBase {
         IPoolManager            poolManager          = IPoolManager(poolManager_);
         IPool                   pool                 = IPool(poolManager.pool());
         IPoolPermissionManager  ppm                  = IPoolPermissionManager(poolManager.poolPermissionManager());
-        ILoanManagerLike        fixedTermLoanManager = ILoanManagerLike(poolManager.loanManagerList(0));
-        ILoanManagerLike        openTermLoanManager  = ILoanManagerLike(poolManager.loanManagerList(1));
+        ILoanManagerLike        fixedTermLoanManager = ILoanManagerLike(poolManager.strategyList(0));
+        ILoanManagerLike        openTermLoanManager  = ILoanManagerLike(poolManager.strategyList(1));
         IWithdrawalManagerQueue withdrawalManager    = IWithdrawalManagerQueue(poolManager.withdrawalManager());
 
         assertEq(poolManager.asset(),                 address(fundsAsset));
@@ -495,8 +585,8 @@ contract DeployPoolWMQueueTests is TestBase {
         assertTrue(!poolManager.active());
         assertTrue(poolManager.configured());
         assertTrue(poolManager.hasSufficientCover());
-        assertTrue(poolManager.isLoanManager(poolManager.loanManagerList(0)));
-        assertTrue(poolManager.isLoanManager(poolManager.loanManagerList(1)));
+        assertTrue(poolManager.isStrategy(poolManager.strategyList(0)));
+        assertTrue(poolManager.isStrategy(poolManager.strategyList(1)));
 
         assertEq(pool.asset(),       address(fundsAsset));
         assertEq(pool.name(),        "Maple Pool");
@@ -519,11 +609,21 @@ contract DeployPoolWMQueueTests is TestBase {
     }
 
     function test_deployPoolWMQueue_withoutCoverAmount() external {
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            1_000e6,
+            "Maple Pool",
+            "MP"
+        );
+
         vm.prank(poolDelegate);
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -536,13 +636,22 @@ contract DeployPoolWMQueueTests is TestBase {
 
 }
 
-contract DeployPoolWMQueueFailureTests is TestBase {
+contract DeployPoolWMQueueFailureTests is DeployPoolTestsBase {
 
     function setUp() public override {
         _createAccounts();
         _createAssets();
         _createGlobals();
         _createFactories();
+
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            1_000e6,
+            "Maple Pool",
+            "MP"
+        );
     }
 
     function test_deployPoolWMQueue_failIfInvalidPD() external {
@@ -550,7 +659,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -568,7 +678,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -583,7 +694,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -601,7 +713,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -616,7 +729,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -633,7 +747,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: cyclicalWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -651,7 +766,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -666,7 +782,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -681,7 +798,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(1),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -697,7 +815,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(1),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -715,7 +834,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -734,7 +854,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -755,7 +876,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -772,7 +894,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -786,7 +909,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -801,7 +925,8 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool",
@@ -815,28 +940,39 @@ contract DeployPoolWMQueueFailureTests is TestBase {
         address poolManager_ = deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
-            name_:                     "Maple Pool 1",
-            symbol_:                   "MP1",
+            name_:                     "Maple Pool",
+            symbol_:                   "MP",
             configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
         });
 
         vm.prank(governor);
         globals.activatePoolManager(poolManager_);
 
+        defaultStrategyDeploymentData = _getStrategyDeploymentData(
+            poolManagerFactory,
+            poolDelegate,
+            address(fundsAsset),
+            2_000e6,
+            "Maple Pool 2",
+            "MP 2"
+        );
+
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
         deployer.deployPool({
             poolManagerFactory_:       poolManagerFactory,
             withdrawalManagerFactory_: queueWMFactory,
-            loanManagerFactories_:     loanManagerFactories,
+            strategyFactories_:        strategyFactories,
+            strategyDeploymentData_:   defaultStrategyDeploymentData,
             asset_:                    address(fundsAsset),
             poolPermissionManager_:    address(poolPermissionManager),
             name_:                     "Maple Pool 2",
-            symbol_:                   "MP2",
-            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 1_000e6]
+            symbol_:                   "MP 2",
+            configParams_:             [uint256(1_000_000e6), 0.1e6, 0, 2_000e6]
         });
     }
 

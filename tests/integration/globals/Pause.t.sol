@@ -130,11 +130,12 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("acceptPoolDelegate()"),
         abi.encodeWithSignature("setPendingPoolDelegate(address)", address(0)),
         abi.encodeWithSignature("setActive(bool)", false),
-        abi.encodeWithSignature("addLoanManager(address)", address(0)),
+        abi.encodeWithSignature("addStrategy(address,bytes)", address(0), new bytes(0)),
         abi.encodeWithSignature("setDelegateManagementFeeRate(uint256)", 0),
-        abi.encodeWithSignature("setIsLoanManager(address,bool)", address(0), false),
+        abi.encodeWithSignature("setIsStrategy(address,bool)", address(0), false),
         abi.encodeWithSignature("setLiquidityCap(uint256)", 0),
         abi.encodeWithSignature("setWithdrawalManager(address)", address(0)),
+        abi.encodeWithSignature("setPoolPermissionManager(address)", address(0)),
         abi.encodeWithSignature("requestFunds(address,uint256)", address(0), 0),
         abi.encodeWithSignature("finishCollateralLiquidation(address)", address(0)),
         abi.encodeWithSignature("triggerDefault(address,address)", address(0), address(0)),
@@ -174,8 +175,8 @@ contract PauseTests is TestBaseWithAssertions {
 
         deposit(makeAddr("depositor"), 3_500_000e6);
 
-        fixedTermLoanManager = poolManager.loanManagerList(0);
-        openTermLoanManager  = poolManager.loanManagerList(1);
+        fixedTermLoanManager = poolManager.strategyList(0);
+        openTermLoanManager  = poolManager.strategyList(1);
 
         fixedTermLoan = fundAndDrawdownLoan({
             borrower:    borrower,

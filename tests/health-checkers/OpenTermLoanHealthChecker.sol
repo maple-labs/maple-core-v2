@@ -7,6 +7,8 @@ import {
     IPoolManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
+import { IOldPoolManagerLike } from "./Interfaces.sol";
+
 contract OpenTermLoanHealthChecker {
 
     uint256 constant internal BUFFER              = 1e6;
@@ -63,7 +65,7 @@ contract OpenTermLoanHealthChecker {
     function checkInvariants(address poolManager_, address[] memory loans_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        uint256 length = poolManager.loanManagerListLength();
+        uint256 length = IOldPoolManagerLike(address(poolManager)).loanManagerListLength();
 
         require(length == 1 || length == 2, "OTHC:CI:INVALID_LM_LIST_LENGTH");
 
@@ -71,12 +73,14 @@ contract OpenTermLoanHealthChecker {
         invariants_ = _initStruct();
 
         for(uint256 i; i < length; ++i) {
-            address loanManager_ = poolManager.loanManagerList(i);
+            address loanManager_ = IOldPoolManagerLike(address(poolManager)).loanManagerList(i);
 
             if (_isOpenTermLoanManager(loanManager_)) {
 
                 // If there're two loan managers, only one can be an open term, otherwise this contract can't properly assert invariants.
-                if (i == 1) require(!_isOpenTermLoanManager(poolManager.loanManagerList(0)), "OTHC:CI:TWO_OTLMs");
+                if (i == 1) {
+                    require(!_isOpenTermLoanManager(IOldPoolManagerLike(address(poolManager)).loanManagerList(0)), "OTHC:CI:TWO_OTLMs");
+                }
 
                 invariants_.openTermLoanInvariantA = check_otl_invariant_A(loans_);
                 invariants_.openTermLoanInvariantB = check_otl_invariant_B(loans_);

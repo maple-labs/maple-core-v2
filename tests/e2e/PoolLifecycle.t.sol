@@ -76,7 +76,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         _createPool(start, 1 weeks, 2 days);
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         /****************************************/
         /*** Step 2: Governor and PD set fees ***/

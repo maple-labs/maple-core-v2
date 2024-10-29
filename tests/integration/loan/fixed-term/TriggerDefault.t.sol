@@ -28,7 +28,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
     }
 
@@ -44,7 +44,7 @@ contract TriggerDefaultFailureTests is TestBaseWithAssertions {
     }
 
     function test_triggerDefault_notPoolManager() external {
-        ILoanManagerLike loanManager = ILoanManagerLike(poolManager.loanManagerList(0));
+        ILoanManagerLike loanManager = ILoanManagerLike(poolManager.strategyList(0));
 
         vm.expectRevert("LM:NOT_PM");
         loanManager.triggerDefault(loan, address(liquidatorFactory));
@@ -89,7 +89,7 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
         deposit(lp, 1_500_000e6);
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,
@@ -129,7 +129,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_invalidLoanManager() external {
-        address invalidLoan = address(deployFromFile("Contracts","OpenTermLoan"));
+        address invalidLoan = address(deployFromFile("Contracts@7","OpenTermLoan"));
 
         vm.prank(address(poolDelegate));
         vm.expectRevert("PM:GLM:INVALID_LOAN_MANAGER");

@@ -531,11 +531,12 @@ contract ProtocolActions is Runner {
         IGlobals(globals_).activatePoolManager(poolManager_);
     }
 
-    function addLoanManager(address poolManager_, address loanManagerFactory_) internal {
+    // TODO: Update to be generic with any strategy type, LMs, Sky etc
+    function addStrategy(address poolManager_, address strategyFactory_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IPoolManager(poolManager_).addLoanManager(loanManagerFactory_);
+        IPoolManager(poolManager_).addStrategy(strategyFactory_, abi.encode(poolManager_));
     }
 
     function allowLender(address poolManager_, address lender_) internal {
@@ -567,6 +568,7 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
+    // TODO: This can only deploy pools with loan managers but not with strategies.
     function deployAndActivatePool(
         address           deployer_,
         address           fundsAsset_,
@@ -576,7 +578,7 @@ contract ProtocolActions is Runner {
         address           withdrawalManagerFactory_,
         string     memory name_,
         string     memory symbol_,
-        address[]  memory loanManagerFactories_,
+        address[]  memory strategyFactories_,
         uint256[7] memory configParams_
     )
         internal returns (address poolManager_)
@@ -596,12 +598,23 @@ contract ProtocolActions is Runner {
 
         address ppm_ = _deployPoolPermissionManager(globals_);
 
+        address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory_).getInstanceAddress(
+            abi.encode(poolDelegate_, fundsAsset_, 0, name_, symbol_), // 0 is the initial supply
+            keccak256(abi.encode(poolDelegate_))
+        );
+
+        bytes[] memory strategyDeploymentData_ = new bytes[](strategyFactories_.length);
+        for (uint256 i = 0; i < strategyFactories_.length; i++) {
+            strategyDeploymentData_[i] = abi.encode(poolManagerDeployment);
+        }
+
         // PD deploys pool
         vm.prank(poolDelegate_);
         poolManager_ = IPoolDeployer(deployer_).deployPool({
             poolManagerFactory_:       poolManagerFactory_,
             withdrawalManagerFactory_: withdrawalManagerFactory_,
-            loanManagerFactories_:     loanManagerFactories_,
+            strategyFactories_:        strategyFactories_,
+            strategyDeploymentData_:   strategyDeploymentData_,
             asset_:                    fundsAsset_,
             poolPermissionManager_:    ppm_,
             name_:                     name_,

@@ -60,7 +60,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         asset        = IMockERC20(poolManager.asset());
         globals      = IGlobals(loanFactory.mapleGlobals());
-        loanManager  = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager  = IOpenTermLoanManager(poolManager.strategyList(1));
         pool         = IPool(poolManager.pool());
         testContract = IInvariantTest(msg.sender);
 

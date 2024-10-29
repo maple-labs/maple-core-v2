@@ -106,7 +106,7 @@ contract FixedTermLoanHandler is HandlerBase {
         poolManager       = IPoolManager(poolManager_);
         fundsAsset        = IMockERC20(poolManager.asset());
         liquidatorFactory = liquidatorFactory_;
-        loanManager       = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager       = IFixedTermLoanManager(poolManager.strategyList(0));
         pool              = IPool(poolManager.pool());
         testContract      = IInvariantTest(testContract_);
 

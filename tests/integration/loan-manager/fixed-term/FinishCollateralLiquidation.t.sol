@@ -28,7 +28,7 @@ contract FinishCollateralLiquidationFailureTests is TestBaseWithAssertions {
             termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
             amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
     }
 

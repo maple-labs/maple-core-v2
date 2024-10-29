@@ -13,6 +13,8 @@ import {
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
+import { IOldPoolManagerLike } from "./Interfaces.sol";
+
 // NOTE: This contract only uses onchain calls to check invariants.
 contract ProtocolHealthChecker {
 
@@ -105,13 +107,13 @@ contract ProtocolHealthChecker {
         address openTermLoanManager_;
 
         {
-            uint256 length = poolManager.loanManagerListLength();
+            uint256 length = IOldPoolManagerLike(address(poolManager)).loanManagerListLength();
 
             // Assume at most two LMs. This require will just help debug in case of future failures.
             require(length == 1 || length == 2, "PHC:CI:INVALID_LM_LENGTH");
 
-            address loanManagerOne_ = poolManager.loanManagerList(0);
-            address loanManagerTwo_ = length == 2 ? poolManager.loanManagerList(1) : address(0);
+            address loanManagerOne_ = IOldPoolManagerLike(address(poolManager)).loanManagerList(0);
+            address loanManagerTwo_ = length == 2 ? IOldPoolManagerLike(address(poolManager)).loanManagerList(1) : address(0);
 
             if (_isFixedTermLoanManager(loanManagerOne_)) {
                 bool empty = loanManagerTwo_ == address(0);

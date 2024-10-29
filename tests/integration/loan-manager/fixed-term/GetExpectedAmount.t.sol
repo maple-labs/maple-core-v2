@@ -22,7 +22,7 @@ contract GetExpectedAmountTests is TestBase {
 
         super.setUp();
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
     }
 
     function testFork_getExpectedAmount_oracleNotSet() external {

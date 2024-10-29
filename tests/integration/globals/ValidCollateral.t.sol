@@ -18,7 +18,7 @@ contract ValidCollateralTests is TestBase {
 
         bytes memory arguments = abi.encode(
             borrower,
-            address(poolManager.loanManagerList(0)),
+            address(poolManager.strategyList(0)),
             address(fixedTermFeeManager),
             [address(collateralAsset), address(fundsAsset)],
             [uint256(12 hours), uint256(1_000_000), uint256(3)],

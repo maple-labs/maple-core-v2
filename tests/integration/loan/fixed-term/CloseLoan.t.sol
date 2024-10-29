@@ -33,7 +33,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
             termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(3.1536e6), uint256(0.01e6), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
     }
 
@@ -82,7 +82,7 @@ contract CloseLoanTests is TestBaseWithAssertions {
     }
 
     function test_closeLoan_failIfNotLoan() external {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        IFixedTermLoanManager loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         vm.expectRevert("LM:DCF:NOT_LOAN");
         loanManager.claim(0, 10, start, start + 1_000_000);

@@ -40,7 +40,7 @@ contract CallPrincipalTestsBase is TestBaseWithAssertions {
 
         deposit(lp, 1_500_000e6);
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,

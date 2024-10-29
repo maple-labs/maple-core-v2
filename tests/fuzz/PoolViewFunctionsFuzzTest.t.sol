@@ -36,7 +36,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
 
         user = makeAddr("user");
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
 

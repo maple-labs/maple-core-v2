@@ -39,7 +39,7 @@ contract FixedTermLoanManagerImpairFailureTests is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         loan = IFixedTermLoan(fundAndDrawdownLoan({
             borrower:    borrower,
@@ -90,7 +90,7 @@ contract FixedTermLoanManagerImpairSuccessTests is TestBaseWithAssertions {
         super.setUp();
 
         borrower    = makeAddr("borrower");
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
         lp          = makeAddr("lp");
 
         depositCover(100_000e6);
@@ -624,7 +624,7 @@ contract FixedTermLoanManagerImpairAndRefinanceTests is TestBaseWithAssertions {
         super.setUp();
 
         borrower    = makeAddr("borrower");
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
         lp          = makeAddr("lp");
 
         depositCover(100_000e6);
@@ -1024,7 +1024,7 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,
             borrower,
@@ -1273,7 +1273,7 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
 
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
-        loanManager = IOpenTermLoanManager(poolManager.loanManagerList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,
             borrower,

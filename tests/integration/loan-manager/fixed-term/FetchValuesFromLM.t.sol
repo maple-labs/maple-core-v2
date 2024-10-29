@@ -14,7 +14,7 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        loanManager = IFixedTermLoanManager(poolManager.loanManagerList(0));
+        loanManager = IFixedTermLoanManager(poolManager.strategyList(0));
 
         deposit(makeAddr("depositor"), 1_500_000e6);
 
@@ -23,7 +23,7 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e6), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
     }
 

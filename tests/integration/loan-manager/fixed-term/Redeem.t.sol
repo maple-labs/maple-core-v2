@@ -474,7 +474,7 @@ contract RedeemTests is TestBase {
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
 
         vm.warp(start + 2 weeks);
@@ -527,7 +527,7 @@ contract RedeemTests is TestBase {
             termDetails: [uint256(5 days), uint256(1_000_000), uint256(3)],
             amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
             rates:       [uint256(0.031536e6), uint256(0), uint256(0.0001e6), uint256(0.031536e6)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
 
         vm.warp(start + 2 weeks);
@@ -590,7 +590,7 @@ contract MultiUserRedeemTests is TestBase {
         lp2      = makeAddr("lp2");
         lp3      = makeAddr("lp3");
 
-        loanManager = poolManager.loanManagerList(0);
+        loanManager = poolManager.strategyList(0);
         wm          = address(cyclicalWM);
 
         // NOTE: Available liquidity ratio (AVR) = availableCash / totalRequestedLiquidity
@@ -1052,7 +1052,7 @@ contract RedeemIntegrationTests is TestBase {
             termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
             amounts:     [uint256(collateralAmount_), uint256(2_000_000e6), uint256(2_000_000e6)],
             rates:       [uint256(0.12e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.loanManagerList(0)
+            loanManager: poolManager.strategyList(0)
         });
     }
 
@@ -1331,7 +1331,7 @@ contract RedeemIntegrationTests is TestBase {
 
         // Trigger Default on the loan
         triggerDefault(loan, address(liquidatorFactory));
-        assertTrue(!IFixedTermLoanManager(poolManager.loanManagerList(0)).isLiquidationActive(loan));
+        assertTrue(!IFixedTermLoanManager(poolManager.strategyList(0)).isLiquidationActive(loan));
 
         // Check cover was used
         assertEq(fundsAsset.balanceOf(address(poolCover)), 600_000e6);

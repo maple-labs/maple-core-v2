@@ -31,7 +31,7 @@ contract BasicInterestAccrualTest is TestBaseWithAssertions {
         /*** Fund and Drawdown Loan ***/
         /******************************/
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         address loan = fundAndDrawdownLoan({
             borrower:    borrower,

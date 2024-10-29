@@ -35,7 +35,7 @@ contract AcceptLoanTermsOTLTests is AcceptLoanTermsTestBase {
     function setUp() public override {
         super.setUp();
 
-        address loanManager = poolManager.loanManagerList(1);
+        address loanManager = poolManager.strategyList(1);
 
         loan = createOpenTermLoan(
             address(borrower),
@@ -87,7 +87,7 @@ contract AcceptLoanTermsFTLTests is AcceptLoanTermsTestBase {
     function setUp() public override {
         super.setUp();
 
-        address loanManager = poolManager.loanManagerList(0);
+        address loanManager = poolManager.strategyList(0);
 
         loan = createFixedTermLoan({
             borrower:   address(borrower),
