@@ -29,7 +29,6 @@ import { MockLiquidationStrategy } from "./mocks/Mocks.sol";
 
 contract TestBase is ProtocolActions {
 
-    uint256 constant HUNDRED_PERCENT = 100_0000;  // TODO: Fix Globals module to export this constant in its interface.
     uint256 constant MAX_TOKEN_AMOUNT = 1e29;
 
     uint256 constant ONE_DAY   = 1 days;
@@ -47,24 +46,32 @@ contract TestBase is ProtocolActions {
     address securityAdmin;
     address treasury;
 
+    address aaveStrategyFactory;
+    address basicStrategyFactory;
+    address cyclicalWMFactory;
     address fixedTermLoanFactory;
     address fixedTermLoanManagerFactory;
     address liquidatorFactory;
     address openTermLoanFactory;
     address openTermLoanManagerFactory;
     address poolManagerFactory;
-    address cyclicalWMFactory;
     address queueWMFactory;
+    address skyStrategyFactory;
 
+    address aaveStrategyImplementation;
+    address basicStrategyImplementation;
+    address cyclicalWMImplementation;
     address fixedTermLoanImplementation;
     address fixedTermLoanManagerImplementation;
     address liquidatorImplementation;
     address openTermLoanImplementation;
     address openTermLoanManagerImplementation;
     address poolManagerImplementation;
-    address cyclicalWMImplementation;
     address queueWMImplementation;
+    address skyStrategyImplementation;
 
+    address aaveStrategyInitializer;
+    address basicStrategyInitializer;
     address fixedTermLoanInitializer;
     address fixedTermLoanManagerInitializer;
     address liquidatorInitializer;
@@ -74,6 +81,7 @@ contract TestBase is ProtocolActions {
     address poolPermissionManagerInitializer;
     address cyclicalWMInitializer;
     address queueWMInitializer;
+    address skyStrategyInitializer;
 
     uint256 nextDelegateOriginationFee;
     uint256 nextDelegateServiceFee;
@@ -135,13 +143,13 @@ contract TestBase is ProtocolActions {
     }
 
     function _createFactories() internal {
+        cyclicalWMFactory           = deployFromFile("Contracts@7", "WithdrawalManagerCyclicalFactory", abi.encode(address(globals)));
         fixedTermLoanFactory        = deployFromFile("Contracts@7", "FixedTermLoanFactory",             abi.encode(address(globals), address(0)));
         fixedTermLoanManagerFactory = deployFromFile("Contracts@7", "FixedTermLoanManagerFactory",      abi.encode(address(globals)));
         liquidatorFactory           = deployFromFile("Contracts@7", "LiquidatorFactory",                abi.encode(address(globals)));
         openTermLoanFactory         = deployFromFile("Contracts@7", "OpenTermLoanFactory",              abi.encode(address(globals)));
         openTermLoanManagerFactory  = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory",       abi.encode(address(globals)));
         poolManagerFactory          = deployFromFile("Contracts@7", "PoolManagerFactory",               abi.encode(address(globals)));
-        cyclicalWMFactory           = deployFromFile("Contracts@7", "WithdrawalManagerCyclicalFactory", abi.encode(address(globals)));
         queueWMFactory              = deployFromFile("Contracts@7", "WithdrawalManagerQueueFactory",    abi.encode(address(globals)));
 
         fixedTermLoanImplementation        = deployFromFile("Contracts@7",  "FixedTermLoan");
@@ -171,6 +179,16 @@ contract TestBase is ProtocolActions {
 
         poolPermissionManager = IPoolPermissionManager(deployNPT(governor, poolPermissionManagerInitializer));
 
+        aaveStrategyFactory         = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        basicStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        skyStrategyFactory          = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        aaveStrategyImplementation  = deployFromFile("Contracts@25", "AaveStrategy");
+        basicStrategyImplementation = deployFromFile("Contracts@25", "BasicStrategy");
+        skyStrategyImplementation   = deployFromFile("Contracts@25", "SkyStrategy");
+        aaveStrategyInitializer     = deployFromFile("Contracts@25", "AaveStrategyInitializer");
+        basicStrategyInitializer    = deployFromFile("Contracts@25", "BasicStrategyInitializer");
+        skyStrategyInitializer      = deployFromFile("Contracts@25", "SkyStrategyInitializer");
+
         vm.startPrank(governor);
 
         IPoolPermissionManagerInitializer(address(poolPermissionManager)).initialize(poolPermissionManagerImplementation, address(globals));
@@ -192,6 +210,9 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       cyclicalWMFactory,             true);
         globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 aaveStrategyFactory,           true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 basicStrategyFactory,          true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 skyStrategyFactory,            true);
         globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
         globals.setValidInstanceOf("REFINANCER",                       address(openTermRefinancer),   true);
         globals.setValidInstanceOf("OT_REFINANCER",                    address(openTermRefinancer),   true);
@@ -199,10 +220,13 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
         globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
 
+        globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
+        globals.setCanDeployFrom(basicStrategyFactory,        address(deployer), true);
         globals.setCanDeployFrom(fixedTermLoanManagerFactory, address(deployer), true);
         globals.setCanDeployFrom(poolManagerFactory,          address(deployer), true);
         globals.setCanDeployFrom(cyclicalWMFactory,           address(deployer), true);
         globals.setCanDeployFrom(queueWMFactory,              address(deployer), true);
+        globals.setCanDeployFrom(skyStrategyFactory,          address(deployer), true);
 
         IMapleProxyFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         IMapleProxyFactory(liquidatorFactory).setDefaultVersion(1);
@@ -236,6 +260,15 @@ contract TestBase is ProtocolActions {
         IMapleProxyFactory(queueWMFactory).registerImplementation(1, queueWMImplementation, queueWMInitializer);
         IMapleProxyFactory(queueWMFactory).setDefaultVersion(1);
 
+        IMapleProxyFactory(aaveStrategyFactory).registerImplementation(1, aaveStrategyImplementation, aaveStrategyInitializer);
+        IMapleProxyFactory(aaveStrategyFactory).setDefaultVersion(1);
+
+        IMapleProxyFactory(basicStrategyFactory).registerImplementation(1, basicStrategyImplementation, basicStrategyInitializer);
+        IMapleProxyFactory(basicStrategyFactory).setDefaultVersion(1);
+
+        IMapleProxyFactory(skyStrategyFactory).registerImplementation(1, skyStrategyImplementation, skyStrategyInitializer);
+        IMapleProxyFactory(skyStrategyFactory).setDefaultVersion(1);
+
         vm.stopPrank();
 
         strategyFactories.push(fixedTermLoanManagerFactory);
@@ -260,7 +293,7 @@ contract TestBase is ProtocolActions {
         vm.stopPrank();
     }
 
-    function _createPool(
+    function _createPoolWithCyclical(
         uint256 startTime,
         uint256 withdrawalCycle,
         uint256 windowDuration
@@ -271,8 +304,23 @@ contract TestBase is ProtocolActions {
             address wm_
         )
     {
+        uint256[7] memory configParams_ = [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0, startTime];
+
         _setupDeploymentData();
-        poolManager = IPoolManager(_deploy(startTime, withdrawalCycle, windowDuration));
+
+        poolManager = IPoolManager(deployPoolWithCyclical(
+            poolDelegate,
+            address(deployer),
+            poolManagerFactory,
+            cyclicalWMFactory,
+            strategyFactories,
+            strategyDeploymentData_,
+            address(fundsAsset),
+            address(poolPermissionManager),
+            POOL_NAME,
+            POOL_SYMBOL,
+            configParams_
+        ));
 
         poolManagers.push(address(poolManager));
 
@@ -283,21 +331,6 @@ contract TestBase is ProtocolActions {
         pool_ = address(pool);
         pm_   = address(poolManager);
         wm_   = address(cyclicalWM);
-    }
-
-    function _deploy(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal returns (address pm_) {
-        vm.prank(poolDelegate);
-        pm_ = deployer.deployPool({
-                poolManagerFactory_:       poolManagerFactory,
-                withdrawalManagerFactory_: cyclicalWMFactory,
-                strategyFactories_:        strategyFactories,
-                strategyDeploymentData_:   strategyDeploymentData_,
-                asset_:                    address(fundsAsset),
-                poolPermissionManager_:    address(poolPermissionManager),
-                name_:                     POOL_NAME,
-                symbol_:                   POOL_SYMBOL,
-                configParams_:             [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 0, startTime]
-            });
     }
 
     // TODO: Update required to support non LM strategies.
@@ -312,7 +345,7 @@ contract TestBase is ProtocolActions {
         }
     }
 
-    function _createPool(address poolDelegate_, string memory poolName_) internal returns (address pool_, address pm_, address wm_) {
+    function _createPoolWithQueue(address poolDelegate_, string memory poolName_) internal returns (address pool_, address pm_, address wm_) {
         string memory symbol_ = "MP";
 
         address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory).getInstanceAddress(
@@ -325,24 +358,25 @@ contract TestBase is ProtocolActions {
             strategyDeploymentData2_[i] = abi.encode(poolManagerDeployment);
         }
 
-        vm.prank(poolDelegate_);
-        poolManager = IPoolManager(deployer.deployPool({
-            poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: queueWMFactory,
-            strategyFactories_:        strategyFactories,
-            strategyDeploymentData_:   strategyDeploymentData2_,
-            asset_:                    address(fundsAsset),
-            poolPermissionManager_:    address(poolPermissionManager),
-            name_:                     poolName_,
-            symbol_:                   symbol_,
-            configParams_:             [type(uint256).max, 0, 0, 0]
-        }));
+        poolManager = IPoolManager(deployPoolWithQueue(
+            address(poolDelegate_),
+            address(deployer),
+            address(poolManagerFactory),
+            address(queueWMFactory),
+            strategyFactories,
+            strategyDeploymentData2_,
+            address(fundsAsset),
+            address(poolPermissionManager),
+            poolName_,
+            symbol_,
+            [type(uint256).max, 0, 0, 0]
+        ));
 
         poolManagers.push(address(poolManager));
 
-        queueWM    = IWithdrawalManagerQueue(poolManager.withdrawalManager());
-        pool       = IPool(poolManager.pool());
-        poolCover  = IPoolDelegateCover(poolManager.poolDelegateCover());
+        queueWM   = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool      = IPool(poolManager.pool());
+        poolCover = IPoolDelegateCover(poolManager.poolDelegateCover());
 
         pool_ = address(pool);
         pm_   = address(poolManager);
@@ -363,37 +397,64 @@ contract TestBase is ProtocolActions {
             strategyDeploymentData_[i] = abi.encode(poolManagerDeployment);
         }
 
-        vm.prank(poolDelegate);
-        poolManager = IPoolManager(deployer.deployPool({
-            poolManagerFactory_:       poolManagerFactory,
-            withdrawalManagerFactory_: queueWMFactory,
-            strategyFactories_:        strategyFactories,
-            strategyDeploymentData_:   strategyDeploymentData_,
-            asset_:                    address(fundsAsset),
-            poolPermissionManager_:    address(poolPermissionManager),
-            name_:                     name_,
-            symbol_:                   symbol_,
-            configParams_:             [type(uint256).max, 0, 0, 0]
-        }));
+        poolManager = IPoolManager(deployPoolWithQueue(
+            address(poolDelegate),
+            address(deployer),
+            address(poolManagerFactory),
+            address(queueWMFactory),
+            strategyFactories,
+            strategyDeploymentData_,
+            address(fundsAsset),
+            address(poolPermissionManager),
+            name_,
+            symbol_,
+            [type(uint256).max, 0, 0, 0]
+        ));
+
         poolManagers.push(address(poolManager));
 
-        queueWM    = IWithdrawalManagerQueue(poolManager.withdrawalManager());
-        pool       = IPool(poolManager.pool());
-        poolCover  = IPoolDelegateCover(poolManager.poolDelegateCover());
+        queueWM   = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool      = IPool(poolManager.pool());
+        poolCover = IPoolDelegateCover(poolManager.poolDelegateCover());
     }
 
     function _configurePool() internal {
-        vm.startPrank(governor);
-        globals.activatePoolManager(address(poolManager));
-        globals.setMaxCoverLiquidationPercent(address(poolManager), HUNDRED_PERCENT);
-        vm.stopPrank();
-
+        activatePool(address(poolManager), HUNDRED_PERCENT);
         allowLender(address(poolManager), address(cyclicalWM));
     }
 
     function _createAndConfigurePool(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal {
-        _createPool(startTime, withdrawalCycle, windowDuration);
-        _configurePool();
+        _createPoolWithCyclical(startTime, withdrawalCycle, windowDuration);
+        activatePool(address(poolManager), HUNDRED_PERCENT);
+        allowLender(address(poolManager), address(cyclicalWM));
+    }
+
+    function _createPoolWithQueueAndStrategies(
+        address fundsAsset_,
+        address[] memory strategiesFactories_,
+        bytes[] memory strategiesData_
+    )
+        internal
+    {
+        poolManager = IPoolManager(deployPoolWithQueue(
+            address(poolDelegate),
+            address(deployer),
+            address(poolManagerFactory),
+            address(queueWMFactory),
+            strategiesFactories_,
+            strategiesData_,
+            fundsAsset_,
+            address(poolPermissionManager),
+            POOL_NAME,
+            POOL_SYMBOL,
+            [type(uint256).max, 0, 0, 0]
+        ));
+
+        poolManagers.push(address(poolManager));
+
+        queueWM   = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+        pool      = IPool(poolManager.pool());
+        poolCover = IPoolDelegateCover(poolManager.poolDelegateCover());
     }
 
     function _setTreasury() internal {

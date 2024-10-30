@@ -31,6 +31,8 @@ import { Runner, ERC20Helper, console2 as console } from "./Runner.sol";
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Runner {
 
+    uint256 constant HUNDRED_PERCENT = 100_0000;  // TODO: Fix Globals module to export this constant in its interface.
+
     address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
     address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     address WETH      = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
@@ -44,6 +46,12 @@ contract ProtocolActions is Runner {
     address USDC_SOURCE      = address(0x0A59649758aa4d66E25f08Dd01271e891fe52199);
     address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
+
+    address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
+    address AAVE_USDT     = address(0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a);
+    address SAVINGS_USDS  = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
+    address USDS_LITE_PSM = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
+    address USDS          = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -531,12 +539,28 @@ contract ProtocolActions is Runner {
         IGlobals(globals_).activatePoolManager(poolManager_);
     }
 
-    // TODO: Update to be generic with any strategy type, LMs, Sky etc
+    function activatePool(address poolManager_, uint256 maxLiquidationPercent_) internal {
+        address globals_  = IPoolManager(poolManager_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.startPrank(governor_);
+        IGlobals(globals_).activatePoolManager(poolManager_);
+        IGlobals(globals_).setMaxCoverLiquidationPercent(poolManager_, maxLiquidationPercent_);
+        vm.stopPrank();
+    }
+
     function addStrategy(address poolManager_, address strategyFactory_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
         IPoolManager(poolManager_).addStrategy(strategyFactory_, abi.encode(poolManager_));
+    }
+
+    function addStrategy(address poolManager_, address strategyFactory_, bytes memory data_) internal {
+        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+
+        vm.prank(poolDelegate_);
+        IPoolManager(poolManager_).addStrategy(strategyFactory_, data_);
     }
 
     function allowLender(address poolManager_, address lender_) internal {
@@ -608,25 +632,82 @@ contract ProtocolActions is Runner {
             strategyDeploymentData_[i] = abi.encode(poolManagerDeployment);
         }
 
-        // PD deploys pool
+        poolManager_ = deployPoolWithCyclical(
+            poolDelegate_,
+            deployer_,
+            poolManagerFactory_,
+            withdrawalManagerFactory_,
+            strategyFactories_,
+            strategyDeploymentData_,
+            fundsAsset_,
+            ppm_,
+            name_,
+            symbol_,
+            configParams_
+        );
+
+        // Governor activates the pool
+        activatePool(poolManager_, HUNDRED_PERCENT);
+    }
+
+    function deployPoolWithCyclical(
+        address           poolDelegate_,
+        address           deployer_,
+        address           poolManagerFactory_,
+        address           cyclicalWMFactory_,
+        address[]  memory strategyFactories_,
+        bytes[]    memory strategyDeploymentData_,
+        address           fundsAsset_,
+        address           poolPermissionManager_,
+        string     memory name_,
+        string     memory symbol_,
+        uint256[7] memory configParams_
+    )
+        internal
+        returns (address poolManager_)
+    {
         vm.prank(poolDelegate_);
         poolManager_ = IPoolDeployer(deployer_).deployPool({
             poolManagerFactory_:       poolManagerFactory_,
-            withdrawalManagerFactory_: withdrawalManagerFactory_,
+            withdrawalManagerFactory_: cyclicalWMFactory_,
             strategyFactories_:        strategyFactories_,
             strategyDeploymentData_:   strategyDeploymentData_,
             asset_:                    fundsAsset_,
-            poolPermissionManager_:    ppm_,
+            poolPermissionManager_:    poolPermissionManager_,
             name_:                     name_,
             symbol_:                   symbol_,
             configParams_:             configParams_
         });
+    }
 
-        // Governor activates the pool
-        vm.startPrank(IGlobals(globals_).governor());
-        IGlobals(globals_).activatePoolManager(poolManager_);
-        IGlobals(globals_).setMaxCoverLiquidationPercent(poolManager_, 1e6);
-        vm.stopPrank();
+    function deployPoolWithQueue(
+        address           poolDelegate_,
+        address           deployer_,
+        address           poolManagerFactory_,
+        address           queueWMFactory_,
+        address[]  memory strategyFactories_,
+        bytes[]    memory strategyDeploymentData_,
+        address           fundsAsset_,
+        address           poolPermissionManager_,
+        string     memory name_,
+        string     memory symbol_,
+        uint256[4] memory configParams_
+    ) 
+        internal 
+        returns (address poolManager_) 
+    {
+        vm.prank(poolDelegate_);
+        poolManager_ = IPoolDeployer(deployer_).deployPool({
+            poolManagerFactory_:       poolManagerFactory_,
+            withdrawalManagerFactory_: queueWMFactory_,
+            strategyFactories_:        strategyFactories_,
+            strategyDeploymentData_:   strategyDeploymentData_,
+            asset_:                    fundsAsset_,
+            poolPermissionManager_:    poolPermissionManager_,
+            name_:                     name_,
+            symbol_:                   symbol_,
+            configParams_:             configParams_
+        });
     }
 
     function depositCover(address poolManager_, uint256 amount_) internal {
@@ -989,6 +1070,25 @@ contract ProtocolActions is Runner {
     /**************************************************************************************************************************************/
     /*** Governor Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
+
+    function configureFactory(
+        address globals_,
+        address factory_,
+        address implementation_,
+        address initializer_,
+        bytes32 key_
+    )
+        internal
+    {
+        address governor = IGlobals(globals_).governor();
+
+        vm.startPrank(governor);
+        IMapleProxyFactory(factory_).registerImplementation(1, implementation_, initializer_);
+        IMapleProxyFactory(factory_).setDefaultVersion(1);
+
+        IGlobals(globals_).setValidInstanceOf(key_, factory_, true);
+        vm.stopPrank();
+    }
 
     function setMaxCoverLiquidationPercent(address globals, address poolManager, uint256 maxCoverLiquidationPercent) internal {
         address governor = IGlobals(globals).governor();

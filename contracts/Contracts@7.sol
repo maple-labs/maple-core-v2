@@ -57,6 +57,8 @@ import { MapleWithdrawalManagerFactory as MWMQF }
 import { MapleWithdrawalManagerInitializer as MWMQI }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
 
+import { SyrupRouter } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
+
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
 /******************************************************************************************************************************************/

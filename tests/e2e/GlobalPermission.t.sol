@@ -42,8 +42,8 @@ contract GlobalPermissionTests is TestBase {
         globals.setValidPoolDelegate(poolDelegate2, true);
 
         // Create two pools.
-        ( pool1, poolManager1, withdrawalManager1 ) = _createPool(start, 1 weeks, 2 days);
-        ( pool2, poolManager2, withdrawalManager2 ) = _createPool(poolDelegate2, "Maple Pool 2");
+        ( pool1, poolManager1, withdrawalManager1 ) = _createPoolWithCyclical(start, 1 weeks, 2 days);
+        ( pool2, poolManager2, withdrawalManager2 ) = _createPoolWithQueue(poolDelegate2, "Maple Pool 2");
 
         // Active both pools.
         activatePoolManager(poolManager1);

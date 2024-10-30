@@ -8,6 +8,34 @@ import { MaplePoolManager as MPM }             from "../modules/pool/contracts/M
 import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
 import { MaplePoolManagerMigrator as MPMM }    from "../modules/pool/contracts/proxy/MaplePoolManagerMigrator.sol";
 
+import { MapleAaveStrategy as MAS }             from "../modules/strategies/contracts/MapleAaveStrategy.sol";
+import { MapleAaveStrategyInitializer as MASI } from "../modules/strategies/contracts/proxy/aaveStrategy/MapleAaveStrategyInitializer.sol";
+import { MapleBasicStrategy as MBS }            from "../modules/strategies/contracts/MapleBasicStrategy.sol";
+import { MapleSkyStrategy as MSS }              from "../modules/strategies/contracts/MapleSkyStrategy.sol";
+import { MapleSkyStrategyInitializer as MSSI }  from "../modules/strategies/contracts/proxy/skyStrategy/MapleSkyStrategyInitializer.sol";
+import { MapleStrategyFactory as MSF }          from "../modules/strategies/contracts/proxy/MapleStrategyFactory.sol";
+
+import { MapleBasicStrategyInitializer as MBSI } 
+    from "../modules/strategies/contracts/proxy/basicStrategy/MapleBasicStrategyInitializer.sol";
+
+contract AaveStrategy is MAS { }
+
+contract AaveStrategyInitializer is MASI { }
+
+contract BasicStrategy is MBS { }
+
+contract BasicStrategyInitializer is MBSI { }
+
+contract SkyStrategy is MSS { }
+
+contract SkyStrategyInitializer is MSSI { }
+
+contract StrategyFactory is MSF { 
+
+    constructor(address globals_) MSF(globals_) { }
+    
+}
+
 contract Pool is MP {
 
     constructor(
