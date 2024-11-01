@@ -44,6 +44,7 @@ contract TestBase is ProtocolActions {
     address poolDelegate;
     address permissionAdmin;
     address securityAdmin;
+    address strategyManager;
     address treasury;
 
     address aaveStrategyFactory;
@@ -134,6 +135,7 @@ contract TestBase is ProtocolActions {
         poolDelegate     = makeAddr("poolDelegate");
         permissionAdmin  = makeAddr("permissionAdmin");
         securityAdmin    = makeAddr("securityAdmin");
+        strategyManager  = makeAddr("strategyManager");
         treasury         = makeAddr("treasury");
     }
 
@@ -219,6 +221,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("REFINANCER",                       address(fixedTermRefinancer),  true);
         globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
         globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
+        globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
 
         globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
         globals.setCanDeployFrom(basicStrategyFactory,        address(deployer), true);

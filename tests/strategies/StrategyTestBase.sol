@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IMockERC20 } from "../../contracts/interfaces/Interfaces.sol";
+import { IMapleProxied, IMockERC20 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../contracts/Runner.sol";
 
@@ -9,7 +9,7 @@ import { TestBase } from "../TestBase.sol";
 
 contract StrategyTestBase is TestBase {
 
-    function setUp() public override {
+    function setUp() public override virtual {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
 
         start = block.timestamp;
@@ -56,11 +56,20 @@ contract StrategyTestBase is TestBase {
         vm.stopPrank();
 
         _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
+
+        _configurePool();
     }
 
-    // TODO: Remove once initial tests are added for strategies
-    function test_sanity() external {
-        assertTrue(true);
+    function _getStrategy(address factory_) internal view returns (address strategy_) {
+        uint256 length = poolManager.strategyListLength();
+
+        for (uint256 i; i < length; i++) {
+            strategy_ = poolManager.strategyList(i);
+            if (IMapleProxied(strategy_).factory() == factory_) {
+                return strategy_;
+            }
+        }
+        revert("STRATEGY_NOT_FOUND");
     }
 
 }

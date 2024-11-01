@@ -3,6 +3,8 @@ pragma solidity ^0.8.7;
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
+import { IMapleProxied } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
+
 import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
@@ -42,6 +44,9 @@ import { IMapleWithdrawalManager as IMWMC }
 import { IMapleWithdrawalManager as IMWMQ }
     from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
 
+import { IMapleStrategy }     from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
+import { IMapleAaveStrategy } from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
+
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
@@ -79,6 +84,10 @@ interface IPoolManager is IMPM { }
 interface IPoolPermissionManager is IMPPM { }
 
 interface IPoolPermissionManagerInitializer is IMPPMI { }
+
+interface IStrategy is IMapleStrategy { }
+
+interface IAaveStrategy is IMapleAaveStrategy { }
 
 interface ISyrupRouter is ISR { }
 

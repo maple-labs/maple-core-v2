@@ -6,6 +6,7 @@ optimizer       = false                   # Enable or disable the solc optimizer
 verbosity       = 3                       # The verbosity of tests
 block_timestamp = 1_685_721_539           # Timestamp for tests (non-zero)
 gas_limit       = "18446744073709551615"  # Gas limit for tests
+evm_version     = "cancun"                # EVM version for tests
 
 [profile.production]
 optimizer      = true  # Enable or disable the solc optimizer
