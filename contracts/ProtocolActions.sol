@@ -695,8 +695,7 @@ contract ProtocolActions is Runner {
         string     memory symbol_,
         uint256[4] memory configParams_
     )
-        internal
-        returns (address poolManager_)
+        internal returns (address poolManager_)
     {
         vm.prank(poolDelegate_);
         poolManager_ = IPoolDeployer(deployer_).deployPool({

@@ -28,6 +28,7 @@ import { IMaplePool as IMP }                from "../../modules/pool/contracts/i
 import { IMaplePoolDelegateCover as IMPDC } from "../../modules/pool/contracts/interfaces/IMaplePoolDelegateCover.sol";
 import { IMaplePoolDeployer as IMPD }       from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
 import { IMaplePoolManager as IMPM }        from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
+import { IMapleProxied }                    from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
 import { IMapleProxyFactory }               from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
 import { IMaplePoolPermissionManager as IMPPM }
@@ -47,10 +48,13 @@ import { IMapleWithdrawalManager as IMWMQ }
 import { IMapleStrategy }      from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
 import { IMapleAaveStrategy }  from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
 import { IMapleBasicStrategy } from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
+import { IMapleSkyStrategy }   from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
+
+interface IAaveStrategy is IMapleAaveStrategy { }
 
 interface IFeeManager is IMLFM { }
 
@@ -88,7 +92,7 @@ interface IPoolPermissionManagerInitializer is IMPPMI { }
 
 interface IStrategy is IMapleStrategy { }
 
-interface IAaveStrategy is IMapleAaveStrategy { }
+interface ISkyStrategy is IMapleSkyStrategy { }
 
 interface IBasicStrategy is IMapleBasicStrategy { }
 
@@ -323,6 +327,28 @@ interface IWithdrawalManagerLike {
         external view returns (uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration);
 
     function getCurrentCycleId() external view returns (uint256 cycleId_);
+}
+
+interface IPSMLike {
+
+    function buyGem(address usr, uint256 gemAmt) external returns (uint256 daiInWad);
+
+    function file(bytes32 what, uint256 data) external;
+
+    function gem() external view returns (address gem);
+
+    function psm() external view returns (address pms);
+
+    function sellGem(address usr, uint256 gemAmt) external returns (uint256 daiOutWad);
+
+    function tin() external view returns (uint256 tin); // Sell side fee
+
+    function tout() external view returns (uint256 tout); // Buy side fee
+
+    function to18ConversionFactor() external view returns (uint256 to18ConversionFactor);
+
+    function usds() external view returns (address usds);
+
 }
 
 /******************************************************************************************************************************************/

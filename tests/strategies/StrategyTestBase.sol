@@ -9,7 +9,7 @@ import { TestBase } from "../TestBase.sol";
 
 contract StrategyTestBase is TestBase {
 
-    function setUp() public override virtual {
+    function setUp() public virtual override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
 
         start = block.timestamp;
@@ -21,7 +21,7 @@ contract StrategyTestBase is TestBase {
         _setTreasury();
         _createFactories();
 
-        ( address poolManager_, address pool_, , , ) =
+        ( address poolManager_, address pool_, , address wm_ , ) =
             deployer.getDeploymentAddresses({
                 poolDelegate_:             address(poolDelegate),
                 poolManagerFactory_:       address(poolManagerFactory),
@@ -57,7 +57,8 @@ contract StrategyTestBase is TestBase {
 
         _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
 
-        _configurePool();
+        activatePool(address(poolManager), HUNDRED_PERCENT);
+        allowLender(address(poolManager), wm_);
     }
 
     function _getStrategy(address factory_) internal view returns (address strategy_) {
@@ -69,7 +70,8 @@ contract StrategyTestBase is TestBase {
                 return strategy_;
             }
         }
-        revert("STRATEGY_NOT_FOUND");
+
+        require(false, "STRATEGY_NOT_FOUND");
     }
 
 }
