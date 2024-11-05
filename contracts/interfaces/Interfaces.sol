@@ -44,8 +44,9 @@ import { IMapleWithdrawalManager as IMWMC }
 import { IMapleWithdrawalManager as IMWMQ }
     from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
 
-import { IMapleStrategy }     from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
-import { IMapleAaveStrategy } from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
+import { IMapleStrategy }      from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
+import { IMapleAaveStrategy }  from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
+import { IMapleBasicStrategy } from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
@@ -89,6 +90,8 @@ interface IStrategy is IMapleStrategy { }
 
 interface IAaveStrategy is IMapleAaveStrategy { }
 
+interface IBasicStrategy is IMapleBasicStrategy { }
+
 interface ISyrupRouter is ISR { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
@@ -123,6 +126,21 @@ interface IERC20Like {
 
     function transferFrom(address owner, address recipient, uint256 amount) external returns (bool success);
 
+}
+
+interface IERC4626Like is IERC20Like {
+
+    function asset() external view returns (address asset_);
+
+    function convertToAssets(uint256 shares_) external view returns (uint256 assets_);
+
+    function convertToShares(uint256 assets_) external view returns (uint256 shares_);
+
+    function deposit(uint256 assets_, address receiver_) external returns (uint256 shares_);
+
+    function redeem(uint256 shares_, address receiver_, address owner_) external returns (uint256 assets_);
+
+    function withdraw(uint256 assets_, address receiver_, address owner_) external returns (uint256 shares_);
 }
 
 interface IExemptionsManagerLike {

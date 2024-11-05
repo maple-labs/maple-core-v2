@@ -46,6 +46,7 @@ contract ProtocolActions is Runner {
     address USDC_SOURCE      = address(0x4B16c5dE96EB2117bBE5fd171E4d203624B014aa);
     address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
+    address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
     address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
     address AAVE_USDT     = address(0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a);
@@ -76,6 +77,7 @@ contract ProtocolActions is Runner {
         else if (asset_ == USDC)      erc20_transfer(USDC,      USDC_SOURCE,      account_, amount_);
         else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
         else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
+        else if (asset_ == USDS)      erc20_transfer(USDS,      USDS_SOURCE,      account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
@@ -692,9 +694,9 @@ contract ProtocolActions is Runner {
         string     memory name_,
         string     memory symbol_,
         uint256[4] memory configParams_
-    ) 
-        internal 
-        returns (address poolManager_) 
+    )
+        internal
+        returns (address poolManager_)
     {
         vm.prank(poolDelegate_);
         poolManager_ = IPoolDeployer(deployer_).deployPool({
