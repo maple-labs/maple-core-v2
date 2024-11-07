@@ -627,3 +627,243 @@ contract AaveStrategyWithdrawTests is AaveStrategyTestsBase {
     }
 
 }
+
+contract AaveSetStrategyFeeTests is AaveStrategyTestsBase {
+
+    function setUp() public override virtual {
+        StrategyTestBase.setUp();
+
+        openPool(address(poolManager));
+        deposit(lp, poolLiquidity);
+
+        aaveStrategy = IAaveStrategy(_getStrategy(address(aaveStrategyFactory)));
+
+        aaveToken = IMockERC20(address(aaveStrategy.aaveToken()));
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_failIfBiggerThanHundredPercent() external {
+        vm.prank(governor);
+        vm.expectRevert("MAS:SSFR:INVALID_FEE_RATE");
+        aaveStrategy.setStrategyFeeRate(1e6 + 1);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_failIfDeactivated() external {
+        vm.prank(governor);
+        aaveStrategy.deactivateStrategy();
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:NOT_ACTIVE");
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_failIfImpaired() external {
+        vm.prank(governor);
+        aaveStrategy.impairStrategy();
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:NOT_ACTIVE");
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_withGovernor_unfundedStrategy() external {
+        assertEq(aaveStrategy.strategyFeeRate(),         0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(pool.totalAssets(),                     poolLiquidity);
+
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(pool.totalAssets(),                     poolLiquidity);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_withGovernor_fromNonZeroToZeroFeeRate() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(poolDelegate);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                     poolLiquidity);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 initialYield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 initialFee   = (initialYield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(initialYield, 0);
+        assertGt(initialFee,   0);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                     poolLiquidity + initialYield - initialFee);
+
+        assertEq(fundsAsset.balanceOf(treasury), 0);
+
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(0);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         0);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
+        assertEq(pool.totalAssets(),                     poolLiquidity + initialYield - initialFee);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);
+
+        uint256 intermediaryBalance = aaveToken.balanceOf(address(aaveStrategy));
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 additionalYield = aaveToken.balanceOf(address(aaveStrategy)) - intermediaryBalance;
+        uint256 fee             = (additionalYield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(additionalYield, 0);
+        assertEq(fee,             0);  // No fees taken when fee rate is 0
+
+        assertEq(aaveStrategy.strategyFeeRate(),         0);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield + additionalYield - initialFee);
+        assertEq(pool.totalAssets(),                     poolLiquidity + initialYield + additionalYield - initialFee);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_withPoolDelegate_fundedStrategy() external {
+        vm.prank(poolDelegate);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                     poolLiquidity);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield      = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 currentFee = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield,      0);
+        assertEq(currentFee, 0);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                     poolLiquidity + yield);
+
+        assertEq(fundsAsset.balanceOf(treasury), 0);
+
+        vm.prank(poolDelegate);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + yield);
+        assertEq(pool.totalAssets(),                     poolLiquidity + yield);
+
+        assertEq(fundsAsset.balanceOf(treasury), 0);
+
+        uint256 intermediaryBalance = aaveToken.balanceOf(address(aaveStrategy));
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 additionalYield = aaveToken.balanceOf(address(aaveStrategy)) - intermediaryBalance;
+        uint256 fee             = (additionalYield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(additionalYield, 0);
+        assertGt(fee,             0);
+
+        assertEq(aaveStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield + additionalYield - fee);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + yield);
+        assertEq(pool.totalAssets(),                     poolLiquidity + yield + additionalYield - fee);
+    }
+
+    function test_aaveStrategy_setStrategyFeeRate_withOperationalAdmin_withWithdrawal() external {
+        // Set a non-zero fee rate
+        assertEq(aaveStrategy.strategyFeeRate(), 0);
+
+        vm.prank(operationalAdmin);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        assertEq(aaveStrategy.strategyFeeRate(), strategyFeeRate);
+
+        // Fund the strategy
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                     poolLiquidity);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 initialYield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 initialFee   = (initialYield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        // Update the fee
+        uint256 newFeeRate = 0.02e6;
+
+        vm.prank(operationalAdmin);
+        aaveStrategy.setStrategyFeeRate(newFeeRate);
+
+        assertEq(aaveStrategy.strategyFeeRate(), newFeeRate);
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);  // Treasury should have received the initial fee
+        
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
+        assertEq(pool.totalAssets(),                     poolLiquidity + initialYield - initialFee);
+
+        uint256 intermediaryBalance = aaveToken.balanceOf(address(aaveStrategy));
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 additionalYield = aaveToken.balanceOf(address(aaveStrategy)) - intermediaryBalance;
+        uint256 additionalFee   = (additionalYield * newFeeRate) / 1e6;
+
+        assertGt(additionalYield, 0);
+        assertGt(additionalFee,   0);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);
+        
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield + additionalYield - initialFee - additionalFee);
+        assertEq(pool.totalAssets(),                     poolLiquidity + initialYield + additionalYield - initialFee - additionalFee);
+
+        uint256 withdrawalAmount = amountToFund / 3;
+
+        // Withdraw from the strategy
+        vm.prank(strategyManager);
+        aaveStrategy.withdrawFromStrategy(withdrawalAmount);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee + additionalFee);
+
+        uint256 aum = (amountToFund - withdrawalAmount) + initialYield + additionalYield - initialFee - additionalFee;
+
+        assertApproxEqAbs(aaveStrategy.assetsUnderManagement(),   aum, 1);
+        assertApproxEqAbs(aaveStrategy.lastRecordedTotalAssets(), aum, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + initialYield + additionalYield - initialFee - additionalFee, 1);
+    }
+
+}
