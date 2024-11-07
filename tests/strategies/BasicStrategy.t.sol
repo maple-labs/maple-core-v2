@@ -19,7 +19,7 @@ contract BasicStrategyTestsBase is StrategyTestBase {
     IMapleBasicStrategy basicStrategy;
     IERC4626Like        strategyVault;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
 
         start = block.timestamp;
@@ -48,7 +48,6 @@ contract BasicStrategyTestsBase is StrategyTestBase {
 
         bytes[] memory deploymentData = new bytes[](3);
 
-        // Add both aave and sky strategy factories
         factories[0] = (fixedTermLoanManagerFactory);
         factories[1] = (openTermLoanManagerFactory);
         factories[2] = (basicStrategyFactory);
@@ -428,6 +427,449 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
         assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), secondAmountToFund,           1);
         assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   secondAmountToFund,           1);
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity - amountToFund, 1);
+    }
+
+}
+
+contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
+
+    uint256 amountToWithdraw = 40e18;
+
+    // NOTE: Helper needed to ensure round down test has lower initial deposit
+    function _fundStrategy() internal {
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+    }
+
+    function test_basicStrategy_withdraw_failWhenPaused() external {
+        _fundStrategy();
+
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.expectRevert("MS:PAUSED");
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+    }
+
+    function test_basicStrategy_withdraw_failIfNotStrategyManager() external {
+        _fundStrategy();
+
+        vm.expectRevert("MS:NOT_MANAGER");
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+    }
+
+    function test_basicStrategy_withdraw_failIfZeroAmount() external {
+        _fundStrategy();
+
+        vm.prank(strategyManager);
+        vm.expectRevert("MBS:WFS:ZERO_ASSETS");
+        basicStrategy.withdrawFromStrategy(0);
+    }
+
+    function test_basicStrategy_withdraw_failIfLowAssets() external {
+        _fundStrategy();
+
+        vm.prank(strategyManager);
+        vm.expectRevert();
+        basicStrategy.withdrawFromStrategy(amountToFund + 1);
+    }
+
+    function test_basicStrategy_withdraw_failWithFullLoss() external {
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 sUSDSBalance = strategyVault.balanceOf(address(basicStrategy));
+
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), sUSDSBalance);  // Also remove yield to round the accounting
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(pool.totalAssets(),                    poolLiquidity - amountToFund);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MBS:WFS:LOW_ASSETS");
+        basicStrategy.withdrawFromStrategy(1);
+    }
+
+    function test_basicStrategy_withdraw_withPoolDelegate_noFeesSameBlock() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(0);
+
+        _fundStrategy();
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,  1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity, 1);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(
+            strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund - amountToWithdraw,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund - amountToWithdraw, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - amountToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+    }
+
+    function test_basicStrategy_withdraw_noFeesWithYield() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(0);
+
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+
+        assertGt(yield, 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,          1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield, 1);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(
+            strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund + yield - amountToWithdraw,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield - amountToWithdraw, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - amountToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+    }
+
+    function test_basicStrategy_withdraw_noFeesWithYieldFullWithdrawal() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(0);
+
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+
+        assertGt(yield, 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,          1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield, 1);
+
+        amountToWithdraw = basicStrategy.assetsUnderManagement();  // Full Withdrawal
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertEq(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+    }
+
+    function test_basicStrategy_withdraw_withFeesAndYield() external {
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fee   = (yield * strategyFeeRate) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fee,   0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fee,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield - fee, 1);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(
+            strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund + yield - fee - amountToWithdraw,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               fee);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield - amountToWithdraw - fee, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - amountToWithdraw - fee, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fee, 1);
+    }
+
+    function test_basicStrategy_withdraw_withFeesAndYieldFullWithdrawal() external {
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fee   = (yield * strategyFeeRate) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fee,   0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fee,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield - fee, 1);
+
+        amountToWithdraw = basicStrategy.assetsUnderManagement();  // Full Withdrawal
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertEq(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               fee);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fee, 1);
+    }
+
+    function test_basicStrategy_withdraw_withFeesRoundedToZeroAndYield() external {
+        amountToFund     = 5e6;
+        amountToWithdraw = 1e6;
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 300 seconds);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fee   = (yield * strategyFeeRate) / 1e6;
+
+        assertGt(yield, 0);
+        assertEq(fee,   0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,          1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield, 1);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(
+            strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund + yield - amountToWithdraw,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield - amountToWithdraw, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - amountToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+    }
+
+    function test_basicStrategy_withdraw_withLoss() external {
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 loss               = 20e18;
+        uint256 lossShares         = strategyVault.convertToShares(loss);
+        uint256 yieldShares        = strategyVault.convertToShares(yield);
+
+        assertGt(yield, 0);
+
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), lossShares + yieldShares);  // Also remove yield to round the accounting
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss,  1);
+        assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity - loss, 1);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(
+            strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund - amountToWithdraw - loss,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund - amountToWithdraw - loss, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - amountToWithdraw - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+    }
+
+    function test_basicStrategy_withdraw_whileImpaired() external {
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fee   = (yield * strategyFeeRate) / 1e6;
+
+        // Both Yield and Fees should be greater than 0
+        assertGt(yield, 0);
+        assertGt(fee,   0);
+
+        vm.prank(governor);
+        basicStrategy.impairStrategy();
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fee);
+        assertEq(basicStrategy.unrealizedLosses(),        amountToFund + yield - fee);
+        assertEq(pool.totalAssets(),                      poolLiquidity + yield - fee);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(
+            strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund + yield - amountToWithdraw,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);  // No fees taken when impaired
+
+        // While impaired, the lastRecordedTotalAssets should not be updated
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(), amountToFund + yield - amountToWithdraw, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),      amountToFund + yield - amountToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Strategy remains Impaired
+    }
+
+    function test_basicStrategy_withdraw_whileDeactivated() external {
+        _fundStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fee   = (yield * strategyFeeRate) / 1e6;
+
+        // Both Yield and Fees should be greater than 0
+        assertGt(yield, 0);
+        assertGt(fee,   0);
+
+        vm.prank(governor);
+        basicStrategy.deactivateStrategy();
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(pool.totalAssets(),                      poolLiquidity - amountToFund);
+
+        vm.prank(poolDelegate);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+
+        assertApproxEqAbs(
+            strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
+            amountToFund + yield - amountToWithdraw,
+            1
+        );
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund + amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);  // No fees taken when deactivated
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+
+        // In this scenario, the pool books a loss for the full amount, but adds what was withdrawn
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund + amountToWithdraw, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Strategy remains Deactivated
     }
 
 }
