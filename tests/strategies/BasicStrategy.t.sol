@@ -873,3 +873,248 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
     }
 
 }
+
+contract BasicSetStrategyFeeTests is BasicStrategyTestsBase {
+
+    function setUp() public override virtual {
+        super.setUp();
+
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(0);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_failIfBiggerThanHundredPercent() external {
+        vm.prank(governor);
+        vm.expectRevert("MBS:SSFR:INVALID_STRATEGY_FEE_RATE");
+        basicStrategy.setStrategyFeeRate(1e6 + 1);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_failIfDeactivated() external {
+        vm.prank(governor);
+        basicStrategy.deactivateStrategy();
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:NOT_ACTIVE");
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_failIfImpaired() external {
+        vm.prank(governor);
+        basicStrategy.impairStrategy();
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:NOT_ACTIVE");
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_withGovernor_unfundedStrategy() external {
+        assertEq(basicStrategy.strategyFeeRate(),         0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(pool.totalAssets(),                      poolLiquidity);
+
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        assertEq(basicStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(pool.totalAssets(),                      poolLiquidity);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_withGovernor_fromNonZeroToZeroFeeRate() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(poolDelegate);
+        basicStrategy.fundStrategy(amountToFund);
+
+        assertEq(basicStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(), amountToFund,  1);
+        assertApproxEqAbs(pool.totalAssets(),                    poolLiquidity, 1);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 initialYield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 initialFee   = (initialYield * strategyFeeRate) / 1e6;
+
+        assertGt(initialYield, 0);
+        assertGt(initialFee,   0);
+
+        assertEq(basicStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                      poolLiquidity + initialYield - initialFee);
+
+        assertEq(fundsAsset.balanceOf(treasury), 0);
+
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(0);
+
+        assertEq(basicStrategy.strategyFeeRate(),         0);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
+        assertEq(pool.totalAssets(),                      poolLiquidity + initialYield - initialFee);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);
+
+        uint256 intermediaryBalance = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 additionalYield = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))) - intermediaryBalance;
+        uint256 fee             = (additionalYield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(additionalYield, 0);
+        assertEq(fee,             0);  // No fees taken when fee rate is 0
+
+        assertEq(basicStrategy.strategyFeeRate(),         0);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + initialYield + additionalYield - initialFee);
+        assertEq(pool.totalAssets(),                      poolLiquidity + initialYield + additionalYield - initialFee);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_withPoolDelegate_fundedStrategy() external {
+        vm.prank(poolDelegate);
+        basicStrategy.fundStrategy(amountToFund);
+
+        assertEq(basicStrategy.strategyFeeRate(),         0);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(), amountToFund,  1);
+        assertApproxEqAbs(pool.totalAssets(),                    poolLiquidity, 1);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield      = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 currentFee = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield,      0);
+        assertEq(currentFee, 0);
+
+        assertEq(basicStrategy.strategyFeeRate(),         0);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + yield);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(pool.totalAssets(),                      poolLiquidity + yield);
+
+        assertEq(fundsAsset.balanceOf(treasury), 0);
+
+        vm.prank(poolDelegate);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        assertEq(basicStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + yield);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield);
+        assertEq(pool.totalAssets(),                      poolLiquidity + yield);
+
+        assertEq(fundsAsset.balanceOf(treasury), 0);
+
+        uint256 intermediaryBalance = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 additionalYield = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))) - intermediaryBalance;
+        uint256 fee             = (additionalYield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(additionalYield, 0);
+        assertGt(fee,             0);
+
+        assertEq(basicStrategy.strategyFeeRate(),         strategyFeeRate);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + yield + additionalYield - fee);
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield);
+        assertEq(pool.totalAssets(),                      poolLiquidity + yield + additionalYield - fee);
+    }
+
+    function test_basicStrategy_setStrategyFeeRate_withOperationalAdmin_withWithdrawal() external {
+        // Set a non-zero fee rate
+        assertEq(basicStrategy.strategyFeeRate(), 0);
+
+        vm.prank(operationalAdmin);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        assertEq(basicStrategy.strategyFeeRate(), strategyFeeRate);
+
+        // Fund the strategy 
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund);
+
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(), amountToFund,  1);
+        assertApproxEqAbs(pool.totalAssets(),                    poolLiquidity, 1);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 initialYield = currentTotalAssets - amountToFund;
+        uint256 initialFee   = (initialYield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        // Update the fee
+        uint256 newFeeRate = 0.02e6;
+
+        vm.prank(operationalAdmin);
+        basicStrategy.setStrategyFeeRate(newFeeRate);
+
+        assertEq(basicStrategy.strategyFeeRate(), newFeeRate);
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);  // Treasury should have received the initial fee
+        
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
+        assertEq(pool.totalAssets(),                      poolLiquidity + initialYield - initialFee);
+
+        uint256 intermediaryBalance = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 additionalYield = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))) - intermediaryBalance;
+        uint256 additionalFee   = (additionalYield * newFeeRate) / 1e6;
+
+        assertGt(additionalYield, 0);
+        assertGt(additionalFee,   0);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee);
+        
+        assertEq(basicStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
+        assertEq(basicStrategy.assetsUnderManagement(),   amountToFund + initialYield + additionalYield - initialFee - additionalFee);
+        assertEq(pool.totalAssets(),                      poolLiquidity + initialYield + additionalYield - initialFee - additionalFee);
+
+        uint256 withdrawalAmount = amountToFund / 3;
+
+        // Withdraw from the strategy
+        vm.prank(strategyManager);
+        basicStrategy.withdrawFromStrategy(withdrawalAmount);
+
+        assertEq(fundsAsset.balanceOf(treasury), initialFee + additionalFee);
+
+        uint256 aum = (amountToFund - withdrawalAmount) + initialYield + additionalYield - initialFee - additionalFee;
+
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   aum, 1);
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), aum, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + initialYield + additionalYield - initialFee - additionalFee, 1);
+    }
+
+}
