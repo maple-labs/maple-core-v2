@@ -338,13 +338,9 @@ contract TestBase is ProtocolActions {
 
     // TODO: Update required to support non LM strategies.
     function _setupDeploymentData() internal {
-        address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory).getInstanceAddress(
-            abi.encode(poolDelegate, fundsAsset, 0, POOL_NAME, POOL_SYMBOL), // 0 is the initial supply
-            keccak256(abi.encode(poolDelegate))
-        );
 
         for (uint256 i = 0; i < strategyFactories.length; i++) {
-            strategyDeploymentData_.push(abi.encode(poolManagerDeployment));
+            strategyDeploymentData_.push(abi.encode(new bytes(0)));
         }
     }
 
@@ -390,14 +386,9 @@ contract TestBase is ProtocolActions {
         string memory name_   = "Maple Pool";
         string memory symbol_ = "MP";
 
-        address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory).getInstanceAddress(
-            abi.encode(poolDelegate, fundsAsset, 0, name_, symbol_), // 0 is the initial supply
-            keccak256(abi.encode(poolDelegate))
-        );
-
         strategyDeploymentData_ = new bytes[](strategyFactories.length);
         for (uint256 i = 0; i < strategyFactories.length; i++) {
-            strategyDeploymentData_[i] = abi.encode(poolManagerDeployment);
+            strategyDeploymentData_[i] = abi.encode(new bytes(0));
         }
 
         poolManager = IPoolManager(deployPoolWithQueue(

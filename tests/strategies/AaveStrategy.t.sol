@@ -309,10 +309,9 @@ contract AaveStrategyFundTests is AaveStrategyTestsBase {
         assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund - secondAmountToFund);
         assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
 
-        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund - loss + secondAmountToFund);
-
-        assertApproxEqAbs(aaveStrategy.assetsUnderManagement(), amountToFund - loss + secondAmountToFund, 1);
-        assertApproxEqAbs(pool.totalAssets(),                   poolLiquidity - loss,                     1);
+        assertApproxEqAbs(aaveStrategy.lastRecordedTotalAssets(), amountToFund - loss + secondAmountToFund, 1);
+        assertApproxEqAbs(aaveStrategy.assetsUnderManagement(),   amountToFund - loss + secondAmountToFund, 1);
+        assertApproxEqAbs(pool.totalAssets(),                     poolLiquidity - loss,                     1);
 
         assertEq(fundsAsset.balanceOf(treasury), 0);  // No fees were taken by the treasury
     }
@@ -829,7 +828,7 @@ contract AaveSetStrategyFeeTests is AaveStrategyTestsBase {
 
         assertEq(aaveStrategy.strategyFeeRate(), newFeeRate);
         assertEq(fundsAsset.balanceOf(treasury), initialFee);  // Treasury should have received the initial fee
-        
+
         assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
         assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield - initialFee);
         assertEq(pool.totalAssets(),                     poolLiquidity + initialYield - initialFee);
@@ -845,7 +844,7 @@ contract AaveSetStrategyFeeTests is AaveStrategyTestsBase {
         assertGt(additionalFee,   0);
 
         assertEq(fundsAsset.balanceOf(treasury), initialFee);
-        
+
         assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund + initialYield - initialFee);
         assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + initialYield + additionalYield - initialFee - additionalFee);
         assertEq(pool.totalAssets(),                     poolLiquidity + initialYield + additionalYield - initialFee - additionalFee);

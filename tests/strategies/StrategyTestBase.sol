@@ -21,19 +21,6 @@ contract StrategyTestBase is TestBase {
         _setTreasury();
         _createFactories();
 
-        ( address poolManager_, address pool_, , address wm_ , ) =
-            deployer.getDeploymentAddresses({
-                poolDelegate_:             address(poolDelegate),
-                poolManagerFactory_:       address(poolManagerFactory),
-                withdrawalManagerFactory_: address(queueWMFactory),
-                strategyFactories_:        new address[](0),
-                strategyDeploymentData_:   new bytes[](0),
-                asset_:                    address(fundsAsset),
-                name_:                     POOL_NAME,
-                symbol_:                   POOL_SYMBOL,
-                configParams_:             [type(uint256).max, 0, 0, 0]
-            });
-
         address[] memory factories = new address[](4);
 
         bytes[] memory deploymentData = new bytes[](4);
@@ -44,10 +31,10 @@ contract StrategyTestBase is TestBase {
         factories[2] = (aaveStrategyFactory);
         factories[3] = (skyStrategyFactory);
 
-        deploymentData[0] = (abi.encode(poolManager_));
-        deploymentData[1] = (abi.encode(poolManager_));
-        deploymentData[2] = (abi.encode(pool_, AAVE_USDC));
-        deploymentData[3] = (abi.encode(pool_, SAVINGS_USDS, USDS_LITE_PSM));
+        deploymentData[0] = (abi.encode(new bytes(0)));
+        deploymentData[1] = (abi.encode(new bytes(0)));
+        deploymentData[2] = (abi.encode(AAVE_USDC));
+        deploymentData[3] = (abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDC),     true);
@@ -58,7 +45,7 @@ contract StrategyTestBase is TestBase {
         _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
-        allowLender(address(poolManager), wm_);
+        allowLender(address(poolManager), address(queueWM));
     }
 
     function _getStrategy(address factory_) internal view returns (address strategy_) {

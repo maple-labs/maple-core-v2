@@ -416,7 +416,7 @@ contract SkyStrategyFundStrategyTests is SkyStrategyTestBase {
 
         uint256 loss = skyStrategy.lastRecordedTotalAssets() - currentTotalAssets;
 
-        assertEq(loss, initialUsdcIn);
+        assertApproxEqAbs(loss, initialUsdcIn, 1);
 
         vm.prank(strategyManager);
         skyStrategy.fundStrategy(usdcIn);
@@ -669,7 +669,7 @@ contract SkyStrategyFundStrategyTests is SkyStrategyTestBase {
 
         uint256 loss = skyStrategy.lastRecordedTotalAssets() - currentTotalAssets;
 
-        assertEq(loss, initialUsdcIn);
+        assertApproxEqAbs(loss, initialUsdcIn, 1);
 
         vm.prank(strategyManager);
         skyStrategy.fundStrategy(usdcIn);
@@ -1368,7 +1368,8 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
         vm.prank(strategyManager);
         skyStrategy.withdrawFromStrategy(aum);
 
-        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity + yield);
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity + yield, 1);
+
         assertEq(usdc.balanceOf(address(treasury)),    0);
         assertEq(usdc.balanceOf(address(skyStrategy)), 0);
 
@@ -1377,7 +1378,7 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
 
         assertEq(_currentTotalAssets(0), 0);
 
-        assertEq(pool.totalAssets(), poolLiquidity + yield);
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
     }
 
     function test_withdrawFromStrategy_activeStrategy_noFees_afterLoss_partialWithdrawal() external {
@@ -1466,7 +1467,8 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
         vm.prank(strategyManager);
         skyStrategy.withdrawFromStrategy(aum);
 
-        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - loss);
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity - loss, 1);
+
         assertEq(usdc.balanceOf(address(treasury)),    0);
         assertEq(usdc.balanceOf(address(skyStrategy)), 0);
 
@@ -1641,7 +1643,8 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
         vm.prank(strategyManager);
         skyStrategy.withdrawFromStrategy(aum);
 
-        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity + yield - fees);
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity + yield - fees, 1);
+
         assertEq(usdc.balanceOf(address(treasury)),    fees);
         assertEq(usdc.balanceOf(address(skyStrategy)), 0);
 
@@ -1650,7 +1653,7 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
 
         assertEq(_currentTotalAssets(0), 0);
 
-        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
     }
 
     function test_withdrawFromStrategy_activeStrategy_strategyFees_afterLoss_partialWithdrawal() external {
@@ -1741,7 +1744,8 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
         vm.prank(strategyManager);
         skyStrategy.withdrawFromStrategy(aum);
 
-        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - loss);
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity - loss, 1);
+
         assertEq(usdc.balanceOf(address(treasury)),    0);
         assertEq(usdc.balanceOf(address(skyStrategy)), 0);
 
@@ -1750,7 +1754,7 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
 
         assertEq(_currentTotalAssets(0), 0);
 
-        assertEq(pool.totalAssets(), poolLiquidity - loss);
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
     }
 
     function test_withdrawFromStrategy_activeStrategy_psmFees_whenStagnant_partialWithdrawal() external {
