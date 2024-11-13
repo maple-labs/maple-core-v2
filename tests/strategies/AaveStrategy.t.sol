@@ -861,8 +861,604 @@ contract AaveSetStrategyFeeTests is AaveStrategyTestsBase {
 
         assertApproxEqAbs(aaveStrategy.assetsUnderManagement(),   aum, 1);
         assertApproxEqAbs(aaveStrategy.lastRecordedTotalAssets(), aum, 1);
+    }
 
-        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + initialYield + additionalYield - initialFee - additionalFee, 1);
+}
+
+contract AaveStrategyImpairTests is AaveStrategyTestsBase {
+
+    function test_aaveStrategy_impair_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        aaveStrategy.impairStrategy();
+    }
+
+    function test_aaveStrategy_impair_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        aaveStrategy.impairStrategy();
+    }
+
+    function test_aaveStrategy_impair_failIfAlreadyImpaired() external {
+        vm.prank(operationalAdmin);
+        aaveStrategy.impairStrategy();
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MAS:IS:ALREADY_IMPAIRED");
+        aaveStrategy.impairStrategy();
+    }
+
+    function test_aaveStrategy_impair_unfundedStrategy() external {
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_aaveStrategy_impair_stagnant_noFees() external {
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund);
+        assertEq(aaveStrategy.unrealizedLosses(),        amountToFund);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_aaveStrategy_impair_withGain_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);
+        assertEq(aaveStrategy.unrealizedLosses(),        amountToFund + yield - fees);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_aaveStrategy_impair_withLoss_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+        uint256 loss  = (amountToFund / 2) - yield;
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(aaveStrategy));
+        aaveToken.transfer(address(0xdead), loss);
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield - loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - loss);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - loss);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield - loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - loss);
+        assertEq(aaveStrategy.unrealizedLosses(),        amountToFund + yield - loss);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - loss);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_aaveStrategy_impair_withFullLoss_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+        uint256 loss  = aaveToken.balanceOf(address(aaveStrategy));
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(aaveStrategy));
+        aaveToken.transfer(address(0xdead), loss);
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_aaveStrategy_impair_withGain_inactive_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        // Deactivate the strategy first
+        vm.prank(poolDelegate);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);  // Deactivated should set AUM to 0
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(poolDelegate);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);  // AUM should return after impairment
+        assertEq(aaveStrategy.unrealizedLosses(),        amountToFund + yield - fees);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+    }
+
+}
+
+contract AaveStrategyDeactivateTests is AaveStrategyTestsBase {
+
+    function test_aaveStrategy_deactivate_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        aaveStrategy.deactivateStrategy();
+    }
+
+    function test_aaveStrategy_deactivate_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        aaveStrategy.deactivateStrategy();
+    }
+
+    function test_aaveStrategy_deactivate_failIfAlreadyInactive() external {
+        vm.prank(poolDelegate);
+        aaveStrategy.deactivateStrategy();
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MAS:DS:ALREADY_INACTIVE");
+        aaveStrategy.deactivateStrategy();
+    }
+
+    function test_aaveStrategy_deactivate_unfundedStrategy() external {
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_aaveStrategy_deactivate_stagnant_noFees() external {
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_aaveStrategy_deactivate_withGain_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_aaveStrategy_deactivate_withLoss_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+        uint256 loss  = (amountToFund / 2) - yield;
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(aaveStrategy));
+        aaveToken.transfer(address(0xdead), loss);
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield - loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - loss);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - loss);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield - loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_aaveStrategy_deactivate_withFullLoss_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+        uint256 loss  = aaveToken.balanceOf(address(aaveStrategy));
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(aaveStrategy));
+        aaveToken.transfer(address(0xdead), loss);
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_aaveStrategy_deactivate_withGain_impaired_strategyFees() external {
+        vm.prank(governor);
+        aaveStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 yield = aaveToken.balanceOf(address(aaveStrategy)) - amountToFund;
+        uint256 fees  = (yield * aaveStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 0);  // Active
+
+        // Impair the strategy first
+        vm.prank(poolDelegate);
+        aaveStrategy.impairStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   amountToFund + yield - fees);
+        assertEq(aaveStrategy.unrealizedLosses(),        amountToFund + yield - fees);
+
+        assertEq(pool.totalAssets(), poolLiquidity + yield - fees);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(poolDelegate);
+        aaveStrategy.deactivateStrategy();
+
+        assertEq(aaveToken.balanceOf(address(aaveStrategy)),  amountToFund + yield);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(aaveStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),              0);
+
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), amountToFund);
+        assertEq(aaveStrategy.assetsUnderManagement(),   0);
+        assertEq(aaveStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(aaveStrategy.strategyState()), 2);  // Deactivated
     }
 
 }
