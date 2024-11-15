@@ -1115,3 +1115,1341 @@ contract BasicSetStrategyFeeTests is BasicStrategyTestsBase {
     }
 
 }
+
+contract BasicStrategyImpairTests is BasicStrategyTestsBase {
+
+    function test_basicStrategy_impair_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        basicStrategy.impairStrategy();
+    }
+
+    function test_basicStrategy_impair_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        basicStrategy.impairStrategy();
+    }
+
+    function test_basicStrategy_impair_failIfAlreadyImpaired() external {
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MBS:IS:ALREADY_IMPAIRED");
+        basicStrategy.impairStrategy();
+    }
+
+    function test_basicStrategy_impair_unfundedStrategy() external {
+        assertEq(strategyVault.balanceOf(address (basicStrategy)),  0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        assertEq(strategyVault.balanceOf(address (basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),     0);
+        assertEq(fundsAsset.balanceOf(treasury),                   0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_basicStrategy_impair_stagnant_noFees() external {
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_basicStrategy_impair_withGain_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fees  = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund + yield - fees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_basicStrategy_impair_withLoss_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 loss               = amountToFund / 3;
+        uint256 lossShares         = strategyVault.convertToShares(loss);
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), lossShares);
+
+        assertGt(yield, 0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - loss, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - loss, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund + yield - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_basicStrategy_impair_withFullLoss_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fees               = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+        uint256 loss               = strategyVault.balanceOf(address(basicStrategy));
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), loss);
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(strategyVault.balanceOf(address (basicStrategy)),  0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertEq(strategyVault.balanceOf(address (basicStrategy)),  0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+    }
+
+    function test_basicStrategy_impair_withGain_inactive_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fees  = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        // Deactivate the strategy first
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);  // Deactivated should set AUM to 0
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);  // AUM should return after impairment
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund + yield - fees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+    }
+
+}
+
+contract BasicStrategyDeactivateTests is BasicStrategyTestsBase {
+
+    function test_basicStrategy_deactivate_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        basicStrategy.deactivateStrategy();
+    }
+
+    function test_basicStrategy_deactivate_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        basicStrategy.deactivateStrategy();
+    }
+
+    function test_basicStrategy_deactivate_failIfAlreadyInactive() external {
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MBS:DS:ALREADY_INACTIVE");
+        basicStrategy.deactivateStrategy();
+    }
+
+    function test_basicStrategy_deactivate_unfundedStrategy() external {
+        assertEq(strategyVault.balanceOf(address (basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),     0);
+        assertEq(fundsAsset.balanceOf(treasury),                   0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        basicStrategy.deactivateStrategy();
+
+        assertEq(strategyVault.balanceOf(address (basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),     0);
+        assertEq(fundsAsset.balanceOf(treasury),                   0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_basicStrategy_deactivate_stagnant_noFees() external {
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(operationalAdmin);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   0,            1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_basicStrategy_deactivate_withGain_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fees  = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_basicStrategy_deactivate_withLoss_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 loss               = amountToFund / 3;
+        uint256 lossShares         = strategyVault.convertToShares(loss);
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), lossShares);
+
+        assertGt(yield, 0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - loss, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_basicStrategy_deactivate_withFullLoss_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+        uint256 yield              = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fees               = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+        uint256 loss               = strategyVault.balanceOf(address(basicStrategy));
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), loss);
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertEq(strategyVault.balanceOf(address (basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),     0);
+        assertEq(fundsAsset.balanceOf(treasury),                   0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertEq(strategyVault.balanceOf(address (basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),              poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),     0);
+        assertEq(fundsAsset.balanceOf(treasury),                   0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+    }
+
+    function test_basicStrategy_deactivate_withGain_impaired_strategyFees() external {
+        vm.prank(governor);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        uint256 yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        uint256 fees  = (yield * basicStrategy.strategyFeeRate()) / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees , 0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+
+        // Impair the strategy first
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,                1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund + yield - fees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+    }
+
+}
+
+contract BasicReactivateTests is BasicStrategyTestsBase {
+
+    function setUp() public override {
+        super.setUp();
+
+        // All tests done with fees, as it's a more realistic scenario and to reduce the possible combinations.
+        vm.prank(poolDelegate);
+        basicStrategy.setStrategyFeeRate(strategyFeeRate);
+    }
+
+    function test_basicStrategy_reactivate_failIfPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        basicStrategy.reactivateStrategy(false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        basicStrategy.reactivateStrategy(true);
+    }
+
+    function test_basicStrategy_reactivate_failIfNotProtocolAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        basicStrategy.reactivateStrategy(false);
+
+        vm.expectRevert("MS:NOT_ADMIN");
+        basicStrategy.reactivateStrategy(true);
+    }
+
+    function test_basicStrategy_reactivate_failIfAlreadyActive() external {
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MBS:RS:ALREADY_ACTIVE");
+        basicStrategy.reactivateStrategy(false);
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MBS:RS:ALREADY_ACTIVE");
+        basicStrategy.reactivateStrategy(true);
+    }
+
+    function test_basicStrategy_reactivate_unfunded_fromImpaired_withAccountingUpdate() external {
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_unfunded_fromImpaired_withoutAccountingUpdate() external {
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_unfunded_fromInactive_withAccountingUpdate() external {
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),    0);
+        assertEq(fundsAsset.balanceOf(treasury),                  0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),    0);
+        assertEq(fundsAsset.balanceOf(treasury),                  0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_unfunded_fromInactive_withoutAccountingUpdate() external {
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),    0);
+        assertEq(fundsAsset.balanceOf(treasury),                  0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertEq(strategyVault.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             poolLiquidity);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)),    0);
+        assertEq(fundsAsset.balanceOf(treasury),                  0);
+
+        assertEq(basicStrategy.lastRecordedTotalAssets(), 0);
+        assertEq(basicStrategy.assetsUnderManagement(),   0);
+        assertEq(basicStrategy.unrealizedLosses(),        0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_stagnant_fromImpaired_withAccountingUpdate() external {
+        _setupStagnantStrategy();
+
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_stagnant_fromImpaired_withoutAccountingUpdate() external {
+        _setupStagnantStrategy();
+
+        vm.prank(poolDelegate);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_stagnant_fromInactive_withAccountingUpdate() external {
+        _setupStagnantStrategy();
+
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_stagnant_fromInactive_withoutAccountingUpdate() external {
+        _setupStagnantStrategy();
+
+        vm.prank(poolDelegate);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - amountToFund);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withGain_fromImpaired_withAccountingUpdate() external {
+        uint256 yield = _setupStrategyWithGain();
+        uint256 fees = yield * strategyFeeRate / 1e6;
+
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund + yield - fees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        // Fees are not charged retroactively with accounting updates.
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withGain_fromImpaired_withoutAccountingUpdate() external {
+        uint256 yield = _setupStrategyWithGain();
+        uint256 fees = yield * strategyFeeRate / 1e6;
+
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund + yield - fees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);  // No change as the contract was not touched apart from reactivation.
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withGain_fromInactive_withAccountingUpdate() external {
+        uint256 yield = _setupStrategyWithGain();
+
+        vm.prank(operationalAdmin);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund + yield, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withGain_fromInactive_withoutAccountingUpdate() external {
+        uint256 yield = _setupStrategyWithGain();
+        uint256 fees = yield * strategyFeeRate / 1e6;
+
+        vm.prank(operationalAdmin);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund + yield, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);  // No change as the contract was not touched apart from reactivation.
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund + yield - fees, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield - fees, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withLoss_fromImpaired_withAccountingUpdate() external {
+        ( , uint256 loss) = _setupStrategyWithLoss();
+
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,        1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund - loss, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        0,                   1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withLoss_fromImpaired_withoutAccountingUpdate() external {
+        ( , uint256 loss) = _setupStrategyWithLoss();
+
+        vm.prank(operationalAdmin);
+        basicStrategy.impairStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,        1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss, 1);
+        assertApproxEqAbs(basicStrategy.unrealizedLosses(),        amountToFund - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 1);  // Impaired
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss, 1);
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withLoss_fromInactive_withAccountingUpdate() external {
+        (, uint256 loss) = _setupStrategyWithLoss();
+
+        vm.prank(operationalAdmin);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(true);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund - loss, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    function test_basicStrategy_reactivate_withLoss_fromInactive_withoutAccountingUpdate() external {
+        ( , uint256 loss) = _setupStrategyWithLoss();
+
+        vm.prank(operationalAdmin);
+        basicStrategy.deactivateStrategy();
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+
+        assertEq(basicStrategy.assetsUnderManagement(), 0);
+        assertEq(basicStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - amountToFund, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 2);  // Deactivated
+
+        vm.prank(operationalAdmin);
+        basicStrategy.reactivateStrategy(false);
+
+        assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund - loss, 1);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
+        assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(treasury),               0);
+
+        assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund, 1);
+        assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund - loss, 1);
+
+        assertEq(basicStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+
+        assertEq(uint256(basicStrategy.strategyState()), 0);  // Active
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Helpers                                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function _setupStagnantStrategy() internal {
+        vm.prank(strategyManager);
+        basicStrategy.fundStrategy(amountToFund);
+    }
+
+    function _setupStrategyWithGain() internal returns (uint256 yield) {
+        _setupStagnantStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+    }
+
+    function _setupStrategyWithLoss() internal returns (uint256 yield, uint256 loss) {
+        _setupStagnantStrategy();
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 currentTotalAssets = strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy)));
+
+        yield = currentTotalAssets - basicStrategy.lastRecordedTotalAssets();
+        loss  = amountToFund / 3;
+
+        uint256 lossShares = strategyVault.convertToShares(loss);
+        uint256 yieldShares = strategyVault.convertToShares(yield);
+
+        // Simulate a loss by transferring funds out
+        vm.prank(address(basicStrategy));
+        strategyVault.transfer(address(0xdead), lossShares + yieldShares);
+    }
+
+}

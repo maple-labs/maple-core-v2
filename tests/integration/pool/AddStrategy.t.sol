@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
@@ -80,7 +79,7 @@ contract AddStrategyTests is TestBase {
 
     function test_addStrategy_noExtraArguments_withPoolDelegate() external {
         assertEq(poolManager.strategyListLength(), 0);
-        
+
         vm.prank(poolDelegate);
         poolManager.addStrategy(openTermLoanManagerFactory, new bytes(0));
 
@@ -94,7 +93,7 @@ contract AddStrategyTests is TestBase {
 
     function test_addStrategy_withExtraArguments_withOperationalAdmin() external {
         assertEq(poolManager.strategyListLength(), 0);
-        
+
         vm.prank(operationalAdmin);
         poolManager.addStrategy(aaveStrategyFactory, abi.encode(AAVE_USDC));
 
@@ -108,7 +107,7 @@ contract AddStrategyTests is TestBase {
 
     function test_addStrategy_withExtraArguments_withGovernor() external {
         assertEq(poolManager.strategyListLength(), 0);
-        
+
         vm.prank(governor);
         poolManager.addStrategy(skyStrategyFactory, abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
 
@@ -123,7 +122,7 @@ contract AddStrategyTests is TestBase {
     function test_addStrategy_multipleStrategies() external {
         // Add a open term loan manager
         assertEq(poolManager.strategyListLength(), 0);
-        
+
         vm.prank(poolDelegate);
         poolManager.addStrategy(openTermLoanManagerFactory, new bytes(0));
 
