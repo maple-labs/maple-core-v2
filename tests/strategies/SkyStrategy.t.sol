@@ -3574,6 +3574,1309 @@ contract SkyStrategyWithdrawFromStrategyTests is SkyStrategyTestBase {
         assertEq(pool.totalAssets(), poolLiquidity - psmFees - loss);
     }
 
+    function test_withdrawFromStrategy_inactiveStrategy_noFees_whenStagnant_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund - usdcToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_noFees_whenStagnant_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        uint256 withdrawableAssets = _currentTotalAssets(0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity, 1);
+
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_noFees_afterGain_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(0) - skyStrategy.lastRecordedTotalAssets();
+
+        assertGt(yield, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund - usdcToWithdraw + yield, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_noFees_afterGain_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield              = _currentTotalAssets(0) - skyStrategy.lastRecordedTotalAssets();
+        uint256 withdrawableAssets = _currentTotalAssets(0);
+
+        assertGt(yield, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity + yield, 1);
+
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_noFees_afterLoss_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(0);
+
+        assertGt(loss, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund - usdcToWithdraw - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_noFees_afterLoss_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(0);
+
+        assertGt(loss, 0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity - loss, 1);
+
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_strategyFees_whenStagnant_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, 0, 0);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund - usdcToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_strategyFees_whenStagnant_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, 0, 0);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        uint256 withdrawableAssets = _currentTotalAssets(0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity, 1);
+
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_strategyFees_afterGain_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, 0, 0);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(0) - skyStrategy.lastRecordedTotalAssets();
+        uint256 fees  = yield * strategyFeeRate / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees,  0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund - usdcToWithdraw + yield, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_strategyFees_afterGain_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, 0, 0);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(0) - skyStrategy.lastRecordedTotalAssets();
+        uint256 fees  = yield * strategyFeeRate / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees,  0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity + yield, 1);
+
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity + yield, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_strategyFees_afterLoss_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, 0, 0);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(0);
+
+        assertGt(loss, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund - usdcToWithdraw - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_strategyFees_afterLoss_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, 0, 0);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  0);
+        assertEq(psmWrapper.tout(), 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(0), usdcToFund, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(0);
+
+        assertGt(loss, 0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertApproxEqAbs(usdc.balanceOf(address(pool)), poolLiquidity - loss, 1);
+
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - loss, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_psmFees_whenStagnant_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(0, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees - usdcToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_psmFees_whenStagnant_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(0, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        uint256 withdrawableAssets = _currentTotalAssets(psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - psmFees);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_psmFees_afterGain_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(0, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+
+        assertGt(yield, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees - usdcToWithdraw + yield, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_psmFees_afterGain_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(0, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+
+        assertGt(yield, 0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - psmFees + yield);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertEq(_currentTotalAssets(psmTout), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + yield);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_psmFees_afterLoss_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(0, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(loss, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees - usdcToWithdraw - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_psmFees_afterLoss_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(0, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), 0);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(loss, 0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - psmFees - loss);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertEq(_currentTotalAssets(psmTout), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - loss);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_allFees_whenStagnant_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees - usdcToWithdraw, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_allFees_whenStagnant_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        uint256 withdrawableAssets = _currentTotalAssets(psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - psmFees);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertEq(_currentTotalAssets(0), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_allFees_afterGain_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+        uint256 fees  = yield * strategyFeeRate / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees,  0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees - usdcToWithdraw + yield, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_allFees_afterGain_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Accrue yield for 10 days.
+        vm.warp(start + 10 days);
+
+        uint256 yield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+        uint256 fees  = yield * strategyFeeRate / 1e6;
+
+        assertGt(yield, 0);
+        assertGt(fees,  0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - psmFees + yield);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertEq(_currentTotalAssets(psmTout), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + yield);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_allFees_afterLoss_partialWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(loss, 0);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(usdcToWithdraw);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund + usdcToWithdraw);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees - usdcToWithdraw - loss, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund + usdcToWithdraw, 1);
+    }
+
+    function test_withdrawFromStrategy_inactiveStrategy_allFees_afterLoss_fullWithdrawal() external {
+        deposit(address(this), poolLiquidity);
+        _setFees(strategyFeeRate, psmTin, psmTout);
+
+        assertEq(skyStrategy.strategyFeeRate(), strategyFeeRate);
+
+        assertEq(psmWrapper.tin(),  psmTin);
+        assertEq(psmWrapper.tout(), psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcToFund);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(uint256(skyStrategy.strategyState()), 2);  // Inactive
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - usdcToFund);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(_currentTotalAssets(psmTout), usdcToFund - psmFees, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcToFund, 1);
+
+        // Incur losses after 10 days by transferring out sUSDS shares.
+        uint256 susdsBalance = susds.balanceOf(address(skyStrategy));
+
+        vm.warp(start + 10 days);
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), susdsBalance / 3);
+
+        uint256 loss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(loss, 0);
+
+        uint256 withdrawableAssets = _currentTotalAssets(psmTout);
+
+        vm.prank(strategyManager);
+        skyStrategy.withdrawFromStrategy(withdrawableAssets);
+
+        assertEq(usdc.balanceOf(address(pool)),        poolLiquidity - psmFees - loss);
+        assertEq(usdc.balanceOf(address(treasury)),    0);
+        assertEq(usdc.balanceOf(address(skyStrategy)), 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcToFund - psmFees, 1);
+
+        assertEq(_currentTotalAssets(psmTout), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - loss);
+    }
+
 }
 
 contract SkyStrategySetStrategyFeeTests is SkyStrategyTestBase {
