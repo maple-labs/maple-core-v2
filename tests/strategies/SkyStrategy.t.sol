@@ -3,6 +3,8 @@ pragma solidity ^0.8.7;
 
 import { stdStorage, StdStorage } from "../../modules/forge-std/src/Test.sol";
 
+import { StrategyState } from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
+
 import {
     IERC20,
     IERC4626Like,
@@ -93,6 +95,10 @@ contract SkyStrategyTestBase is StrategyTestBase {
         uint256 usdcOut_ = usdsOut_ * USDC_PRECISION / (USDS_PRECISION + psmTout_);
 
         return usdcOut_;
+    }
+
+    function assertState(StrategyState actual, StrategyState expected) internal {
+        assertEq(uint256(actual), uint256(expected));
     }
 
 }
@@ -3864,6 +3870,862 @@ contract SkyStrategySetStrategyFeeTests is SkyStrategyTestBase {
         assertApproxEqAbs(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees - strategyLoss, 1);
 
         assertApproxEqAbs(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss, 1);
+    }
+
+}
+
+contract SkyStrategyDeactivateStrategyTests is SkyStrategyTestBase {
+
+    uint256 usdcIn = 1_250_000e6;
+
+    function test_deactivateStrategy_protocolPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        skyStrategy.deactivateStrategy();
+    }
+
+    function test_deactivateStrategy_notAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        skyStrategy.deactivateStrategy();
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+    }
+
+    function test_deactivateStrategy_inactive() external {
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSS:DS:ALREADY_INACTIVE");
+        skyStrategy.deactivateStrategy();
+    }
+
+    function test_deactivateStrategy_active() external {
+        deposit(address(this), poolLiquidity);
+
+        vm.prank(poolDelegate);
+        skyStrategy.fundStrategy(usdcIn);
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(), usdcIn, 1);
+        assertEq(skyStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcIn, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+    }
+
+    function test_deactivateStrategy_impaired() external {
+        deposit(address(this), poolLiquidity);
+
+        vm.prank(poolDelegate);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(), usdcIn, 1);
+        assertApproxEqAbs(skyStrategy.unrealizedLosses(),      usdcIn, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcIn, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+    }
+
+}
+
+contract SkyStrategyImpairStrategyTests is SkyStrategyTestBase {
+
+    uint256 usdcIn = 1_250_000e6;
+
+    function test_impairStrategy_protocolPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        skyStrategy.impairStrategy();
+    }
+
+    function test_impairStrategy_notAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        skyStrategy.impairStrategy();
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+    }
+
+    function test_impairStrategy_impaired() external {
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        vm.expectRevert("MSS:IS:ALREADY_IMPAIRED");
+        skyStrategy.impairStrategy();
+    }
+
+    function test_impairStrategy_active() external {
+        deposit(address(this), poolLiquidity);
+
+        vm.prank(poolDelegate);
+        skyStrategy.fundStrategy(usdcIn);
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(), usdcIn, 1);
+        assertEq(skyStrategy.unrealizedLosses(), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(), usdcIn, 1);
+        assertApproxEqAbs(skyStrategy.unrealizedLosses(),      usdcIn, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+    }
+
+    function test_impairStrategy_inactive() external {
+        deposit(address(this), poolLiquidity);
+
+        vm.prank(poolDelegate);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(), 0);
+        assertEq(skyStrategy.unrealizedLosses(),      0);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity - usdcIn, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(), usdcIn, 1);
+        assertApproxEqAbs(skyStrategy.unrealizedLosses(),      usdcIn, 1);
+
+        assertApproxEqAbs(pool.totalAssets(), poolLiquidity, 1);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+    }
+
+}
+
+contract SkyStrategyReactivateStrategyTests is SkyStrategyTestBase {
+
+    uint256 usdcIn  = 5_000_000e6;
+    uint256 usdcOut = _reduceByPsmFees(usdcIn, psmTin, psmTout);
+    uint256 psmFees = usdcIn - usdcOut;
+
+    function setUp() public override virtual {
+        super.setUp();
+
+        deposit(address(this), poolLiquidity);
+
+        _setFees(strategyFeeRate, psmTin, psmTout);
+    }
+
+    function test_reactivateStrategy_protocolPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        skyStrategy.reactivateStrategy(false);
+    }
+
+    function test_reactivateStrategy_notAdmin() external {
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        vm.expectRevert("MS:NOT_ADMIN");
+        skyStrategy.reactivateStrategy(false);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+    }
+
+    function test_reactivateStrategy_active() external {
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+
+        vm.prank(governor);
+        vm.expectRevert("MSS:RS:ALREADY_ACTIVE");
+        skyStrategy.reactivateStrategy(false);
+    }
+
+    function test_reactivateStrategy_impaired_new_updateAccounting() external {
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_flat_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees);
+        assertEq(skyStrategy.unrealizedLosses(),        usdcIn - psmFees);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_gain_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        // Accrue yield.
+        vm.warp(start + 10 days);
+
+        uint256 strategyYield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+        uint256 strategyFees  = strategyYield * strategyFeeRate / 1e6;
+
+        assertGt(strategyYield, 0);
+        assertGt(strategyFees,  0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees + strategyYield - strategyFees);
+        assertEq(skyStrategy.unrealizedLosses(),        usdcIn - psmFees + strategyYield - strategyFees);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + strategyYield - strategyFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees + strategyYield);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees + strategyYield);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + strategyYield);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_loss_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy)) / 3;
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        uint256 strategyLoss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(strategyLoss, 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.unrealizedLosses(),        usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees - strategyLoss);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_totalLoss_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy));
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_new_keepAccounting() external {
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_flat_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees);
+        assertEq(skyStrategy.unrealizedLosses(),        usdcIn - psmFees);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_gain_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        // Accrue yield.
+        vm.warp(start + 10 days);
+
+        uint256 strategyYield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+        uint256 strategyFees  = strategyYield * strategyFeeRate / 1e6;
+
+        assertGt(strategyYield, 0);
+        assertGt(strategyFees,  0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees + strategyYield - strategyFees);
+        assertEq(skyStrategy.unrealizedLosses(),        usdcIn - psmFees + strategyYield - strategyFees);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + strategyYield - strategyFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees + strategyYield - strategyFees);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + strategyYield - strategyFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_loss_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy)) / 3;
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        uint256 strategyLoss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(strategyLoss, 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.unrealizedLosses(),        usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_impaired_totalLoss_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.impairStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy));
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Impaired);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_new_updateAccounting() external {
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_flat_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_gain_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        // Accrue yield.
+        vm.warp(start + 10 days);
+
+        uint256 strategyYield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+        uint256 strategyFees  = strategyYield * strategyFeeRate / 1e6;
+
+        assertGt(strategyYield, 0);
+        assertGt(strategyFees,  0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees + strategyYield);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees + strategyYield);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + strategyYield);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_loss_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy)) / 3;
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        uint256 strategyLoss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(strategyLoss, 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees - strategyLoss);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_totalLoss_updateAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy));
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(true);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_new_keepAccounting() external {
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), 0);
+
+        assertEq(pool.totalAssets(), poolLiquidity);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_flat_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_gain_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        // Accrue yield.
+        vm.warp(start + 10 days);
+
+        uint256 strategyYield = _currentTotalAssets(psmTout) - skyStrategy.lastRecordedTotalAssets();
+        uint256 strategyFees  = strategyYield * strategyFeeRate / 1e6;
+
+        assertGt(strategyYield, 0);
+        assertGt(strategyFees,  0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees + strategyYield - strategyFees);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees + strategyYield - strategyFees);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_loss_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy)) / 3;
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        uint256 strategyLoss = skyStrategy.lastRecordedTotalAssets() - _currentTotalAssets(psmTout);
+
+        assertGt(strategyLoss, 0);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   usdcIn - psmFees - strategyLoss);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - psmFees - strategyLoss);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
+    }
+
+    function test_reactivateStrategy_inactive_totalLoss_keepAccounting() external {
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(usdcIn);
+
+        vm.prank(governor);
+        skyStrategy.deactivateStrategy();
+
+        // Incur losses.
+        vm.warp(start + 10 days);
+
+        uint256 lostShares = susds.balanceOf(address(skyStrategy));
+
+        vm.prank(address(skyStrategy));
+        susds.transfer(address(1), lostShares);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Inactive);
+
+        vm.prank(governor);
+        skyStrategy.reactivateStrategy(false);
+
+        assertEq(skyStrategy.assetsUnderManagement(),   0);
+        assertEq(skyStrategy.unrealizedLosses(),        0);
+        assertEq(skyStrategy.lastRecordedTotalAssets(), usdcIn - psmFees);
+
+        assertEq(pool.totalAssets(), poolLiquidity - usdcIn);
+
+        assertState(skyStrategy.strategyState(), StrategyState.Active);
     }
 
 }
