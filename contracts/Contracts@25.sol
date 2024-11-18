@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.25;
 
+import { MapleGlobals as MG }  from "../modules/globals/contracts/MapleGlobals.sol";
+
 import { MaplePool as MP }                     from "../modules/pool/contracts/MaplePool.sol";
 import { MaplePoolDelegateCover as MPDC }      from "../modules/pool/contracts/MaplePoolDelegateCover.sol";
 import { MaplePoolDeployer as MPD }            from "../modules/pool/contracts/MaplePoolDeployer.sol";
@@ -15,7 +17,7 @@ import { MapleSkyStrategy as MSS }              from "../modules/strategies/cont
 import { MapleSkyStrategyInitializer as MSSI }  from "../modules/strategies/contracts/proxy/skyStrategy/MapleSkyStrategyInitializer.sol";
 import { MapleStrategyFactory as MSF }          from "../modules/strategies/contracts/proxy/MapleStrategyFactory.sol";
 
-import { MapleBasicStrategyInitializer as MBSI } 
+import { MapleBasicStrategyInitializer as MBSI }
     from "../modules/strategies/contracts/proxy/basicStrategy/MapleBasicStrategyInitializer.sol";
 
 contract AaveStrategy is MAS { }
@@ -26,14 +28,16 @@ contract BasicStrategy is MBS { }
 
 contract BasicStrategyInitializer is MBSI { }
 
+contract Globals is MG { }
+
 contract SkyStrategy is MSS { }
 
 contract SkyStrategyInitializer is MSSI { }
 
-contract StrategyFactory is MSF { 
+contract StrategyFactory is MSF {
 
     constructor(address globals_) MSF(globals_) { }
-    
+
 }
 
 contract Pool is MP {

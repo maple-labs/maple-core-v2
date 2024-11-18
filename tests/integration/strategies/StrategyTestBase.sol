@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IMapleProxied, IMockERC20 } from "../../contracts/interfaces/Interfaces.sol";
+import { IMapleProxied, IMockERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console } from "../../contracts/Runner.sol";
+import { console2 as console } from "../../../contracts/Runner.sol";
 
-import { TestBase } from "../TestBase.sol";
+import { TestBase } from "../../TestBase.sol";
 
 contract StrategyTestBase is TestBase {
 

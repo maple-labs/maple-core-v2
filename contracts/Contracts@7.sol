@@ -33,7 +33,6 @@ import { MapleLiquidator as ML }             from "../modules/liquidations/contr
 import { MapleLiquidatorFactory as MLF }     from "../modules/liquidations/contracts/MapleLiquidatorFactory.sol";
 import { MapleLiquidatorInitializer as MLI } from "../modules/liquidations/contracts/MapleLiquidatorInitializer.sol";
 
-import { MapleGlobals as MG }  from "../modules/globals/contracts/MapleGlobals.sol";
 import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
 import { MaplePoolManagerFactory as MPMF } from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
@@ -102,8 +101,6 @@ contract FixedTermLoanV5Migrator is MFTLV5M { }
 contract FixedTermLoanV502Migrator is MFTLV502M { }
 
 contract FixedTermRefinancer is MFTLR { }
-
-contract Globals is MG { }
 
 contract Liquidator is ML { }
 

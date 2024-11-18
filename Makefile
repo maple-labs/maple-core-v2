@@ -26,7 +26,7 @@ integration:
 	./test.sh -d tests/integration -p $(profile)
 
 strategies:
-	./test.sh -d tests/strategies -p $(profile)
+	./test.sh -d tests/integration/strategies -p $(profile)
 
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
