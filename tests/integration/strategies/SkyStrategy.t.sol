@@ -103,6 +103,83 @@ contract SkyStrategyTestBase is StrategyTestBase {
 
 }
 
+contract SkyStrategySetPSMTests is SkyStrategyTestBase {
+
+    address newPsm = makeAddr("new psm");
+
+    function setUp() public override {
+        super.setUp();
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("PSM", newPsm, true);
+    }
+
+    function testFork_setPsm_protocolPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MS:PAUSED");
+        skyStrategy.setPsm(newPsm);
+    }
+
+    function testFork_setPsm_notAdmin() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        skyStrategy.setPsm(newPsm);
+
+        vm.prank(governor);
+        skyStrategy.setPsm(newPsm);
+
+        vm.prank(poolDelegate);
+        skyStrategy.setPsm(newPsm);
+
+        vm.prank(operationalAdmin);
+        skyStrategy.setPsm(newPsm);
+    }
+
+    function testFork_setPsm_failIfNotValidInstance() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("PSM", newPsm, false);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSS:SPSM:INVALID_PSM");
+        skyStrategy.setPsm(newPsm);
+    }
+
+    function testFork_setPsm_unfundedStrategy() external {
+        assertEq(skyStrategy.psm(), USDS_LITE_PSM);
+
+        vm.prank(operationalAdmin);
+        skyStrategy.setPsm(newPsm);
+
+        assertEq(skyStrategy.psm(), newPsm);
+    }
+
+    function testFork_setPsm_fundedStrategy() external {
+        deposit(address(this), poolLiquidity);
+
+        vm.prank(strategyManager);
+        skyStrategy.fundStrategy(10e6);
+
+        vm.warp(block.timestamp + 5 days);
+
+        assertEq(skyStrategy.psm(), USDS_LITE_PSM);
+
+        // Copy the current PSM into the newPsm variable.
+        vm.etch(newPsm, USDS_LITE_PSM.code);
+
+        vm.prank(governor);
+        skyStrategy.setPsm(newPsm);
+
+        assertEq(skyStrategy.psm(), newPsm);
+        assertEq(fundsAsset.allowance(address(skyStrategy), newPsm), type(uint256).max);
+        assertEq(usds.allowance(address(skyStrategy),       newPsm), type(uint256).max);
+
+        // TODO: perform an withdrawal with the new PSM 
+    }
+
+}
+
 contract SkyStrategyFundStrategyTests is SkyStrategyTestBase {
 
     uint256 initialUsdcIn = 5_000_000e6;

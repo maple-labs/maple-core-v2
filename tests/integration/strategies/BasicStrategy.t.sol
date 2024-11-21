@@ -71,12 +71,12 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
         globals.setProtocolPause(true);
 
         vm.expectRevert("MS:PAUSED");
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function testFork_basicStrategy_fund_failIfNotStrategyManager() external {
         vm.expectRevert("MS:NOT_MANAGER");
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function testFork_basicStrategy_fund_failWhenDeactivated() external {
@@ -85,7 +85,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         vm.prank(strategyManager);
         vm.expectRevert("MS:NOT_ACTIVE");
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function testFork_basicStrategy_fund_failWhenImpaired() external {
@@ -94,7 +94,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         vm.prank(strategyManager);
         vm.expectRevert("MS:NOT_ACTIVE");
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function testFork_basicStrategy_fund_failIfInvalidStrategyVault() external {
@@ -103,13 +103,13 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         vm.prank(strategyManager);
         vm.expectRevert("MBS:FS:INVALID_VAULT");
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function testFork_basicStrategy_fund_failIfZeroAmount() external {
         vm.prank(strategyManager);
         vm.expectRevert("PM:RF:INVALID_PRINCIPAL");
-        basicStrategy.fundStrategy(0);
+        basicStrategy.fundStrategy(0, 0);
     }
 
     function testFork_basicStrategy_fund_failIfInvalidStrategyFactory() external {
@@ -118,13 +118,19 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         vm.prank(strategyManager);
         vm.expectRevert("PM:RF:INVALID_FACTORY");
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function testFork_basicStrategy_fund_failIfNotEnoughPoolLiquidity() external {
         vm.prank(strategyManager);
         vm.expectRevert("PM:RF:TRANSFER_FAIL");
-        basicStrategy.fundStrategy(poolLiquidity + 1);
+        basicStrategy.fundStrategy(poolLiquidity + 1, 0);
+    }
+
+    function testFork_basicStrategy_fund_failIfNotEnoughSharesOut() external {
+        vm.prank(strategyManager);
+        vm.expectRevert("MBS:FS:MIN_SHARES");
+        basicStrategy.fundStrategy(amountToFund, amountToFund + 1);
     }
 
     // NOTE: As ERC4626 vaults round down against the user there may be a diff of 1 wei when converting back to assets.
@@ -142,7 +148,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Initial Fund
         vm.prank(poolDelegate);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
 
@@ -172,7 +178,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Initial Fund
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
 
@@ -189,7 +195,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
     function testFork_basicStrategy_fund_secondFundWithGain_withStrategyFees() external {
         // Initial Fund
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -210,7 +216,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Fund a second time
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(secondAmountToFund);
+        basicStrategy.fundStrategy(secondAmountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund - secondAmountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -233,7 +239,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Initial Fund
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -253,7 +259,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Fund a second time
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(secondAmountToFund);
+        basicStrategy.fundStrategy(secondAmountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund - secondAmountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -276,7 +282,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Initial Fund
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -298,7 +304,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Fund a second time
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(secondAmountToFund);
+        basicStrategy.fundStrategy(secondAmountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund - secondAmountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -318,7 +324,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
     function testFork_basicStrategy_fund_secondFundWithLoss_withStrategyFees() external {
         // Initial Fund
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -347,7 +353,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Fund a second time
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(secondAmountToFund);
+        basicStrategy.fundStrategy(secondAmountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund - secondAmountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -367,7 +373,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
     function testFork_basicStrategy_fund_secondFundAfterTotalLoss_withStrategyFees() external {
         // Initial Fund
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -391,7 +397,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
         // Fund a second time
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(secondAmountToFund);
+        basicStrategy.fundStrategy(secondAmountToFund, 0);
 
         assertEq(fundsAsset.balanceOf(address(pool)),          poolLiquidity - amountToFund - secondAmountToFund);
         assertEq(fundsAsset.balanceOf(address(basicStrategy)), 0);
@@ -416,8 +422,10 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
 
     // NOTE: Helper needed to ensure round down test has lower initial deposit
     function _fundStrategy() internal {
+        uint256 minSharesOut = strategyVault.convertToShares(amountToFund);
+
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, minSharesOut);
     }
 
     function testFork_basicStrategy_withdraw_failWhenPaused() external {
@@ -669,7 +677,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         amountToWithdraw = 1e6;
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 300 seconds);
 
@@ -924,7 +932,7 @@ contract BasicSetStrategyFeeTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(poolDelegate);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(basicStrategy.strategyFeeRate(), strategyFeeRate);
 
@@ -982,7 +990,7 @@ contract BasicSetStrategyFeeTests is BasicStrategyTestsBase {
 
     function testFork_basicStrategy_setStrategyFeeRate_withPoolDelegate_fundedStrategy() external {
         vm.prank(poolDelegate);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertEq(basicStrategy.strategyFeeRate(), 0);
 
@@ -1047,7 +1055,7 @@ contract BasicSetStrategyFeeTests is BasicStrategyTestsBase {
 
         // Fund the strategy
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertApproxEqAbs(basicStrategy.lastRecordedTotalAssets(), amountToFund,  1);
         assertApproxEqAbs(basicStrategy.assetsUnderManagement(),   amountToFund,  1);
@@ -1175,7 +1183,7 @@ contract BasicStrategyImpairTests is BasicStrategyTestsBase {
 
     function testFork_basicStrategy_impair_stagnant_noFees() external {
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
 
@@ -1214,7 +1222,7 @@ contract BasicStrategyImpairTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1264,7 +1272,7 @@ contract BasicStrategyImpairTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1317,7 +1325,7 @@ contract BasicStrategyImpairTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1372,7 +1380,7 @@ contract BasicStrategyImpairTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1496,7 +1504,7 @@ contract BasicStrategyDeactivateTests is BasicStrategyTestsBase {
 
     function testFork_basicStrategy_deactivate_stagnant_noFees() external {
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         assertApproxEqAbs(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), amountToFund, 1);
 
@@ -1537,7 +1545,7 @@ contract BasicStrategyDeactivateTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1588,7 +1596,7 @@ contract BasicStrategyDeactivateTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1642,7 +1650,7 @@ contract BasicStrategyDeactivateTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -1695,7 +1703,7 @@ contract BasicStrategyDeactivateTests is BasicStrategyTestsBase {
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
 
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
 
         vm.warp(block.timestamp + 30 days);
 
@@ -2421,7 +2429,7 @@ contract BasicReactivateTests is BasicStrategyTestsBase {
 
     function _setupStagnantStrategy() internal {
         vm.prank(strategyManager);
-        basicStrategy.fundStrategy(amountToFund);
+        basicStrategy.fundStrategy(amountToFund, 0);
     }
 
     function _setupStrategyWithGain() internal returns (uint256 yield) {
