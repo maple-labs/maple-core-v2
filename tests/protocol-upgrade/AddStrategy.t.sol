@@ -1,13 +1,40 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IAaveStrategy, ISkyStrategy } from "contracts/interfaces/Interfaces.sol";
+import {
+    IAaveStrategy,
+    IMapleProxyFactory,
+    IPool,
+    IPoolManager,
+    ISkyStrategy
+} from "../../contracts/interfaces/Interfaces.sol";
 
-import { StrategyTestBase } from "./StrategyTestBase.sol";
+import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
 
-contract AddStrategyToSyrupUSDCTests is StrategyTestBase {
+contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
-    uint256 usdcIn = 200_00e6;
+    address syrupUSDCPoolDelegate;
+
+    uint256 start;
+    uint256 usdcIn;
+
+    IPool        syrupUsdcPool;
+    IPoolManager syrupUsdcPoolManager;
+
+    function setUp() external {
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21185932);
+
+        syrupUsdcPool         = IPool(syrupUSDCPool);                // NOTE: Address registry address is uppercase USDC
+        syrupUsdcPoolManager  = IPoolManager(syrupUSDCPoolManager);  // NOTE: Address registry address is uppercase USDC
+        syrupUSDCPoolDelegate = syrupUsdcPoolManager.poolDelegate();
+
+        setupStrategies();
+        setupPoolManagers();
+        setupGlobals();
+
+        start  = block.timestamp;
+        usdcIn = 200_000e6;
+    }
 
     function test_addStrategy_syrupUSDC_aaveStrategy() external {
         vm.prank(governor);
@@ -22,7 +49,7 @@ contract AddStrategyToSyrupUSDCTests is StrategyTestBase {
         vm.prank(syrupUSDCPoolDelegate);
         aaveStrategy.fundStrategy(usdcIn);
 
-        assertApproxEqAbs(syrupUsdcPool.totalAssets(),              totalAssets, 1);
+        assertApproxEqAbs(syrupUsdcPool.totalAssets(),          totalAssets, 1);
         assertApproxEqAbs(aaveStrategy.assetsUnderManagement(), usdcIn,      1);
 
         // Accrue yield.
@@ -49,7 +76,7 @@ contract AddStrategyToSyrupUSDCTests is StrategyTestBase {
         vm.prank(syrupUSDCPoolDelegate);
         skyStrategy.fundStrategy(usdcIn);
 
-        assertApproxEqAbs(syrupUsdcPool.totalAssets(),             totalAssets, 1);
+        assertApproxEqAbs(syrupUsdcPool.totalAssets(),         totalAssets, 1);
         assertApproxEqAbs(skyStrategy.assetsUnderManagement(), usdcIn,      1);
 
         // Accrue yield.

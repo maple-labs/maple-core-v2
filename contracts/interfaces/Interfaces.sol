@@ -352,6 +352,16 @@ interface IPSMLike {
 
 }
 
+interface IStrategyLike is IStrategy {
+
+    function poolManager() external view returns (address poolManager);
+
+    function fundStrategy(uint256 assetsIn) external;
+
+    function fundStrategy(uint256 assetsIn, uint256 minSharesOut) external;
+
+}
+
 /******************************************************************************************************************************************/
 /*** Smart Account Interfaces                                                                                                           ***/
 /******************************************************************************************************************************************/

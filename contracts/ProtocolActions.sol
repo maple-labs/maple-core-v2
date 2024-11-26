@@ -21,6 +21,7 @@ import {
     IPoolPermissionManager,
     IPoolPermissionManagerInitializer,
     IProxiedLike,
+    IStrategyLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
@@ -1019,6 +1020,34 @@ contract ProtocolActions is Runner {
 
         vm.prank(governor_);
         ppm_.setPoolPermissionLevel(poolManager_, permissionLevel_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Strategy Functions                                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    function fundStrategy(address strategy_, uint256 assetsIn_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.startPrank(poolDelegate_);
+
+        try s_.fundStrategy(assetsIn_) {}
+        catch { s_.fundStrategy(assetsIn_, 0); }
+
+        vm.stopPrank();
+    }
+
+    function withdrawFromStrategy(address strategy_, uint256 assetsOut_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.withdrawFromStrategy(assetsOut_);
     }
 
     /**************************************************************************************************************************************/

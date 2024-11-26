@@ -12,6 +12,7 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
+    IStrategy,
     IWithdrawalManagerCyclical,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
@@ -33,6 +34,11 @@ enum LoanAction {
     TriggerDefault
 }
 
+enum StrategyAction {
+    Fund,
+    Withdraw
+}
+
 contract FuzzedUtil is ProtocolActions {
 
     uint256 constant CALL_FACTOR              = 75;
@@ -43,8 +49,10 @@ contract FuzzedUtil is ProtocolActions {
     uint256 constant PAYMENT_FACTOR           = 100;
     uint256 constant REMOVE_CALL_FACTOR       = 100;
     uint256 constant REMOVE_IMPAIRMENT_FACTOR = 100;
+    uint256 constant FUND_STRATEGY_FACTOR     = 125;
+    uint256 constant WITHDRAW_STRATEGY_FACTOR = 75;
 
-    // Local addresses that will be overridden by implementers
+    // Local addresses that will be overridden by implementers.
     address _collateralAsset;
     address _feeManager;
     address _fixedTermLoanManager;
@@ -65,7 +73,15 @@ contract FuzzedUtil is ProtocolActions {
 
     uint256[] escrowedShares;
 
-    function fuzzedSetup(uint256 fixedTermLoans, uint256 openTermLoans, uint256 actionCount, uint256 seed_) internal {
+    function fuzzedSetup(
+        uint256 fixedTermLoans,
+        uint256 openTermLoans,
+        uint256 loanActionCount,
+        uint256 strategyActionCount,
+        uint256 seed_
+    )
+        internal
+    {
         seed = seed_;
 
         // Create and fund fixed loans.
@@ -81,7 +97,7 @@ contract FuzzedUtil is ProtocolActions {
         }
 
         // Perform random loan actions.
-        for (uint256 i; i < actionCount; ++i) {
+        for (uint256 i; i < loanActionCount; ++i) {
             // Get loan and due date of active loan with earliest due date.
             ( address loan, uint256 dueDate ) = getEarliestDueDate();
 
@@ -100,6 +116,18 @@ contract FuzzedUtil is ProtocolActions {
             if (ILoanLike(loan).principal() == 0) {
                 removeLoan(loan);
             }
+        }
+
+        // Perform random strategy actions.
+        for (uint256 i; i < strategyActionCount; ++i) {
+            // Get a random strategy.
+            address strategy = getSomeStrategy();
+
+            // Move forwards in time.
+            vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
+
+            // Perform a random action on the strategy.
+            performSomeStrategyAction(strategy);
         }
     }
 
@@ -227,6 +255,8 @@ contract FuzzedUtil is ProtocolActions {
             [gracePeriod, noticePeriod, paymentInterval],
             [delegateServiceFeeRate, interestRate, lateFeeRate, lateInterestPremium]
         );
+
+        console.log("Open-term loan created:", loan);
     }
 
     function createSomeFixedTermLoan() internal returns (address loan) {
@@ -276,6 +306,8 @@ contract FuzzedUtil is ProtocolActions {
             rates,
             fees
         );
+
+        console.log("Fixed-term loan created:", loan);
     }
 
     function removeLoan(address loan) internal {
@@ -329,6 +361,29 @@ contract FuzzedUtil is ProtocolActions {
             console.log("Loan call removed:", loan);
             return;
         }
+    }
+
+    function performSomeStrategyAction(address strategy) internal {
+        // Randomly select an action that can be performed on the strategy.
+        StrategyAction action = getSomeStrategyAction(strategy);
+
+        if (action == StrategyAction.Fund) {
+            uint256 max = 1_000_000 * 10 ** IERC20(_fundsAsset).decimals();
+            fundStrategy(strategy, getSomeValue(1, max));
+
+            console.log("Strategy funded:", strategy);
+            return;
+        }
+
+        if (action == StrategyAction.Withdraw) {
+            uint256 max = IStrategy(strategy).assetsUnderManagement();
+            withdrawFromStrategy(strategy, getSomeValue(1, max));
+
+            console.log("Strategy withdrawn from:", strategy);
+            return;
+        }
+
+        require(false, "INVALID_STRATEGY_ACTION");
     }
 
     // NOTE: Code duplication with `getSomeOpenTermAction` because can not yet identify cleaner way to do this.
@@ -421,6 +476,18 @@ contract FuzzedUtil is ProtocolActions {
         }
 
         return LoanAction.TriggerDefault;
+    }
+
+    function getSomeStrategyAction(address strategy) internal returns (StrategyAction action) {
+        // If there is nothing to withdraw, fund the strategy.
+        if (IStrategy(strategy).assetsUnderManagement() == 0) return StrategyAction.Fund;
+
+        // Otherwise choose randomly between funding and withdrawing.
+        uint256 total = FUND_STRATEGY_FACTOR + WITHDRAW_STRATEGY_FACTOR;
+        uint256 draw  = getSomeValue(0, total - 1);
+
+        if (draw < FUND_STRATEGY_FACTOR) return StrategyAction.Fund;
+        else return StrategyAction.Withdraw;
     }
 
     function getEarliestDueDate() internal view returns (address loan_, uint256 dueDate_) {
@@ -533,6 +600,13 @@ contract FuzzedUtil is ProtocolActions {
 
         // If all loans are inactive return the zero address.
         return address(0);
+    }
+
+    function getSomeStrategy() internal returns (address strategy) {
+        // TODO: Check if this works for all pools.
+        uint256 index = getSomeValue(2, 3);
+
+        strategy = IPoolManager(_poolManager).strategyList(index);
     }
 
     function getSomeValue(uint256 min_, uint256 max_) internal returns (uint256 value_) {

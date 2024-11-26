@@ -27,7 +27,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     }
 
     function testFuzz_call_otl(uint256 seed) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, seed);
+        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed);
 
         loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
 
@@ -102,7 +102,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     }
 
     function testFuzz_removeCall_otl(uint256 seed) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, seed);
+        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed);
 
         loan = IOpenTermLoan(getSomeCalledOpenTermLoan());
 

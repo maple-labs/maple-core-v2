@@ -45,7 +45,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     PoolManagerStorage         poolManagerStorage;
 
     function testFuzz_otlFuzzedSetup_makePayment(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, seed_);
+        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan        = IOpenTermLoan(getSomeActiveOpenTermLoan());
         loanManager = IOpenTermLoanManager(loan.lender());
@@ -157,7 +157,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     }
 
     function testFuzz_otlFuzzedSetup_triggerDefault(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, seed_);
+        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan        = IOpenTermLoan(getSomeActiveOpenTermLoan());
         loanManager = IOpenTermLoanManager(loan.lender());

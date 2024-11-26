@@ -1,46 +1,39 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { MapleAddressRegistryETH as AddressRegistry } from "../../modules/address-registry/contracts/MapleAddressRegistryETH.sol";
-
 import {
     IGlobals,
     IMapleProxyFactory,
     INonTransparentProxy,
-    IPool,
     IPoolManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
+import { UpgradeAddressRegistry } from "./UpgradeAddressRegistry.sol";
+
 import { Runner } from "../../contracts/Runner.sol";
 
-contract StrategyTestBase is Runner, AddressRegistry {
-
-    address syrupUSDCPoolDelegate;
-
-    uint256 start;
-
-    IPool        syrupUsdcPool;
-    IPoolManager syrupUsdcPoolManager;
+contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
     IMapleProxyFactory basicStrategyFactory;
     IMapleProxyFactory aaveStrategyFactory;
     IMapleProxyFactory skyStrategyFactory;
 
-    function setUp() external {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21185932);
+    /**************************************************************************************************************************************/
+    /*** Upgrade Procedure                                                                                                              ***/
+    /**************************************************************************************************************************************/
 
-        syrupUsdcPool         = IPool(syrupUSDCPool);                // NOTE: Address registry address is uppercase USDC
-        syrupUsdcPoolManager  = IPoolManager(syrupUSDCPoolManager);  // NOTE: Address registry address is uppercase USDC
-        syrupUSDCPoolDelegate = syrupUsdcPoolManager.poolDelegate();
-
+    function upgradeProtocol() internal {
         setupStrategies();
-        setupPoolManager();
+        setupPoolManagers();
         setupGlobals();
-
-        start  = block.timestamp;
+        addStrategies();
     }
 
-    function setupPoolManager() internal {
+    /**************************************************************************************************************************************/
+    /*** Helper Functions                                                                                                               ***/
+    /**************************************************************************************************************************************/
+
+    function setupPoolManagers() internal {
         // Deploy the new PoolManager implementation and initializer.
         address poolManagerImplementation = deployFromFile("Contracts@25", "PoolManager");
         address poolManagerInitializer    = deployFromFile("Contracts@25", "PoolManagerInitializer");
@@ -57,17 +50,18 @@ contract StrategyTestBase is Runner, AddressRegistry {
 
         assertEq(poolManagerFactory_.migratorForPath(400, 400), poolManagerInitializer);
         assertEq(poolManagerFactory_.migratorForPath(300, 400), address(0));
-        assertEq(poolManagerFactory_.migratorForPath(301, 400), address(0));
-
         assertEq(poolManagerFactory_.defaultVersion(), 400);
 
-        // Upgrade the PoolManager.
-        vm.prank(securityAdmin);
-        syrupUsdcPoolManager.upgrade(400, "");
+        // Upgrade all pools.
+        for (uint256 i; i < poolManagers.length; i++) {
+            IPoolManager poolManager = IPoolManager(poolManagers[i]);
 
-        assertEq(syrupUsdcPoolManager.implementation(), poolManagerImplementation);
+            vm.prank(securityAdmin);
+            poolManager.upgrade(400, "");
 
-        assertEq(poolManagerFactory_.versionOf(syrupUsdcPoolManager.implementation()), 400);
+            assertEq(poolManager.implementation(), poolManagerImplementation);
+            assertEq(poolManagerFactory_.versionOf(poolManager.implementation()), 400);
+        }
     }
 
     function setupGlobals() internal {
@@ -82,12 +76,14 @@ contract StrategyTestBase is Runner, AddressRegistry {
 
         // Configure MapleGlobals.
         vm.startPrank(governor);
-        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(basicStrategyFactory), true);
-        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(aaveStrategyFactory),  true);
-        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(skyStrategyFactory),   true);
-        globals_.setValidInstanceOf("STRATEGY_VAULT",   address(aUsdc),                true);
-        globals_.setValidInstanceOf("STRATEGY_VAULT",   address(savingsUsds),          true);
-        globals_.setValidInstanceOf("PSM",              address(usdsLitePSM),          true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(fixedTermLoanManagerFactory), true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(openTermLoanManagerFactory),  true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(basicStrategyFactory),        true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(aaveStrategyFactory),         true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(skyStrategyFactory),          true);
+        globals_.setValidInstanceOf("STRATEGY_VAULT",   address(aUsdc),                       true);
+        globals_.setValidInstanceOf("STRATEGY_VAULT",   address(savingsUsds),                 true);
+        globals_.setValidInstanceOf("PSM",              address(usdsLitePSM),                 true);
         vm.stopPrank();
     }
 
@@ -127,6 +123,18 @@ contract StrategyTestBase is Runner, AddressRegistry {
         assertEq(basicStrategyFactory.defaultVersion(), 100);
         assertEq(aaveStrategyFactory.defaultVersion(),  100);
         assertEq(skyStrategyFactory.defaultVersion(),   100);
+    }
+
+    function addStrategies() internal {
+        // Add all strategies to all pools.
+        for (uint256 i; i < poolManagers.length; i++) {
+            IPoolManager poolManager = IPoolManager(poolManagers[i]);
+
+            vm.startPrank(governor);
+            poolManager.addStrategy(address(aaveStrategyFactory),  abi.encode(aUsdc));
+            poolManager.addStrategy(address(skyStrategyFactory),   abi.encode(savingsUsds, usdsLitePSM));
+            vm.stopPrank();
+        }
     }
 
 }

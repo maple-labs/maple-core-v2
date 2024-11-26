@@ -95,3 +95,16 @@ jobs:
         run: ./setup-ci.sh
       - name: Run Scenarios
         run: ./scenarios.sh
+
+  protocol-upgrade-tests:
+    runs-on:
+        group: SC-HighMemory
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Update submodules
+        run: ./setup-ci.sh
+      - name: Run Protocol Upgrade tests
+        run: ./test.sh -d tests/protocol-upgrade -p $FOUNDRY_PROFILE

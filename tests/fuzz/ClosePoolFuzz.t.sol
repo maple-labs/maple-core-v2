@@ -11,7 +11,7 @@ contract ClosePoolFuzz is FuzzedSetup {
     uint256 constant ALLOWED_DIFF   = 1000;
 
     function testFuzz_fuzzedSetup_closePool(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, seed_);
+        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         ( uint256 lastDomainStartFTLM, uint256 lastDomainStartOTLM ) = payOffLoansAndRedeemAllLps();
 
@@ -95,7 +95,7 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
     }
 
     function testFuzz_fuzzedSetup_closePool_withQueueWM(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, seed_);
+        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         ( uint256 lastDomainStartFTLM, uint256 lastDomainStartOTLM ) = payOffLoansAndRedeemAllLps();
 
