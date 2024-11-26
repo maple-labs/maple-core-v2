@@ -5,13 +5,14 @@ export FOUNDRY_PROFILE=production
 echo Using profile: $FOUNDRY_PROFILE
 
 # For Testing
+# For Maple Strategies Release
 forge script \
     --rpc-url $ETH_RPC_URL \
     -vvvv \
     --unlocked \
     --slow \
     --sender $ETH_SENDER \
-    scripts/DeployQ3Loans.s.sol:DeployQ32024Loans
+    scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
 
 # For Production
 
@@ -27,7 +28,7 @@ forge script \
 #     --broadcast \
 #     scripts/DeployHealthChecker.s.sol:DeployHealthChecker
 
-# For Q3 Loans
+# For Maple Strategies Release
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
@@ -37,4 +38,4 @@ forge script \
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
-#     scripts/DeployQ3Loans.s.sol:DeployQ32024Loans
+#     scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
