@@ -1026,6 +1026,16 @@ contract ProtocolActions is Runner {
     /*** Strategy Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
+    function deactivateStrategy(address strategy_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.deactivateStrategy();
+    }
+
     function fundStrategy(address strategy_, uint256 assetsIn_) internal {
         IStrategyLike s_ = IStrategyLike(strategy_);
         IPoolManager pm_ = IPoolManager(s_.poolManager());
@@ -1038,6 +1048,26 @@ contract ProtocolActions is Runner {
         catch { s_.fundStrategy(assetsIn_, 0); }
 
         vm.stopPrank();
+    }
+
+    function impairStrategy(address strategy_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.impairStrategy();
+    }
+
+    function reactivateStrategy(address strategy_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.reactivateStrategy(false);
     }
 
     function withdrawFromStrategy(address strategy_, uint256 assetsOut_) internal {
