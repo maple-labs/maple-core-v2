@@ -6,13 +6,22 @@ echo Using profile: $FOUNDRY_PROFILE
 
 # For Testing
 # For Maple Strategies Release
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
+
+# For Delegated Initiated Loans Release
 forge script \
     --rpc-url $ETH_RPC_URL \
     -vvvv \
     --unlocked \
     --slow \
     --sender $ETH_SENDER \
-    scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
+    scripts/DelegatedInitiatedLoansDeployment.s.sol:DelegatedInitiatedLoansDeployment
 
 # For Production
 
@@ -39,3 +48,13 @@ forge script \
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
 #     scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
+
+# For Delegated Initiated Loans Release
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --broadcast \
+#     scripts/DelegatedInitiatedLoansDeployment.s.sol:DelegatedInitiatedLoansDeployment
