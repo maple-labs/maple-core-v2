@@ -4,6 +4,7 @@ pragma solidity 0.8.7;
 import { stdStorage, StdStorage } from "../../modules/forge-std/src/Test.sol";
 
 import {
+    IAaveStrategy,
     IGlobals,
     IMapleProxyFactory,
     IMockERC20,
@@ -36,7 +37,8 @@ contract StrategyScenarios is TestBaseWithAssertions {
     uint256 liquidity  = 1_000_000e6;
     uint256 strategyIn = 750_000e6;
 
-    ISkyStrategy skyStrategy;
+    IAaveStrategy aaveStrategy;
+    ISkyStrategy  skyStrategy;
 
     /**************************************************************************************************************************************/
     /*** Setup                                                                                                                          ***/
@@ -68,15 +70,20 @@ contract StrategyScenarios is TestBaseWithAssertions {
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", AAVE_USDC,     true);
         globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
         vm.stopPrank();
 
         vm.prank(governor);
         poolManager.addStrategy(address(skyStrategyFactory), abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
 
-        pool        = IPool(poolManager.pool());
-        queueWM     = IWithdrawalManager(poolManager.withdrawalManager());
-        skyStrategy = ISkyStrategy(poolManager.strategyList(0));
+        vm.prank(governor);
+        poolManager.addStrategy(address(aaveStrategyFactory), abi.encode(AAVE_USDC));
+
+        pool         = IPool(poolManager.pool());
+        queueWM      = IWithdrawalManager(poolManager.withdrawalManager());
+        skyStrategy  = ISkyStrategy(poolManager.strategyList(0));
+        aaveStrategy = IAaveStrategy(poolManager.strategyList(1));
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));
@@ -400,6 +407,68 @@ contract StrategyScenarios is TestBaseWithAssertions {
 
         assertGt(assetsIn_1,  assetsIn_2);
         assertLt(assetsOut_1, assetsOut_2);
+    }
+
+    function testFork_strategy_scenario4() external {
+        // Deposit funds.
+        deposit(address(pool), lp_0, 1_000_000e6);
+        deposit(address(pool), lp_1, 450_000e6);
+        deposit(address(pool), lp_2, 500_000e6);
+
+        uint256 totalAssets = 1_000_000e6 + 450_000e6 + 500_000e6;
+        uint256 totalSupply = totalAssets;
+
+        assertEq(fundsAsset.balanceOf(lp_1), 0);
+        assertEq(fundsAsset.balanceOf(lp_2), 0);
+
+        assertEq(pool.balanceOf(lp_1), 450_000e6);
+        assertEq(pool.balanceOf(lp_2), 500_000e6);
+
+        assertEq(pool.totalAssets(), totalAssets);
+
+        assertEq(skyStrategy.assetsUnderManagement(),  0);
+        assertEq(aaveStrategy.assetsUnderManagement(), 0);
+
+        // Fund both Aave and Sky strategies.
+        fundStrategy(address(skyStrategy),  100_000e6);
+        fundStrategy(address(aaveStrategy), 125_000e6);
+
+        assertApproxEqAbs(pool.totalAssets(), totalAssets, 1);
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(),  100_000e6, 1);
+        assertApproxEqAbs(aaveStrategy.assetsUnderManagement(), 125_000e6, 1);
+
+        // Accrue yield.
+        vm.warp(start + 15 days);
+
+        uint256 skyYield  = skyStrategy.assetsUnderManagement() - skyStrategy.lastRecordedTotalAssets();
+        uint256 aaveYield = aaveStrategy.assetsUnderManagement() - aaveStrategy.lastRecordedTotalAssets();
+
+        totalAssets = 1_000_000e6 + 450_000e6 + 500_000e6 + skyYield + aaveYield;
+
+        assertApproxEqAbs(pool.totalAssets(), totalAssets, 1);
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(),  100_000e6 + skyYield,  1);
+        assertApproxEqAbs(aaveStrategy.assetsUnderManagement(), 125_000e6 + aaveYield, 1);
+
+        // Both users withdraw all their shares.
+        requestRedeem(address(pool), lp_1, 450_000e6);
+        requestRedeem(address(pool), lp_2, 500_000e6);
+
+        processRedemptions(address(pool), 450_000e6 + 500_000e6);
+
+        uint256 assetsWithdrawn = totalAssets * (450_000e6 + 500_000e6) / totalSupply;
+
+        assertEq(fundsAsset.balanceOf(lp_1), totalAssets * 450_000e6 / totalSupply);
+        assertEq(fundsAsset.balanceOf(lp_2), totalAssets * 500_000e6 / totalSupply);
+
+        assertEq(pool.balanceOf(lp_1), 0);
+        assertEq(pool.balanceOf(lp_2), 0);
+
+        assertApproxEqAbs(pool.totalAssets(), totalAssets - assetsWithdrawn, 1);
+
+        assertApproxEqAbs(skyStrategy.assetsUnderManagement(),  100_000e6 + skyYield,  1);
+        assertApproxEqAbs(aaveStrategy.assetsUnderManagement(), 125_000e6 + aaveYield, 1);
     }
 
 }
