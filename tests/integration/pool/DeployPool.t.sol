@@ -16,22 +16,10 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 contract DeployPoolTestsBase is TestBaseWithAssertions {
     bytes[] defaultStrategyDeploymentData;
 
-    function _getStrategyDeploymentData(
-        address poolManagerFactory_,
-        address poolDelegate_,
-        address fundsAsset_,
-        uint256 initialSupply_,
-        string memory poolName_,
-        string memory symbol_
-    ) internal view returns (bytes[] memory strategyDeploymentData_) {
-        address pmAddress_ = IMapleProxyFactory(poolManagerFactory_).getInstanceAddress(
-            abi.encode(poolDelegate_, fundsAsset_, initialSupply_, poolName_, symbol_),
-            keccak256(abi.encode(poolDelegate_))
-        );
-
+    function _getStrategyDeploymentData() internal view returns (bytes[] memory strategyDeploymentData_) {
         strategyDeploymentData_ = new bytes[](strategyFactories.length);
         for (uint256 i = 0; i < strategyFactories.length; i++) {
-            strategyDeploymentData_[i] = abi.encode(pmAddress_);
+            strategyDeploymentData_[i] = "";
         }
     }
 
@@ -48,14 +36,7 @@ contract DeployPoolTests is DeployPoolTestsBase {
         _setTreasury();
         _createFactories();
 
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            0,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
     }
 
     function test_deployPool_failWithInvalidPD() external {
@@ -363,14 +344,7 @@ contract DeployPoolTests is DeployPoolTestsBase {
     }
 
     function test_deployPool_successWithInitialSupply() external {
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            1_000_000e6,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
 
         fundsAsset.mint(poolDelegate, 1_000_000e6);
 
@@ -442,14 +416,7 @@ contract DeployPoolTests is DeployPoolTestsBase {
     }
 
     function test_deployPool_success() external {
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            2_000_000e6,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
 
         fundsAsset.mint(poolDelegate, 1_000_000e6);
 
@@ -529,25 +496,11 @@ contract DeployPoolWMQueueTests is DeployPoolTestsBase {
 
         fundsAsset.mint(poolDelegate, 10e6);
 
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            0,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
     }
 
     function test_deployPoolWMQueue_success() external {
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            1_000e6,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
 
         vm.startPrank(poolDelegate);
         fundsAsset.approve(address(deployer), 10e6);
@@ -609,14 +562,7 @@ contract DeployPoolWMQueueTests is DeployPoolTestsBase {
     }
 
     function test_deployPoolWMQueue_withoutCoverAmount() external {
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            1_000e6,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
 
         vm.prank(poolDelegate);
         address poolManager_ = deployer.deployPool({
@@ -644,14 +590,7 @@ contract DeployPoolWMQueueFailureTests is DeployPoolTestsBase {
         _createGlobals();
         _createFactories();
 
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            1_000e6,
-            "Maple Pool",
-            "MP"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
     }
 
     function test_deployPoolWMQueue_failIfInvalidPD() external {
@@ -952,14 +891,7 @@ contract DeployPoolWMQueueFailureTests is DeployPoolTestsBase {
         vm.prank(governor);
         globals.activatePoolManager(poolManager_);
 
-        defaultStrategyDeploymentData = _getStrategyDeploymentData(
-            poolManagerFactory,
-            poolDelegate,
-            address(fundsAsset),
-            2_000e6,
-            "Maple Pool 2",
-            "MP 2"
-        );
+        defaultStrategyDeploymentData = _getStrategyDeploymentData();
 
         vm.prank(poolDelegate);
         vm.expectRevert("MPF:CI:FAILED");
