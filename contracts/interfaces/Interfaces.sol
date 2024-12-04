@@ -106,6 +106,22 @@ interface IWithdrawalManagerQueue is IMWMQ {}
 /*** Like Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
 
+interface IAaveRewardsControllerLike {
+
+    function getRewardsList() external view returns (address[] memory);
+
+    function getRewardsByAsset(address asset) external view returns (address[] memory);
+
+    function getUserRewards(address[] calldata assets, address user, address reward) external view returns (uint256);
+
+}
+
+interface IAaveTokenLike {
+
+    function getIncentivesController() external view returns (address controller);
+
+}
+
 interface IERC20Like {
 
     function allowance(address owner, address spender) external view returns (uint256 allowance);

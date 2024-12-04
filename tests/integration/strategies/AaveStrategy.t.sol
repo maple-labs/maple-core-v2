@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IAaveStrategy, IMockERC20 } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IAaveRewardsControllerLike,
+    IAaveStrategy,
+    IAaveTokenLike,
+    IMockERC20
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../../contracts/Runner.sol";
 
@@ -2118,6 +2123,107 @@ contract AaveReactivateTests is AaveStrategyTestsBase {
         // Simulate a loss by transferring funds out
         vm.prank(address(aaveStrategy));
         aaveToken.transfer(address(0xdead), loss + yield);
+    }
+
+}
+
+contract AaveClaimRewardsTests is AaveStrategyTestsBase {
+
+    uint256 funding   = 250_000e18;
+    uint256 liquidity = 1_000_000e18;
+
+    address[] assets = [AAVE_USDS];
+
+    IAaveRewardsControllerLike aaveController;
+
+    // Creates a new USDS pool.
+    function setUp() public override {
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21325954);
+
+        fundsAsset = IMockERC20(USDS);
+
+        _createAccounts();
+        _createGlobals();
+        _setTreasury();
+        _createFactories();
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDS), true);
+
+        address[] memory factories = new address[](1);
+        bytes[] memory deploymentData = new bytes[](1);
+
+        factories[0] = aaveStrategyFactory;
+        deploymentData[0] = abi.encode(AAVE_USDS);
+
+        _createPoolWithQueueAndStrategies(USDS, factories, deploymentData);
+        activatePool(address(poolManager), HUNDRED_PERCENT);
+        openPool(address(poolManager));
+        deposit(lp, liquidity);
+
+        aaveToken      = IMockERC20(AAVE_USDS);
+        aaveStrategy   = IAaveStrategy(_getStrategy(aaveStrategyFactory));
+        aaveController = IAaveRewardsControllerLike(IAaveTokenLike(AAVE_USDS).getIncentivesController());
+
+        start = block.timestamp;
+    }
+
+    function testFork_aaveStrategy_claimRewards_paused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(governor);
+        vm.expectRevert("MS:PAUSED");
+        aaveStrategy.claimRewards(assets, 100e18, AAVE_USDS);
+    }
+
+    function testFork_aaveStrategy_claimRewards_unauthorized() external {
+        vm.expectRevert("MS:NOT_ADMIN");
+        aaveStrategy.claimRewards(assets, 100e18, AAVE_USDS);
+    }
+
+    function testFork_aaveStrategy_claimRewards_success() external {
+        // Check what rewards are available.
+        address[] memory rewards = aaveController.getRewardsByAsset(AAVE_USDS);
+
+        // Holding aUSDS allows for claiming of rewards in the form of additional aUSDS.
+        assertEq(rewards.length, 1);
+        assertEq(rewards[0], AAVE_USDS);
+
+        // Fund the strategy.
+        vm.prank(strategyManager);
+        aaveStrategy.fundStrategy(funding);
+
+        // Wait in order to accrue yield (and rewards).
+        vm.warp(start + 10 days);
+
+        uint256 yield  = aaveStrategy.assetsUnderManagement() - aaveStrategy.lastRecordedTotalAssets();
+        uint256 reward = aaveController.getUserRewards(assets, address(aaveStrategy), AAVE_USDS);
+
+        assertGt(yield,  0);
+        assertGt(reward, 0);
+
+        // Collect a portion of the rewards.
+        assertEq(aaveToken.balanceOf(treasury), 0);
+
+        vm.prank(governor);
+        aaveStrategy.claimRewards(assets, reward / 3, AAVE_USDS);
+
+        assertEq(aaveToken.balanceOf(treasury), reward / 3);
+
+        // Collect all of the remaining rewards.
+        vm.prank(governor);
+        aaveStrategy.claimRewards(assets, type(uint256).max, AAVE_USDS);
+
+        assertEq(aaveToken.balanceOf(treasury), reward);
+
+        // Transfer rewards back to the strategy to distribute them.
+        assertEq(aaveStrategy.assetsUnderManagement(), funding + yield);
+
+        vm.prank(treasury);
+        aaveToken.transfer(address(aaveStrategy), reward);
+
+        assertEq(aaveStrategy.assetsUnderManagement(), funding + yield + reward);
     }
 
 }
