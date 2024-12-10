@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 import { console2 as console, StdInvariant } from "../../modules/forge-std/src/Test.sol";
 
 import {
+    IERC20Like,
+    IERC4626Like,
     IFeeManager,
     IFixedTermLoan,
     IFixedTermLoanManager,
@@ -13,6 +15,8 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolPermissionManager,
+    IPSMLike,
+    IStrategyLike,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -162,6 +166,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant G: ∀ requestId[lender] ∈ [0, lastRequestId]
         * Invariant H: requestId is unique
         * Invariant I: lender is unique
+
+     * Strategy
+        * Invariant A: assetsUnderManagement == currentTotalAssets - accruedFees
+        * Invariant B: currentAccruedFees <= currentTotalAssets
+        * Invariant C: strategyState == ACTIVE -> unrealizedLosses == 0
+        * Invariant D: strategyState == IMPAIRED -> assetsUnderManagement == unrealizedLosses
+        * Invariant E: strategyState == INACTIVE -> assetsUnderManagement == unrealizedLosses == 0
+        * Invariant F: strategyState ∈ [0, 2]
+        * Invariant G: strategyFeeRate <= 1e6
 
     /**************************************************************************************************************************************/
     /*** Fixed Term Loan Invariants                                                                                                     ***/
@@ -899,8 +912,76 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     /**************************************************************************************************************************************/
+    /*** Strategy Invariants                                                                                                            ***/
+    /**************************************************************************************************************************************/
+
+    function assert_strategy_invariant_A(address strategy) internal {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        uint256 assetsUnderManagement = s.assetsUnderManagement();
+        uint256 currentTotalAssets    = _getCurrentTotalAssets(s);
+        uint256 currentAccruedFees    = _getCurrentAccruedFees(s);
+
+        assertEq(assetsUnderManagement, currentTotalAssets - currentAccruedFees);
+    }
+
+    function assert_strategy_invariant_B(address strategy) internal {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        uint256 currentTotalAssets = _getCurrentTotalAssets(s);
+        uint256 currentAccruedFees = _getCurrentAccruedFees(s);
+
+        assertLe(currentAccruedFees, currentTotalAssets);
+    }
+
+    function assert_strategy_invariant_C(address strategy) internal {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        if (s.strategyState() == 0) {
+            assertEq(s.unrealizedLosses(), 0);
+        }
+    }
+
+    function assert_strategy_invariant_D(address strategy) internal {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        if (s.strategyState() == 1) {
+            assertEq(s.assetsUnderManagement(), s.unrealizedLosses());
+        }
+    }
+
+    function assert_strategy_invariant_E(address strategy) internal {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        if (s.strategyState() == 2) {
+            assertEq(s.assetsUnderManagement(), 0);
+            assertEq(s.unrealizedLosses(),      0);
+        }
+    }
+
+    function assert_strategy_invariant_F(address strategy) internal {
+        assertLe(IStrategyLike(strategy).strategyState(), 2);
+    }
+
+    function assert_strategy_invariant_G(address strategy) internal {
+        assertLe(IStrategyLike(strategy).strategyFeeRate(), 1e6);
+    }
+
+    /**************************************************************************************************************************************/
     /*** Internal Helpers Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
+
+    function _getCurrentAccruedFees(IStrategyLike strategy) internal view returns (uint256 currentAccruedFees) {
+        uint256 currentTotalAssets      = _getCurrentTotalAssets(strategy);
+        uint256 lastRecordedTotalAssets = strategy.lastRecordedTotalAssets();
+        uint256 strategyFeeRate         = strategy.strategyFeeRate();
+
+        if (currentTotalAssets <= lastRecordedTotalAssets) {
+            return 0;
+        }
+
+        currentAccruedFees = currentTotalAssets * strategyFeeRate / 1e6 - lastRecordedTotalAssets * strategyFeeRate / 1e6;
+    }
 
     function _getActiveLoans() internal view returns (address[] memory loans) {
         uint256 index;
@@ -959,6 +1040,38 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
                 : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());
 
         interestAccrued_ = accrued_ + netRefinanceInterest;
+    }
+
+    function _getCurrentTotalAssets(IStrategyLike strategy) internal view returns (uint256 currentTotalAssets) {
+        bytes memory t = bytes(strategy.STRATEGY_TYPE());
+
+        if (keccak256(t) == keccak256("BASIC")) {
+            IERC4626Like strategyVault = IERC4626Like(strategy.strategyVault());
+            uint256 currentTotalShares = strategyVault.balanceOf(address(strategy));
+
+            currentTotalAssets = IERC4626Like(strategyVault).previewRedeem(currentTotalShares);
+        }
+
+        else if (keccak256(t) == keccak256("AAVE")) {
+            IERC20Like aaveToken = IERC20Like(strategy.aaveToken());
+
+            currentTotalAssets = aaveToken.balanceOf(address(strategy));
+        }
+
+        else if (keccak256(t) == keccak256("SKY")) {
+            IERC4626Like savingsUsds = IERC4626Like(strategy.savingsUsds());
+            IPSMLike psm             = IPSMLike(strategy.psm());
+
+            uint256 psmTout          = psm.tout();
+            uint256 conversionFactor = psm.to18ConversionFactor();
+            uint256 usdsAmount       = savingsUsds.maxWithdraw(address(strategy));
+
+            currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
+        }
+
+        else {
+            require(false, "INVALID_STRATEGY");
+        }
     }
 
     function _getExpectedIssuanceRate(address loan) internal view returns (uint256 expectedIssuanceRate) {

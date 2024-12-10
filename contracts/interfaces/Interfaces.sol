@@ -158,6 +158,10 @@ interface IERC4626Like is IERC20Like {
 
     function deposit(uint256 assets_, address receiver_) external returns (uint256 shares_);
 
+    function maxWithdraw(address account_) external view returns (uint256 assets_);
+
+    function previewRedeem(uint256 shares_) external view returns (uint256 assets_);
+
     function redeem(uint256 shares_, address receiver_, address owner_) external returns (uint256 assets_);
 
     function withdraw(uint256 assets_, address receiver_, address owner_) external returns (uint256 shares_);
@@ -370,11 +374,25 @@ interface IPSMLike {
 
 interface IStrategyLike is IStrategy {
 
-    function poolManager() external view returns (address poolManager);
+    function aaveToken() external view returns (address aaveToken);
 
     function fundStrategy(uint256 assetsIn) external;
 
     function fundStrategy(uint256 assetsIn, uint256 minSharesOut) external;
+
+    function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
+
+    function poolManager() external view returns (address poolManager);
+
+    function psm() external view returns (address psm);
+
+    function savingsUsds() external view returns (address savingsUsds);
+
+    function strategyFeeRate() external view returns (uint256 strategyFeeRate);
+
+    function strategyState() external view returns (uint256 strategyState);
+
+    function strategyVault() external view returns (address strategyVault);
 
 }
 
