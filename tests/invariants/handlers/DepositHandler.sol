@@ -39,7 +39,7 @@ contract DepositHandler is HandlerBase {
         numberOfCalls["depositHandler.deposit"]++;
 
         // Set to max resolution / 10 of LM
-        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, 1e26);
+        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, 1_000_000e6);
         address lp_     = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
         vm.startPrank(lp_);
@@ -56,7 +56,7 @@ contract DepositHandler is HandlerBase {
 
         // The first mint needs to be large enough to not lock mints if total assets eventually become zero due to defaults.
         address lp_     = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
-        uint256 shares_ = _bound(_randomize(seed_, "shares"), 10, 1e26);
+        uint256 shares_ = _bound(_randomize(seed_, "shares"), 10, 1_000_000e6);
         uint256 assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
 
         vm.startPrank(lp_);

@@ -67,7 +67,9 @@ contract OpenTermLoanHandler is HandlerBase {
         refinancer = refinancer_;
 
         for (uint256 i; i < maxBorrowers_; ++i) {
-            borrowers.push(makeAddr(string(abi.encode("borrower", i))));
+            address borrower = makeAddr(string(abi.encode("borrower", i)));
+
+            borrowers.push(borrower);
         }
 
         maxLoans = maxLoans_;
@@ -153,14 +155,12 @@ contract OpenTermLoanHandler is HandlerBase {
 
         address borrower_ = IOpenTermLoan(loan_).borrower();
 
-        // Borrower must send enough to cover the principal + interest + fees
+        vm.startPrank(borrower_);
         asset.mint(borrower_, amountToReturn_);
-
-        vm.prank(borrower_);
         asset.approve(loan_, amountToReturn_);
+        vm.stopPrank();
 
         proposeRefinance(loan_, refinancer, block.timestamp, calls_);
-
         acceptRefinanceOT(loan_, refinancer, block.timestamp, calls_);
     }
 

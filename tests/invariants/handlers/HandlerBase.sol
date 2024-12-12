@@ -5,6 +5,8 @@ import { IHandlerEntryPoint, IInvariantTest } from "../../../contracts/interface
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
+import { console2 as console } from "../../../contracts/Runner.sol";
+
 contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 
     uint256 constant internal WEIGHTS_RANGE = 10_000;

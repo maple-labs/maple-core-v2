@@ -29,6 +29,7 @@ import { GlobalsHandler }            from "./handlers/GlobalsHandler.sol";
 import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
 import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
+import { StrategyHandler }           from "./handlers/StrategyHandler.sol";
 import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
@@ -48,6 +49,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     OpenTermLoanHandler       otlHandler;
     PermissionHandler         permissionHandler;
     QueueWithdrawalHandler    queueWithdrawalHandler;
+    StrategyHandler           strategyHandler;
     TransferHandler           transferHandler;
 
     uint256 setTimestamps;
@@ -918,11 +920,16 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_strategy_invariant_A(address strategy) internal {
         IStrategyLike s = IStrategyLike(strategy);
 
+        // Ignore inactive strategies.
+        if (s.strategyState() == 2) {
+            return;
+        }
+
         uint256 assetsUnderManagement = s.assetsUnderManagement();
         uint256 currentTotalAssets    = _getCurrentTotalAssets(s);
         uint256 currentAccruedFees    = _getCurrentAccruedFees(s);
 
-        assertEq(assetsUnderManagement, currentTotalAssets - currentAccruedFees);
+        assertEq(assetsUnderManagement, currentTotalAssets - currentAccruedFees, "Strategy Invariant A");
     }
 
     function assert_strategy_invariant_B(address strategy) internal {
@@ -931,14 +938,14 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 currentTotalAssets = _getCurrentTotalAssets(s);
         uint256 currentAccruedFees = _getCurrentAccruedFees(s);
 
-        assertLe(currentAccruedFees, currentTotalAssets);
+        assertLe(currentAccruedFees, currentTotalAssets, "Strategy Invariant B");
     }
 
     function assert_strategy_invariant_C(address strategy) internal {
         IStrategyLike s = IStrategyLike(strategy);
 
         if (s.strategyState() == 0) {
-            assertEq(s.unrealizedLosses(), 0);
+            assertEq(s.unrealizedLosses(), 0, "Strategy Invariant C");
         }
     }
 
@@ -946,7 +953,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         IStrategyLike s = IStrategyLike(strategy);
 
         if (s.strategyState() == 1) {
-            assertEq(s.assetsUnderManagement(), s.unrealizedLosses());
+            assertEq(s.assetsUnderManagement(), s.unrealizedLosses(), "Strategy Invariant D");
         }
     }
 
@@ -954,17 +961,17 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         IStrategyLike s = IStrategyLike(strategy);
 
         if (s.strategyState() == 2) {
-            assertEq(s.assetsUnderManagement(), 0);
-            assertEq(s.unrealizedLosses(),      0);
+            assertEq(s.assetsUnderManagement(), 0, "Strategy Invariant E");
+            assertEq(s.unrealizedLosses(),      0, "Strategy Invariant E");
         }
     }
 
     function assert_strategy_invariant_F(address strategy) internal {
-        assertLe(IStrategyLike(strategy).strategyState(), 2);
+        assertLe(IStrategyLike(strategy).strategyState(), 2, "Strategy Invariant F");
     }
 
     function assert_strategy_invariant_G(address strategy) internal {
-        assertLe(IStrategyLike(strategy).strategyFeeRate(), 1e6);
+        assertLe(IStrategyLike(strategy).strategyFeeRate(), 1e6, "Strategy Invariant G");
     }
 
     /**************************************************************************************************************************************/
@@ -980,7 +987,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             return 0;
         }
 
-        currentAccruedFees = currentTotalAssets * strategyFeeRate / 1e6 - lastRecordedTotalAssets * strategyFeeRate / 1e6;
+        currentAccruedFees = (currentTotalAssets - lastRecordedTotalAssets) * strategyFeeRate / 1e6;
     }
 
     function _getActiveLoans() internal view returns (address[] memory loans) {
@@ -1064,7 +1071,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
             uint256 psmTout          = psm.tout();
             uint256 conversionFactor = psm.to18ConversionFactor();
-            uint256 usdsAmount       = savingsUsds.maxWithdraw(address(strategy));
+            uint256 usdsAmount       = savingsUsds.previewRedeem(savingsUsds.balanceOf(address(strategy)));
 
             currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
         }

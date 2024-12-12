@@ -1045,6 +1045,7 @@ contract ProtocolActions is Runner {
 
         vm.startPrank(poolDelegate_);
 
+        // TODO: Replace with type checks.
         try s_.fundStrategy(assetsIn_) {}
         catch { s_.fundStrategy(assetsIn_, 0); }
 
@@ -1062,13 +1063,27 @@ contract ProtocolActions is Runner {
     }
 
     function reactivateStrategy(address strategy_) internal {
+        reactivateStrategy(strategy_, false);
+    }
+
+    function reactivateStrategy(address strategy_, bool updateAccounting_) internal {
         IStrategyLike s_ = IStrategyLike(strategy_);
         IPoolManager pm_ = IPoolManager(s_.poolManager());
 
         address poolDelegate_ = pm_.poolDelegate();
 
         vm.prank(poolDelegate_);
-        s_.reactivateStrategy(false);
+        s_.reactivateStrategy(updateAccounting_);
+    }
+
+    function setStrategyFeeRate(address strategy_, uint256 feeRate_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.setStrategyFeeRate(feeRate_);
     }
 
     function withdrawFromStrategy(address strategy_, uint256 assetsOut_) internal {

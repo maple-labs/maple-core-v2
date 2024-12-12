@@ -376,11 +376,15 @@ interface IStrategyLike is IStrategy {
 
     function aaveToken() external view returns (address aaveToken);
 
+    function fundsAsset() external view returns (address fundsAsset);
+
     function fundStrategy(uint256 assetsIn) external;
 
     function fundStrategy(uint256 assetsIn, uint256 minSharesOut) external;
 
     function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
+
+    function pool() external view returns (address pool);
 
     function poolManager() external view returns (address poolManager);
 
@@ -393,6 +397,14 @@ interface IStrategyLike is IStrategy {
     function strategyState() external view returns (uint256 strategyState);
 
     function strategyVault() external view returns (address strategyVault);
+
+}
+
+interface IUSDCLike {
+
+    function masterMinter() external view returns (address);
+
+    function configureMinter(address minter, uint256 minterAllowedAmount) external returns (bool);
 
 }
 
