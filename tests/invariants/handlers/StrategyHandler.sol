@@ -75,7 +75,7 @@ contract StrategyHandler is HandlerBase {
 
         uint256 available_ = _currentTotalAssets(strategy_);
 
-        if (available_ < 1) return;
+        if (available_ < 2) return;
 
         uint256 assets_ = _bound(seed_, 1, available_ - 1);
 
