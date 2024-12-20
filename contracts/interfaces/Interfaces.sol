@@ -398,6 +398,10 @@ interface IStrategyLike is IStrategy {
 
     function strategyVault() external view returns (address strategyVault);
 
+    function withdrawFromStrategy(uint256 assetsOut) external;
+
+    function withdrawFromStrategy(uint256 assetsOut, uint256 minSharesBurned) external;
+
 }
 
 interface IUSDCLike {

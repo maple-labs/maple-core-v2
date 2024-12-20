@@ -435,14 +435,14 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         globals.setProtocolPause(true);
 
         vm.expectRevert("MS:PAUSED");
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
     }
 
     function testFork_basicStrategy_withdraw_failIfNotStrategyManager() external {
         _fundStrategy();
 
         vm.expectRevert("MS:NOT_MANAGER");
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
     }
 
     function testFork_basicStrategy_withdraw_failIfZeroAmount() external {
@@ -450,7 +450,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
 
         vm.prank(strategyManager);
         vm.expectRevert("MBS:WFS:ZERO_ASSETS");
-        basicStrategy.withdrawFromStrategy(0);
+        basicStrategy.withdrawFromStrategy(0, type(uint256).max);
     }
 
     function testFork_basicStrategy_withdraw_failIfLowAssets() external {
@@ -458,7 +458,15 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
 
         vm.prank(strategyManager);
         vm.expectRevert();
-        basicStrategy.withdrawFromStrategy(amountToFund + 1);
+        basicStrategy.withdrawFromStrategy(amountToFund + 1, type(uint256).max);
+    }
+
+    function testFork_basicStrategy_withdraw_failIfSlippage() external {
+        _fundStrategy();
+
+        vm.prank(strategyManager);
+        vm.expectRevert("MBS:WFS:SLIPPAGE");
+        basicStrategy.withdrawFromStrategy(amountToFund / 2, 0);
     }
 
     function testFork_basicStrategy_withdraw_failWithFullLoss() external {
@@ -478,7 +486,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
 
         vm.prank(poolDelegate);
         vm.expectRevert("MBS:WFS:LOW_ASSETS");
-        basicStrategy.withdrawFromStrategy(1);
+        basicStrategy.withdrawFromStrategy(1, type(uint256).max);
     }
 
     function testFork_basicStrategy_withdraw_withPoolDelegate_noFeesSameBlock() external {
@@ -496,7 +504,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity, 1);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(
             strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
@@ -537,7 +545,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield, 1);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(
             strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
@@ -579,7 +587,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         amountToWithdraw = basicStrategy.assetsUnderManagement();  // Full Withdrawal
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertEq(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), 0);
 
@@ -616,7 +624,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield - fee, 1);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(
             strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
@@ -658,7 +666,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         amountToWithdraw = basicStrategy.assetsUnderManagement();  // Full Withdrawal
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertEq(strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))), 0);
 
@@ -698,7 +706,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield, 1);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(
             strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
@@ -741,7 +749,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity - loss, 1);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(strategyVault.convertToAssets(
             strategyVault.balanceOf(address(basicStrategy))),
@@ -789,7 +797,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertApproxEqAbs(pool.totalAssets(),                      poolLiquidity + yield - fee, 1);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(
             strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
@@ -841,7 +849,7 @@ contract BasicStrategyWithdrawTests is BasicStrategyTestsBase {
         assertEq(pool.totalAssets(),                      poolLiquidity - amountToFund);
 
         vm.prank(poolDelegate);
-        basicStrategy.withdrawFromStrategy(amountToWithdraw);
+        basicStrategy.withdrawFromStrategy(amountToWithdraw, type(uint256).max);
 
         assertApproxEqAbs(
             strategyVault.convertToAssets(strategyVault.balanceOf(address(basicStrategy))),
@@ -1110,7 +1118,7 @@ contract BasicSetStrategyFeeTests is BasicStrategyTestsBase {
 
         // Withdraw from the strategy
         vm.prank(strategyManager);
-        basicStrategy.withdrawFromStrategy(withdrawalAmount);
+        basicStrategy.withdrawFromStrategy(withdrawalAmount, type(uint256).max);
 
         assertEq(fundsAsset.balanceOf(treasury), initialFee + additionalFee);
 

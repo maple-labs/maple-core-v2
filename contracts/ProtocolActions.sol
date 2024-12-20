@@ -1092,8 +1092,13 @@ contract ProtocolActions is Runner {
 
         address poolDelegate_ = pm_.poolDelegate();
 
-        vm.prank(poolDelegate_);
-        s_.withdrawFromStrategy(assetsOut_);
+        vm.startPrank(poolDelegate_);
+
+        // TODO: Replace with type checks.
+        try s_.withdrawFromStrategy(assetsOut_) {}
+        catch { s_.withdrawFromStrategy(assetsOut_, type(uint256).max); }
+
+        vm.stopPrank();
     }
 
     /**************************************************************************************************************************************/

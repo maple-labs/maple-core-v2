@@ -110,6 +110,8 @@ contract SkyStrategySetPSMTests is SkyStrategyTestBase {
     function setUp() public override {
         super.setUp();
 
+        vm.etch(newPsm, USDS_LITE_PSM.code);
+
         vm.prank(governor);
         globals.setValidInstanceOf("PSM", newPsm, true);
     }
@@ -165,17 +167,12 @@ contract SkyStrategySetPSMTests is SkyStrategyTestBase {
 
         assertEq(skyStrategy.psm(), USDS_LITE_PSM);
 
-        // Copy the current PSM into the newPsm variable.
-        vm.etch(newPsm, USDS_LITE_PSM.code);
-
         vm.prank(governor);
         skyStrategy.setPsm(newPsm);
 
         assertEq(skyStrategy.psm(), newPsm);
         assertEq(fundsAsset.allowance(address(skyStrategy), newPsm), type(uint256).max);
         assertEq(usds.allowance(address(skyStrategy),       newPsm), type(uint256).max);
-
-        // TODO: perform an withdrawal with the new PSM 
     }
 
 }
