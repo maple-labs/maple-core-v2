@@ -267,7 +267,7 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function _getLoanParams(uint256 seed_) internal pure returns (uint256[3] memory terms_, uint256[4] memory rates_) {
-        uint256 noticePeriod_    = _bound(_hash(seed_, "noticePeriod"),    0,       30 days);
+        uint256 noticePeriod_    = _bound(_hash(seed_, "noticePeriod"),    1,       30 days);
         uint256 gracePeriod_     = _bound(_hash(seed_, "gracePeriod"),     0,       30 days);
         uint256 paymentInterval_ = _bound(_hash(seed_, "paymentInterval"), 1 hours, 30 days);
 
