@@ -38,7 +38,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
     function test_addStrategy_syrupUSDC_aaveStrategy() external {
         vm.prank(governor);
-        syrupUsdcPoolManager.addStrategy(address(aaveStrategyFactory), abi.encode(address(aUsdc)));
+        syrupUsdcPoolManager.addStrategy(address(aaveStrategyFactory_), abi.encode(address(aUsdc)));
 
         IAaveStrategy aaveStrategy = IAaveStrategy(syrupUsdcPoolManager.strategyList(2));
 
@@ -65,7 +65,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
     function test_addStrategy_syrupUSDC_skyStrategy() external {
         vm.prank(governor);
-        syrupUsdcPoolManager.addStrategy(address(skyStrategyFactory), abi.encode(savingsUsds, usdsLitePSM));
+        syrupUsdcPoolManager.addStrategy(address(skyStrategyFactory_), abi.encode(savingsUsds, usdsLitePSM));
 
         ISkyStrategy skyStrategy = ISkyStrategy(syrupUsdcPoolManager.strategyList(2));
 

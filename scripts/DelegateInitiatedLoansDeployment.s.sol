@@ -9,7 +9,7 @@ import { MapleLoanInitializer as FixedTermLoanInitializer } from "../modules/fix
 import { MapleLoan as OpenTermLoan }                       from "../modules/open-term-loan/contracts/MapleLoan.sol";
 import { MapleLoanInitializer as OpenTermLoanInitializer } from "../modules/open-term-loan/contracts/MapleLoanInitializer.sol";
 
-contract DelegatedInitiatedLoansDeployment is Script {
+contract DelegateInitiatedLoansDeployment is Script {
 
     function run() public {
         address ETH_SENDER = vm.envAddress("ETH_SENDER");

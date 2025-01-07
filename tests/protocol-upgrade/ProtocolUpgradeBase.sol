@@ -14,9 +14,9 @@ import { Runner } from "../../contracts/Runner.sol";
 
 contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
-    IMapleProxyFactory basicStrategyFactory;
-    IMapleProxyFactory aaveStrategyFactory;
-    IMapleProxyFactory skyStrategyFactory;
+    IMapleProxyFactory basicStrategyFactory_;
+    IMapleProxyFactory aaveStrategyFactory_;
+    IMapleProxyFactory skyStrategyFactory_;
 
     /**************************************************************************************************************************************/
     /*** Upgrade Procedure                                                                                                              ***/
@@ -66,7 +66,7 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
     function setupGlobals() internal {
         // Deploy the new MapleGlobals implementation.
-        address newGlobalsImplementation = deployFromFile("Contracts@25", "Globals");
+        newGlobalsImplementation = deployFromFile("Contracts@25", "Globals");
 
         // Set the new implementation.
         vm.prank(governor);
@@ -78,10 +78,11 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         vm.startPrank(governor);
         globals_.setValidInstanceOf("STRATEGY_FACTORY", address(fixedTermLoanManagerFactory), true);
         globals_.setValidInstanceOf("STRATEGY_FACTORY", address(openTermLoanManagerFactory),  true);
-        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(basicStrategyFactory),        true);
-        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(aaveStrategyFactory),         true);
-        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(skyStrategyFactory),          true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(basicStrategyFactory_),       true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(aaveStrategyFactory_),        true);
+        globals_.setValidInstanceOf("STRATEGY_FACTORY", address(skyStrategyFactory_),         true);
         globals_.setValidInstanceOf("STRATEGY_VAULT",   address(aUsdc),                       true);
+        globals_.setValidInstanceOf("STRATEGY_VAULT",   address(aUsdt),                       true);
         globals_.setValidInstanceOf("STRATEGY_VAULT",   address(savingsUsds),                 true);
         globals_.setValidInstanceOf("PSM",              address(usdsLitePSM),                 true);
         vm.stopPrank();
@@ -91,9 +92,9 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         // Deploy the strategy factories.
         bytes memory data = abi.encode(address(globals));
 
-        basicStrategyFactory = IMapleProxyFactory(deployFromFile("Contracts@25", "StrategyFactory", data));
-        aaveStrategyFactory  = IMapleProxyFactory(deployFromFile("Contracts@25", "StrategyFactory", data));
-        skyStrategyFactory   = IMapleProxyFactory(deployFromFile("Contracts@25", "StrategyFactory", data));
+        basicStrategyFactory_ = IMapleProxyFactory(deployFromFile("Contracts@25", "StrategyFactory", data));
+        aaveStrategyFactory_  = IMapleProxyFactory(deployFromFile("Contracts@25", "StrategyFactory", data));
+        skyStrategyFactory_   = IMapleProxyFactory(deployFromFile("Contracts@25", "StrategyFactory", data));
 
         // Deploy strategy implementations and initializers.
         address basicStrategyImplementation = deployFromFile("Contracts@25", "BasicStrategy");
@@ -106,35 +107,36 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Configure the strategy factories.
         vm.startPrank(governor);
-        basicStrategyFactory.registerImplementation(100, basicStrategyImplementation, basicStrategyInitializer);
-        aaveStrategyFactory.registerImplementation(100,  aaveStrategyImplementation,  aaveStrategyInitializer);
-        skyStrategyFactory.registerImplementation(100,   skyStrategyImplementation,   skyStrategyInitializer);
+        basicStrategyFactory_.registerImplementation(100, basicStrategyImplementation, basicStrategyInitializer);
+        aaveStrategyFactory_.registerImplementation(100,  aaveStrategyImplementation,  aaveStrategyInitializer);
+        skyStrategyFactory_.registerImplementation(100,   skyStrategyImplementation,   skyStrategyInitializer);
 
-        basicStrategyFactory.setDefaultVersion(100);
-        aaveStrategyFactory.setDefaultVersion(100);
-        skyStrategyFactory.setDefaultVersion(100);
+        basicStrategyFactory_.setDefaultVersion(100);
+        aaveStrategyFactory_.setDefaultVersion(100);
+        skyStrategyFactory_.setDefaultVersion(100);
         vm.stopPrank();
 
         // Assert factory configurations.
-        assertEq(basicStrategyFactory.migratorForPath(100, 100), basicStrategyInitializer);
-        assertEq(aaveStrategyFactory.migratorForPath(100, 100),  aaveStrategyInitializer);
-        assertEq(skyStrategyFactory.migratorForPath(100, 100),   skyStrategyInitializer);
+        assertEq(basicStrategyFactory_.migratorForPath(100, 100), basicStrategyInitializer);
+        assertEq(aaveStrategyFactory_.migratorForPath(100, 100),  aaveStrategyInitializer);
+        assertEq(skyStrategyFactory_.migratorForPath(100, 100),   skyStrategyInitializer);
 
-        assertEq(basicStrategyFactory.defaultVersion(), 100);
-        assertEq(aaveStrategyFactory.defaultVersion(),  100);
-        assertEq(skyStrategyFactory.defaultVersion(),   100);
+        assertEq(basicStrategyFactory_.defaultVersion(), 100);
+        assertEq(aaveStrategyFactory_.defaultVersion(),  100);
+        assertEq(skyStrategyFactory_.defaultVersion(),   100);
     }
 
     function addStrategies() internal {
-        // Add all strategies to all pools.
-        for (uint256 i; i < poolManagers.length; i++) {
-            IPoolManager poolManager = IPoolManager(poolManagers[i]);
+        // Add all strategies to correct pools.
+        vm.startPrank(governor);
+        IPoolManager(securedLendingUSDCPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdc));
 
-            vm.startPrank(governor);
-            poolManager.addStrategy(address(aaveStrategyFactory),  abi.encode(aUsdc));
-            poolManager.addStrategy(address(skyStrategyFactory),   abi.encode(savingsUsds, usdsLitePSM));
-            vm.stopPrank();
-        }
+        IPoolManager(syrupUSDCPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdc));
+        IPoolManager(syrupUSDCPoolManager).addStrategy(address(skyStrategyFactory_),  abi.encode(savingsUsds, usdsLitePSM));
+
+        IPoolManager(syrupUSDTPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdt));
+        vm.stopPrank();
+
     }
 
 }

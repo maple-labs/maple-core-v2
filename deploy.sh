@@ -15,13 +15,13 @@ echo Using profile: $FOUNDRY_PROFILE
 #     scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
 
 # For Delegated Initiated Loans Release
-forge script \
-    --rpc-url $ETH_RPC_URL \
-    -vvvv \
-    --unlocked \
-    --slow \
-    --sender $ETH_SENDER \
-    scripts/DelegatedInitiatedLoansDeployment.s.sol:DelegatedInitiatedLoansDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/DelegateInitiatedLoansDeployment.s.sol:DelegateInitiatedLoansDeployment
 
 # For Production
 
@@ -53,8 +53,10 @@ forge script \
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
-#     --unlocked \
+#     --mnemonic-indexes 2 \
+#     --ledger \
 #     --slow \
 #     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
 #     --broadcast \
-#     scripts/DelegatedInitiatedLoansDeployment.s.sol:DelegatedInitiatedLoansDeployment
+#     scripts/DelegateInitiatedLoansDeployment.s.sol:DelegateInitiatedLoansDeployment
