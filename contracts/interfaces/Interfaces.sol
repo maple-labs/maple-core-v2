@@ -370,6 +370,10 @@ interface IPSMLike {
 
     function usds() external view returns (address usds);
 
+    function __setGem(address gem_) external;
+
+    function __setUsds(address usds_) external;
+
 }
 
 interface IStrategyLike is IStrategy {

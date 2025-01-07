@@ -20,6 +20,8 @@ import { MapleStrategyFactory as MSF }          from "../modules/strategies/cont
 import { MapleBasicStrategyInitializer as MBSI }
     from "../modules/strategies/contracts/proxy/basicStrategy/MapleBasicStrategyInitializer.sol";
 
+import { MockPSM as MPSM } from "../modules/strategies/tests/utils/Mocks.sol";
+
 contract AaveStrategy is MAS { }
 
 contract AaveStrategyInitializer is MASI { }
@@ -71,3 +73,5 @@ contract PoolManager is MPM { }
 contract PoolManagerInitializer is MPMI { }
 
 contract PoolManagerMigrator is MPMM { }
+
+contract MockPSM is MPSM { }

@@ -20,6 +20,8 @@ contract SkyStrategyTestBase is StrategyTestBase {
 
     using stdStorage for StdStorage;
 
+    address mockPsm;
+
     uint256 constant USDC_PRECISION    = 1e6;   // USDC has 6 decimals.
     uint256 constant USDS_PRECISION    = 1e18;  // USDS has 18 decimals.
     uint256 constant CONVERSION_FACTOR = 1e12;  // Difference in precision between USDC and USDS.
@@ -137,6 +139,33 @@ contract SkyStrategySetPSMTests is SkyStrategyTestBase {
 
         vm.prank(operationalAdmin);
         skyStrategy.setPsm(newPsm);
+    }
+
+    function testFork_setPsm_zeroAddress() external {
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSS:SPSM:ZERO_ADDRESS");
+        skyStrategy.setPsm(address(0));
+    }
+
+    function testFork_setPsm_invalidGem() external {
+        address mockPsm = deployFromFile("Contracts@25", "MockPSM");
+
+        IPSMLike(mockPsm).__setGem(address(1));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSS:SPSM:INVALID_GEM");
+        skyStrategy.setPsm(mockPsm);
+    }
+
+    function testFork_setPsm_invalidUsds() external {
+        address mockPsm = deployFromFile("Contracts@25", "MockPSM");
+
+        IPSMLike(mockPsm).__setGem(address(fundsAsset));
+        IPSMLike(mockPsm).__setUsds(address(1));
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSS:SPSM:INVALID_USDS");
+        skyStrategy.setPsm(mockPsm);
     }
 
     function testFork_setPsm_failIfNotValidInstance() external {
