@@ -73,9 +73,12 @@ contract StrategyHandler is HandlerBase {
 
         if (strategy_ == address(0)) return;
 
-        uint256 available_ = _currentTotalAssets(strategy_);
+        uint256 totalAssets_ = _currentTotalAssets(strategy_);
+        uint256 accruedFees_ = _currentAccruedFees(strategy_, totalAssets_);
 
-        if (available_ < 2) return;
+        uint256 available_ = totalAssets_ - accruedFees_;
+
+        if (available_ <= 1) return;
 
         uint256 assets_ = _bound(seed_, 1, available_ - 1);
 
@@ -147,6 +150,25 @@ contract StrategyHandler is HandlerBase {
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
+
+    function _currentAccruedFees(address strategy_, uint256 currentTotalAssets_) internal view returns (uint256 currentAccruedFees_) {
+        IStrategyLike strategy = IStrategyLike(strategy_);
+
+        uint256 strategyFeeRate_         = strategy.strategyFeeRate();
+        uint256 lastRecordedTotalAssets_ = strategy.lastRecordedTotalAssets();
+
+        if (strategyFeeRate_ == 0) {
+            return 0;
+        }
+
+        if (currentTotalAssets_ <= lastRecordedTotalAssets_) {
+            return 0;
+        }
+
+        uint256 yieldAccrued_ = currentTotalAssets_ - lastRecordedTotalAssets_;
+
+        currentAccruedFees_ = yieldAccrued_ * strategyFeeRate_ / 1e6;
+    }
 
     function _currentTotalAssets(address strategy_) internal view returns (uint256 currentTotalAssets) {
         IStrategyLike strategy = IStrategyLike(strategy_);
