@@ -43,7 +43,7 @@ deploy:
 # Utility
 
 validate:
-	forge script Validate$(step)
+	forge script Validate$(step) -vvv --rpc-url $(ETH_RPC_URL)
 
 validateLocal:
 	forge script Validate$(step) --rpc-url "http://localhost:8545"

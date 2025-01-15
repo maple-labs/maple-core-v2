@@ -13,7 +13,7 @@ import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
 
 contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
-    address syrupUSDCPoolDelegate;
+    address syrupUSDCPD;
 
     uint256 start;
     uint256 usdcIn;
@@ -26,7 +26,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
         syrupUsdcPool         = IPool(syrupUSDCPool);                // NOTE: Address registry address is uppercase USDC
         syrupUsdcPoolManager  = IPoolManager(syrupUSDCPoolManager);  // NOTE: Address registry address is uppercase USDC
-        syrupUSDCPoolDelegate = syrupUsdcPoolManager.poolDelegate();
+        syrupUSDCPD           = syrupUsdcPoolManager.poolDelegate();
 
         setupStrategies();
         setupPoolManagers();
@@ -46,7 +46,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
         uint256 totalAssets = syrupUsdcPool.totalAssets();
 
-        vm.prank(syrupUSDCPoolDelegate);
+        vm.prank(syrupUSDCPD);
         aaveStrategy.fundStrategy(usdcIn);
 
         assertApproxEqAbs(syrupUsdcPool.totalAssets(),          totalAssets, 1);
@@ -57,7 +57,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
         assertGt(aaveStrategy.assetsUnderManagement(), usdcIn);
 
-        vm.prank(syrupUSDCPoolDelegate);
+        vm.prank(syrupUSDCPD);
         aaveStrategy.withdrawFromStrategy(usdcIn);
 
         assertGt(aaveStrategy.assetsUnderManagement(), 0);
@@ -73,7 +73,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
         uint256 totalAssets = syrupUsdcPool.totalAssets();
 
-        vm.prank(syrupUSDCPoolDelegate);
+        vm.prank(syrupUSDCPD);
         skyStrategy.fundStrategy(usdcIn);
 
         assertApproxEqAbs(syrupUsdcPool.totalAssets(),         totalAssets, 1);
@@ -84,7 +84,7 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
 
         assertGt(skyStrategy.assetsUnderManagement(), usdcIn);
 
-        vm.prank(syrupUSDCPoolDelegate);
+        vm.prank(syrupUSDCPD);
         skyStrategy.withdrawFromStrategy(usdcIn);
 
         assertGt(skyStrategy.assetsUnderManagement(), 0);

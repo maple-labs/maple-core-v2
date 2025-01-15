@@ -14,6 +14,8 @@ contract DelegateInitiatedLoansDeployment is Script {
     function run() public {
         address ETH_SENDER = vm.envAddress("ETH_SENDER");
 
+        console.log("ETH_SENDER: ", ETH_SENDER);
+
         vm.startBroadcast(ETH_SENDER);
 
         console.log("Deploying loans...");

@@ -24,6 +24,8 @@ contract MapleStrategiesDeployment is Script, MapleAddressRegistryETH {
     function run() public {
         address ETH_SENDER = vm.envAddress("ETH_SENDER");
 
+        console.log("ETH_SENDER: ", ETH_SENDER);
+
         vm.startBroadcast(ETH_SENDER);
 
         console.log("Deploying strategies...");
@@ -44,18 +46,18 @@ contract MapleStrategiesDeployment is Script, MapleAddressRegistryETH {
         address skyImplementation   = address(new MapleSkyStrategy());
 
         console.log("Aave factory deployed at         ", aaveFactory);
-        console.log("Aave initializer deployed at     ", aaveInitializer);
         console.log("Aave implementation deployed at  ", aaveImplementation);
+        console.log("Aave initializer deployed at     ", aaveInitializer);
         console.log("---------------------------------");
 
         console.log("Basic factory deployed at        ", basicFactory);
-        console.log("Basic initializer deployed at    ", basicInitializer);
         console.log("Basic implementation deployed at ", basicImplementation);
+        console.log("Basic initializer deployed at    ", basicInitializer);
         console.log("---------------------------------");
 
         console.log("Sky factory deployed at          ", skyFactory);
-        console.log("Sky initializer deployed at      ", skyInitializer);
         console.log("Sky implementation deployed at   ", skyImplementation);
+        console.log("Sky initializer deployed at      ", skyInitializer);
 
         console.log("---------------------------------");
         // Deploy new globals version

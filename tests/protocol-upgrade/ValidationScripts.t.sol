@@ -7,30 +7,29 @@ import { IGlobals, IMapleProxied, IMapleProxyFactory, IPoolManager } from "../..
 
 import { UpgradeAddressRegistry } from "./UpgradeAddressRegistry.sol";
 
-contract ValidateGlobalsUpgrade is UpgradeAddressRegistry, Test {
+contract ValidateStrategiesGlobalsAndFactoriesSetup is UpgradeAddressRegistry, Test {
 
     function run() external {
-        assertEq(IMapleProxied(address(globals)).implementation(), newGlobalsImplementation);
+        validateFactoriesSetup();
+        validateGlobalsUpgrade();
+        validateGlobalsSetup();
     }
 
-}
-
-// TODO: Let's also assert there is no migrator set for the upgrade paths for the PM
-contract ValidateStrategiesFactoriesSetup is UpgradeAddressRegistry, Test {
-
-    function run() external {
+    function validateFactoriesSetup() internal {
         validateFactory({
             factory:        basicStrategyFactory,
             version:        100,
             implementation: newBasicStrategyImplementation,
             initializer:    newBasicStrategyInitializer
         });
+
         validateFactory({
             factory:        aaveStrategyFactory,
             version:        100,
             implementation: newAaveStrategyImplementation,
             initializer:    newAaveStrategyInitializer
         });
+
         validateFactory({
             factory:        skyStrategyFactory,
             version:        100,
@@ -47,21 +46,16 @@ contract ValidateStrategiesFactoriesSetup is UpgradeAddressRegistry, Test {
 
         assertTrue(IMapleProxyFactory(poolManagerFactory).upgradeEnabledForPath(300, 400));
         assertTrue(IMapleProxyFactory(poolManagerFactory).upgradeEnabledForPath(301, 400));
+
+        assertEq(IMapleProxyFactory(poolManagerFactory).migratorForPath(300, 400), address(0));
+        assertEq(IMapleProxyFactory(poolManagerFactory).migratorForPath(301, 400), address(0));
     }
 
-    function validateFactory(address factory, uint256 version, address implementation, address initializer) internal {
-        IMapleProxyFactory factoryContract = IMapleProxyFactory(factory);
-
-        assertEq(factoryContract.defaultVersion(),                  version);
-        assertEq(factoryContract.migratorForPath(version, version), initializer);
-        assertEq(factoryContract.implementationOf(version),         implementation);
+    function validateGlobalsUpgrade() internal {
+        assertEq(IMapleProxied(address(globals)).implementation(), newGlobalsImplementation);
     }
 
-}
-
-contract ValidateStrategiesGlobalsSetup is UpgradeAddressRegistry, Test {
-
-    function run() external {
+    function validateGlobalsSetup() internal {
         IGlobals globals_ = IGlobals(globals);
 
         assertTrue(globals_.isInstanceOf("STRATEGY_FACTORY", fixedTermLoanManagerFactory));
@@ -76,33 +70,73 @@ contract ValidateStrategiesGlobalsSetup is UpgradeAddressRegistry, Test {
         assertTrue(globals_.isInstanceOf("PSM",            usdsLitePSM));
     }
 
+    function validateFactory(address factory, uint256 version, address implementation, address initializer) internal {
+        IMapleProxyFactory factoryContract = IMapleProxyFactory(factory);
+
+        assertEq(factoryContract.defaultVersion(),                  version);
+        assertEq(factoryContract.migratorForPath(version, version), initializer);
+        assertEq(factoryContract.implementationOf(version),         implementation);
+    }
+
 }
 
-// TODO: Needs all pools we are upgrading added
 contract ValidateStrategiesPoolManagerUpgrade is UpgradeAddressRegistry, Test {
 
     function run() external {
-        assertEq(IMapleProxyFactory(poolManagerFactory).versionOf(IMapleProxied(syrupUSDCPoolManager).implementation()),          400);
-        assertEq(IMapleProxyFactory(poolManagerFactory).versionOf(IMapleProxied(syrupUSDTPoolManager).implementation()),          400);
-        assertEq(IMapleProxyFactory(poolManagerFactory).versionOf(IMapleProxied(securedLendingUSDCPoolManager).implementation()), 400);
+
+        for (uint256 i = 0; i < poolManagers.length; i++) {
+            assertEq(IMapleProxyFactory(poolManagerFactory).versionOf(IMapleProxied(poolManagers[i]).implementation()), 400);
+        }
     }
 
 }
 
-// TODO: The length isn't sufficient we should assert the address of the instance is in the array
 contract ValidateStrategyAddition is UpgradeAddressRegistry, Test {
 
     function run() external {
-        assertEq(IPoolManager(syrupUSDCPoolManager).strategyListLength(),          4);  // Both LMs + Aave and Sky
-        assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyListLength(), 3);  // Both LMs + Aave
-        assertEq(IPoolManager(syrupUSDTPoolManager).strategyListLength(),          3);  // Both LMs + Aave
+
+        // Assert SyrupUSDC
+        assertTrue(IPoolManager(syrupUSDCPoolManager).isStrategy(syrupUSDCAaveStrategy));
+        assertTrue(IPoolManager(syrupUSDCPoolManager).isStrategy(syrupUSDCSkyStrategy));
+
+        assertEq(IPoolManager(syrupUSDCPoolManager).strategyListLength(), 4);
+        assertEq(IPoolManager(syrupUSDCPoolManager).strategyList(2),      syrupUSDCAaveStrategy);
+        assertEq(IPoolManager(syrupUSDCPoolManager).strategyList(3),      syrupUSDCSkyStrategy);
+
+        validateIsInstance(aaveStrategyFactory, syrupUSDCAaveStrategy);
+        validateIsInstance(skyStrategyFactory,  syrupUSDCSkyStrategy);
+
+        // Assert SyrupUSDT
+        assertTrue(IPoolManager(syrupUSDTPoolManager).isStrategy(syrupUSDTAaveStrategy));
+
+        assertEq(IPoolManager(syrupUSDTPoolManager).strategyListLength(), 3);
+        assertEq(IPoolManager(syrupUSDTPoolManager).strategyList(2),      syrupUSDTAaveStrategy);
+
+        validateIsInstance(aaveStrategyFactory, syrupUSDTAaveStrategy);
+
+        // Assert SecuredLendingUSDC
+        assertTrue(IPoolManager(securedLendingUSDCPoolManager).isStrategy(securedLendingAaveStrategy));
+
+        assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyListLength(), 3);
+        assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyList(2),      securedLendingAaveStrategy);
+
+        validateIsInstance(aaveStrategyFactory, securedLendingAaveStrategy);
+    }
+
+    function validateIsInstance(address factory, address strategy) internal {
+        assertTrue(IMapleProxyFactory(factory).isInstance(strategy));
     }
 
 }
 
-contract ValidateLoanFactoriesSetup is UpgradeAddressRegistry, Test {
+contract ValidateDILSetup is UpgradeAddressRegistry, Test {
 
     function run() external {
+
+        for (uint256 i = 0; i < poolDelegates.length; i++) {
+            assertCanDeployFrom(poolDelegates[i]);
+        }
+
         validateFactory({
             factory:        fixedTermLoanFactoryV2,
             version:        600,
@@ -116,6 +150,11 @@ contract ValidateLoanFactoriesSetup is UpgradeAddressRegistry, Test {
             implementation: newOpenTermLoanImplementation,
             initializer:    newOpenTermLoanInitializer
         });
+    }
+
+    function assertCanDeployFrom(address delegate) internal {
+        assertTrue(IGlobals(globals).canDeployFrom(fixedTermLoanFactoryV2, delegate));
+        assertTrue(IGlobals(globals).canDeployFrom(openTermLoanFactory,    delegate));
     }
 
     function validateFactory(address factory, uint256 version, address implementation, address initializer) internal {
