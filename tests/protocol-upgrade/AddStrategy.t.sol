@@ -90,4 +90,46 @@ contract AddStrategyToSyrupUSDCTests is ProtocolUpgradeBase {
         assertGt(skyStrategy.assetsUnderManagement(), 0);
     }
 
+    function test_addStrategy_syrupUSDC_doubleAaveStrategy() external {
+        vm.prank(governor);
+        syrupUsdcPoolManager.addStrategy(address(aaveStrategyFactory_), abi.encode(address(aUsdc)));
+
+        vm.prank(governor);
+        syrupUsdcPoolManager.addStrategy(address(aaveStrategyFactory_), abi.encode(address(aUsdc)));
+
+        IAaveStrategy firstStrategy  = IAaveStrategy(syrupUsdcPoolManager.strategyList(2));
+        IAaveStrategy secondStrategy = IAaveStrategy(syrupUsdcPoolManager.strategyList(3));
+
+        assertEq(syrupUsdcPoolManager.isStrategy(address(firstStrategy)),  true);
+        assertEq(syrupUsdcPoolManager.isStrategy(address(secondStrategy)), true);
+
+        uint256 totalAssets = syrupUsdcPool.totalAssets();
+
+        vm.prank(syrupUSDCPoolDelegate);
+        firstStrategy.fundStrategy(usdcIn / 2);
+
+        vm.prank(syrupUSDCPoolDelegate);
+        secondStrategy.fundStrategy(usdcIn / 2);
+
+        assertEq(syrupUsdcPool.totalAssets(), totalAssets);
+
+        assertApproxEqAbs(firstStrategy.assetsUnderManagement(),  usdcIn / 2, 1);
+        assertApproxEqAbs(secondStrategy.assetsUnderManagement(), usdcIn / 2, 1);
+
+        // Accrue yield.
+        vm.warp(start + 10 days);
+
+        assertGt(firstStrategy.assetsUnderManagement(),  usdcIn / 2);
+        assertGt(secondStrategy.assetsUnderManagement(), usdcIn / 2);
+
+        vm.prank(syrupUSDCPoolDelegate);
+        firstStrategy.withdrawFromStrategy(usdcIn / 2);
+
+        vm.prank(syrupUSDCPoolDelegate);
+        secondStrategy.withdrawFromStrategy(usdcIn / 2);
+
+        assertGt(firstStrategy.assetsUnderManagement(),  0);
+        assertGt(secondStrategy.assetsUnderManagement(), 0);
+    }
+
 }
