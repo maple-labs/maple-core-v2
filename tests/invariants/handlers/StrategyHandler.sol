@@ -32,7 +32,7 @@ contract StrategyHandler is HandlerBase {
         strategies.push(aaveStrategy_);
         strategies.push(skyStrategy_);
 
-        maximumFunding = 1_000_000e6;
+        maximumFunding = 500_000e6;
         strategyCount  = strategies.length;
 
         testContract = IInvariantTest(msg.sender);
