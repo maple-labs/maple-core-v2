@@ -123,6 +123,8 @@ contract FuzzedUtil is ProtocolActions {
             // Get a random strategy.
             address strategy = getSomeStrategy();
 
+            if (strategy == address(0)) return;
+
             // Move forwards in time.
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
 
@@ -603,8 +605,23 @@ contract FuzzedUtil is ProtocolActions {
     }
 
     function getSomeStrategy() internal returns (address strategy) {
-        // TODO: Check if this works for all pools.
-        uint256 index = getSomeValue(2, 3);
+        uint256 strategyCount = IPoolManager(_poolManager).strategyListLength();
+        uint256 index;
+
+        // Pool only has loan managers.
+        if (strategyCount == 2) {
+            return address(0);
+        }
+
+        // Pool only has one strategy, select it.
+        if (strategyCount == 3) {
+            index = 2;
+        }
+
+        // Pool has two strategies, choose one randomly.
+        if (strategyCount == 4) {
+            index = getSomeValue(2, 3);
+        }
 
         strategy = IPoolManager(_poolManager).strategyList(index);
     }

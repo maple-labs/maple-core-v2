@@ -74,4 +74,32 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address[] syrupUSDCFixedTermLoans;
     address[] syrupUSDCOpenTermLoans;
 
+    address[] syrupUSDTAllowedLenders;
+    address[] syrupUSDTFixedTermLoans;
+    address[] syrupUSDTOpenTermLoans;
+
+    address[] aqruAllowedLenders;
+    address[] aqruFixedTermLoans;
+    address[] aqruOpenTermLoans;
+
+    address[] cashUSDCAllowedLenders;
+    address[] cashUSDCFixedTermLoans;
+    address[] cashUSDCOpenTermLoans;
+
+    address[] blueChipAllowedLenders;
+    address[] blueChipFixedTermLoans;
+    address[] blueChipOpenTermLoans;
+
+    address[] highYieldCorpUSDCAllowedLenders;
+    address[] highYieldCorpUSDCFixedTermLoans;
+    address[] highYieldCorpUSDCOpenTermLoans;
+
+    address[] highYieldCorpWETHAllowedLenders;
+    address[] highYieldCorpWETHFixedTermLoans;
+    address[] highYieldCorpWETHOpenTermLoans;
+
+    address[] securedLendingUSDCAllowedLenders;
+    address[] securedLendingUSDCFixedTermLoans;
+    address[] securedLendingUSDCOpenTermLoans;
+
 }
