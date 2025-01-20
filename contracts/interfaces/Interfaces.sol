@@ -106,6 +106,12 @@ interface IWithdrawalManagerQueue is IMWMQ {}
 /*** Like Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
 
+interface IAaveConfiguratorLike {
+
+    function setSupplyCap(address asset, uint256 newSupplyCap) external;
+
+}
+
 interface IAaveRewardsControllerLike {
 
     function getRewardsList() external view returns (address[] memory);

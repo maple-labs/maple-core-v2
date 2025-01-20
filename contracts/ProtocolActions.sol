@@ -49,6 +49,8 @@ contract ProtocolActions is Runner {
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
+    address AAVE_ACL      = address(0xc2aaCf6553D20d1e9d78E365AAba8032af9c85b0);
+    address AAVE_CONFIG   = address(0x64b761D848206f447Fe2dd461b0c635Ec39EbB27);
     address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
     address AAVE_USDS     = address(0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259);
     address AAVE_USDT     = address(0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a);

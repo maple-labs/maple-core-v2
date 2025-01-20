@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IMockERC20, IUSDCLike } from "../../contracts/interfaces/Interfaces.sol";
+import {
+	IAaveConfiguratorLike,
+	IMockERC20,
+	IUSDCLike
+} from "../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../contracts/Runner.sol";
 
@@ -83,6 +87,12 @@ contract StrategyInvariants is BaseInvariants {
         _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));
+
+        // Remove Aave supply cap.
+        address aclAdmin = 0x5300A1a15135EA4dc7aD5a167152C01EFc9b192A;
+
+        vm.prank(aclAdmin);
+        IAaveConfiguratorLike(AAVE_CONFIG).setSupplyCap(USDC, 0);
 
         // Create and configure handlers.
         depositHandler = new DepositHandler(address(pool), lps);
