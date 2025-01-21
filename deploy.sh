@@ -41,7 +41,7 @@ echo Using profile: $FOUNDRY_PROFILE
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
-#     --mnemonic-indexes 2 \
+#     --mnemonic-indexes 15 \
 #     --ledger \
 #     --slow \
 #     --sender $ETH_SENDER \
@@ -53,7 +53,7 @@ echo Using profile: $FOUNDRY_PROFILE
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
-#     --mnemonic-indexes 2 \
+#     --mnemonic-indexes 15 \
 #     --ledger \
 #     --slow \
 #     --sender $ETH_SENDER \
