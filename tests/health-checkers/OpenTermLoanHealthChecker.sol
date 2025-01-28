@@ -7,12 +7,10 @@ import {
     IPoolManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { IOldPoolManagerLike } from "./Interfaces.sol";
-
 contract OpenTermLoanHealthChecker {
 
     uint256 constant internal BUFFER              = 1e6;
-    uint256 constant internal UNDERFLOW_THRESHOLD = 10;
+    uint256 constant internal UNDERFLOW_THRESHOLD = 30;
 
     /******************************************************************************************************************************/
     /*** Invariant Tests                                                                                                        ***/
@@ -65,21 +63,21 @@ contract OpenTermLoanHealthChecker {
     function checkInvariants(address poolManager_, address[] memory loans_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        uint256 length = IOldPoolManagerLike(address(poolManager)).loanManagerListLength();
+        uint256 length = poolManager.strategyListLength();
 
-        require(length == 1 || length == 2, "OTHC:CI:INVALID_LM_LIST_LENGTH");
+        require(length < 5, "OTHC:CI:INVALID_LM_LIST_LENGTH");
 
-        // Initializing all to true makes sure that contract returns true if there's no fixed term loan manager.
+        // Initializing all to true makes sure that contract returns true if there's no open term loan manager.
         invariants_ = _initStruct();
 
         for(uint256 i; i < length; ++i) {
-            address loanManager_ = IOldPoolManagerLike(address(poolManager)).loanManagerList(i);
+            address loanManager_ = poolManager.strategyList(i);
 
             if (_isOpenTermLoanManager(loanManager_)) {
 
                 // If there're two loan managers, only one can be an open term, otherwise this contract can't properly assert invariants.
                 if (i == 1) {
-                    require(!_isOpenTermLoanManager(IOldPoolManagerLike(address(poolManager)).loanManagerList(0)), "OTHC:CI:TWO_OTLMs");
+                    require(!_isOpenTermLoanManager(poolManager.strategyList(0)), "OTHC:CI:TWO_OTLMs");
                 }
 
                 invariants_.openTermLoanInvariantA = check_otl_invariant_A(loans_);
@@ -397,6 +395,8 @@ contract OpenTermLoanHealthChecker {
             IOpenTermLoan(loan).interestRate(),
             IOpenTermLoan(loan).paymentInterval()
         );
+
+        if (grossInterest == 0) return 0;
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 

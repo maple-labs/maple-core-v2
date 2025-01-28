@@ -416,9 +416,11 @@ interface IStrategyLike is IStrategy {
 
 interface IUSDCLike {
 
+    function configureMinter(address minter, uint256 minterAllowedAmount) external returns (bool);
+
     function masterMinter() external view returns (address);
 
-    function configureMinter(address minter, uint256 minterAllowedAmount) external returns (bool);
+    function mint(address to, uint256 amount) external;
 
 }
 

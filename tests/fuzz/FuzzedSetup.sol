@@ -123,7 +123,7 @@ contract FuzzedUtil is ProtocolActions {
             // Get a random strategy.
             address strategy = getSomeStrategy();
 
-            if (strategy == address(0)) return;
+            if (strategy == address(0)) continue;
 
             // Move forwards in time.
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));

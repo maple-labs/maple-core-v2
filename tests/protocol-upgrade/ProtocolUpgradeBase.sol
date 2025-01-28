@@ -136,7 +136,6 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         IPoolManager(syrupUSDTPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdt));
         vm.stopPrank();
-
     }
 
 }

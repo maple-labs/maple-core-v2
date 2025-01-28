@@ -3,19 +3,21 @@ pragma solidity ^0.8.7;
 
 import {
     IERC20,
+    IERC4626Like,
     IFixedTermLoanManager,
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
     IPoolPermissionManager,
+    IPSMLike,
+    IStrategyLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerLike,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { IOldPoolManagerLike } from "./Interfaces.sol";
-
 // NOTE: This contract only uses onchain calls to check invariants.
+// NOTE: This contract assumes one strategy type is deployed per Pool.
 contract ProtocolHealthChecker {
 
     uint256 constant internal BUFFER_MULTIPLE = 4;
@@ -32,7 +34,7 @@ contract ProtocolHealthChecker {
         * Invariant J: if (loanManager.paymentWithEarliestDueDate != 0) then issuanceRate > 0
         * Invariant K: if (loanManager.paymentWithEarliestDueDate != 0) then domainEnd == paymentWithEarliestDueDate
 
-    * Open Term Loan Manager
+     * Open Term Loan Manager
         * Invariant E: unrealizedLosses <= assetsUnderManagement()
         * Invariant G: block.timestamp >= domainStart
 
@@ -66,7 +68,22 @@ contract ProtocolHealthChecker {
         * Invariant F: requests(0) == (0, 0)
         * Invariant I: lender is unique
 
+     * Strategy
+        * Invariant A: assetsUnderManagement == currentTotalAssets - accruedFees
+        * Invariant B: currentAccruedFees <= currentTotalAssets
+        * Invariant C: strategyState == ACTIVE -> unrealizedLosses == 0
+        * Invariant D: strategyState == IMPAIRED -> assetsUnderManagement == unrealizedLosses
+        * Invariant E: strategyState == INACTIVE -> assetsUnderManagement == unrealizedLosses == 0
+        * Invariant F: strategyState ∈ [0, 2]
+        * Invariant G: strategyFeeRate <= 1e6
     *******************************************************************************************************************************/
+
+    struct Strategies {
+        address fixedTermLoanManager;
+        address openTermLoanManager;
+        address aaveStrategy;
+        address skyStrategy;
+    }
 
     // Struct to avoid stack too deep compiler error.
     struct Invariants {
@@ -98,61 +115,59 @@ contract ProtocolHealthChecker {
         bool withdrawalManagerQueueInvariantE;
         bool withdrawalManagerQueueInvariantF;
         bool withdrawalManagerQueueInvariantI;
+        bool strategiesInvariantA;
+        bool strategiesInvariantB;
+        bool strategiesInvariantC;
+        bool strategiesInvariantD;
+        bool strategiesInvariantE;
+        bool strategiesInvariantF;
+        bool strategiesInvariantG;
     }
 
     function checkInvariants(address poolManager_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        address fixedTermLoanManager_;
-        address openTermLoanManager_;
+        Strategies memory strategies = _getStrategies(poolManager_);
 
-        {
-            uint256 length = IOldPoolManagerLike(address(poolManager)).loanManagerListLength();
-
-            // Assume at most two LMs. This require will just help debug in case of future failures.
-            require(length == 1 || length == 2, "PHC:CI:INVALID_LM_LENGTH");
-
-            address loanManagerOne_ = IOldPoolManagerLike(address(poolManager)).loanManagerList(0);
-            address loanManagerTwo_ = length == 2 ? IOldPoolManagerLike(address(poolManager)).loanManagerList(1) : address(0);
-
-            if (_isFixedTermLoanManager(loanManagerOne_)) {
-                bool empty = loanManagerTwo_ == address(0);
-
-                // Given the 1st LM is fixed term, the 2nd LM must be either empty or open term.
-                require(empty || _isOpenTermLoanManager(loanManagerTwo_), "PHC:CI:INVALID_LM_TYPES");
-
-                fixedTermLoanManager_ = loanManagerOne_;
-                openTermLoanManager_  = empty ? address(0) : loanManagerTwo_;
-            }
-
-            if (_isOpenTermLoanManager(loanManagerOne_)) {
-                bool empty = loanManagerTwo_ == address(0);
-
-                // Given the 1st LM is open term, the 2nd LM must be either empty or fixed term.
-                require(empty || _isFixedTermLoanManager(loanManagerTwo_), "PHC:CI:INVALID_LM_TYPES");
-
-                fixedTermLoanManager_ = empty ? address(0) : loanManagerTwo_;
-                openTermLoanManager_  = loanManagerOne_;
-            }
-        }
+        invariants_ = _bootstrapInvariantsResults();
 
         address pool_              = poolManager.pool();
         address fundsAsset_        = IPool(pool_).asset();
         address withdrawalManager_ = poolManager.withdrawalManager();
 
-        bool emptyLoanManager = fixedTermLoanManager_ == address(0);
+        if (strategies.fixedTermLoanManager != address(0)) {
+            invariants_.fixedTermLoanManagerInvariantA = check_fixedTermLoanManager_invariant_A(strategies.fixedTermLoanManager);
+            invariants_.fixedTermLoanManagerInvariantB = check_fixedTermLoanManager_invariant_B(strategies.fixedTermLoanManager);
+            invariants_.fixedTermLoanManagerInvariantF = check_fixedTermLoanManager_invariant_F(strategies.fixedTermLoanManager);
+            invariants_.fixedTermLoanManagerInvariantI = check_fixedTermLoanManager_invariant_I(strategies.fixedTermLoanManager);
+            invariants_.fixedTermLoanManagerInvariantJ = check_fixedTermLoanManager_invariant_J(strategies.fixedTermLoanManager);
+            invariants_.fixedTermLoanManagerInvariantK = check_fixedTermLoanManager_invariant_K(strategies.fixedTermLoanManager);
+        }
 
-        invariants_.fixedTermLoanManagerInvariantA = emptyLoanManager || check_fixedTermLoanManager_invariant_A(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantB = emptyLoanManager || check_fixedTermLoanManager_invariant_B(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantF = emptyLoanManager || check_fixedTermLoanManager_invariant_F(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantI = emptyLoanManager || check_fixedTermLoanManager_invariant_I(fixedTermLoanManager_);
-        invariants_.fixedTermLoanManagerInvariantJ = true;  // 0 interest loan possible, consider removing.
-        invariants_.fixedTermLoanManagerInvariantK = emptyLoanManager || check_fixedTermLoanManager_invariant_K(fixedTermLoanManager_);
+        if (strategies.openTermLoanManager != address(0)) {
+            invariants_.openTermLoanManagerInvariantE = check_openTermLoanManager_invariant_E(strategies.openTermLoanManager);
+            invariants_.openTermLoanManagerInvariantG = check_openTermLoanManager_invariant_G(strategies.openTermLoanManager);
+        }
 
-        emptyLoanManager = openTermLoanManager_ == address(0);
+        if (strategies.aaveStrategy != address(0)) {
+            invariants_.strategiesInvariantA = check_strategy_invariant_A(strategies.aaveStrategy);
+            invariants_.strategiesInvariantB = check_strategy_invariant_B(strategies.aaveStrategy);
+            invariants_.strategiesInvariantC = check_strategy_invariant_C(strategies.aaveStrategy);
+            invariants_.strategiesInvariantD = check_strategy_invariant_D(strategies.aaveStrategy);
+            invariants_.strategiesInvariantE = check_strategy_invariant_E(strategies.aaveStrategy);
+            invariants_.strategiesInvariantF = check_strategy_invariant_F(strategies.aaveStrategy);
+            invariants_.strategiesInvariantG = check_strategy_invariant_G(strategies.aaveStrategy);
+        }
 
-        invariants_.openTermLoanManagerInvariantE = emptyLoanManager || check_openTermLoanManager_invariant_E(openTermLoanManager_);
-        invariants_.openTermLoanManagerInvariantG = emptyLoanManager || check_openTermLoanManager_invariant_G(openTermLoanManager_);
+        if (strategies.skyStrategy != address(0)) {
+            invariants_.strategiesInvariantA = check_strategy_invariant_A(strategies.skyStrategy);
+            invariants_.strategiesInvariantB = check_strategy_invariant_B(strategies.skyStrategy);
+            invariants_.strategiesInvariantC = check_strategy_invariant_C(strategies.skyStrategy);
+            invariants_.strategiesInvariantD = check_strategy_invariant_D(strategies.skyStrategy);
+            invariants_.strategiesInvariantE = check_strategy_invariant_E(strategies.skyStrategy);
+            invariants_.strategiesInvariantF = check_strategy_invariant_F(strategies.skyStrategy);
+            invariants_.strategiesInvariantG = check_strategy_invariant_G(strategies.skyStrategy);
+        }
 
         invariants_.poolInvariantA = check_pool_invariant_A(pool_);
         invariants_.poolInvariantD = check_pool_invariant_D(pool_);
@@ -163,8 +178,6 @@ contract ProtocolHealthChecker {
 
         invariants_.poolManagerInvariantA = check_poolManager_invariant_A(
             fundsAsset_,
-            fixedTermLoanManager_,
-            openTermLoanManager_,
             pool_,
             poolManager_
         );
@@ -173,31 +186,19 @@ contract ProtocolHealthChecker {
 
         invariants_.poolPermissionManagerInvariantA = check_poolPermissionManager_invariant_A(poolManager_);
 
-        bool isWithdrawalManagerCyclical_ = isWithdrawalManagerCyclical(withdrawalManager_);
-
-        invariants_.withdrawalManagerCyclicalInvariantC =
-            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_C(withdrawalManager_);
-        invariants_.withdrawalManagerCyclicalInvariantD =
-            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_D(withdrawalManager_);
-        invariants_.withdrawalManagerCyclicalInvariantE =
-            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_E(withdrawalManager_);
-        invariants_.withdrawalManagerCyclicalInvariantM =
-            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_M(pool_, withdrawalManager_);
-        invariants_.withdrawalManagerCyclicalInvariantN =
-            !isWithdrawalManagerCyclical_ || check_withdrawalManagerCyclical_invariant_N(pool_, withdrawalManager_);
-
-        invariants_.withdrawalManagerQueueInvariantA =
-            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_A(withdrawalManager_);
-        invariants_.withdrawalManagerQueueInvariantB =
-            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_B(withdrawalManager_);
-        invariants_.withdrawalManagerQueueInvariantD =
-            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_D(withdrawalManager_);
-        invariants_.withdrawalManagerQueueInvariantE =
-            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_E(withdrawalManager_);
-        invariants_.withdrawalManagerQueueInvariantF =
-            isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_F(withdrawalManager_);
-        invariants_.withdrawalManagerQueueInvariantI =
-            isWithdrawalManagerCyclical_ || true;  // TODO: Implement in LP HealthChecker;
+        if (isWithdrawalManagerCyclical(withdrawalManager_)) {
+            invariants_.withdrawalManagerCyclicalInvariantC = check_withdrawalManagerCyclical_invariant_C(withdrawalManager_);
+            invariants_.withdrawalManagerCyclicalInvariantD = check_withdrawalManagerCyclical_invariant_D(withdrawalManager_);
+            invariants_.withdrawalManagerCyclicalInvariantE = check_withdrawalManagerCyclical_invariant_E(withdrawalManager_);
+            invariants_.withdrawalManagerCyclicalInvariantM = check_withdrawalManagerCyclical_invariant_M(pool_, withdrawalManager_);
+            invariants_.withdrawalManagerCyclicalInvariantN = check_withdrawalManagerCyclical_invariant_N(pool_, withdrawalManager_);
+        } else {
+            invariants_.withdrawalManagerQueueInvariantA = check_withdrawalManagerQueue_invariant_A(withdrawalManager_);
+            invariants_.withdrawalManagerQueueInvariantB = check_withdrawalManagerQueue_invariant_B(withdrawalManager_);
+            invariants_.withdrawalManagerQueueInvariantD = check_withdrawalManagerQueue_invariant_D(withdrawalManager_);
+            invariants_.withdrawalManagerQueueInvariantE = check_withdrawalManagerQueue_invariant_E(withdrawalManager_);
+            invariants_.withdrawalManagerQueueInvariantF = check_withdrawalManagerQueue_invariant_F(withdrawalManager_);
+        }
     }
 
     /******************************************************************************************************************************/
@@ -339,21 +340,20 @@ contract ProtocolHealthChecker {
 
     function check_poolManager_invariant_A(
         address fundsAsset_,
-        address fixedTermLoanManager_,
-        address openTermLoanManager_,
         address pool_,
         address poolManager_
     ) public view returns (bool isMaintained_) {
-        uint256 fixedTermAUM =
-            fixedTermLoanManager_ == address(0) ? 0 : IFixedTermLoanManager(fixedTermLoanManager_).assetsUnderManagement();
+        uint256 length = IPoolManager(poolManager_).strategyListLength();
 
-        uint256 openTermAUM =
-            openTermLoanManager_ == address(0) ? 0 : IOpenTermLoanManager(openTermLoanManager_).assetsUnderManagement();
+        uint256 totalAUM = 0;
+
+        for (uint256 i; i < length; ++i) {
+            totalAUM += IStrategyLike(IPoolManager(poolManager_).strategyList(i)).assetsUnderManagement();
+        }
 
         isMaintained_ =
         _assertApproxEqAbs(
-            (fixedTermAUM +
-            openTermAUM +
+            (totalAUM +
             IERC20(fundsAsset_).balanceOf(pool_)),
             IPoolManager(poolManager_).totalAssets(),
             BUFFER
@@ -514,6 +514,73 @@ contract ProtocolHealthChecker {
         isMaintained_ = shares == 0 && owner == address(0);
     }
 
+    /**************************************************************************************************************************************/
+    /*** Strategy Invariants                                                                                                            ***/
+    /**************************************************************************************************************************************/
+
+    function check_strategy_invariant_A(address strategy) public view returns(bool isMaintained_) {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        // Ignore inactive strategies.
+        if (s.strategyState() == 2) {
+            return true;
+        }
+
+        uint256 assetsUnderManagement = s.assetsUnderManagement();
+        uint256 currentTotalAssets    = _getCurrentTotalAssets(s);
+        uint256 currentAccruedFees    = _getCurrentAccruedFees(s);
+
+        isMaintained_ = assetsUnderManagement == currentTotalAssets - currentAccruedFees;
+    }
+
+    function check_strategy_invariant_B(address strategy) public view returns(bool isMaintained_) {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        uint256 currentTotalAssets = _getCurrentTotalAssets(s);
+        uint256 currentAccruedFees = _getCurrentAccruedFees(s);
+
+        isMaintained_ = currentAccruedFees <= currentTotalAssets;
+    }
+
+    function check_strategy_invariant_C(address strategy) public view returns(bool isMaintained_) {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        isMaintained_ = true;
+
+        if (s.strategyState() == 0) {
+            isMaintained_ = s.unrealizedLosses() == 0;
+        }
+    }
+
+    function check_strategy_invariant_D(address strategy) public view returns(bool isMaintained_) {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        isMaintained_ = true;
+
+        if (s.strategyState() == 1) {
+            isMaintained_ = s.assetsUnderManagement() == s.unrealizedLosses();
+        }
+    }
+
+    function check_strategy_invariant_E(address strategy) public view returns(bool isMaintained_) {
+        IStrategyLike s = IStrategyLike(strategy);
+
+        isMaintained_ = true;
+
+        if (s.strategyState() == 2) {
+            isMaintained_ = s.assetsUnderManagement() == 0 && s.unrealizedLosses() == 0;
+        }
+    }
+
+    function check_strategy_invariant_F(address strategy) public view returns(bool isMaintained_) {
+        isMaintained_ = IStrategyLike(strategy).strategyState() <= 2;
+    }
+
+    function check_strategy_invariant_G(address strategy) public view returns(bool isMaintained_) {
+        isMaintained_ = IStrategyLike(strategy).strategyFeeRate() <= 1e6;
+    }
+
+
     /******************************************************************************************************************************/
     /*** Helpers                                                                                                                ***/
     /******************************************************************************************************************************/
@@ -528,12 +595,114 @@ contract ProtocolHealthChecker {
         return true;
     }
 
+    function _bootstrapInvariantsResults() internal pure returns (Invariants memory invariants) {
+        invariants.fixedTermLoanManagerInvariantA = true;
+        invariants.fixedTermLoanManagerInvariantB = true;
+        invariants.fixedTermLoanManagerInvariantF = true;
+        invariants.fixedTermLoanManagerInvariantI = true;
+        invariants.fixedTermLoanManagerInvariantJ = true;
+        invariants.fixedTermLoanManagerInvariantK = true;
+
+        invariants.openTermLoanManagerInvariantE = true;
+        invariants.openTermLoanManagerInvariantG = true;
+
+        invariants.poolInvariantA = true;
+        invariants.poolInvariantD = true;
+        invariants.poolInvariantE = true;
+        invariants.poolInvariantI = true;
+        invariants.poolInvariantJ = true;
+        invariants.poolInvariantK = true;
+
+        invariants.poolManagerInvariantA = true;
+        invariants.poolManagerInvariantB = true;
+
+        invariants.poolPermissionManagerInvariantA = true;
+
+        invariants.withdrawalManagerCyclicalInvariantC = true;
+        invariants.withdrawalManagerCyclicalInvariantD = true;
+        invariants.withdrawalManagerCyclicalInvariantE = true;
+        invariants.withdrawalManagerCyclicalInvariantM = true;
+        invariants.withdrawalManagerCyclicalInvariantN = true;
+
+        invariants.withdrawalManagerQueueInvariantA = true;
+        invariants.withdrawalManagerQueueInvariantB = true;
+        invariants.withdrawalManagerQueueInvariantD = true;
+        invariants.withdrawalManagerQueueInvariantE = true;
+        invariants.withdrawalManagerQueueInvariantF = true;
+        invariants.withdrawalManagerQueueInvariantI = true;
+
+        invariants.strategiesInvariantA = true;
+        invariants.strategiesInvariantB = true;
+        invariants.strategiesInvariantC = true;
+        invariants.strategiesInvariantD = true;
+        invariants.strategiesInvariantE = true;
+        invariants.strategiesInvariantF = true;
+        invariants.strategiesInvariantG = true;
+    }
+
     function _delta(uint256 a, uint256 b) internal pure returns (uint256) {
         return a > b ? a - b : b - a;
     }
 
+    function _getCurrentAccruedFees(IStrategyLike strategy) internal view returns (uint256 currentAccruedFees) {
+        uint256 currentTotalAssets      = _getCurrentTotalAssets(strategy);
+        uint256 lastRecordedTotalAssets = strategy.lastRecordedTotalAssets();
+        uint256 strategyFeeRate         = strategy.strategyFeeRate();
+
+        if (currentTotalAssets <= lastRecordedTotalAssets) {
+            return 0;
+        }
+
+        currentAccruedFees = (currentTotalAssets - lastRecordedTotalAssets) * strategyFeeRate / 1e6;
+    }
+
+    function _getCurrentTotalAssets(IStrategyLike strategy) internal view returns (uint256 currentTotalAssets) {
+        bytes memory t = bytes(strategy.STRATEGY_TYPE());
+
+        if (keccak256(t) == keccak256("BASIC")) {
+            IERC4626Like strategyVault = IERC4626Like(strategy.strategyVault());
+            uint256 currentTotalShares = strategyVault.balanceOf(address(strategy));
+
+            currentTotalAssets = IERC4626Like(strategyVault).previewRedeem(currentTotalShares);
+        }
+
+        else if (keccak256(t) == keccak256("AAVE")) {
+            IERC20 aaveToken = IERC20(strategy.aaveToken());
+
+            currentTotalAssets = aaveToken.balanceOf(address(strategy));
+        }
+
+        else if (keccak256(t) == keccak256("SKY")) {
+            IERC4626Like savingsUsds = IERC4626Like(strategy.savingsUsds());
+            IPSMLike psm             = IPSMLike(strategy.psm());
+
+            uint256 psmTout          = psm.tout();
+            uint256 conversionFactor = psm.to18ConversionFactor();
+            uint256 usdsAmount       = savingsUsds.previewRedeem(savingsUsds.balanceOf(address(strategy)));
+
+            currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
+        }
+
+        else {
+            require(false, "INVALID_STRATEGY");
+        }
+    }
+
     function _getDiff(uint256 x, uint256 y) internal pure returns (uint256 diff) {
         diff = x > y ? x - y : y - x;
+    }
+
+    function _getStrategies(address poolManager) internal view returns (Strategies memory strategies) {
+        uint256 length = IPoolManager(poolManager).strategyListLength();
+
+        for (uint256 i = 0; i < length; i++) {
+            address strategy = IPoolManager(poolManager).strategyList(i);
+            if (_isFixedTermLoanManager(strategy)) strategies.fixedTermLoanManager = strategy;
+            if (_isOpenTermLoanManager(strategy))  strategies.openTermLoanManager  = strategy;
+            if (_isAaveStrategy(strategy))         strategies.aaveStrategy         = strategy;
+            if (_isSkyStrategy(strategy))          strategies.skyStrategy          = strategy;
+        }
+
     }
 
     function _isFixedTermLoanManager(address loan) internal view returns (bool isFixedTermLoanManager_) {
@@ -545,6 +714,20 @@ contract ProtocolHealthChecker {
     function _isOpenTermLoanManager(address loan) internal view returns (bool isOpenTermLoanManager_) {
         try IOpenTermLoanManager(loan).paymentFor(address(0)) {
             isOpenTermLoanManager_ = true;
+        } catch { }
+    }
+
+    function _isAaveStrategy(address strategy) internal view returns (bool isAaveStrategy_) {
+        // Using specific function to not need to hash the strings for comparison.
+        try IStrategyLike(strategy).aaveToken() {
+            isAaveStrategy_ = true;
+        } catch { }
+    }
+
+    function _isSkyStrategy(address strategy) internal view returns (bool isSkyStrategy_) {
+        // Using specific function to not need to hash the strings for comparison.
+        try IStrategyLike(strategy).savingsUsds() {
+            isSkyStrategy_ = true;
         } catch { }
     }
 

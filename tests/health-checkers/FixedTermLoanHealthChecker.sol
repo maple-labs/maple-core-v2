@@ -9,8 +9,6 @@ import {
     IPoolManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { IOldPoolManagerLike } from "./Interfaces.sol";
-
 contract FixedTermLoanHealthChecker {
 
     /******************************************************************************************************************************/
@@ -42,15 +40,15 @@ contract FixedTermLoanHealthChecker {
     function checkInvariants(address poolManager_, address[] memory loans_) external view returns (Invariants memory invariants_) {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
-        uint256 length = IOldPoolManagerLike(address(poolManager)).loanManagerListLength();
+        uint256 length = poolManager.strategyListLength();
 
-        require(length == 1 || length == 2, "FTHC:CI:INVALID_LM_LIST_LENGTH");
+        require(length < 5, "FTHC:CI:INVALID_LM_LIST_LENGTH");
 
         // Initializing all to true makes sure that contract returns true if there's no fixed term loan manager.
         invariants_ = _initStruct();
 
         for(uint256 i; i < length; ++i) {
-            address loanManager_ = IOldPoolManagerLike(address(poolManager)).loanManagerList(i);
+            address loanManager_ = poolManager.strategyList(i);
             if (_isFixedTermLoanManager(loanManager_)) {
 
                 // If there're two loan managers, only one can be a fixed term, otherwise this contract can't properly assert invariants.

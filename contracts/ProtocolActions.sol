@@ -22,6 +22,7 @@ import {
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IStrategyLike,
+    IUSDCLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
@@ -44,7 +45,7 @@ contract ProtocolActions is Runner {
     address MPL_SOURCE       = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
     address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
     address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
-    address USDC_SOURCE      = address(0x4B16c5dE96EB2117bBE5fd171E4d203624B014aa);
+    address USDC_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
     address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
@@ -78,10 +79,10 @@ contract ProtocolActions is Runner {
         if      (asset_ == MPL)       erc20_transfer(MPL,       MPL_SOURCE,       account_, amount_);
         else if (asset_ == WBTC)      erc20_transfer(WBTC,      WBTC_SOURCE,      account_, amount_);
         else if (asset_ == WETH)      erc20_transfer(WETH,      WETH_SOURCE,      account_, amount_);
-        else if (asset_ == USDC)      erc20_transfer(USDC,      USDC_SOURCE,      account_, amount_);
         else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
         else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
         else if (asset_ == USDS)      erc20_transfer(USDS,      USDS_SOURCE,      account_, amount_);
+        else if (asset_ == USDC)      mintUSDC(account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
@@ -93,6 +94,13 @@ contract ProtocolActions is Runner {
         try IOpenTermLoan(loan).dateCalled() {
             isOpenTermLoan_ = true;
         } catch { }
+    }
+
+    function mintUSDC(address account_, uint256 amount_) internal {
+        vm.prank(IUSDCLike(USDC).masterMinter());
+        IUSDCLike(USDC).configureMinter(address(this), type(uint256).max);
+
+        if (amount_ > 0) IUSDCLike(USDC).mint(account_, amount_);
     }
 
     /**************************************************************************************************************************************/
