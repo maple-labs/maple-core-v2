@@ -23,6 +23,23 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     scripts/DelegateInitiatedLoansDeployment.s.sol:DelegateInitiatedLoansDeployment
 
+# For BorrowerActions Release
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/BorrowerActionsDeployment.s.sol:BorrowerActionsDeployment
+
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/BorrowerActionsProxyDeployment.s.sol:BorrowerActionsProxyDeployment
+
 # For Production
 
 # For Healthchecker
@@ -60,3 +77,26 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
 #     scripts/DelegateInitiatedLoansDeployment.s.sol:DelegateInitiatedLoansDeployment
+
+# For BorrowerActions Release
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 15 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     --broadcast \
+#     scripts/BorrowerActionsDeployment.s.sol:BorrowerActionsDeployment
+
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 15 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     --broadcast \
+#     scripts/BorrowerActionsProxyDeployment.s.sol:BorrowerActionsProxyDeployment

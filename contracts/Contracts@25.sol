@@ -22,6 +22,8 @@ import { MapleBasicStrategyInitializer as MBSI }
 
 import { MockPSM as MPSM } from "../modules/strategies/tests/utils/Mocks.sol";
 
+import { MapleBorrowerActions } from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
+
 contract AaveStrategy is MAS { }
 
 contract AaveStrategyInitializer is MASI { }
@@ -75,3 +77,5 @@ contract PoolManagerInitializer is MPMI { }
 contract PoolManagerMigrator is MPMM { }
 
 contract MockPSM is MPSM { }
+
+contract BorrowerActions is MapleBorrowerActions { }

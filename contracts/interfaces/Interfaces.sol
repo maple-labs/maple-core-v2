@@ -50,11 +50,15 @@ import { IMapleAaveStrategy }  from "../../modules/strategies/contracts/interfac
 import { IMapleBasicStrategy } from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
 import { IMapleSkyStrategy }   from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
 
+import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
+
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
 
 interface IAaveStrategy is IMapleAaveStrategy { }
+
+interface IBorrowerActions is IMapleBorrowerActions { }
 
 interface IFeeManager is IMLFM { }
 

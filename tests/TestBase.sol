@@ -84,6 +84,8 @@ contract TestBase is ProtocolActions {
     address queueWMInitializer;
     address skyStrategyInitializer;
 
+    address borrowerActions;
+
     uint256 nextDelegateOriginationFee;
     uint256 nextDelegateServiceFee;
 
@@ -190,6 +192,8 @@ contract TestBase is ProtocolActions {
         aaveStrategyInitializer     = deployFromFile("Contracts@25", "AaveStrategyInitializer");
         basicStrategyInitializer    = deployFromFile("Contracts@25", "BasicStrategyInitializer");
         skyStrategyInitializer      = deployFromFile("Contracts@25", "SkyStrategyInitializer");
+
+        borrowerActions = deployNPT(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
         vm.startPrank(governor);
 
