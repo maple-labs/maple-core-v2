@@ -5,7 +5,8 @@ import { MapleAddressRegistryETH as AddressRegistry } from "../../modules/addres
 
 contract UpgradeAddressRegistry is AddressRegistry {
 
-    // Using deployer 0x14e289f19898a5c16AF00b81180C18A791Fa0979
+    // Using deployer for strategies 0x14e289f19898a5c16AF00b81180C18A791Fa0979
+    // Using deployer for DIL        0x89D70c5127035d7558df6594229d9868B643DC1a
 
     address aaveStrategyFactory            = 0x01ab799f77F9a9f4dd0D2b6E7C83DCF3F48D5650;
     address newAaveStrategyImplementation  = 0xFc8F7F97165d446B02Cc95363d2cA31154BBe9F9;
@@ -25,10 +26,13 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address newPoolManagerInitializer    = 0xB33Bfa00E1d92fDaC5AeCB2976d6998C2ecca759;
     address newPoolDeployer              = 0xdaF005B31B10F33EE42cEB1A4b983434FE947488;
 
-    address newFixedTermLoanImplementation = 0xe59afb1A3239a0aE48c9b77a44c3CDf1A3783F9d;
-    address newFixedTermLoanInitializer    = 0x37dBaB1Ca75bAf218251F05e4063270cdd5C5FA8;
-    address newOpenTermLoanImplementation  = 0x133A6feE09dFb0FD3B0e0f69c8897cCe3798d4bB;
-    address newOpenTermLoanInitializer     = 0xBBd0537D68C41Dc3EDa4B362436A119059Be9836;
+    address newFixedTermLoanImplementation = 0xe1714CEEB10683448E40bFE73c9F493662ff5b7e;
+    address newFixedTermLoanInitializer    = 0xC43e722A0F9432609a96Df0cF1aFA99556532F18;
+    address newOpenTermLoanImplementation  = 0xEeaDb66693d63cFCF3E4D942D2812D4aE9443Fc1;
+    address newOpenTermLoanInitializer     = 0x9385A0F681c3D4b39c2780cD69777Dd97a681485;
+
+    address borrowerActionsImplementation = 0x78c5f240A1150c3c2ebDBDe559d04a0418DFCFF3;
+    address borrowerActionsProxy          = 0x70Eb188452DaA5f4662150E437B61dA148449E20;
 
     address syrupUSDCAaveStrategy = 0x5C3cFc2AFc1C2b96c479713cb49b9D09429F74a0;
     address syrupUSDCSkyStrategy  = 0x5aE349aAcDDcD9a1ec0FcafbdFde96A925cA1145;

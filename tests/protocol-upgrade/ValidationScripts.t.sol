@@ -3,7 +3,13 @@ pragma solidity ^0.8.7;
 
 import { console2 as console, Test } from "../../contracts/Runner.sol";
 
-import { IGlobals, IMapleProxied, IMapleProxyFactory, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
+import {
+    IGlobals,
+    IMapleProxied,
+    IMapleProxyFactory,
+    INonTransparentProxied,
+    IPoolManager
+} from "../../contracts/interfaces/Interfaces.sol";
 
 import { UpgradeAddressRegistry } from "./UpgradeAddressRegistry.sol";
 
@@ -139,17 +145,19 @@ contract ValidateDILSetup is UpgradeAddressRegistry, Test {
 
         validateFactory({
             factory:        fixedTermLoanFactoryV2,
-            version:        600,
+            version:        601,
             implementation: newFixedTermLoanImplementation,
             initializer:    newFixedTermLoanInitializer
         });
 
         validateFactory({
             factory:        openTermLoanFactory,
-            version:        200,
+            version:        201,
             implementation: newOpenTermLoanImplementation,
             initializer:    newOpenTermLoanInitializer
         });
+
+        assertTrue(IGlobals(globals).isInstanceOf("BORROWER_ACTIONS", borrowerActionsProxy));
     }
 
     function assertCanDeployFrom(address delegate) internal {
@@ -163,6 +171,15 @@ contract ValidateDILSetup is UpgradeAddressRegistry, Test {
         assertEq(factoryContract.defaultVersion(),                  version);
         assertEq(factoryContract.migratorForPath(version, version), initializer);
         assertEq(factoryContract.implementationOf(version),         implementation);
+    }
+
+}
+
+contract ValidateBorrowerActions is UpgradeAddressRegistry, Test {
+
+    function run() external {
+        assertEq(INonTransparentProxied(borrowerActionsProxy).implementation(), borrowerActionsImplementation);
+        assertEq(INonTransparentProxied(borrowerActionsProxy).admin(),          securityAdmin);
     }
 
 }
