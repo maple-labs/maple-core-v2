@@ -1436,9 +1436,10 @@ contract AcceptNewTermsFailureTests is TestBaseWithAssertions {
         loanManager.acceptNewTerms(address(loan), address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);
     }
 
-    function testFail_acceptNewTerms_failIfNotValidLoanManager() external {
+    function test_acceptNewTerms_failIfNotValidLoanManager() external {
         address fakeLoan = makeAddr("fakeLoan");
 
+        vm.expectRevert();
         // NOTE: EVM reverts on factory call.
         vm.prank(poolDelegate);
         loanManager.acceptNewTerms(fakeLoan, address(fixedTermRefinancer), block.timestamp + 1, new bytes[](0), 0);

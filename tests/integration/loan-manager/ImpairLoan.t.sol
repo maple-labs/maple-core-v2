@@ -1062,7 +1062,8 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
         loanManager.impairLoan(address(loan));
     }
 
-    function testFail_impairLoan_notLoanContract() external {
+    function test_impairLoan_notLoanContract() external {
+        vm.expectRevert();
         vm.prank(poolDelegate);
         loanManager.impairLoan(address(1));
     }
