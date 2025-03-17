@@ -52,8 +52,8 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         assertEq(poolManagerFactory_.migratorForPath(300, 400), address(0));
         assertEq(poolManagerFactory_.defaultVersion(), 400);
 
-        // Upgrade all pools.
-        for (uint256 i; i < poolManagers.length; i++) {
+        // Upgrade all pools note skip lend and long.
+        for (uint256 i; i < 8; i++) {
             IPoolManager poolManager = IPoolManager(poolManagers[i]);
 
             vm.prank(securityAdmin);
@@ -129,12 +129,12 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     function addStrategies() internal {
         // Add all strategies to correct pools.
         vm.startPrank(governor);
-        IPoolManager(securedLendingUSDCPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdc));
-
         IPoolManager(syrupUSDCPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdc));
         IPoolManager(syrupUSDCPoolManager).addStrategy(address(skyStrategyFactory_),  abi.encode(savingsUsds, usdsLitePSM));
 
         IPoolManager(syrupUSDTPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdt));
+
+        IPoolManager(securedLendingUSDCPoolManager).addStrategy(address(aaveStrategyFactory_), abi.encode(aUsdc));
         vm.stopPrank();
     }
 

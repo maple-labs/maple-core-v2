@@ -22,8 +22,8 @@ contract UpgradeAddressRegistry is AddressRegistry {
 
     address newGlobalsImplementation = 0x9BeAbb1B6F3ad1DdB87b65148BA5Eb6102334956;
 
-    address newPoolManagerImplementation = 0xfE02Be1aD28EdFd8e3dD6F29C402B244C2A258B8;
     address newPoolManagerInitializer    = 0xB33Bfa00E1d92fDaC5AeCB2976d6998C2ecca759;
+    address newPoolManagerImplementation = 0xfE02Be1aD28EdFd8e3dD6F29C402B244C2A258B8;
     address newPoolDeployer              = 0xdaF005B31B10F33EE42cEB1A4b983434FE947488;
 
     address newFixedTermLoanImplementation = 0xe1714CEEB10683448E40bFE73c9F493662ff5b7e;
@@ -34,12 +34,19 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address borrowerActionsImplementation = 0x78c5f240A1150c3c2ebDBDe559d04a0418DFCFF3;
     address borrowerActionsProxy          = 0x70Eb188452DaA5f4662150E437B61dA148449E20;
 
-    address syrupUSDCAaveStrategy = 0x5C3cFc2AFc1C2b96c479713cb49b9D09429F74a0;
-    address syrupUSDCSkyStrategy  = 0x5aE349aAcDDcD9a1ec0FcafbdFde96A925cA1145;
+    address syrupUSDCAaveStrategy = 0x560B3A85Af1cEF113BB60105d0Cf21e1d05F91d4;
+    address syrupUSDCSkyStrategy  = 0x859C9980931fa0A63765fD8EF2e29918Af5b038C;
 
-    address syrupUSDTAaveStrategy = 0x1DD7F048dDE12E7C963C6699B1603d1a10D17542;
+    address syrupUSDTAaveStrategy = 0x2b817B822B0ddd4597a92dBEd1bD0a6796CA37E0;
 
-    address securedLendingAaveStrategy = 0x8947af19bDCC7c3f8beeCe7FC1C75e85Aa3F40BC;
+    address securedLendingAaveStrategy = 0x87Aa770f610679DFC2553FB95fAc1B4d996BA1cd;
+    address securedLendingSkyStrategy  = 0xe3eE1b26AF5396Cec45c8C3b4c4FD5136A2455CC;
+
+    address LendAndLongUSDC1AaveStrategy = 0x36C2C86a929E72afb23235d5E91e50809CBfA2Ae;
+    address LendAndLongUSDC1SkyStrategy  = 0xb390AeA520885b02af36EC3c96f79b3Bb81C5807;
+
+    address LendAndLongUSDC2AaveStrategy = 0xd6E084eF7f48653cB4F9D5a2679aE7B4974C7058;
+    address LendAndLongUSDC2SkyStrategy  = 0x34E7014E2Ef62C2F3Cc8c8c25Ac0110E2aA33B00;
 
     // Pool Delegates
     address aqruPoolDelegate              = 0x39DF355Ae51fDf17aE1a68D00F770701e9627A93;
@@ -70,7 +77,9 @@ contract UpgradeAddressRegistry is AddressRegistry {
         highYieldCorpWETHPoolManager,
         securedLendingUSDCPoolManager,
         syrupUSDCPoolManager,
-        syrupUSDTPoolManager
+        syrupUSDTPoolManager,
+        LendAndLongUSDC1PoolManager,
+        LendAndLongUSDC2PoolManager
     ];
 
     // TODO: Populate and add the same data for other pools.

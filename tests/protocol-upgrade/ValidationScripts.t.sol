@@ -55,6 +55,10 @@ contract ValidateStrategiesGlobalsAndFactoriesSetup is UpgradeAddressRegistry, T
 
         assertEq(IMapleProxyFactory(poolManagerFactory).migratorForPath(300, 400), address(0));
         assertEq(IMapleProxyFactory(poolManagerFactory).migratorForPath(301, 400), address(0));
+
+        assertTrue(IGlobals(globals).canDeployFrom(poolManagerFactory,               newPoolDeployer));
+        assertTrue(IGlobals(globals).canDeployFrom(withdrawalManagerCyclicalFactory, newPoolDeployer));
+        assertTrue(IGlobals(globals).canDeployFrom(withdrawalManagerQueueFactory,    newPoolDeployer));
     }
 
     function validateGlobalsUpgrade() internal {
@@ -122,11 +126,36 @@ contract ValidateStrategyAddition is UpgradeAddressRegistry, Test {
 
         // Assert SecuredLendingUSDC
         assertTrue(IPoolManager(securedLendingUSDCPoolManager).isStrategy(securedLendingAaveStrategy));
+        assertTrue(IPoolManager(securedLendingUSDCPoolManager).isStrategy(securedLendingSkyStrategy));
 
-        assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyListLength(), 3);
+        assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyListLength(), 4);
         assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyList(2),      securedLendingAaveStrategy);
+        assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyList(3),      securedLendingSkyStrategy);
 
         validateIsInstance(aaveStrategyFactory, securedLendingAaveStrategy);
+        validateIsInstance(skyStrategyFactory,  securedLendingSkyStrategy);
+
+        // Assert LendAndLongUSDC1
+        assertTrue(IPoolManager(LendAndLongUSDC1PoolManager).isStrategy(LendAndLongUSDC1AaveStrategy));
+        assertTrue(IPoolManager(LendAndLongUSDC1PoolManager).isStrategy(LendAndLongUSDC1SkyStrategy));
+
+        assertEq(IPoolManager(LendAndLongUSDC1PoolManager).strategyListLength(), 4);
+        assertEq(IPoolManager(LendAndLongUSDC1PoolManager).strategyList(2),      LendAndLongUSDC1AaveStrategy);
+        assertEq(IPoolManager(LendAndLongUSDC1PoolManager).strategyList(3),      LendAndLongUSDC1SkyStrategy);
+
+        validateIsInstance(aaveStrategyFactory, LendAndLongUSDC1AaveStrategy);
+        validateIsInstance(skyStrategyFactory,  LendAndLongUSDC1SkyStrategy);
+
+        // Assert LendAndLongUSDC2
+        assertTrue(IPoolManager(LendAndLongUSDC2PoolManager).isStrategy(LendAndLongUSDC2AaveStrategy));
+        assertTrue(IPoolManager(LendAndLongUSDC2PoolManager).isStrategy(LendAndLongUSDC2SkyStrategy));
+
+        assertEq(IPoolManager(LendAndLongUSDC2PoolManager).strategyListLength(), 4);
+        assertEq(IPoolManager(LendAndLongUSDC2PoolManager).strategyList(2),      LendAndLongUSDC2AaveStrategy);
+        assertEq(IPoolManager(LendAndLongUSDC2PoolManager).strategyList(3),      LendAndLongUSDC2SkyStrategy);
+
+        validateIsInstance(aaveStrategyFactory, LendAndLongUSDC2AaveStrategy);
+        validateIsInstance(skyStrategyFactory,  LendAndLongUSDC2SkyStrategy);
     }
 
     function validateIsInstance(address factory, address strategy) internal {
