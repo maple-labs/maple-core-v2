@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { MapleLoanManager as FixedTermLoanManager } from "../../../modules/fixed-term-loan-manager/contracts/MapleLoanManager.sol";
+import { LoanManager as FixedTermLoanManager } from "../../../modules/fixed-term-loan-manager/contracts/LoanManager.sol";
 
 contract FixedTermLoanManagerHarness is FixedTermLoanManager {
 
