@@ -51,4 +51,4 @@
 	url = git@github.com:maple-labs/syrup-utils-private.git
 [submodule "modules/strategies"]
 	path = modules/strategies
-	url = git@github.com:maple-labs/maple-strategies.git
+	url = git@github.com:maple-labs/maple-strategies-private.git

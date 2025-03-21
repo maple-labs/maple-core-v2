@@ -8,15 +8,12 @@ contract UpgradeAddressRegistry is AddressRegistry {
     // Using deployer for strategies 0x14e289f19898a5c16AF00b81180C18A791Fa0979
     // Using deployer for DIL        0x89D70c5127035d7558df6594229d9868B643DC1a
 
-    address aaveStrategyFactory            = 0x01ab799f77F9a9f4dd0D2b6E7C83DCF3F48D5650;
     address newAaveStrategyImplementation  = 0xFc8F7F97165d446B02Cc95363d2cA31154BBe9F9;
     address newAaveStrategyInitializer     = 0x0d2dBb28B1c7d225132722FAdb2402E93A35c1Be;
 
-    address basicStrategyFactory           = 0x876D54DBF61473cA169b89B95344A14E81F37afe;
     address newBasicStrategyImplementation = 0x7a1E281Ec29F3A861f211a28a23161762BD55B73;
     address newBasicStrategyInitializer    = 0x2b9aDDb5244548f126e59FA5483040efc102f69e;
 
-    address skyStrategyFactory             = 0x27327E08de810c687687F95bfCE92088089b56dB;
     address newSkyStrategyImplementation   = 0xBBEe42621499005Ff0dDEF947BBDeFfBBeE77730;
     address newSkyStrategyInitializer      = 0x29199d071717c72baab50eEf9adD6736A18A1d1d;
 
@@ -34,19 +31,8 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address borrowerActionsImplementation = 0x78c5f240A1150c3c2ebDBDe559d04a0418DFCFF3;
     address borrowerActionsProxy          = 0x70Eb188452DaA5f4662150E437B61dA148449E20;
 
-    address syrupUSDCAaveStrategy = 0x560B3A85Af1cEF113BB60105d0Cf21e1d05F91d4;
-    address syrupUSDCSkyStrategy  = 0x859C9980931fa0A63765fD8EF2e29918Af5b038C;
-
-    address syrupUSDTAaveStrategy = 0x2b817B822B0ddd4597a92dBEd1bD0a6796CA37E0;
-
     address securedLendingAaveStrategy = 0x87Aa770f610679DFC2553FB95fAc1B4d996BA1cd;
     address securedLendingSkyStrategy  = 0xe3eE1b26AF5396Cec45c8C3b4c4FD5136A2455CC;
-
-    address LendAndLongUSDC1AaveStrategy = 0x36C2C86a929E72afb23235d5E91e50809CBfA2Ae;
-    address LendAndLongUSDC1SkyStrategy  = 0xb390AeA520885b02af36EC3c96f79b3Bb81C5807;
-
-    address LendAndLongUSDC2AaveStrategy = 0xd6E084eF7f48653cB4F9D5a2679aE7B4974C7058;
-    address LendAndLongUSDC2SkyStrategy  = 0x34E7014E2Ef62C2F3Cc8c8c25Ac0110E2aA33B00;
 
     // Pool Delegates
     address aqruPoolDelegate              = 0x39DF355Ae51fDf17aE1a68D00F770701e9627A93;
