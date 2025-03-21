@@ -22,7 +22,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run integration tests
         run: ./test.sh -d tests/integration -p $FOUNDRY_PROFILE
 
@@ -34,7 +36,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run end to end tests
         run: ./test.sh -d tests/e2e -p $FOUNDRY_PROFILE
 
@@ -47,7 +51,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run fuzz tests
         run: ./test.sh -t testFuzz -p $FUZZ_PROFILE
 
@@ -60,7 +66,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run invariant tests
         run: ./test.sh -d tests/invariants -p $FUZZ_PROFILE
 
@@ -76,7 +84,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run Scenarios
         run: ./scenarios.sh
 
@@ -89,6 +99,8 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run Protocol Upgrade tests
         run: ./test.sh -d tests/protocol-upgrade -p $FOUNDRY_PROFILE
