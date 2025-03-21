@@ -72,46 +72,9 @@ Specific tests can be run using `forge test` conventions, specified in more deta
 |---|---|
 | `make scenario` | Run the scenarios found in `./scenarios/data/csv/` |
 
-### Contract Verification Script
-
-```shell
-$ ./verify.sh -i "NETWORK_NAME" -k "ETHERSCAN_API_KEY" -a "CONTRACT_ADDRESS" -c "RELATIVE_PATH_TO_CONTRACT_FILE:CONTRACT_NAME" -s "CONSTRUCTOR_SIGNATURE" -g "CONSTRUCTOR_ARGUMENTS_SPACE_DELIMITED"
-```
-
-```shell
-$ ./verify.sh -i "goerli" -k "ETHERSCAN_API_KEY_HERE" -a "0xA756055900D13d62350a882334e5BD196987adcb" -c "./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory" -s "constructor(address)" -g "0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6"
-Profile: production
-Compiler: v0.8.7+commit.e28d00a7
-Address: 0xA756055900D13d62350a882334e5BD196987adcb
-Path To Contract: ./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory
-Optimzations: 200
-Chain: goerli
-constructorSignature: constructor(address)
-constructorArguments: 0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6
-Start verifying contract `0xa756055900d13d62350a882334e5bd196987adcb` deployed on goerli
-
-Submitting verification for [modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory] "0xA756055900D13d62350a882334e5BD196987adcb".
-Submitted contract for verification:
-	Response: `OK`
-	GUID: `mkes8fusv3yzajjwd11nzrifefwwh4pam1br739rlfxn7y4igt`
-	URL:
-        https://goerli.etherscan.io/address/0xa756055900d13d62350a882334e5bd196987adcb
-Contract verification status:
-Response: `NOTOK`
-Details: `Pending in queue`
-Contract verification status:
-Response: `OK`
-Details: `Pass - Verified`
-Contract successfully verified
-```
-
 ## Audit Reports
 
-| Auditor | Report Link |
-|---|---|
-| Trail of Bits | [`2022-08-24 - Trail of Bits Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10246688/Maple.Finance.v2.-.Final.Report.-.Fixed.-.2022.pdf) |
-| Spearbit | [`2022-10-17 - Spearbit Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10223545/Maple.Finance.v2.-.Spearbit.pdf) |
-| Three Sigma | [`2022-10-24 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10223541/three-sigma_maple-finance_code-audit_v1.1.1.pdf) |
+All audit reports can be found at [https://github.com/maple-labs/maple-core-v2/tree/main/audits](https://github.com/maple-labs/maple-core-v2/tree/main/audits)
 
 ## Bug Bounty
 
