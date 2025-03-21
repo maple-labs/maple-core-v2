@@ -1,9 +1,9 @@
 # Maple V2 Core
 
-![Foundry CI](https://github.com/maple-labs/maple-core-v2-private/actions/workflows/ci.yaml/badge.svg)
+![Foundry CI](https://github.com/maple-labs/maple-core-v2/actions/workflows/ci.yaml/badge.svg)
 [![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/maple-for-developers/protocol-overview)
 [![Foundry][foundry-badge]][foundry]
-[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2-private/blob/main/LICENSE)
+[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2/blob/main/LICENSE)
 
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
@@ -15,13 +15,22 @@ This repository brings together the core smart contracts of the Maple V2 protoco
 ## Submodules
 
 Submodules imported:
-- [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
+- [`maple-labs/forge-std` (for testing)](https://github.com/maple-labs/forge-std)
+- [`maple-labs/address-registry`](https://github.com/maple-labs/address-registry)
 - [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
+- [`maple-labs/erc20-helper`](https://github.com/maple-labs/erc20-helper)
 - [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
 - [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
-- [`maple-labs/loan`](https://github.com/maple-labs/loan)
+- [`maple-labs/fixed-term-loan`](https://github.com/maple-labs/fixed-term-loan)
+- [`maple-labs/fixed-term-loan-manager`](https://github.com/maple-labs/fixed-term-loan-manager)
+- [`maple-labs/open-term-loan`](https://github.com/maple-labs/open-term-loan)
+- [`maple-labs/open-term-loan-manager`](https://github.com/maple-labs/open-term-loan-manager)
 - [`maple-labs/pool-v2`](https://github.com/maple-labs/pool-v2)
-- [`maple-labs/withdrawal-manager`](https://github.com/maple-labs/withdrawal-manager)
+- [`maple-labs/pool-permission-manager`](https://github.com/maple-labs/pool-permission-manager)
+- [`maple-labs/withdrawal-manager-cyclical`](https://github.com/maple-labs/withdrawal-manager-cyclical)
+- [`maple-labs/withdrawal-manager-queue`](https://github.com/maple-labs/withdrawal-manager-queue)
+- [`maple-labs/strategies`](https://github.com/maple-labs/strategies)
+- [`maple-labs/syrup-utils`](https://github.com/maple-labs/syrup-utils)
 
 Versions of dependencies can be checked with `git submodule status`.
 
@@ -30,8 +39,8 @@ Versions of dependencies can be checked with `git submodule status`.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/maple-core-v2-private.git
-cd maple-core-v2-private
+git clone git@github.com:maple-labs/maple-core-v2.git
+cd maple-core-v2
 forge install
 ```
 
