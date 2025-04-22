@@ -45,11 +45,12 @@ import { IMapleWithdrawalManager as IMWMC }
 import { IMapleWithdrawalManager as IMWMQ }
     from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
 
-import { IMapleStrategy }      from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
-import { IMapleAaveStrategy }  from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
-import { IMapleBasicStrategy } from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
-import { IMapleSkyStrategy }   from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
-
+import { IMapleStrategy }        from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
+import { IMapleFeeStrategy }     from "../../modules/strategies/contracts/interfaces/IMapleFeeStrategy.sol";
+import { IMapleAaveStrategy }    from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
+import { IMapleBasicStrategy }   from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
+import { IMapleSkyStrategy }     from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
+import { IMapleCoreStrategy }    from "../../modules/strategies/contracts/interfaces/coreStrategy/IMapleCoreStrategy.sol";
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
 
 /******************************************************************************************************************************************/
@@ -94,11 +95,13 @@ interface IPoolPermissionManager is IMPPM { }
 
 interface IPoolPermissionManagerInitializer is IMPPMI { }
 
-interface IStrategy is IMapleStrategy { }
+interface IStrategy is IMapleStrategy, IMapleFeeStrategy { }
 
 interface ISkyStrategy is IMapleSkyStrategy { }
 
 interface IBasicStrategy is IMapleBasicStrategy { }
+
+interface ICoreStrategy is IMapleCoreStrategy { }
 
 interface ISyrupRouter is ISR { }
 
@@ -176,6 +179,8 @@ interface IERC4626Like is IERC20Like {
 
     function withdraw(uint256 assets_, address receiver_, address owner_) external returns (uint256 shares_);
 
+    function totalAssets() external view returns (uint256 totalAssets_);
+    
 }
 
 interface IExemptionsManagerLike {

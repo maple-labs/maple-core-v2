@@ -58,6 +58,7 @@ contract TestBase is ProtocolActions {
     address poolManagerFactory;
     address queueWMFactory;
     address skyStrategyFactory;
+    address coreStrategyFactory;
 
     address aaveStrategyImplementation;
     address basicStrategyImplementation;
@@ -70,6 +71,7 @@ contract TestBase is ProtocolActions {
     address poolManagerImplementation;
     address queueWMImplementation;
     address skyStrategyImplementation;
+    address coreStrategyImplementation;
 
     address aaveStrategyInitializer;
     address basicStrategyInitializer;
@@ -83,6 +85,7 @@ contract TestBase is ProtocolActions {
     address cyclicalWMInitializer;
     address queueWMInitializer;
     address skyStrategyInitializer;
+    address coreStrategyInitializer;
 
     address borrowerActions;
 
@@ -186,12 +189,15 @@ contract TestBase is ProtocolActions {
         aaveStrategyFactory         = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
         basicStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
         skyStrategyFactory          = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        coreStrategyFactory         = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
         aaveStrategyImplementation  = deployFromFile("Contracts@25", "AaveStrategy");
         basicStrategyImplementation = deployFromFile("Contracts@25", "BasicStrategy");
         skyStrategyImplementation   = deployFromFile("Contracts@25", "SkyStrategy");
+        coreStrategyImplementation  = deployFromFile("Contracts@25", "CoreStrategy");
         aaveStrategyInitializer     = deployFromFile("Contracts@25", "AaveStrategyInitializer");
         basicStrategyInitializer    = deployFromFile("Contracts@25", "BasicStrategyInitializer");
         skyStrategyInitializer      = deployFromFile("Contracts@25", "SkyStrategyInitializer");
+        coreStrategyInitializer     = deployFromFile("Contracts@25", "CoreStrategyInitializer");
 
         borrowerActions = deployNPT(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
@@ -219,6 +225,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 aaveStrategyFactory,           true);
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 basicStrategyFactory,          true);
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 skyStrategyFactory,            true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 coreStrategyFactory,           true);
         globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
         globals.setValidInstanceOf("REFINANCER",                       address(openTermRefinancer),   true);
         globals.setValidInstanceOf("OT_REFINANCER",                    address(openTermRefinancer),   true);
@@ -234,6 +241,7 @@ contract TestBase is ProtocolActions {
         globals.setCanDeployFrom(cyclicalWMFactory,           address(deployer), true);
         globals.setCanDeployFrom(queueWMFactory,              address(deployer), true);
         globals.setCanDeployFrom(skyStrategyFactory,          address(deployer), true);
+        globals.setCanDeployFrom(coreStrategyFactory,         address(deployer), true);
 
         IMapleProxyFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         IMapleProxyFactory(liquidatorFactory).setDefaultVersion(1);
@@ -275,6 +283,9 @@ contract TestBase is ProtocolActions {
 
         IMapleProxyFactory(skyStrategyFactory).registerImplementation(1, skyStrategyImplementation, skyStrategyInitializer);
         IMapleProxyFactory(skyStrategyFactory).setDefaultVersion(1);
+
+        IMapleProxyFactory(coreStrategyFactory).registerImplementation(1, coreStrategyImplementation, coreStrategyInitializer);
+        IMapleProxyFactory(coreStrategyFactory).setDefaultVersion(1);
 
         vm.stopPrank();
 
@@ -453,6 +464,33 @@ contract TestBase is ProtocolActions {
         queueWM   = IWithdrawalManagerQueue(poolManager.withdrawalManager());
         pool      = IPool(poolManager.pool());
         poolCover = IPoolDelegateCover(poolManager.poolDelegateCover());
+    }
+    
+    function _createAdditionalPoolWithQueueAndStrategies(
+        address fundsAsset_,
+        address poolDelegate_,
+        address[] memory strategiesFactories_,
+        bytes[] memory strategiesData_
+    )
+        internal returns (address pool_, address pm_, address wm_)
+    {
+        IPoolManager poolManager_ = IPoolManager(deployPoolWithQueue(
+            address(poolDelegate_),
+            address(deployer),
+            address(poolManagerFactory),
+            address(queueWMFactory),
+            strategiesFactories_,
+            strategiesData_,
+            fundsAsset_,
+            address(poolPermissionManager),
+            "NAME",
+            "SYMBOL",
+            [type(uint256).max, 0, 0, 0]
+        ));
+
+        wm_   = poolManager_.withdrawalManager();
+        pool_ = poolManager_.pool();
+        pm_   = address(poolManager_);
     }
 
     function _setTreasury() internal {

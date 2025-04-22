@@ -14,7 +14,11 @@ import { MapleAaveStrategy as MAS }             from "../modules/strategies/cont
 import { MapleAaveStrategyInitializer as MASI } from "../modules/strategies/contracts/proxy/aaveStrategy/MapleAaveStrategyInitializer.sol";
 import { MapleBasicStrategy as MBS }            from "../modules/strategies/contracts/MapleBasicStrategy.sol";
 import { MapleSkyStrategy as MSS }              from "../modules/strategies/contracts/MapleSkyStrategy.sol";
+import { MapleCoreStrategy as MCS }             from "../modules/strategies/contracts/MapleCoreStrategy.sol";
+
 import { MapleSkyStrategyInitializer as MSSI }  from "../modules/strategies/contracts/proxy/skyStrategy/MapleSkyStrategyInitializer.sol";
+import { MapleCoreStrategyInitializer as MCSI } from "../modules/strategies/contracts/proxy/coreStrategy/MapleCoreStrategyInitializer.sol";
+
 import { MapleStrategyFactory as MSF }          from "../modules/strategies/contracts/proxy/MapleStrategyFactory.sol";
 
 import { MapleBasicStrategyInitializer as MBSI }
@@ -37,6 +41,11 @@ contract Globals is MG { }
 contract SkyStrategy is MSS { }
 
 contract SkyStrategyInitializer is MSSI { }
+
+contract CoreStrategy is MCS { }
+
+contract CoreStrategyInitializer is MCSI { }
+
 
 contract StrategyFactory is MSF {
 
