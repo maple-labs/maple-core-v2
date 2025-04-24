@@ -423,6 +423,12 @@ interface IStrategyLike is IStrategy {
 
 }
 
+interface IStrategyWithAccountingLike is IStrategyLike {
+
+    function reactivateStrategy(bool updateAccounting) external;
+
+}
+
 interface IUSDCLike {
 
     function configureMinter(address minter, uint256 minterAllowedAmount) external returns (bool);

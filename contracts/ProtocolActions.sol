@@ -22,6 +22,7 @@ import {
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IStrategyLike,
+    IStrategyWithAccountingLike,
     IUSDCLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue
@@ -1077,8 +1078,8 @@ contract ProtocolActions is Runner {
     }
 
     function reactivateStrategy(address strategy_, bool updateAccounting_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+        IStrategyWithAccountingLike s_ = IStrategyWithAccountingLike(strategy_);
+        IPoolManager pm_               = IPoolManager(s_.poolManager());
 
         address poolDelegate_ = pm_.poolDelegate();
 

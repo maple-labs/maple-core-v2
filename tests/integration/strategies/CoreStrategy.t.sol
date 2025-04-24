@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import {
     IERC4626Like,
     IMockERC20,
+    IERC20Like,
     IMapleCoreStrategy,
     IGlobals,
     IWithdrawalManagerQueue,
@@ -355,7 +356,6 @@ contract CoreStrategyFundTests is CoreStrategyTestsBase {
 
 }
 
-// TODO: Check if pushAssetsToPool covers the PD processing the Queue and funds asset being available in the coreStrategy contract
 contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
 
     uint256 amountToWithdraw = 40_000_000e6;
@@ -523,7 +523,6 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
     }
 
 }
-
 
 contract CoreStrategyDeactivateStrategyTests is CoreStrategyTestsBase {
 
@@ -706,7 +705,6 @@ contract CoreStrategyImpairedStrategyTests is CoreStrategyTestsBase {
 
 }
 
-// TODO: Needs updating once submodule commit updated in next PR
 contract CoreStrategyReactivateStrategyTests is CoreStrategyTestsBase {
 
     function testFork_reactivateStrategy_failWhenProtocolPaused() external {
@@ -715,7 +713,7 @@ contract CoreStrategyReactivateStrategyTests is CoreStrategyTestsBase {
 
         vm.prank(poolDelegate);
         vm.expectRevert("MS:PAUSED");
-        coreStrategy.reactivateStrategy(false);
+        coreStrategy.reactivateStrategy();
     }
 
     function testFork_reactivateStrategy_failWhenNotAdmin() external {
@@ -723,10 +721,10 @@ contract CoreStrategyReactivateStrategyTests is CoreStrategyTestsBase {
         coreStrategy.deactivateStrategy();
 
         vm.expectRevert("MS:NOT_ADMIN");
-        coreStrategy.reactivateStrategy(false);
+        coreStrategy.reactivateStrategy();
 
         vm.prank(governor);
-        coreStrategy.reactivateStrategy(false);
+        coreStrategy.reactivateStrategy();
     }
 
     function testFork_reactivateStrategy_failWhenAlreadyActive() external {
@@ -734,7 +732,7 @@ contract CoreStrategyReactivateStrategyTests is CoreStrategyTestsBase {
 
         vm.prank(poolDelegate);
         vm.expectRevert("MCS:RS:ALREADY_ACTIVE");
-        coreStrategy.reactivateStrategy(false);
+        coreStrategy.reactivateStrategy();
     }
 
     function testFork_reactivateStrategy_aumCorrectAfterReactivation() external {
@@ -752,9 +750,345 @@ contract CoreStrategyReactivateStrategyTests is CoreStrategyTestsBase {
         assertEq(coreStrategy.assetsUnderManagement(), 0);
 
         vm.prank(governor);
-        coreStrategy.reactivateStrategy(false);
+        coreStrategy.reactivateStrategy();
 
         assertEq(coreStrategy.assetsUnderManagement(), aumBefore);
     }
 
 }
+
+contract CoreStrategyPushAssetsTests is CoreStrategyTestsBase {
+
+    function _requestWithdrawalFromStrategy(uint256 amount) internal {
+        vm.prank(strategyManager);
+        coreStrategy.requestWithdrawFromStrategy(amount);
+    }
+
+    function _processAllWithdrawalsByOwnerShares(IWithdrawalManagerQueue withdrawalManager, address owner) internal {
+        uint128 requestId = withdrawalManager.requestIds(owner);
+        ( , uint256 shares ) = withdrawalManager.requests(requestId);
+
+        _processWithdrawalRequests(withdrawalManager, shares);
+    }
+
+    function _processWithdrawalRequests(IWithdrawalManagerQueue withdrawalManager, uint256 sharesToProcess) internal {
+        vm.prank(secondPoolDelegate);
+        withdrawalManager.processRedemptions(sharesToProcess);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_failWhenPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(strategyManager);
+        vm.expectRevert("MS:PAUSED");
+
+        coreStrategy.pushAssetsToPool();
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_failIfNotStrategyManager() external {
+        vm.expectRevert("MS:NOT_MANAGER");
+        coreStrategy.pushAssetsToPool();
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_failIfNotPoolDelegate() external {
+        vm.expectRevert("MS:NOT_MANAGER");
+        coreStrategy.pushAssetsToPool();
+
+        vm.prank(poolDelegate);
+        coreStrategy.pushAssetsToPool();
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_failTransfer() external {
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToFund);
+        _processAllWithdrawalsByOwnerShares(secondMapleWithdrawalManager, address(coreStrategy));
+
+        vm.mockCall(
+            address(fundsAsset),
+            abi.encodeWithSelector(IERC20Like.transfer.selector, address(pool), amountToFund),
+            abi.encode(false)
+        );
+        vm.expectRevert("MCS:PATP:TRANSFER_FAILED");
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successWhenZeroBalance() external {
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+
+        uint256 poolBalanceBefore = fundsAsset.balanceOf(address(pool));
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolBalanceBefore);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successWhenPositiveBalance() external {
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToFund);
+        _processAllWithdrawalsByOwnerShares(secondMapleWithdrawalManager, address(coreStrategy));
+
+        uint256 poolBalanceBefore = fundsAsset.balanceOf(address(pool));
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), amountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund);
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolBalanceBefore + amountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        0);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successAfterAdditionalFunding() external {
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToFund);
+        _processAllWithdrawalsByOwnerShares(secondMapleWithdrawalManager, address(coreStrategy));
+
+        vm.prank(strategyManager);
+        coreStrategy.fundStrategy(secondAmountToFund);
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - (amountToFund + secondAmountToFund));
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund + secondAmountToFund);
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - secondAmountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        secondAmountToFund);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successWhenPartialWithdrawalProcessed() external {
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToFund);
+
+        uint256 tenthOfStrategyShares = secondMaplePool.convertToAssets(amountToFund / 10);
+
+        _processWithdrawalRequests(secondMapleWithdrawalManager, tenthOfStrategyShares);
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), tenthOfStrategyShares);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund);
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund + tenthOfStrategyShares);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund - tenthOfStrategyShares);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successWhenPartialWithdrawalRequested() external {
+        uint256 amountToWithdraw = amountToFund / 2;
+
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToWithdraw);
+
+        _processAllWithdrawalsByOwnerShares(secondMapleWithdrawalManager, address(coreStrategy));
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), amountToWithdraw);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund);
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToWithdraw);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund - amountToWithdraw);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successWhenImpaired() external {
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToFund);
+        _processAllWithdrawalsByOwnerShares(secondMapleWithdrawalManager, address(coreStrategy));
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund);
+
+        vm.prank(governor);
+        coreStrategy.impairStrategy();
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity);
+        assertEq(coreStrategy.assetsUnderManagement(),        0);
+    }
+
+    function testFork_coreStrategy_pushAssetsToPool_successWhenDeactivated() external {
+        _fundStrategy();
+        _requestWithdrawalFromStrategy(amountToFund);
+        _processAllWithdrawalsByOwnerShares(secondMapleWithdrawalManager, address(coreStrategy));
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), amountToFund);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity - amountToFund);
+        assertEq(coreStrategy.assetsUnderManagement(),        amountToFund);
+
+        vm.prank(governor);
+        coreStrategy.deactivateStrategy();
+
+        vm.prank(strategyManager);
+        coreStrategy.pushAssetsToPool();
+
+        assertEq(fundsAsset.balanceOf(address(coreStrategy)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),         poolLiquidity);
+        assertEq(coreStrategy.assetsUnderManagement(),        0);
+    }
+
+}
+
+contract CoreStrategyRemoveSharesIntegrationTests is CoreStrategyTestsBase {
+
+    uint256 sharesToRemove = 1_000_000e6;
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.prank(strategyManager);
+        coreStrategy.fundStrategy(amountToFund);
+
+        vm.prank(strategyManager);
+        coreStrategy.requestWithdrawFromStrategy(amountToFund);
+    }
+
+    function testFork_coreStrategy_removeShares_failWhenPaused() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.prank(strategyManager);
+        vm.expectRevert("MS:PAUSED");
+        coreStrategy.removeShares(sharesToRemove);
+    }
+
+    function testFork_coreStrategy_removeShares_failIfNotStrategyManager() external {
+        vm.expectRevert("MS:NOT_MANAGER");
+        coreStrategy.removeShares(sharesToRemove);
+
+        vm.prank(strategyManager);
+        coreStrategy.removeShares(sharesToRemove);
+
+        vm.prank(poolDelegate);
+        coreStrategy.removeShares(sharesToRemove);
+    }
+
+    function testFork_coreStrategy_removeShares_failIfZeroShares() external {
+        vm.prank(strategyManager);
+        vm.expectRevert("MCS:RS:ZERO_SHARES");
+        coreStrategy.removeShares(0);
+    }
+
+    function testFork_coreStrategy_removeShares_failInsufficientShares() external {
+        ( , uint256 sharesBefore) = secondMapleWithdrawalManager.requests(1);
+
+        vm.prank(strategyManager);
+        vm.expectRevert("WM:RS:INSUFFICIENT_SHARES");
+        coreStrategy.removeShares(sharesBefore + 1);
+    }
+
+    function testFork_coreStrategy_removeShares_removeAllSharesSuccess() external {
+        uint256 strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerBefore, uint256 sharesBefore ) = secondMapleWithdrawalManager.requests(1);
+
+        assertNotEq(sharesBefore,      0);
+        assertEq(ownerBefore,          address(coreStrategy));
+        assertEq(strategyShareBalance, 0);
+
+        vm.prank(strategyManager);
+        coreStrategy.removeShares(sharesBefore);
+
+        strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerAfter, uint256 sharesAfter ) = secondMapleWithdrawalManager.requests(1);
+
+        assertEq(sharesAfter,          0);
+        assertEq(ownerAfter,           address(0));
+        assertEq(strategyShareBalance, amountToFund);
+    }
+
+    function testFork_coreStrategy_removeShares_removePartialSharesSuccess() external {
+        uint256 strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerBefore, uint256 sharesBefore ) = secondMapleWithdrawalManager.requests(1);
+
+        assertNotEq(sharesBefore,      0);
+        assertEq(ownerBefore,          address(coreStrategy));
+        assertEq(strategyShareBalance, 0);
+
+        sharesToRemove = sharesBefore - 1_000_000e6;
+
+        vm.prank(strategyManager);
+        coreStrategy.removeShares(sharesToRemove);
+
+        strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerAfter, uint256 sharesAfter ) = secondMapleWithdrawalManager.requests(1);
+
+        assertEq(sharesAfter,          sharesBefore - sharesToRemove);
+        assertEq(ownerAfter,           address(coreStrategy));
+        assertEq(strategyShareBalance, sharesToRemove);
+    }
+
+    function testFork_coreStrategy_removeShares_successWhenImpaired() external {
+        uint256 strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerBefore, uint256 sharesBefore ) = secondMapleWithdrawalManager.requests(1);
+
+        assertNotEq(sharesBefore,      0);
+        assertEq(ownerBefore,          address(coreStrategy));
+        assertEq(strategyShareBalance, 0);
+
+        vm.prank(governor);
+        coreStrategy.impairStrategy();
+
+        vm.prank(strategyManager);
+        coreStrategy.removeShares(sharesBefore);
+
+        strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerAfter, uint256 sharesAfter ) = secondMapleWithdrawalManager.requests(1);
+
+        assertEq(sharesAfter,          0);
+        assertEq(ownerAfter,           address(0));
+        assertEq(strategyShareBalance, amountToFund);
+    }
+
+    function testFork_coreStrategy_removeShares_successWhenDeactivated() external {
+        uint256 strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerBefore, uint256 sharesBefore ) = secondMapleWithdrawalManager.requests(1);
+
+        assertNotEq(sharesBefore,      0);
+        assertEq(ownerBefore,          address(coreStrategy));
+        assertEq(strategyShareBalance, 0);
+
+        vm.prank(governor);
+        coreStrategy.deactivateStrategy();
+
+        vm.prank(strategyManager);
+        coreStrategy.removeShares(sharesBefore);
+
+        strategyShareBalance = secondMaplePool.balanceOf(address(coreStrategy));
+
+        ( address ownerAfter, uint256 sharesAfter ) = secondMapleWithdrawalManager.requests(1);
+
+        assertEq(sharesAfter,          0);
+        assertEq(ownerAfter,           address(0));
+        assertEq(strategyShareBalance, amountToFund);
+    }
+
+}
+
