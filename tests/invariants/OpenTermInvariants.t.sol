@@ -129,6 +129,9 @@ contract OpenTermInvariants is BaseInvariants {
             assert_otlm_invariant_H(loan, loanManager);
             assert_otlm_invariant_I(loan, loanManager);
             assert_otlm_invariant_J(loan, loanManager);
+            assert_otlm_invariant_K(loanManager, loans);
+            assert_otlm_invariant_L(loanManager);
+            assert_otlm_invariant_M(loanManager, loans);
         }
     }
 

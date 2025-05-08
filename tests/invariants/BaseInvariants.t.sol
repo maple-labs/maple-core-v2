@@ -118,6 +118,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant I: payment.issuanceRate == theoretical calculation (minus management fees)
         * Invariant J: payment.impairedDate >= payment.startDate
         * Invariant K: assetsUnderManagement - unrealizedLosses - ∑outstandingValue(loan) ~= 0
+        * Invariant L: fundsAsset.balanceOf(OTLM) == 0
+        * Invariant M: fundsAsset.allowance(OTLM, address(loan)) == 0
 
      * Pool (non-liquidating)
         * Invariant A: totalAssets > fundsAsset balance of pool
@@ -739,6 +741,18 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 diff = a > b ? a - b : b - a;
 
         assertApproxEqAbs(diff, 0, ALLOWED_DIFF, "OTLM Invariant K");
+    }
+
+    function assert_otlm_invariant_L(address loanManager_) internal {
+        uint256 balance = fundsAsset.balanceOf(address(loanManager_));
+
+        assertEq(balance, 0, "OTLM Invariant L");
+    }
+
+    function assert_otlm_invariant_M(address loanManager_, address[] memory loans_) internal {
+        for (uint256 i; i < loans_.length; ++i) {
+            assertEq(fundsAsset.allowance(loanManager_, loans_[i]), 0, "OTLM Invariant M");
+        }
     }
 
     /**************************************************************************************************************************************/
