@@ -112,6 +112,8 @@ contract OpenTermInvariants is BaseInvariants {
         assert_otlm_invariant_D(loanManager, loans);
         assert_otlm_invariant_F(loanManager, loans);
         // assert_otlm_invariant_K(loanManager, loans);  TODO: Spike to find long term fix
+        assert_otlm_invariant_L(loanManager);
+        assert_otlm_invariant_M(loanManager, loans);
 
         for (uint256 i; i < loans.length; ++i) {
             address loan = loans[i];
@@ -129,9 +131,6 @@ contract OpenTermInvariants is BaseInvariants {
             assert_otlm_invariant_H(loan, loanManager);
             assert_otlm_invariant_I(loan, loanManager);
             assert_otlm_invariant_J(loan, loanManager);
-            assert_otlm_invariant_K(loanManager, loans);
-            assert_otlm_invariant_L(loanManager);
-            assert_otlm_invariant_M(loanManager, loans);
         }
     }
 
