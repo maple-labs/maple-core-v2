@@ -20,10 +20,11 @@ import { MapleLoanManager as MFTLM }             from "../modules/fixed-term-loa
 import { MapleLoanManagerFactory as MFTLMF }     from "../modules/fixed-term-loan-manager/contracts/proxy/MapleLoanManagerFactory.sol";
 import { MapleLoanManagerInitializer as MFTLMI } from "../modules/fixed-term-loan-manager/contracts/proxy/MapleLoanManagerInitializer.sol";
 
-import { MapleLoan as MOTL }             from "../modules/open-term-loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory as MOTLF }     from "../modules/open-term-loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanInitializer as MOTLI } from "../modules/open-term-loan/contracts/MapleLoanInitializer.sol";
-import { MapleRefinancer as MOTLR }      from "../modules/open-term-loan/contracts/MapleRefinancer.sol";
+import { MapleLoan as MOTL }                  from "../modules/open-term-loan/contracts/MapleLoan.sol";
+import { MapleLoanV202Migrator as MOTLV202M } from "modules/open-term-loan/contracts/MapleLoanV202Migrator.sol";
+import { MapleLoanFactory as MOTLF }          from "../modules/open-term-loan/contracts/MapleLoanFactory.sol";
+import { MapleLoanInitializer as MOTLI }      from "../modules/open-term-loan/contracts/MapleLoanInitializer.sol";
+import { MapleRefinancer as MOTLR }           from "../modules/open-term-loan/contracts/MapleRefinancer.sol";
 
 import { MapleLoanManager as MOTLM }             from "../modules/open-term-loan-manager/contracts/MapleLoanManager.sol";
 import { MapleLoanManagerFactory as MOTLMF }     from "../modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol";
@@ -119,6 +120,8 @@ contract MockERC20 is ConfigurableMockERC20 {
 }
 
 contract OpenTermLoan is MOTL { }
+
+contract OpenTermLoanV202Migrator is MOTLV202M { }
 
 contract OpenTermLoanFactory is MOTLF {
 
