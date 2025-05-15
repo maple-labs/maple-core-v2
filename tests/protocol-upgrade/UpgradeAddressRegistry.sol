@@ -5,11 +5,19 @@ import { MapleAddressRegistryETH as AddressRegistry } from "../../modules/addres
 
 contract UpgradeAddressRegistry is AddressRegistry {
 
+    address coreStrategyFactory;
+    address coreStrategyV100Implementation;
+    address coreStrategyV100Initializer;
+
     address openTermLoanV202Implementation;
     address openTermLoanV202Initializer;
     address openTermLoanV202Migrator;
+
     address openTermLoanManagerV101Implementation;
     address openTermLoanManagerV101Initializer;
+
+    address poolManagerV401Implementation;
+    address poolManagerV401Initializer;
 
     // Pool Delegates
     address aqruPoolDelegate              = 0x39DF355Ae51fDf17aE1a68D00F770701e9627A93;

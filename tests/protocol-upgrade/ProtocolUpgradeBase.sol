@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IMapleProxyFactory, IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
-
-import { UpgradeAddressRegistry } from "./UpgradeAddressRegistry.sol";
+import {
+    IGlobals,
+    IMapleProxyFactory,
+    IOpenTermLoan,
+    IOpenTermLoanManager,
+    IPoolManager
+} from "../../contracts/interfaces/Interfaces.sol";
 
 import { Runner } from "../../contracts/Runner.sol";
+
+import { UpgradeAddressRegistry } from "./UpgradeAddressRegistry.sol";
 
 contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
@@ -13,10 +19,11 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     /*** Upgrade Procedure                                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    // TODO: MapleCoreStrategy setup
     function upgradeProtocol() internal {
         setupLoan();
         setupLoanManager();
+        setupPoolManager();
+        setupCoreStrategy();
     }
 
     /**************************************************************************************************************************************/
@@ -99,6 +106,42 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
                 , 101
             );
         }
+    }
+
+    function setupPoolManager() internal {
+        poolManagerV401Implementation = deployFromFile("Contracts@25", "PoolManager");
+        poolManagerV401Initializer    = deployFromFile("Contracts@25", "PoolManagerInitializer");
+
+        vm.startPrank(governor);
+        IMapleProxyFactory(poolManagerFactory).registerImplementation(401, poolManagerV401Implementation, poolManagerV401Initializer);
+        IMapleProxyFactory(poolManagerFactory).enableUpgradePath(400, 401, address(0));
+        IMapleProxyFactory(poolManagerFactory).setDefaultVersion(401);
+        vm.stopPrank();
+
+        for (uint256 i; i < poolManagers.length; i++) {
+            IPoolManager poolManager = IPoolManager(poolManagers[i]);
+
+            vm.prank(securityAdmin);
+            poolManager.upgrade(401, "");
+
+            assertEq(poolManager.implementation(), poolManagerV401Implementation);
+            assertEq(IMapleProxyFactory(poolManagerFactory).versionOf(poolManager.implementation()), 401);
+        }
+    }
+
+    function setupCoreStrategy() internal {
+        coreStrategyFactory = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+
+        coreStrategyV100Implementation = deployFromFile("Contracts@25", "CoreStrategy");
+        coreStrategyV100Initializer    = deployFromFile("Contracts@25", "CoreStrategyInitializer");
+
+        vm.startPrank(governor);
+        IMapleProxyFactory(coreStrategyFactory).registerImplementation(100, coreStrategyV100Implementation, coreStrategyV100Initializer);
+        IMapleProxyFactory(coreStrategyFactory).setDefaultVersion(100);
+        vm.stopPrank();
+
+        vm.prank(governor);
+        IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY", coreStrategyFactory, true);
     }
 
 }
