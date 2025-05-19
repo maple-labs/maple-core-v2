@@ -53,8 +53,9 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         assertEq(IMapleProxyFactory(openTermLoanFactory).defaultVersion(), 202);
 
         // Upgrade All Open Term Loans
-        for (uint256 i; i < openTermLoans.length; i++) {
-            IOpenTermLoan openTermLoan = IOpenTermLoan(openTermLoans[i]);
+        for (uint256 i; i < allOpenTermLoans.length; i++) {
+
+            IOpenTermLoan openTermLoan = IOpenTermLoan(allOpenTermLoans[i]);
 
             vm.prank(securityAdmin);
             openTermLoan.upgrade(202, "");

@@ -47,7 +47,7 @@ contract ProtocolActions is Runner {
     address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
     address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
     address USDC_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
-    address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address USDT_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
