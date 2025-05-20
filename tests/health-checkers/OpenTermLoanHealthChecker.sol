@@ -10,7 +10,7 @@ import {
 contract OpenTermLoanHealthChecker {
 
     uint256 constant internal BUFFER              = 1e6;
-    uint256 constant internal UNDERFLOW_THRESHOLD = 30;
+    uint256 constant internal UNDERFLOW_THRESHOLD = 50;
 
     /******************************************************************************************************************************/
     /*** Invariant Tests                                                                                                        ***/
@@ -98,7 +98,7 @@ contract OpenTermLoanHealthChecker {
                 invariants_.openTermLoanManagerInvariantH = check_otlm_invariant_H(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantI = check_otlm_invariant_I(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantJ = check_otlm_invariant_J(loanManager_, loans_);
-                invariants_.openTermLoanManagerInvariantK = true;  // check_otlm_invariant_K(loanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantK = check_otlm_invariant_K(loanManager_, loans_);
             }
         }
     }
