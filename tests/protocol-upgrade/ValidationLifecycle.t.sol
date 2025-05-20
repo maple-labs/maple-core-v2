@@ -205,7 +205,7 @@ contract ValidationLifecycleETH is ProtocolUpgradeBase, FuzzedUtil {
         assertTrue(results.openTermLoanManagerInvariantH, "OTL LM H");
         assertTrue(results.openTermLoanManagerInvariantI, "OTL LM I");
         assertTrue(results.openTermLoanManagerInvariantJ, "OTL LM J");
-        // assertTrue(results.openTermLoanManagerInvariantK, "OTL LM K");  // TODO: Fix failing invariant test. SC: 20354
+        assertTrue(results.openTermLoanManagerInvariantK, "OTL LM K");  // TODO: Fix failing invariant test (over/underflow) SC: 20354
     }
 
     function _checkProtocolInvariants(address poolManager_) internal {

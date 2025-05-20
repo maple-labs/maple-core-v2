@@ -5,40 +5,24 @@ export FOUNDRY_PROFILE=production
 echo Using profile: $FOUNDRY_PROFILE
 
 # For Testing
-# For Maple Strategies Release
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
 
-# For Delegated Initiated Loans Release
+# For Core strategy And Router Deployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
 #     --unlocked \
 #     --slow \
 #     --sender $ETH_SENDER \
-#     scripts/DelegateInitiatedLoansDeployment.s.sol:DelegateInitiatedLoansDeployment
+#     scripts/CoreStrategyAndRouterDeployment.s.sol:CoreStrategyAndRouterDeployment
 
-# For BorrowerActions Release
+# For Refinance Upgrades Deployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
 #     --unlocked \
 #     --slow \
 #     --sender $ETH_SENDER \
-#     scripts/BorrowerActionsDeployment.s.sol:BorrowerActionsDeployment
-
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/BorrowerActionsProxyDeployment.s.sol:BorrowerActionsProxyDeployment
+#     scripts/RefinanceUpgradesDeployment.s.sol:RefinanceUpgradesDeployment
 
 # For Production
 
@@ -54,7 +38,7 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --broadcast \
 #     scripts/DeployHealthChecker.s.sol:DeployHealthChecker
 
-# For Maple Strategies Release
+# For Core strategy And Router Deployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
@@ -64,9 +48,9 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
-#     scripts/MapleStrategiesDeployment.s.sol:MapleStrategiesDeployment
+#     scripts/CoreStrategyAndRouterDeployment.s.sol:CoreStrategyAndRouterDeployment
 
-# For Delegated Initiated Loans Release
+# For Refinance Upgrades Deployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
@@ -76,27 +60,5 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     --broadcast \
-#     scripts/DelegateInitiatedLoansDeployment.s.sol:DelegateInitiatedLoansDeployment
+#     scripts/RefinanceUpgradesDeployment.s.sol:RefinanceUpgradesDeployment
 
-# For BorrowerActions Release
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 15 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     --broadcast \
-#     scripts/BorrowerActionsDeployment.s.sol:BorrowerActionsDeployment
-
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 15 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     --broadcast \
-#     scripts/BorrowerActionsProxyDeployment.s.sol:BorrowerActionsProxyDeployment
