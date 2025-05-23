@@ -87,5 +87,5 @@ For all information related to the ongoing bug bounty for these contracts run by
 ---
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/44272939/196706799-fe96d294-f700-41e7-a65f-2d754d0a6eac.gif" height="100" />
+  <img src="https://github.com/maple-labs/maple-metadata/blob/796e313f3b2fd4960929910cd09a9716688a4410/assets/maplelogo.png" height="100" />
 </p>
