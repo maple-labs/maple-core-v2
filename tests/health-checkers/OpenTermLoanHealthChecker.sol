@@ -90,7 +90,7 @@ contract OpenTermLoanHealthChecker {
                 invariants_.openTermLoanInvariantH = check_otl_invariant_H(loans_);
                 invariants_.openTermLoanInvariantI = check_otl_invariant_I(loans_);
 
-                invariants_.openTermLoanManagerInvariantA = true;  // check_otlm_invariant_A(openTermLoanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantA = check_otlm_invariant_A(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantB = check_otlm_invariant_B(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantC = check_otlm_invariant_C(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantD = check_otlm_invariant_D(loanManager_, loans_);
@@ -405,7 +405,11 @@ contract OpenTermLoanHealthChecker {
     }
 
     function _getExpectedNetInterest(address loan, address loanManager) internal view returns (uint256 netInterest) {
-        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+        uint256 timestamp = IOpenTermLoan(loan).isImpaired()
+            ? IOpenTermLoan(loan).dateImpaired()
+            : block.timestamp;
+
+        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(timestamp);
 
         (
             uint24 platformManagementFeeRate,

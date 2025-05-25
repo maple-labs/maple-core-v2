@@ -430,7 +430,7 @@ contract FuzzedUtil is ProtocolActions {
     // NOTE: Code duplication with `getSomeFixedTermAction` because can not yet identify cleaner way to do this.
     function getSomeOpenTermAction(address loan) internal returns (LoanAction action) {
         // Always enable payments, calls, impairments to be performed.
-        uint256 total = PAYMENT_FACTOR + CALL_FACTOR + IMPAIR_FACTOR;
+        uint256 total = PAYMENT_FACTOR + CALL_FACTOR;
 
         bool isCalled    = IOpenTermLoan(loan).isCalled();
         bool isImpaired  = IOpenTermLoan(loan).isImpaired();
@@ -441,9 +441,11 @@ contract FuzzedUtil is ProtocolActions {
             total += REMOVE_CALL_FACTOR;
         }
 
-        // If the loan is impaired also enable impairment removal.
+        // If the loan is impaired enabled impairment removal, otherwise enable impairments.
         if (isImpaired) {
             total += REMOVE_IMPAIRMENT_FACTOR;
+        } else {
+            total += IMPAIR_FACTOR;
         }
 
         // If the loan is past the default date also enable default triggering.
@@ -461,10 +463,6 @@ contract FuzzedUtil is ProtocolActions {
 
         draw -= CALL_FACTOR;
 
-        if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
-
-        draw -= IMPAIR_FACTOR;
-
         if (isCalled) {
             if (draw < REMOVE_CALL_FACTOR) return LoanAction.RemoveCall;
 
@@ -475,6 +473,10 @@ contract FuzzedUtil is ProtocolActions {
             if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
 
             draw -= REMOVE_IMPAIRMENT_FACTOR;
+        } else {
+            if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
+
+            draw -= IMPAIR_FACTOR;
         }
 
         return LoanAction.TriggerDefault;
