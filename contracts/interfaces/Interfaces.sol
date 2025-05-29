@@ -38,6 +38,7 @@ import { IMaplePoolPermissionManagerInitializer as IMPPMI }
     from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManagerInitializer.sol";
 
 import { ISyrupRouter as ISR } from "../../modules/syrup-utils/contracts/interfaces/ISyrupRouter.sol";
+import { IMapleRouter as IMR } from "../../modules/syrup-utils/contracts/interfaces/IMapleRouter.sol";
 
 import { IMapleWithdrawalManager as IMWMC }
     from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
@@ -104,6 +105,8 @@ interface IBasicStrategy is IMapleBasicStrategy { }
 interface ICoreStrategy is IMapleCoreStrategy { }
 
 interface ISyrupRouter is ISR { }
+
+interface IMapleRouter is IMR { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
 
@@ -436,6 +439,18 @@ interface IUSDCLike {
     function masterMinter() external view returns (address);
 
     function mint(address to, uint256 amount) external;
+
+}
+
+interface IMapleRouterLike {
+
+    function globals() external view returns (address globals_);
+
+    function ppm() external view returns (address ppm_);
+
+    function implementation() external view returns (address implementation_);
+
+    function assetWhitelisting() external view returns (bool assetWhitelisting_);
 
 }
 

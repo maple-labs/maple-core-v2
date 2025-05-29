@@ -3,7 +3,8 @@ pragma solidity 0.8.7;
 
 import {
     IGlobals,
-    IPoolManager
+    IPoolManager,
+    IMapleRouter
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";

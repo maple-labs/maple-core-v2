@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.25;
 
-import { MapleGlobals as MG }  from "../modules/globals/contracts/MapleGlobals.sol";
+import { MapleGlobals as MG } from "../modules/globals/contracts/MapleGlobals.sol";
 
 import { MaplePool as MP }                     from "../modules/pool/contracts/MaplePool.sol";
 import { MaplePoolDelegateCover as MPDC }      from "../modules/pool/contracts/MaplePoolDelegateCover.sol";
@@ -26,7 +26,10 @@ import { MapleBasicStrategyInitializer as MBSI }
 
 import { MockPSM as MPSM } from "../modules/strategies/tests/utils/Mocks.sol";
 
-import { MapleBorrowerActions } from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
+import { MapleBorrowerActions }          from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
+import { MapleRouter as MR }             from "../modules/syrup-utils/contracts/MapleRouter.sol";
+import { MapleRouterInitializer as MRI } from "../modules/syrup-utils/contracts/MapleRouterInitializer.sol";
+import { NonTransparentProxy as NTP }    from "../modules/syrup-utils/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
 contract AaveStrategy is MAS { }
 
@@ -88,3 +91,7 @@ contract PoolManagerMigrator is MPMM { }
 contract MockPSM is MPSM { }
 
 contract BorrowerActions is MapleBorrowerActions { }
+
+contract MapleRouter is MR {}
+
+contract MapleRouterInitializer is MRI {}

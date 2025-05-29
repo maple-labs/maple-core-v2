@@ -19,6 +19,10 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address poolManagerV401Implementation;
     address poolManagerV401Initializer;
 
+    address mapleRouterImplementation;
+    address mapleRouterInitializer;
+    address mapleRouterProxy;
+
     // Pool Delegates
     address aqruPoolDelegate              = 0x39DF355Ae51fDf17aE1a68D00F770701e9627A93;
     address cashUSDCPoolDelegate          = 0x94b8dcbe4c7841B54170925b67918a6312154C9c;

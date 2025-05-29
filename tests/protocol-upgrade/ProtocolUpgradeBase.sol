@@ -13,6 +13,8 @@ import { Runner } from "../../contracts/Runner.sol";
 
 import { UpgradeAddressRegistry } from "./UpgradeAddressRegistry.sol";
 
+import { IMapleRouterInitializer } from "../../modules/syrup-utils/contracts/interfaces/IMapleRouterInitializer.sol";
+
 contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
     /**************************************************************************************************************************************/
@@ -24,6 +26,7 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         setupLoanManager();
         setupPoolManager();
         setupCoreStrategy();
+        setupMapleRouter();
     }
 
     /**************************************************************************************************************************************/
@@ -143,6 +146,19 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         vm.prank(governor);
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY", coreStrategyFactory, true);
+    }
+
+    function setupMapleRouter() internal {
+        mapleRouterImplementation = deployFromFile("Contracts@25", "MapleRouter");
+        mapleRouterInitializer    = deployFromFile("Contracts@25", "MapleRouterInitializer");
+        mapleRouterProxy          = deployNTPv25(operationalAdmin, mapleRouterInitializer);
+
+        vm.prank(operationalAdmin);
+        IMapleRouterInitializer(mapleRouterProxy).initialize(
+            mapleRouterImplementation,
+            globals,
+            poolPermissionManager
+        );
     }
 
 }

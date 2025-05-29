@@ -184,7 +184,7 @@ contract TestBase is ProtocolActions {
         address poolPermissionManagerImplementation = deployFromFile("Contracts@7","PoolPermissionManager");
         poolPermissionManagerInitializer            = deployFromFile("Contracts@7","PoolPermissionManagerInitializer");
 
-        poolPermissionManager = IPoolPermissionManager(deployNPT(governor, poolPermissionManagerInitializer));
+        poolPermissionManager = IPoolPermissionManager(deployNTP(governor, poolPermissionManagerInitializer));
 
         aaveStrategyFactory         = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
         basicStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
@@ -199,7 +199,7 @@ contract TestBase is ProtocolActions {
         skyStrategyInitializer      = deployFromFile("Contracts@25", "SkyStrategyInitializer");
         coreStrategyInitializer     = deployFromFile("Contracts@25", "CoreStrategyInitializer");
 
-        borrowerActions = deployNPT(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
+        borrowerActions = deployNTP(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
         vm.startPrank(governor);
 
@@ -294,7 +294,7 @@ contract TestBase is ProtocolActions {
     }
 
     function _createGlobals() internal {
-        globals = IGlobals(deployNPT(governor, deploy("MapleGlobals")));
+        globals = IGlobals(deployNTP(governor, deploy("MapleGlobals")));
 
         deployer = IPoolDeployer(deploy("MaplePoolDeployer", abi.encode(address(globals))));
 
@@ -465,7 +465,7 @@ contract TestBase is ProtocolActions {
         pool      = IPool(poolManager.pool());
         poolCover = IPoolDelegateCover(poolManager.poolDelegateCover());
     }
-    
+
     function _createAdditionalPoolWithQueueAndStrategies(
         address fundsAsset_,
         address poolDelegate_,
