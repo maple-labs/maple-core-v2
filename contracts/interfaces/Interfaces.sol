@@ -183,7 +183,7 @@ interface IERC4626Like is IERC20Like {
     function withdraw(uint256 assets_, address receiver_, address owner_) external returns (uint256 shares_);
 
     function totalAssets() external view returns (uint256 totalAssets_);
-    
+
 }
 
 interface IExemptionsManagerLike {
@@ -406,11 +406,21 @@ interface IStrategyLike is IStrategy {
 
     function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
 
+    function mapleWithdrawalManager() external view returns (address withdrawalManager);
+
     function pool() external view returns (address pool);
 
     function poolManager() external view returns (address poolManager);
 
     function psm() external view returns (address psm);
+
+    function pushAssetsToPool() external;
+
+    function reactivateStrategy() external;
+
+    function reactivateStrategy(bool updateAccounting) external;
+
+    function requestWithdrawFromStrategy(uint256 assets) external;
 
     function savingsUsds() external view returns (address savingsUsds);
 
@@ -423,12 +433,6 @@ interface IStrategyLike is IStrategy {
     function withdrawFromStrategy(uint256 assetsOut) external;
 
     function withdrawFromStrategy(uint256 assetsOut, uint256 minSharesBurned) external;
-
-}
-
-interface IStrategyWithAccountingLike is IStrategyLike {
-
-    function reactivateStrategy(bool updateAccounting) external;
 
 }
 

@@ -379,7 +379,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         assertApproxEqAbs(skyStrategy.assetsUnderManagement(), 0, 1);
 
         // Reactivate strategy.
-        reactivateStrategy(address(skyStrategy));
+        reactivateStrategy(address(skyStrategy), false);
 
         totalAssets += aum;
 

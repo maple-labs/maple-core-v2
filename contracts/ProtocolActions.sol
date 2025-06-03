@@ -22,7 +22,6 @@ import {
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IStrategyLike,
-    IStrategyWithAccountingLike,
     IUSDCLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue
@@ -57,6 +56,7 @@ contract ProtocolActions is Runner {
     address AAVE_USDS     = address(0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259);
     address AAVE_USDT     = address(0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a);
     address SAVINGS_USDS  = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
+    address SYRUP_USDC    = address(0x80ac24aA929eaF5013f6436cdA2a7ba190f5Cc0b);
     address USDS_LITE_PSM = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
     address USDS          = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
 
@@ -1073,18 +1073,44 @@ contract ProtocolActions is Runner {
         s_.impairStrategy();
     }
 
+    function pushAssetsToPool(address strategy_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.pushAssetsToPool();
+    }
+
     function reactivateStrategy(address strategy_) internal {
-        reactivateStrategy(strategy_, false);
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.reactivateStrategy();
     }
 
     function reactivateStrategy(address strategy_, bool updateAccounting_) internal {
-        IStrategyWithAccountingLike s_ = IStrategyWithAccountingLike(strategy_);
-        IPoolManager pm_               = IPoolManager(s_.poolManager());
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
 
         address poolDelegate_ = pm_.poolDelegate();
 
         vm.prank(poolDelegate_);
         s_.reactivateStrategy(updateAccounting_);
+    }
+
+    function requestWithdrawFromStrategy(address strategy_, uint256 assets_) internal {
+        IStrategyLike s_ = IStrategyLike(strategy_);
+        IPoolManager pm_ = IPoolManager(s_.poolManager());
+
+        address poolDelegate_ = pm_.poolDelegate();
+
+        vm.prank(poolDelegate_);
+        s_.requestWithdrawFromStrategy(assets_);
     }
 
     function setStrategyFeeRate(address strategy_, uint256 feeRate_) internal {

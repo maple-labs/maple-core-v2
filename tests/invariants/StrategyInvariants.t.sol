@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import {
 	IAaveConfiguratorLike,
 	IMockERC20,
+    IPool,
 	IUSDCLike
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -65,28 +66,34 @@ contract StrategyInvariants is BaseInvariants {
         _setTreasury();
         _createFactories();
 
-        address[] memory factories = new address[](4);
-        bytes[] memory deploymentData = new bytes[](4);
+        address[] memory factories = new address[](5);
+        bytes[] memory deploymentData = new bytes[](5);
 
         factories[0] = fixedTermLoanManagerFactory;
         factories[1] = openTermLoanManagerFactory;
         factories[2] = aaveStrategyFactory;
         factories[3] = skyStrategyFactory;
+        factories[4] = coreStrategyFactory;
 
         deploymentData[0] = "";
         deploymentData[1] = "";
         deploymentData[2] = abi.encode(AAVE_USDC);
         deploymentData[3] = abi.encode(SAVINGS_USDS, USDS_LITE_PSM);
+        deploymentData[4] = abi.encode(SYRUP_USDC);
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDC),     true);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(SAVINGS_USDS),  true);
         globals.setValidInstanceOf("PSM",            address(USDS_LITE_PSM), true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", address(SYRUP_USDC),    true);
         vm.stopPrank();
 
         _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));
+
+        // Set Syrup USDC to public.
+        openPool(IPool(SYRUP_USDC).manager());
 
         // Remove Aave supply cap.
         address aclAdmin = 0x5300A1a15135EA4dc7aD5a167152C01EFc9b192A;
@@ -98,7 +105,11 @@ contract StrategyInvariants is BaseInvariants {
         depositHandler = new DepositHandler(address(pool), lps);
         transferHandler = new TransferHandler(address(pool), lps);
         queueWithdrawalHandler = new QueueWithdrawalHandler(address(pool), lps);
-        strategyHandler = new StrategyHandler(poolManager.strategyList(2), poolManager.strategyList(3));
+        strategyHandler = new StrategyHandler({
+            aaveStrategy_: poolManager.strategyList(2),
+            skyStrategy_:  poolManager.strategyList(3),
+            coreStrategy_: poolManager.strategyList(4)
+        });
         otlHandler = new OpenTermLoanHandler({
             loanFactory_:       address(openTermLoanFactory),
             liquidatorFactory_: address(liquidatorFactory),
@@ -119,13 +130,15 @@ contract StrategyInvariants is BaseInvariants {
         queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",        1_000);
         queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",       3_500);
 
-        strategyHandler.setSelectorWeight("fundStrategy(uint256)",         1_500);
-        strategyHandler.setSelectorWeight("withdrawFromStrategy(uint256)", 1_500);
-        strategyHandler.setSelectorWeight("setStrategyFeeRate(uint256)",   500);
-        strategyHandler.setSelectorWeight("impairStrategy(uint256)",       500);
-        strategyHandler.setSelectorWeight("deactivateStrategy(uint256)",   500);
-        strategyHandler.setSelectorWeight("reactivateStrategy(uint256)",   500);
-        strategyHandler.setSelectorWeight("warp(uint256)",                 5_000);
+        strategyHandler.setSelectorWeight("fundStrategy(uint256)",                2_000);
+        strategyHandler.setSelectorWeight("withdrawFromStrategy(uint256)",        2_000);
+        strategyHandler.setSelectorWeight("requestWithdrawFromStrategy(uint256)", 500);
+        strategyHandler.setSelectorWeight("processRedemptions(uint256)",          500);
+        strategyHandler.setSelectorWeight("setStrategyFeeRate(uint256)",          500);
+        strategyHandler.setSelectorWeight("impairStrategy(uint256)",              500);
+        strategyHandler.setSelectorWeight("deactivateStrategy(uint256)",          500);
+        strategyHandler.setSelectorWeight("reactivateStrategy(uint256)",          500);
+        strategyHandler.setSelectorWeight("warp(uint256)",                        3_000);
 
         otlHandler.setSelectorWeight("callLoan(uint256)",             500);
         otlHandler.setSelectorWeight("fundLoan(uint256)",             1_500);

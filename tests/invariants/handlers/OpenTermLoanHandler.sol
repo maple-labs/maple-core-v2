@@ -150,15 +150,27 @@ contract OpenTermLoanHandler is HandlerBase {
             uint256 platformServiceFee_
         ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
-        uint256 principalToReturn_ = principalDelta_ < 0 ? uint256(principalDelta_ * - 1) : 0;
-        uint256 amountToReturn_    = principalToReturn_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
+        uint256 amountToReturn_ = interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
+
+        // If the principal is decreased the borrower must return the decreased amount.
+        if (principalDelta_ < 0) {
+            amountToReturn_ += uint256(principalDelta_ * -1);
+        }
+
+        // If principal is increased the borrower deducts fees/interest from the increased amount.
+        // This can result in all fees/interest being covered by the increased principal.
+        else if (principalDelta_ > 0) {
+            amountToReturn_ = uint256(principalDelta_) < amountToReturn_ ? amountToReturn_ - uint256(principalDelta_) : 0;
+        }
 
         address borrower_ = IOpenTermLoan(loan_).borrower();
 
-        vm.startPrank(borrower_);
-        asset.mint(borrower_, amountToReturn_);
-        asset.approve(loan_, amountToReturn_);
-        vm.stopPrank();
+        if (amountToReturn_ > 0) {
+            vm.startPrank(borrower_);
+            asset.mint(borrower_, amountToReturn_);
+            asset.approve(loan_, amountToReturn_);
+            vm.stopPrank();
+        }
 
         proposeRefinance(loan_, refinancer, block.timestamp, calls_);
         acceptRefinanceOT(loan_, refinancer, block.timestamp, calls_);

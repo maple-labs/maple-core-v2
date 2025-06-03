@@ -985,6 +985,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_strategy_invariant_G(address strategy) internal {
+        bytes memory t = bytes(IStrategyLike(strategy).STRATEGY_TYPE());
+
+        // Core strategies have no fees.
+        if (keccak256(t) == keccak256("CORE")) {
+            return;
+        }
+
         assertLe(IStrategyLike(strategy).strategyFeeRate(), 1e6, "Strategy Invariant G");
     }
 
@@ -993,6 +1000,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function _getCurrentAccruedFees(IStrategyLike strategy) internal view returns (uint256 currentAccruedFees) {
+        bytes memory t = bytes(strategy.STRATEGY_TYPE());
+
+        // Core strategies have no fees.
+        if (keccak256(t) == keccak256("CORE")) {
+            return 0;
+        }
+
         uint256 currentTotalAssets      = _getCurrentTotalAssets(strategy);
         uint256 lastRecordedTotalAssets = strategy.lastRecordedTotalAssets();
         uint256 strategyFeeRate         = strategy.strategyFeeRate();
@@ -1088,6 +1102,20 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             uint256 usdsAmount       = savingsUsds.previewRedeem(savingsUsds.balanceOf(address(strategy)));
 
             currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
+        }
+
+        else if (keccak256(t) == keccak256("CORE")) {
+            IERC20Like asset = IERC20Like(strategy.fundsAsset());
+            IPool      pool  = IPool(strategy.strategyVault());
+
+            IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(strategy.mapleWithdrawalManager());
+
+            ( , uint256 escrowedShares ) = wm.requests(wm.requestIds(address(strategy)));
+
+            uint256 shares = pool.balanceOf(address(strategy)) + escrowedShares;
+            uint256 assets = asset.balanceOf(address(strategy));
+
+            currentTotalAssets = pool.convertToExitAssets(shares) + assets;
         }
 
         else {

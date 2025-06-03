@@ -5,8 +5,10 @@ import {
     IERC20,
     IERC4626Like,
     IInvariantTest,
+    IPool,
     IPSMLike,
-    IStrategyLike
+    IStrategyLike,
+    IWithdrawalManagerQueue as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../../contracts/Runner.sol";
@@ -19,6 +21,8 @@ contract StrategyHandler is HandlerBase {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
+    address coreStrategy;
+
     address[] public strategies;
 
     uint256 public maximumFunding;
@@ -28,9 +32,12 @@ contract StrategyHandler is HandlerBase {
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(address aaveStrategy_, address skyStrategy_) {
+    constructor(address aaveStrategy_, address skyStrategy_, address coreStrategy_) {
+        coreStrategy = coreStrategy_;
+
         strategies.push(aaveStrategy_);
         strategies.push(skyStrategy_);
+        strategies.push(coreStrategy_);
 
         maximumFunding = 500_000e6;
         strategyCount  = strategies.length;
@@ -59,7 +66,7 @@ contract StrategyHandler is HandlerBase {
         if (liquidity_ == 0) return;
         if (liquidity_ > maximumFunding) liquidity_ = maximumFunding;
 
-        uint256 assets_ = _bound(seed_, 1, liquidity_);
+        uint256 assets_ = _bound(seed_, 10, liquidity_);
 
         fundStrategy(strategy_, assets_);
     }
@@ -73,6 +80,12 @@ contract StrategyHandler is HandlerBase {
 
         if (strategy_ == address(0)) return;
 
+        if (_isCoreStrategy(strategy_)) {
+            pushAssetsToPool(strategy_);
+
+            return;
+        }
+
         uint256 totalAssets_ = _currentTotalAssets(strategy_);
         uint256 accruedFees_ = _currentAccruedFees(strategy_, totalAssets_);
 
@@ -85,6 +98,48 @@ contract StrategyHandler is HandlerBase {
         withdrawFromStrategy(strategy_, assets_);
     }
 
+    function requestWithdrawFromStrategy(uint256 seed_) external useTimestamps {
+        console.log("strategyHandler.requestWithdrawFromStrategy(%s)", seed_);
+
+        numberOfCalls["requestWithdrawFromStrategy"]++;
+
+        address wm_ = IStrategyLike(coreStrategy).mapleWithdrawalManager();
+
+        uint256 requestId_ = IWithdrawalManager(wm_).requestIds(coreStrategy);
+
+        if (requestId_ == 0) return;
+
+        uint256 totalAssets_ = _currentTotalAssets(coreStrategy);
+
+        if (totalAssets_ == 0) return;
+
+        uint256 selectedAssets_ = _bound(seed_, 1, totalAssets_);
+
+        requestWithdrawFromStrategy(coreStrategy, selectedAssets_);
+    }
+
+    function processRedemptions(uint256 seed_) external useTimestamps {
+        console.log("strategyHandler.processRedemptions(%s)", seed_);
+
+        numberOfCalls["processRedemptions"]++;
+
+        // Only use the core strategy.
+        IStrategyLike strategy_ = IStrategyLike(coreStrategy);
+        IWithdrawalManager wm_  = IWithdrawalManager(strategy_.mapleWithdrawalManager());
+
+        uint256 sharesToProcess_ = _bound(seed_, 0, wm_.totalShares());
+
+        if (sharesToProcess_ == 0) return;
+
+        address pool_ = strategy_.strategyVault();
+        address lp_   = makeAddr("lp");
+
+        uint256 assetsToDeposit_ = IPool(pool_).previewMint(sharesToProcess_);
+
+        deposit(pool_, lp_, assetsToDeposit_);
+        processRedemptions(address(pool_), sharesToProcess_);
+    }
+
     function setStrategyFeeRate(uint256 seed_) external useTimestamps {
         console.log("strategyHandler.setStrategyFeeRate(%s)", seed_);
 
@@ -93,6 +148,7 @@ contract StrategyHandler is HandlerBase {
         address strategy_ = _selectStrategy({ seed_: seed_, selectActive_: true, selectImpaired_: false, selectInactive_: false });
 
         if (strategy_ == address(0)) return;
+        if (_isCoreStrategy(strategy_)) return;
 
         uint256 feeRate_ = _bound(seed_, 0, 1e6);
 
@@ -132,6 +188,12 @@ contract StrategyHandler is HandlerBase {
 
         if (strategy_ == address(0)) return;
 
+        if (_isCoreStrategy(strategy_)) {
+            reactivateStrategy(strategy_);
+
+            return;
+        }
+
         bool updateAccounting_ = seed_ % 2 == 0 ? true : false;
 
         reactivateStrategy(strategy_, updateAccounting_);
@@ -152,6 +214,11 @@ contract StrategyHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function _currentAccruedFees(address strategy_, uint256 currentTotalAssets_) internal view returns (uint256 currentAccruedFees_) {
+        // Core strategy does not accrue fees.
+        if (_isCoreStrategy(strategy_)) {
+            return 0;
+        }
+
         IStrategyLike strategy = IStrategyLike(strategy_);
 
         uint256 strategyFeeRate_         = strategy.strategyFeeRate();
@@ -199,9 +266,28 @@ contract StrategyHandler is HandlerBase {
             currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
         }
 
+        else if (keccak256(t) == keccak256("CORE")) {
+            IERC20     asset      = IERC20(strategy.fundsAsset());
+            IPool      pool       = IPool(strategy.strategyVault());
+            IWithdrawalManager wm = IWithdrawalManager(strategy.mapleWithdrawalManager());
+
+            ( , uint256 escrowedShares ) = wm.requests(wm.requestIds(address(strategy)));
+
+            uint256 shares = pool.balanceOf(address(strategy)) + escrowedShares;
+            uint256 assets = asset.balanceOf(address(strategy));
+
+            currentTotalAssets = pool.convertToExitAssets(shares) + assets;
+        }
+
         else {
             require(false, "INVALID_STRATEGY");
         }
+    }
+
+    function _isCoreStrategy(address strategy_) internal view returns (bool) {
+        bytes memory t = bytes(IStrategyLike(strategy_).STRATEGY_TYPE());
+
+        return keccak256(t) == keccak256("CORE");
     }
 
     function _selectStrategy(
