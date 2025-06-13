@@ -65,7 +65,7 @@ contract OpenTermLoanHealthChecker {
 
         uint256 length = poolManager.strategyListLength();
 
-        require(length < 5, "OTHC:CI:INVALID_LM_LIST_LENGTH");
+        require(length < 6, "OTHC:CI:INVALID_LM_LIST_LENGTH");
 
         // Initializing all to true makes sure that contract returns true if there's no open term loan manager.
         invariants_ = _initStruct();

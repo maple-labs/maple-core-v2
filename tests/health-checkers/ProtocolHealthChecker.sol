@@ -83,6 +83,7 @@ contract ProtocolHealthChecker {
         address openTermLoanManager;
         address aaveStrategy;
         address skyStrategy;
+        address coreStrategy;
     }
 
     // Struct to avoid stack too deep compiler error.
@@ -167,6 +168,16 @@ contract ProtocolHealthChecker {
             invariants_.strategiesInvariantE = check_strategy_invariant_E(strategies.skyStrategy);
             invariants_.strategiesInvariantF = check_strategy_invariant_F(strategies.skyStrategy);
             invariants_.strategiesInvariantG = check_strategy_invariant_G(strategies.skyStrategy);
+        }
+
+        if (strategies.coreStrategy != address(0)) {
+            invariants_.strategiesInvariantA = check_strategy_invariant_A(strategies.coreStrategy);
+            invariants_.strategiesInvariantB = check_strategy_invariant_B(strategies.coreStrategy);
+            invariants_.strategiesInvariantC = check_strategy_invariant_C(strategies.coreStrategy);
+            invariants_.strategiesInvariantD = check_strategy_invariant_D(strategies.coreStrategy);
+            invariants_.strategiesInvariantE = check_strategy_invariant_E(strategies.coreStrategy);
+            invariants_.strategiesInvariantF = check_strategy_invariant_F(strategies.coreStrategy);
+            invariants_.strategiesInvariantG = check_strategy_invariant_G(strategies.coreStrategy);
         }
 
         invariants_.poolInvariantA = check_pool_invariant_A(pool_);
@@ -577,6 +588,13 @@ contract ProtocolHealthChecker {
     }
 
     function check_strategy_invariant_G(address strategy) public view returns(bool isMaintained_) {
+        bytes memory t = bytes(IStrategyLike(strategy).STRATEGY_TYPE());
+
+        // Core strategies have no fees.
+        if (keccak256(t) == keccak256("CORE")) {
+            return true;
+        }
+
         isMaintained_ = IStrategyLike(strategy).strategyFeeRate() <= 1e6;
     }
 
@@ -645,6 +663,13 @@ contract ProtocolHealthChecker {
     }
 
     function _getCurrentAccruedFees(IStrategyLike strategy) internal view returns (uint256 currentAccruedFees) {
+        bytes memory t = bytes(strategy.STRATEGY_TYPE());
+
+        // Core strategies have no fees.
+        if (keccak256(t) == keccak256("CORE")) {
+            return 0;
+        }
+
         uint256 currentTotalAssets      = _getCurrentTotalAssets(strategy);
         uint256 lastRecordedTotalAssets = strategy.lastRecordedTotalAssets();
         uint256 strategyFeeRate         = strategy.strategyFeeRate();
@@ -683,6 +708,20 @@ contract ProtocolHealthChecker {
             currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
         }
 
+        else if (keccak256(t) == keccak256("CORE")) {
+            IERC20 asset = IERC20(strategy.fundsAsset());
+            IPool  pool  = IPool(strategy.strategyVault());
+
+            IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(strategy.mapleWithdrawalManager());
+
+            ( , uint256 escrowedShares ) = wm.requests(wm.requestIds(address(strategy)));
+
+            uint256 shares = pool.balanceOf(address(strategy)) + escrowedShares;
+            uint256 assets = asset.balanceOf(address(strategy));
+
+            currentTotalAssets = pool.convertToExitAssets(shares) + assets;
+        }
+
         else {
             require(false, "INVALID_STRATEGY");
         }
@@ -701,6 +740,7 @@ contract ProtocolHealthChecker {
             if (_isOpenTermLoanManager(strategy))  strategies.openTermLoanManager  = strategy;
             if (_isAaveStrategy(strategy))         strategies.aaveStrategy         = strategy;
             if (_isSkyStrategy(strategy))          strategies.skyStrategy          = strategy;
+            if (_isCoreStrategy(strategy))         strategies.coreStrategy         = strategy;
         }
 
     }
@@ -728,6 +768,13 @@ contract ProtocolHealthChecker {
         // Using specific function to not need to hash the strings for comparison.
         try IStrategyLike(strategy).savingsUsds() {
             isSkyStrategy_ = true;
+        } catch { }
+    }
+
+    function _isCoreStrategy(address strategy) internal view returns (bool isCoreStrategy_) {
+        // Using specific function to not need to hash the strings for comparison.
+        try IStrategyLike(strategy).mapleWithdrawalManager() {
+            isCoreStrategy_ = true;
         } catch { }
     }
 

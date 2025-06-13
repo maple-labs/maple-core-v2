@@ -42,7 +42,7 @@ contract FixedTermLoanHealthChecker {
 
         uint256 length = poolManager.strategyListLength();
 
-        require(length < 5, "FTHC:CI:INVALID_LM_LIST_LENGTH");
+        require(length < 6, "FTHC:CI:INVALID_LM_LIST_LENGTH");
 
         // Initializing all to true makes sure that contract returns true if there's no fixed term loan manager.
         invariants_ = _initStruct();
