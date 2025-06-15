@@ -5,7 +5,9 @@ import {
 	IAaveConfiguratorLike,
 	IMockERC20,
     IPool,
-	IUSDCLike
+    IPoolManager,
+	IUSDCLike,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../contracts/Runner.sol";
@@ -88,7 +90,18 @@ contract StrategyInvariants is BaseInvariants {
         globals.setValidInstanceOf("STRATEGY_VAULT", address(SYRUP_USDC),    true);
         vm.stopPrank();
 
+        // Whitelist Syrup USDC contracts on globals.
+        address syrupUsdcPoolManager       = IPool(SYRUP_USDC).manager();
+        address syrupUsdcWithdrawalManager = IPoolManager(syrupUsdcPoolManager).withdrawalManager();
+
+        vm.startPrank(governor);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",             IPoolManager(syrupUsdcPoolManager).factory(),                  true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", IWithdrawalManagerQueue(syrupUsdcWithdrawalManager).factory(), true);
+        vm.stopPrank();
+
+        // Create a new pool, activate and open it.
         _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
+
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));
 
