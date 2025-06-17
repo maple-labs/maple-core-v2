@@ -16,7 +16,7 @@ import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 
 import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.sol";
 
-contract HelperFunctions is Test {
+contract MapleRouterProtocolUpgradeBase is Test {
 
     function signPermit(
         IERC20 asset,
@@ -121,7 +121,7 @@ contract HelperFunctions is Test {
 
 }
 
-contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions, HelperFunctions {
+contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions, MapleRouterProtocolUpgradeBase {
 
     uint256 defaultUSDCDepositAmount = 100_000e6;
     uint256 defaultUSDTDepositAmount = 100_000e6;
@@ -285,6 +285,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         uint256 expectedSharesMinted  = pool.convertToExitShares(swap.minAssetsOut);
         uint256 poolUSDCBalanceBefore = IERC20(USDC).balanceOf(syrupUSDCPool);
 
+        // Assert that we are setting the approval to 0 at the end of the swap
+        vm.expectCall(
+            usdsToken,
+            abi.encodeWithSelector(IERC20.approve.selector, swap.router, 0)
+        );
+
         vm.prank(usdsDepositor);
         mapleRouter.deposit(
             syrupUSDCPoolManager,
@@ -307,6 +313,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
             expectedSharesMinted,
             1
         );
+
+        assertEq(
+            IERC20(usdsToken).allowance(address(mapleRouter), swap.router),
+             0,
+             "Allowance not set to zero"
+        );
     }
 
     function testFork_mapleRouter_deposit_usds_WithSwapToUSDT() external {
@@ -324,6 +336,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
 
         uint256 expectedSharesMinted  = pool.convertToExitShares(swap.minAssetsOut);
         uint256 poolUSDTBalanceBefore = IERC20(USDT).balanceOf(syrupUSDTPool);
+
+        // Assert that we are setting the approval to 0 at the end of the swap
+        vm.expectCall(
+            usdsToken,
+            abi.encodeWithSelector(IERC20.approve.selector, swap.router, 0)
+        );
 
         vm.prank(usdsDepositor);
         mapleRouter.deposit(
@@ -346,6 +364,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
             IERC20(syrupUSDTPool).balanceOf(usdsDepositor),
             expectedSharesMinted,
             1
+        );
+
+        assertEq(
+            IERC20(usdsToken).allowance(address(mapleRouter), swap.router),
+             0,
+             "Allowance not set to zero"
         );
     }
 
@@ -381,6 +405,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         uint256 expectedSharesMinted  = pool.convertToExitShares(swap.minAssetsOut);
         uint256 poolUSDCBalanceBefore = IERC20(USDC).balanceOf(syrupUSDCPool);
 
+        // Assert that we are setting the approval to 0 at the end of the swap
+        vm.expectCall(
+            usdsToken,
+            abi.encodeWithSelector(IERC20.approve.selector, swap.router, 0)
+        );
+
         vm.prank(permitWallet.addr);
         mapleRouter.deposit(
             syrupUSDCPoolManager,
@@ -402,6 +432,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
             IERC20(syrupUSDCPool).balanceOf(permitWallet.addr),
             expectedSharesMinted,
             1
+        );
+
+        assertEq(
+            IERC20(usdsToken).allowance(address(mapleRouter), swap.router),
+             0,
+             "Allowance not set to zero"
         );
     }
 
@@ -437,6 +473,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         uint256 expectedSharesMinted  = pool.convertToExitShares(swap.minAssetsOut);
         uint256 poolUSDTBalanceBefore = IERC20(USDT).balanceOf(syrupUSDTPool);
 
+        // Assert that we are setting the approval to 0 at the end of the swap
+        vm.expectCall(
+            usdsToken,
+            abi.encodeWithSelector(IERC20.approve.selector, swap.router, 0)
+        );
+
         vm.prank(permitWallet.addr);
         mapleRouter.deposit(
             syrupUSDTPoolManager,
@@ -458,6 +500,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
             IERC20(syrupUSDTPool).balanceOf(permitWallet.addr),
             expectedSharesMinted,
             1
+        );
+
+        assertEq(
+            IERC20(usdsToken).allowance(address(mapleRouter), swap.router),
+             0,
+             "Allowance not set to zero"
         );
     }
 
@@ -508,8 +556,13 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         uint256 expectedSharesMinted  = pool.convertToExitShares(swap.minAssetsOut);
         uint256 poolUSDCBalanceBefore = IERC20(USDC).balanceOf(syrupUSDCPool);
 
-        vm.prank(permitWallet.addr);
+        // Assert that we are setting the approval to 0 at the end of the swap
+        vm.expectCall(
+            usdsToken,
+            abi.encodeWithSelector(IERC20.approve.selector, swap.router, 0)
+        );
 
+        vm.prank(permitWallet.addr);
         mapleRouter.deposit(
             syrupUSDCPoolManager,
             usdsToken,
@@ -530,6 +583,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
             IERC20(syrupUSDCPool).balanceOf(permitWallet.addr),
             expectedSharesMinted,
             1
+        );
+
+        assertEq(
+            IERC20(usdsToken).allowance(address(mapleRouter), swap.router),
+             0,
+             "Allowance not set to zero"
         );
     }
 
@@ -580,6 +639,12 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         uint256 expectedSharesMinted  = pool.convertToExitShares(swap.minAssetsOut);
         uint256 poolUSDTBalanceBefore = IERC20(USDT).balanceOf(syrupUSDTPool);
 
+        // Assert that we are setting the approval to 0 at the end of the swap
+        vm.expectCall(
+            usdsToken,
+            abi.encodeWithSelector(IERC20.approve.selector, swap.router, 0)
+        );
+
         vm.prank(permitWallet.addr);
         mapleRouter.deposit(
             syrupUSDTPoolManager,
@@ -602,11 +667,17 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
             expectedSharesMinted,
             1
         );
+
+        assertEq(
+            IERC20(usdsToken).allowance(address(mapleRouter), swap.router),
+             0,
+             "Allowance not set to zero"
+        );
     }
 
 }
 
-contract MapleRouterUpgradeFailureTests is ProtocolUpgradeBase, ProtocolActions, HelperFunctions {
+contract MapleRouterUpgradeFailureTests is ProtocolUpgradeBase, ProtocolActions, MapleRouterProtocolUpgradeBase {
 
     uint256 defaultUSDCDepositAmount = 100_000e6;
     uint256 defaultUSDSDepositAmount = 100_000e6;
@@ -839,7 +910,7 @@ contract MapleRouterUpgradeFailureTests is ProtocolUpgradeBase, ProtocolActions,
 
 }
 
-contract MapleRouterUpgrade1InchSanityTests is  ProtocolUpgradeBase, ProtocolActions, HelperFunctions {
+contract MapleRouterUpgrade1InchSanityTests is ProtocolUpgradeBase, ProtocolActions, MapleRouterProtocolUpgradeBase {
 
     uint256 defaultUSDCDepositAmount = 100_000e6;
     uint256 usdsSellAmount           = 100_000e18;
@@ -921,6 +992,59 @@ contract MapleRouterUpgrade1InchSanityTests is  ProtocolUpgradeBase, ProtocolAct
             IERC20(syrupUSDCPool).balanceOf(usdsDepositor),
             expectedSharesMinted,
             1
+        );
+    }
+
+}
+
+contract MapleRouterUpgradeSkimTests is ProtocolUpgradeBase, ProtocolActions, MapleRouterProtocolUpgradeBase {
+
+    IMapleRouter mapleRouter;
+
+    function setUp() external {
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 22624425);
+
+        upgradeProtocol();
+
+        mapleRouter = IMapleRouter(mapleRouterProxy);
+    }
+
+    function testFork_mapleRouter_skim_failure_zero_destination() external {
+        vm.prank(governor);
+        vm.expectRevert("MR:S:ZERO_ADDRESS");
+        mapleRouter.skim(USDC, address(0));
+    }
+
+    function testFork_mapleRouter_failure_unauthorised() external {
+        vm.expectRevert("MR:NOT_AUTHORIZED");
+        mapleRouter.skim(address(0), address(this));
+    }
+
+    function testFork_mapleRouter_failure_nothing_to_skim() external {
+        vm.prank(governor);
+        vm.expectRevert("MR:S:NO_TOKEN_TO_SKIM");
+        mapleRouter.skim(USDS, address(this));
+    }
+
+    function testFork_mapleRouter_skim() external {
+        deal(USDS, address(mapleRouter), 100_000e18);
+
+        uint256 usdsBalanceBefore        = IERC20(USDS).balanceOf(address(this));
+        uint256 usdsExpectedBalanceAfter = IERC20(USDS).balanceOf(address(mapleRouter));
+
+        vm.prank(governor);
+        mapleRouter.skim(USDS, address(this));
+
+        uint256 usdsBalanceAfter = IERC20(USDS).balanceOf(address(this));
+
+        assertEq(
+            IERC20(USDS).balanceOf(address(mapleRouter)),
+            0
+        );
+
+        assertEq(
+            usdsBalanceAfter,
+            usdsExpectedBalanceAfter + usdsBalanceBefore
         );
     }
 
