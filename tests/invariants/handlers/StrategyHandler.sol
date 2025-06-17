@@ -26,6 +26,7 @@ contract StrategyHandler is HandlerBase {
     address[] public strategies;
 
     uint256 public maximumFunding;
+    uint256 public minimumFunding;
     uint256 public strategyCount;
 
     /**************************************************************************************************************************************/
@@ -40,7 +41,9 @@ contract StrategyHandler is HandlerBase {
         strategies.push(coreStrategy_);
 
         maximumFunding = 500_000e6;
-        strategyCount  = strategies.length;
+        minimumFunding = 10;
+
+        strategyCount = strategies.length;
 
         testContract = IInvariantTest(msg.sender);
     }
@@ -63,10 +66,10 @@ contract StrategyHandler is HandlerBase {
 
         uint256 liquidity_ = IERC20(asset_).balanceOf(pool_);
 
-        if (liquidity_ == 0) return;
+        if (liquidity_ < minimumFunding) return;
         if (liquidity_ > maximumFunding) liquidity_ = maximumFunding;
 
-        uint256 assets_ = _bound(seed_, 10, liquidity_);
+        uint256 assets_ = _bound(seed_, minimumFunding, liquidity_);
 
         fundStrategy(strategy_, assets_);
     }
