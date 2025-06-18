@@ -158,6 +158,9 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         vm.prank(governor);
         mapleRouter.setAllowedRouterFunction(swapRouter, hex"2213bc0b", true);  // Adding the 0x swap router function selector
 
+        vm.prank(governor);
+        mapleRouter.setAllowedAllowanceHolder(swapRouter, true);  // Allow the 0x swap router as the allowance holder
+
         permitWallet  = vm.createWallet("PermitWallet");
         authWallet    = vm.createWallet("AuthWallet");
 
@@ -689,6 +692,9 @@ contract MapleRouterUpgradeSuccessTests is ProtocolUpgradeBase, ProtocolActions,
         swap.calldata_    = replaceTakerAddressIn0xData(swap.calldata_, address(mapleRouter));  // Ensures that the calldata has the correct mapleRouter address.
         swap.minAssetsOut = 99850000000;  // If you change the swap.calldata_ or fork block you will need to update this value.
 
+        vm.prank(governor);
+        mapleRouter.setAllowedAllowanceHolder(address(0x1234), true);  // Allow the 0x swap router as the allowance holder
+
         vm.expectEmit();
         // Ensure we are approving the allowance holder and not the router.
         emit Approval(address(mapleRouter), address(swap.allowanceHolder), usdsSellAmount);
@@ -922,11 +928,39 @@ contract MapleRouterUpgradeFailureTests is ProtocolUpgradeBase, ProtocolActions,
         swap.calldata_    = replaceTakerAddressIn0xData(swap.calldata_, address(mapleRouter));  // Ensures that the calldata has the correct mapleRouter address.
         swap.minAssetsOut = 99850000000;  // If you change the swap.calldata_ or fork block you will need to update this value.
 
-        vm.prank(governor);
-        mapleRouter.setAllowedRouterFunction(swap.router, bytes4(hex"2213bc0b"), false);
-
         vm.prank(usdsDepositor);
         vm.expectRevert("MR:S:INVALID_ROUTER_FUNCTION");
+        mapleRouter.deposit(
+            syrupUSDCPoolManager,
+            usdsToken,
+            defaultUSDSDepositAmount,
+            "",
+            permit,
+            swap,
+            authorization
+        );
+    }
+
+    function testFork_mapleRouter_deposit_swapRouter_allowance_holder_not_whitelisted() external {
+        IMapleRouter.Permit        memory permit;
+        IMapleRouter.Swap          memory swap;
+        IMapleRouter.Authorization memory authorization;
+
+        swap.router = swapRouter;
+
+        // The below hex is generated with the 0x API to perform a swap from USDS to USDC.
+        swap.calldata_    = hex"2213bc0b0000000000000000000000005418226af9c8d5d287a78fbbbcd337b86ec07d61000000000000000000000000dc035d45d973e3ec169d2276ddab16f1e407384f00000000000000000000000000000000000000000000152d02c7e14af68000000000000000000000000000005418226af9c8d5d287a78fbbbcd337b86ec07d6100000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000006a41fff991f0000000000000000000000002a07706473244bc757e10f2a9e86fb532828afe3000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000000000000000000000000000000000001703eb4c8000000000000000000000000000000000000000000000000000000000000000a0eff212bb1e74e511cac4ad6c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001c0000000000000000000000000000000000000000000000000000000000000032000000000000000000000000000000000000000000000000000000000000003e0000000000000000000000000000000000000000000000000000000000000048000000000000000000000000000000000000000000000000000000000000000e4c1fb425e0000000000000000000000005418226af9c8d5d287a78fbbbcd337b86ec07d61000000000000000000000000dc035d45d973e3ec169d2276ddab16f1e407384f00000000000000000000000000000000000000000000152d02c7e14af6800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000682e041000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012438c9c147000000000000000000000000dc035d45d973e3ec169d2276ddab16f1e407384f00000000000000000000000000000000000000000000000000000000000027100000000000000000000000003225737a9bbb6473cb4a45b7244aca2befdb276a000000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000004468f301500000000000000000000000005418226af9c8d5d287a78fbbbcd337b86ec07d61000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000084bfda52920000000000000000000000005418226af9c8d5d287a78fbbbcd337b86ec07d61000000000000000000000000000000000000000000000000000000000000271000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000064c876d21d000000000000000000000000f5c4f3dc02c3fb9279495a8fef7b0741da956157000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000017487d005e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012438c9c147000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000000000000000000000000000000000000000000f000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000044a9059cbb000000000000000000000000ad01c20d5886137e056775af56915de824c8fce50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        swap.calldata_    = replaceTakerAddressIn0xData(swap.calldata_, address(mapleRouter));  // Ensures that the calldata has the correct mapleRouter address.
+        swap.minAssetsOut = 99850000000;  // If you change the swap.calldata_ or fork block you will need to update this value.
+
+        vm.prank(governor);
+        mapleRouter.setAllowedRouterFunction(swap.router, bytes4(hex"2213bc0b"), true);
+
+        vm.prank(governor);
+        mapleRouter.setAllowedAllowanceHolder(swapRouter, false);  // Remove the 1inch swap router as the allowance holder
+
+        vm.prank(usdsDepositor);
+        vm.expectRevert("MR:S:INVALID_ALLOWANCE_HOLDER");
         mapleRouter.deposit(
             syrupUSDCPoolManager,
             usdsToken,
@@ -966,6 +1000,9 @@ contract MapleRouterUpgrade1InchSanityTests is ProtocolUpgradeBase, ProtocolActi
 
         vm.prank(governor);
         mapleRouter.setAllowedRouterFunction(swapRouter, hex"07ed2379", true);  // Adding the 1Inch swap router function selector
+
+        vm.prank(governor);
+        mapleRouter.setAllowedAllowanceHolder(swapRouter, true);  // Allow the 1inch swap router as the allowance holder
 
         erc20_approve(usdsToken, usdsDepositor, address(mapleRouter), type(uint256).max);
 
@@ -1076,6 +1113,32 @@ contract MapleRouterUpgradeSkimTests is ProtocolUpgradeBase, ProtocolActions, Ma
             usdsBalanceAfter,
             usdsExpectedBalanceAfter + usdsBalanceBefore
         );
+    }
+
+}
+
+contract MapleRouterSetAllowedAllowanceHolderTests is MapleRouterUpgradeSuccessTests {
+
+    address allowanceHolder = address(1337);
+
+    function test_setAllowedAllowanceHolder_notAdmin() external {
+        vm.expectRevert("MR:NOT_AUTHORIZED");
+        mapleRouter.setAllowedAllowanceHolder(allowanceHolder, true);
+    }
+
+    function test_setAllowedAllowanceHolder_zeroAddress() external {
+        vm.prank(governor);
+        vm.expectRevert("MR:SAAH:ZERO_ADDRESS");
+        mapleRouter.setAllowedAllowanceHolder(address(0), true);
+    }
+
+    function test_setAllowedAllowanceHolder_success() external {
+        assertEq(mapleRouter.allowedAllowanceHolders(allowanceHolder), false);
+
+        vm.prank(governor);
+        mapleRouter.setAllowedAllowanceHolder(allowanceHolder, true);
+
+        assertEq(mapleRouter.allowedAllowanceHolders(allowanceHolder), true);
     }
 
 }
