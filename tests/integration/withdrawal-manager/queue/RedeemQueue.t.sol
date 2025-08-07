@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import {
+    IERC20Like,
     IMapleProxyFactory,
     IFixedTermLoan,
     IFixedTermLoanManager,
@@ -81,6 +82,9 @@ contract ManualRedeemTests is QueueRedeemBase {
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 2_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
+
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
@@ -99,6 +103,9 @@ contract ManualRedeemTests is QueueRedeemBase {
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+
         assertQueue({ poolManager: address(poolManager), nextRequestId: 3, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
@@ -113,6 +120,9 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
         assertEq(pool.balanceOf(wm),  0);
@@ -120,6 +130,7 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         assertEq(queueWM.manualSharesAvailable(lp2), 0);
     }
+
     function test_manualRedeem_partialLiquidity() external {
         assertEq(pool.balanceOf(lp1), 2_000e6);
         assertEq(pool.balanceOf(lp2), 2_000e6);
@@ -133,6 +144,9 @@ contract ManualRedeemTests is QueueRedeemBase {
         // Assert WM State
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 2_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
 
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
 
@@ -152,6 +166,9 @@ contract ManualRedeemTests is QueueRedeemBase {
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 1_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 1_000e6);
+
         assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp1), 0);
@@ -168,6 +185,9 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
         assertEq(pool.balanceOf(wm),  2_000e6);
@@ -179,12 +199,91 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+
         assertEq(pool.balanceOf(lp1), 0);
         assertEq(pool.balanceOf(lp2), 0);
         assertEq(pool.balanceOf(wm),  0);
         assertEq(pool.totalSupply(),  0);
 
         assertEq(queueWM.manualSharesAvailable(lp2), 0);
+    }
+
+    function test_manualRedeem_multipleRequests() external {
+        requestRedeem(address(pool), lp2, 1_000e6);
+        requestRedeem(address(pool), lp2, 500e6);
+        requestRedeem(address(pool), lp2, 500e6);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp2, shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 500e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp2, shares: 500e6 });
+
+        assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 0);
+
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
+
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 3 });
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 500e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp2, shares: 500e6 });
+
+        assertEq(queueWM.userEscrowedShares(lp2),    1_000e6);
+        assertEq(queueWM.manualSharesAvailable(lp2), 1_000e6);
+
+        assertEq(pool.balanceOf(lp2),                     0);
+        assertEq(pool.balanceOf(wm),                      2_000e6);
+        assertEq(pool.totalSupply(),                      4_000e6);
+        assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 0);
+
+        redeem(address(pool), address(lp2), 1_000e6);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 500e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp2, shares: 500e6 });
+
+        assertEq(queueWM.userEscrowedShares(lp2),    1_000e6);
+        assertEq(queueWM.manualSharesAvailable(lp2), 0);
+
+        assertEq(pool.balanceOf(lp2),                     0);
+        assertEq(pool.balanceOf(wm),                      1_000e6);
+        assertEq(pool.totalSupply(),                      3_000e6);
+        assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 1_000e6);
+
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
+
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 3 });
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp2),    0);
+        assertEq(queueWM.manualSharesAvailable(lp2), 1_000e6);
+
+        assertEq(pool.balanceOf(lp2),                     0);
+        assertEq(pool.balanceOf(wm),                      1_000e6);
+        assertEq(pool.totalSupply(),                      3_000e6);
+        assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 1_000e6);
+
+        redeem(address(pool), address(lp2), 1_000e6);
+
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 3 });
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp2),    0);
+        assertEq(queueWM.manualSharesAvailable(lp2), 0);
+
+        assertEq(pool.balanceOf(lp2),                     0);
+        assertEq(pool.balanceOf(wm),                      0);
+        assertEq(pool.totalSupply(),                      2_000e6);
+        assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 2_000e6);
     }
 
     function test_manualRedeem_insufficientLiquidity() external {

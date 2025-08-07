@@ -83,6 +83,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4, shares: 4_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
+
         assertQueue({poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
         assertEq(pool.balanceOf(lp1),   0);
@@ -108,6 +113,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
+        assertEq(queueWM.userEscrowedShares(lp4), 0);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
 
@@ -142,6 +152,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4, shares: 4_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
+
         assertQueue({poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
         assertEq(pool.balanceOf(lp1),   0);
@@ -166,6 +181,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2,        shares: 1_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3,        shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4,        shares: 4_000e6 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 4 });
 
@@ -195,6 +215,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4,        shares: 2_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
+        assertEq(queueWM.userEscrowedShares(lp4), 2_000e6);
+
         assertQueue({poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 4 });
 
         assertEq(pool.balanceOf(lp1),   0);
@@ -222,6 +247,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
+        assertEq(queueWM.userEscrowedShares(lp4), 0);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
 
@@ -259,6 +289,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4, shares: 4_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
+
         assertQueue({poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
         assertEq(pool.balanceOf(lp1),   0);
@@ -284,6 +319,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
+        assertEq(queueWM.userEscrowedShares(lp4), 0);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
 
@@ -324,6 +364,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
             requestRedeem(lp2, 2_000e6);
 
             assertRequest({ poolManager: address(poolManager), requestId: uint128(i + 1), owner: lp2, shares: 2_000e6});
+            assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
 
             vm.prank(poolDelegate);
             queueWM.processRedemptions(2_000e6);
@@ -355,6 +396,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4, shares: 4_000e6 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
@@ -389,6 +435,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
+        assertEq(queueWM.userEscrowedShares(lp4), 0);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
 
@@ -440,6 +491,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4, shares: 4_000e6 });
 
+        assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
+
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
         // Process more than the total shares.
@@ -466,6 +522,11 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
+        assertEq(queueWM.userEscrowedShares(lp4), 0);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 5, lastRequestId: 4 });
     }
@@ -516,6 +577,10 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
+
+        assertEq(queueWM.userEscrowedShares(lp1), 0);
+        assertEq(queueWM.userEscrowedShares(lp2), 0);
+        assertEq(queueWM.userEscrowedShares(lp3), 0);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 3 });
     }

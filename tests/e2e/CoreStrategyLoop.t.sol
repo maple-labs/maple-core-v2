@@ -12,7 +12,8 @@ import {
     IMapleProxyFactory,
     IPool,
     IPoolManager,
-    IPoolPermissionManager
+    IPoolPermissionManager,
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
 contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
@@ -51,16 +52,31 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
         address poolManagerImplementation = deployFromFile("Contracts@25", "PoolManager");
         address poolManagerInitializer    = deployFromFile("Contracts@25", "PoolManagerInitializer");
 
+        address withdrawalManagerQueueImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
+        address withdrawalManagerQueueInitializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
+
         vm.startPrank(governor);
         IMapleProxyFactory(poolManagerFactory).registerImplementation(401, poolManagerImplementation, poolManagerInitializer);
         IMapleProxyFactory(poolManagerFactory).enableUpgradePath(400, 401, address(0));
         IMapleProxyFactory(poolManagerFactory).setDefaultVersion(401);
+
+        IMapleProxyFactory(withdrawalManagerQueueFactory).registerImplementation(
+            101,
+            withdrawalManagerQueueImplementation,
+            withdrawalManagerQueueInitializer
+        );
+        IMapleProxyFactory(withdrawalManagerQueueFactory).enableUpgradePath(100, 101, address(0));
+        IMapleProxyFactory(withdrawalManagerQueueFactory).setDefaultVersion(101);
         vm.stopPrank();
 
         vm.startPrank(securityAdmin);
         IPoolManager(poolManager_A).upgrade(401, "");
         IPoolManager(poolManager_B).upgrade(401, "");
         IPoolManager(poolManager_C).upgrade(401, "");
+
+        IWithdrawalManagerQueue(IPoolManager(poolManager_A).withdrawalManager()).upgrade(101, "");
+        IWithdrawalManagerQueue(IPoolManager(poolManager_B).withdrawalManager()).upgrade(101, "");
+        IWithdrawalManagerQueue(IPoolManager(poolManager_C).withdrawalManager()).upgrade(101, "");
         vm.stopPrank();
 
         // Create the core strategy factory and set it up.

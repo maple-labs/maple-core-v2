@@ -6,11 +6,10 @@ import {
 	IMockERC20,
     IPool,
     IPoolManager,
+    IProxyFactoryLike,
 	IUSDCLike,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
-
-import { console2 as console } from "../../contracts/Runner.sol";
 
 import { DepositHandler }         from "./handlers/DepositHandler.sol";
 import { DistributionHandler }    from "./handlers/DistributionHandler.sol";
@@ -67,6 +66,7 @@ contract StrategyInvariants is BaseInvariants {
         _createGlobals();
         _setTreasury();
         _createFactories();
+        _upgradeSyrupUSDCWithdrawalManager();
 
         address[] memory factories = new address[](5);
         bytes[] memory deploymentData = new bytes[](5);
@@ -180,6 +180,26 @@ contract StrategyInvariants is BaseInvariants {
         distributionHandler = new DistributionHandler(targetContracts, weightsDistributorHandler);
 
         targetContract(address(distributionHandler));
+    }
+
+    // TODO: Update with Migrator once available
+    function _upgradeSyrupUSDCWithdrawalManager() internal {
+        address syrupUsdcPoolManager       = IPool(SYRUP_USDC).manager();
+        address syrupUsdcWithdrawalManager = IPoolManager(syrupUsdcPoolManager).withdrawalManager();
+
+        address governor = 0xd6d4Bcde6c816F17889f1Dd3000aF0261B03a196;
+
+        vm.startPrank(governor);
+        address factory = IWithdrawalManagerQueue(syrupUsdcWithdrawalManager).factory();
+        IProxyFactoryLike(factory).registerImplementation(101, queueWMImplementation, address(0));
+        IProxyFactoryLike(factory).setDefaultVersion(101);
+        IProxyFactoryLike(factory).enableUpgradePath(100, 101, address(0));
+        vm.stopPrank();
+
+        address securityAdmin = 0x6b1A78C1943b03086F7Ee53360f9b0672bD60818;
+
+        vm.prank(securityAdmin);
+        IWithdrawalManagerQueue(syrupUsdcWithdrawalManager).upgrade(101, "");
     }
 
     /**************************************************************************************************************************************/

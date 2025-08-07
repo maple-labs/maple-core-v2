@@ -114,6 +114,21 @@ contract CoreStrategyTestsBase is StrategyTestBase {
         coreStrategy.fundStrategy(amountToFund);
     }
 
+    function assertLastRequestId(address user_, uint128 requestId_) internal {
+        assertEq(secondMapleWithdrawalManager.requestIds(user_), requestId_);
+    }
+
+    function assertUserRequests(address user_, uint128[] memory expectedRequestIds_, uint256[] memory expectedShares_) internal {
+        ( uint128[] memory requestIds, uint256[] memory shares ) = secondMapleWithdrawalManager.requestsByOwner(user_);
+
+        assertEq(requestIds.length, expectedRequestIds_.length);
+        assertEq(shares.length    , expectedShares_.length);
+
+        for (uint256 i = 0; i < requestIds.length; i++) {
+            assertEq(requestIds[i], expectedRequestIds_[i]);
+            assertEq(shares[i]    , expectedShares_[i]);
+        }
+    }
 }
 
 contract CoreStrategyFundTests is CoreStrategyTestsBase {
@@ -437,23 +452,6 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         vm.stopPrank();
     }
 
-
-    function testFork_coreStrategy_requestWithdrawFromStrategy_failWithMultipleWithdrawals() external {
-        _fundStrategy();
-
-        uint256 aum = coreStrategy.assetsUnderManagement();
-
-        assertNotEq(aum, 0);
-
-        vm.startPrank(strategyManager);
-        coreStrategy.requestWithdrawFromStrategy(aum - 1);
-
-        vm.expectRevert("WM:AS:IN_QUEUE");
-        coreStrategy.requestWithdrawFromStrategy(1);
-
-        vm.stopPrank();
-    }
-
     function testFork_coreStrategy_requestWithdrawFromStrategy_success() external {
         _fundStrategy();
 
@@ -461,7 +459,7 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
 
         assertNotEq(aum, 0);
 
-        assertEq(secondMapleWithdrawalManager.requestIds(address(coreStrategy)), 0);
+        assertLastRequestId(address(coreStrategy), 0);
 
         vm.startPrank(strategyManager);
         coreStrategy.requestWithdrawFromStrategy(aum);
@@ -470,7 +468,9 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         assertEq(coreStrategy.assetsUnderManagement(), aum);
         assertEq(pool.totalAssets(),                   poolLiquidity);
 
-        assertNotEq(secondMapleWithdrawalManager.requestIds(address(coreStrategy)), 0);
+        assertLastRequestId(address(coreStrategy), 1);
+
+        assertEq(secondMapleWithdrawalManager.userEscrowedShares(address(coreStrategy)), aum);
     }
 
     function testFork_coreStrategy_requestWithdrawFromStrategy_successWithPartialWithdrawal() external {
@@ -480,7 +480,7 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
 
         assertNotEq(aum, 0);
 
-        assertEq(secondMapleWithdrawalManager.requestIds(address(coreStrategy)), 0);
+        assertLastRequestId(address(coreStrategy), 0);
 
         vm.startPrank(strategyManager);
         coreStrategy.requestWithdrawFromStrategy(aum - 1);
@@ -489,7 +489,9 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         assertEq(coreStrategy.assetsUnderManagement(), aum);
         assertEq(pool.totalAssets(),                   poolLiquidity);
 
-        uint128 requestId = secondMapleWithdrawalManager.requestIds(address(coreStrategy));
+
+        ( uint128[] memory requestIds, ) = secondMapleWithdrawalManager.requestsByOwner(address(coreStrategy));
+        uint128 requestId                = requestIds[requestIds.length - 1];
 
         ( address owner, uint256 shares ) = secondMapleWithdrawalManager.requests(requestId);
 
@@ -497,6 +499,8 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         assertEq(owner,        address(coreStrategy));
 
         assertApproxEqAbs(aum, shares, 1);
+
+        assertEq(secondMapleWithdrawalManager.userEscrowedShares(address(coreStrategy)), aum - 1);
     }
 
     function testFork_coreStrategy_requestWithdrawFromStrategy_successAfterPartialLoss() external {
@@ -510,7 +514,7 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
 
         assertNotEq(aumAfterLoss, 0);
 
-        assertEq(secondMapleWithdrawalManager.requestIds(address(coreStrategy)), 0);
+        assertLastRequestId(address(coreStrategy), 0);
 
         vm.startPrank(strategyManager);
         coreStrategy.requestWithdrawFromStrategy(aumAfterLoss);
@@ -519,7 +523,44 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         assertEq(coreStrategy.assetsUnderManagement(), aumAfterLoss);
         assertEq(pool.totalAssets(),                   poolLiquidity - loss);
 
-        assertNotEq(secondMapleWithdrawalManager.requestIds(address(coreStrategy)), 0);
+        assertLastRequestId(address(coreStrategy), 1);
+
+        assertEq(secondMapleWithdrawalManager.userEscrowedShares(address(coreStrategy)), aumAfterLoss);
+    }
+
+    function testFork_coreStrategy_requestWithdrawFromStrategy_successWithMultipleWithdrawals() external {
+        _fundStrategy();
+
+        uint256 aum = coreStrategy.assetsUnderManagement();
+
+        assertNotEq(aum, 0);
+
+        assertLastRequestId(address(coreStrategy), 0);
+
+        uint256 amountToWithdraw1 = aum / 2;
+        uint256 amountToWithdraw2 = aum / 4;
+
+        vm.startPrank(strategyManager);
+        coreStrategy.requestWithdrawFromStrategy(amountToWithdraw1);
+        coreStrategy.requestWithdrawFromStrategy(amountToWithdraw2);
+        vm.stopPrank();
+
+        assertEq(coreStrategy.assetsUnderManagement(), aum);
+        assertEq(pool.totalAssets(),                   poolLiquidity);
+
+
+        uint128[] memory expectedRequests = new uint128[](2);
+        expectedRequests[0]               = 1;
+        expectedRequests[1]               = 2;
+
+        uint256[] memory expectedShares = new uint256[](2);
+        expectedShares[0]               = amountToWithdraw1;
+        expectedShares[1]               = amountToWithdraw2;
+
+        assertUserRequests(address(coreStrategy), expectedRequests, expectedShares);
+        assertLastRequestId(address(coreStrategy), 2);
+
+        assertEq(secondMapleWithdrawalManager.userEscrowedShares(address(coreStrategy)), amountToWithdraw1 + amountToWithdraw2);
     }
 
 }
@@ -765,8 +806,9 @@ contract CoreStrategyPushAssetsTests is CoreStrategyTestsBase {
     }
 
     function _processAllWithdrawalsByOwnerShares(IWithdrawalManagerQueue withdrawalManager, address owner) internal {
-        uint128 requestId = withdrawalManager.requestIds(owner);
-        ( , uint256 shares ) = withdrawalManager.requests(requestId);
+        ( uint128[] memory requestIds, ) = withdrawalManager.requestsByOwner(owner);
+        uint128 requestId                = requestIds[requestIds.length - 1];
+        ( , uint256 shares )             = withdrawalManager.requests(requestId);
 
         _processWithdrawalRequests(withdrawalManager, shares);
     }
@@ -991,11 +1033,16 @@ contract CoreStrategyRemoveSharesIntegrationTests is CoreStrategyTestsBase {
     }
 
     function testFork_coreStrategy_removeShares_failInsufficientShares() external {
-        ( , uint256 sharesBefore) = secondMapleWithdrawalManager.requests(1);
+        vm.startPrank(strategyManager);
+        coreStrategy.fundStrategy(amountToFund);
+        coreStrategy.requestWithdrawFromStrategy(amountToFund);
+        vm.stopPrank();
+
+        uint256 userEscrowedShares = secondMapleWithdrawalManager.userEscrowedShares(address(coreStrategy));
 
         vm.prank(strategyManager);
         vm.expectRevert("WM:RS:INSUFFICIENT_SHARES");
-        coreStrategy.removeShares(sharesBefore + 1);
+        coreStrategy.removeShares(userEscrowedShares + 1);
     }
 
     function testFork_coreStrategy_removeShares_removeAllSharesSuccess() external {
@@ -1040,6 +1087,48 @@ contract CoreStrategyRemoveSharesIntegrationTests is CoreStrategyTestsBase {
         assertEq(sharesAfter,          sharesBefore - sharesToRemove);
         assertEq(ownerAfter,           address(coreStrategy));
         assertEq(strategyShareBalance, sharesToRemove);
+    }
+
+    function testFork_coreStrategy_removeShares_removePartialWithMultipleRequests() external {
+        vm.startPrank(strategyManager);
+        coreStrategy.fundStrategy(1_000e6);
+        coreStrategy.requestWithdrawFromStrategy(500e6);
+        coreStrategy.removeShares(500e6 + amountToFund / 2);
+        vm.stopPrank();
+
+        uint128[] memory expectedRequestIds = new uint128[](1);
+        uint256[] memory expectedShares     = new uint256[](1);
+
+        expectedRequestIds[0] = 1;
+        expectedShares[0]     = amountToFund / 2;
+
+        assertUserRequests(address(coreStrategy), expectedRequestIds, expectedShares);
+
+        ( address firstRequestOwner, uint256 firstRequestShares )   = secondMapleWithdrawalManager.requests(1);
+        ( address secondRequestOwner, uint256 secondRequestShares ) = secondMapleWithdrawalManager.requests(2);
+
+        assertEq(firstRequestOwner,   address(coreStrategy));
+        assertEq(firstRequestShares,  amountToFund / 2);
+        assertEq(secondRequestOwner,  address(0));
+        assertEq(secondRequestShares, 0);
+    }
+
+    function testFork_coreStrategy_removeShares_completeRemovalWithMultipleRequests() external {
+        vm.startPrank(strategyManager);
+        coreStrategy.fundStrategy(1_000e6);
+        coreStrategy.requestWithdrawFromStrategy(500e6);
+        coreStrategy.removeShares(amountToFund + 500e6);
+        vm.stopPrank();
+
+        ( address firstRequestOwner, uint256 firstRequestShares )   = secondMapleWithdrawalManager.requests(1);
+        ( address secondRequestOwner, uint256 secondRequestShares ) = secondMapleWithdrawalManager.requests(2);
+
+        assertEq(firstRequestOwner,   address(0));
+        assertEq(firstRequestShares,  0);
+        assertEq(secondRequestOwner,  address(0));
+        assertEq(secondRequestShares, 0);
+
+        assertUserRequests(address(coreStrategy), new uint128[](0), new uint256[](0));
     }
 
     function testFork_coreStrategy_removeShares_successWhenImpaired() external {

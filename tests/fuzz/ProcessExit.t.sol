@@ -40,7 +40,10 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
         for (uint256 i = 0; i < 10; i++) {
             if (lps[i] == address(0)) continue;
             if (lps[i] == address(pool)) continue;
-            if (queueWM.requestIds(lps[i]) != 0) continue;
+
+            ( uint128[] memory requestIds, ) = queueWM.requestsByOwner(lps[i]);
+
+            if (requestIds.length > 0) continue;
 
             uint256 sharesToRequest = bound(shares[i], MIN_SHARES, MAX_SHARES);
 

@@ -41,14 +41,6 @@ contract SetManualWithdrawalTests is TestBaseWithAssertions {
         queueWM.setManualWithdrawal(lp, true);
     }
 
-    function test_setManualWithdrawal_failIfLpAlreadyInQueue() external {
-        requestRedeem(lp, 1_000e6);
-
-        vm.expectRevert("WM:SMW:IN_QUEUE");
-        vm.prank(poolDelegate);
-        queueWM.setManualWithdrawal(lp, true);
-    }
-
     function test_setManualWithdrawal_success() external {
         vm.prank(poolDelegate);
         queueWM.setManualWithdrawal(lp, true);

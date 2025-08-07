@@ -108,8 +108,11 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         if (requestId_ == 0) return;
 
+        uint128[] memory requestIds_ = new uint128[](1);
+        requestIds_[0] = requestId_;
+
         vm.prank(pm.poolDelegate());
-        wm.removeRequest(lp_);
+        wm.removeRequest(lp_, requestIds_);
     }
 
     function removeShares(uint256 seed_) external useTimestamps {

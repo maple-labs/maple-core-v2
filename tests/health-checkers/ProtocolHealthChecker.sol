@@ -714,7 +714,7 @@ contract ProtocolHealthChecker {
 
             IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(strategy.mapleWithdrawalManager());
 
-            ( , uint256 escrowedShares ) = wm.requests(wm.requestIds(address(strategy)));
+            uint256 escrowedShares = wm.userEscrowedShares(address(strategy));
 
             uint256 shares = pool.balanceOf(address(strategy)) + escrowedShares;
             uint256 assets = asset.balanceOf(address(strategy));

@@ -884,10 +884,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_wmq_invariant_H(address withdrawalManager_, address[] memory lenders_) internal {
-        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
-
         for (uint256 i; i < lenders_.length; i++) {
-            uint128 requestId = wm.requestIds(lenders_[i]);
+            uint128 requestId = IWithdrawalManagerQueue(withdrawalManager_).requestIds(lenders_[i]);
 
             if (requestId == 0) continue;
 
@@ -898,7 +896,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         // NOTE: Clean up storage for future assertion calls.
         for (uint256 i; i < lenders_.length; i++) {
-            uint128 requestId = wm.requestIds(lenders_[i]);
+            uint128 requestId = IWithdrawalManagerQueue(withdrawalManager_).requestIds(lenders_[i]);
 
             existingRequestIds[requestId] = false;
         }

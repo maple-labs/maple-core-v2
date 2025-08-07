@@ -329,10 +329,10 @@ contract LPHealthChecker {
         uint256 shares;
 
         for (uint256 i; i < poolLps_.length; i++) {
-            requestId = withdrawalManager.requestIds(poolLps_[i]);
+            ( uint128[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
-            if (requestId != 0) {
-                ( owner, shares ) = withdrawalManager.requests(requestId);
+            if (requests.length > 0) {
+                ( owner, shares ) = withdrawalManager.requests(requests[requests.length - 1]);
 
                 if (!(shares > 0 && owner == poolLps_[i])) {
                     return false;
@@ -354,7 +354,11 @@ contract LPHealthChecker {
         ( , uint128 lastRequestId) = withdrawalManager.queue();
 
         for (uint256 i; i < poolLps_.length; i++) {
-            requestId = withdrawalManager.requestIds(poolLps_[i]);
+            ( uint128[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+
+            if (requests.length > 0) {
+                requestId = requests[requests.length - 1];
+            }
 
             if (requestId > lastRequestId) {
                 return false;
@@ -375,7 +379,11 @@ contract LPHealthChecker {
         uint128[] memory requestIdList = new uint128[](poolLps_.length);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            requestId = withdrawalManager.requestIds(poolLps_[i]);
+            ( uint128[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+
+            if (requests.length > 0) {
+                requestId = requests[requests.length - 1];
+            }
 
             for (uint256 j; j < i; j++) {
                 if (requestId == requestIdList[j] && requestId != 0) {

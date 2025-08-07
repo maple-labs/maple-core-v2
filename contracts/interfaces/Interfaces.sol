@@ -357,6 +357,8 @@ interface IProxyFactoryLike {
     function setDefaultVersion(uint256 version_) external;
 
     function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
+
+    function upgradeInstance(uint256 toVersion_, bytes calldata arguments_) external;
 }
 
 // NOTE: cycleConfigs() is not defined as a view function in the submodule which needs updating.

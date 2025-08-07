@@ -271,6 +271,10 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertTrue(impairedByGovernor_ == impairedByGovernor);
     }
 
+    function assertLastRequestId(address withdrawalManager_, address user_, uint128 requestId_) internal {
+        assertEq(IWithdrawalManagerQueue(withdrawalManager_).requestIds(user_), requestId_);
+    }
+
     function assertLiquidationInfo(
         address loan,
         uint256 principal,
@@ -352,6 +356,18 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
         assertEq(owner_,  owner);
         assertEq(shares_, shares);
+    }
+
+    function assertUserRequests(address poolManager, address owner, uint128[] memory requestIds) internal {
+        address wm = IPoolManager(poolManager).withdrawalManager();
+
+        ( uint128[] memory requests, ) = IWithdrawalManagerQueue(wm).requestsByOwner(owner);
+
+        assertEq(requests.length, requestIds.length);
+
+        for (uint256 i; i < requestIds.length; i++) {
+            assertEq(requests[i], requestIds[i]);
+        }
     }
 
     function assertWithdrawalManagerState(
