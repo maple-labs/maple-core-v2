@@ -52,3 +52,6 @@
 [submodule "modules/strategies"]
 	path = modules/strategies
 	url = git@github.com:maple-labs/maple-strategies-private.git
+[submodule "modules/controller"]
+	path = modules/controller
+	url = git@github.com:maple-labs/maple-controller-private.git

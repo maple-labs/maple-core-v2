@@ -43,4 +43,7 @@ git submodule update --init --recursive modules/strategies
 echo "$SSH_KEY_SYRUP_UTILS" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/syrup-utils
 
+echo "$SSH_KEY_MAPLE_CONTROLLER" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/controller
+
 git submodule update --init --recursive
