@@ -28,7 +28,7 @@ contract BasicStrategyTestsBase is StrategyTestBase {
 
         _createAccounts();
         _createGlobals();
-        _setTreasury();
+        _configureGlobals();
         _createFactories();
 
         address[] memory factories = new address[](3);

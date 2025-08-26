@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import { console2 as console } from "../modules/forge-std/src/console2.sol";
 
 import {
+    ICompositeToken,
     IFeeManager,
     IFixedTermLoan,
     IFixedTermLoanManager,
@@ -47,6 +48,10 @@ contract TestBase is ProtocolActions {
     address strategyManager;
     address treasury;
 
+    address compositeTokenImplementation;
+    address compositeTokenInitializer;
+    address compositeTokenProxy;
+
     address aaveStrategyFactory;
     address basicStrategyFactory;
     address cyclicalWMFactory;
@@ -59,6 +64,7 @@ contract TestBase is ProtocolActions {
     address queueWMFactory;
     address skyStrategyFactory;
     address coreStrategyFactory;
+    address bitcoinStrategyFactory;
 
     address aaveStrategyImplementation;
     address basicStrategyImplementation;
@@ -72,6 +78,7 @@ contract TestBase is ProtocolActions {
     address queueWMImplementation;
     address skyStrategyImplementation;
     address coreStrategyImplementation;
+    address bitcoinStrategyImplementation;
 
     address aaveStrategyInitializer;
     address basicStrategyInitializer;
@@ -86,6 +93,7 @@ contract TestBase is ProtocolActions {
     address queueWMInitializer;
     address skyStrategyInitializer;
     address coreStrategyInitializer;
+    address bitcoinStrategyInitializer;
 
     address borrowerActions;
 
@@ -105,8 +113,6 @@ contract TestBase is ProtocolActions {
     IFeeManager                fixedTermFeeManager;
     IFixedTermRefinancer       fixedTermRefinancer;
     IGlobals                   globals;
-    IMockERC20                 collateralAsset;
-    IMockERC20                 fundsAsset;
     IOpenTermRefinancer        openTermRefinancer;
     IPool                      pool;
     IPoolDelegateCover         poolCover;
@@ -115,14 +121,20 @@ contract TestBase is ProtocolActions {
     IPoolPermissionManager     poolPermissionManager;
     IWithdrawalManagerCyclical cyclicalWM;
     IWithdrawalManagerQueue    queueWM;
+    IWithdrawalManagerQueue    withdrawalManager;
+
+    IMockERC20      collateralAsset;
+    IMockERC20      depositAsset;
+    IMockERC20      fundsAsset;
+    ICompositeToken compositeAsset;
 
     function setUp() public virtual {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
@@ -144,9 +156,49 @@ contract TestBase is ProtocolActions {
         treasury         = makeAddr("treasury");
     }
 
+    function _createGlobals() internal {
+        globals  = IGlobals(deployNTP(governor, deploy("MapleGlobals")));
+        deployer = IPoolDeployer(deploy("MaplePoolDeployer", abi.encode(address(globals))));
+    }
+
     function _createAssets() internal {
-        collateralAsset = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapper Ether", "WETH", 18)));
-        fundsAsset      = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("USD Coin",      "USDC", 6)));
+        collateralAsset = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapper Ether",   "WETH", 18)));
+        fundsAsset      = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("USD Coin",        "USDC", 6)));
+        depositAsset    = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapped Bitcoin", "WBTC", 8)));
+
+        compositeTokenImplementation = deployFromFile("Contracts@25", "CompositeToken");
+        compositeTokenInitializer = deployFromFile("Contracts@25", "CompositeTokenInitializer");
+        compositeTokenProxy = deployFromFile(
+            "Contracts@25",
+            "NonTransparentProxyInitializable",
+            abi.encode(
+                address(globals),
+                address(compositeTokenImplementation),
+                address(compositeTokenInitializer),
+                abi.encodeWithSignature("initialize(string,string,uint8)", "Synthetic Bitcoin", "synthBTC", 8)
+            )
+        );
+
+        compositeAsset = ICompositeToken(compositeTokenProxy);
+
+        vm.prank(governor);
+        compositeAsset.allowAllAddresses(true);
+    }
+
+    function _configureGlobals() internal {
+        vm.startPrank(governor);
+        globals.setMigrationAdmin(migrationAdmin);
+        globals.setOperationalAdmin(operationalAdmin);
+        globals.setSecurityAdmin(governor);
+        globals.setValidPoolAsset(address(fundsAsset), true);
+        globals.setValidPoolAsset(address(compositeAsset), true);
+        globals.setValidCollateralAsset(address(collateralAsset), true);
+        globals.setValidPoolDelegate(poolDelegate, true);
+        globals.setManualOverridePrice(address(fundsAsset),      1e8);     // 1     USD / 1 USDC
+        globals.setManualOverridePrice(address(collateralAsset), 1500e8);  // 1_500 USD / 1 WETH
+        globals.setDefaultTimelockParameters(1 weeks, 2 days);
+        globals.setMapleTreasury(treasury);
+        vm.stopPrank();
     }
 
     function _createFactories() internal {
@@ -186,18 +238,21 @@ contract TestBase is ProtocolActions {
 
         poolPermissionManager = IPoolPermissionManager(deployNTP(governor, poolPermissionManagerInitializer));
 
-        aaveStrategyFactory         = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
-        basicStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
-        skyStrategyFactory          = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
-        coreStrategyFactory         = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
-        aaveStrategyImplementation  = deployFromFile("Contracts@25", "AaveStrategy");
-        basicStrategyImplementation = deployFromFile("Contracts@25", "BasicStrategy");
-        skyStrategyImplementation   = deployFromFile("Contracts@25", "SkyStrategy");
-        coreStrategyImplementation  = deployFromFile("Contracts@25", "CoreStrategy");
-        aaveStrategyInitializer     = deployFromFile("Contracts@25", "AaveStrategyInitializer");
-        basicStrategyInitializer    = deployFromFile("Contracts@25", "BasicStrategyInitializer");
-        skyStrategyInitializer      = deployFromFile("Contracts@25", "SkyStrategyInitializer");
-        coreStrategyInitializer     = deployFromFile("Contracts@25", "CoreStrategyInitializer");
+        aaveStrategyFactory           = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        basicStrategyFactory          = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        skyStrategyFactory            = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        coreStrategyFactory           = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        bitcoinStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(address(globals)));
+        aaveStrategyImplementation    = deployFromFile("Contracts@25", "AaveStrategy");
+        basicStrategyImplementation   = deployFromFile("Contracts@25", "BasicStrategy");
+        skyStrategyImplementation     = deployFromFile("Contracts@25", "SkyStrategy");
+        coreStrategyImplementation    = deployFromFile("Contracts@25", "CoreStrategy");
+        bitcoinStrategyImplementation = deployFromFile("Contracts@25", "BitcoinStrategy");
+        aaveStrategyInitializer       = deployFromFile("Contracts@25", "AaveStrategyInitializer");
+        basicStrategyInitializer      = deployFromFile("Contracts@25", "BasicStrategyInitializer");
+        skyStrategyInitializer        = deployFromFile("Contracts@25", "SkyStrategyInitializer");
+        coreStrategyInitializer       = deployFromFile("Contracts@25", "CoreStrategyInitializer");
+        bitcoinStrategyInitializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
 
         borrowerActions = deployNTP(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
@@ -226,6 +281,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 basicStrategyFactory,          true);
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 skyStrategyFactory,            true);
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 coreStrategyFactory,           true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 bitcoinStrategyFactory,        true);
         globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
         globals.setValidInstanceOf("REFINANCER",                       address(openTermRefinancer),   true);
         globals.setValidInstanceOf("OT_REFINANCER",                    address(openTermRefinancer),   true);
@@ -233,6 +289,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
         globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
         globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
+        globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
 
         globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
         globals.setCanDeployFrom(basicStrategyFactory,        address(deployer), true);
@@ -242,6 +299,7 @@ contract TestBase is ProtocolActions {
         globals.setCanDeployFrom(queueWMFactory,              address(deployer), true);
         globals.setCanDeployFrom(skyStrategyFactory,          address(deployer), true);
         globals.setCanDeployFrom(coreStrategyFactory,         address(deployer), true);
+        globals.setCanDeployFrom(bitcoinStrategyFactory,      address(deployer), true);
 
         IMapleProxyFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
         IMapleProxyFactory(liquidatorFactory).setDefaultVersion(1);
@@ -287,28 +345,13 @@ contract TestBase is ProtocolActions {
         IMapleProxyFactory(coreStrategyFactory).registerImplementation(1, coreStrategyImplementation, coreStrategyInitializer);
         IMapleProxyFactory(coreStrategyFactory).setDefaultVersion(1);
 
+        IMapleProxyFactory(bitcoinStrategyFactory).registerImplementation(1, bitcoinStrategyImplementation, bitcoinStrategyInitializer);
+        IMapleProxyFactory(bitcoinStrategyFactory).setDefaultVersion(1);
+
         vm.stopPrank();
 
         strategyFactories.push(fixedTermLoanManagerFactory);
         strategyFactories.push(openTermLoanManagerFactory);
-    }
-
-    function _createGlobals() internal {
-        globals = IGlobals(deployNTP(governor, deploy("MapleGlobals")));
-
-        deployer = IPoolDeployer(deploy("MaplePoolDeployer", abi.encode(address(globals))));
-
-        vm.startPrank(governor);
-        globals.setMigrationAdmin(migrationAdmin);
-        globals.setOperationalAdmin(operationalAdmin);
-        globals.setSecurityAdmin(governor);
-        globals.setValidPoolAsset(address(fundsAsset), true);
-        globals.setValidCollateralAsset(address(collateralAsset), true);
-        globals.setValidPoolDelegate(poolDelegate, true);
-        globals.setManualOverridePrice(address(fundsAsset),      1e8);     // 1     USD / 1 USDC
-        globals.setManualOverridePrice(address(collateralAsset), 1500e8);  // 1_500 USD / 1 WETH
-        globals.setDefaultTimelockParameters(1 weeks, 2 days);
-        vm.stopPrank();
     }
 
     function _createPoolWithCyclical(
@@ -427,6 +470,38 @@ contract TestBase is ProtocolActions {
         poolCover = IPoolDelegateCover(poolManager.poolDelegateCover());
     }
 
+    function _createBitcoinPool() internal {
+        address[] memory strategyFactories_  = new address[](4);
+        bytes[]   memory additionalCalldata_ = new bytes[](4);
+
+        // NOTE: Creates 4 distinct bitcoin strategies.
+        for (uint i; i < 4; i++) {
+            strategyFactories_[i]  = address(bitcoinStrategyFactory);
+            additionalCalldata_[i] = abi.encode("");
+        }
+
+        poolManager = IPoolManager(deployPoolWithQueue(
+            address(poolDelegate),
+            address(deployer),
+            address(poolManagerFactory),
+            address(queueWMFactory),
+            strategyFactories_,
+            additionalCalldata_,
+            address(compositeAsset),
+            address(poolPermissionManager),
+            "Syrup BTC Pool",
+            "syrupBTC",
+            [type(uint256).max, 0, 0, 0]
+        ));
+
+        poolManagers.push(address(poolManager));
+
+        pool              = IPool(poolManager.pool());
+        withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+
+        activatePool(address(poolManager), HUNDRED_PERCENT);
+    }
+
     function _configurePool() internal {
         activatePool(address(poolManager), HUNDRED_PERCENT);
         allowLender(address(poolManager), address(cyclicalWM));
@@ -491,12 +566,6 @@ contract TestBase is ProtocolActions {
         wm_   = poolManager_.withdrawalManager();
         pool_ = poolManager_.pool();
         pm_   = address(poolManager_);
-    }
-
-    function _setTreasury() internal {
-        vm.startPrank(governor);
-        globals.setMapleTreasury(treasury);
-        vm.stopPrank();
     }
 
     /**************************************************************************************************************************************/

@@ -25,9 +25,9 @@ contract PoolEntryPermissionTestBase is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 

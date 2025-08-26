@@ -576,9 +576,9 @@ contract MultiUserRedeemTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
 
         // Set interval to give round numbers

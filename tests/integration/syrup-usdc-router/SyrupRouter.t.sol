@@ -31,9 +31,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();
@@ -979,9 +979,9 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();

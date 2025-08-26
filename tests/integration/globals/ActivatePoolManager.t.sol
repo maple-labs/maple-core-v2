@@ -9,9 +9,9 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithCyclical(start, 1 weeks, 2 days);
     }
@@ -49,9 +49,9 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithCyclical(start, 1 weeks, 2 days);
     }

@@ -18,7 +18,7 @@ contract AddStrategyTests is TestBase {
 
         _createAccounts();
         _createGlobals();
-        _setTreasury();
+        _configureGlobals();
         _createFactories();
 
         // Create a pool with no strategies.

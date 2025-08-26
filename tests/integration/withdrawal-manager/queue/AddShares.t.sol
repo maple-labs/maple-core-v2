@@ -11,9 +11,9 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();
@@ -194,9 +194,9 @@ contract AddSharesQueueFailureTests is TestBase {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();

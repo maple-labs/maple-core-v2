@@ -51,9 +51,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
 
         borrower1 = makeAddr("borrower1");

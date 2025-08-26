@@ -64,7 +64,7 @@ contract StrategyInvariants is BaseInvariants {
 
         _createAccounts();
         _createGlobals();
-        _setTreasury();
+        _configureGlobals();
         _createFactories();
         _upgradeSyrupUSDCWithdrawalManager();
 

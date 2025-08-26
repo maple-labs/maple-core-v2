@@ -317,9 +317,9 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();
@@ -477,7 +477,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
 
         assertLastRequestId(address(queueWM), lp2, 0);
     }
-    
+
     function test_removeShares_partial_multipleRequests() external {
         deposit(lp2, 4_000e6);  // LP2 will get only 2_000e6 shares due to the exchange rate
 
@@ -640,9 +640,9 @@ contract RemoveSharesQueueFailureTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();

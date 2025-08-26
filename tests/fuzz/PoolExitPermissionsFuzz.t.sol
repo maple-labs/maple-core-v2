@@ -23,9 +23,9 @@ contract PoolExitPermissionsFuzzTests is TestBase {
 
     function setUp() public virtual override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();

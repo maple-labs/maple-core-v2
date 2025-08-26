@@ -74,10 +74,12 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
+
         openPool(address(poolManager));
 
         vm.startPrank(governor);
@@ -159,7 +161,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_notInDefault_boundary() external {
-        _setTreasury();
+        _configureGlobals();
 
         vm.prank(address(poolDelegate));
         loanManager.fund(address(loan));
@@ -181,6 +183,13 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_treasuryZeroAddress() external {
+        // Set `mapleTreasury()` to the zero address.
+        vm.store(
+            address(globals),
+            bytes32(uint256(0)),
+            bytes32(uint256(uint160(0)))
+        );
+
         vm.prank(address(poolDelegate));
         loanManager.fund(address(loan));
 
@@ -204,7 +213,7 @@ contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase 
     function setUp() public override {
         super.setUp();
 
-        _setTreasury();
+        _configureGlobals();
 
         vm.prank(address(poolDelegate));
         loanManager.fund(address(loan));

@@ -17,9 +17,9 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();

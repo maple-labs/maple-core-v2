@@ -31,9 +31,9 @@ contract DeployPoolTests is DeployPoolTestsBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
 
         defaultStrategyDeploymentData = _getStrategyDeploymentData();
@@ -490,8 +490,9 @@ contract DeployPoolWMQueueTests is DeployPoolTestsBase {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
 
         fundsAsset.mint(poolDelegate, 10e6);
@@ -586,8 +587,9 @@ contract DeployPoolWMQueueFailureTests is DeployPoolTestsBase {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
 
         defaultStrategyDeploymentData = _getStrategyDeploymentData();

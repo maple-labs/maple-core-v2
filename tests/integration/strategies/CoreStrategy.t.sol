@@ -42,6 +42,7 @@ contract CoreStrategyTestsBase is StrategyTestBase {
 
         _createAccounts();
         _createGlobals();
+        _configureGlobals();
         _createFactories();
 
         address[] memory strategyFactories    = new address[](1);
@@ -1180,4 +1181,3 @@ contract CoreStrategyRemoveSharesIntegrationTests is CoreStrategyTestsBase {
     }
 
 }
-

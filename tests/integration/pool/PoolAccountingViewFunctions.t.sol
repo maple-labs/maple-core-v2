@@ -65,10 +65,11 @@ contract MaxDepositTests is TestBase {
 
     function setUp() public override {
         start = block.timestamp;
+
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
@@ -139,9 +140,9 @@ contract MaxMintTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
@@ -312,8 +313,9 @@ contract MaxRedeemWMQueueTests is TestBase {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();
@@ -525,9 +527,9 @@ contract PreviewRedeemWithQueueWMTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();
@@ -623,9 +625,9 @@ contract AutomatedPreviewRedeemWithQueueWMTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();
@@ -724,9 +726,9 @@ contract PreviewWithdrawWithQueueWMTests is TestBase {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createPoolWithQueue();
         _configurePool();

@@ -541,9 +541,9 @@ contract WithdrawOnPermissionedPool is TestBase {
 
         // Manually doing setUp steps so the pool is not open to public.
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
@@ -565,7 +565,7 @@ contract WithdrawOnPermissionedPool is TestBase {
         allowLender(address(poolManager), address(cyclicalWM));
 
         // In the callstack, shares are transferred to the PM first, so it also needs to be allowlisted.
-        allowLender(address(poolManager), address(poolManager)); 
+        allowLender(address(poolManager), address(poolManager));
     }
 
     function test_withdraw_withUnwhitelistedUser() external {

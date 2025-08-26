@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.25;
 
+import { CompositeToken as CT }                     from "../modules/controller/contracts/CompositeToken.sol";
+import { CompositeTokenInitializer as CTI }         from "../modules/controller/contracts/proxy/CompositeTokenInitializer.sol";
+import { NonTransparentProxyInitializable as NTPI } from "../modules/controller/contracts/NonTransparentProxyInitializable.sol";
+
 import { MapleGlobals as MG } from "../modules/globals/contracts/MapleGlobals.sol";
 
 import { MaplePool as MP }                     from "../modules/pool/contracts/MaplePool.sol";
@@ -10,19 +14,24 @@ import { MaplePoolManager as MPM }             from "../modules/pool/contracts/M
 import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
 import { MaplePoolManagerMigrator as MPMM }    from "../modules/pool/contracts/proxy/MaplePoolManagerMigrator.sol";
 
-import { MapleAaveStrategy as MAS }             from "../modules/strategies/contracts/MapleAaveStrategy.sol";
-import { MapleAaveStrategyInitializer as MASI } from "../modules/strategies/contracts/proxy/aaveStrategy/MapleAaveStrategyInitializer.sol";
-import { MapleBasicStrategy as MBS }            from "../modules/strategies/contracts/MapleBasicStrategy.sol";
-import { MapleSkyStrategy as MSS }              from "../modules/strategies/contracts/MapleSkyStrategy.sol";
-import { MapleCoreStrategy as MCS }             from "../modules/strategies/contracts/MapleCoreStrategy.sol";
+import { MapleAaveStrategy as MAS }      from "../modules/strategies/contracts/MapleAaveStrategy.sol";
+import { MapleBasicStrategy as MBS }     from "../modules/strategies/contracts/MapleBasicStrategy.sol";
+import { MapleBitcoinStrategy as MBTCS } from "../modules/strategies/contracts/MapleBitcoinStrategy.sol";
+import { MapleCoreStrategy as MCS }      from "../modules/strategies/contracts/MapleCoreStrategy.sol";
+import { MapleSkyStrategy as MSS }       from "../modules/strategies/contracts/MapleSkyStrategy.sol";
 
-import { MapleSkyStrategyInitializer as MSSI }  from "../modules/strategies/contracts/proxy/skyStrategy/MapleSkyStrategyInitializer.sol";
-import { MapleCoreStrategyInitializer as MCSI } from "../modules/strategies/contracts/proxy/coreStrategy/MapleCoreStrategyInitializer.sol";
-
-import { MapleStrategyFactory as MSF }          from "../modules/strategies/contracts/proxy/MapleStrategyFactory.sol";
-
+import { MapleAaveStrategyInitializer as MASI }
+    from "../modules/strategies/contracts/proxy/aaveStrategy/MapleAaveStrategyInitializer.sol";
 import { MapleBasicStrategyInitializer as MBSI }
     from "../modules/strategies/contracts/proxy/basicStrategy/MapleBasicStrategyInitializer.sol";
+import { MapleBitcoinStrategyInitializer as MBTCSI }
+    from "../modules/strategies/contracts/proxy/bitcoinStrategy/MapleBitcoinStrategyInitializer.sol";
+import { MapleCoreStrategyInitializer as MCSI }
+    from "../modules/strategies/contracts/proxy/coreStrategy/MapleCoreStrategyInitializer.sol";
+import { MapleSkyStrategyInitializer as MSSI }
+    from "../modules/strategies/contracts/proxy/skyStrategy/MapleSkyStrategyInitializer.sol";
+
+import { MapleStrategyFactory as MSF } from "../modules/strategies/contracts/proxy/MapleStrategyFactory.sol";
 
 import { MockPSM as MPSM } from "../modules/strategies/tests/utils/Mocks.sol";
 
@@ -39,6 +48,14 @@ contract BasicStrategy is MBS { }
 
 contract BasicStrategyInitializer is MBSI { }
 
+contract BitcoinStrategy is MBTCS { }
+
+contract BitcoinStrategyInitializer is MBTCSI { }
+
+contract CompositeToken is CT { }
+
+contract CompositeTokenInitializer is CTI { }
+
 contract Globals is MG { }
 
 contract SkyStrategy is MSS { }
@@ -48,7 +65,6 @@ contract SkyStrategyInitializer is MSSI { }
 contract CoreStrategy is MCS { }
 
 contract CoreStrategyInitializer is MCSI { }
-
 
 contract StrategyFactory is MSF {
 
@@ -67,6 +83,17 @@ contract Pool is MP {
         string memory name_,
         string memory symbol_
     ) MP(manager_, asset_, destination_, bootstrapMint_, initialSupply_, name_, symbol_) { }
+
+}
+
+contract NonTransparentProxyInitializable is NTPI {
+
+    constructor(
+        address globals,
+        address implementation,
+        address initializer,
+        bytes memory calldata_
+    ) NTPI(globals, implementation, initializer, calldata_) {}
 
 }
 

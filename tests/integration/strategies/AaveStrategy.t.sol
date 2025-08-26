@@ -2144,7 +2144,7 @@ contract AaveClaimRewardsTests is AaveStrategyTestsBase {
 
         _createAccounts();
         _createGlobals();
-        _setTreasury();
+        _configureGlobals();
         _createFactories();
 
         vm.prank(governor);

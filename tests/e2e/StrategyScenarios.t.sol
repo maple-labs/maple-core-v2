@@ -51,7 +51,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
 
         _createAccounts();
         _createGlobals();
-        _setTreasury();
+        _configureGlobals();
         _createFactories();
 
         poolManager = IPoolManager(deployPoolWithQueue({

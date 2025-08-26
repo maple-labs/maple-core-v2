@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
+import { ICompositeToken as ICT } from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
+
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
 import { IMapleProxied } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
@@ -50,6 +52,7 @@ import { IMapleStrategy }        from "../../modules/strategies/contracts/interf
 import { IMapleFeeStrategy }     from "../../modules/strategies/contracts/interfaces/IMapleFeeStrategy.sol";
 import { IMapleAaveStrategy }    from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
 import { IMapleBasicStrategy }   from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
+import { IMapleBitcoinStrategy } from "../../modules/strategies/contracts/interfaces/bitcoinStrategy/IMapleBitcoinStrategy.sol";
 import { IMapleSkyStrategy }     from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
 import { IMapleCoreStrategy }    from "../../modules/strategies/contracts/interfaces/coreStrategy/IMapleCoreStrategy.sol";
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
@@ -61,6 +64,8 @@ import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/inter
 interface IAaveStrategy is IMapleAaveStrategy { }
 
 interface IBorrowerActions is IMapleBorrowerActions { }
+
+interface ICompositeToken is ICT { }
 
 interface IFeeManager is IMLFM { }
 
@@ -101,6 +106,8 @@ interface IStrategy is IMapleStrategy, IMapleFeeStrategy { }
 interface ISkyStrategy is IMapleSkyStrategy { }
 
 interface IBasicStrategy is IMapleBasicStrategy { }
+
+interface IBitcoinStrategy is IMapleBitcoinStrategy { }
 
 interface ICoreStrategy is IMapleCoreStrategy { }
 

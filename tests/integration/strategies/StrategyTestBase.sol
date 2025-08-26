@@ -18,7 +18,7 @@ contract StrategyTestBase is TestBase {
 
         _createAccounts();
         _createGlobals();
-        _setTreasury();
+        _configureGlobals();
         _createFactories();
 
         address[] memory factories = new address[](4);

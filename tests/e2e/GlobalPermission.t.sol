@@ -30,10 +30,10 @@ contract GlobalPermissionTests is TestBase {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
-        _setTreasury();
 
         start = block.timestamp;
 
