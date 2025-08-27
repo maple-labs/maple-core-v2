@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { ICompositeToken as ICT } from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
+import { IAssetController as IAC }     from "../../modules/controller/contracts/interfaces/IAssetController.sol";
+import { ICompositeToken as ICT }      from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
+import { IPriceOracle as IPO }         from "../../modules/controller/contracts/interfaces/IPriceOracle.sol";
+import { ISyrupBitcoinRouter as ISBR } from "../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
@@ -63,7 +66,15 @@ import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/inter
 
 interface IAaveStrategy is IMapleAaveStrategy { }
 
+interface IAssetController is IAC { }
+
 interface IBorrowerActions is IMapleBorrowerActions { }
+
+interface IBasicStrategy is IMapleBasicStrategy { }
+
+interface IBitcoinStrategy is IMapleBitcoinStrategy { }
+
+interface ICoreStrategy is IMapleCoreStrategy { }
 
 interface ICompositeToken is ICT { }
 
@@ -80,6 +91,8 @@ interface IFixedTermRefinancer is IMFTLR { }
 interface IGlobals is IMG { }
 
 interface ILiquidator is IML { }
+
+interface IMapleRouter is IMR { }
 
 interface IOpenTermLoan is IMOTL { }
 
@@ -101,19 +114,15 @@ interface IPoolPermissionManager is IMPPM { }
 
 interface IPoolPermissionManagerInitializer is IMPPMI { }
 
+interface IPriceOracle is IPO { }
+
 interface IStrategy is IMapleStrategy, IMapleFeeStrategy { }
 
 interface ISkyStrategy is IMapleSkyStrategy { }
 
-interface IBasicStrategy is IMapleBasicStrategy { }
-
-interface IBitcoinStrategy is IMapleBitcoinStrategy { }
-
-interface ICoreStrategy is IMapleCoreStrategy { }
+interface ISyrupBitcoinRouter is ISBR { }
 
 interface ISyrupRouter is ISR { }
-
-interface IMapleRouter is IMR { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
 

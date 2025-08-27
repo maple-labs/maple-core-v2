@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
+import { ISyrupBitcoinRouter } from "../../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
+
 import { TestBase } from "../../TestBaseWithAssertions.sol";
 
-// TODO: Update to deployer Controller/ Price Oracle and syrupBTCRouter
 contract DepositTestBase is TestBase {
 
     address controller = makeAddr("controller");
@@ -12,49 +13,35 @@ contract DepositTestBase is TestBase {
     bool[]    flags;
 
     function setUp() public virtual override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createBitcoinPool();
-
-        // NOTE: Move into setup function later.
-        controllers.push(controller);
-        flags.push(true);
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("ASSET_CONTROLLER", controller, true);
-
-        vm.prank(governor);
-        compositeAsset.setAssetControllers(controllers, flags);
+        _setupBitcoinPool();
     }
 
     function test_bitcoin_deposit() external {
-        address depositor = makeAddr("depositor");
+        address depositor = makeAddr("lp");
         uint256 amount    = 125e8;
 
-        vm.prank(controller);
-        compositeAsset.mint(depositor, amount);
-
-        address[] memory depositors_ = new address[](1);
-        bool[] memory flags_         = new bool[](1);
-
-        depositors_[0] = depositor;
-        flags_[0]      = true;
-
-        vm.prank(governor);
-        poolPermissionManager.setLenderAllowlist(address(poolManager), depositors_, flags_);
+        depositAsset.mint(depositor, amount);
 
         vm.startPrank(depositor);
-        compositeAsset.approve(address(pool), amount);
-        pool.deposit(amount, address(depositor));
+        depositAsset.approve(address(bitcoinRouter), amount);
+        bitcoinRouter.deposit(address(depositAsset), amount, "", emptyPermit());
         vm.stopPrank();
 
-        assertEq(compositeAsset.balanceOf(depositor), 0);
-        assertEq(pool.balanceOf(depositor),           amount);
+        assertEq(depositAsset.balanceOf(address(depositor)),       0);
+        assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(depositAsset.balanceOf(address(assetController)), amount);
+        assertEq(depositAsset.balanceOf(address(pool)),            0);
+
+        assertEq(compositeAsset.balanceOf(address(depositor)),       0);
+        assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(compositeAsset.balanceOf(address(assetController)), 0);
+        assertEq(compositeAsset.balanceOf(address(pool)),            amount);
+
+        assertEq(pool.balanceOf(address(depositor)), amount);
+    }
+
+    function emptyPermit() internal returns (ISyrupBitcoinRouter.Permit memory permit) {
+        permit = ISyrupBitcoinRouter.Permit(false, 0, 0, 0, 0);
     }
 
 }

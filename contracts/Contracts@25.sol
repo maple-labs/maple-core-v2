@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.25;
 
-import { CompositeToken as CT }                     from "../modules/controller/contracts/CompositeToken.sol";
-import { CompositeTokenInitializer as CTI }         from "../modules/controller/contracts/proxy/CompositeTokenInitializer.sol";
+import { AssetController as AC }     from "../modules/controller/contracts/AssetController.sol";
+import { CompositeToken as CT }      from "../modules/controller/contracts/CompositeToken.sol";
+import { PriceOracle as PO }         from "../modules/controller/contracts/PriceOracle.sol";
+import { SyrupBitcoinRouter as SBR } from "../modules/controller/contracts/SyrupBitcoinRouter.sol";
+
+import { AssetControllerInitializer as ACI }     from "../modules/controller/contracts/proxy/AssetControllerInitializer.sol";
+import { CompositeTokenInitializer as CTI }      from "../modules/controller/contracts/proxy/CompositeTokenInitializer.sol";
+import { SyrupBitcoinRouterInitializer as SBRI } from "../modules/controller/contracts/proxy/SyrupBitcoinRouterInitializer.sol";
+
 import { NonTransparentProxyInitializable as NTPI } from "../modules/controller/contracts/NonTransparentProxyInitializable.sol";
 
 import { MapleGlobals as MG } from "../modules/globals/contracts/MapleGlobals.sol";
@@ -44,6 +51,10 @@ contract AaveStrategy is MAS { }
 
 contract AaveStrategyInitializer is MASI { }
 
+contract AssetController is AC { }
+
+contract AssetControllerInitializer is ACI { }
+
 contract BasicStrategy is MBS { }
 
 contract BasicStrategyInitializer is MBSI { }
@@ -52,23 +63,32 @@ contract BitcoinStrategy is MBTCS { }
 
 contract BitcoinStrategyInitializer is MBTCSI { }
 
+contract BorrowerActions is MapleBorrowerActions { }
+
 contract CompositeToken is CT { }
 
 contract CompositeTokenInitializer is CTI { }
-
-contract Globals is MG { }
-
-contract SkyStrategy is MSS { }
-
-contract SkyStrategyInitializer is MSSI { }
 
 contract CoreStrategy is MCS { }
 
 contract CoreStrategyInitializer is MCSI { }
 
-contract StrategyFactory is MSF {
+contract Globals is MG { }
 
-    constructor(address globals_) MSF(globals_) { }
+contract MapleRouter is MR {}
+
+contract MapleRouterInitializer is MRI {}
+
+contract MockPSM is MPSM { }
+
+contract NonTransparentProxyInitializable is NTPI {
+
+    constructor(
+        address globals,
+        address implementation,
+        address initializer,
+        bytes   memory calldata_
+    ) NTPI(globals, implementation, initializer, calldata_) {}
 
 }
 
@@ -80,20 +100,9 @@ contract Pool is MP {
         address destination_,
         uint256 bootstrapMint_,
         uint256 initialSupply_,
-        string memory name_,
-        string memory symbol_
+        string  memory name_,
+        string  memory symbol_
     ) MP(manager_, asset_, destination_, bootstrapMint_, initialSupply_, name_, symbol_) { }
-
-}
-
-contract NonTransparentProxyInitializable is NTPI {
-
-    constructor(
-        address globals,
-        address implementation,
-        address initializer,
-        bytes memory calldata_
-    ) NTPI(globals, implementation, initializer, calldata_) {}
 
 }
 
@@ -115,10 +124,18 @@ contract PoolManagerInitializer is MPMI { }
 
 contract PoolManagerMigrator is MPMM { }
 
-contract MockPSM is MPSM { }
+contract PriceOracle is PO { }
 
-contract BorrowerActions is MapleBorrowerActions { }
+contract SkyStrategy is MSS { }
 
-contract MapleRouter is MR {}
+contract SkyStrategyInitializer is MSSI { }
 
-contract MapleRouterInitializer is MRI {}
+contract StrategyFactory is MSF {
+
+    constructor(address globals_) MSF(globals_) { }
+
+}
+
+contract SyrupBitcoinRouter is SBR { }
+
+contract SyrupBitcoinRouterInitializer is SBRI { }

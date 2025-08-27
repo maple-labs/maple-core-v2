@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 import { console2 as console } from "../modules/forge-std/src/console2.sol";
 
 import {
+    IAssetController,
+    IBitcoinStrategy,
     ICompositeToken,
     IFeeManager,
     IFixedTermLoan,
@@ -20,6 +22,8 @@ import {
     IPoolManager,
     IPoolPermissionManager,
     IPoolPermissionManagerInitializer,
+    IPriceOracle,
+    ISyrupBitcoinRouter,
     IWithdrawalManagerCyclical,
     IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
@@ -48,9 +52,20 @@ contract TestBase is ProtocolActions {
     address strategyManager;
     address treasury;
 
+    address assetControllerImplementation;
+    address assetControllerInitializer;
+    address assetControllerProxy;
+
     address compositeTokenImplementation;
     address compositeTokenInitializer;
     address compositeTokenProxy;
+
+    address priceOracleImplementation;
+    address priceOracleProxy;
+
+    address bitcoinRouterImplementation;
+    address bitcoinRouterInitializer;
+    address bitcoinRouterProxy;
 
     address aaveStrategyFactory;
     address basicStrategyFactory;
@@ -123,10 +138,14 @@ contract TestBase is ProtocolActions {
     IWithdrawalManagerQueue    queueWM;
     IWithdrawalManagerQueue    withdrawalManager;
 
-    IMockERC20      collateralAsset;
-    IMockERC20      depositAsset;
-    IMockERC20      fundsAsset;
-    ICompositeToken compositeAsset;
+    IAssetController    assetController;
+    ICompositeToken     compositeAsset;
+    IPriceOracle        priceOracle;
+    ISyrupBitcoinRouter bitcoinRouter;
+
+    IMockERC20 collateralAsset;
+    IMockERC20 depositAsset;
+    IMockERC20 fundsAsset;
 
     function setUp() public virtual {
         start = block.timestamp;
@@ -139,6 +158,19 @@ contract TestBase is ProtocolActions {
         _createAndConfigurePool(start, 1 weeks, 2 days);
 
         openPool(address(poolManager));
+    }
+
+    function _setupBitcoinPool() internal {
+        start = block.timestamp;
+
+        _createAccounts();
+        _createGlobals();
+        _createAssets();
+        _configureGlobals();
+        _createFactories();
+        _createBitcoinPool();
+        _createPeripheryContracts();
+        _configurePeripheryContracts();
     }
 
     /**************************************************************************************************************************************/
@@ -180,9 +212,6 @@ contract TestBase is ProtocolActions {
         );
 
         compositeAsset = ICompositeToken(compositeTokenProxy);
-
-        vm.prank(governor);
-        compositeAsset.allowAllAddresses(true);
     }
 
     function _configureGlobals() internal {
@@ -289,6 +318,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
         globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
         globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
+        globals.setValidInstanceOf("DEPOSIT_ASSET",                    address(depositAsset),         true);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
 
         globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
@@ -474,7 +504,7 @@ contract TestBase is ProtocolActions {
         address[] memory strategyFactories_  = new address[](4);
         bytes[]   memory additionalCalldata_ = new bytes[](4);
 
-        // NOTE: Creates 4 distinct bitcoin strategies.
+        // Creates 4 distinct bitcoin strategies.
         for (uint i; i < 4; i++) {
             strategyFactories_[i]  = address(bitcoinStrategyFactory);
             additionalCalldata_[i] = abi.encode("");
@@ -500,6 +530,190 @@ contract TestBase is ProtocolActions {
         withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
+
+        // Whitelist all of the bitcoin strategies on globals.
+        for (uint i; i < 4; i++) {
+            address bitcoinStrategy = poolManager.strategyList(i);
+
+            vm.prank(governor);
+            globals.setValidInstanceOf("BITCOIN_STRATEGY", address(bitcoinStrategy), true);
+        }
+    }
+
+    function _createPeripheryContracts() internal {
+        priceOracleImplementation = deployFromFile("Contracts@25", "PriceOracle");
+        priceOracleProxy = deployFromFile(
+            "Contracts@25",
+            "NonTransparentProxyInitializable",
+            abi.encode(
+                address(globals),
+                address(priceOracleImplementation),
+                address(0),
+                abi.encode("")
+            )
+        );
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("CONTROLLER_ORACLE", priceOracleProxy, true);
+
+        bitcoinRouterImplementation = deployFromFile("Contracts@25", "SyrupBitcoinRouter");
+        bitcoinRouterInitializer = deployFromFile("Contracts@25", "SyrupBitcoinRouterInitializer");
+        bitcoinRouterProxy = deployFromFile(
+            "Contracts@25",
+            "NonTransparentProxyInitializable",
+            abi.encode(
+                address(globals),
+                address(bitcoinRouterImplementation),
+                address(bitcoinRouterInitializer),
+                abi.encodeWithSignature("initialize(address)", address(poolManager))
+            )
+        );
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("SYRUP_BTC_ROUTER", bitcoinRouterProxy, true);
+
+        assetControllerImplementation = deployFromFile("Contracts@25", "AssetController");
+        assetControllerInitializer = deployFromFile("Contracts@25", "AssetControllerInitializer");
+        assetControllerProxy = deployFromFile(
+            "Contracts@25",
+            "NonTransparentProxyInitializable",
+            abi.encode(
+                address(globals),
+                address(assetControllerImplementation),
+                address(assetControllerInitializer),
+                abi.encodeWithSignature(
+                    "initialize(address,address,address)",
+                    priceOracleProxy,
+                    compositeTokenProxy,
+                    bitcoinRouterProxy
+                )
+            )
+        );
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("ASSET_CONTROLLER", assetControllerProxy, true);
+
+        assetController = IAssetController(assetControllerProxy);
+        bitcoinRouter   = ISyrupBitcoinRouter(bitcoinRouterProxy);
+        priceOracle     = IPriceOracle(priceOracleProxy);
+    }
+
+    function _configurePeripheryContracts() internal {
+        // Allow usage of composite tokens only for the pool, router, controller, and all bitcoin strategies.
+        address[] memory addresses = new address[](7);
+        bool[]    memory allowed   = new bool[](7);
+
+        addresses[0] = address(pool);
+        addresses[1] = address(assetController);
+        addresses[2] = address(bitcoinRouter);
+        addresses[3] = poolManager.strategyList(0);
+        addresses[4] = poolManager.strategyList(1);
+        addresses[5] = poolManager.strategyList(2);
+        addresses[6] = poolManager.strategyList(3);
+
+        allowed[0] = true;
+        allowed[1] = true;
+        allowed[2] = true;
+        allowed[3] = true;
+        allowed[4] = true;
+        allowed[5] = true;
+        allowed[6] = true;
+
+        vm.prank(governor);
+        compositeAsset.allowAddresses(addresses, allowed);
+
+        // Set which deposit assets are allowed to be deposited and withdrawn.
+        addresses = new address[](1);
+        allowed   = new bool[](1);
+
+        addresses[0] = address(depositAsset);
+        allowed[0]   = true;
+
+        vm.prank(governor);
+        assetController.setAssets(addresses, allowed, allowed);
+
+        // Set all bitcoin strategies on the asset controller.
+        addresses = new address[](4);
+        allowed   = new bool[](4);
+
+        addresses[0] = poolManager.strategyList(0);
+        addresses[1] = poolManager.strategyList(1);
+        addresses[2] = poolManager.strategyList(2);
+        addresses[3] = poolManager.strategyList(3);
+
+        allowed[0] = true;
+        allowed[1] = true;
+        allowed[2] = true;
+        allowed[3] = true;
+
+        vm.prank(governor);
+        assetController.setStrategies(addresses, allowed);
+
+        // Set the asset controller on the token, router, and all bitcoin strategies.
+        addresses = new address[](1);
+        allowed   = new bool[](1);
+
+        addresses[0] = address(assetController);
+        allowed[0]   = true;
+
+        vm.prank(governor);
+        compositeAsset.setAssetControllers(addresses, allowed);
+
+        vm.prank(governor);
+        bitcoinRouter.setAssetController(address(depositAsset), address(assetController));
+
+        for (uint i; i < 4; i++) {
+            address bitcoinStrategy = poolManager.strategyList(i);
+
+            vm.prank(governor);
+            IBitcoinStrategy(bitcoinStrategy).setAssetController(address(depositAsset), address(assetController));
+        }
+
+        // Allow only the router to interact with the pool.
+        addresses = new address[](1);
+        allowed   = new bool[](1);
+
+        addresses[0] = address(bitcoinRouter);
+        allowed[0]   = true;
+
+        vm.prank(governor);
+        poolPermissionManager.setLenderAllowlist(address(poolManager), addresses, allowed);
+
+        // Allow everyone else to only transfer the pool token around.
+        bytes32[] memory functionIds = new bytes32[](11);
+        uint256[] memory bitmaps     = new uint256[](11);
+
+        uint256 bitmap = 2 ** 5;
+
+        functionIds[0]  = "P:deposit";
+        functionIds[1]  = "P:depositWithPermit";
+        functionIds[2]  = "P:mint";
+        functionIds[3]  = "P:mintWithPermit";
+        functionIds[4]  = "P:redeem";
+        functionIds[5]  = "P:withdraw";
+        functionIds[6]  = "P:transfer";
+        functionIds[7]  = "P:transferFrom";
+        functionIds[8]  = "P:removeShares";
+        functionIds[9]  = "P:requestRedeem";
+        functionIds[10] = "P:requestWithdraw";
+
+        bitmaps[0]  = bitmap;
+        bitmaps[1]  = bitmap;
+        bitmaps[2]  = bitmap;
+        bitmaps[3]  = bitmap;
+        bitmaps[4]  = bitmap;
+        bitmaps[5]  = bitmap;
+        bitmaps[6]  = 0;
+        bitmaps[7]  = 0;
+        bitmaps[8]  = bitmap;
+        bitmaps[9]  = bitmap;
+        bitmaps[10] = bitmap;
+
+        vm.prank(governor);
+        poolPermissionManager.setPoolPermissionLevel(address(poolManager), 1);
+
+        vm.prank(governor);
+        poolPermissionManager.setPoolBitmaps(address(poolManager), functionIds, bitmaps);
     }
 
     function _configurePool() internal {
