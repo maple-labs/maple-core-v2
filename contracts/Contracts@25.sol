@@ -12,7 +12,8 @@ import { SyrupBitcoinRouterInitializer as SBRI } from "../modules/controller/con
 
 import { NonTransparentProxyInitializable as NTPI } from "../modules/controller/contracts/NonTransparentProxyInitializable.sol";
 
-import { MapleGlobals as MG } from "../modules/globals/contracts/MapleGlobals.sol";
+import { GovernorTimelock as GT } from "../modules/globals/contracts/GovernorTimelock.sol";
+import { MapleGlobals as MG }     from "../modules/globals/contracts/MapleGlobals.sol";
 
 import { MaplePool as MP }                     from "../modules/pool/contracts/MaplePool.sol";
 import { MaplePoolDelegateCover as MPDC }      from "../modules/pool/contracts/MaplePoolDelegateCover.sol";
@@ -123,6 +124,13 @@ contract PoolManager is MPM { }
 contract PoolManagerInitializer is MPMI { }
 
 contract PoolManagerMigrator is MPMM { }
+
+contract Timelock is GT {
+
+    constructor(address tokenWithdrawer_, address proposer_, address executor_, address canceller_, address roleAdmin_)
+        GT(tokenWithdrawer_, proposer_, executor_, canceller_, roleAdmin_) { }
+
+}
 
 contract PriceOracle is PO { }
 

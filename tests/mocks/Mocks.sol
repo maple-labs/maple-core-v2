@@ -37,6 +37,36 @@ contract ConfigurableMockERC20 is MockERC20 {
 
 }
 
+contract MockContractWithFallback {
+
+    uint256 public counter;
+
+    fallback() external {
+        counter++;
+    }
+
+}
+
+contract MockGlobals {
+
+    address public governor;
+
+    constructor(address governor_) {
+        governor = governor_;
+    }
+
+}
+
+contract FakeMapleWithdrawalManager {
+
+    address public immutable poolManager;
+
+    constructor(address poolManager_) {
+        poolManager = poolManager_;
+    }
+
+}
+
 contract FakeLoan {
 
     address public factory;

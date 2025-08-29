@@ -6,6 +6,7 @@ import {
     IFixedTermLoan,
     IFixedTermLoanManager,
     IFixedTermLoanManagerStructs,
+    IGovernorTimelock,
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
@@ -389,6 +390,53 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(withdrawalManager.totalCycleShares(currentExitCycleId),  currentCycleTotalShares);
 
         assertEq(IPool(pool).balanceOf(address(withdrawalManager)), withdrawalManagerTotalShares);
+    }
+
+    function assertProposal(address timelock, uint256 proposalId, IGovernorTimelock.Proposal memory proposal ) internal {
+        (
+            bytes32 proposalHash,
+            bool    isUnschedulable,
+            uint32  scheduledAt,
+            uint32  delayedUntil,
+            uint32  validUntil
+        ) = IGovernorTimelock(timelock).proposals(proposalId);
+
+        assertEq(proposalHash,    proposal.proposalHash);
+        assertEq(isUnschedulable, proposal.isUnschedulable);
+        assertEq(scheduledAt,     proposal.scheduledAt);
+        assertEq(delayedUntil,    proposal.delayedUntil);
+        assertEq(validUntil,      proposal.validUntil);
+    }
+
+    function assertEmptyProposal(address timelock, uint256 proposalId) internal {
+        (
+            bytes32 proposalHash,
+            bool    isUnschedulable,
+            uint32  scheduledAt,
+            uint32  delayedUntil,
+            uint32  validUntil
+        ) = IGovernorTimelock(timelock).proposals(proposalId);
+
+        assertEq(proposalHash,    bytes32(0));
+        assertEq(isUnschedulable, false);
+        assertEq(scheduledAt,     0);
+        assertEq(delayedUntil,    0);
+        assertEq(validUntil,      0);
+    }
+
+    function assertNotEmptyProposal(address timelock, uint256 proposalId) internal {
+        (
+            bytes32 proposalHash,
+            ,
+            uint32  scheduledAt,
+            uint32  delayedUntil,
+            uint32  validUntil
+        ) = IGovernorTimelock(timelock).proposals(proposalId);
+
+        assertNotEq(proposalHash, bytes32(0));
+        assertNotEq(scheduledAt,  uint32(0));
+        assertNotEq(delayedUntil, uint32(0));
+        assertNotEq(validUntil,   uint32(0));
     }
 
 }

@@ -10,7 +10,9 @@ import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
 import { IMapleProxied } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
 
-import { IMapleGlobals as IMG }   from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
+import { IGovernorTimelock as IGTL } from "../../modules/globals/contracts/interfaces/IGovernorTimelock.sol";
+import { IMapleGlobals as IMG }      from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
+
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
@@ -89,6 +91,8 @@ interface IFixedTermLoanManagerStructs is IMFTLMS { }
 interface IFixedTermRefinancer is IMFTLR { }
 
 interface IGlobals is IMG { }
+
+interface IGovernorTimelock is IGTL { }
 
 interface ILiquidator is IML { }
 

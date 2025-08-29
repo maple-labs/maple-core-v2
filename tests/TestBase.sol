@@ -218,7 +218,7 @@ contract TestBase is ProtocolActions {
         vm.startPrank(governor);
         globals.setMigrationAdmin(migrationAdmin);
         globals.setOperationalAdmin(operationalAdmin);
-        globals.setSecurityAdmin(governor);
+        globals.setSecurityAdmin(securityAdmin);
         globals.setValidPoolAsset(address(fundsAsset), true);
         globals.setValidPoolAsset(address(compositeAsset), true);
         globals.setValidCollateralAsset(address(collateralAsset), true);
@@ -680,22 +680,22 @@ contract TestBase is ProtocolActions {
         poolPermissionManager.setLenderAllowlist(address(poolManager), addresses, allowed);
 
         // Allow everyone else to only transfer the pool token around.
-        bytes32[] memory functionIds = new bytes32[](11);
-        uint256[] memory bitmaps     = new uint256[](11);
+        bytes32[] memory functionIdsToSet = new bytes32[](11);
+        uint256[] memory bitmaps          = new uint256[](11);
 
         uint256 bitmap = 2 ** 5;
 
-        functionIds[0]  = "P:deposit";
-        functionIds[1]  = "P:depositWithPermit";
-        functionIds[2]  = "P:mint";
-        functionIds[3]  = "P:mintWithPermit";
-        functionIds[4]  = "P:redeem";
-        functionIds[5]  = "P:withdraw";
-        functionIds[6]  = "P:transfer";
-        functionIds[7]  = "P:transferFrom";
-        functionIds[8]  = "P:removeShares";
-        functionIds[9]  = "P:requestRedeem";
-        functionIds[10] = "P:requestWithdraw";
+        functionIdsToSet[0]  = "P:deposit";
+        functionIdsToSet[1]  = "P:depositWithPermit";
+        functionIdsToSet[2]  = "P:mint";
+        functionIdsToSet[3]  = "P:mintWithPermit";
+        functionIdsToSet[4]  = "P:redeem";
+        functionIdsToSet[5]  = "P:withdraw";
+        functionIdsToSet[6]  = "P:transfer";
+        functionIdsToSet[7]  = "P:transferFrom";
+        functionIdsToSet[8]  = "P:removeShares";
+        functionIdsToSet[9]  = "P:requestRedeem";
+        functionIdsToSet[10] = "P:requestWithdraw";
 
         bitmaps[0]  = bitmap;
         bitmaps[1]  = bitmap;
@@ -713,7 +713,7 @@ contract TestBase is ProtocolActions {
         poolPermissionManager.setPoolPermissionLevel(address(poolManager), 1);
 
         vm.prank(governor);
-        poolPermissionManager.setPoolBitmaps(address(poolManager), functionIds, bitmaps);
+        poolPermissionManager.setPoolBitmaps(address(poolManager), functionIdsToSet, bitmaps);
     }
 
     function _configurePool() internal {

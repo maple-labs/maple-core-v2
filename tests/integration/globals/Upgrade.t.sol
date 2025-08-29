@@ -197,7 +197,7 @@ contract LoanManagerUpgradeTests is TestBase {
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
-    function test_upgradeLoanManager_governor_noTimelockNeeded() external {
+    function test_upgradeLoanManager_securityAdmin_noTimelockNeeded() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
@@ -213,7 +213,7 @@ contract LoanManagerUpgradeTests is TestBase {
         // Call upgrade using governor instead, unaffected by pool delegate's scheduled timelock.
         vm.stopPrank();
 
-        vm.prank(governor);
+        vm.prank(securityAdmin);
         IProxiedLike(loanManager).upgrade(2, upgradeCallData);
     }
 
@@ -587,7 +587,7 @@ contract PoolManagerUpgradeTests is TestBase {
         poolManager.upgrade(2, upgradeCallData);
     }
 
-    function test_upgradePoolManager_governor_noTimelockNeeded() external {
+    function test_upgradePoolManager_securityAdmin_noTimelockNeeded() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
@@ -603,7 +603,7 @@ contract PoolManagerUpgradeTests is TestBase {
         // Call upgrade using governor instead, unaffected by pool delegate's scheduled timelock.
         vm.stopPrank();
 
-        vm.prank(governor);
+        vm.prank(securityAdmin);
         poolManager.upgrade(2, upgradeCallData);
     }
 }
@@ -763,7 +763,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
         cyclicalWM.upgrade(2, upgradeCallData);
     }
 
-    function test_upgradeWithdrawalManager_governor_noTimelockNeeded() external {
+    function test_upgradeWithdrawalManager_securityAdmin_noTimelockNeeded() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.startPrank(poolDelegate);
@@ -779,7 +779,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
         // Call upgrade using governor instead, unaffected by withdrawal delegate's scheduled timelock.
         vm.stopPrank();
 
-        vm.prank(governor);
+        vm.prank(securityAdmin);
         cyclicalWM.upgrade(2, upgradeCallData);
     }
 
