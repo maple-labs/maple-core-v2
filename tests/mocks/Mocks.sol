@@ -47,6 +47,14 @@ contract MockContractWithFallback {
 
 }
 
+contract MockFactory {
+
+    function isInstance(address) external pure returns (bool) {
+        return true;
+    }
+
+}
+
 contract MockGlobals {
 
     address public governor;
@@ -57,7 +65,24 @@ contract MockGlobals {
 
 }
 
-contract FakeMapleWithdrawalManager {
+contract MockPoolManager {
+
+    address public factory;
+    address public poolDelegate;
+    bool    public active;
+
+    constructor(address factory_, address poolDelegate_) {
+        factory = factory_;
+        poolDelegate = poolDelegate_;
+    }
+
+    function setActive(bool active_) external {
+        active = active_;
+    }
+
+}
+
+contract MockMapleWithdrawalManager {
 
     address public immutable poolManager;
 

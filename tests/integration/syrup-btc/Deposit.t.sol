@@ -40,7 +40,7 @@ contract DepositTestBase is TestBase {
         assertEq(pool.balanceOf(address(depositor)), amount);
     }
 
-    function emptyPermit() internal returns (ISyrupBitcoinRouter.Permit memory permit) {
+    function emptyPermit() internal pure returns (ISyrupBitcoinRouter.Permit memory permit) {
         permit = ISyrupBitcoinRouter.Permit(false, 0, 0, 0, 0);
     }
 

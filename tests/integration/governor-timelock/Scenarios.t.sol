@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { IMapleProxyFactory } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FakeMapleWithdrawalManager } from "../../mocks/Mocks.sol";
+import { MockMapleWithdrawalManager } from "../../mocks/Mocks.sol";
 
 import { GovernorTimelockTestBase } from "./GovernorTimelockTestBase.t.sol";
 
@@ -95,7 +95,7 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
         assertNotEq(cyclicalWM.poolManager(), newPoolManager);
         assertEq(cyclicalWM.poolManager(), address(poolManager));
 
-        address newImplementation = address(new FakeMapleWithdrawalManager(newPoolManager));
+        address newImplementation = address(new MockMapleWithdrawalManager(newPoolManager));
         uint256 version           = 200;
 
         bytes4 functionToExecute1 = IMapleProxyFactory.registerImplementation.selector;

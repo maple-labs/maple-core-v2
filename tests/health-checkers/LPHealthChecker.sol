@@ -325,7 +325,6 @@ contract LPHealthChecker {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
         address owner;
-        uint128 requestId;
         uint256 shares;
 
         for (uint256 i; i < poolLps_.length; i++) {

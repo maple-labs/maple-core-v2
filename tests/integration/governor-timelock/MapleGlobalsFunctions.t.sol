@@ -417,7 +417,7 @@ contract MapleGlobalsFunctionsTests is GovernorTimelockTestBase {
     }
 
     function test_setPlatformManagementFeeRate() public {
-        address poolManager               = makeAddr("poolManager");
+        address poolManager                  = makeAddr("poolManager");
         uint256 newPlatformManagementFeeRate = 100;
 
         assertEq(globals.platformManagementFeeRate(poolManager),    0);
@@ -433,7 +433,7 @@ contract MapleGlobalsFunctionsTests is GovernorTimelockTestBase {
     }
 
     function test_setPlatformOriginationFeeRate() public {
-        address poolManager                = makeAddr("poolManager");
+        address poolManager                   = makeAddr("poolManager");
         uint256 newPlatformOriginationFeeRate = 100;
 
         assertEq(globals.platformOriginationFeeRate(poolManager),    0);
@@ -449,7 +449,7 @@ contract MapleGlobalsFunctionsTests is GovernorTimelockTestBase {
     }
 
     function test_setPlatformServiceFeeRate() public {
-        address poolManager            = makeAddr("poolManager");
+        address poolManager               = makeAddr("poolManager");
         uint256 newPlatformServiceFeeRate = 100;
 
         assertEq(globals.platformServiceFeeRate(poolManager),    0);

@@ -2576,7 +2576,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         vm.warp(start + 3_200_000);
 
-        // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
+        // 90_000e6 accounted for loan1 and 180_000e6 for loan2.
         assertEq(poolManager.totalAssets(), 3_500_000e6 + 90_000e6 + 180_000e6);
 
         assertFixedTermLoanManager({
@@ -2644,7 +2644,7 @@ contract MakePaymentTestsDomainStartGtDomainEnd is TestBaseWithAssertions {
 
         makePayment(loan2);
 
-        // 90_000e6 accounted for loan1 and and 180_000e6 for loan2.
+        // 90_000e6 accounted for loan1 and 180_000e6 for loan2.
         assertEq(poolManager.totalAssets(), 3_500_000e6 + 90_000e6 + 180_000e6);
 
         assertFixedTermLoanManager({
