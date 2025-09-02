@@ -39,6 +39,18 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
         timelock.scheduleProposals(targets, data);
     }
 
+    function test_scheduleProposals_revert_emptyTarget() public {
+        address[] memory targets = new address[](1);
+        bytes[]   memory data    = new bytes[](1);
+
+        targets[0] = address(1337);
+        data[0]    = abi.encodeWithSignature("randomFunction(bytes)", "randomParameters");
+
+        vm.expectRevert("GT:SP:EMPTY_ADDRESS");
+        vm.prank(proposer);
+        timelock.scheduleProposals(targets, data);
+    }
+
     function test_scheduleProposals_success_respectsDefaultTimelockAndFunctionSpecific() public {
         address[] memory targets = new address[](2);
         bytes[]   memory data    = new bytes[](2);

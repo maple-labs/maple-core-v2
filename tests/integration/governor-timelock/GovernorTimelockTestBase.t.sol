@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../contracts/interfaces/Interfaces.sol";
+import { IGovernorTimelock, IMG as IMapleGlobals, IWithdrawalManagerQueue } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract GovernorTimelockTestBase is TestBaseWithAssertions {
 
     address public proposer  = makeAddr("proposer");
-    address public executor  = operationalAdmin;
-    address public canceller = securityAdmin;
-    address public roleAdmin = governor;
+    address public executor;
+    address public canceller;
+    address public roleAdmin;
 
     uint256 public startTimestamp;
 
@@ -18,6 +18,10 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
 
     function setUp() public virtual override {
         super.setUp();
+
+        executor  = operationalAdmin;
+        canceller = securityAdmin;
+        roleAdmin = governor;
 
         timelock = IGovernorTimelock(
             deployFromFile("Contracts@25", "Timelock", abi.encode(governor, proposer, executor, canceller, roleAdmin))
@@ -29,6 +33,8 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
         _executeThroughTimelock(address(globals), IMapleGlobals.acceptGovernor.selector, "");
 
         startTimestamp = block.timestamp;
+
+        queueWM = IWithdrawalManagerQueue(poolManager.withdrawalManager());
     }
 
     function test_setUp() public {
@@ -124,5 +130,5 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
             proposalId_, address(timelock), timelock.updateRole.selector, abi.encode(role_, account_, shouldGrant_)
         );
     }
-    
+
 }

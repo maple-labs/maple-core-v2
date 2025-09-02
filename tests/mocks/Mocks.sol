@@ -47,6 +47,15 @@ contract MockContractWithFallback {
 
 }
 
+contract MockContractWithRevertingFallback {
+
+    fallback() external {
+        revert();
+    }
+
+}
+
+
 contract MockFactory {
 
     function isInstance(address) external pure returns (bool) {

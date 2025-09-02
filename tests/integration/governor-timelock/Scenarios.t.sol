@@ -85,7 +85,7 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
 
         assertEmptyProposal(address(timelock), proposalId);
 
-        vm.expectRevert("GT:EP:NOT_EXECUTABLE");
+        vm.expectRevert("GT:EP:PROPOSAL_NOT_FOUND");
         _executeProposal(proposalId, address(timelock), functionToExecute, parameters);
     }
 

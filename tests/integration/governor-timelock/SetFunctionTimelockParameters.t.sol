@@ -26,7 +26,7 @@ contract SetFunctionTimelockParametersTests is GovernorTimelockTestBase {
         ( uint256 proposalId, uint32 delayedUntil ) = _scheduleProposal(address(timelock), functionToExecute, parameters);
 
         vm.warp(delayedUntil);
-        vm.expectRevert("GT:EP:FAILED");
+        vm.expectRevert("GT:SFTP:INVALID_DELAY");
         _executeProposal(proposalId, address(timelock), functionToExecute, parameters);
     }
 
@@ -43,7 +43,7 @@ contract SetFunctionTimelockParametersTests is GovernorTimelockTestBase {
         ( uint256 proposalId, uint32 delayedUntil ) = _scheduleProposal(address(timelock), functionToExecute, parameters);
 
         vm.warp(delayedUntil);
-        vm.expectRevert("GT:EP:FAILED");
+        vm.expectRevert("GT:SFTP:INVALID_EXEC_WINDOW");
         _executeProposal(proposalId, address(timelock), functionToExecute, parameters);
     }
 

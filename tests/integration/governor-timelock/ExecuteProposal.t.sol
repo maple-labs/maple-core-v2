@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { MockContractWithFallback } from "../../mocks/Mocks.sol";
+import { MockContractWithFallback, MockContractWithRevertingFallback } from "../../mocks/Mocks.sol";
 
 import { GovernorTimelockTestBase } from "./GovernorTimelockTestBase.t.sol";
 
@@ -109,7 +109,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
         assertEq(collateralAsset.balanceOf(address(timelock)), 100e18);
 
-        vm.expectRevert("GT:EP:NOT_EXECUTABLE");
+        vm.expectRevert("GT:EP:PROPOSAL_NOT_FOUND");
         vm.prank(executor);
         timelock.executeProposals(proposalIds, targets, data);
 
@@ -152,7 +152,28 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         assertEq(timelock.isExecutable(3), true);
     }
 
-    function test_executeProposals_executionFailed() public {
+    function test_executeProposals_revert_executionFailed() public {
+        assertEq(timelock.latestProposalId(), 1);
+
+        uint256 nextProposalId = timelock.latestProposalId() + 1;
+
+        MockContractWithRevertingFallback contractWithFallback = new MockContractWithRevertingFallback();
+
+        _scheduleProposal(address(contractWithFallback), "", "");
+
+        assertNotEmptyProposal(address(timelock), nextProposalId);
+
+        uint256[] memory proposalIds = new uint256[](1);
+        proposalIds[0]               = nextProposalId;
+
+        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+
+        vm.warp(startTimestamp + delay);
+        vm.expectRevert("GT:EP:CALL_FAILED");
+        _executeProposal(nextProposalId, address(contractWithFallback), "", "");
+    }
+
+    function test_executeProposals_executionFailed_notPendingAdmin() public {
         address[] memory targets = new address[](2);
         bytes[]   memory data    = new bytes[](2);
 
@@ -178,7 +199,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         proposalIds[0]               = 2;
         proposalIds[1]               = 3;
 
-        vm.expectRevert("GT:EP:FAILED");
+        vm.expectRevert("MG:NOT_PENDING_GOV");
         vm.prank(executor);
         timelock.executeProposals(proposalIds, targets, data);
 

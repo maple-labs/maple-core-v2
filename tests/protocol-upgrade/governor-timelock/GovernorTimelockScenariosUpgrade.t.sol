@@ -119,7 +119,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
 
         _assertEmptyProposal(proposalId);
 
-        vm.expectRevert("GT:EP:NOT_EXECUTABLE");
+        vm.expectRevert("GT:EP:PROPOSAL_NOT_FOUND");
         _executeProposal(proposalId, address(timelock), functionToExecute, parameters);
 
         assertEq(IERC20(usdc).balanceOf(address(timelock)), timelockBalance);

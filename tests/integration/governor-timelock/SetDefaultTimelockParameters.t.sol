@@ -21,7 +21,7 @@ contract SetDefaultTimelockParametersTests is GovernorTimelockTestBase {
 
         vm.warp(delayedUntil);
 
-        vm.expectRevert("GT:EP:FAILED");
+        vm.expectRevert("GT:SDTP:INVALID_DELAY");
         _executeProposal(proposalId, address(timelock), functionToExecute, parameters);
     }
 
@@ -36,7 +36,7 @@ contract SetDefaultTimelockParametersTests is GovernorTimelockTestBase {
 
         vm.warp(delayedUntil);
 
-        vm.expectRevert("GT:EP:FAILED");
+        vm.expectRevert("GT:SDTP:INVALID_EXEC_WINDOW");
         _executeProposal(proposalId, address(timelock), functionToExecute, parameters);
     }
 
