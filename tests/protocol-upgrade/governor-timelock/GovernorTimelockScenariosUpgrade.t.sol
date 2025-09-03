@@ -137,8 +137,8 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         assertNotEq(currentPoolManager, newPoolManager);
 
         address newImplementation = address(new MockMapleWithdrawalManager(newPoolManager));
-        uint256 version           = 200;
-        uint256 currentVersion    = 100;
+        uint256 version           = 201;
+        uint256 currentVersion    = 200;
 
         bytes4 functionToExecute1 = IMapleProxyFactory.registerImplementation.selector;
         bytes4 functionToExecute2 = IMapleProxyFactory.enableUpgradePath.selector;

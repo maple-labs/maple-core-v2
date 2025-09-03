@@ -7,6 +7,9 @@ contract UpgradeAddressRegistry is AddressRegistry {
 
     address oldGlobalsOnTreasury = 0xC234c62c8C09687DFf0d9047e40042cd166F3600;
 
+    address mapleWithdrawalManagerV200Implementation;
+    address mapleWithdrawalManagerV200Migrator;
+
     address proposer;
     address executor;
     address canceller;

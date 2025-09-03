@@ -56,6 +56,8 @@ import { MapleWithdrawalManagerFactory as MWMQF }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerFactory.sol";
 import { MapleWithdrawalManagerInitializer as MWMQI }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
+import { MapleWithdrawalManagerMigratorV200 as MWMQM }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV200.sol";
 
 import { SyrupRouter } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
@@ -172,3 +174,5 @@ contract WithdrawalManagerQueueFactory is MWMQF {
 }
 
 contract WithdrawalManagerQueueInitializer is MWMQI { }
+
+contract WithdrawalManagerQueueMigrator is MWMQM { }
