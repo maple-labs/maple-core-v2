@@ -115,12 +115,12 @@ contract CoreStrategyTestsBase is StrategyTestBase {
         coreStrategy.fundStrategy(amountToFund);
     }
 
-    function assertLastRequestId(address user_, uint128 requestId_) internal {
+    function assertLastRequestId(address user_, uint256 requestId_) internal {
         assertEq(secondMapleWithdrawalManager.requestIds(user_), requestId_);
     }
 
-    function assertUserRequests(address user_, uint128[] memory expectedRequestIds_, uint256[] memory expectedShares_) internal {
-        ( uint128[] memory requestIds, uint256[] memory shares ) = secondMapleWithdrawalManager.requestsByOwner(user_);
+    function assertUserRequests(address user_, uint256[] memory expectedRequestIds_, uint256[] memory expectedShares_) internal {
+        ( uint256[] memory requestIds, uint256[] memory shares ) = secondMapleWithdrawalManager.requestsByOwner(user_);
 
         assertEq(requestIds.length, expectedRequestIds_.length);
         assertEq(shares.length    , expectedShares_.length);
@@ -491,8 +491,8 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         assertEq(pool.totalAssets(),                   poolLiquidity);
 
 
-        ( uint128[] memory requestIds, ) = secondMapleWithdrawalManager.requestsByOwner(address(coreStrategy));
-        uint128 requestId                = requestIds[requestIds.length - 1];
+        ( uint256[] memory requestIds, ) = secondMapleWithdrawalManager.requestsByOwner(address(coreStrategy));
+        uint256 requestId                = requestIds[requestIds.length - 1];
 
         ( address owner, uint256 shares ) = secondMapleWithdrawalManager.requests(requestId);
 
@@ -550,7 +550,7 @@ contract CoreStrategyRequestWithdrawFromStrategyTests is CoreStrategyTestsBase {
         assertEq(pool.totalAssets(),                   poolLiquidity);
 
 
-        uint128[] memory expectedRequests = new uint128[](2);
+        uint256[] memory expectedRequests = new uint256[](2);
         expectedRequests[0]               = 1;
         expectedRequests[1]               = 2;
 
@@ -807,8 +807,8 @@ contract CoreStrategyPushAssetsTests is CoreStrategyTestsBase {
     }
 
     function _processAllWithdrawalsByOwnerShares(IWithdrawalManagerQueue withdrawalManager, address owner) internal {
-        ( uint128[] memory requestIds, ) = withdrawalManager.requestsByOwner(owner);
-        uint128 requestId                = requestIds[requestIds.length - 1];
+        ( uint256[] memory requestIds, ) = withdrawalManager.requestsByOwner(owner);
+        uint256 requestId                = requestIds[requestIds.length - 1];
         ( , uint256 shares )             = withdrawalManager.requests(requestId);
 
         _processWithdrawalRequests(withdrawalManager, shares);
@@ -1097,7 +1097,7 @@ contract CoreStrategyRemoveSharesIntegrationTests is CoreStrategyTestsBase {
         coreStrategy.removeShares(500e6 + amountToFund / 2);
         vm.stopPrank();
 
-        uint128[] memory expectedRequestIds = new uint128[](1);
+        uint256[] memory expectedRequestIds = new uint256[](1);
         uint256[] memory expectedShares     = new uint256[](1);
 
         expectedRequestIds[0] = 1;
@@ -1129,7 +1129,7 @@ contract CoreStrategyRemoveSharesIntegrationTests is CoreStrategyTestsBase {
         assertEq(secondRequestOwner,  address(0));
         assertEq(secondRequestShares, 0);
 
-        assertUserRequests(address(coreStrategy), new uint128[](0), new uint256[](0));
+        assertUserRequests(address(coreStrategy), new uint256[](0), new uint256[](0));
     }
 
     function testFork_coreStrategy_removeShares_successWhenImpaired() external {

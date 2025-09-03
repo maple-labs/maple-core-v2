@@ -55,7 +55,7 @@ contract RemoveRequestTests is TestBaseWithAssertions {
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
         assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
 
-        ( uint128[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
+        ( uint256[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
 
         vm.prank(poolDelegate);
         queueWM.removeRequest(lp1, requestIds_);
@@ -92,7 +92,7 @@ contract RemoveRequestTests is TestBaseWithAssertions {
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
         assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
 
-        ( uint128[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
+        ( uint256[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
 
         vm.prank(poolDelegate);
         queueWM.removeRequest(lp1, requestIds_);
@@ -124,7 +124,7 @@ contract RemoveRequestTests is TestBaseWithAssertions {
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
         assertEq(queueWM.userEscrowedShares(lp1), 600e6);
 
-        ( uint128[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
+        ( uint256[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
 
         vm.prank(poolDelegate);
         queueWM.removeRequest(lp1, requestIds_);
@@ -161,7 +161,7 @@ contract RemoveRequestTests is TestBaseWithAssertions {
 
         assertEq(queueWM.manualSharesAvailable(lp1), 600e6);
 
-        ( uint128[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
+        ( uint256[] memory requestIds_, ) = queueWM.requestsByOwner(lp1);
 
         vm.prank(poolDelegate);
         queueWM.removeRequest(lp1, requestIds_);
@@ -220,7 +220,7 @@ contract RemoveRequestTests is TestBaseWithAssertions {
         assertEq(queueWM.userEscrowedShares(lp1), 900e6);
 
         // remove middle request
-        uint128[] memory requestIds = new uint128[](1);
+        uint256[] memory requestIds = new uint256[](1);
         requestIds[0]               = 2;
 
         vm.prank(poolDelegate);
@@ -239,7 +239,7 @@ contract RemoveRequestTests is TestBaseWithAssertions {
         assertEq(queueWM.userEscrowedShares(lp1), 600e6);
 
         // remove the rest of the requests
-        requestIds    = new uint128[](2);
+        requestIds    = new uint256[](2);
         requestIds[0] = 1;
         requestIds[1] = 3;
 
@@ -293,11 +293,11 @@ contract RemoveRequestFailureTests is TestBase {
 
         vm.prank(poolDelegate);
         vm.expectRevert("WM:PAUSED");
-        queueWM.removeRequest(lp, new uint128[](0));
+        queueWM.removeRequest(lp, new uint256[](0));
     }
 
     function test_removeRequest_failIfNotPoolDelegate() external {
-        uint128[] memory requestIds = _createRemoveRequestIds();
+        uint256[] memory requestIds = _createRemoveRequestIds();
 
         vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
         queueWM.removeRequest(lp, requestIds);
@@ -307,7 +307,7 @@ contract RemoveRequestFailureTests is TestBase {
     }
 
     function test_removeRequest_failIfNotGovernor() external {
-        uint128[] memory requestIds = _createRemoveRequestIds();
+        uint256[] memory requestIds = _createRemoveRequestIds();
 
         vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
         queueWM.removeRequest(lp, requestIds);
@@ -317,7 +317,7 @@ contract RemoveRequestFailureTests is TestBase {
     }
 
     function test_removeRequest_failIfNotOperationalAdmin() external {
-        uint128[] memory requestIds = _createRemoveRequestIds();
+        uint256[] memory requestIds = _createRemoveRequestIds();
 
         vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
         queueWM.removeRequest(lp, requestIds);
@@ -327,7 +327,7 @@ contract RemoveRequestFailureTests is TestBase {
     }
 
     function test_removeRequest_failIfNotInQueue() external {
-        uint128[] memory requestIds = _createRemoveRequestIds();
+        uint256[] memory requestIds = _createRemoveRequestIds();
 
         vm.prank(poolDelegate);
         queueWM.removeRequest(lp, requestIds);
@@ -341,17 +341,17 @@ contract RemoveRequestFailureTests is TestBase {
         vm.prank(wm);
         pool.transfer(address(1), 1_000e6);
 
-        uint128[] memory requestIds = _createRemoveRequestIds();
+        uint256[] memory requestIds = _createRemoveRequestIds();
 
         vm.prank(poolDelegate);
         vm.expectRevert("WM:RR:TRANSFER_FAIL");
         queueWM.removeRequest(lp, requestIds);
     }
 
-    function _createRemoveRequestIds() internal view returns (uint128[] memory requestIds) {
-        ( uint128[] memory requests, ) = queueWM.requestsByOwner(lp);
+    function _createRemoveRequestIds() internal view returns (uint256[] memory requestIds) {
+        ( uint256[] memory requests, ) = queueWM.requestsByOwner(lp);
 
-        requestIds    = new uint128[](1);
+        requestIds    = new uint256[](1);
         requestIds[0] = requests[0];
     }
 

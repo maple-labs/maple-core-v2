@@ -104,11 +104,11 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint128 requestId_ = wm.requestIds(lp_);
+        uint256 requestId_ = wm.requestIds(lp_);
 
         if (requestId_ == 0) return;
 
-        uint128[] memory requestIds_ = new uint128[](1);
+        uint256[] memory requestIds_ = new uint256[](1);
         requestIds_[0] = requestId_;
 
         vm.prank(pm.poolDelegate());
@@ -121,7 +121,7 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint128 requestId_ = wm.requestIds(lp_);
+        uint256 requestId_ = wm.requestIds(lp_);
 
         if (requestId_ == 0) return;
 
@@ -143,7 +143,7 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         if (pool.balanceOf(lp_) == 0) return;
 
-        uint128 requestId_ = wm.requestIds(lp_);
+        uint256 requestId_ = wm.requestIds(lp_);
 
         if (requestId_ != 0) return;
 
@@ -159,7 +159,7 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint128 requestId_ = wm.requestIds(lp_);
+        uint256 requestId_ = wm.requestIds(lp_);
 
         if (requestId_ != 0) return;
 

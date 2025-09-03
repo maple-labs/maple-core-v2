@@ -504,7 +504,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: address(0), shares: 0 });
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
-        uint128[] memory expectedRequests = new uint128[](2);
+        uint256[] memory expectedRequests = new uint256[](2);
         expectedRequests[0] = 2;
         expectedRequests[1] = 3;
 
@@ -520,7 +520,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         vm.prank(lp2);
         sharesReturned = pool.removeShares(100e6, lp2);
 
-        expectedRequests = new uint128[](1);
+        expectedRequests = new uint256[](1);
         expectedRequests[0] = 2;
 
         assertUserRequests(address(poolManager), lp2, expectedRequests);
@@ -570,7 +570,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         assertEq(queueWM.totalShares(), 1_000e6);
 
         assertLastRequestId(address(queueWM), lp2, 0);
-        assertUserRequests(address(poolManager), lp2, new uint128[](0));
+        assertUserRequests(address(poolManager), lp2, new uint256[](0));
     }
 
     function test_removeShares_sameAddressCallingTwice() external {

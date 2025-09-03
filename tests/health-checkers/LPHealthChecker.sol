@@ -328,7 +328,7 @@ contract LPHealthChecker {
         uint256 shares;
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint128[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+            ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
             if (requests.length > 0) {
                 ( owner, shares ) = withdrawalManager.requests(requests[requests.length - 1]);
@@ -348,12 +348,12 @@ contract LPHealthChecker {
     ) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        uint128 requestId;
+        uint256 requestId;
 
-        ( , uint128 lastRequestId) = withdrawalManager.queue();
+        ( , uint256 lastRequestId) = withdrawalManager.queue();
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint128[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+            ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
             if (requests.length > 0) {
                 requestId = requests[requests.length - 1];
@@ -373,12 +373,12 @@ contract LPHealthChecker {
     ) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        uint128 requestId;
+        uint256 requestId;
 
-        uint128[] memory requestIdList = new uint128[](poolLps_.length);
+        uint256[] memory requestIdList = new uint256[](poolLps_.length);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint128[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+            ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
             if (requests.length > 0) {
                 requestId = requests[requests.length - 1];

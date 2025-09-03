@@ -5,6 +5,7 @@ import { console2 as console } from "../modules/forge-std/src/console2.sol";
 
 import {
     IAssetController,
+    IAssetControllerOracle,
     IBitcoinStrategy,
     ICompositeToken,
     IFeeManager,
@@ -22,7 +23,6 @@ import {
     IPoolManager,
     IPoolPermissionManager,
     IPoolPermissionManagerInitializer,
-    IPriceOracle,
     ISyrupBitcoinRouter,
     IWithdrawalManagerCyclical,
     IWithdrawalManagerQueue
@@ -138,10 +138,10 @@ contract TestBase is ProtocolActions {
     IWithdrawalManagerQueue    queueWM;
     IWithdrawalManagerQueue    withdrawalManager;
 
-    IAssetController    assetController;
-    ICompositeToken     compositeAsset;
-    IPriceOracle        priceOracle;
-    ISyrupBitcoinRouter bitcoinRouter;
+    IAssetController       assetController;
+    IAssetControllerOracle priceOracle;
+    ICompositeToken        compositeAsset;
+    ISyrupBitcoinRouter    bitcoinRouter;
 
     IMockERC20 collateralAsset;
     IMockERC20 depositAsset;
@@ -318,7 +318,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
         globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
         globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
-        globals.setValidInstanceOf("DEPOSIT_ASSET",                    address(depositAsset),         true);
+        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),         true);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
 
         globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
@@ -541,7 +541,8 @@ contract TestBase is ProtocolActions {
     }
 
     function _createPeripheryContracts() internal {
-        priceOracleImplementation = deployFromFile("Contracts@25", "PriceOracle");
+        priceOracleImplementation = deployFromFile("Contracts@25", "AssetControllerOracle");
+
         priceOracleProxy = deployFromFile(
             "Contracts@25",
             "NonTransparentProxyInitializable",
@@ -549,7 +550,7 @@ contract TestBase is ProtocolActions {
                 address(globals),
                 address(priceOracleImplementation),
                 address(0),
-                abi.encode("")
+                ""
             )
         );
 
@@ -595,7 +596,7 @@ contract TestBase is ProtocolActions {
 
         assetController = IAssetController(assetControllerProxy);
         bitcoinRouter   = ISyrupBitcoinRouter(bitcoinRouterProxy);
-        priceOracle     = IPriceOracle(priceOracleProxy);
+        priceOracle     = IAssetControllerOracle(priceOracleProxy);
     }
 
     function _configurePeripheryContracts() internal {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.25;
 
-import { AssetController as AC }     from "../modules/controller/contracts/AssetController.sol";
-import { CompositeToken as CT }      from "../modules/controller/contracts/CompositeToken.sol";
-import { PriceOracle as PO }         from "../modules/controller/contracts/PriceOracle.sol";
-import { SyrupBitcoinRouter as SBR } from "../modules/controller/contracts/SyrupBitcoinRouter.sol";
+import { AssetController as AC }        from "../modules/controller/contracts/AssetController.sol";
+import { AssetControllerOracle as ACO } from "../modules/controller/contracts/AssetControllerOracle.sol";
+import { CompositeToken as CT }         from "../modules/controller/contracts/CompositeToken.sol";
+import { SyrupBitcoinRouter as SBR }    from "../modules/controller/contracts/SyrupBitcoinRouter.sol";
 
 import { AssetControllerInitializer as ACI }     from "../modules/controller/contracts/proxy/AssetControllerInitializer.sol";
 import { CompositeTokenInitializer as CTI }      from "../modules/controller/contracts/proxy/CompositeTokenInitializer.sol";
@@ -53,6 +53,8 @@ contract AaveStrategy is MAS { }
 contract AaveStrategyInitializer is MASI { }
 
 contract AssetController is AC { }
+
+contract AssetControllerOracle is ACO { }
 
 contract AssetControllerInitializer is ACI { }
 
@@ -131,8 +133,6 @@ contract Timelock is GT {
         GT(tokenWithdrawer_, proposer_, executor_, canceller_, roleAdmin_) { }
 
 }
-
-contract PriceOracle is PO { }
 
 contract SkyStrategy is MSS { }
 

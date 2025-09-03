@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IAssetController as IAC }     from "../../modules/controller/contracts/interfaces/IAssetController.sol";
-import { ICompositeToken as ICT }      from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
-import { IPriceOracle as IPO }         from "../../modules/controller/contracts/interfaces/IPriceOracle.sol";
-import { ISyrupBitcoinRouter as ISBR } from "../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
+import { IAssetController as IAC }        from "../../modules/controller/contracts/interfaces/IAssetController.sol";
+import { IAssetControllerOracle as IACO } from "../../modules/controller/contracts/interfaces/IAssetControllerOracle.sol";
+import { ICompositeToken as ICT }         from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
+import { ISyrupBitcoinRouter as ISBR }    from "../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
@@ -70,6 +70,8 @@ interface IAaveStrategy is IMapleAaveStrategy { }
 
 interface IAssetController is IAC { }
 
+interface IAssetControllerOracle is IACO { }
+
 interface IBorrowerActions is IMapleBorrowerActions { }
 
 interface IBasicStrategy is IMapleBasicStrategy { }
@@ -117,8 +119,6 @@ interface IPoolManager is IMPM { }
 interface IPoolPermissionManager is IMPPM { }
 
 interface IPoolPermissionManagerInitializer is IMPPMI { }
-
-interface IPriceOracle is IPO { }
 
 interface IStrategy is IMapleStrategy, IMapleFeeStrategy { }
 

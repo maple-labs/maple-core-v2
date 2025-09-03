@@ -8,12 +8,12 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
     uint256 constant MAX_SHARES = 1e30;
     uint256 constant MIN_SHARES = 100;
 
-    uint128 lastRequestId;
+    uint256 lastRequestId;
     uint256 totalShares;
 
     mapping(address => bool)    lpManuals;
     mapping(address => uint256) lpShares;
-    mapping(uint128 => address) lpRequests;
+    mapping(uint256 => address) lpRequests;
 
     function setUp() public override {
         start = block.timestamp;
@@ -41,7 +41,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
             if (lps[i] == address(0)) continue;
             if (lps[i] == address(pool)) continue;
 
-            ( uint128[] memory requestIds, ) = queueWM.requestsByOwner(lps[i]);
+            ( uint256[] memory requestIds, ) = queueWM.requestsByOwner(lps[i]);
 
             if (requestIds.length > 0) continue;
 
@@ -65,11 +65,11 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
 
         processRedemptions(address(pool), sharesToProcess);
 
-        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = queueWM.queue();
+        ( uint256 nextRequestId_, uint256 lastRequestId_ ) = queueWM.queue();
 
         uint256 sharesProcessed;
 
-        for (uint128 i = 1; i < nextRequestId_; i++) {
+        for (uint256 i = 1; i < nextRequestId_; i++) {
             address lp = lpRequests[i];
 
             assertRequest({
@@ -102,7 +102,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
             assertEq(queueWM.manualSharesAvailable(nextLp), nextLpProcessedShares);
         }
 
-        for (uint128 i = nextRequestId_ + 1; i <= lastRequestId_; i++) {
+        for (uint256 i = nextRequestId_ + 1; i <= lastRequestId_; i++) {
             address lp = lpRequests[i];
 
             assertRequest({

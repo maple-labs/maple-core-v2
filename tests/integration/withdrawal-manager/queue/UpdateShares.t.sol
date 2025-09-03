@@ -87,7 +87,7 @@ contract UpdateSharesQueueTests is TestBaseWithAssertions {
 
         assertLastRequestId(address(queueWM), lp, 3);
 
-        uint128[] memory expectedUserRequests = new uint128[](2);
+        uint256[] memory expectedUserRequests = new uint256[](2);
         expectedUserRequests[0]               = 1;
         expectedUserRequests[1]               = 3;
 
@@ -117,7 +117,7 @@ contract UpdateSharesQueueTests is TestBaseWithAssertions {
 
         assertLastRequestId(address(queueWM), lp, 4);
 
-        uint128[] memory expectedUserRequests = new uint128[](3);
+        uint256[] memory expectedUserRequests = new uint256[](3);
         expectedUserRequests[0]               = 1;
         expectedUserRequests[1]               = 3;
         expectedUserRequests[2]               = 4;

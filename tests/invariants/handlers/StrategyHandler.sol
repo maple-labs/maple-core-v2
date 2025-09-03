@@ -107,7 +107,7 @@ contract StrategyHandler is HandlerBase {
         numberOfCalls["requestWithdrawFromStrategy"]++;
 
         address withdrawalManager_ = IStrategyLike(coreStrategy).mapleWithdrawalManager();
-        uint128 requestId_         = IWithdrawalManager(withdrawalManager_).requestIds(address(coreStrategy));
+        uint256 requestId_         = IWithdrawalManager(withdrawalManager_).requestIds(address(coreStrategy));
 
         if (requestId_ == 0) return;
 
@@ -273,7 +273,7 @@ contract StrategyHandler is HandlerBase {
             IPool      pool       = IPool(strategy.strategyVault());
             IWithdrawalManager wm = IWithdrawalManager(strategy.mapleWithdrawalManager());
 
-            uint128 requestId_    = wm.requestIds(address(strategy));
+            uint256 requestId_    = wm.requestIds(address(strategy));
             ( , uint256 shares_ ) = wm.requests(requestId_);
 
             uint256 shares = pool.balanceOf(address(strategy)) + shares_;

@@ -272,7 +272,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertTrue(impairedByGovernor_ == impairedByGovernor);
     }
 
-    function assertLastRequestId(address withdrawalManager_, address user_, uint128 requestId_) internal {
+    function assertLastRequestId(address withdrawalManager_, address user_, uint256 requestId_) internal {
         assertEq(IWithdrawalManagerQueue(withdrawalManager_).requestIds(user_), requestId_);
     }
 
@@ -341,16 +341,16 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IPoolManager(poolManager).unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
     }
 
-    function assertQueue(address poolManager, uint128 nextRequestId, uint128 lastRequestId) internal {
+    function assertQueue(address poolManager, uint256 nextRequestId, uint256 lastRequestId) internal {
         address wm = IPoolManager(poolManager).withdrawalManager();
 
-        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = IWithdrawalManagerQueue(wm).queue();
+        ( uint256 nextRequestId_, uint256 lastRequestId_ ) = IWithdrawalManagerQueue(wm).queue();
 
         assertEq(nextRequestId_, nextRequestId);
         assertEq(lastRequestId_, lastRequestId);
     }
 
-    function assertRequest(address poolManager, uint128 requestId, address owner, uint256 shares) internal {
+    function assertRequest(address poolManager, uint256 requestId, address owner, uint256 shares) internal {
         address wm = IPoolManager(poolManager).withdrawalManager();
 
         ( address owner_, uint256 shares_ ) = IWithdrawalManagerQueue(wm).requests(requestId);
@@ -359,10 +359,10 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(shares_, shares);
     }
 
-    function assertUserRequests(address poolManager, address owner, uint128[] memory requestIds) internal {
+    function assertUserRequests(address poolManager, address owner, uint256[] memory requestIds) internal {
         address wm = IPoolManager(poolManager).withdrawalManager();
 
-        ( uint128[] memory requests, ) = IWithdrawalManagerQueue(wm).requestsByOwner(owner);
+        ( uint256[] memory requests, ) = IWithdrawalManagerQueue(wm).requestsByOwner(owner);
 
         assertEq(requests.length, requestIds.length);
 
