@@ -24,6 +24,16 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     scripts/RefinanceUpgradesDeployment.s.sol:RefinanceUpgradesDeployment
 
+# For GovernorTimelock
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --broadcast \
+#     scripts/GovernorTimelockDeployment.s.sol:GovernorTimelockDeployment
+
 # For Production
 
 # For Healthchecker
@@ -62,3 +72,14 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --broadcast \
 #     scripts/RefinanceUpgradesDeployment.s.sol:RefinanceUpgradesDeployment
 
+# For GovernorTimelock
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 15 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     --broadcast \
+#     scripts/GovernorTimelockDeployment.s.sol:GovernorTimelockDeployment
