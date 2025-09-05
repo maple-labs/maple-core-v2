@@ -130,7 +130,7 @@ interface ISyrupRouter is ISR { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
 
-interface IWithdrawalManagerQueue is IMWMQ {}
+interface IWithdrawalManagerQueue is IMWMQ { }
 
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                    ***/
