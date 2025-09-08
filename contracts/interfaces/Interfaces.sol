@@ -4,7 +4,8 @@ pragma solidity ^0.8.7;
 import { IAssetController as IAC }        from "../../modules/controller/contracts/interfaces/IAssetController.sol";
 import { IAssetControllerOracle as IACO } from "../../modules/controller/contracts/interfaces/IAssetControllerOracle.sol";
 import { ICompositeToken as ICT }         from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
-import { ISyrupBitcoinRouter as ISBR }    from "../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
+
+import { ISyrupBitcoinRouter as ISBR, Permit } from "../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
 
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
