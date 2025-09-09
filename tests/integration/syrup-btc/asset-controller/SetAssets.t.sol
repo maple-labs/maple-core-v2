@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { AssetControllerTestBase } from "../AssetControllerTestBase.sol";
+import { SyrupBitcoinTestBase } from "../SyrupBitcoinTestBase.sol";
 
-contract AssetControllerSetAssetsTests is AssetControllerTestBase {
+contract AssetControllerSetAssetsTests is SyrupBitcoinTestBase {
 
     address[] newAssets;
 

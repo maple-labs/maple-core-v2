@@ -4,11 +4,11 @@ pragma solidity ^0.8.7;
 import {
     IERC20,
     Permit 
-} from "../../../../contracts/interfaces/Interfaces.sol";
+} from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBase } from "../../../TestBase.sol";
+import { TestBase } from "../../TestBase.sol";
 
-contract SyrupBTCRouterTestBase is TestBase {
+contract SyrupBitcoinTestBase is TestBase {
 
     function setUp() public virtual override {
         _setupBitcoinPool();

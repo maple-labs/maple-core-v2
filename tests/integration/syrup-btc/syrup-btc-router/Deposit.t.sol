@@ -7,9 +7,9 @@ import {
     Permit
 } from "../../../../contracts/interfaces/Interfaces.sol";
 
-import { SyrupBTCRouterTestBase } from "../syrup-btc-router/SyrupBTCRouterTestBase.sol";
+import { SyrupBitcoinTestBase } from "../SyrupBitcoinTestBase.sol";
 
-contract SyrupBitcoinRouterDepositTests is SyrupBTCRouterTestBase {
+contract SyrupBitcoinRouterDepositTests is SyrupBitcoinTestBase {
 
     bytes32 constant EMPTY_METADATA = "";
 

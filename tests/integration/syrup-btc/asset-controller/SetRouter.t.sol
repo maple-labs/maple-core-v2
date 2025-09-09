@@ -5,9 +5,9 @@ import {
     ISyrupBitcoinRouter
 } from "../../../../contracts/interfaces/Interfaces.sol";
 
-import { AssetControllerTestBase } from "../AssetControllerTestBase.sol";
+import { SyrupBitcoinTestBase } from "../SyrupBitcoinTestBase.sol";
 
-contract AssetControllerSetRouterTests is AssetControllerTestBase {
+contract AssetControllerSetRouterTests is SyrupBitcoinTestBase {
 
     ISyrupBitcoinRouter newRouter;
 
