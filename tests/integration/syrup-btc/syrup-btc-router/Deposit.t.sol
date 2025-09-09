@@ -141,20 +141,21 @@ contract SyrupBitcoinRouterDepositTests is SyrupBTCRouterTestBase {
     }
 
     function test_syrupBitcoinRouter_deposit_revert_wrapFailed_invalidAsset() external {
-        address[] memory assets   = new address[](1);
-        bool[] memory canDeposit  = new bool[](1);
-        bool[] memory canWithdraw = new bool[](1);
+        address[] memory assets = new address[](1);
+
+        bool[] memory allowed    = new bool[](1);
+        bool[] memory notAllowed = new bool[](1);
 
         assets[0] = address(depositAsset);
 
-        canDeposit[0]  = false;
-        canWithdraw[0] = true;
+        allowed[0]    = true;
+        notAllowed[0] = false;
 
         vm.prank(governor);
-        assetController.setAssets(assets, canDeposit, canWithdraw);
+        assetController.setAssets(assets, notAllowed, allowed, allowed, allowed);
 
         vm.prank(depositor);
-        vm.expectRevert("AC:W:NOT_ALLOWED");
+        vm.expectRevert("AC:W:INVALID_ASSET");
         bitcoinRouter.deposit(address(depositAsset), depositAmount, EMPTY_METADATA, emptyPermit());
     }
 
@@ -275,7 +276,7 @@ contract SyrupBitcoinRouterDepositTests is SyrupBTCRouterTestBase {
         );
 
         vm.prank(depositor);
-        vm.expectRevert("AC:W:POOL_ASSET_FAILURE");
+        vm.expectRevert("AC:W:COMPOSITE_ASSET_FAILURE");
         bitcoinRouter.deposit(address(depositAsset), depositAmount, EMPTY_METADATA, emptyPermit());
     }
 

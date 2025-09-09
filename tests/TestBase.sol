@@ -115,6 +115,7 @@ contract TestBase is ProtocolActions {
     uint256 nextDelegateOriginationFee;
     uint256 nextDelegateServiceFee;
 
+    uint32  startingTime;
     uint256 start;
 
     address[] strategyFactories;
@@ -140,6 +141,7 @@ contract TestBase is ProtocolActions {
 
     IAssetController       assetController;
     IAssetControllerOracle priceOracle;
+    IBitcoinStrategy       bitcoinStrategy;
     ICompositeToken        compositeAsset;
     ISyrupBitcoinRouter    bitcoinRouter;
 
@@ -161,7 +163,8 @@ contract TestBase is ProtocolActions {
     }
 
     function _setupBitcoinPool() internal {
-        start = block.timestamp;
+        start        = block.timestamp;
+        startingTime = uint32(start);
 
         _createAccounts();
         _createGlobals();
@@ -528,16 +531,17 @@ contract TestBase is ProtocolActions {
 
         pool              = IPool(poolManager.pool());
         withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
-
-        activatePool(address(poolManager), HUNDRED_PERCENT);
+        bitcoinStrategy   = IBitcoinStrategy(poolManager.strategyList(0));
 
         // Whitelist all of the bitcoin strategies on globals.
         for (uint i; i < 4; i++) {
-            address bitcoinStrategy = poolManager.strategyList(i);
+            address strategy = poolManager.strategyList(i);
 
             vm.prank(governor);
-            globals.setValidInstanceOf("BITCOIN_STRATEGY", address(bitcoinStrategy), true);
+            globals.setValidInstanceOf("BITCOIN_STRATEGY", address(strategy), true);
         }
+
+        activatePool(address(poolManager), HUNDRED_PERCENT);
     }
 
     function _createPeripheryContracts() internal {
@@ -631,7 +635,11 @@ contract TestBase is ProtocolActions {
         allowed[0]   = true;
 
         vm.prank(governor);
-        assetController.setAssets(addresses, allowed, allowed);
+        assetController.setAssets(addresses, allowed, allowed, allowed, allowed);
+
+        // Set the bitcoin router to manual withdrawal.
+        vm.prank(governor);
+        withdrawalManager.setManualWithdrawal(address(bitcoinRouter), true);
 
         // Set all bitcoin strategies on the asset controller.
         addresses = new address[](4);
@@ -664,10 +672,21 @@ contract TestBase is ProtocolActions {
         bitcoinRouter.setAssetController(address(depositAsset), address(assetController));
 
         for (uint i; i < 4; i++) {
-            address bitcoinStrategy = poolManager.strategyList(i);
+            address strategy = poolManager.strategyList(i);
 
             vm.prank(governor);
-            IBitcoinStrategy(bitcoinStrategy).setAssetController(address(depositAsset), address(assetController));
+            IBitcoinStrategy(strategy).setAssetController(address(depositAsset), address(assetController));
+        }
+
+        // Allow the strategy manager to deploy, schedule, and reconcile all strategies.
+        addresses[0] = strategyManager;
+        allowed[0]   = true;
+
+        for (uint i; i < 4; i++) {
+            address strategy = poolManager.strategyList(i);
+
+            vm.prank(governor);
+            IBitcoinStrategy(strategy).setPermissions(addresses, allowed, allowed, allowed);
         }
 
         // Allow only the router to interact with the pool.

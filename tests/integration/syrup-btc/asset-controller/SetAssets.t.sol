@@ -7,15 +7,20 @@ contract AssetControllerSetAssetsTests is AssetControllerTestBase {
 
     address[] newAssets;
 
-    bool[] canDeposit;
-    bool[] canWithdraw;
+    bool[] canWrap;
+    bool[] canUnwrap;
+    bool[] canDeploy;
+    bool[] canReconcile;
 
     function setUp() public virtual override {
         super.setUp();
 
-        newAssets   = [address(0x01), address(0x02)];
-        canDeposit  = [true, true];
-        canWithdraw = [true, true];
+        newAssets = [address(0x01), address(0x02)];
+
+        canWrap      = [true, true];
+        canUnwrap    = [true, true];
+        canDeploy    = [true, true];
+        canReconcile = [true, true];
 
         vm.startPrank(governor);
 
@@ -27,39 +32,54 @@ contract AssetControllerSetAssetsTests is AssetControllerTestBase {
 
     function test_setAssets_revert_notGovernor() external {
         vm.expectRevert("AC:NOT_GOVERNOR");
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
     }
 
     function test_setAssets_revert_noAssets() external {
         vm.prank(governor);
         vm.expectRevert("AC:SA:NO_ASSETS");
-        assetController.setAssets(new address[](0), canDeposit, canWithdraw);
+        assetController.setAssets(new address[](0), canWrap, canUnwrap, canDeploy, canReconcile);
     }
 
-    function test_setAssets_revert_lengthMismatch_canDeposit() external {
-        canDeposit.pop();
+    function test_setAssets_revert_lengthMismatch_canWrap() external {
+        canWrap.pop();
 
         vm.prank(governor);
-        vm.expectRevert("AC:SA:LENGTH_MISMATCH");
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
+        vm.expectRevert("AC:SA:WRAP_MISMATCH");
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
     }
 
-    function test_setAssets_revert_lengthMismatch_canWithdraw() external {
-        canWithdraw.pop();
+    function test_setAssets_revert_lengthMismatch_canUnwrap() external {
+        canUnwrap.pop();
 
         vm.prank(governor);
-        vm.expectRevert("AC:SA:LENGTH_MISMATCH");
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
+        vm.expectRevert("AC:SA:UNWRAP_MISMATCH");
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
+    }
+
+    function test_setAssets_revert_lengthMismatch_canDeploy() external {
+        canDeploy.push(true);
+
+        vm.prank(governor);
+        vm.expectRevert("AC:SA:DEPLOY_MISMATCH");
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
+    }
+
+    function test_setAssets_revert_lengthMismatch_canReconcile() external {
+        canReconcile.push(false);
+
+        vm.prank(governor);
+        vm.expectRevert("AC:SA:RECONCILE_MISMATCH");
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
     }
 
     function test_setAssets_revert_notAsset_all() external {
-        address[] memory invalidAssets = new address[](2);
-        invalidAssets[0] = makeAddr("invalid_asset1");
-        invalidAssets[1] = makeAddr("invalid_asset2");
+        newAssets[0] = makeAddr("invalid_asset1");
+        newAssets[1] = makeAddr("invalid_asset2");
 
         vm.prank(governor);
         vm.expectRevert("AC:SA:NOT_ASSET");
-        assetController.setAssets(invalidAssets, canDeposit, canWithdraw);
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
     }
 
     function test_setAssets_revert_notAsset_one() external {
@@ -67,66 +87,83 @@ contract AssetControllerSetAssetsTests is AssetControllerTestBase {
 
         vm.prank(governor);
         vm.expectRevert("AC:SA:NOT_ASSET");
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
     }
 
     function test_setAssets_success_setAssets() public {
-        vm.startPrank(governor);
+        assertEq(assetController.canWrap(newAssets[0]), false);
+        assertEq(assetController.canWrap(newAssets[1]), false);
 
-        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET", newAssets[0], true);
-        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET", newAssets[1], true);
+        assertEq(assetController.canUnwrap(newAssets[0]), false);
+        assertEq(assetController.canUnwrap(newAssets[1]), false);
 
-        assertEq(assetController.canDeposit(newAssets[0]), false);
-        assertEq(assetController.canDeposit(newAssets[1]), false);
+        assertEq(assetController.canDeploy(newAssets[0]), false);
+        assertEq(assetController.canDeploy(newAssets[1]), false);
 
-        assertEq(assetController.canWithdraw(newAssets[0]), false);
-        assertEq(assetController.canWithdraw(newAssets[1]), false);
+        assertEq(assetController.canReconcile(newAssets[0]), false);
+        assertEq(assetController.canReconcile(newAssets[1]), false);
 
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
+        vm.prank(governor);
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
 
-        vm.stopPrank();
+        assertEq(assetController.canWrap(newAssets[0]), true);
+        assertEq(assetController.canWrap(newAssets[1]), true);
 
-        assertEq(assetController.canDeposit(newAssets[0]), true);
-        assertEq(assetController.canDeposit(newAssets[1]), true);
+        assertEq(assetController.canUnwrap(newAssets[0]), true);
+        assertEq(assetController.canUnwrap(newAssets[1]), true);
 
-        assertEq(assetController.canWithdraw(newAssets[0]), true);
-        assertEq(assetController.canWithdraw(newAssets[1]), true);
+        assertEq(assetController.canDeploy(newAssets[0]), true);
+        assertEq(assetController.canDeploy(newAssets[1]), true);
+
+        assertEq(assetController.canReconcile(newAssets[0]), true);
+        assertEq(assetController.canReconcile(newAssets[1]), true);
     }
 
     function test_setAssets_success_removeAssets() external {
-        vm.startPrank(governor);
+        assertEq(assetController.canWrap(newAssets[0]), false);
+        assertEq(assetController.canWrap(newAssets[1]), false);
 
-        // TODO: Upcoming change to the assetController may make setting globals unnecessary. Revisit after the PR is merged. 
-        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET", newAssets[0], true);
-        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET", newAssets[1], true);
+        assertEq(assetController.canUnwrap(newAssets[0]), false);
+        assertEq(assetController.canUnwrap(newAssets[1]), false);
 
-        assertEq(assetController.canDeposit(newAssets[0]), false);
-        assertEq(assetController.canDeposit(newAssets[1]), false);
+        assertEq(assetController.canDeploy(newAssets[0]), false);
+        assertEq(assetController.canDeploy(newAssets[1]), false);
 
-        assertEq(assetController.canWithdraw(newAssets[0]), false);
-        assertEq(assetController.canWithdraw(newAssets[1]), false);
-
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
-
-        vm.stopPrank();
-
-        assertEq(assetController.canDeposit(newAssets[0]), true);
-        assertEq(assetController.canDeposit(newAssets[1]), true);
-
-        assertEq(assetController.canWithdraw(newAssets[0]), true);
-        assertEq(assetController.canWithdraw(newAssets[1]), true);
-
-        canDeposit  = [false, false];
-        canWithdraw = [false, false];
+        assertEq(assetController.canReconcile(newAssets[0]), false);
+        assertEq(assetController.canReconcile(newAssets[1]), false);
 
         vm.prank(governor);
-        assetController.setAssets(newAssets, canDeposit, canWithdraw);
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
 
-        assertEq(assetController.canDeposit(newAssets[0]), false);
-        assertEq(assetController.canDeposit(newAssets[1]), false);
+        assertEq(assetController.canWrap(newAssets[0]), true);
+        assertEq(assetController.canWrap(newAssets[1]), true);
 
-        assertEq(assetController.canWithdraw(newAssets[0]), false);
-        assertEq(assetController.canWithdraw(newAssets[1]), false);
+        assertEq(assetController.canUnwrap(newAssets[0]), true);
+        assertEq(assetController.canUnwrap(newAssets[1]), true);
+
+        assertEq(assetController.canDeploy(newAssets[0]), true);
+        assertEq(assetController.canDeploy(newAssets[1]), true);
+
+        assertEq(assetController.canReconcile(newAssets[0]), true);
+        assertEq(assetController.canReconcile(newAssets[1]), true);
+
+        canWrap  = [false, false];
+        canUnwrap = [false, false];
+
+        vm.prank(governor);
+        assetController.setAssets(newAssets, canWrap, canUnwrap, canDeploy, canReconcile);
+
+        assertEq(assetController.canWrap(newAssets[0]), false);
+        assertEq(assetController.canWrap(newAssets[1]), false);
+
+        assertEq(assetController.canUnwrap(newAssets[0]), false);
+        assertEq(assetController.canUnwrap(newAssets[1]), false);
+
+        assertEq(assetController.canDeploy(newAssets[0]), true);
+        assertEq(assetController.canDeploy(newAssets[1]), true);
+
+        assertEq(assetController.canReconcile(newAssets[0]), true);
+        assertEq(assetController.canReconcile(newAssets[1]), true);
     }
 
 }
