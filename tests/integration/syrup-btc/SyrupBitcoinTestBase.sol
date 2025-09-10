@@ -10,6 +10,8 @@ import { TestBase } from "../../TestBase.sol";
 
 contract SyrupBitcoinTestBase is TestBase {
 
+    bytes32 public constant EMPTY_METADATA = "";
+
     function setUp() public virtual override {
         _setupBitcoinPool();
     }

@@ -11,8 +11,6 @@ import { SyrupBitcoinTestBase } from "../SyrupBitcoinTestBase.sol";
 
 contract SyrupBitcoinRouterDepositTests is SyrupBitcoinTestBase {
 
-    bytes32 constant EMPTY_METADATA = "";
-
     address depositor;
     address invalidDepositAsset;
 
