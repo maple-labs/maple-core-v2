@@ -48,14 +48,14 @@ contract DeployTestBase is TestBase {
 
     function assertAccounting(
         uint256 outstandingAssets,
-        uint256 lifetimeFees,
+        uint256 realizedFees,
         uint256 accruedYield,
         uint256 accruedFees
     )
         internal
     {
         assertEq(bitcoinStrategy.outstandingAssets(), outstandingAssets);
-        assertEq(bitcoinStrategy.lifetimeFees(),      lifetimeFees);
+        assertEq(bitcoinStrategy.realizedFees(),      realizedFees);
         assertEq(bitcoinStrategy.accruedYield(),      accruedYield);
         assertEq(bitcoinStrategy.accruedFees(),       accruedFees);
 
@@ -291,7 +291,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -316,7 +316,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: partialDeposit,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -340,7 +340,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -365,7 +365,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: depositAmount,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -392,7 +392,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -417,7 +417,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: partialDeposit,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -444,7 +444,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -469,7 +469,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: depositAmount,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -498,7 +498,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      partialYield,
             accruedFees:       partialFees
         });
@@ -523,7 +523,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: partialDeposit + partialYield - partialFees,
-            lifetimeFees:      partialFees,
+            realizedFees:      partialFees,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -552,7 +552,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      partialYield,
             accruedFees:       partialFees
         });
@@ -577,7 +577,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: depositAmount + partialYield - partialFees,
-            lifetimeFees:      partialFees,
+            realizedFees:      partialFees,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -606,7 +606,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      yieldAmount,
             accruedFees:       feeAmount
         });
@@ -631,7 +631,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: partialDeposit + yieldAmount - feeAmount,
-            lifetimeFees:      feeAmount,
+            realizedFees:      feeAmount,
             accruedYield:      0,
             accruedFees:       0
         });
@@ -660,7 +660,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: 0,
-            lifetimeFees:      0,
+            realizedFees:      0,
             accruedYield:      yieldAmount,
             accruedFees:       feeAmount
         });
@@ -685,7 +685,7 @@ contract DeploySuccessTests is DeployTestBase {
 
         assertAccounting({
             outstandingAssets: depositAmount + yieldAmount - feeAmount,
-            lifetimeFees:      feeAmount,
+            realizedFees:      feeAmount,
             accruedYield:      0,
             accruedFees:       0
         });
