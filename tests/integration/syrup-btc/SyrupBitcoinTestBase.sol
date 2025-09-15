@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import {
     IERC20,
-    Permit 
+    Permit
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../../TestBase.sol";
@@ -14,6 +14,40 @@ contract SyrupBitcoinTestBase is TestBase {
 
     function setUp() public virtual override {
         _setupBitcoinPool();
+    }
+
+    function assertAccounting(
+        uint256 outstandingAssets,
+        uint256 realizedFees,
+        uint256 accruedYield,
+        uint256 accruedFees,
+        uint256 assetsUnderManagement
+    )
+        internal
+    {
+        assertEq(bitcoinStrategy.outstandingAssets(),     outstandingAssets);
+        assertEq(bitcoinStrategy.realizedFees(),          realizedFees);
+        assertEq(bitcoinStrategy.accruedYield(),          accruedYield);
+        assertEq(bitcoinStrategy.accruedFees(),           accruedFees);
+        assertEq(bitcoinStrategy.assetsUnderManagement(), assetsUnderManagement);
+    }
+
+    function assertSchedule(
+        uint256 remainingYield,
+        uint32  remainingDuration,
+        uint32  lastUpdated,
+        uint256 yieldRate
+    )
+        internal
+    {
+        ( uint256 remainingYield_, uint32 lastUpdated_, uint32 remainingDuration_ ) = bitcoinStrategy.schedules(0);
+
+        uint256 yieldRate_ = bitcoinStrategy.yieldRate();
+
+        assertEq(remainingYield_,    remainingYield);
+        assertEq(remainingDuration_, remainingDuration);
+        assertEq(lastUpdated_,       lastUpdated);
+        assertEq(yieldRate_,         yieldRate);
     }
 
     function emptyPermit() internal pure returns (Permit memory permit) {
