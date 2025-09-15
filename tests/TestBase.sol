@@ -51,6 +51,7 @@ contract TestBase is ProtocolActions {
     address securityAdmin;
     address strategyManager;
     address treasury;
+    address redeemer;
 
     address assetControllerImplementation;
     address assetControllerInitializer;
@@ -189,6 +190,7 @@ contract TestBase is ProtocolActions {
         securityAdmin    = makeAddr("securityAdmin");
         strategyManager  = makeAddr("strategyManager");
         treasury         = makeAddr("treasury");
+        redeemer         = makeAddr("redeemer");
     }
 
     function _createGlobals() internal {
@@ -323,6 +325,7 @@ contract TestBase is ProtocolActions {
         globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
         globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),         true);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
+        globals.setValidInstanceOf("SYRUP_BTC_REDEEMER",                redeemer,                     true);
 
         globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
         globals.setCanDeployFrom(basicStrategyFactory,        address(deployer), true);
