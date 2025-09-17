@@ -32,6 +32,11 @@ contract SyrupBitcoinTestBase is TestBase {
         assertEq(bitcoinStrategy.assetsUnderManagement(), assetsUnderManagement);
     }
 
+    function assertImpairment(uint256 impairedAssets, uint256 unrealizedLosses) internal {
+        assertEq(bitcoinStrategy.impairedAssets(),   impairedAssets);
+        assertEq(bitcoinStrategy.unrealizedLosses(), unrealizedLosses);
+    }
+
     function assertSchedule(
         uint256 remainingYield,
         uint32  remainingDuration,
