@@ -5,38 +5,7 @@ import { Permit } from "../../../../contracts/interfaces/Interfaces.sol";
 
 import { SyrupBitcoinTestBase } from "../SyrupBitcoinTestBase.sol";
 
-// TODO: Can add assertions for requestsByOwner
-contract SyrupBitcoinRouterRequestRedeemTestsBase is SyrupBitcoinTestBase {
-
-    function assertRequestOnRouter(
-        uint256 requestId,
-        address asset,
-        address owner,
-        uint256 shares
-    )
-        internal
-    {
-        ( address asset_, address owner_, uint256 shares_ ) = bitcoinRouter.redeemRequests(requestId);
-        assertEq(asset_,  asset);
-        assertEq(owner_,  owner);
-        assertEq(shares_, shares);
-    }
-
-    function assertRequestOnWm(
-        uint256 requestId,
-        address owner,
-        uint256 shares
-    )
-        internal
-    {
-        ( address owner_, uint256 shares_ ) = withdrawalManager.requests(requestId);
-        assertEq(owner_,  owner);
-        assertEq(shares_, shares);
-    }
-
-}
-
-contract SyrupBitcoinRouterRequestRedeemTests is SyrupBitcoinRouterRequestRedeemTestsBase {
+contract SyrupBitcoinRouterRequestRedeemTests is SyrupBitcoinTestBase {
 
     address alice;
     address bob;

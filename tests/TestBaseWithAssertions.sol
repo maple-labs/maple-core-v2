@@ -27,6 +27,22 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     /*** State Assertion Functions                                                                                                      ***/
     /**************************************************************************************************************************************/
 
+    function assertAccounting(
+        uint256 outstandingAssets,
+        uint256 realizedFees,
+        uint256 accruedYield,
+        uint256 accruedFees,
+        uint256 assetsUnderManagement
+    )
+        internal
+    {
+        assertEq(bitcoinStrategy.outstandingAssets(),     outstandingAssets);
+        assertEq(bitcoinStrategy.realizedFees(),          realizedFees);
+        assertEq(bitcoinStrategy.accruedYield(),          accruedYield);
+        assertEq(bitcoinStrategy.accruedFees(),           accruedFees);
+        assertEq(bitcoinStrategy.assetsUnderManagement(), assetsUnderManagement);
+    }
+
     function assertFixedTermLoan(
         address loan,
         uint256 principal,
@@ -60,6 +76,11 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
         assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
         assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+    }
+
+    function assertImpairment(uint256 impairedAssets, uint256 unrealizedLosses) internal {
+        assertEq(bitcoinStrategy.impairedAssets(),   impairedAssets);
+        assertEq(bitcoinStrategy.unrealizedLosses(), unrealizedLosses);
     }
 
     function assertOpenTermLoan(
@@ -359,6 +380,45 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(shares_, shares);
     }
 
+    function assertRequestOnWm(
+        uint256 requestId,
+        address owner,
+        uint256 shares
+    ) internal {
+        // This function does the same as assertRequest but is named differently in order to make reading of some tests more intuitive.
+        assertRequest(address(poolManager), requestId, owner, shares);
+    }
+
+    function assertRequestOnRouter(
+        uint256 requestId,
+        address asset,
+        address owner,
+        uint256 shares
+    ) internal {
+        ( address asset_, address owner_, uint256 shares_ ) = bitcoinRouter.redeemRequests(requestId);
+        assertEq(asset_,  asset);
+        assertEq(owner_,  owner);
+        assertEq(shares_, shares);
+    }
+
+    function assertSchedule(
+        uint256 remainingYield,
+        uint32  remainingDuration,
+        uint32  lastUpdated,
+        uint256 yieldRate
+    )
+        internal
+    {
+        ( uint256 remainingYield_, uint32 lastUpdated_, uint32 remainingDuration_ ) = bitcoinStrategy.schedules(0);
+
+        uint256 yieldRate_ = bitcoinStrategy.yieldRate();
+
+        assertEq(remainingYield_,    remainingYield);
+        assertEq(remainingDuration_, remainingDuration);
+        assertEq(lastUpdated_,       lastUpdated);
+        assertEq(yieldRate_,         yieldRate);
+    }
+
     function assertUserRequests(address poolManager, address owner, uint256[] memory requestIds) internal {
         address wm = IPoolManager(poolManager).withdrawalManager();
 
@@ -369,6 +429,11 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         for (uint256 i; i < requestIds.length; i++) {
             assertEq(requests[i], requestIds[i]);
         }
+    }
+
+    function assertUsersRequestsOnWm(address user, uint256[] memory requestIds) internal {
+        // This function does the same as assertUserRequests but is named differently in order to make reading of some tests more intuitive.
+        assertUserRequests(address(poolManager), user, requestIds);
     }
 
     function assertWithdrawalManagerState(
