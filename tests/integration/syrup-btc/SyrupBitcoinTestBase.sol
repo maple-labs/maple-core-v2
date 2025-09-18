@@ -90,7 +90,7 @@ contract SyrupBitcoinTestBase is TestBase {
 
     function calculateFee(uint256 amount, uint256 fee) internal pure returns (uint256 fee_) {
         uint256 HUNDRED_PERCENT = 1e6;  // 100.0000%
-        fee_ = (amount * fee) / HUNDRED_PERCENT;
+        fee_ = (amount * fee + HUNDRED_PERCENT - 1) / HUNDRED_PERCENT;
     }
 
 }

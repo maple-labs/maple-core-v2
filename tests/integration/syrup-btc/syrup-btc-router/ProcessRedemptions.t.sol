@@ -964,6 +964,94 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(routerRequest2SharesAfter, 0);
     }
 
+    function test_syrupBitcoinRouter_processRedemptions_success_redemptionFeeEqualsRedeemAmount_userReceivesZeroShares() external {
+        uint256 redemptionFeeRate = 0.1e6;  // 10% fee
+        uint256 processedShares   = 1 wei;
+        uint256 expectedFee       = calculateFee(processedShares, redemptionFeeRate);
+
+        assertEq(expectedFee, processedShares);
+
+        assertEq(pool.balanceOf(address(bitcoinRouter)),           0);
+        assertEq(pool.balanceOf(depositorA),                       0);
+        assertEq(pool.balanceOf(depositorB),                       0);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       depositAmountA + depositAmountB);
+        assertEq(depositAsset.balanceOf(address(treasury)),        0);
+        assertEq(depositAsset.balanceOf(address(assetController)), depositAmountA + depositAmountB);
+        assertEq(compositeAsset.balanceOf(address(pool)),          depositAmountA + depositAmountB);
+
+        ( address wmRequestOwner, uint256 wmRequestShares ) = withdrawalManager.requests(requestIds[0]);
+
+        assertEq(wmRequestOwner,  address(bitcoinRouter));
+        assertEq(wmRequestShares, depositAmountA);
+
+        (
+            address routerRequestAsset,
+            address routerRequestOwner,
+            uint256 routerRequestShares
+        ) = bitcoinRouter.redeemRequests(requestIds[0]);
+
+        assertEq(routerRequestAsset,  address(depositAsset));
+        assertEq(routerRequestOwner,  depositorA);
+        assertEq(routerRequestShares, depositAmountA);
+
+        vm.startPrank(governor);
+        bitcoinRouter.setFees(address(depositAsset), 0, redemptionFeeRate);
+        withdrawalManager.processRedemptions(processedShares);
+        vm.stopPrank();
+
+        assertEq(pool.balanceOf(address(bitcoinRouter)),           0);
+        assertEq(pool.balanceOf(depositorA),                       0);
+        assertEq(pool.balanceOf(depositorB),                       0);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       depositAmountA + depositAmountB);
+        assertEq(depositAsset.balanceOf(address(treasury)),        0);
+        assertEq(depositAsset.balanceOf(address(assetController)), depositAmountA + depositAmountB);
+        assertEq(compositeAsset.balanceOf(address(pool)),          depositAmountA + depositAmountB);
+
+        ( wmRequestOwner, wmRequestShares ) = withdrawalManager.requests(requestIds[0]);
+
+        assertEq(wmRequestOwner,  address(bitcoinRouter));
+        assertEq(wmRequestShares, depositAmountA - processedShares);
+
+        (
+            routerRequestAsset,
+            routerRequestOwner,
+            routerRequestShares
+        ) = bitcoinRouter.redeemRequests(requestIds[0]);
+
+        assertEq(routerRequestAsset,  address(depositAsset));
+        assertEq(routerRequestOwner,  depositorA);
+        assertEq(routerRequestShares, depositAmountA);
+
+        uint256[] memory requestIdsToProcess = new uint256[](1);
+        requestIdsToProcess[0]               = requestIds[0];
+
+        vm.prank(redeemer);
+        bitcoinRouter.processRedemptions(requestIdsToProcess);
+
+        assertEq(pool.balanceOf(address(bitcoinRouter)),           0);
+        assertEq(pool.balanceOf(depositorA),                       0);
+        assertEq(pool.balanceOf(depositorB),                       0);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       depositAmountA + depositAmountB - processedShares);
+        assertEq(depositAsset.balanceOf(address(treasury)),        expectedFee);
+        assertEq(depositAsset.balanceOf(address(assetController)), depositAmountA + depositAmountB - processedShares);
+        assertEq(compositeAsset.balanceOf(address(pool)),          depositAmountA + depositAmountB - processedShares);
+
+        ( wmRequestOwner, wmRequestShares ) = withdrawalManager.requests(requestIds[0]);
+
+        assertEq(wmRequestOwner,  address(bitcoinRouter));
+        assertEq(wmRequestShares, depositAmountA - processedShares);
+
+        (
+            routerRequestAsset,
+            routerRequestOwner,
+            routerRequestShares
+        ) = bitcoinRouter.redeemRequests(requestIds[0]);
+
+        assertEq(routerRequestAsset,  address(depositAsset));
+        assertEq(routerRequestOwner,  depositorA);
+        assertEq(routerRequestShares, depositAmountA - processedShares);
+    }
+
     function test_syrupBitcoinRouter_processRedemptions_success_withFullRedemptionFee() external {
         uint256 redemptionFeeRate = 1e6;  // 100% fee
 

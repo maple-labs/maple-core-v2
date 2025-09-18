@@ -310,6 +310,40 @@ contract SyrupBitcoinRouterDepositTests is SyrupBitcoinTestBase {
         bitcoinRouter.deposit(address(depositAsset), depositAmount, EMPTY_METADATA, emptyPermit());
     }
 
+    function test_syrupBitcoinRouter_deposit_revert_feeEqualsDepositAmount_zeroAmountToWrap() external {
+        uint256 minimumDepositAmount = 1;
+        uint256 depositorBalance     = depositAsset.balanceOf(depositor);
+        uint256 mintFee              = 0.15e6;  // 15% Fee
+        uint256 redemptionFee        = 0;
+        uint256 expectedFee          = calculateFee(minimumDepositAmount, mintFee);
+
+        assertEq(expectedFee, minimumDepositAmount);
+
+        vm.startPrank(governor);
+        bitcoinRouter.setFees(address(depositAsset), mintFee, redemptionFee);
+        vm.stopPrank();
+
+        assertEq(depositAsset.balanceOf(depositor),                depositorBalance);
+        assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(depositAsset.balanceOf(address(assetController)), 0);
+        assertEq(depositAsset.balanceOf(address(pool)),            0);
+        assertEq(depositAsset.balanceOf(address(treasury)),        0);
+
+        assertEq(compositeAsset.balanceOf(depositor),                0);
+        assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(compositeAsset.balanceOf(address(assetController)), 0);
+        assertEq(compositeAsset.balanceOf(address(pool)),            0);
+
+        assertEq(assetController.poolAssets(address(depositAsset)),    0);
+        assertEq(assetController.depositAssets(address(depositAsset)), 0);
+
+        assertEq(pool.balanceOf(depositor), 0);
+
+        vm.prank(depositor);
+        vm.expectRevert("AC:W:ZERO_DEPOSIT");
+        bitcoinRouter.deposit(address(depositAsset), minimumDepositAmount, EMPTY_METADATA, emptyPermit());
+    }
+
     function test_syrupBitcoinRouter_deposit_success_noPermit_fullApproval() external {
         assertEq(depositAsset.balanceOf(depositor),                depositAmount);
         assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
@@ -591,6 +625,58 @@ contract SyrupBitcoinRouterDepositTests is SyrupBitcoinTestBase {
         assertEq(pool.balanceOf(depositor), depositAmount - expectedFee);
     }
 
+    function test_syrupBitcoinRouter_deposit_success_withFee_feeRoundedUp() external {
+        depositAmount = 3 wei;
+
+        uint256 mintFee       = 0.5e6;  // 50% Fee
+        uint256 redemptionFee = 0;
+        uint256 expectedFee   = calculateFee(depositAmount, mintFee);
+
+        assertEq(expectedFee, 2 wei);
+
+        vm.startPrank(governor);
+        bitcoinRouter.setFees(address(depositAsset), mintFee, redemptionFee);
+        vm.stopPrank();
+
+        uint256 depositorBalanceBefore = depositAsset.balanceOf(depositor);
+
+        assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(depositAsset.balanceOf(address(assetController)), 0);
+        assertEq(depositAsset.balanceOf(address(pool)),            0);
+        assertEq(depositAsset.balanceOf(address(treasury)),        0);
+
+        assertEq(compositeAsset.balanceOf(depositor),                0);
+        assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(compositeAsset.balanceOf(address(assetController)), 0);
+        assertEq(compositeAsset.balanceOf(address(pool)),            0);
+
+        assertEq(assetController.poolAssets(address(depositAsset)),    0);
+        assertEq(assetController.depositAssets(address(depositAsset)), 0);
+
+        assertEq(pool.balanceOf(depositor), 0);
+
+        vm.prank(depositor);
+        uint256 sharesMinted = bitcoinRouter.deposit(address(depositAsset), depositAmount, EMPTY_METADATA, emptyPermit());
+
+        assertEq(sharesMinted, depositAmount - expectedFee);
+
+        assertEq(depositAsset.balanceOf(depositor),                depositorBalanceBefore - depositAmount);
+        assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(depositAsset.balanceOf(address(assetController)), depositAmount - expectedFee);
+        assertEq(depositAsset.balanceOf(address(pool)),            0);
+        assertEq(depositAsset.balanceOf(address(treasury)),        expectedFee);
+
+        assertEq(compositeAsset.balanceOf(depositor),                0);
+        assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
+        assertEq(compositeAsset.balanceOf(address(assetController)), 0);
+        assertEq(compositeAsset.balanceOf(address(pool)),            depositAmount - expectedFee);
+
+        assertEq(assetController.poolAssets(address(depositAsset)),    depositAmount - expectedFee);
+        assertEq(assetController.depositAssets(address(depositAsset)), depositAmount - expectedFee);
+
+        assertEq(pool.balanceOf(depositor), depositAmount - expectedFee);
+    }
+
     function test_syrupBitcoinRouter_deposit_success_minimumDeposit_zeroFee() external {
         uint256 minimumDepositAmount  = 1;
         uint256 depositorBalance      = depositAsset.balanceOf(depositor);
@@ -621,57 +707,6 @@ contract SyrupBitcoinRouterDepositTests is SyrupBitcoinTestBase {
         assertEq(depositAsset.balanceOf(address(assetController)), minimumDepositAmount);
         assertEq(depositAsset.balanceOf(address(pool)),            0);
         assertEq(depositAsset.balanceOf(address(treasury)),        0);
-
-        assertEq(compositeAsset.balanceOf(depositor),                0);
-        assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
-        assertEq(compositeAsset.balanceOf(address(assetController)), 0);
-        assertEq(compositeAsset.balanceOf(address(pool)),            minimumDepositAmount);
-
-        assertEq(assetController.poolAssets(address(depositAsset)),    minimumDepositAmount);
-        assertEq(assetController.depositAssets(address(depositAsset)), minimumDepositAmount);
-
-        assertEq(pool.balanceOf(depositor), minimumDepositAmount);
-    }
-
-    function test_syrupBitcoinRouter_deposit_success_minimumDeposit_withFeeRoundedDown() external {
-        uint256 minimumDepositAmount = 1;
-        uint256 depositorBalance     = depositAsset.balanceOf(depositor);
-        uint256 mintFee              = 0.15e6;  // 15% Fee
-        uint256 redemptionFee        = 0;
-        uint256 expectedFee          = calculateFee(minimumDepositAmount, mintFee);
-
-        assertEq(expectedFee, 0);
-
-        vm.startPrank(governor);
-        bitcoinRouter.setFees(address(depositAsset), mintFee, redemptionFee);
-        vm.stopPrank();
-
-        assertEq(depositAsset.balanceOf(depositor),                depositorBalance);
-        assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
-        assertEq(depositAsset.balanceOf(address(assetController)), 0);
-        assertEq(depositAsset.balanceOf(address(pool)),            0);
-        assertEq(depositAsset.balanceOf(address(treasury)),        0);
-
-        assertEq(compositeAsset.balanceOf(depositor),                0);
-        assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
-        assertEq(compositeAsset.balanceOf(address(assetController)), 0);
-        assertEq(compositeAsset.balanceOf(address(pool)),            0);
-
-        assertEq(assetController.poolAssets(address(depositAsset)),    0);
-        assertEq(assetController.depositAssets(address(depositAsset)), 0);
-
-        assertEq(pool.balanceOf(depositor), 0);
-
-        vm.prank(depositor);
-        uint256 sharesMinted_ = bitcoinRouter.deposit(address(depositAsset), minimumDepositAmount, EMPTY_METADATA, emptyPermit());
-
-        assertEq(sharesMinted_, minimumDepositAmount);
-
-        assertEq(depositAsset.balanceOf(depositor),                depositorBalance - minimumDepositAmount);
-        assertEq(depositAsset.balanceOf(address(bitcoinRouter)),   0);
-        assertEq(depositAsset.balanceOf(address(assetController)), minimumDepositAmount);
-        assertEq(depositAsset.balanceOf(address(pool)),            0);
-        assertEq(depositAsset.balanceOf(address(treasury)),        expectedFee);
 
         assertEq(compositeAsset.balanceOf(depositor),                0);
         assertEq(compositeAsset.balanceOf(address(bitcoinRouter)),   0);
