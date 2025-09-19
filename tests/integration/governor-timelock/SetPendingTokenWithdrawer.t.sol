@@ -6,7 +6,7 @@ import { GovernorTimelockTestBase } from "./GovernorTimelockTestBase.t.sol";
 contract SetPendingTokenWithdrawerTests is GovernorTimelockTestBase {
 
     function test_setPendingTokenWithdrawer_revert_notTokenWithdrawer() public {
-        vm.expectRevert("GT:SPTW:NOT_AUTHORIZED");
+        vm.expectRevert("GT:NOT_AUTHORIZED");
         timelock.setPendingTokenWithdrawer(makeAddr("pendingTokenWithdrawer"));
     }
 
@@ -18,7 +18,7 @@ contract SetPendingTokenWithdrawerTests is GovernorTimelockTestBase {
         assertEq(timelock.pendingTokenWithdrawer(), address(0));
         assertEq(timelock.tokenWithdrawer(),        governor);
 
-        vm.prank(governor);
+        vm.prank(roleAdmin);
         timelock.setPendingTokenWithdrawer(pendingTokenWithdrawer);
 
         assertEq(timelock.pendingTokenWithdrawer(), pendingTokenWithdrawer);

@@ -17,7 +17,7 @@ contract AcceptTokenWithdrawerTests is GovernorTimelockTestBase {
 
         assertEq(timelock.pendingTokenWithdrawer(), address(0));
 
-        vm.prank(governor);
+        vm.prank(roleAdmin);
         timelock.setPendingTokenWithdrawer(pendingTokenWithdrawer);
 
         assertEq(timelock.pendingTokenWithdrawer(), pendingTokenWithdrawer);
