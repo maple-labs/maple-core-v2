@@ -318,6 +318,21 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertTrue(liquidationInfo.triggeredByGovernor == triggeredByGovernor,     "triggeredByGovernor");
     }
 
+    function assertPermissions(
+        address account,
+        bool    canDeploy,
+        bool    canReconcile,
+        bool    canSchedule
+    )
+        internal
+    {
+        ( bool canDeploy_, bool canReconcile_, bool canSchedule_ ) = bitcoinStrategy.permissions(account);
+
+        assertEq(canDeploy_,    canDeploy);
+        assertEq(canReconcile_, canReconcile);
+        assertEq(canSchedule_,  canSchedule);
+    }
+
     function assertPoolState(
         address pool,
         uint256 totalAssets,
