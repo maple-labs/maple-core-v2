@@ -14,11 +14,11 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     /**************************************************************************************************************************************/
 
     function upgradeProtocol() internal {
-        upgradeGovernorTimelock();
+        deployGovernorTimelock();
         setupWithdrawalManager();
     }
 
-    function upgradeGovernorTimelock() internal {
+    function deployGovernorTimelock() internal {
         proposer  = makeAddr("proposer");
         executor  = operationalAdmin;
         canceller = securityAdmin;

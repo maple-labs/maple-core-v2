@@ -76,10 +76,9 @@ echo Using profile: $FOUNDRY_PROFILE
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
-#     --mnemonic-indexes 15 \
+#     --mnemonic-indexes 19 \
 #     --ledger \
 #     --slow \
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
-#     --broadcast \
 #     scripts/GovernorTimelockDeployment.s.sol:GovernorTimelockDeployment
