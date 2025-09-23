@@ -299,27 +299,17 @@ contract RemoveRequestFailureTests is TestBase {
     function test_removeRequest_failIfNotPoolDelegate() external {
         uint256[] memory requestIds = _createRemoveRequestIds();
 
-        vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
+        vm.expectRevert("WM:NOT_POOL_DELEG_OR_OPS_ADMIN");
         queueWM.removeRequest(lp, requestIds);
 
         vm.prank(poolDelegate);
         queueWM.removeRequest(lp, requestIds);
     }
 
-    function test_removeRequest_failIfNotGovernor() external {
-        uint256[] memory requestIds = _createRemoveRequestIds();
-
-        vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
-        queueWM.removeRequest(lp, requestIds);
-
-        vm.prank(governor);
-        queueWM.removeRequest(lp, requestIds);
-    }
-
     function test_removeRequest_failIfNotOperationalAdmin() external {
         uint256[] memory requestIds = _createRemoveRequestIds();
 
-        vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
+        vm.expectRevert("WM:NOT_POOL_DELEG_OR_OPS_ADMIN");
         queueWM.removeRequest(lp, requestIds);
 
         vm.prank(operationalAdmin);

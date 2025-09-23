@@ -37,19 +37,12 @@ contract SetManualWithdrawalTests is TestBaseWithAssertions {
     }
 
     function test_setManualWithdrawal_failIfNotProtocolAdmin() external {
-        vm.expectRevert("WM:NOT_PD_OR_GOV_OR_OA");
+        vm.expectRevert("WM:NOT_POOL_DELEG_OR_OPS_ADMIN");
         queueWM.setManualWithdrawal(lp, true);
     }
 
     function test_setManualWithdrawal_success() external {
         vm.prank(poolDelegate);
-        queueWM.setManualWithdrawal(lp, true);
-
-        assertTrue(queueWM.isManualWithdrawal(lp));
-    }
-
-    function test_setManualWithdrawal_successAsGovernor() external {
-        vm.prank(governor);
         queueWM.setManualWithdrawal(lp, true);
 
         assertTrue(queueWM.isManualWithdrawal(lp));

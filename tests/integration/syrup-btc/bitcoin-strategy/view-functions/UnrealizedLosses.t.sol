@@ -26,7 +26,7 @@ contract UnrealizedLossesTests is SyrupBitcoinTestBase {
         bitcoinStrategy.deploy(address(depositAsset), principal);
 
         // Set impairment.
-        impairedAssets = bound(impairedAssets, 0, principal);
+        impairedAssets = bound(impairedAssets, 0, principal - 1);
 
         vm.prank(governor);
         bitcoinStrategy.setImpairment(impairedAssets);

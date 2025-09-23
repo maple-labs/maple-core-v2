@@ -97,7 +97,7 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
     }
 
     function test_removeSharesById_revert_invalidRequest_fullyProcessed() external {
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(redeemAmount1);
 
         vm.prank(depositor);
@@ -114,7 +114,7 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
     function test_removeSharesById_revert_noChange_wmRequestPartiallyProcessed() external {
         uint256 sharesToProcess = 100e8;
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(sharesToProcess);
 
         vm.prank(depositor);
@@ -295,7 +295,7 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
         uint256 sharesToProcess = 100e8;
         uint256 sharesToRemove  = redeemAmount1 - sharesToProcess;
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(sharesToProcess);
 
         assertRequestOnRouter({
@@ -548,7 +548,7 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
         uint256 sharesToProcess = 100e8;
         uint256 sharesToRemove  = 200e8;
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(sharesToProcess);
 
         assertRequestOnRouter({

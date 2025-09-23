@@ -29,7 +29,7 @@ contract SyrupBitcoinRouterSetFeesTests is SyrupBitcoinTestBase {
     }
 
     function test_setFees_revert_notAuthorized() external {
-        vm.expectRevert("SBR:NOT_AUTHORIZED");
+        vm.expectRevert("SBR:NOT_GOV_OR_POOL_DELEGATE");
         bitcoinRouter.setFees(address(depositAsset), 0, 0);
     }
 

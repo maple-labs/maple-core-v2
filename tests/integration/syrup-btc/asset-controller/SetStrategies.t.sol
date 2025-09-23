@@ -6,7 +6,7 @@ import { SyrupBitcoinTestBase } from "../SyrupBitcoinTestBase.sol";
 contract AssetControllerSetStrategiesTests is SyrupBitcoinTestBase {
 
     address[] newStrategies;
-    
+
     bool[] flags;
 
     function setUp() public virtual override {
@@ -24,7 +24,7 @@ contract AssetControllerSetStrategiesTests is SyrupBitcoinTestBase {
     }
 
     function test_setStrategies_revert_notGovernor() external  {
-        vm.expectRevert("AC:NOT_GOVERNOR");
+        vm.expectRevert("AC:NOT_GOV_OR_OPS_ADMIN");
         assetController.setStrategies(newStrategies, flags);
     }
 
@@ -67,7 +67,7 @@ contract AssetControllerSetStrategiesTests is SyrupBitcoinTestBase {
 
     function test_setStrategies_success_falseFlag_keyNotSet() external {
         flags = [false, false];
-        
+
         vm.startPrank(governor);
 
         globals.setValidInstanceOf("BITCOIN_STRATEGY", newStrategies[0], false);

@@ -18,8 +18,8 @@ contract CompositeTokenAllowAddressesTests is SyrupBitcoinTestBase {
         allowed.push(true);
     }
 
-    function test_allowAddresses_revert_notProtocolAdmins() external {
-        vm.expectRevert("CT:NOT_AUTHORIZED");
+    function test_allowAddresses_revert_notGovernor() external {
+        vm.expectRevert("CT:NOT_GOVERNOR");
         compositeAsset.allowAddresses(new address[](0), new bool[](0));
     }
 
@@ -28,7 +28,7 @@ contract CompositeTokenAllowAddressesTests is SyrupBitcoinTestBase {
         vm.expectRevert("CT:A:NO_ADDRESSES");
         compositeAsset.allowAddresses(new address[](0), new bool[](0));
 
-        vm.prank(operationalAdmin);
+        vm.prank(governor);
         vm.expectRevert("CT:A:NO_ADDRESSES");
         compositeAsset.allowAddresses(new address[](0), new bool[](0));
     }
@@ -38,7 +38,7 @@ contract CompositeTokenAllowAddressesTests is SyrupBitcoinTestBase {
         vm.expectRevert("CT:A:LENGTH_MISMATCH");
         compositeAsset.allowAddresses(new address[](1), new bool[](2));
 
-        vm.prank(operationalAdmin);
+        vm.prank(governor);
         vm.expectRevert("CT:A:LENGTH_MISMATCH");
         compositeAsset.allowAddresses(new address[](1), new bool[](2));
     }
@@ -63,25 +63,4 @@ contract CompositeTokenAllowAddressesTests is SyrupBitcoinTestBase {
         assertEq(compositeAsset.allowedAddresses(addresses[1]), false);
     }
 
-    function test_allowAddresses_success_operationalAdmin() external {
-        assertEq(compositeAsset.allowedAddresses(addresses[0]), false);
-        assertEq(compositeAsset.allowedAddresses(addresses[1]), false);
-
-        vm.prank(operationalAdmin);
-        compositeAsset.allowAddresses(addresses, allowed);
-
-        assertEq(compositeAsset.allowedAddresses(addresses[0]), true);
-        assertEq(compositeAsset.allowedAddresses(addresses[1]), true);
-
-        allowed[0] = false;
-        allowed[1] = false;
-
-        vm.prank(operationalAdmin);
-        compositeAsset.allowAddresses(addresses, allowed);
-
-        assertEq(compositeAsset.allowedAddresses(addresses[0]), false);
-        assertEq(compositeAsset.allowedAddresses(addresses[1]), false);
-    }
-
 }
-

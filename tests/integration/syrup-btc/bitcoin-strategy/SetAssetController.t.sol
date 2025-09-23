@@ -33,7 +33,7 @@ contract SetAssetControllerTests is SyrupBitcoinTestBase {
     }
 
     function test_setAssetController_revert_notAdmin() external {
-        vm.expectRevert("MBS:NOT_ADMIN");
+        vm.expectRevert("MBS:NOT_GOV_OR_OPS_ADMIN");
         bitcoinStrategy.setAssetController(address(depositAsset), controllerA);
     }
 

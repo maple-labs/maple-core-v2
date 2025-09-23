@@ -173,7 +173,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -243,7 +243,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -278,7 +278,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -319,7 +319,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -363,7 +363,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -402,7 +402,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -441,7 +441,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -487,7 +487,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -533,7 +533,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -584,7 +584,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
             assertEq(assetController.poolAssets(address(depositAsset)),     depositAmountA + depositAmountB);
         }
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);
 
         {
@@ -634,7 +634,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -664,7 +664,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         reversedIds[0] = requestIds[1];
         reversedIds[1] = requestIds[0];
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(reversedIds);
 
         assertEq(depositAsset.balanceOf(depositorA),        depositAmountA);
@@ -701,7 +701,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -741,7 +741,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         uint256[] memory oneRequest = new uint256[](1);
         oneRequest[0]               = requestIds[0];
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(oneRequest);
 
         assertEq(depositAsset.balanceOf(depositorA),        depositAmountA);
@@ -778,7 +778,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA / 2);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -812,7 +812,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         uint256[] memory oneRequest = new uint256[](1);
         oneRequest[0]               = requestIds[0];
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(oneRequest);
 
         assertEq(depositAsset.balanceOf(depositorA),        depositAmountA / 2);
@@ -849,7 +849,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA / 2);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -875,11 +875,11 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
 
         assertEq(depositorADepositAssetBalanceAfterFirst, depositAmountA / 2);
 
-        vm.startPrank(governor);
+        vm.startPrank(poolDelegate);
         withdrawalManager.processRedemptions((depositAmountA - (depositAmountA / 2)) + depositAmountB);
         vm.stopPrank();
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);
 
         assertEq(depositAsset.balanceOf(depositorA), depositAmountA);
@@ -915,7 +915,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -941,7 +941,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         uint256 expectedPayoutB               = depositAmountB - expectedFeeB;
         uint256 expectedTreasuryBalanceAfter  = treasuryDepositAssetBalanceBefore + expectedFeeA + expectedFeeB;
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);
 
         assertEq(depositAsset.balanceOf(depositorA),        expectedPayoutA);
@@ -994,10 +994,11 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(routerRequestOwner,  depositorA);
         assertEq(routerRequestShares, depositAmountA);
 
-        vm.startPrank(governor);
+        vm.prank(governor);
         bitcoinRouter.setFees(address(depositAsset), 0, redemptionFeeRate);
+
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(processedShares);
-        vm.stopPrank();
 
         assertEq(pool.balanceOf(address(bitcoinRouter)),           0);
         assertEq(pool.balanceOf(depositorA),                       0);
@@ -1025,7 +1026,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         uint256[] memory requestIdsToProcess = new uint256[](1);
         requestIdsToProcess[0]               = requestIds[0];
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIdsToProcess);
 
         assertEq(pool.balanceOf(address(bitcoinRouter)),           0);
@@ -1071,7 +1072,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(shares1, depositAmountA);
         assertEq(shares2, depositAmountB);
 
-        vm.prank(governor);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
         ( owner1, shares1 ) = withdrawalManager.requests(1);
@@ -1117,7 +1118,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(depositAsset.balanceOf(depositorB),     0);
         assertEq(pool.balanceOf(address(bitcoinRouter)), 0);
 
-        vm.prank(redeemer);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);
 
         uint256 expectedTreasuryBalanceAfter = depositAmountA + depositAmountB;
@@ -1129,7 +1130,7 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
 
         ( address routerRequest1AssetAfter, address routerRequest1OwnerAfter, uint256 routerRequest1SharesAfter ) =
             bitcoinRouter.redeemRequests(1);
-            
+
         ( address routerRequest2AssetAfter, address routerRequest2OwnerAfter, uint256 routerRequest2SharesAfter ) =
             bitcoinRouter.redeemRequests(2);
 

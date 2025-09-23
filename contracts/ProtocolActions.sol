@@ -796,9 +796,9 @@ contract ProtocolActions is Runner {
     function processRedemptions(address pool_, uint256 shares_) internal {
         address poolManager_       = IPool(pool_).manager();
         address withdrawalManager_ = IPoolManager(poolManager_).withdrawalManager();
-        address governor_          = IPoolManager(poolManager_).governor();
+        address poolDelegate_      = IPoolManager(poolManager_).poolDelegate();
 
-        vm.prank(governor_);
+        vm.prank(poolDelegate_);
         IWithdrawalManagerQueue(withdrawalManager_).processRedemptions(shares_);
     }
 
@@ -856,9 +856,9 @@ contract ProtocolActions is Runner {
         IPoolManager pm_            = IPoolManager(poolManager_);
         IWithdrawalManagerQueue wm_ = IWithdrawalManagerQueue(pm_.withdrawalManager());
 
-        address governor_ = pm_.governor();
+        address poolDelegate_ = pm_.poolDelegate();
 
-        vm.prank(governor_);
+        vm.prank(poolDelegate_);
         wm_.setManualWithdrawal(lender_, isManual_);
     }
 

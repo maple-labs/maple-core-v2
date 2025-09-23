@@ -44,13 +44,13 @@ contract DepositAssetsTests is SyrupBitcoinTestBase {
 
         assertEq(lockedShares, shares);
 
-        vm.prank(operationalAdmin);
+        vm.prank(poolDelegate);
         withdrawalManager.processRedemptions(shares);
 
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0]               = requestId;
 
-        vm.prank(operationalAdmin);
+        vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);
 
         assertEq(assetController.depositAssets(address(depositAsset)), 0);

@@ -641,7 +641,7 @@ contract TestBase is ProtocolActions {
         assetController.setAssets(addresses, allowed, allowed, allowed, allowed);
 
         // Set the bitcoin router to manual withdrawal.
-        vm.prank(governor);
+        vm.prank(operationalAdmin);
         withdrawalManager.setManualWithdrawal(address(bitcoinRouter), true);
 
         // Set all bitcoin strategies on the asset controller.

@@ -28,7 +28,7 @@ contract SyrupBitcoinRouterSetAssetControllerTests is SyrupBitcoinTestBase {
     }
 
     function test_setAssetController_revert_notAuthorized() external {
-        vm.expectRevert("SBR:NOT_AUTHORIZED");
+        vm.expectRevert("SBR:NOT_GOV_OR_OPS_ADMIN");
         bitcoinRouter.setAssetController(address(depositAsset), address(newAssetController));
     }
 

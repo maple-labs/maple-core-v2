@@ -24,7 +24,7 @@ contract CompositeTokenSetAssetControllersTests is SyrupBitcoinTestBase {
     }
 
     function test_setAssetControllers_revert_notProtocolAdmins() external {
-        vm.expectRevert("CT:NOT_AUTHORIZED");
+        vm.expectRevert("CT:NOT_GOVERNOR");
         compositeAsset.setAssetControllers(new address[](0), new bool[](0));
     }
 
@@ -63,26 +63,6 @@ contract CompositeTokenSetAssetControllersTests is SyrupBitcoinTestBase {
         flags[1] = false;
 
         vm.prank(governor);
-        compositeAsset.setAssetControllers(controllers, flags);
-
-        assertEq(compositeAsset.controllers(controllers[0]), false);
-        assertEq(compositeAsset.controllers(controllers[1]), false);
-    }
-
-    function test_setAssetControllers_success_operationalAdmin() external {
-        assertEq(compositeAsset.controllers(controllers[0]), false);
-        assertEq(compositeAsset.controllers(controllers[1]), false);
-
-        vm.prank(operationalAdmin);
-        compositeAsset.setAssetControllers(controllers, flags);
-
-        assertEq(compositeAsset.controllers(controllers[0]), true);
-        assertEq(compositeAsset.controllers(controllers[1]), true);
-
-        flags[0] = false;
-        flags[1] = false;
-
-        vm.prank(operationalAdmin);
         compositeAsset.setAssetControllers(controllers, flags);
 
         assertEq(compositeAsset.controllers(controllers[0]), false);
