@@ -16,7 +16,7 @@ contract GovernorTimelockUpgradeTestsBase is ProtocolUpgradeBase {
     uint256 start;
     uint256 validUntil;
 
-    function test_governorTimelock_fullUpgradeProcedure() public {
+    function testFork_governorTimelock_fullUpgradeProcedure() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"));
 
         backupRoleAdmin = makeAddr("backupRoleAdmin");

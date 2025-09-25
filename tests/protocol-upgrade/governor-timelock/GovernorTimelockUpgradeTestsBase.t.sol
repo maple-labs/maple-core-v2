@@ -20,7 +20,7 @@ contract GovernorTimelockUpgradeTestsBase is ProtocolUpgradeBase {
     }
 
 
-    function test_setUp_governorTimelockUpgradeTests() public {
+    function testFork_setUp_governorTimelockUpgradeTests() public {
         assertEq(IGovernorTimelock(timelock).hasRole(proposer,         IGovernorTimelock(timelock).PROPOSER_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin,    IGovernorTimelock(timelock).CANCELLER_ROLE()), true);

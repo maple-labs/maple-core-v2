@@ -27,7 +27,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
         proxyFactories.push(basicStrategyFactory);
     }
 
-    function test_disableUpgradePath() public {
+    function testFork_disableUpgradePath() public {
         uint256 fromVersion = 100;
         uint256 toVersion   = 101;
 
@@ -50,7 +50,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
         }
     }
 
-    function test_enabledUpgradePath() public {
+    function testFork_enabledUpgradePath() public {
         uint256 fromVersion = 100;
         uint256 toVersion   = 101;
 
@@ -70,7 +70,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
     }
 
 
-    function test_registerImplementation() public {
+    function testFork_registerImplementation() public {
         // Implementation can be any contract it is important to have size > 0
         address newImplementation = address(timelock);
         uint256 version           = 12345;
@@ -92,7 +92,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
         }
     }
 
-    function test_setDefaultVersion() public {
+    function testFork_setDefaultVersion() public {
         // Implementation can be any contract it is important to have size > 0
         address newImplementation = address(timelock);
         uint256 version           = 12345;
@@ -114,7 +114,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
         }
     }
 
-    function test_setGlobals() public {
+    function testFork_setGlobals() public {
         address newGlobalsGovernor = makeAddr("newGlobalsGovernor");
         address newGlobals = address(new MockGlobals(newGlobalsGovernor));
 

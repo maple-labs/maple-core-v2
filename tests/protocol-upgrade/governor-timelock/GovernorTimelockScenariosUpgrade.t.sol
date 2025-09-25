@@ -16,7 +16,7 @@ import { GovernorTimelockUpgradeTestsBase } from "./GovernorTimelockUpgradeTests
 
 contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
-    function test_reclaimERC20_withoutChangingGovernorOnOldGlobals() public {
+    function testFork_reclaimERC20_withoutChangingGovernorOnOldGlobals() public {
         uint256 amountToReclaim = 100e6;
 
         uint256 treasuryBalanceBefore = IERC20(usdc).balanceOf(address(treasury));
@@ -29,7 +29,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         assertEq(IERC20(usdc).balanceOf(address(governor)), governorBalanceBefore + amountToReclaim);
     }
 
-    function test_withdrawERC20Token_afterChangingTokenWithdrawer_withNewGovernorOnOldGlobals() public {
+    function testFork_withdrawERC20Token_afterChangingTokenWithdrawer_withNewGovernorOnOldGlobals() public {
         _setGovernorOnOldGlobals();
 
         address newTokenWithdrawer = makeAddr("newTokenWithdrawer");
@@ -70,7 +70,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         assertEq(IERC20(usdc).balanceOf(address(timelock)),  0);
     }
 
-    function test_updateRoles_backupRoleAdmin_removesPrimaryRoleAdmin() public {
+    function testFork_updateRoles_backupRoleAdmin_removesPrimaryRoleAdmin() public {
         uint256 latestProposalId    = IGovernorTimelock(timelock).latestProposalId();
         uint256 expectedProposalId1 = latestProposalId + 1;
         uint256 expectedProposalId2 = latestProposalId + 2;
@@ -89,7 +89,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         assertEq(IGovernorTimelock(timelock).hasRole(roleAdmin2, IGovernorTimelock(timelock).ROLE_ADMIN()), true);
     }
 
-    function test_unscheduleProposals_cancellerCanNotUnscheduleRoleUpdate() public {
+    function testFork_unscheduleProposals_cancellerCanNotUnscheduleRoleUpdate() public {
         uint256 latestProposalId   = IGovernorTimelock(timelock).latestProposalId();
         uint256 expectedProposalId = latestProposalId + 1;
 
@@ -103,7 +103,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         IGovernorTimelock(timelock).unscheduleProposals(proposalsToCancel);
     }
 
-    function test_unscheduleProposals_cancellerUnschedulesMaliciousProposal() public {
+    function testFork_unscheduleProposals_cancellerUnschedulesMaliciousProposal() public {
         uint256 timelockBalance = IERC20(usdc).balanceOf(address(timelock));
 
         bytes4 functionToExecute = IERC20.transfer.selector;
@@ -125,7 +125,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         assertEq(IERC20(usdc).balanceOf(address(timelock)), timelockBalance);
     }
 
-    function test_upgradeWithdrawalManager() public {
+    function testFork_upgradeWithdrawalManager() public {
         uint256 latestProposalId    = IGovernorTimelock(timelock).latestProposalId();
         uint256 expectedProposalId1 = latestProposalId + 1;
         uint256 expectedProposalId2 = latestProposalId + 2;

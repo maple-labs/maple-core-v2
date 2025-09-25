@@ -9,7 +9,7 @@ import { GovernorTimelockUpgradeTestsBase } from "./GovernorTimelockUpgradeTests
 
 contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
-    function test_setPendingGovernor() public {
+    function testFork_setPendingGovernor() public {
         address newPendingGovernor = makeAddr("newPendingGovernor");
 
         assertEq(IMapleGlobals(globals).pendingGovernor(), address(0));
@@ -29,7 +29,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).pendingGovernor(), address(0));
     }
 
-    function test_activatePoolManager() public {
+    function testFork_activatePoolManager() public {
         address poolDelegate = makeAddr("newPoolDelegate");
         _executeThroughTimelock(globals, IMapleGlobals.setValidPoolDelegate.selector, abi.encode(poolDelegate, true));
 
@@ -55,7 +55,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(poolManager.active(),                                  true);
     }
 
-    function test_setBootstrapMint() public {
+    function testFork_setBootstrapMint() public {
         address asset  = makeAddr("asset");
         uint256 amount = 100e18;
 
@@ -66,7 +66,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).bootstrapMint(asset), amount);
     }
 
-    function test_setDefaultTimelockParameters() public {
+    function testFork_setDefaultTimelockParameters() public {
         uint128 newDefaultDelay    = 3;
         uint128 newDefaultDuration = 8;
 
@@ -87,7 +87,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(duration, newDefaultDuration);
     }
 
-    function test_setMapleTreasury() public {
+    function testFork_setMapleTreasury() public {
         address newMapleTreasury = makeAddr("newMapleTreasury");
 
         assertEq(IMapleGlobals(globals).mapleTreasury(), treasury);
@@ -97,7 +97,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).mapleTreasury(), newMapleTreasury);
     }
 
-    function test_setMigrationAdmin() public {
+    function testFork_setMigrationAdmin() public {
         address newMigrationAdmin = makeAddr("newMigrationAdmin");
 
         assertNotEq(IMapleGlobals(globals).migrationAdmin(), newMigrationAdmin);
@@ -111,7 +111,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).migrationAdmin(), newMigrationAdmin);
     }
 
-    function test_setOperationalAdmin() public {
+    function testFork_setOperationalAdmin() public {
         address newOperationalAdmin = makeAddr("newOperationalAdmin");
 
         assertEq(IMapleGlobals(globals).operationalAdmin(), operationalAdmin);
@@ -125,7 +125,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).operationalAdmin(), newOperationalAdmin);
     }
 
-    function test_setPriceOracle() public {
+    function testFork_setPriceOracle() public {
         address asset       = makeAddr("asset");
         address newOracle   = makeAddr("newOracle");
         uint96  newMaxDelay = 100;
@@ -147,7 +147,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(maxDelay, newMaxDelay);
     }
 
-    function test_setSecurityAdmin() public {
+    function testFork_setSecurityAdmin() public {
         address newSecurityAdmin = makeAddr("newSecurityAdmin");
 
         assertEq(IMapleGlobals(globals).securityAdmin(),    securityAdmin);
@@ -157,7 +157,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).securityAdmin(), newSecurityAdmin);
     }
 
-    function test_setContractPause() public {
+    function testFork_setContractPause() public {
         address contractAddress = makeAddr("contract");
         bool    contractPaused  = true;
 
@@ -182,7 +182,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isContractPaused(contractAddress), contractPaused);
     }
 
-    function test_setFunctionUnpause() public {
+    function testFork_setFunctionUnpause() public {
         address contractAddress  = makeAddr("contract");
         bytes4  sig              = bytes4(keccak256("functionUnpause(address,bytes4,bool)"));
         bool    functionUnpaused = true;
@@ -208,7 +208,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isFunctionUnpaused(contractAddress, sig), functionUnpaused);
     }
 
-    function test_setProtocolPause() public {
+    function testFork_setProtocolPause() public {
         bool protocolPaused = true;
 
         assertEq(IMapleGlobals(globals).protocolPaused(), !protocolPaused);
@@ -224,7 +224,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).protocolPaused(), protocolPaused);
     }
 
-    function test_setCanDeployFrom() public {
+    function testFork_setCanDeployFrom() public {
         address factory       = makeAddr("factory");
         address account       = makeAddr("account");
         bool    canDeployFrom = true;
@@ -250,7 +250,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).canDeployFrom(factory, account), canDeployFrom);
     }
 
-    function test_setValidBorrower() public {
+    function testFork_setValidBorrower() public {
         address borrower = makeAddr("borrower");
         bool    isValid  = true;
 
@@ -275,7 +275,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isBorrower(borrower), isValid);
     }
 
-    function test_setValidCollateralAsset() public {
+    function testFork_setValidCollateralAsset() public {
         address collateralAsset = makeAddr("collateralAsset");
         bool    isValid         = true;
 
@@ -300,7 +300,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isCollateralAsset(collateralAsset), isValid);
     }
 
-    function test_setValidInstanceOf() public {
+    function testFork_setValidInstanceOf() public {
         bytes32 instanceKey = keccak256("instanceKey");
         address instance    = makeAddr("instance");
 
@@ -323,7 +323,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isInstanceOf(instanceKey, instance), false);
     }
 
-    function test_setValidPoolAsset() public {
+    function testFork_setValidPoolAsset() public {
         address newPoolAsset = makeAddr("poolAsset");
 
         assertEq(IMapleGlobals(globals).isPoolAsset(newPoolAsset), false);
@@ -345,7 +345,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isPoolAsset(newPoolAsset), false);
     }
 
-    function test_setValidPoolDelegate() public {
+    function testFork_setValidPoolDelegate() public {
         address account = makeAddr("account");
 
         assertEq(IMapleGlobals(globals).isPoolDelegate(account), false);
@@ -367,7 +367,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).isPoolDelegate(account), false);
     }
 
-    function test_setManualOverridePrice() public {
+    function testFork_setManualOverridePrice() public {
         address asset = makeAddr("asset");
         uint256 price = 100e18;
 
@@ -382,7 +382,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).manualOverridePrice(asset), price);
     }
 
-    function test_setMaxCoverLiquidationPercent() public {
+    function testFork_setMaxCoverLiquidationPercent() public {
         address poolManager                = makeAddr("poolManager");
         uint256 maxCoverLiquidationPercent = 3;
 
@@ -397,7 +397,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).maxCoverLiquidationPercent(poolManager), maxCoverLiquidationPercent);
     }
 
-    function test_setMinCoverAmount() public {
+    function testFork_setMinCoverAmount() public {
         address poolManager    = makeAddr("poolManager");
         uint256 minCoverAmount = 100e18;
 
@@ -412,7 +412,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).minCoverAmount(poolManager), minCoverAmount);
     }
 
-    function test_setPlatformManagementFeeRate() public {
+    function testFork_setPlatformManagementFeeRate() public {
         address poolManager                  = makeAddr("poolManager");
         uint256 newPlatformManagementFeeRate = 100;
 
@@ -428,7 +428,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).platformManagementFeeRate(poolManager), newPlatformManagementFeeRate);
     }
 
-    function test_setPlatformOriginationFeeRate() public {
+    function testFork_setPlatformOriginationFeeRate() public {
         address poolManager                   = makeAddr("poolManager");
         uint256 newPlatformOriginationFeeRate = 100;
 
@@ -444,7 +444,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).platformOriginationFeeRate(poolManager), newPlatformOriginationFeeRate);
     }
 
-    function test_setPlatformServiceFeeRate() public {
+    function testFork_setPlatformServiceFeeRate() public {
         address poolManager               = makeAddr("poolManager");
         uint256 newPlatformServiceFeeRate = 100;
 
@@ -460,7 +460,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).platformServiceFeeRate(poolManager), newPlatformServiceFeeRate);
     }
 
-    function test_setTimelockWindow() public {
+    function testFork_setTimelockWindow() public {
         address contractAddress = makeAddr("contract");
         bytes32 functionId      = keccak256("functionId");
         uint128 newDelay        = 100;
@@ -483,7 +483,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(duration, newDuration);
     }
 
-    function test_setTimelockWindows() public {
+    function testFork_setTimelockWindows() public {
         address contractAddress      = makeAddr("contract");
         bytes32[] memory functionIds = new bytes32[](2);
         uint128[] memory delays      = new uint128[](2);
@@ -519,7 +519,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         }
     }
 
-    function test_unscheduleCall() public {
+    function testFork_unscheduleCall() public {
         address contractAddress = makeAddr("randomContract");
         bytes32 functionId      = keccak256("functionId");
         bytes memory data       = abi.encode("");
