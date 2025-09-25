@@ -590,9 +590,8 @@ contract TestBase is ProtocolActions {
                 address(assetControllerImplementation),
                 address(assetControllerInitializer),
                 abi.encodeWithSignature(
-                    "initialize(address,address,address)",
+                    "initialize(address,address)",
                     priceOracleProxy,
-                    compositeTokenProxy,
                     bitcoinRouterProxy
                 )
             )

@@ -184,9 +184,8 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
                 assetControllerImplementation,
                 assetControllerInitializer,
                 abi.encodeWithSignature(
-                    "initialize(address,address,address)",
+                    "initialize(address,address)",
                     assetPriceOracleProxy,
-                    compositeTokenProxy,
                     bitcoinRouterProxy
                 )
             )
