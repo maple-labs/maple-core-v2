@@ -8,7 +8,7 @@ import { ProtocolUpgradeBase } from "../ProtocolUpgradeBase.t.sol";
 contract GovernorTimelockUpgradeTestsBase is ProtocolUpgradeBase {
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"));
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23428891);
 
         upgradeProtocol();
 

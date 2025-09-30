@@ -33,7 +33,7 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
     address strategyFactory;
 
     function setUp() external {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"));
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23428891);
 
         // Select a few existing Maple pools that use the same asset.
         pool_A = syrupUSDCPool;
