@@ -264,48 +264,6 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         bitcoinRouter.processRedemptions(requestIds);
     }
 
-    // TODO: Fix test to account for new logic
-    // function test_syrupBitcoinRouter_processRedemptions_revert_zeroPoolAssets() external {
-    //     uint256 manualSharesAvailableBefore = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
-
-    //     assertEq(manualSharesAvailableBefore, 0);
-
-    //     ( address owner1, uint256 shares1 ) = withdrawalManager.requests(1);
-    //     ( address owner2, uint256 shares2 ) = withdrawalManager.requests(2);
-
-    //     assertEq(owner1, address(bitcoinRouter));
-    //     assertEq(owner2, address(bitcoinRouter));
-
-    //     assertEq(shares1, depositAmountA);
-    //     assertEq(shares2, depositAmountB);
-
-    //     vm.prank(poolDelegate);
-    //     withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
-
-    //     ( owner1, shares1 ) = withdrawalManager.requests(1);
-    //     ( owner2, shares2 ) = withdrawalManager.requests(2);
-
-    //     assertEq(owner1, address(0));
-    //     assertEq(owner2, address(0));
-
-    //     assertEq(shares1, 0);
-    //     assertEq(shares2, 0);
-
-    //     uint256 manualSharesAvailableAfter = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
-
-    //     assertEq(manualSharesAvailableAfter, depositAmountA + depositAmountB);
-
-    //     address compositeToken  = pool.asset();
-    //     uint256 poolCash        = IERC20Like(address(compositeToken)).balanceOf(address(pool));
-
-    //     vm.prank(address(assetController));
-    //     IERC20Like(compositeToken).burn(address(pool), poolCash);
-
-    //     vm.prank(redeemer);
-    //     vm.expectRevert("AC:U:ZERO_BURN");
-    //     bitcoinRouter.processRedemptions(requestIds);
-    // }
-
     function test_syrupBitcoinRouter_processRedemptions_revert_assetController_zeroWithdrawAmount() external {
         uint256 manualSharesAvailableBefore = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
 
@@ -428,52 +386,56 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         bitcoinRouter.processRedemptions(requestIds);
     }
 
-    // TODO: Fix test to account for new logic
-    // function test_syrupBitcoinRouter_deposit_processRedemptions_transferFeeFailure() external {
-    //     uint256 manualSharesAvailableBefore = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
+    function test_syrupBitcoinRouter_deposit_processRedemptions_transferFeeFailure() external {
+        uint256 redemptionFeeRate = 0.15e6;
 
-    //     assertEq(manualSharesAvailableBefore, 0);
+        vm.prank(governor);
+        bitcoinRouter.setFees(address(depositAsset), 0, redemptionFeeRate);
 
-    //     ( address owner1, uint256 shares1 ) = withdrawalManager.requests(1);
-    //     ( address owner2, uint256 shares2 ) = withdrawalManager.requests(2);
+        uint256 manualSharesAvailableBefore = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
 
-    //     assertEq(owner1, address(bitcoinRouter));
-    //     assertEq(owner2, address(bitcoinRouter));
+        assertEq(manualSharesAvailableBefore, 0);
 
-    //     assertEq(shares1, depositAmountA);
-    //     assertEq(shares2, depositAmountB);
+        ( address owner1, uint256 shares1 ) = withdrawalManager.requests(1);
+        ( address owner2, uint256 shares2 ) = withdrawalManager.requests(2);
 
-    //     vm.prank(poolDelegate);
-    //     withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
+        assertEq(owner1, address(bitcoinRouter));
+        assertEq(owner2, address(bitcoinRouter));
 
-    //     ( owner1, shares1 ) = withdrawalManager.requests(1);
-    //     ( owner2, shares2 ) = withdrawalManager.requests(2);
+        assertEq(shares1, depositAmountA);
+        assertEq(shares2, depositAmountB);
 
-    //     assertEq(owner1, address(0));
-    //     assertEq(owner2, address(0));
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
 
-    //     assertEq(shares1, 0);
-    //     assertEq(shares2, 0);
+        ( owner1, shares1 ) = withdrawalManager.requests(1);
+        ( owner2, shares2 ) = withdrawalManager.requests(2);
 
-    //     uint256 manualSharesAvailableAfter = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
+        assertEq(owner1, address(0));
+        assertEq(owner2, address(0));
 
-    //     assertEq(manualSharesAvailableAfter, depositAmountA + depositAmountB);
+        assertEq(shares1, 0);
+        assertEq(shares2, 0);
 
-    //     // Mocked because the transfer amount is based on a calculation and will always succeed.
-    //     vm.mockCall(
-    //         address(depositAsset),
-    //         abi.encodeWithSelector(
-    //             IERC20Like.transfer.selector,
-    //             address(treasury),
-    //             0
-    //         ),
-    //         abi.encode(false)
-    //     );
+        uint256 manualSharesAvailableAfter = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
 
-    //     vm.prank(redeemer);
-    //     vm.expectRevert("SBR:PR:TRANSFER_FEE_FAILED");
-    //     bitcoinRouter.processRedemptions(requestIds);
-    // }
+        assertEq(manualSharesAvailableAfter, depositAmountA + depositAmountB);
+
+        // Mocked because the transfer amount is based on a calculation and will always succeed.
+        vm.mockCall(
+            address(depositAsset),
+            abi.encodeWithSelector(
+                IERC20Like.transfer.selector,
+                address(treasury),
+                depositAmountA * redemptionFeeRate / 1e6
+            ),
+            abi.encode(false)
+        );
+
+        vm.prank(redeemer);
+        vm.expectRevert("SBR:PR:TRANSFER_FEE_FAILED");
+        bitcoinRouter.processRedemptions(requestIds);
+    }
 
     function test_syrupBitcoinRouter_deposit_processRedemptions_transferFailure() external {
         uint256 manualSharesAvailableBefore = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
@@ -1151,6 +1113,97 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         assertEq(wmRequest1SharesAfter, 0);
         assertEq(wmRequest2OwnerAfter,  address(0));
         assertEq(wmRequest2SharesAfter, 0);
+    }
+
+    function test_syrupBitcoinRouter_processRedemptions_success_zeroPoolAssets() external {
+        uint256 manualSharesAvailableBefore = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
+
+        assertEq(manualSharesAvailableBefore, 0);
+
+        ( address owner1, uint256 shares1 ) = withdrawalManager.requests(1);
+        ( address owner2, uint256 shares2 ) = withdrawalManager.requests(2);
+
+        assertEq(owner1, address(bitcoinRouter));
+        assertEq(owner2, address(bitcoinRouter));
+
+        assertEq(shares1, depositAmountA);
+        assertEq(shares2, depositAmountB);
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
+
+        ( owner1, shares1 ) = withdrawalManager.requests(1);
+        ( owner2, shares2 ) = withdrawalManager.requests(2);
+
+        assertEq(owner1, address(0));
+        assertEq(owner2, address(0));
+
+        assertEq(shares1, 0);
+        assertEq(shares2, 0);
+
+        uint256 manualSharesAvailableAfter = withdrawalManager.manualSharesAvailable(address(bitcoinRouter));
+
+        assertEq(manualSharesAvailableAfter, depositAmountA + depositAmountB);
+
+        uint256 treasuryDepositAssetBalanceBefore = depositAsset.balanceOf(address(treasury));
+
+        assertEq(treasuryDepositAssetBalanceBefore, 0);
+
+        ( address wmRequest1OwnerBefore, uint256 wmRequest1SharesBefore ) = withdrawalManager.requests(1);
+        ( address wmRequest2OwnerBefore, uint256 wmRequest2SharesBefore ) = withdrawalManager.requests(2);
+
+        assertEq(wmRequest1OwnerBefore,  address(0));
+        assertEq(wmRequest1SharesBefore, 0);
+        assertEq(wmRequest2OwnerBefore,  address(0));
+        assertEq(wmRequest2SharesBefore, 0);
+
+        ( address routerRequest1AssetBefore, address routerRequest1OwnerBefore, uint256 routerRequest1SharesBefore ) =
+            bitcoinRouter.redeemRequests(1);
+
+        ( address routerRequest2AssetBefore, address routerRequest2OwnerBefore, uint256 routerRequest2SharesBefore ) =
+            bitcoinRouter.redeemRequests(2);
+
+        assertEq(routerRequest1AssetBefore,  address(depositAsset));
+        assertEq(routerRequest1OwnerBefore,  depositorA);
+        assertEq(routerRequest1SharesBefore, depositAmountA);
+
+        assertEq(routerRequest2AssetBefore,  address(depositAsset));
+        assertEq(routerRequest2OwnerBefore,  depositorB);
+        assertEq(routerRequest2SharesBefore, depositAmountB);
+
+        assertEq(depositAsset.balanceOf(depositorA),     0);
+        assertEq(depositAsset.balanceOf(depositorB),     0);
+        assertEq(pool.balanceOf(address(bitcoinRouter)), 0);
+
+        // Make the pool shares worthless.
+        address compositeToken  = pool.asset();
+        uint256 poolCash        = IERC20Like(address(compositeToken)).balanceOf(address(pool));
+
+        vm.prank(address(assetController));
+        IERC20Like(compositeToken).burn(address(pool), poolCash);
+
+        vm.prank(redeemer);
+        bitcoinRouter.processRedemptions(requestIds);
+
+        assertEq(depositAsset.balanceOf(depositorA),        0);
+        assertEq(depositAsset.balanceOf(depositorB),        0);
+        assertEq(depositAsset.balanceOf(address(treasury)), 0);
+
+        assertEq(pool.balanceOf(address(bitcoinRouter)), 0);
+
+        ( address routerRequest1AssetAfter, address routerRequest1OwnerAfter, uint256 routerRequest1SharesAfter ) =
+            bitcoinRouter.redeemRequests(1);
+
+        ( address routerRequest2AssetAfter, address routerRequest2OwnerAfter, uint256 routerRequest2SharesAfter ) =
+            bitcoinRouter.redeemRequests(2);
+
+        assertEq(routerRequest1AssetAfter,  address(0));
+        assertEq(routerRequest1OwnerAfter,  address(0));
+        assertEq(routerRequest1SharesAfter, 0);
+
+        assertEq(routerRequest2AssetAfter,  address(0));
+        assertEq(routerRequest2OwnerAfter,  address(0));
+        assertEq(routerRequest2SharesAfter, 0);
     }
 
 }
