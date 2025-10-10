@@ -458,6 +458,24 @@ interface IStrategyLike is IStrategy {
 
 }
 
+interface ISyrupUSDTPlasmaLike {
+
+    function DEFAULT_ADMIN_ROLE() external view returns (bytes32 role);
+
+    function MINTER_ROLE() external view returns (bytes32 role);
+
+    function BURNER_ROLE() external view returns (bytes32 role);
+
+    function hasRole(bytes32 role, address account) external view returns (bool hasRole);
+
+    function grantRole(bytes32 role, address account) external;
+
+    function revokeRole(bytes32 role, address account) external;
+
+    function renounceRole(bytes32 role, address account) external;
+
+}
+
 interface IUSDCLike {
 
     function configureMinter(address minter, uint256 minterAllowedAmount) external returns (bool);

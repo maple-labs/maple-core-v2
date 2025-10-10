@@ -22,6 +22,21 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address backupRoleAdmin = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
     /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Plasma                                                                                  ***/
+    /**************************************************************************************************************************************/
+
+    address timelockPlasma;
+
+    address cancellerPlasma;
+    address executorPlasma;
+    address proposerPlasma;
+    address roleAdminPlasma;
+    address tokenWithdrawerPlasma;
+
+    address syrupUSDTPlasma       = 0xC4374775489CB9C56003BF2C9b12495fC64F0771;
+    address syrupUSDTDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
     /*** syrupBTC Procedure Addresses                                                                                                   ***/
     /**************************************************************************************************************************************/
 

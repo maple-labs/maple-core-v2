@@ -26,6 +26,26 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(governor, proposer, executor, canceller, roleAdmin));
     }
 
+    function deployGovernorTimelockPlasma() internal {
+        tokenWithdrawerPlasma = makeAddr("tokenWithdrawerPlasma");
+        proposerPlasma        = makeAddr("proposerPlasma");
+        executorPlasma        = makeAddr("executorPlasma");
+        cancellerPlasma       = makeAddr("cancellerPlasma");
+        roleAdminPlasma       = makeAddr("roleAdminPlasma");
+
+        timelockPlasma = deployFromFile(
+            "Contracts@25",
+            "Timelock",
+            abi.encode(
+                tokenWithdrawerPlasma,
+                proposerPlasma,
+                executorPlasma,
+                cancellerPlasma,
+                roleAdminPlasma
+            )
+        );
+    }
+
     // TODO: Update Helper and upgrade all active Pools WM
     function setupWithdrawalManager() internal {
         mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
