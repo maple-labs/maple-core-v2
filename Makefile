@@ -34,8 +34,11 @@ invariant:
 protocol-upgrade:
 	./test.sh -d tests/protocol-upgrade -p $(profile)
 
-scenario:
-	./scenarios.sh
+scenario-v2:
+	VERSION=v2 ./scenarios.sh
+
+scenario-v3:
+	VERSION=v3 ./scenarios.sh
 
 deploy:
 	./deploy.sh

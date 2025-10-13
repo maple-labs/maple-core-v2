@@ -1,0 +1,298 @@
+{
+    "actions": [
+        {
+            "actionType": "createPool",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 0,
+                        "outstanding": 0,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 0,
+                        "outstanding": 0,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 0
+                }
+            },
+            "parameters": {
+                "asset": "synthBTC",
+                "name": "test_pool_1",
+                "strategyFeeRate_A": 0,
+                "strategyFeeRate_B": 0
+            },
+            "timestamp": 1758206028
+        },
+        {
+            "actionType": "deposit",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 0,
+                        "outstanding": 0,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 0,
+                        "outstanding": 0,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 10000000000
+                }
+            },
+            "parameters": {
+                "assets": 10000000000,
+                "name": "lender1"
+            },
+            "timestamp": 1758214274
+        },
+        {
+            "actionType": "deploy",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 5000000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 0,
+                        "outstanding": 0,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 10000000000
+                }
+            },
+            "parameters": {
+                "assets": 5000000000,
+                "name": "strategyA"
+            },
+            "timestamp": 1758215741
+        },
+        {
+            "actionType": "deploy",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 5000000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 5000000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 10000000000
+                }
+            },
+            "parameters": {
+                "assets": 5000000000,
+                "name": "strategyB"
+            },
+            "timestamp": 1758215826
+        },
+        {
+            "actionType": "schedule",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 5000000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 5000000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 10000000000
+                }
+            },
+            "parameters": {
+                "deadline": 2592000,
+                "name": "strategyA",
+                "yield": 200000000
+            },
+            "timestamp": 1758217401
+        },
+        {
+            "actionType": "schedule",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 60880,
+                        "aum": 5000060880,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 5000000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 10000060880
+                }
+            },
+            "parameters": {
+                "deadline": 604800,
+                "name": "strategyB",
+                "yield": 100000000
+            },
+            "timestamp": 1758218190
+        },
+        {
+            "actionType": "deposit",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 19722454,
+                        "aum": 5019722454,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 42131944,
+                        "aum": 5042131944,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 15061854398
+                }
+            },
+            "parameters": {
+                "assets": 5000000000,
+                "name": "lender2"
+            },
+            "timestamp": 1758473004
+        },
+        {
+            "actionType": "deploy",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 10019772685,
+                        "outstanding": 10019772685,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 42239583,
+                        "aum": 5042239583,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 15062012269
+                }
+            },
+            "parameters": {
+                "assets": 5000000000,
+                "name": "strategyA"
+            },
+            "timestamp": 1758473655
+        },
+        {
+            "actionType": "schedule",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 0,
+                        "aum": 10019784568,
+                        "outstanding": 10019784568,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 42265046,
+                        "aum": 5042265046,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 15062049614
+                }
+            },
+            "parameters": {
+                "deadline": 2592000,
+                "name": "strategyA",
+                "yield": 250000000
+            },
+            "timestamp": 1758473809
+        },
+        {
+            "actionType": "passTime",
+            "expected": {
+                "strategies": {
+                    "strategyA": {
+                        "accruedFees": 0,
+                        "accruedYield": 58333333,
+                        "aum": 10078117901,
+                        "outstanding": 10019784568,
+                        "realizedFees": 0
+                    },
+                    "strategyB": {
+                        "accruedFees": 0,
+                        "accruedYield": 100000000,
+                        "aum": 5100000000,
+                        "outstanding": 5000000000,
+                        "realizedFees": 0
+                    }
+                },
+                "system": {
+                    "aum": 15178117901
+                }
+            },
+            "parameters": {
+                "seconds": 604800
+            },
+            "timestamp": 1759078609
+        }
+    ]
+}

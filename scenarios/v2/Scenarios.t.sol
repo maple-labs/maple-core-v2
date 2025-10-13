@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { console2 as console, stdJson, stdMath, StdStyle } from "../modules/forge-std/src/Test.sol";
+import { console2 as console, stdJson, stdMath, StdStyle } from "../../modules/forge-std/src/Test.sol";
 
-import { ILoanLike, ILoanManagerLike } from "../contracts/interfaces/Interfaces.sol";
+import { ILoanLike, ILoanManagerLike } from "../../contracts/interfaces/Interfaces.sol";
 
-import { TestBase } from "../tests/TestBase.sol";
+import { TestBase } from "../../tests/TestBase.sol";
 
 // NOTE: All Converting basis points into basis points scaled by 100.
 // NOTE: All `XyzParameters` structs require properties in alphanumerical order to be correctly parsed.
@@ -559,11 +559,11 @@ contract Scenario is TestBase {
         console.log("\nScenario", scenarioId, "\n");
 
         // Load and parse the json file located at "${root}/scenarios/data/json/${scenarioId}.json".
-        string memory json = vm.readFile(concat(vm.projectRoot(), "/scenarios/data/json/", scenarioId, ".json"));
+        string memory json = vm.readFile(concat(vm.projectRoot(), "/scenarios/v2/data/json/", scenarioId, ".json"));
 
-        string[] memory actions = json.readStringArray(".actions");
+        uint256 actionsLength = getActionsLength(json);
 
-        for (uint256 i; i < actions.length; ++i) {  // For each action/row within the json.
+        for (uint256 i; i < actionsLength; ++i) {  // For each action/row within the json.
             console.log("Action", i);
 
             vm.warp(json.readUint(concat(".actions[", toString(i), "].timestamp")));  // Warp top the timestamp defined by this action.
@@ -590,6 +590,12 @@ contract Scenario is TestBase {
             }
 
             console.log("");
+        }
+    }
+
+    function getActionsLength(string memory json_) internal view returns (uint256 length_) {
+        while (vm.keyExists(json_, concat(".actions[", toString(length_), "]"))) {
+            unchecked { ++length_; }
         }
     }
 

@@ -176,8 +176,8 @@ const CSVToActionsJSON = (data, { omitFirstRow = false } = {}) => {
     return json;
 }
 
-const csv = fs.readFileSync(`./scenarios/data/csv/${process.argv[2]}.csv`, { encoding: 'utf8' });  // Read CSV as utf8 encoded.
+const csv = fs.readFileSync(`./scenarios/v2/data/csv/${process.argv[2]}.csv`, { encoding: 'utf8' });  // Read CSV as utf8 encoded.
 
 const json = { config: {}, actions: CSVToActionsJSON(csv, { omitFirstRow: true }) };  // convert to json, omitting header row.
 
-fs.writeFileSync(`./scenarios/data/json/${process.argv[2]}.json`, JSON.stringify(json, null, 4), { encoding: 'utf8' });  // Write JSON as utf8 encoded, with same file name.
+fs.writeFileSync(`./scenarios/v2/data/json/${process.argv[2]}.json`, JSON.stringify(json, null, 4), { encoding: 'utf8' });  // Write JSON as utf8 encoded, with same file name.

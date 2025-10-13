@@ -94,8 +94,10 @@ jobs:
         uses: actions/setup-node@v4
       - name: Update submodules
         run: ./setup-ci.sh
-      - name: Run Scenarios
-        run: ./scenarios.sh
+      - name: Run Scenarios v2
+        run:  VERSION=v2 ./scenarios.sh
+      - name: Run Scenarios v3
+        run:  VERSION=v3 ./scenarios.sh
 
   protocol-upgrade-tests:
     runs-on:

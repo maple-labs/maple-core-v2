@@ -1,0 +1,11 @@
+Timestamp,Action Type,Parameters,System AUM,StrategyA AUM,StrategyB AUM,StrategyA Outstanding,StrategyB Outstanding,StrategyA Realized Fees,StrategyB Realized Fees,StrategyA Accrued Yield,StrategyB Accrued Yield,StrategyA Accrued Fees,StrategyB Accrued Fees
+1758206028,createPool,"{'name': 'test_pool_1', 'asset': 'synthBTC', 'strategyFeeRate_A': 0, 'strategyFeeRate_B': 0}",0,0,0,0,0,0,0,0,0,0,0
+1758214274,deposit,"{'name': 'lender1', 'assets': 10000000000}",10000000000,0,0,0,0,0,0,0,0,0,0
+1758215741,deploy,"{'name': 'strategyA', 'assets': 5000000000}",10000000000,5000000000,0,5000000000,0,0,0,0,0,0,0
+1758215826,deploy,"{'name': 'strategyB', 'assets': 5000000000}",10000000000,5000000000,5000000000,5000000000,5000000000,0,0,0,0,0,0
+1758217401,schedule,"{'name': 'strategyA', 'yield': '200000000', 'deadline': 2592000}",10000000000,5000000000,5000000000,5000000000,5000000000,0,0,0,0,0,0
+1758218190,schedule,"{'name': 'strategyB', 'yield': '100000000', 'deadline': 604800}",10000060880,5000060880,5000000000,5000000000,5000000000,0,0,60880,0,0,0
+1758473004,deposit,"{'name': 'lender2', 'assets': 5000000000}",15061854398,5019722454,5042131944,5000000000,5000000000,0,0,19722454,42131944,0,0
+1758473655,deploy,"{'name': 'strategyA', 'assets': 5000000000}",15062012269,10019772685,5042239583,10019772685,5000000000,0,0,0,42239583,0,0
+1758473809,schedule,"{'name': 'strategyA', 'yield': '250000000', 'deadline': 2592000}",15062049614,10019784568,5042265046,10019784568,5000000000,0,0,0,42265046,0,0
+1759078609,passTime,{'seconds': '604800'},15178117901,10078117901,5100000000,10019784568,5000000000,0,0,58333333,100000000,0,0
