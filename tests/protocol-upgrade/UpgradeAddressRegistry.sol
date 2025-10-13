@@ -25,13 +25,15 @@ contract UpgradeAddressRegistry is AddressRegistry {
     /*** GovernorTimelock Procedure Addresses - Plasma                                                                                  ***/
     /**************************************************************************************************************************************/
 
-    address timelockPlasma;
+    address timelockPlasma = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
 
-    address cancellerPlasma;
-    address executorPlasma;
-    address proposerPlasma;
-    address roleAdminPlasma;
-    address tokenWithdrawerPlasma;
+    address cancellerPlasma       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorPlasma        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerPlasma        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminPlasma       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerPlasma = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorPlasma  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminPlasma = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
     address syrupUSDTPlasma       = 0xC4374775489CB9C56003BF2C9b12495fC64F0771;
     address syrupUSDTDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;

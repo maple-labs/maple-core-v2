@@ -34,6 +34,16 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --broadcast \
 #     scripts/GovernorTimelockDeployment.s.sol:GovernorTimelockDeployment
 
+# For GovernorTimelock Cross Chain
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --broadcast \
+#     scripts/GovernorTimelockCrossChainDeployment.s.sol:GovernorTimelockCrossChainDeployment
+
 # For CompositeTokenDeployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
@@ -136,6 +146,17 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     scripts/GovernorTimelockDeployment.s.sol:GovernorTimelockDeployment
+
+# For GovernorTimelock Cross Chain
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 19 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     scripts/GovernorTimelockCrossChainDeployment.s.sol:GovernorTimelockCrossChainDeployment
 
 # For CompositeTokenDeployment
 # forge script \
