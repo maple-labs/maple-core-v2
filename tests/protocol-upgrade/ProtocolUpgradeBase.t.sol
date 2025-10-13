@@ -15,7 +15,7 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
     function upgradeProtocol() internal {
         deployGovernorTimelock();
-        setupWithdrawalManager();
+        upgradeWithdrawalManagers();
     }
 
     function deployGovernorTimelock() internal {
@@ -46,21 +46,17 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         );
     }
 
-    // TODO: Update Helper and upgrade all active Pools WM
-    function setupWithdrawalManager() internal {
+    function upgradeWithdrawalManagers() internal {
         mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
         mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@7", "WithdrawalManagerQueueMigrator");
-
-        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue);
+        mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
 
         vm.startPrank(governor);
-
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).versionOf(withdrawalManager.implementation()), 100);
 
         IMapleProxyFactory(withdrawalManagerQueueFactory).registerImplementation(
             200,
             mapleWithdrawalManagerV200Implementation,
-            address(0)
+            mapleWithdrawalManagerV200Initializer
         );
 
         IMapleProxyFactory(withdrawalManagerQueueFactory).enableUpgradePath(100, 200, mapleWithdrawalManagerV200Migrator);
@@ -68,15 +64,16 @@ contract ProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         vm.stopPrank();
 
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).defaultVersion(),          200);
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).migratorForPath(100, 200), mapleWithdrawalManagerV200Migrator);
+        for (uint256 i; i < withdrawalManagerQueuesToUpgrade.length; ++i) {
+            IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManagerQueuesToUpgrade[i]);
 
-        vm.prank(securityAdmin);
-        withdrawalManager.upgrade(200, "");
+            vm.prank(securityAdmin);
+            wm.upgrade(200, "");
 
-        assertEq(withdrawalManager.implementation(), mapleWithdrawalManagerV200Implementation);
-
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).versionOf(withdrawalManager.implementation()), 200);
+            assertEq(wm.implementation(), mapleWithdrawalManagerV200Implementation);
+            
+            assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).versionOf(wm.implementation()), 200);
+        }
     }
 
 }

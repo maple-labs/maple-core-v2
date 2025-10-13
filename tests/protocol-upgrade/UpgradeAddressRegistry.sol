@@ -68,4 +68,20 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address mapleWithdrawalManagerV200Initializer;
     address mapleWithdrawalManagerV200Migrator;
 
+    /**************************************************************************************************************************************/
+    /*** Withdrawal Manager Upgrade Addresses                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    address[] withdrawalManagerQueuesToUpgrade = [
+        cashUSDCWithdrawalManagerQueue,
+        blueChipSecuredUSDCWithdrawalManagerQueue,
+        highYieldCorpUSDCWithdrawalManagerQueue,
+        highYieldCorpWETHWithdrawalManagerQueue,
+        securedLendingUSDCWithdrawalManagerQueue,
+        LendAndLongUSDC1WithdrawalManagerQueue,
+        LendAndLongUSDC2WithdrawalManagerQueue,
+        syrupUSDCWithdrawalManagerQueue,
+        syrupUSDTWithdrawalManagerQueue
+    ];
+
 }
