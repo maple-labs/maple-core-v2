@@ -299,7 +299,7 @@ contract RemoveRequestFailureTests is TestBase {
     function test_removeRequest_failIfNotPoolDelegate() external {
         uint256[] memory requestIds = _createRemoveRequestIds();
 
-        vm.expectRevert("WM:NOT_POOL_DELEG_OR_OPS_ADMIN");
+        vm.expectRevert("WM:NOT_REDEEMER");
         queueWM.removeRequest(lp, requestIds);
 
         vm.prank(poolDelegate);
@@ -309,7 +309,7 @@ contract RemoveRequestFailureTests is TestBase {
     function test_removeRequest_failIfNotOperationalAdmin() external {
         uint256[] memory requestIds = _createRemoveRequestIds();
 
-        vm.expectRevert("WM:NOT_POOL_DELEG_OR_OPS_ADMIN");
+        vm.expectRevert("WM:NOT_REDEEMER");
         queueWM.removeRequest(lp, requestIds);
 
         vm.prank(operationalAdmin);

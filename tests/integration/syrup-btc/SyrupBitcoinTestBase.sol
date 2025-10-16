@@ -16,8 +16,25 @@ contract SyrupBitcoinTestBase is TestBaseWithAssertions {
         _setupBitcoinPool();
     }
 
+    function calculateFee(uint256 amount, uint256 fee) internal pure returns (uint256 fee_) {
+        uint256 HUNDRED_PERCENT = 1e6;  // 100.0000%
+        fee_ = (amount * fee + HUNDRED_PERCENT - 1) / HUNDRED_PERCENT;
+    }
+
     function emptyPermit() internal pure returns (Permit memory permit) {
         permit = Permit(false, 0, 0, 0, 0);
+    }
+
+    function requestRouterRedeem(address lp, uint256 assets) internal returns (uint256 shares, uint256 requestId) {
+        vm.startPrank(lp);
+
+        depositAsset.mint(lp, assets);
+        depositAsset.approve(address(bitcoinRouter), assets);
+        shares = bitcoinRouter.deposit(address(depositAsset), assets, EMPTY_METADATA, emptyPermit());
+        pool.approve(address(bitcoinRouter), shares);
+        ( shares, requestId ) = bitcoinRouter.requestRedeem(address(depositAsset), shares, EMPTY_METADATA, emptyPermit());
+
+        vm.stopPrank();
     }
 
     function signPermit(
@@ -47,11 +64,6 @@ contract SyrupBitcoinTestBase is TestBaseWithAssertions {
         ( permit.v, permit.r, permit.s ) = vm.sign(userPrivateKey, digest);
         permit.deadline = deadline;
         permit.enabled = true;
-    }
-
-    function calculateFee(uint256 amount, uint256 fee) internal pure returns (uint256 fee_) {
-        uint256 HUNDRED_PERCENT = 1e6;  // 100.0000%
-        fee_ = (amount * fee + HUNDRED_PERCENT - 1) / HUNDRED_PERCENT;
     }
 
 }
