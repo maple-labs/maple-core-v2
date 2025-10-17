@@ -4,6 +4,9 @@ pragma solidity ^0.8.7;
 import { console2 as console, StdInvariant } from "../../modules/forge-std/src/Test.sol";
 
 import {
+    IAssetController,
+    IBitcoinStrategy,
+    IERC20,
     IERC20Like,
     IERC4626Like,
     IFeeManager,
@@ -17,6 +20,7 @@ import {
     IPoolPermissionManager,
     IPSMLike,
     IStrategyLike,
+    ISyrupBitcoinRouter,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -179,6 +183,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant E: strategyState == INACTIVE -> assetsUnderManagement == unrealizedLosses == 0
         * Invariant F: strategyState ∈ [0, 2]
         * Invariant G: strategyFeeRate <= 1e6
+
+     * Syrup BTC
+        * Invariant A: depositAssets(wBTC) == poolAssets(wBTC)
+        * Invariant B: balanceOf(pool) == poolAssets(wBTC)
+        * Invariant C: totalSupply == balanceOf(pool)
+        * Invariant D: balanceOf(router) >= Σrequest.shares
+        * Invariant E: Σrouter.request.shares == Σwm.request.shares + manualShares(router)
+        * Invariant F: (remainingYield > 0) == (remainingDuration > 0)
+        * Invariant G: accruedFees() <= accruedYield()
 
     /**************************************************************************************************************************************/
     /*** Fixed Term Loan Invariants                                                                                                     ***/
@@ -991,6 +1004,76 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
 
         assertLe(IStrategyLike(strategy).strategyFeeRate(), 1e6, "Strategy Invariant G");
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Syrup BTC Invariants                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    function assert_syrupBtc_invariant_A(address asset, address controller) internal {
+        uint256 depositAssets = IAssetController(controller).depositAssets(asset);
+        uint256 poolAssets    = IAssetController(controller).poolAssets(asset);
+
+        assertEq(depositAssets, poolAssets, "Syrup BTC Invariant A");
+    }
+
+    function assert_syrupBtc_invariant_B(address depositAsset, address pool, address controller) internal {
+        address poolAsset      = IPool(pool).asset();
+        uint256 poolBalance    = IERC20(poolAsset).balanceOf(pool);
+        uint256 poolAccounting = IAssetController(controller).poolAssets(depositAsset);
+
+        assertEq(poolBalance, poolAccounting, "Syrup BTC Invariant B");
+    }
+
+    function assert_syrupBtc_invariant_C(address pool) internal {
+        address poolAsset   = IPool(pool).asset();
+        uint256 poolBalance = IERC20(poolAsset).balanceOf(pool);
+        uint256 totalSupply = IERC20(poolAsset).totalSupply();
+
+        assertEq(poolBalance, totalSupply, "Syrup BTC Invariant C");
+    }
+
+    function assert_syrupBtc_invariant_D(address router, uint256[] memory shares) internal {
+        address pool             = ISyrupBitcoinRouter(router).pool();
+        uint256 routerBalance    = IERC20(pool).balanceOf(router);
+        uint256 routerAccounting = 0;
+
+        for (uint i; i < shares.length; i++) {
+            routerAccounting += shares[i];
+        }
+
+        assertGe(routerBalance, routerAccounting, "Syrup BTC Invariant D");
+    }
+
+    function assert_syrupBtc_invariant_E(address router, address wm, uint256[] memory routerShares, uint256[] memory wmShares) internal {
+        uint256 routerAccounting = 0;
+        uint256 wmAccounting     = IWithdrawalManagerQueue(wm).manualSharesAvailable(router);
+
+        for (uint i; i < routerShares.length; i++) {
+            routerAccounting += routerShares[i];
+        }
+
+        for (uint i; i < wmShares.length; i++) {
+            wmAccounting += wmShares[i];
+        }
+
+        assertEq(routerAccounting, wmAccounting, "Syrup BTC Invariant E");
+    }
+
+    function assert_syrupBtc_invariant_F(address strategy) internal {
+        ( uint256 remainingYield, , uint32 remainingDuration ) = IBitcoinStrategy(strategy).schedules(0);
+
+        bool nothingScheduled = remainingYield == 0 && remainingDuration == 0;
+        bool yieldScheduled   = remainingYield > 0  && remainingDuration > 0;
+
+        assertEq(nothingScheduled || yieldScheduled, true, "Syrup BTC Invariant F");
+    }
+
+    function assert_syrupBtc_invariant_G(address strategy) internal {
+        uint256 accruedFees  = IBitcoinStrategy(strategy).accruedFees();
+        uint256 accruedYield = IBitcoinStrategy(strategy).accruedYield();
+
+        assertLe(accruedFees, accruedYield, "Syrup BTC Invariant G");
     }
 
     /**************************************************************************************************************************************/
