@@ -253,7 +253,13 @@ interface IPoolDeployerV2Like {
 
 interface IProxiedLike {
 
+    function factory() external view returns (address factory_);
+
     function implementation() external view returns (address implementation_);
+
+    function setImplementation(address newImplementation_) external;
+
+    function migrate(address migrator_, bytes calldata arguments_) external;
 
     function upgrade(uint256 toVersion_, bytes calldata arguments_) external;
 
@@ -272,8 +278,6 @@ interface ILoanLike is IProxiedLike {
         external returns (bytes32 refinanceCommitment_);
 
     function borrower() external view returns (address borrower_);
-
-    function factory() external view returns (address factory_);
 
     function fundsAsset() external view returns (address fundsAsset_);
 
