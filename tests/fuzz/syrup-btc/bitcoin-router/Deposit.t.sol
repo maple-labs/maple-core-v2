@@ -9,16 +9,13 @@ import { SyrupBtcFuzzBase } from "../SyrupBtcFuzzBase.t.sol";
 contract SyrupBtcDepositFuzzTests is SyrupBtcFuzzBase {
 
     function testFuzz_deposit(
-      address depositor,
       uint256 totalDeposited,
       uint256 depositorAssets,
       uint256 assetsToDeposit,
       uint256[4] memory deployedAssets,
       uint256[4] memory defaultedAssets
     ) external {
-        if (depositor == address(0)) depositor = address(1);
-
-        vm.assume(depositor != address(pool) && depositor != address(this));
+        address depositor = makeAddr("depositor");
 
         totalDeposited  = bound(totalDeposited,  0, 1e30);
         depositorAssets = bound(depositorAssets, 1, 1e30);
