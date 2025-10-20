@@ -691,16 +691,6 @@ contract TestBase is ProtocolActions {
             IBitcoinStrategy(strategy).setPermissions(addresses, allowed, allowed, allowed);
         }
 
-        // Allow only the router to interact with the pool.
-        addresses = new address[](1);
-        allowed   = new bool[](1);
-
-        addresses[0] = address(bitcoinRouter);
-        allowed[0]   = true;
-
-        vm.prank(governor);
-        poolPermissionManager.setLenderAllowlist(address(poolManager), addresses, allowed);
-
         // Allow everyone else to only transfer the pool token around.
         bytes32[] memory functionIdsToSet = new bytes32[](11);
         uint256[] memory bitmaps          = new uint256[](11);
@@ -736,6 +726,15 @@ contract TestBase is ProtocolActions {
 
         vm.prank(governor);
         poolPermissionManager.setPoolBitmaps(address(poolManager), functionIdsToSet, bitmaps);
+
+        addresses = new address[](1);
+        bitmaps   = new uint256[](1);
+
+        addresses[0] = address(bitcoinRouter);
+        bitmaps[0]   = bitmap;
+
+        vm.prank(governor);
+        poolPermissionManager.setLenderBitmaps(addresses, bitmaps);
     }
 
     function _configurePool() internal {

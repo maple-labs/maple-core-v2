@@ -61,6 +61,7 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address bitcoinStrategyFactory;
     address bitcoinStrategy1;
     address bitcoinStrategy2;
+    address bitcoinStrategy3;
     address syrupBitcoinPool;
     address syrupBitcoinPoolManager;
 

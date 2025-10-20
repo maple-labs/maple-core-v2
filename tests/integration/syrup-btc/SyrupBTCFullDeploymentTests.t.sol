@@ -20,8 +20,8 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
     address bitcoinRouterRedeemer = makeAddr("bitcoinRouterRedeemer");
     address bitcoinStrategy1;
     address bitcoinStrategy2;
+    address bitcoinStrategy3;
 
-    uint256 bootstrapMint             = 0.0001e8;
     uint256 delegateManagementFeeRate = 0.333e6; // 3.33%
     uint256 liquidityCap              = 100e8;
 
@@ -49,7 +49,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
             )
         );
 
-        // Step 2: Whitelist composite token on globals, whitelist redeemer and set bootstrap mint
+        // Step 2: Whitelist composite token and redeemer on globals
 
         vm.prank(governor);
         globals.setValidPoolAsset(compositeTokenProxy, true);
@@ -57,18 +57,19 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         vm.startPrank(operationalAdmin);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET", compositeTokenProxy, true);
         globals.setValidInstanceOf("SYRUP_BTC_REDEEMER",   bitcoinRouterRedeemer,  true);
-        globals.setBootstrapMint(compositeTokenProxy, bootstrapMint);
         vm.stopPrank();
 
         // Step 3: Deploy MaplePool
 
-        strategyFactories       = new address[](2);
-        strategyDeploymentData_ = new bytes[](2);
+        strategyFactories       = new address[](3);
+        strategyDeploymentData_ = new bytes[](3);
 
         strategyFactories[0]       = bitcoinStrategyFactory;
         strategyFactories[1]       = bitcoinStrategyFactory;
+        strategyFactories[2]       = bitcoinStrategyFactory;
         strategyDeploymentData_[0] = new bytes(0);
         strategyDeploymentData_[1] = new bytes(0);
+        strategyDeploymentData_[2] = new bytes(0);
 
         uint256[4] memory configParams = [liquidityCap, delegateManagementFeeRate, uint256(0), uint256(0)];
 
@@ -88,6 +89,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         pool             = IPool(poolManager.pool());
         bitcoinStrategy1 = poolManager.strategyList(0);
         bitcoinStrategy2 = poolManager.strategyList(1);
+        bitcoinStrategy3 = poolManager.strategyList(2);
 
         // Step 4: Deploy AssetControllerOracle
 
@@ -126,6 +128,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         globals.setValidInstanceOf("SYRUP_BTC_ROUTER",     bitcoinRouterProxy,  true);
         globals.setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy1,    true);
         globals.setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy2,    true);
+        globals.setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy3,    true);
         vm.stopPrank();
 
         // Step 7: Deploy AssetController
@@ -154,20 +157,22 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
 
         // Step 9: Allow composite token to be held by pool, asset controller, bitcoin router and bitcoin strategy
 
-        address[] memory addresses = new address[](5);
-        bool[]    memory allowed   = new bool[](5);
+        address[] memory addresses = new address[](6);
+        bool[]    memory allowed   = new bool[](6);
 
         addresses[0] = address(pool);
         addresses[1] = assetControllerProxy;
         addresses[2] = bitcoinRouterProxy;
         addresses[3] = bitcoinStrategy1;
         addresses[4] = bitcoinStrategy2;
+        addresses[5] = bitcoinStrategy3;
 
         allowed[0] = true;
         allowed[1] = true;
         allowed[2] = true;
         allowed[3] = true;
         allowed[4] = true;
+        allowed[5] = true;
 
         vm.prank(governor);
         ICompositeToken(compositeTokenProxy).allowAddresses(addresses, allowed);
@@ -185,13 +190,15 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
 
         // Step 11: Whitelist bitcoin strategy on asset controller
 
-        addresses = new address[](2);
-        allowed   = new bool[](2);
+        addresses = new address[](3);
+        allowed   = new bool[](3);
 
         addresses[0] = bitcoinStrategy1;
         addresses[1] = bitcoinStrategy2;
+        addresses[2] = bitcoinStrategy3;
         allowed[0]   = true;
         allowed[1]   = true;
+        allowed[2]   = true;
 
         vm.prank(operationalAdmin);
         IAssetController(assetControllerProxy).setStrategies(addresses, allowed);
@@ -211,6 +218,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         ISyrupBitcoinRouter(bitcoinRouterProxy).setAssetController(address(depositAsset), assetControllerProxy);
         IBitcoinStrategy(bitcoinStrategy1).setAssetController(address(depositAsset), assetControllerProxy);
         IBitcoinStrategy(bitcoinStrategy2).setAssetController(address(depositAsset), assetControllerProxy);
+        IBitcoinStrategy(bitcoinStrategy3).setAssetController(address(depositAsset), assetControllerProxy);
 
         // Step 13: Allow strategy manager to deploy, schedule and reconcile all strategies
 
@@ -219,19 +227,9 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
 
         IBitcoinStrategy(bitcoinStrategy1).setPermissions(addresses, allowed, allowed, allowed);
         IBitcoinStrategy(bitcoinStrategy2).setPermissions(addresses, allowed, allowed, allowed);
+        IBitcoinStrategy(bitcoinStrategy3).setPermissions(addresses, allowed, allowed, allowed);
 
         vm.stopPrank();
-
-        // Step 14: Whitelist strategy manager on pool permission manager
-
-        addresses = new address[](1);
-        allowed   = new bool[](1);
-
-        addresses[0] = strategyManager;
-        allowed[0]   = true;
-
-        vm.prank(operationalAdmin);
-        poolPermissionManager.setLenderAllowlist(bitcoinRouterProxy, addresses, allowed);
 
         bytes32[] memory functionIdsToSet = new bytes32[](11);
         uint256[] memory bitmaps          = new uint256[](11);
@@ -259,14 +257,26 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         bitmaps[6]  = 0;
         bitmaps[7]  = 0;
         bitmaps[8]  = bitmap;
-        bitmaps[9]  = bitmap;
+        bitmaps[9]  = bitmap + 1;  // TODO: Decide how to handle this in production 
         bitmaps[10] = bitmap;
 
-        // Step 15: Set pool permission level to be function level and set bitmaps
+        // Step 14: Set pool permission level to be function level, set bitmaps, set lender bitmaps and set manual withdrawal for the router
 
         vm.startPrank(operationalAdmin);
         poolPermissionManager.setPoolPermissionLevel(address(poolManager), 1);
         poolPermissionManager.setPoolBitmaps(address(poolManager), functionIdsToSet, bitmaps);
+
+        addresses = new address[](1);
+        bitmaps   = new uint256[](1);
+
+        addresses[0] = bitcoinRouterProxy;
+        bitmaps[0]   = bitmap;
+
+        poolPermissionManager.setLenderBitmaps(addresses, bitmaps);
+
+        address withdrawalManager = IPoolManager(poolManager).withdrawalManager();
+        IWithdrawalManager(withdrawalManager).setManualWithdrawal(bitcoinRouterProxy, true);
+
         vm.stopPrank();
     }
 
@@ -276,7 +286,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
 
         assertEq(IPool(pool).totalSupply(),    0);
         assertEq(IPool(pool).totalAssets(),    0);
-        assertEq(IPool(pool).BOOTSTRAP_MINT(), bootstrapMint);
+        assertEq(IPool(pool).BOOTSTRAP_MINT(), 0);
         assertEq(IPool(pool).asset(),          compositeTokenProxy);
         assertEq(IPool(pool).name(),           "Syrup Bitcoin");
         assertEq(IPool(pool).symbol(),         "syrupBTC");
@@ -286,7 +296,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertEq(poolManager.configured(),                true);
         assertEq(poolManager.totalAssets(),               0);
         assertEq(poolManager.unrealizedLosses(),          0);
-        assertEq(poolManager.strategyListLength(),        2);
+        assertEq(poolManager.strategyListLength(),        3);
         assertEq(poolManager.liquidityCap(),              liquidityCap);
         assertEq(poolManager.delegateManagementFeeRate(), delegateManagementFeeRate);
         assertEq(poolManager.governor(),                  governor);
@@ -299,21 +309,24 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
 
         assertEq(poolManager.strategyList(0), bitcoinStrategy1);
         assertEq(poolManager.strategyList(1), bitcoinStrategy2);
+        assertEq(poolManager.strategyList(2), bitcoinStrategy3);
 
         assertNotEq(poolManager.strategyList(0),     address(0));
         assertNotEq(poolManager.strategyList(1),     address(0));
+        assertNotEq(poolManager.strategyList(2),     address(0));
         assertNotEq(poolManager.withdrawalManager(), address(0));
         assertNotEq(poolManager.poolDelegateCover(), address(0));
 
-        assertEq(IWithdrawalManager(withdrawalManager).totalShares(),    0);
-        assertEq(IWithdrawalManager(withdrawalManager).pool(),           pool);
-        assertEq(IWithdrawalManager(withdrawalManager).governor(),       governor);
-        assertEq(IWithdrawalManager(withdrawalManager).poolDelegate(),   poolDelegate);
-        assertEq(IWithdrawalManager(withdrawalManager).factory(),        queueWMFactory);
-        assertEq(IWithdrawalManager(withdrawalManager).asset(),          compositeTokenProxy);
-        assertEq(IWithdrawalManager(withdrawalManager).implementation(), queueWMImplementation);
-        assertEq(IWithdrawalManager(withdrawalManager).globals(),        address(globals));
-        assertEq(IWithdrawalManager(withdrawalManager).poolManager(),    address(poolManager));
+        assertEq(IWithdrawalManager(withdrawalManager).totalShares(),                          0);
+        assertEq(IWithdrawalManager(withdrawalManager).pool(),                                 pool);
+        assertEq(IWithdrawalManager(withdrawalManager).governor(),                             governor);
+        assertEq(IWithdrawalManager(withdrawalManager).poolDelegate(),                         poolDelegate);
+        assertEq(IWithdrawalManager(withdrawalManager).factory(),                              queueWMFactory);
+        assertEq(IWithdrawalManager(withdrawalManager).asset(),                                compositeTokenProxy);
+        assertEq(IWithdrawalManager(withdrawalManager).implementation(),                       queueWMImplementation);
+        assertEq(IWithdrawalManager(withdrawalManager).globals(),                              address(globals));
+        assertEq(IWithdrawalManager(withdrawalManager).poolManager(),                          address(poolManager));
+        assertEq(IWithdrawalManager(withdrawalManager).isManualWithdrawal(bitcoinRouterProxy), true);
 
         assertEq(IBitcoinStrategy(bitcoinStrategy1).realizedFees(),          0);
         assertEq(IBitcoinStrategy(bitcoinStrategy1).outstandingAssets(),     0);
@@ -347,6 +360,22 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertEq(IBitcoinStrategy(bitcoinStrategy2).poolAsset(),             compositeTokenProxy);
         assertEq(IBitcoinStrategy(bitcoinStrategy2).poolManager(),           address(poolManager));
 
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).realizedFees(),          0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).outstandingAssets(),     0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).feeRate(),               0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).impairedAssets(),        0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).accruedYield(),          0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).assetsUnderManagement(), 0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).unrealizedLosses(),      0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).yieldRate(),             0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).accruedFees(),           0);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).locked(),                1);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).pool(),                  pool);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).poolAsset(),             compositeTokenProxy);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).factory(),               bitcoinStrategyFactory);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).poolManager(),           address(poolManager));
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).implementation(),        bitcoinStrategyImplementation);
+
         (
             bool canDeploy,
             bool canReconcile,
@@ -362,6 +391,16 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
             canReconcile,
             canSchedule
         ) = IBitcoinStrategy(bitcoinStrategy2).permissions(strategyManager);
+
+        assertEq(canDeploy,    true);
+        assertEq(canReconcile, true);
+        assertEq(canSchedule,  true);
+
+        (
+            canDeploy,
+            canReconcile,
+            canSchedule
+        ) = IBitcoinStrategy(bitcoinStrategy3).permissions(strategyManager);
 
         assertEq(canDeploy,    true);
         assertEq(canReconcile, true);
@@ -400,10 +439,12 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertEq(IERC20(compositeTokenProxy).allowance(bitcoinRouterProxy, assetControllerProxy), type(uint256).max);
         assertEq(IERC20(compositeTokenProxy).allowance(bitcoinStrategy1,   assetControllerProxy), type(uint256).max);
         assertEq(IERC20(compositeTokenProxy).allowance(bitcoinStrategy2,   assetControllerProxy), type(uint256).max);
+        assertEq(IERC20(compositeTokenProxy).allowance(bitcoinStrategy3,   assetControllerProxy), type(uint256).max);
 
         assertEq(IERC20(depositAsset).allowance(bitcoinRouterProxy, assetControllerProxy), type(uint256).max);
         assertEq(IERC20(depositAsset).allowance(bitcoinStrategy1,   assetControllerProxy), type(uint256).max);
         assertEq(IERC20(depositAsset).allowance(bitcoinStrategy2,   assetControllerProxy), type(uint256).max);
+        assertEq(IERC20(depositAsset).allowance(bitcoinStrategy3,   assetControllerProxy), type(uint256).max);
 
         assertEq(ICompositeToken(compositeTokenProxy).allAllowed(),                           false);
         assertEq(ICompositeToken(compositeTokenProxy).allowedAddresses(address(pool)),        true);
@@ -411,6 +452,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertEq(ICompositeToken(compositeTokenProxy).allowedAddresses(bitcoinRouterProxy),   true);
         assertEq(ICompositeToken(compositeTokenProxy).allowedAddresses(bitcoinStrategy1),     true);
         assertEq(ICompositeToken(compositeTokenProxy).allowedAddresses(bitcoinStrategy2),     true);
+        assertEq(ICompositeToken(compositeTokenProxy).allowedAddresses(bitcoinStrategy3),     true);
         assertEq(ICompositeToken(compositeTokenProxy).controllers(assetControllerProxy),      true);
 
         assertEq(IAssetController(assetControllerProxy).canWrap(address(depositAsset)),      true);
@@ -419,11 +461,13 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertEq(IAssetController(assetControllerProxy).canReconcile(address(depositAsset)), true);
         assertEq(IAssetController(assetControllerProxy).isStrategy(bitcoinStrategy1),        true);
         assertEq(IAssetController(assetControllerProxy).isStrategy(bitcoinStrategy2),        true);
-
-        assertEq(poolPermissionManager.lenderAllowlist(bitcoinRouterProxy, strategyManager), true);
-        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), 1);
+        assertEq(IAssetController(assetControllerProxy).isStrategy(bitcoinStrategy3),        true);
 
         uint256 bitmap = 2 ** 5;
+
+        assertEq(poolPermissionManager.lenderAllowlist(bitcoinRouterProxy, strategyManager), false);
+        assertEq(poolPermissionManager.lenderBitmaps(bitcoinRouterProxy), bitmap);
+        assertEq(poolPermissionManager.permissionLevels(address(poolManager)), 1);
 
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),          0);
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transferFrom"),      0);
@@ -434,7 +478,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:redeem"),            bitmap);
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:withdraw"),          bitmap);
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"),      bitmap);
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:requestRedeem"),     bitmap);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:requestRedeem"),     bitmap + 1);
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:requestWithdraw"),   bitmap);
 
         assertEq(globals.isInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy1),      true);

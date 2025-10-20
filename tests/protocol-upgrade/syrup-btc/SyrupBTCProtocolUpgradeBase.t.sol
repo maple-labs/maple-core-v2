@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
+import { IAssetController } from "../../../modules/controller/contracts/interfaces/IAssetController.sol";
+import { ICompositeToken } from "../../../modules/controller/contracts/interfaces/ICompositeToken.sol";
+import { IMapleGlobals }   from "../../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
+
 import { Runner } from "../../../contracts/Runner.sol";
 
 import {
-    IAssetController,
     IBitcoinStrategy,
-    ICompositeToken,
     IGlobals,
+    IGovernorTimelock,
     IMapleProxyFactory,
     IPoolDeployer,
     IPoolManager,
     IPoolPermissionManager,
-    ISyrupBitcoinRouter
+    ISyrupBitcoinRouter,
+    IWithdrawalManagerQueue
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
@@ -23,56 +27,32 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     address poolDelegate              = makeAddr("poolDelegate");
     address strategyManager           = makeAddr("strategyManager");
 
-    uint256 bootstrapMint             = 0.0001e8;
-    uint256 delegateManagementFeeRate = 0.333e6;  // 3.33%
+    uint256 delegateManagementFeeRate = 0.333e6; // 3.33%
     uint256 liquidityCap              = 100e8;
+    uint256 startingTime;              
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23428891);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"));
+
+        startingTime = block.timestamp;
 
         upgradeProtocol();
     }
 
     function upgradeProtocol() internal {
-        registerNewWithdrawalManagerVersion();
-        deployAndSetupSyrupBTC();
-    }
+        // Step 1: Deploy new version of withdrawal manager queue
 
-    function registerNewWithdrawalManagerVersion() internal {
         mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
         mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
         mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@7", "WithdrawalManagerQueueMigrator");
 
-        vm.startPrank(governor);
-
-        IMapleProxyFactory(withdrawalManagerQueueFactory).registerImplementation(
-            200,
-            mapleWithdrawalManagerV200Implementation,
-            mapleWithdrawalManagerV200Initializer
-        );
-
-        IMapleProxyFactory(withdrawalManagerQueueFactory).enableUpgradePath(100, 200, mapleWithdrawalManagerV200Migrator);
-        IMapleProxyFactory(withdrawalManagerQueueFactory).setDefaultVersion(200);
-
-        vm.stopPrank();
-
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).defaultVersion(), 200);
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).migratorForPath(100, 200), mapleWithdrawalManagerV200Migrator);
-    }
-
-    function deployAndSetupSyrupBTC() internal {
-        // Step 1: Deploy BitcoinStrategyFactory
+        // Step 2: Deploy bitcoin strategy factory
 
         bitcoinStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(globals));
         bitcoinStrategyImplementation = deployFromFile("Contracts@25", "BitcoinStrategy");
         bitcoinStrategyInitializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
 
-        vm.startPrank(governor);
-        IMapleProxyFactory(bitcoinStrategyFactory).registerImplementation(100, bitcoinStrategyImplementation, bitcoinStrategyInitializer);
-        IMapleProxyFactory(bitcoinStrategyFactory).setDefaultVersion(100);
-        vm.stopPrank();
-
-        // Step 2: Deploy Composite Token
+        // Step 3: Deploy composite token
 
         compositeTokenImplementation = deployFromFile("Contracts@25", "CompositeToken");
         compositeTokenInitializer    = deployFromFile("Contracts@25", "CompositeTokenInitializer");
@@ -87,11 +67,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
             )
         );
 
-        // Step 3: Whitelist composite token on globals, whitelist pool delegate, whitelist WBTC and bitcoin strategy factory
-        //         and set bootstrap mint
-
-        vm.prank(governor);
-        IGlobals(globals).setValidPoolAsset(compositeTokenProxy, true);
+        // Step 4: Operational admin whitelists contracts on globals
 
         vm.startPrank(operationalAdmin);
         IGlobals(globals).setValidPoolDelegate(poolDelegate, true);
@@ -100,19 +76,62 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         IGlobals(globals).setValidInstanceOf("COMPOSITE_POOL_ASSET",    compositeTokenProxy,    true);
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY",        bitcoinStrategyFactory, true);
         IGlobals(globals).setValidInstanceOf("SYRUP_BTC_REDEEMER",      bitcoinRouterRedeemer,  true);
-
-        IGlobals(globals).setBootstrapMint(compositeTokenProxy, bootstrapMint);
         vm.stopPrank();
 
-        // Step 4: Deploy MaplePool
+        // Step 5: Governor registers new withdrawal manager version, enables upgrade path and sets default version.
+        //         Governor registers new bitcoin strategy version and sets default version
+        //         Governor whitelists composite token as pool asset
 
-        address[] memory strategyFactories      = new address[](2);
-        bytes[]   memory strategyDeploymentData = new bytes[](2);
+        address[] memory targets = new address[](6);
+        bytes[]   memory data    = new bytes[](6);
+
+        targets[0] = withdrawalManagerQueueFactory;
+        targets[1] = withdrawalManagerQueueFactory;
+        targets[2] = withdrawalManagerQueueFactory;
+        targets[3] = bitcoinStrategyFactory;
+        targets[4] = bitcoinStrategyFactory;
+        targets[5] = globals;
+
+        data[0] = abi.encodeWithSelector(
+            IMapleProxyFactory.registerImplementation.selector,
+            200,
+            mapleWithdrawalManagerV200Implementation,
+            mapleWithdrawalManagerV200Initializer
+        );
+
+        data[1] = abi.encodeWithSelector(
+            IMapleProxyFactory.enableUpgradePath.selector,
+            100,
+            200,
+            mapleWithdrawalManagerV200Migrator
+        );
+
+        data[2] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 200);
+
+        data[3] = abi.encodeWithSelector(
+            IMapleProxyFactory.registerImplementation.selector,
+            100,
+            bitcoinStrategyImplementation,
+            bitcoinStrategyInitializer
+        );
+
+        data[4] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 100);
+        data[5] = abi.encodeWithSelector(IMapleGlobals.setValidPoolAsset.selector, compositeTokenProxy, true);
+
+        uint256[] memory proposalIds = scheduleProposals(targets, data);
+        executeProposals(proposalIds, targets, data);
+
+        // Step 6: Deploy MaplePool
+
+        address[] memory strategyFactories      = new address[](3);
+        bytes[]   memory strategyDeploymentData = new bytes[](3);
 
         strategyFactories[0]      = bitcoinStrategyFactory;
         strategyFactories[1]      = bitcoinStrategyFactory;
+        strategyFactories[2]      = bitcoinStrategyFactory;
         strategyDeploymentData[0] = new bytes(0);
         strategyDeploymentData[1] = new bytes(0);
+        strategyDeploymentData[2] = new bytes(0);
 
         uint256[4] memory configParams = [liquidityCap, delegateManagementFeeRate, uint256(0), uint256(0)];
 
@@ -132,8 +151,9 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         syrupBitcoinPool = IPoolManager(syrupBitcoinPoolManager).pool();
         bitcoinStrategy1 = IPoolManager(syrupBitcoinPoolManager).strategyList(0);
         bitcoinStrategy2 = IPoolManager(syrupBitcoinPoolManager).strategyList(1);
+        bitcoinStrategy3 = IPoolManager(syrupBitcoinPoolManager).strategyList(2);
 
-        // Step 5: Deploy AssetControllerOracle
+        // Step 7: Deploy AssetControllerOracle
 
         assetPriceOracleImplementation = deployFromFile("Contracts@25", "AssetControllerOracle");
         assetPriceOracleProxy          = deployFromFile(
@@ -147,7 +167,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
             )
         );
 
-        // Step 6: Deploy SyrupBitcoinRouter
+        // Step 8: Deploy SyrupBitcoinRouter
 
         bitcoinRouterImplementation = deployFromFile("Contracts@25", "SyrupBitcoinRouter");
         bitcoinRouterInitializer    = deployFromFile("Contracts@25", "SyrupBitcoinRouterInitializer");
@@ -162,7 +182,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
             )
         );
 
-        // Step 7: Whitelist contracts on globals
+        // Step 9: Operational admin whitelists contracts on globals
 
         vm.startPrank(operationalAdmin);
         IGlobals(globals).setValidInstanceOf("CONTROLLER_ORACLE",    assetPriceOracleProxy, true);
@@ -170,9 +190,10 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         IGlobals(globals).setValidInstanceOf("SYRUP_BTC_ROUTER",     bitcoinRouterProxy,    true);
         IGlobals(globals).setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy1,      true);
         IGlobals(globals).setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy2,      true);
+        IGlobals(globals).setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy3,      true);
         vm.stopPrank();
 
-        // Step 8: Deploy AssetController
+        // Step 10: Deploy AssetController
 
         assetControllerImplementation = deployFromFile("Contracts@25", "AssetController");
         assetControllerInitializer    = deployFromFile("Contracts@25", "AssetControllerInitializer");
@@ -191,83 +212,44 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
             )
         );
 
-        // Step 9: Whitelist asset controller on globals
+        // Step 11: Operational admin whitelists asset controller on globals
+        //          Operational admin sets WBTC as valid asset to be used by asset controller
+        //          Operational admin sets asset controller on router and bitcoin strategies
+        //          Operational admin sets permissions on the bitcoin strategies
+        //          Operational admin sets pool permission level to be function level and sets bitmaps and lender bitmaps for the router
+        //          Operational admin sets manual withdrawal for the router
 
-        vm.prank(operationalAdmin);
+        // Step 11.1: Operational admin whitelists asset controller on globals
+
+        vm.startPrank(operationalAdmin);
+
         IGlobals(globals).setValidInstanceOf("ASSET_CONTROLLER", assetControllerProxy, true);
 
-        // Step 10: Allow composite token to be held by pool, asset controller, bitcoin router and bitcoin strategy
+        // Step 11.2: Operational admin sets WBTC as valid asset to be used by asset controller
 
-        address[] memory addresses = new address[](5);
-        bool[]    memory allowed   = new bool[](5);
+        address[] memory addresses = new address[](1);
+        bool[]    memory allowed   = new bool[](1);
 
-        addresses[0] = syrupBitcoinPool;
-        addresses[1] = assetControllerProxy;
-        addresses[2] = bitcoinRouterProxy;
-        addresses[3] = bitcoinStrategy1;
-        addresses[4] = bitcoinStrategy2;
-
-        allowed[0] = true;
-        allowed[1] = true;
-        allowed[2] = true;
-        allowed[3] = true;
-        allowed[4] = true;
-
-        vm.prank(governor);
-        ICompositeToken(compositeTokenProxy).allowAddresses(addresses, allowed);
-
-        // Step 11: Allow WBTC to be wrapped, unwrapped, deployed and reconciled
-
-        addresses = new address[](1);
-        allowed   = new bool[](1);
-
-        addresses[0] = wbtc;
-        allowed[0]   = true;
-
-        vm.prank(governor);
-        IAssetController(assetControllerProxy).setAssets(addresses, allowed, allowed, allowed, allowed);
-
-        // Step 12: Whitelist bitcoin strategy on asset controller
-
-        addresses = new address[](2);
-        allowed   = new bool[](2);
+        addresses = new address[](3);
+        allowed   = new bool[](3);
 
         addresses[0] = bitcoinStrategy1;
         addresses[1] = bitcoinStrategy2;
+        addresses[2] = bitcoinStrategy3;
         allowed[0]   = true;
         allowed[1]   = true;
+        allowed[2]   = true;
 
-        vm.prank(operationalAdmin);
         IAssetController(assetControllerProxy).setStrategies(addresses, allowed);
 
-        // Step 13: Set asset controller on composite token, bitcoin router and bitcoin strategy
+        // Step 11.3: Operational admin sets asset controller on the router and bitcoin strategies
 
-        addresses = new address[](1);
-        allowed   = new bool[](1);
-
-        addresses[0] = assetControllerProxy;
-        allowed[0]   = true;
-
-        vm.prank(governor);
-        ICompositeToken(compositeTokenProxy).setAssetControllers(addresses, allowed);
-
-        vm.startPrank(operationalAdmin);
         ISyrupBitcoinRouter(bitcoinRouterProxy).setAssetController(wbtc, assetControllerProxy);
         IBitcoinStrategy(bitcoinStrategy1).setAssetController(wbtc, assetControllerProxy);
         IBitcoinStrategy(bitcoinStrategy2).setAssetController(wbtc, assetControllerProxy);
-        vm.stopPrank();
+        IBitcoinStrategy(bitcoinStrategy3).setAssetController(wbtc, assetControllerProxy);
 
-        // Step 14: Allow strategy manager to deploy, schedule and reconcile all strategies
-
-        addresses[0] = strategyManager;
-        allowed[0]   = true;
-
-        vm.startPrank(operationalAdmin);
-        IBitcoinStrategy(bitcoinStrategy1).setPermissions(addresses, allowed, allowed, allowed);
-        IBitcoinStrategy(bitcoinStrategy2).setPermissions(addresses, allowed, allowed, allowed);
-        vm.stopPrank();
-
-        // Step 15: Whitelist strategy manager on pool permission manager
+        // Step 11.4: Operational admin sets permissions on the bitcoin strategies
 
         addresses = new address[](1);
         allowed   = new bool[](1);
@@ -275,8 +257,13 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         addresses[0] = strategyManager;
         allowed[0]   = true;
 
-        vm.prank(operationalAdmin);
-        IPoolPermissionManager(poolPermissionManager).setLenderAllowlist(bitcoinRouterProxy, addresses, allowed);
+        IBitcoinStrategy(bitcoinStrategy1).setPermissions(addresses, allowed, allowed, allowed);
+        IBitcoinStrategy(bitcoinStrategy2).setPermissions(addresses, allowed, allowed, allowed);
+        IBitcoinStrategy(bitcoinStrategy3).setPermissions(addresses, allowed, allowed, allowed);
+
+        // Step 11.5: Operational admin sets pool permission level to be function level and sets bitmaps and lender bitmaps for the router
+
+        IPoolPermissionManager(poolPermissionManager).setPoolPermissionLevel(syrupBitcoinPoolManager, 1);
 
         bytes32[] memory functionIdsToSet = new bytes32[](11);
         uint256[] memory bitmaps          = new uint256[](11);
@@ -304,15 +291,91 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         bitmaps[6]  = 0;
         bitmaps[7]  = 0;
         bitmaps[8]  = bitmap;
-        bitmaps[9]  = bitmap;
+        bitmaps[9]  = bitmap + 1;
         bitmaps[10] = bitmap;
 
-        // Step 16: Set pool permission level to be function level and set bitmaps
-
-        vm.startPrank(operationalAdmin);
-        IPoolPermissionManager(poolPermissionManager).setPoolPermissionLevel(syrupBitcoinPoolManager, 1);
         IPoolPermissionManager(poolPermissionManager).setPoolBitmaps(syrupBitcoinPoolManager, functionIdsToSet, bitmaps);
+
+        addresses = new address[](1);
+        bitmaps   = new uint256[](1);
+
+        addresses[0] = bitcoinRouterProxy;
+        bitmaps[0]   = bitmap;
+
+        IPoolPermissionManager(poolPermissionManager).setLenderBitmaps(addresses, bitmaps);
+
+        // Step 11.6: Operational admin sets manual withdrawal for the router
+
+        address withdrawalManager = IPoolManager(syrupBitcoinPoolManager).withdrawalManager();
+        IWithdrawalManagerQueue(withdrawalManager).setManualWithdrawal(bitcoinRouterProxy, true);
+
         vm.stopPrank();
+
+        // Step 12: Timelock allows composite token to be held by pool, asset controller, bitcoin router and bitcoin strategies
+        //          Timelock allows WBTC to be wrapped, unwrapped, deployed and reconciled
+        //          Timelock sets asset controller on composite token
+
+        targets = new address[](3);
+        data    = new bytes[](3);
+
+        targets[0] = compositeTokenProxy;
+        targets[1] = assetControllerProxy;
+        targets[2] = compositeTokenProxy;
+
+        addresses = new address[](6);
+        allowed   = new bool[](6);
+
+        addresses[0] = syrupBitcoinPool;
+        addresses[1] = assetControllerProxy;
+        addresses[2] = bitcoinRouterProxy;
+        addresses[3] = bitcoinStrategy1;
+        addresses[4] = bitcoinStrategy2;
+        addresses[5] = bitcoinStrategy3;
+
+        allowed[0] = true;
+        allowed[1] = true;
+        allowed[2] = true;
+        allowed[3] = true;
+        allowed[4] = true;
+        allowed[5] = true;
+
+        data[0] = abi.encodeWithSelector(ICompositeToken.allowAddresses.selector, addresses, allowed);
+
+        addresses = new address[](1);
+        allowed   = new bool[](1);
+
+        addresses[0] = wbtc;
+        allowed[0]   = true;
+
+        data[1] = abi.encodeWithSelector(IAssetController.setAssets.selector, addresses, allowed, allowed, allowed, allowed);
+
+        addresses[0] = assetControllerProxy;
+        allowed[0]   = true;
+
+        data[2] = abi.encodeWithSelector(ICompositeToken.setAssetControllers.selector, addresses, allowed);
+
+        proposalIds = scheduleProposals(targets, data);
+        executeProposals(proposalIds, targets, data);
+    }
+
+    function scheduleProposals(address[] memory targets, bytes[] memory data) internal returns (uint256[] memory proposalIds) {
+        uint256 latestProposalId = IGovernorTimelock(timelock).latestProposalId();
+
+        vm.prank(governor);
+        IGovernorTimelock(timelock).scheduleProposals(targets, data);
+
+        proposalIds = new uint256[](targets.length);
+        for (uint256 i = 0; i < targets.length; i++) {
+            proposalIds[i] = latestProposalId + i + 1;
+        }
+    }
+
+    function executeProposals(uint256[] memory proposalIds, address[] memory targets, bytes[] memory data) internal {
+        uint256 currentTimestamp = block.timestamp;
+        vm.warp(currentTimestamp + 3 days);
+
+        vm.prank(executor);
+        IGovernorTimelock(timelock).executeProposals(proposalIds, targets, data);
     }
 
 }
