@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import {
+    IBitcoinStrategy,
     IERC20,
     IFixedTermLoan,
     IFixedTermLoanManager,
@@ -432,6 +433,36 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(remainingDuration_, remainingDuration);
         assertEq(lastUpdated_,       lastUpdated);
         assertEq(yieldRate_,         yieldRate);
+    }
+
+    function assertSyrupBtcSystemState(
+        uint256 strategyManagerBalance,
+        uint256 assetControllerBalance,
+        uint256 poolTotalAssets,
+        uint256 poolCompositeTokenBalance
+    )
+        internal
+    {
+        assertEq(depositAsset.balanceOf(strategyManager),      strategyManagerBalance);
+        assertEq(depositAsset.balanceOf(assetControllerProxy), assetControllerBalance);
+        assertEq(compositeAsset.balanceOf(address(pool)),      poolCompositeTokenBalance);
+        assertEq(pool.totalAssets(),                           poolTotalAssets);
+    }
+
+    function assertBitcoinStrategyState(
+        address strategy,
+        uint256 assetsUnderManagement,
+        uint256 accruedYield,
+        uint256 accruedFees,
+        uint256 impairedAssets
+    )
+        internal
+    {
+        assertEq(IBitcoinStrategy(strategy).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(IBitcoinStrategy(strategy).accruedYield(),          accruedYield);
+        assertEq(IBitcoinStrategy(strategy).accruedFees(),           accruedFees);
+        assertEq(IBitcoinStrategy(strategy).outstandingAssets(),     assetsUnderManagement + accruedFees - accruedYield);
+        assertEq(IBitcoinStrategy(strategy).impairedAssets(),        impairedAssets);
     }
 
     function assertUserRequests(address poolManager, address owner, uint256[] memory requestIds) internal {

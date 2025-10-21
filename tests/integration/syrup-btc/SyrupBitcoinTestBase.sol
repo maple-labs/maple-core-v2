@@ -10,8 +10,6 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract SyrupBitcoinTestBase is TestBaseWithAssertions {
 
-    bytes32 public constant EMPTY_METADATA = "";
-
     function setUp() public virtual override {
         _setupBitcoinPool();
     }

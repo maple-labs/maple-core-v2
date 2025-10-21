@@ -34,7 +34,8 @@ import { MockLiquidationStrategy } from "./mocks/Mocks.sol";
 
 contract TestBase is ProtocolActions {
 
-    uint256 constant MAX_TOKEN_AMOUNT = 1e29;
+    uint256 constant MAX_TOKEN_AMOUNT         = 1e29;
+    uint256 constant DEFAULT_STRATEGIES_COUNT = 4;
 
     uint256 constant ONE_DAY   = 1 days;
     uint256 constant ONE_MONTH = ONE_YEAR / 12;
@@ -118,6 +119,7 @@ contract TestBase is ProtocolActions {
 
     uint32  startingTime;
     uint256 start;
+    uint256 initialStrategiesCount;
 
     address[] strategyFactories;
     address[] poolManagers;
@@ -237,13 +239,17 @@ contract TestBase is ProtocolActions {
 
     function _createFactories() internal {
         cyclicalWMFactory           = deployFromFile("Contracts@7", "WithdrawalManagerCyclicalFactory", abi.encode(address(globals)));
-        fixedTermLoanFactory        = deployFromFile("Contracts@7", "FixedTermLoanFactory",             abi.encode(address(globals), address(0)));
         fixedTermLoanManagerFactory = deployFromFile("Contracts@7", "FixedTermLoanManagerFactory",      abi.encode(address(globals)));
         liquidatorFactory           = deployFromFile("Contracts@7", "LiquidatorFactory",                abi.encode(address(globals)));
         openTermLoanFactory         = deployFromFile("Contracts@7", "OpenTermLoanFactory",              abi.encode(address(globals)));
         openTermLoanManagerFactory  = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory",       abi.encode(address(globals)));
         poolManagerFactory          = deployFromFile("Contracts@7", "PoolManagerFactory",               abi.encode(address(globals)));
         queueWMFactory              = deployFromFile("Contracts@7", "WithdrawalManagerQueueFactory",    abi.encode(address(globals)));
+        fixedTermLoanFactory        = deployFromFile(
+            "Contracts@7",
+            "FixedTermLoanFactory",
+            abi.encode(address(globals), address(0))
+        );
 
         fixedTermLoanImplementation        = deployFromFile("Contracts@7",  "FixedTermLoan");
         fixedTermLoanManagerImplementation = deployFromFile("Contracts@7",  "FixedTermLoanManager");
@@ -438,7 +444,10 @@ contract TestBase is ProtocolActions {
         }
     }
 
-    function _createPoolWithQueue(address poolDelegate_, string memory poolName_) internal returns (address pool_, address pm_, address wm_) {
+    function _createPoolWithQueue(
+        address poolDelegate_,
+        string memory poolName_
+    ) internal returns (address pool_, address pm_, address wm_) {
         string memory symbol_ = "MP";
 
         address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory).getInstanceAddress(
@@ -507,11 +516,13 @@ contract TestBase is ProtocolActions {
     }
 
     function _createBitcoinPool() internal {
-        address[] memory strategyFactories_  = new address[](4);
-        bytes[]   memory additionalCalldata_ = new bytes[](4);
+        initialStrategiesCount = initialStrategiesCount == 0 ? DEFAULT_STRATEGIES_COUNT : initialStrategiesCount;
+
+        address[] memory strategyFactories_  = new address[](initialStrategiesCount);
+        bytes[]   memory additionalCalldata_ = new bytes[](initialStrategiesCount);
 
         // Creates 4 distinct bitcoin strategies.
-        for (uint i; i < 4; i++) {
+        for (uint i; i < initialStrategiesCount; i++) {
             strategyFactories_[i]  = address(bitcoinStrategyFactory);
             additionalCalldata_[i] = abi.encode("");
         }
@@ -537,7 +548,7 @@ contract TestBase is ProtocolActions {
         bitcoinStrategy   = IBitcoinStrategy(poolManager.strategyList(0));
 
         // Whitelist all of the bitcoin strategies on globals.
-        for (uint i; i < 4; i++) {
+        for (uint i; i < initialStrategiesCount; i++) {
             address strategy = poolManager.strategyList(i);
 
             vm.prank(governor);
@@ -607,24 +618,24 @@ contract TestBase is ProtocolActions {
 
     function _configurePeripheryContracts() internal {
         // Allow usage of composite tokens only for the pool, router, controller, and all bitcoin strategies.
-        address[] memory addresses = new address[](7);
-        bool[]    memory allowed   = new bool[](7);
+        address[] memory addresses = new address[](3 + initialStrategiesCount);
+        bool[]    memory allowed   = new bool[](3 + initialStrategiesCount);
 
         addresses[0] = address(pool);
         addresses[1] = address(assetController);
         addresses[2] = address(bitcoinRouter);
-        addresses[3] = poolManager.strategyList(0);
-        addresses[4] = poolManager.strategyList(1);
-        addresses[5] = poolManager.strategyList(2);
-        addresses[6] = poolManager.strategyList(3);
+
+        for (uint i; i < initialStrategiesCount; i++) {
+            addresses[3 + i] = poolManager.strategyList(i);
+        }
 
         allowed[0] = true;
         allowed[1] = true;
         allowed[2] = true;
-        allowed[3] = true;
-        allowed[4] = true;
-        allowed[5] = true;
-        allowed[6] = true;
+
+        for (uint i; i < initialStrategiesCount; i++) {
+            allowed[3 + i] = true;
+        }
 
         vm.prank(governor);
         compositeAsset.allowAddresses(addresses, allowed);
@@ -644,18 +655,13 @@ contract TestBase is ProtocolActions {
         withdrawalManager.setManualWithdrawal(address(bitcoinRouter), true);
 
         // Set all bitcoin strategies on the asset controller.
-        addresses = new address[](4);
-        allowed   = new bool[](4);
+        addresses = new address[](initialStrategiesCount);
+        allowed   = new bool[](initialStrategiesCount);
 
-        addresses[0] = poolManager.strategyList(0);
-        addresses[1] = poolManager.strategyList(1);
-        addresses[2] = poolManager.strategyList(2);
-        addresses[3] = poolManager.strategyList(3);
-
-        allowed[0] = true;
-        allowed[1] = true;
-        allowed[2] = true;
-        allowed[3] = true;
+        for (uint i; i < initialStrategiesCount; i++) {
+            addresses[i] = poolManager.strategyList(i);
+            allowed[i]   = true;
+        }
 
         vm.prank(governor);
         assetController.setStrategies(addresses, allowed);
@@ -673,7 +679,7 @@ contract TestBase is ProtocolActions {
         vm.prank(governor);
         bitcoinRouter.setAssetController(address(depositAsset), address(assetController));
 
-        for (uint i; i < 4; i++) {
+        for (uint i; i < initialStrategiesCount; i++) {
             address strategy = poolManager.strategyList(i);
 
             vm.prank(governor);
@@ -684,7 +690,7 @@ contract TestBase is ProtocolActions {
         addresses[0] = strategyManager;
         allowed[0]   = true;
 
-        for (uint i; i < 4; i++) {
+        for (uint i; i < initialStrategiesCount; i++) {
             address strategy = poolManager.strategyList(i);
 
             vm.prank(governor);

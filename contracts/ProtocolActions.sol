@@ -22,11 +22,12 @@ import {
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IStrategyLike,
+    ISyrupBitcoinRouter,
     IUSDCLike,
     IWithdrawalManagerCyclical as IWithdrawalManager,
-    IWithdrawalManagerQueue
+    IWithdrawalManagerQueue,
+    Permit
 } from "./interfaces/Interfaces.sol";
-
 
 import { Runner, ERC20Helper, console2 as console } from "./Runner.sol";
 
@@ -34,6 +35,8 @@ import { Runner, ERC20Helper, console2 as console } from "./Runner.sol";
 contract ProtocolActions is Runner {
 
     uint256 constant HUNDRED_PERCENT = 100_0000;  // TODO: Fix Globals module to export this constant in its interface.
+
+    bytes32 constant EMPTY_METADATA = "";
 
     address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
     address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
@@ -454,6 +457,21 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
+    function depositInSyrupBtc(
+        address user_,
+        address router_,
+        address depositAsset_,
+        uint256 amount_
+    )
+        internal returns (uint256 shares_)
+    {
+        erc20_mint(depositAsset_, user_, amount_);
+        erc20_approve(depositAsset_, user_, router_, amount_);
+
+        vm.prank(user_);
+        shares_ = ISyrupBitcoinRouter(router_).deposit(depositAsset_, amount_, "", Permit(false, 0, 0, 0, 0));
+    }
+
     function depositWithPermit(address pool_, uint256 privateKey_, uint256 assets, uint256 deadline_) internal returns (uint256 shares_) {
         address account_ = vm.addr(privateKey_);
         address asset_   = IPool(pool_).asset();
@@ -532,6 +550,25 @@ contract ProtocolActions is Runner {
         vm.startPrank(account_);
         escrowShares_ = IPool(pool_).requestRedeem(amount_, account_);
         vm.stopPrank();
+    }
+
+    function requestRedeemFromSyrupBtc(
+        address user_,
+        address router_,
+        address assetToReceive_,
+        uint256 sharesToRedeem_
+    )
+        internal returns (uint256 requestId_)
+    {
+        erc20_approve(ISyrupBitcoinRouter(router_).pool(), user_, router_, sharesToRedeem_);
+
+        vm.prank(user_);
+        ( , requestId_ ) = ISyrupBitcoinRouter(router_).requestRedeem(
+            assetToReceive_,
+            sharesToRedeem_,
+            EMPTY_METADATA,
+            Permit(false, 0, 0, 0, 0)
+        );
     }
 
     /**************************************************************************************************************************************/

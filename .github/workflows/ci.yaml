@@ -44,7 +44,8 @@ jobs:
         run: ./test.sh -d tests/integration -p $FOUNDRY_PROFILE
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: SC-HighMemory
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
