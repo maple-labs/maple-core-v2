@@ -58,7 +58,7 @@ contract StrategyInvariants is BaseInvariants {
             IUSDCLike(USDC).configureMinter(borrower, type(uint256).max);
         }
 
-        start = currentTimestamp = block.timestamp;
+        start = block.timestamp;
 
         fundsAsset = IMockERC20(USDC);
 
@@ -206,7 +206,7 @@ contract StrategyInvariants is BaseInvariants {
     /*** Strategy Invariants                                                                                                            ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_strategy_A_B_C_D_E_F_G() external useCurrentTimestamp {
+    function statefulFuzz_strategy_A_B_C_D_E_F_G() external {
         uint256 strategyCount = strategyHandler.strategyCount();
 
         for (uint i; i < strategyCount; i++) {

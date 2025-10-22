@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IGlobals,
-    IInvariantTest,
-    IPoolPermissionManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IGlobals, IPoolPermissionManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../../contracts/Runner.sol";
 
@@ -35,8 +31,6 @@ contract PermissionHandler is HandlerBase {
         bytes32[] memory functionIds_
     )
     {
-        testContract = IInvariantTest(msg.sender);
-
         ppm      = IPoolPermissionManager(poolPermissionManager_);
         governor = IGlobals(globals_).governor();
 
@@ -49,7 +43,7 @@ contract PermissionHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function setLenderBitmaps(uint256 seed_) public useTimestamps {
+    function setLenderBitmaps(uint256 seed_) public {
         console.log("setLenderBitmaps(%s)", seed_);
         numberOfCalls["setLenderBitmaps"]++;
 
@@ -59,7 +53,7 @@ contract PermissionHandler is HandlerBase {
         ppm.setLenderBitmaps(lenders, bitmaps);
     }
 
-    function setPoolBitmaps(uint256 seed_) public useTimestamps {
+    function setPoolBitmaps(uint256 seed_) public {
         console.log("setPoolBitmaps(%s)", seed_);
         numberOfCalls["setPoolBitmaps"]++;
 
@@ -70,7 +64,7 @@ contract PermissionHandler is HandlerBase {
         ppm.setPoolBitmaps(poolManager, functionIds, bitmaps);
     }
 
-    function setPoolPermissionLevel(uint256 seed_) public useTimestamps {
+    function setPoolPermissionLevel(uint256 seed_) public {
         console.log("setPoolPermissionLevel(%s)", seed_);
         numberOfCalls["setPoolPermissionLevel"]++;
 

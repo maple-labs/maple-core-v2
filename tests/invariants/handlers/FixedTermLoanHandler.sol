@@ -93,7 +93,6 @@ contract FixedTermLoanHandler is HandlerBase {
         address loanFactory_,
         address poolManager_,
         address refinancer_,
-        address testContract_,
         uint256 numBorrowers_
     ) {
         feeManager  = feeManager_;
@@ -108,11 +107,10 @@ contract FixedTermLoanHandler is HandlerBase {
         liquidatorFactory = liquidatorFactory_;
         loanManager       = IFixedTermLoanManager(poolManager.strategyList(0));
         pool              = IPool(poolManager.pool());
-        testContract      = IInvariantTest(testContract_);
 
         poolDelegate = makeAddr("poolDelegate");
 
-        earliestPaymentDueDate = testContract.currentTimestamp();
+        earliestPaymentDueDate = block.timestamp;
 
         for (uint256 i; i < numBorrowers_; ++i) {
             address borrower = makeAddr(string(abi.encode("borrower", i)));
@@ -130,7 +128,7 @@ contract FixedTermLoanHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function createLoanAndFund(uint256 seed_) public useTimestamps {
+    function createLoanAndFund(uint256 seed_) public {
         console.log("ftlHandler.createLoanAndFund(%s)", seed_);
 
         numberOfCalls["ftlHandler.createLoanAndFund"]++;
@@ -198,7 +196,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     // NOTE: Only keep one makePayment function active via the weights.
-    function makePayment(uint256 seed_) public virtual useTimestamps {
+    function makePayment(uint256 seed_) public virtual {
         console.log("ftlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["ftlHandler.makePayment"]++;
@@ -266,7 +264,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     // NOTE: Only keep one makePayment function active via the weights.
-    function impairmentMakePayment(uint256 seed_) public useTimestamps {
+    function impairmentMakePayment(uint256 seed_) public {
         console.log("ftlHandler.impairmentMakePayment(%s)", seed_);
 
         numberOfCalls["ftlHandler.impairmentMakePayment"]++;
@@ -340,7 +338,7 @@ contract FixedTermLoanHandler is HandlerBase {
     }
 
     // NOTE: Only keep one makePayment function active via the weights.
-    function defaultMakePayment(uint256 seed_) public useTimestamps {
+    function defaultMakePayment(uint256 seed_) public {
         console.log("ftlHandler.defaultMakePayment(%s)", seed_);
 
         numberOfCalls["ftlHandler.defaultMakePayment"]++;
@@ -358,7 +356,7 @@ contract FixedTermLoanHandler is HandlerBase {
         }
     }
 
-    function impairLoan(uint256 seed_) public useTimestamps {
+    function impairLoan(uint256 seed_) public {
         console.log("ftlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["ftlHandler.impairLoan"]++;
@@ -393,7 +391,7 @@ contract FixedTermLoanHandler is HandlerBase {
         loanImpaired[loanAddress] = true;
     }
 
-    function triggerDefault(uint256 seed_) public useTimestamps {
+    function triggerDefault(uint256 seed_) public {
         console.log("ftlHandler.triggerDefault(%s)", seed_);
 
         numberOfCalls["ftlHandler.triggerDefault"]++;
@@ -442,7 +440,7 @@ contract FixedTermLoanHandler is HandlerBase {
         }
     }
 
-    function finishCollateralLiquidation(uint256 seed_) public useTimestamps {
+    function finishCollateralLiquidation(uint256 seed_) public {
         console.log("ftlh.finishCollateralLiquidation(%s)", seed_);
 
         numberOfCalls["ftlh.finishCollateralLiquidation"]++;
@@ -484,7 +482,7 @@ contract FixedTermLoanHandler is HandlerBase {
         }
     }
 
-    function refinance(uint256 seed_) public useTimestamps {
+    function refinance(uint256 seed_) public {
         console.log("ftlHandler.refinance(%s)", seed_);
 
         numberOfCalls["ftlHandler.refinance"]++;
@@ -556,7 +554,7 @@ contract FixedTermLoanHandler is HandlerBase {
         collateralAsset.burn(borrower, collateralAsset.balanceOf(borrower));
     }
 
-    function warp(uint256 seed_) public useTimestamps {
+    function warp(uint256 seed_) public {
         console.log("ftlHandler.warp(%s)", seed_);
 
         numberOfCalls["ftlHandler.warp"]++;

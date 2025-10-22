@@ -165,6 +165,10 @@ contract TestBase is ProtocolActions {
         openPool(address(poolManager));
     }
 
+    /**************************************************************************************************************************************/
+    /*** Initialization Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
     function _setupBitcoinPool() internal {
         start        = block.timestamp;
         startingTime = uint32(start);
@@ -178,10 +182,6 @@ contract TestBase is ProtocolActions {
         _createPeripheryContracts();
         _configurePeripheryContracts();
     }
-
-    /**************************************************************************************************************************************/
-    /*** Initialization Functions                                                                                                       ***/
-    /**************************************************************************************************************************************/
 
     function _createAccounts() internal {
         governor         = makeAddr("governor");

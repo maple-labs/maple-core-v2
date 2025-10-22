@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IInvariantTest, IPool } from "../../../contracts/interfaces/Interfaces.sol";
+import { IPool } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../../contracts/Runner.sol";
 
@@ -22,8 +22,6 @@ contract TransferHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(address pool_, address[] memory lps_) {
-        testContract = IInvariantTest(msg.sender);
-
         pool = IPool(pool_);
         lps  = lps_;
     }
@@ -32,7 +30,7 @@ contract TransferHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function transfer(uint256 seed_) external useTimestamps {
+    function transfer(uint256 seed_) external {
         console.log("transferHandler.transfer(%s)", seed_);
         numberOfCalls["transferHandler.transfer"]++;
 

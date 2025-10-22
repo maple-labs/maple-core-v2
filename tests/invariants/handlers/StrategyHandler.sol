@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import {
     IERC20,
     IERC4626Like,
-    IInvariantTest,
     IPool,
     IPSMLike,
     IStrategyLike,
@@ -44,15 +43,13 @@ contract StrategyHandler is HandlerBase {
         minimumFunding = 10;
 
         strategyCount = strategies.length;
-
-        testContract = IInvariantTest(msg.sender);
     }
 
     /**************************************************************************************************************************************/
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function fundStrategy(uint256 seed_) external useTimestamps {
+    function fundStrategy(uint256 seed_) external {
         console.log("strategyHandler.fundStrategy(%s)", seed_);
 
         numberOfCalls["fundStrategy"]++;
@@ -74,7 +71,7 @@ contract StrategyHandler is HandlerBase {
         fundStrategy(strategy_, assets_);
     }
 
-    function withdrawFromStrategy(uint256 seed_) external useTimestamps {
+    function withdrawFromStrategy(uint256 seed_) external {
         console.log("strategyHandler.withdrawFromStrategy(%s)", seed_);
 
         numberOfCalls["withdrawFromStrategy"]++;
@@ -101,7 +98,7 @@ contract StrategyHandler is HandlerBase {
         withdrawFromStrategy(strategy_, assets_);
     }
 
-    function requestWithdrawFromStrategy(uint256 seed_) external useTimestamps {
+    function requestWithdrawFromStrategy(uint256 seed_) external {
         console.log("strategyHandler.requestWithdrawFromStrategy(%s)", seed_);
 
         numberOfCalls["requestWithdrawFromStrategy"]++;
@@ -120,7 +117,7 @@ contract StrategyHandler is HandlerBase {
         requestWithdrawFromStrategy(coreStrategy, selectedAssets_);
     }
 
-    function processRedemptions(uint256 seed_) external useTimestamps {
+    function processRedemptions(uint256 seed_) external {
         console.log("strategyHandler.processRedemptions(%s)", seed_);
 
         numberOfCalls["processRedemptions"]++;
@@ -142,7 +139,7 @@ contract StrategyHandler is HandlerBase {
         processRedemptions(address(pool_), sharesToProcess_);
     }
 
-    function setStrategyFeeRate(uint256 seed_) external useTimestamps {
+    function setStrategyFeeRate(uint256 seed_) external {
         console.log("strategyHandler.setStrategyFeeRate(%s)", seed_);
 
         numberOfCalls["setStrategyFeeRate"]++;
@@ -157,7 +154,7 @@ contract StrategyHandler is HandlerBase {
         setStrategyFeeRate(strategy_, feeRate_);
     }
 
-    function impairStrategy(uint256 seed_) external useTimestamps {
+    function impairStrategy(uint256 seed_) external {
         console.log("strategyHandler.impairStrategy(%s)", seed_);
 
         numberOfCalls["impairStrategy"]++;
@@ -169,7 +166,7 @@ contract StrategyHandler is HandlerBase {
         impairStrategy(strategy_);
     }
 
-    function deactivateStrategy(uint256 seed_) external useTimestamps {
+    function deactivateStrategy(uint256 seed_) external {
         console.log("strategyHandler.deactivateStrategy(%s)", seed_);
 
         numberOfCalls["deactivateStrategy"]++;
@@ -181,7 +178,7 @@ contract StrategyHandler is HandlerBase {
         deactivateStrategy(strategy_);
     }
 
-    function reactivateStrategy(uint256 seed_) external useTimestamps {
+    function reactivateStrategy(uint256 seed_) external {
         console.log("strategyHandler.reactivateStrategy(%s)", seed_);
 
         numberOfCalls["reactivateStrategy"]++;
@@ -201,7 +198,7 @@ contract StrategyHandler is HandlerBase {
         reactivateStrategy(strategy_, updateAccounting_);
     }
 
-    function warp(uint256 seed_) external useTimestamps {
+    function warp(uint256 seed_) external {
         console.log("strategyHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;

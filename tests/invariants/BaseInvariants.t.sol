@@ -17,6 +17,7 @@ import {
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
+    IPoolManager,
     IPoolPermissionManager,
     IPSMLike,
     IStrategyLike,
@@ -26,6 +27,8 @@ import {
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
+import { BitcoinRouterHandler }      from "./handlers/BitcoinRouterHandler.sol";
+import { BitcoinStrategyHandler }    from "./handlers/BitcoinStrategyHandler.sol";
 import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
 import { DepositHandler }            from "./handlers/DepositHandler.sol";
 import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
@@ -35,6 +38,7 @@ import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
 import { StrategyHandler }           from "./handlers/StrategyHandler.sol";
 import { TransferHandler }           from "./handlers/TransferHandler.sol";
+import { WarpHandler }               from "./handlers/WarpHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
@@ -46,6 +50,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant PUBLIC              = 3;
     uint256 constant MAXIMUM_BITMAP      = 2 ** 16 - 1;
 
+    BitcoinRouterHandler      bitcoinRouterHandler;
+    BitcoinStrategyHandler    bitcoinStrategyHandler;
     CyclicalWithdrawalHandler cyclicalWithdrawalHandler;
     DepositHandler            depositHandler;
     FixedTermLoanHandler      ftlHandler;
@@ -55,10 +61,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     QueueWithdrawalHandler    queueWithdrawalHandler;
     StrategyHandler           strategyHandler;
     TransferHandler           transferHandler;
+    WarpHandler               warpHandler;
 
     uint256 setTimestamps;
-
-    uint256 public currentTimestamp;
 
     address[] lps;
 
@@ -66,15 +71,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     mapping(address => bool) existingOwners;
     mapping(uint256 => bool) existingRequestIds;
-
-    /**************************************************************************************************************************************/
-    /*** Modifiers                                                                                                                      ***/
-    /**************************************************************************************************************************************/
-
-    modifier useCurrentTimestamp {
-        vm.warp(currentTimestamp);
-        _;
-    }
 
     /**************************************************************************************************************************************/
     /*** Invariant Tests                                                                                                                ***/
@@ -188,7 +184,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant A: depositAssets(wBTC) == poolAssets(wBTC)
         * Invariant B: balanceOf(pool) == poolAssets(wBTC)
         * Invariant C: totalSupply == balanceOf(pool)
-        * Invariant D: balanceOf(router) >= Σrequest.shares
+        * Invariant D: balanceOf(wm) == Σrequest.shares
         * Invariant E: Σrouter.request.shares == Σwm.request.shares + manualShares(router)
         * Invariant F: (remainingYield > 0) == (remainingDuration > 0)
         * Invariant G: accruedFees() <= accruedYield()
@@ -261,8 +257,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_ftlm_invariant_C(address loanManager) internal {
-        vm.warp(currentTimestamp);
-
         uint256 sumOutstandingInterest = getAllOutstandingInterest();
 
         assertApproxEqAbs(
@@ -739,7 +733,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_otlm_invariant_K(address loanManager_, address[] memory loans_) internal useCurrentTimestamp {
+    function assert_otlm_invariant_K(address loanManager_, address[] memory loans_) internal {
         uint256 outstandingValue;
 
         uint256 assetsUnderManagement = IOpenTermLoanManager(loanManager_).assetsUnderManagement();
@@ -1033,38 +1027,35 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertEq(poolBalance, totalSupply, "Syrup BTC Invariant C");
     }
 
-    function assert_syrupBtc_invariant_D(address router, uint256[] memory shares) internal {
-        address pool             = ISyrupBitcoinRouter(router).pool();
-        uint256 routerBalance    = IERC20(pool).balanceOf(router);
-        uint256 routerAccounting = 0;
+    function assert_syrupBtc_invariant_D(address pool, uint256 routerShares) internal {
+        address pm = IPool(pool).manager();
+        address wm = IPoolManager(pm).withdrawalManager();
 
-        for (uint i; i < shares.length; i++) {
-            routerAccounting += shares[i];
-        }
+        uint256 wmBalance = IERC20(pool).balanceOf(wm);
 
-        assertGe(routerBalance, routerAccounting, "Syrup BTC Invariant D");
+        // NOTE: Assumes shares are always locked, and never directly transferred to the WM.
+        assertEq(wmBalance, routerShares, "Syrup BTC Invariant D");
     }
 
-    function assert_syrupBtc_invariant_E(address router, address wm, uint256[] memory routerShares, uint256[] memory wmShares) internal {
-        uint256 routerAccounting = 0;
-        uint256 wmAccounting     = IWithdrawalManagerQueue(wm).manualSharesAvailable(router);
+    function assert_syrupBtc_invariant_E(address router, uint256 routerShares, uint256[] memory wmShares) internal {
+        address pm = ISyrupBitcoinRouter(router).poolManager();
+        address wm = IPoolManager(pm).withdrawalManager();
 
-        for (uint i; i < routerShares.length; i++) {
-            routerAccounting += routerShares[i];
-        }
+        // NOTE: Also takes into account shares that have been processed but not redeemed.
+        uint256 wmAccounting = IWithdrawalManagerQueue(wm).manualSharesAvailable(router);
 
         for (uint i; i < wmShares.length; i++) {
             wmAccounting += wmShares[i];
         }
 
-        assertEq(routerAccounting, wmAccounting, "Syrup BTC Invariant E");
+        assertEq(routerShares, wmAccounting, "Syrup BTC Invariant E");
     }
 
     function assert_syrupBtc_invariant_F(address strategy) internal {
         ( uint256 remainingYield, , uint32 remainingDuration ) = IBitcoinStrategy(strategy).schedules(0);
 
         bool nothingScheduled = remainingYield == 0 && remainingDuration == 0;
-        bool yieldScheduled   = remainingYield > 0  && remainingDuration > 0;
+        bool yieldScheduled   = remainingYield > 0 && remainingDuration > 0;
 
         assertEq(nothingScheduled || yieldScheduled, true, "Syrup BTC Invariant F");
     }
@@ -1311,16 +1302,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function min(uint256 a_, uint256 b_) internal pure returns (uint256 minimum_) {
         minimum_ = a_ < b_ ? a_ : b_;
-    }
-
-    /**************************************************************************************************************************************/
-    /*** External Setter Functions                                                                                                      ***/
-    /**************************************************************************************************************************************/
-
-    function setCurrentTimestamp(uint256 currentTimestamp_) external {
-        timestamps.push(currentTimestamp_);
-        setTimestamps++;
-        currentTimestamp = currentTimestamp_;
     }
 
     /**************************************************************************************************************************************/

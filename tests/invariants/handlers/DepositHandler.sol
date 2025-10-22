@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IInvariantTest, IMockERC20, IPool } from "../../../contracts/interfaces/Interfaces.sol";
+import { IMockERC20, IPool } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console2 as console } from "../../../contracts/Runner.sol";
 
@@ -23,8 +23,6 @@ contract DepositHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(address pool_, address[] memory lps_) {
-        testContract = IInvariantTest(msg.sender);
-
         pool  = IPool(pool_);
         asset = IMockERC20(pool.asset());
         lps   = lps_;
@@ -34,7 +32,7 @@ contract DepositHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function deposit(uint256 seed_) external useTimestamps {
+    function deposit(uint256 seed_) external {
         console.log("depositHandler.deposit(%s)", seed_);
         numberOfCalls["depositHandler.deposit"]++;
 
@@ -50,7 +48,7 @@ contract DepositHandler is HandlerBase {
         vm.stopPrank();
     }
 
-    function mint(uint256 seed_) external useTimestamps {
+    function mint(uint256 seed_) external {
         console.log("depositHandler.mint(%s)", seed_);
         numberOfCalls["depositHandler.mint"]++;
 

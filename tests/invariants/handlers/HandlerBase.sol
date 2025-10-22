@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IHandlerEntryPoint, IInvariantTest } from "../../../contracts/interfaces/Interfaces.sol";
+import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
@@ -19,20 +19,6 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
     mapping(bytes4 => uint256) public weights;
 
     mapping(bytes32 => uint256) public numberOfCalls;
-
-    IInvariantTest testContract;
-
-    /**************************************************************************************************************************************/
-    /*** Modifiers                                                                                                                      ***/
-    /**************************************************************************************************************************************/
-
-    modifier useTimestamps {
-        vm.warp(testContract.currentTimestamp());
-
-        _;
-
-        testContract.setCurrentTimestamp(block.timestamp);
-    }
 
     /**************************************************************************************************************************************/
     /*** Weighting Setters                                                                                                              ***/
@@ -52,7 +38,7 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
     /*** Entry Point                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function entryPoint(uint256 seed_) external override useTimestamps {
+    function entryPoint(uint256 seed_) external override {
         require(totalWeight == WEIGHTS_RANGE, "HB:INVALID_WEIGHTS");
 
         numCalls++;

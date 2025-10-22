@@ -2,7 +2,6 @@
 pragma solidity ^0.8.7;
 
 import {
-    IInvariantTest,
     IMockERC20,
     IPool,
     IPoolManager,
@@ -31,8 +30,6 @@ contract QueueWithdrawalHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(address pool_, address[] memory lps_) {
-        testContract = IInvariantTest(msg.sender);
-
         pool  = IPool(pool_);
         asset = IMockERC20(pool.asset());
 
@@ -46,7 +43,7 @@ contract QueueWithdrawalHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function processRedemptions(uint256 seed_) external useTimestamps {
+    function processRedemptions(uint256 seed_) external {
         console.log("qwm.processRedemptions(%s)", seed_);
         numberOfCalls["qwm.processRedemptions"]++;
 
@@ -70,7 +67,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         wm.processRedemptions(sharesToProcess_);
     }
 
-    function redeem(uint256 seed_) external useTimestamps {
+    function redeem(uint256 seed_) external {
         console.log("qwm.redeem(%s)", seed_);
         numberOfCalls["qwm.redeem"]++;
 
@@ -98,7 +95,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         pool.redeem(sharesToRedeem_, lp_, lp_);
     }
 
-    function removeRequest(uint256 seed_) external useTimestamps {
+    function removeRequest(uint256 seed_) external {
         console.log("qwm.removeRequest(%s)", seed_);
         numberOfCalls["qwm.removeRequest"]++;
 
@@ -115,7 +112,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         wm.removeRequest(lp_, requestIds_);
     }
 
-    function removeShares(uint256 seed_) external useTimestamps {
+    function removeShares(uint256 seed_) external {
         console.log("qwm.removeShares(%s)", seed_);
         numberOfCalls["qwm.removeShares"]++;
 
@@ -135,7 +132,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         pool.removeShares(sharesToRemove_, lp_);
     }
 
-    function requestRedeem(uint256 seed_) external useTimestamps {
+    function requestRedeem(uint256 seed_) external {
         console.log("qwm.requestRedeem(%s)", seed_);
         numberOfCalls["qwm.requestRedeem"]++;
 
@@ -153,7 +150,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         pool.requestRedeem(sharesToRequest_, lp_);
     }
 
-    function setManualWithdrawal(uint256 seed_) external useTimestamps {
+    function setManualWithdrawal(uint256 seed_) external {
         console.log("qwm.setManualWithdrawal(%s)", seed_);
         numberOfCalls["qwm.setManualWithdrawal"]++;
 

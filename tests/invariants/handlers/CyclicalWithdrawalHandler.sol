@@ -2,7 +2,6 @@
 pragma solidity ^0.8.7;
 
 import {
-    IInvariantTest,
     IMockERC20,
     IPool,
     IPoolManager,
@@ -30,8 +29,6 @@ contract CyclicalWithdrawalHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(address pool_, address[] memory lps_) {
-        testContract = IInvariantTest(msg.sender);
-
         pool  = IPool(pool_);
         asset = IMockERC20(pool.asset());
         wm    = IWithdrawalManager(IPoolManager(pool.manager()).withdrawalManager());
@@ -42,7 +39,7 @@ contract CyclicalWithdrawalHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function redeem(uint256 seed_) external useTimestamps {
+    function redeem(uint256 seed_) external {
         console.log("cwm.redeem(%s)", seed_);
         numberOfCalls["cwm.redeem"]++;
 
@@ -62,7 +59,7 @@ contract CyclicalWithdrawalHandler is HandlerBase {
         vm.stopPrank();
     }
 
-    function removeShares(uint256 seed_) external useTimestamps {
+    function removeShares(uint256 seed_) external {
         console.log("cwm.removeShares(%s)", seed_);
         numberOfCalls["cwm.removeShares"]++;
 
@@ -82,7 +79,7 @@ contract CyclicalWithdrawalHandler is HandlerBase {
         vm.stopPrank();
     }
 
-    function requestRedeem(uint256 seed_) external useTimestamps {
+    function requestRedeem(uint256 seed_) external {
         console.log("cwm.requestRedeem(%s)", seed_);
         numberOfCalls["cwm.requestRedeem"]++;
 

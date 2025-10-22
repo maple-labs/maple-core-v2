@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import {
     IGlobals,
-    IInvariantTest,
     IMapleProxyFactory,
     IMockERC20,
     IOpenTermLoan,
@@ -58,11 +57,10 @@ contract OpenTermLoanHandler is HandlerBase {
         liquidatorFactory = IMapleProxyFactory(liquidatorFactory_);
         poolManager       = IPoolManager(poolManager_);
 
-        asset        = IMockERC20(poolManager.asset());
-        globals      = IGlobals(loanFactory.mapleGlobals());
-        loanManager  = IOpenTermLoanManager(poolManager.strategyList(1));
-        pool         = IPool(poolManager.pool());
-        testContract = IInvariantTest(msg.sender);
+        asset       = IMockERC20(poolManager.asset());
+        globals     = IGlobals(loanFactory.mapleGlobals());
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
+        pool        = IPool(poolManager.pool());
 
         refinancer = refinancer_;
 
@@ -79,7 +77,7 @@ contract OpenTermLoanHandler is HandlerBase {
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function callLoan(uint256 seed_) external useTimestamps {
+    function callLoan(uint256 seed_) external {
         console.log("otlHandler.callLoan(%s)", seed_);
 
         numberOfCalls["callLoan"]++;
@@ -93,7 +91,7 @@ contract OpenTermLoanHandler is HandlerBase {
         callLoan(loan_, principal_);
     }
 
-    function fundLoan(uint256 seed_) public useTimestamps {
+    function fundLoan(uint256 seed_) public {
         console.log("otlHandler.fundLoan(%s)", seed_);
 
         numberOfCalls["fundLoan"]++;
@@ -105,7 +103,7 @@ contract OpenTermLoanHandler is HandlerBase {
         fundLoan(loan_);
     }
 
-    function impairLoan(uint256 seed_) external useTimestamps {
+    function impairLoan(uint256 seed_) external {
         console.log("otlHandler.impairLoan(%s)", seed_);
 
         numberOfCalls["impairLoan"]++;
@@ -119,7 +117,7 @@ contract OpenTermLoanHandler is HandlerBase {
         impairLoan(loan_, caller_);
     }
 
-    function makePayment(uint256 seed_) public useTimestamps {
+    function makePayment(uint256 seed_) public {
         console.log("otlHandler.makePayment(%s)", seed_);
 
         numberOfCalls["makePayment"]++;
@@ -131,7 +129,7 @@ contract OpenTermLoanHandler is HandlerBase {
         makePayment(loan_);
     }
 
-    function refinance(uint256 seed_) public useTimestamps {
+    function refinance(uint256 seed_) public {
         console.log("otlHandler.refinance(%s)", seed_);
 
         numberOfCalls["refinance"]++;
@@ -176,7 +174,7 @@ contract OpenTermLoanHandler is HandlerBase {
         acceptRefinanceOT(loan_, refinancer, block.timestamp, calls_);
     }
 
-    function removeLoanCall(uint256 seed_) external useTimestamps {
+    function removeLoanCall(uint256 seed_) external {
         numberOfCalls["removeLoanCall"]++;
 
         address loan_ = _selectCalledLoan(seed_);
@@ -186,7 +184,7 @@ contract OpenTermLoanHandler is HandlerBase {
         removeLoanCall(loan_);
     }
 
-    function removeLoanImpairment(uint256 seed_) external useTimestamps {
+    function removeLoanImpairment(uint256 seed_) external {
         numberOfCalls["removeLoanImpairment"]++;
 
         address loan_ = _selectImpairedLoan(seed_);
@@ -196,7 +194,7 @@ contract OpenTermLoanHandler is HandlerBase {
         removeLoanImpairment(loan_, globals.governor());
     }
 
-    function triggerDefault(uint256 seed_) external useTimestamps {
+    function triggerDefault(uint256 seed_) external {
         numberOfCalls["triggerDefault"]++;
 
         address loan_ = _selectOverdueLoan(seed_);
@@ -208,7 +206,7 @@ contract OpenTermLoanHandler is HandlerBase {
         triggerDefault(loan_, address(liquidatorFactory), caller_);
     }
 
-    function warp(uint256 seed_) public useTimestamps {
+    function warp(uint256 seed_) public {
         console.log("otlHandler.warp(%s)", seed_);
 
         numberOfCalls["warp"]++;

@@ -27,8 +27,6 @@ contract BasicInvariants is BaseInvariants {
     function setUp() public override {
         super.setUp();
 
-        currentTimestamp = block.timestamp;
-
         for (uint256 i; i < NUM_LPS; i++) {
             lps.push(makeAddr(string(abi.encode("lp", i))));
         }
@@ -54,7 +52,6 @@ contract BasicInvariants is BaseInvariants {
             loanFactory_:       fixedTermLoanFactory,
             poolManager_:       address(poolManager),
             refinancer_:        address(fixedTermRefinancer),
-            testContract_:      address(this),
             numBorrowers_:      NUM_BORROWERS
         });
 
@@ -98,7 +95,7 @@ contract BasicInvariants is BaseInvariants {
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_basicInvariants_fixedTermLoan_A_B_C_fixedTermLoanManager_L_M_N() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoan_A_B_C_fixedTermLoanManager_L_M_N() external {
         for (uint256 i; i < ftlHandler.numLoans(); ++i) {
             address               loan        = ftlHandler.activeLoans(i);
             IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
@@ -127,47 +124,47 @@ contract BasicInvariants is BaseInvariants {
     /*** Loan Manager Non-Iterative Invariants                                                                                          ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_A() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_A() external {
         assert_ftlm_invariant_A(poolManager.strategyList(0));
 
     }
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_B() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_B() external {
         assert_ftlm_invariant_B(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_C() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_C() external {
         assert_ftlm_invariant_C(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_D() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_D() external {
         assert_ftlm_invariant_D(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_E() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_E() external {
         assert_ftlm_invariant_E(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_F() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_F() external {
         assert_ftlm_invariant_F(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_G() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_G() external {
         assert_ftlm_invariant_G(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_H() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_H() external {
         assert_ftlm_invariant_H(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_I() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_I() external {
         assert_ftlm_invariant_I(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_J() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_J() external {
         assert_ftlm_invariant_J(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_basicInvariants_fixedTermLoanManager_K() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_fixedTermLoanManager_K() external {
         assert_ftlm_invariant_K(poolManager.strategyList(0));
     }
 
@@ -175,16 +172,16 @@ contract BasicInvariants is BaseInvariants {
     /*** Pool Invariants                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_basicInvariants_pool_A() external useCurrentTimestamp { assert_pool_invariant_A(); }
-    function statefulFuzz_basicInvariants_pool_C() external useCurrentTimestamp { assert_pool_invariant_C(); }
-    function statefulFuzz_basicInvariants_pool_D() external useCurrentTimestamp { assert_pool_invariant_D(); }
-    function statefulFuzz_basicInvariants_pool_E() external useCurrentTimestamp { assert_pool_invariant_E(); }
-    function statefulFuzz_basicInvariants_pool_H() external useCurrentTimestamp { assert_pool_invariant_H(); }
-    function statefulFuzz_basicInvariants_pool_I() external useCurrentTimestamp { assert_pool_invariant_I(); }
-    function statefulFuzz_basicInvariants_pool_J() external useCurrentTimestamp { assert_pool_invariant_J(); }
-    function statefulFuzz_basicInvariants_pool_K() external useCurrentTimestamp { assert_pool_invariant_K(); }
+    function statefulFuzz_basicInvariants_pool_A() external { assert_pool_invariant_A(); }
+    function statefulFuzz_basicInvariants_pool_C() external { assert_pool_invariant_C(); }
+    function statefulFuzz_basicInvariants_pool_D() external { assert_pool_invariant_D(); }
+    function statefulFuzz_basicInvariants_pool_E() external { assert_pool_invariant_E(); }
+    function statefulFuzz_basicInvariants_pool_H() external { assert_pool_invariant_H(); }
+    function statefulFuzz_basicInvariants_pool_I() external { assert_pool_invariant_I(); }
+    function statefulFuzz_basicInvariants_pool_J() external { assert_pool_invariant_J(); }
+    function statefulFuzz_basicInvariants_pool_K() external { assert_pool_invariant_K(); }
 
-    function statefulFuzz_basicInvariants_pool_B_F_G_2() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_pool_B_F_G_2() external {
         uint256 sumBalanceOf;
         uint256 sumBalanceOfAssets;
 
@@ -206,11 +203,11 @@ contract BasicInvariants is BaseInvariants {
     /*** Pool Manager Invariants                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_basicInvariants_poolManager_A_totalAssetsEqCashPlusAUM() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_poolManager_A_totalAssetsEqCashPlusAUM() external {
         assert_poolManager_invariant_A();
     }
 
-    function statefulFuzz_basicInvariants_poolManager_B() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_poolManager_B() external {
         assert_poolManager_invariant_B();
     }
 
@@ -218,7 +215,7 @@ contract BasicInvariants is BaseInvariants {
     /*** Withdrawal Manager Invariants                                                                                                  ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_basicInvariants_withdrawalManager_A_F_G_H_I_J_K_L() external useCurrentTimestamp {
+    function statefulFuzz_basicInvariants_withdrawalManager_A_F_G_H_I_J_K_L() external {
         if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
 
         uint256 sumLockedShares;
@@ -252,11 +249,11 @@ contract BasicInvariants is BaseInvariants {
         assertTrue(pool.balanceOf(address(cyclicalWM)) == sumLockedShares);
     }
 
-    function statefulFuzz_basicInvariants_withdrawalManager_B() external useCurrentTimestamp { assert_withdrawalManager_invariant_B(); }
-    function statefulFuzz_basicInvariants_withdrawalManager_C() external useCurrentTimestamp { assert_withdrawalManager_invariant_C(); }
-    function statefulFuzz_basicInvariants_withdrawalManager_D() external useCurrentTimestamp { assert_withdrawalManager_invariant_D(); }
-    function statefulFuzz_basicInvariants_withdrawalManager_E() external useCurrentTimestamp { assert_withdrawalManager_invariant_E(); }
-    function statefulFuzz_basicInvariants_withdrawalManager_M() external useCurrentTimestamp { assert_withdrawalManager_invariant_M(); }
-    function statefulFuzz_basicInvariants_withdrawalManager_N() external useCurrentTimestamp { assert_withdrawalManager_invariant_N(); }
+    function statefulFuzz_basicInvariants_withdrawalManager_B() external { assert_withdrawalManager_invariant_B(); }
+    function statefulFuzz_basicInvariants_withdrawalManager_C() external { assert_withdrawalManager_invariant_C(); }
+    function statefulFuzz_basicInvariants_withdrawalManager_D() external { assert_withdrawalManager_invariant_D(); }
+    function statefulFuzz_basicInvariants_withdrawalManager_E() external { assert_withdrawalManager_invariant_E(); }
+    function statefulFuzz_basicInvariants_withdrawalManager_M() external { assert_withdrawalManager_invariant_M(); }
+    function statefulFuzz_basicInvariants_withdrawalManager_N() external { assert_withdrawalManager_invariant_N(); }
 
 }

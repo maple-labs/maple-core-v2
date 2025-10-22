@@ -35,8 +35,6 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
 
         openPool(address(poolManager));
 
-        currentTimestamp = block.timestamp;
-
         setupFees({
             delegateOriginationFee:     500e6,
             delegateServiceFee:         300e6,
@@ -65,7 +63,6 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
             loanFactory_:       fixedTermLoanFactory,
             poolManager_:       address(poolManager),
             refinancer_:        address(fixedTermRefinancer),
-            testContract_:      address(this),
             numBorrowers_:      NUM_BORROWERS
         });
 

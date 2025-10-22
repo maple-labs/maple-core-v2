@@ -11,7 +11,6 @@ contract GlobalsViewFunctionTests is TestBase {
 
     function setUp() public override {
         _setupBitcoinPool();
-        _configurePeripheryContracts();
 
         strategy = poolManager.strategyList(0);
     }

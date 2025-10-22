@@ -35,8 +35,6 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
 
         openPool(address(poolManager));
 
-        currentTimestamp = block.timestamp;
-
         setupFees({
             delegateOriginationFee:     500e6,
             delegateServiceFee:         300e6,
@@ -65,7 +63,6 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
             loanFactory_:       fixedTermLoanFactory,
             poolManager_:       address(poolManager),
             refinancer_:        address(fixedTermRefinancer),
-            testContract_:      address(this),
             numBorrowers_:      NUM_BORROWERS
         });
 
@@ -112,7 +109,7 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
     /*** Loan Iteration Invariants (Loan and LoanManager)                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoan_A_B_C_fixedTermLoanManager_L_M_N() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoan_A_B_C_fixedTermLoanManager_L_M_N() external {
         for (uint256 i; i < ftlHandler.numLoans(); ++i) {
             address               loan        = ftlHandler.activeLoans(i);
             IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
@@ -141,47 +138,47 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
     /*** Loan Manager Non-Iterative Invariants                                                                                          ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_A() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_A() external {
         assert_ftlm_invariant_A(poolManager.strategyList(0));
 
     }
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_B() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_B() external {
         assert_ftlm_invariant_B(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_C() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_C() external {
         assert_ftlm_invariant_C(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_D() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_D() external {
         assert_ftlm_invariant_D(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_E() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_E() external {
         assert_ftlm_invariant_E(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_F() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_F() external {
         assert_ftlm_invariant_F(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_G() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_G() external {
         assert_ftlm_invariant_G(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_H() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_H() external {
         assert_ftlm_invariant_H(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_I() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_I() external {
         assert_ftlm_invariant_I(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_J() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_J() external {
         assert_ftlm_invariant_J(poolManager.strategyList(0));
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_K() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_fixedTermLoanManager_K() external {
         assert_ftlm_invariant_K(poolManager.strategyList(0));
     }
 
@@ -189,16 +186,16 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
     /*** Pool Invariants                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_A() external useCurrentTimestamp { assert_pool_invariant_A(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_C() external useCurrentTimestamp { assert_pool_invariant_C(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_D() external useCurrentTimestamp { assert_pool_invariant_D(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_E() external useCurrentTimestamp { assert_pool_invariant_E(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_H() external useCurrentTimestamp { assert_pool_invariant_H(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_I() external useCurrentTimestamp { assert_pool_invariant_I(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_J() external useCurrentTimestamp { assert_pool_invariant_J(); }
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_K() external useCurrentTimestamp { assert_pool_invariant_K(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_A() external { assert_pool_invariant_A(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_C() external { assert_pool_invariant_C(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_D() external { assert_pool_invariant_D(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_E() external { assert_pool_invariant_E(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_H() external { assert_pool_invariant_H(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_I() external { assert_pool_invariant_I(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_J() external { assert_pool_invariant_J(); }
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_K() external { assert_pool_invariant_K(); }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_pool_B_F_G() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_pool_B_F_G() external {
         uint256 sumBalanceOf;
         uint256 sumBalanceOfAssets;
 
@@ -220,11 +217,11 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
     /*** Pool Manager Invariants                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_poolManager_A_totalAssetsEqCashPlusAUM() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_poolManager_A_totalAssetsEqCashPlusAUM() external {
         assert_poolManager_invariant_A();
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_poolManager_B() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_poolManager_B() external {
         assert_poolManager_invariant_B();
     }
 
@@ -232,14 +229,14 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
     /*** Withdrawal Manager Invariants                                                                                                  ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_wmq_invariant_A_C_G_H() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_wmq_invariant_A_C_G_H() external {
         assert_wmq_invariant_A(address(queueWM), lps);
         assert_wmq_invariant_C(address(queueWM), lps);
         assert_wmq_invariant_G(address(queueWM), lps);
         assert_wmq_invariant_H(address(queueWM), lps);
     }
 
-    function statefulFuzz_withdrawalManagerQueueInvariants_wmq_invariant_B_D_E_F_I() external useCurrentTimestamp {
+    function statefulFuzz_withdrawalManagerQueueInvariants_wmq_invariant_B_D_E_F_I() external {
         assert_wmq_invariant_B(address(queueWM));
         assert_wmq_invariant_D(address(queueWM));
         assert_wmq_invariant_E(address(queueWM));
