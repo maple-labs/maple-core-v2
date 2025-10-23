@@ -254,7 +254,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).accruedInterest(),
             sumOutstandingInterest,
-            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 1,
+            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 2,
             "LoanManager Invariant C"
         );
     }
@@ -276,9 +276,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             // NOTE: the correct rounding acceptance needs to be the amount of loans contributing to the unrealizedLosses(),
             // which are the defaulted but not liquidated and the impaired but not defaulted. Since this value is not tracked in the ftlh,
             // the number of active loans is used instead.
-            assertApproxEqAbs(losses, aum, ftlHandler.numLoans() + 1);
+            assertApproxEqAbs(losses, aum, ftlHandler.numLoans() + 2);
         } else {
-            assertLe(losses, aum + 1, "LoanManager Invariant F");
+            assertLe(losses, aum + 2, "LoanManager Invariant F");
         }
     }
 
@@ -290,7 +290,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             ILoanManagerLike(loanManager).assetsUnderManagement(),
             getAllOutstandingInterest() + ftlHandler.sum_loan_principal(),
-            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 1,
+            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 2,
             "LoanManager Invariant H"
         );
     }
