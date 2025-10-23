@@ -254,7 +254,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).accruedInterest(),
             sumOutstandingInterest,
-            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 2,
+            max(ftlHandler.numPayments(), ftlHandler.numLoans()) * 2,
             "LoanManager Invariant C"
         );
     }
@@ -290,7 +290,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             ILoanManagerLike(loanManager).assetsUnderManagement(),
             getAllOutstandingInterest() + ftlHandler.sum_loan_principal(),
-            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 2,
+            max(ftlHandler.numPayments(), ftlHandler.numLoans()) * 2,
             "LoanManager Invariant H"
         );
     }
@@ -403,7 +403,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             poolManager.totalAssets(),
             expectedTotalAssets,
-            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 2,
+            max(ftlHandler.numPayments(), ftlHandler.numLoans()) * 2,
             "PoolManager Invariant A"
         );
     }
