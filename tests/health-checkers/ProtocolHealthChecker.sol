@@ -76,6 +76,7 @@ contract ProtocolHealthChecker {
         * Invariant E: strategyState == INACTIVE -> assetsUnderManagement == unrealizedLosses == 0
         * Invariant F: strategyState ∈ [0, 2]
         * Invariant G: strategyFeeRate <= 1e6
+
     *******************************************************************************************************************************/
 
     struct Strategies {

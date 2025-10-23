@@ -6,6 +6,7 @@ import { IERC20 } from "../contracts/interfaces/Interfaces.sol";
 import { console2 as console, Runner } from "../contracts/Runner.sol";
 
 import { ProtocolHealthChecker } from "./health-checkers/ProtocolHealthChecker.sol";
+import { SyrupBTCHealthChecker } from "./health-checkers/SyrupBTCHealthChecker.sol";
 
 contract HealthCheckerAssertions is Runner {
 
@@ -34,6 +35,26 @@ contract HealthCheckerAssertions is Runner {
         assertTrue(results.withdrawalManagerCyclicalInvariantD);
         assertTrue(results.withdrawalManagerCyclicalInvariantE);
         assertTrue(results.withdrawalManagerCyclicalInvariantM);
+    }
+
+    function assertSyrupBTCInvariants(
+        address healthChecker_,
+        address bitcoinRouter_,
+        address[] memory depositAssets_
+    )
+        internal
+    {
+        SyrupBTCHealthChecker.Invariants memory results;
+
+        results = SyrupBTCHealthChecker(healthChecker_).checkInvariants(bitcoinRouter_, depositAssets_);
+
+        assertTrue(results.syrupBTCInvariantA);
+        assertTrue(results.syrupBTCInvariantB);
+        assertTrue(results.syrupBTCInvariantC);
+        assertTrue(results.syrupBTCInvariantD);
+        assertTrue(results.syrupBTCInvariantE);
+        assertTrue(results.syrupBTCInvariantF);
+        assertTrue(results.syrupBTCInvariantG);
     }
 
 }

@@ -714,7 +714,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
             strategyManagerBalance:    assetsToDeploy,
             assetControllerBalance:    initialDepositAmount - assetsToDeploy + assetsToDeposit,
             poolTotalAssets:           initialDepositAmount + assetsToDeposit,
-            poolCompositeTokenBalance: initialDepositAmount - assetsToDeploy +assetsToDeposit
+            poolCompositeTokenBalance: initialDepositAmount - assetsToDeploy + assetsToDeposit
         });
 
         assertBitcoinStrategyState({

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import {
+    IBitcoinStrategy,
     IERC20,
     IERC20Like,
     IExemptionsManagerLike,
@@ -942,6 +943,35 @@ contract ProtocolActions is Runner {
         vm.startPrank(poolDelegate_);
         IFixedTermLoanManager(loanManager_).updateAccounting();
         vm.stopPrank();
+    }
+
+    function reconcile_syrupBTC(
+        address strategy_,
+        address strategyManager_,
+        address asset_,
+        uint256 amount_
+    ) internal {
+        uint256 managerBalance_ = IERC20(asset_).balanceOf(strategyManager_);
+
+        if (managerBalance_ < amount_) {
+            erc20_mint(asset_, strategyManager_, amount_ - managerBalance_);
+        }
+
+        erc20_approve(asset_, strategyManager_, strategy_, amount_);
+
+        vm.prank(strategyManager_);
+        IBitcoinStrategy(strategy_).reconcile(asset_, amount_);
+    }
+
+    function scheduleYield_syrupBTC(
+        address strategy_,
+        address strategyManager_,
+        address asset_,
+        uint256 yieldAmount_,
+        uint32  deadline_
+    ) internal {
+        vm.prank(strategyManager_);
+        IBitcoinStrategy(strategy_).schedule(yieldAmount_, deadline_);
     }
 
     /**************************************************************************************************************************************/

@@ -31,7 +31,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     uint256 liquidityCap              = 100e8;
     uint256 startingTime;              
 
-    function setUp() public {
+    function setUp() public virtual {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"));
 
         startingTime = block.timestamp;
