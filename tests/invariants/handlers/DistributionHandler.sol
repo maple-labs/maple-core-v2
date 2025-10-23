@@ -3,11 +3,14 @@ pragma solidity ^0.8.7;
 
 import { console2 as console } from "../../../contracts/Runner.sol";
 
+import { Test } from "../../../modules/forge-std/src/Test.sol";
+
 import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
 
-contract DistributionHandler {
+contract DistributionHandler is Test {
 
-    uint256 constant internal WEIGHTS_RANGE = 100;
+    uint256 constant internal WEIGHTS_RANGE    = 100;
+    uint256 constant internal MAX_TIME_TO_PASS = 10 days;
 
     uint256 public numOfCallsTotal;
 
@@ -41,7 +44,13 @@ contract DistributionHandler {
 
         for (uint256 i = 0; i < targetContracts.length; i++) {
             range_ += weights[i];
+
             if (value_ <= range_ && weights[i] != 0) {
+                uint256 currentTimestamp_ = block.timestamp;
+                uint256 timeToPass_       = _bound(seed_, 0, MAX_TIME_TO_PASS);
+
+                vm.warp(currentTimestamp_ + timeToPass_);
+
                 numOfCalls[targetContracts[i]]++;
                 IHandlerEntryPoint(targetContracts[i]).entryPoint(seed_);
                 break;

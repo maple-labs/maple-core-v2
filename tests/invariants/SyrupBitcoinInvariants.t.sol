@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import { BitcoinRouterHandler }   from "./handlers/BitcoinRouterHandler.sol";
 import { BitcoinStrategyHandler } from "./handlers/BitcoinStrategyHandler.sol";
 import { DistributionHandler }    from "./handlers/DistributionHandler.sol";
-import { WarpHandler }            from "./handlers/WarpHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -39,15 +38,15 @@ contract SyrupBitcoinInvariants is BaseInvariants {
         // Create and configure all the handlers.
         bitcoinRouterHandler   = new BitcoinRouterHandler(bitcoinRouter, depositAsset, lps);
         bitcoinStrategyHandler = new BitcoinStrategyHandler(poolManager, depositAsset, strategyManager);
-        warpHandler            = new WarpHandler();
 
-        bitcoinRouterHandler.setSelectorWeight("deposit(uint256)",                    4_500);
-        bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnRouter(uint256)", 1_000);
-        bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnWm(uint256)",     1_000);
-        bitcoinRouterHandler.setSelectorWeight("removeRequests(uint256)",             250);
-        bitcoinRouterHandler.setSelectorWeight("removeSharesById(uint256)",           500);
-        bitcoinRouterHandler.setSelectorWeight("requestRedeem(uint256)",              2_500);
-        bitcoinRouterHandler.setSelectorWeight("setFees(uint256)",                    250);
+        bitcoinRouterHandler.setSelectorWeight("deposit(uint256)",                     4_500);
+        bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnRouter(uint256)",  1_000);
+        bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnWm(uint256)",      900);
+        bitcoinRouterHandler.setSelectorWeight("processEmptyRedemptionsOnWm(uint256)", 100);
+        bitcoinRouterHandler.setSelectorWeight("removeRequests(uint256)",              250);
+        bitcoinRouterHandler.setSelectorWeight("removeSharesById(uint256)",            500);
+        bitcoinRouterHandler.setSelectorWeight("requestRedeem(uint256)",               2_500);
+        bitcoinRouterHandler.setSelectorWeight("setFees(uint256)",                     250);
 
         bitcoinStrategyHandler.setSelectorWeight("deploy(uint256)",        3_500);
         bitcoinStrategyHandler.setSelectorWeight("reconcile(uint256)",     2_000);
@@ -56,20 +55,14 @@ contract SyrupBitcoinInvariants is BaseInvariants {
         bitcoinStrategyHandler.setSelectorWeight("setFeeRate(uint256)",    500);
         bitcoinStrategyHandler.setSelectorWeight("setImpairment(uint256)", 250);
 
-        // TODO: Remove warp handler and add warping directly into the distribution handler.
-        //       Warp a random amount before every call (and occasionally skip warping).
-        warpHandler.setSelectorWeight("warp(uint256)", 10_000);
-
-        address[] memory targets = new address[](3);
-        uint256[] memory weights = new uint256[](3);
+        address[] memory targets = new address[](2);
+        uint256[] memory weights = new uint256[](2);
 
         targets[0] = address(bitcoinRouterHandler);
         targets[1] = address(bitcoinStrategyHandler);
-        targets[2] = address(warpHandler);
 
-        weights[0] = 45;
-        weights[1] = 25;
-        weights[2] = 30;
+        weights[0] = 65;
+        weights[1] = 35;
 
         distributionHandler = new DistributionHandler(targets, weights);
 

@@ -68,15 +68,14 @@ contract OpenTermInvariants is BaseInvariants {
         cyclicalWithdrawalHandler.setSelectorWeight("removeShares(uint256)",  3_300);
         cyclicalWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)", 3_400);
 
-        otlHandler.setSelectorWeight("callLoan(uint256)",             500);
-        otlHandler.setSelectorWeight("fundLoan(uint256)",             1_500);
+        otlHandler.setSelectorWeight("callLoan(uint256)",             1_000);
+        otlHandler.setSelectorWeight("fundLoan(uint256)",             2_000);
         otlHandler.setSelectorWeight("impairLoan(uint256)",           0);
         otlHandler.setSelectorWeight("makePayment(uint256)",          2_500);
         otlHandler.setSelectorWeight("refinance(uint256)",            1_000);
-        otlHandler.setSelectorWeight("removeLoanCall(uint256)",       500);
-        otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 500);
-        otlHandler.setSelectorWeight("triggerDefault(uint256)",       1_000);
-        otlHandler.setSelectorWeight("warp(uint256)",                 2_500);
+        otlHandler.setSelectorWeight("removeLoanCall(uint256)",       1_000);
+        otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 1_000);
+        otlHandler.setSelectorWeight("triggerDefault(uint256)",       1_500);
 
         address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);

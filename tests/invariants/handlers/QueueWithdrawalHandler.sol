@@ -67,6 +67,22 @@ contract QueueWithdrawalHandler is HandlerBase {
         wm.processRedemptions(sharesToProcess_);
     }
 
+    function processEmptyRedemptions(uint256 seed_) external {
+        console.log("qwm.processEmptyRedemptions(%s)", seed_);
+        numberOfCalls["qwm.processEmptyRedemptions"]++;
+
+        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = wm.queue();
+
+        if (nextRequestId_ >= lastRequestId_) return;
+
+        uint256 numberOfRequests_ = lastRequestId_ - nextRequestId_;
+
+        uint256 numberOfRequestsToProcess_ = _bound(_randomize(seed_, "numberOfRequestsToProcess"), 1, numberOfRequests_);
+
+        vm.prank(pm.poolDelegate());
+        wm.processEmptyRedemptions(numberOfRequestsToProcess_);
+    }
+
     function redeem(uint256 seed_) external {
         console.log("qwm.redeem(%s)", seed_);
         numberOfCalls["qwm.redeem"]++;
@@ -101,15 +117,18 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint256 requestId_ = wm.requestIds(lp_);
+        ( uint256[] memory requestIds_, ) = wm.requestsByOwner(lp_);
 
-        if (requestId_ == 0) return;
+        if (requestIds_.length == 0) return;
 
-        uint256[] memory requestIds_ = new uint256[](1);
-        requestIds_[0] = requestId_;
+        uint256 indexOfRequestToRemove_ = _bound(_randomize(seed_, "indexOfRequestToRemove"), 0, requestIds_.length - 1);
+        uint256 requestIdToRemove_      = requestIds_[indexOfRequestToRemove_];
+
+        uint256[] memory requestIdsToRemove_ = new uint256[](1);
+        requestIdsToRemove_[0]               = requestIdToRemove_;
 
         vm.prank(pm.poolDelegate());
-        wm.removeRequest(lp_, requestIds_);
+        wm.removeRequest(lp_, requestIdsToRemove_);
     }
 
     function removeShares(uint256 seed_) external {
@@ -118,18 +137,38 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint256 requestId_ = wm.requestIds(lp_);
+        (, uint256[] memory shares_ ) = wm.requestsByOwner(lp_);
 
-        if (requestId_ == 0) return;
+        uint256 totalShares_ = 0;
+        for (uint256 i; i < shares_.length; i++) {
+            totalShares_ += shares_[i];
+        }
 
-        ( , uint256 sharesLocked_ ) = wm.requests(requestId_);
+        if (totalShares_ == 0) return;
 
-        if (sharesLocked_ == 0) return;
-
-        uint256 sharesToRemove_ = _bound(_randomize(seed_, "shares"), 1, sharesLocked_);
+        uint256 sharesToRemove_ = _bound(_randomize(seed_, "shares"), 1, totalShares_);
 
         vm.prank(lp_);
         pool.removeShares(sharesToRemove_, lp_);
+    }
+
+    function removeSharesById(uint256 seed_) external {
+        console.log("qwm.removeSharesById(%s)", seed_);
+        numberOfCalls["qwm.removeSharesById"]++;
+
+        address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
+
+        ( uint256[] memory requestIds_, uint256[] memory sharesPerRequest_ ) = wm.requestsByOwner(lp_);
+        
+        if (requestIds_.length == 0) return;
+
+        uint256 indexOfRequestToRemove_ = _bound(_randomize(seed_, "indexOfRequestToRemove"), 0, requestIds_.length - 1);
+        uint256 requestIdToRemove_      = requestIds_[indexOfRequestToRemove_];
+
+        uint256 sharesToRemove_ = _bound(_randomize(seed_, "shares"), 1, sharesPerRequest_[indexOfRequestToRemove_]);
+
+        vm.prank(lp_);
+        wm.removeSharesById(requestIdToRemove_, sharesToRemove_);
     }
 
     function requestRedeem(uint256 seed_) external {
@@ -139,10 +178,6 @@ contract QueueWithdrawalHandler is HandlerBase {
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
         if (pool.balanceOf(lp_) == 0) return;
-
-        uint256 requestId_ = wm.requestIds(lp_);
-
-        if (requestId_ != 0) return;
 
         uint256 sharesToRequest_ = _bound(_randomize(seed_, "shares"), 1, pool.balanceOf(lp_));
 

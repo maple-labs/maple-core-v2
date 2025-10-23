@@ -59,11 +59,10 @@ contract DefaultsInvariants is BaseInvariants {
         ftlHandler.setSelectorWeight("makePayment(uint256)",                 0);
         ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       0);
         ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          2_000);
-        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  1_000);
-        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              1_500);
-        ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 1_000);
-        ftlHandler.setSelectorWeight("warp(uint256)",                        2_000);
-        ftlHandler.setSelectorWeight("refinance(uint256)",                   500);
+        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  1_500);
+        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              2_000);
+        ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 1_500);
+        ftlHandler.setSelectorWeight("refinance(uint256)",                   1_000);
 
         address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);

@@ -198,16 +198,6 @@ contract StrategyHandler is HandlerBase {
         reactivateStrategy(strategy_, updateAccounting_);
     }
 
-    function warp(uint256 seed_) external {
-        console.log("strategyHandler.warp(%s)", seed_);
-
-        numberOfCalls["warp"]++;
-
-        uint256 timespan_ = _bound(seed_, 1 hours, 7 days);
-
-        vm.warp(block.timestamp + timespan_);
-    }
-
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/

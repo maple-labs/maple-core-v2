@@ -137,31 +137,31 @@ contract StrategyInvariants is BaseInvariants {
 
         transferHandler.setSelectorWeight("transfer(uint256)", 10_000);
 
-        queueWithdrawalHandler.setSelectorWeight("processRedemptions(uint256)",  3_500);
-        queueWithdrawalHandler.setSelectorWeight("redeem(uint256)",              1_000);
-        queueWithdrawalHandler.setSelectorWeight("removeRequest(uint256)",       1_000);
-        queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",        1_000);
-        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",       3_500);
+        queueWithdrawalHandler.setSelectorWeight("processRedemptions(uint256)",      2_700);
+        queueWithdrawalHandler.setSelectorWeight("processEmptyRedemptions(uint256)", 300);
+        queueWithdrawalHandler.setSelectorWeight("redeem(uint256)",                  1_000);
+        queueWithdrawalHandler.setSelectorWeight("removeRequest(uint256)",           1_000);
+        queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",            1_000);
+        queueWithdrawalHandler.setSelectorWeight("removeSharesById(uint256)",        1_000);
+        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",           3_000);
 
         strategyHandler.setSelectorWeight("fundStrategy(uint256)",                2_000);
         strategyHandler.setSelectorWeight("withdrawFromStrategy(uint256)",        2_000);
-        strategyHandler.setSelectorWeight("requestWithdrawFromStrategy(uint256)", 500);
-        strategyHandler.setSelectorWeight("processRedemptions(uint256)",          500);
-        strategyHandler.setSelectorWeight("setStrategyFeeRate(uint256)",          500);
-        strategyHandler.setSelectorWeight("impairStrategy(uint256)",              500);
-        strategyHandler.setSelectorWeight("deactivateStrategy(uint256)",          500);
-        strategyHandler.setSelectorWeight("reactivateStrategy(uint256)",          500);
-        strategyHandler.setSelectorWeight("warp(uint256)",                        3_000);
+        strategyHandler.setSelectorWeight("requestWithdrawFromStrategy(uint256)", 1_000);
+        strategyHandler.setSelectorWeight("processRedemptions(uint256)",          1_000);
+        strategyHandler.setSelectorWeight("setStrategyFeeRate(uint256)",          1_000);
+        strategyHandler.setSelectorWeight("impairStrategy(uint256)",              1_000);
+        strategyHandler.setSelectorWeight("deactivateStrategy(uint256)",          1_000);
+        strategyHandler.setSelectorWeight("reactivateStrategy(uint256)",          1_000);
 
-        otlHandler.setSelectorWeight("callLoan(uint256)",             500);
-        otlHandler.setSelectorWeight("fundLoan(uint256)",             1_500);
+        otlHandler.setSelectorWeight("callLoan(uint256)",             1_000);
+        otlHandler.setSelectorWeight("fundLoan(uint256)",             2_000);
         otlHandler.setSelectorWeight("impairLoan(uint256)",           0);
-        otlHandler.setSelectorWeight("makePayment(uint256)",          3_000);
+        otlHandler.setSelectorWeight("makePayment(uint256)",          3_500);
         otlHandler.setSelectorWeight("refinance(uint256)",            0);
-        otlHandler.setSelectorWeight("removeLoanCall(uint256)",       500);
-        otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 500);
-        otlHandler.setSelectorWeight("triggerDefault(uint256)",       1_000);
-        otlHandler.setSelectorWeight("warp(uint256)",                 3_000);
+        otlHandler.setSelectorWeight("removeLoanCall(uint256)",       1_000);
+        otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 1_000);
+        otlHandler.setSelectorWeight("triggerDefault(uint256)",       1_500);
 
         address[] memory targetContracts = new address[](5);
         targetContracts[0] = address(depositHandler);

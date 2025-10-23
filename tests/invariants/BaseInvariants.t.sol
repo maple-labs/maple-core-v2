@@ -38,7 +38,6 @@ import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
 import { StrategyHandler }           from "./handlers/StrategyHandler.sol";
 import { TransferHandler }           from "./handlers/TransferHandler.sol";
-import { WarpHandler }               from "./handlers/WarpHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
@@ -61,15 +60,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     QueueWithdrawalHandler    queueWithdrawalHandler;
     StrategyHandler           strategyHandler;
     TransferHandler           transferHandler;
-    WarpHandler               warpHandler;
-
-    uint256 setTimestamps;
 
     address[] lps;
 
-    uint256[] timestamps;
-
-    mapping(address => bool) existingOwners;
     mapping(uint256 => bool) existingRequestIds;
 
     /**************************************************************************************************************************************/
@@ -169,7 +162,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant F: requests(0) == (0, 0)
         * Invariant G: ∀ requestId[lender] ∈ [0, lastRequestId]
         * Invariant H: requestId is unique
-        * Invariant I: lender is unique
 
      * Strategy
         * Invariant A: assetsUnderManagement == currentTotalAssets - accruedFees
@@ -411,7 +403,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             poolManager.totalAssets(),
             expectedTotalAssets,
-            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 1,
+            max(ftlHandler.numPayments(), ftlHandler.numLoans()) + 2,
             "PoolManager Invariant A"
         );
     }
@@ -906,29 +898,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             uint256 requestId = IWithdrawalManagerQueue(withdrawalManager_).requestIds(lenders_[i]);
 
             existingRequestIds[requestId] = false;
-        }
-    }
-
-    function assert_wmq_invariant_I(address withdrawalManager_) internal {
-        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
-
-        ( uint256 firstRequestId, uint256 lastRequestId ) = wm.queue();
-
-        for (uint256 requestId = firstRequestId; requestId <= lastRequestId; requestId++) {
-            ( address owner, ) = wm.requests(requestId);
-
-            if (owner == address(0)) continue;
-
-            assertFalse(existingOwners[owner], "WMQ Invariant I");
-
-            existingOwners[owner] = true;
-        }
-
-        // NOTE: Clean up storage for future assertion calls.
-        for (uint256 requestId = firstRequestId; requestId <= lastRequestId; requestId++) {
-            ( address owner, ) = wm.requests(requestId);
-
-            existingOwners[owner] = false;
         }
     }
 

@@ -102,6 +102,21 @@ contract BitcoinRouterHandler is HandlerBase {
         withdrawalManager.processRedemptions(sharesToProcess);
     }
 
+    function processEmptyRedemptionsOnWm(uint256 seed) external {
+        console.log("brh.processEmptyRedemptionsOnWm(%s)", seed);
+        numberOfCalls["brh.processEmptyRedemptionsOnWm"]++;
+
+        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+
+        if (nextRequestId >= lastRequestId) return;
+
+        uint256 numberOfRequests = lastRequestId - nextRequestId;
+        uint256 numberOfRequestsToProcess = _bound(_randomize(seed, "numberOfRequestsToProcess"), 1, numberOfRequests);
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processEmptyRedemptions(numberOfRequestsToProcess);
+    }
+
     function removeRequests(uint256 seed) external {
         console.log("brh.removeRequests(%s)", seed);
         numberOfCalls["brh.removeRequests"]++;

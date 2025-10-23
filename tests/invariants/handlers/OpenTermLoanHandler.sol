@@ -206,16 +206,6 @@ contract OpenTermLoanHandler is HandlerBase {
         triggerDefault(loan_, address(liquidatorFactory), caller_);
     }
 
-    function warp(uint256 seed_) public {
-        console.log("otlHandler.warp(%s)", seed_);
-
-        numberOfCalls["warp"]++;
-
-        uint256 warpAmount_ = _bound(seed_, 1 days, 15 days);
-
-        vm.warp(block.timestamp + warpAmount_);
-    }
-
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/

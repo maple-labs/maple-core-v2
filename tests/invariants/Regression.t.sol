@@ -71,22 +71,23 @@ contract WithdrawalManagerQueueInvariants is BaseInvariants {
 
         transferHandler.setSelectorWeight("transfer(uint256)", 10_000);
 
-        queueWithdrawalHandler.setSelectorWeight("processRedemptions(uint256)",  3_000);
-        queueWithdrawalHandler.setSelectorWeight("redeem(uint256)",              1_000);
-        queueWithdrawalHandler.setSelectorWeight("removeRequest(uint256)",       1_000);
-        queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",        1_000);
-        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",       3_000);
-        queueWithdrawalHandler.setSelectorWeight("setManualWithdrawal(uint256)", 1_000);
+        queueWithdrawalHandler.setSelectorWeight("processRedemptions(uint256)",      2_700);
+        queueWithdrawalHandler.setSelectorWeight("processEmptyRedemptions(uint256)", 300);
+        queueWithdrawalHandler.setSelectorWeight("redeem(uint256)",                  1_000);
+        queueWithdrawalHandler.setSelectorWeight("removeRequest(uint256)",           1_000);
+        queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",            1_000);
+        queueWithdrawalHandler.setSelectorWeight("removeSharesById(uint256)",        1_000);
+        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",           2_500);
+        queueWithdrawalHandler.setSelectorWeight("setManualWithdrawal(uint256)",     500);
 
-        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           3_000);
-        ftlHandler.setSelectorWeight("makePayment(uint256)",                 4_500);
+        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           3_500);
+        ftlHandler.setSelectorWeight("makePayment(uint256)",                 5_000);
         ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       0);
         ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          0);
         ftlHandler.setSelectorWeight("impairLoan(uint256)",                  0);
         ftlHandler.setSelectorWeight("triggerDefault(uint256)",              0);
         ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 0);
-        ftlHandler.setSelectorWeight("warp(uint256)",                        2_000);
-        ftlHandler.setSelectorWeight("refinance(uint256)",                   500);
+        ftlHandler.setSelectorWeight("refinance(uint256)",                   1_500);
 
         address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);
