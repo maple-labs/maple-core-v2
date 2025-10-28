@@ -47,7 +47,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IPoolManager(syrupBitcoinPoolManager).globals(),                   globals);
         assertEq(IPoolManager(syrupBitcoinPoolManager).governor(),                  timelock);
         assertEq(IPoolManager(syrupBitcoinPoolManager).liquidityCap(),              liquidityCap);
-        assertEq(IPoolManager(syrupBitcoinPoolManager).poolDelegate(),              poolDelegate);
+        assertEq(IPoolManager(syrupBitcoinPoolManager).poolDelegate(),              syrupBitcoinPoolDelegate);
         assertEq(IPoolManager(syrupBitcoinPoolManager).factory(),                   poolManagerFactory);
         assertEq(IPoolManager(syrupBitcoinPoolManager).poolPermissionManager(),     poolPermissionManager);
         assertEq(IPoolManager(syrupBitcoinPoolManager).delegateManagementFeeRate(), delegateManagementFeeRate);
@@ -67,7 +67,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IWithdrawalManager(withdrawalManager).pool(),                                 pool);
         assertEq(IWithdrawalManager(withdrawalManager).globals(),                              globals);
         assertEq(IWithdrawalManager(withdrawalManager).governor(),                             timelock);
-        assertEq(IWithdrawalManager(withdrawalManager).poolDelegate(),                         poolDelegate);
+        assertEq(IWithdrawalManager(withdrawalManager).poolDelegate(),                         syrupBitcoinPoolDelegate);
         assertEq(IWithdrawalManager(withdrawalManager).asset(),                                compositeTokenProxy);
         assertEq(IWithdrawalManager(withdrawalManager).poolManager(),                          syrupBitcoinPoolManager);
         assertEq(IWithdrawalManager(withdrawalManager).factory(),                              withdrawalManagerQueueFactory);
@@ -126,7 +126,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
             bool canDeploy,
             bool canReconcile,
             bool canSchedule
-        ) = IBitcoinStrategy(bitcoinStrategy1).permissions(strategyManager);
+        ) = IBitcoinStrategy(bitcoinStrategy1).permissions(bitcoinStrategy1Manager);
 
         assertEq(canDeploy,    true);
         assertEq(canReconcile, true);
@@ -136,7 +136,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
             canDeploy,
             canReconcile,
             canSchedule
-        ) = IBitcoinStrategy(bitcoinStrategy2).permissions(strategyManager);
+        ) = IBitcoinStrategy(bitcoinStrategy2).permissions(bitcoinStrategy2Manager);
 
         assertEq(canDeploy,    true);
         assertEq(canReconcile, true);
@@ -146,7 +146,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
             canDeploy,
             canReconcile,
             canSchedule
-        ) = IBitcoinStrategy(bitcoinStrategy3).permissions(strategyManager);
+        ) = IBitcoinStrategy(bitcoinStrategy3).permissions(bitcoinStrategy3Manager);
 
         assertEq(canDeploy,    true);
         assertEq(canReconcile, true);
@@ -207,7 +207,6 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IAssetController(assetControllerProxy).isStrategy(bitcoinStrategy2), true);
         assertEq(IAssetController(assetControllerProxy).isStrategy(bitcoinStrategy3), true);
 
-        assertEq(IPoolPermissionManager(poolPermissionManager).lenderAllowlist(bitcoinRouterProxy, strategyManager), false);
         assertEq(IPoolPermissionManager(poolPermissionManager).permissionLevels(syrupBitcoinPoolManager), 1);
 
         uint256 bitmap = 2 ** 5;
@@ -231,7 +230,6 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IGlobals(globals).isInstanceOf("SYRUP_BTC_ROUTER",     bitcoinRouterProxy),    true);
         assertEq(IGlobals(globals).isInstanceOf("COMPOSITE_POOL_ASSET", compositeTokenProxy),   true);
         assertEq(IGlobals(globals).isInstanceOf("ASSET_CONTROLLER",     assetControllerProxy),  true);
-        assertEq(IGlobals(globals).isInstanceOf("SYRUP_BTC_REDEEMER",   bitcoinRouterRedeemer), true);
         assertEq(IGlobals(globals).isInstanceOf("CONTROLLER_ORACLE",    assetPriceOracleProxy), true);
     }
 
@@ -298,8 +296,10 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         /*** Step 1: Activate the pool manager                                                                                          ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(operationalAdmin);
+        vm.startPrank(operationalAdmin);
         IGlobals(globals).activatePoolManager(syrupBitcoinPoolManager);
+        IGlobals(globals).setValidInstanceOf("SYRUP_BTC_REDEEMER", bitcoinRouterRedeemer, true);
+        vm.stopPrank();
 
         /**********************************************************************************************************************************/
         /*** Step 2: Allow requestRedeem for the router                                                                                 ***/
@@ -343,7 +343,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0]               = 1;
 
-        vm.prank(poolDelegate);
+        vm.prank(syrupBitcoinPoolDelegate);
         IWithdrawalManager(withdrawalManager).processRedemptions(requestAmount);
 
         vm.prank(bitcoinRouterRedeemer);

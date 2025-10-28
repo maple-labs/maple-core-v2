@@ -5,6 +5,7 @@ import {console2 as console} from "../../../modules/forge-std/src/console2.sol";
 
 import {
     IAssetController,
+    IBitcoinStrategy,
     IERC20,
     IERC20Like,
     IGlobals,
@@ -36,9 +37,9 @@ contract SyrupBTCFuzz is SyrupBTCProtocolUpgradeBase, FuzzedUtils, HealthChecker
         _pool              = syrupBitcoinPool;
         _poolAsset         = compositeTokenProxy;
         _bitcoinRouter     = bitcoinRouterProxy;
-        _poolDelegate      = poolDelegate;
+        _poolDelegate      = syrupBitcoinPoolDelegate;
         _redeemer          = bitcoinRouterRedeemer;
-        _strategyManager   = strategyManager;
+        _strategyManager   = bitcoinStrategy1Manager;
         _withdrawalManager = IPoolManager(IPool(_pool).manager()).withdrawalManager();
 
         lps.push(makeAddr("lp1"));
@@ -62,8 +63,32 @@ contract SyrupBTCFuzz is SyrupBTCProtocolUpgradeBase, FuzzedUtils, HealthChecker
         functionIdsToSet[0] = "P:requestRedeem";
         bitmaps[0]          = bitmap;
 
-        vm.prank(operationalAdmin);
+        vm.startPrank(operationalAdmin);
         IPoolPermissionManager(poolPermissionManager).setPoolBitmaps(syrupBitcoinPoolManager, functionIdsToSet, bitmaps);
+        IGlobals(globals).setValidInstanceOf("SYRUP_BTC_REDEEMER", bitcoinRouterRedeemer, true);
+
+        // Note: For Fork let one BTC Strategy manager call all strategies for simplicity
+        address[] memory strategyManager1        = new address[](1);
+        bool[]    memory allowedStrategyManager1 = new bool[](1);
+
+        strategyManager1[0]        = bitcoinStrategy1Manager;
+        allowedStrategyManager1[0] = true;
+
+        IBitcoinStrategy(bitcoinStrategy2).setPermissions(
+            strategyManager1,
+            allowedStrategyManager1,
+            allowedStrategyManager1,
+            allowedStrategyManager1
+        );
+
+        IBitcoinStrategy(bitcoinStrategy3).setPermissions(
+            strategyManager1,
+            allowedStrategyManager1,
+            allowedStrategyManager1,
+            allowedStrategyManager1
+        );
+
+        vm.stopPrank();
 
         syrupBTCHealthChecker = address(new SyrupBTCHealthChecker());
     }

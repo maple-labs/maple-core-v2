@@ -23,13 +23,11 @@ import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
 
 contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
-    address bitcoinRouterRedeemer     = makeAddr("bitcoinRouterRedeemer");
-    address poolDelegate              = makeAddr("poolDelegate");
-    address strategyManager           = makeAddr("strategyManager");
+    address bitcoinRouterRedeemer = makeAddr("bitcoinRouterRedeemer");
 
     uint256 delegateManagementFeeRate = 0.333e6; // 3.33%
     uint256 liquidityCap              = 100e8;
-    uint256 startingTime;              
+    uint256 startingTime;
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"));
@@ -70,12 +68,11 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         // Step 4: Operational admin whitelists contracts on globals
 
         vm.startPrank(operationalAdmin);
-        IGlobals(globals).setValidPoolDelegate(poolDelegate, true);
+        IGlobals(globals).setValidPoolDelegate(syrupBitcoinPoolDelegate, true);
 
         IGlobals(globals).setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET", wbtc,                   true);
         IGlobals(globals).setValidInstanceOf("COMPOSITE_POOL_ASSET",    compositeTokenProxy,    true);
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY",        bitcoinStrategyFactory, true);
-        IGlobals(globals).setValidInstanceOf("SYRUP_BTC_REDEEMER",      bitcoinRouterRedeemer,  true);
         vm.stopPrank();
 
         // Step 5: Governor registers new withdrawal manager version, enables upgrade path and sets default version.
@@ -135,7 +132,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         uint256[4] memory configParams = [liquidityCap, delegateManagementFeeRate, uint256(0), uint256(0)];
 
-        vm.prank(poolDelegate);
+        vm.prank(syrupBitcoinPoolDelegate);
         syrupBitcoinPoolManager = IPoolDeployer(poolDeployerV4).deployPool(
             poolManagerFactory,
             withdrawalManagerQueueFactory,
@@ -186,7 +183,6 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         vm.startPrank(operationalAdmin);
         IGlobals(globals).setValidInstanceOf("CONTROLLER_ORACLE",    assetPriceOracleProxy, true);
-        IGlobals(globals).setValidInstanceOf("COMPOSITE_POOL_ASSET", compositeTokenProxy,   true);
         IGlobals(globals).setValidInstanceOf("SYRUP_BTC_ROUTER",     bitcoinRouterProxy,    true);
         IGlobals(globals).setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy1,      true);
         IGlobals(globals).setValidInstanceOf("BITCOIN_STRATEGY",     bitcoinStrategy2,      true);
@@ -227,11 +223,8 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 11.2: Operational admin sets WBTC as valid asset to be used by asset controller
 
-        address[] memory addresses = new address[](1);
-        bool[]    memory allowed   = new bool[](1);
-
-        addresses = new address[](3);
-        allowed   = new bool[](3);
+        address[] memory addresses = new address[](3);
+        bool[]    memory allowed   = new bool[](3);
 
         addresses[0] = bitcoinStrategy1;
         addresses[1] = bitcoinStrategy2;
@@ -251,15 +244,47 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 11.4: Operational admin sets permissions on the bitcoin strategies
 
-        addresses = new address[](1);
-        allowed   = new bool[](1);
+        // NOTE: To avoid stack too deep
+        {
+            address[] memory strategyManager1        = new address[](1);
+            bool[]    memory allowedStrategyManager1 = new bool[](1);
 
-        addresses[0] = strategyManager;
-        allowed[0]   = true;
+            strategyManager1[0]        = bitcoinStrategy1Manager;
+            allowedStrategyManager1[0] = true;
 
-        IBitcoinStrategy(bitcoinStrategy1).setPermissions(addresses, allowed, allowed, allowed);
-        IBitcoinStrategy(bitcoinStrategy2).setPermissions(addresses, allowed, allowed, allowed);
-        IBitcoinStrategy(bitcoinStrategy3).setPermissions(addresses, allowed, allowed, allowed);
+            address[] memory strategyManager2        = new address[](1);
+            bool[]    memory allowedStrategyManager2 = new bool[](1);
+
+            strategyManager2[0]        = bitcoinStrategy2Manager;
+            allowedStrategyManager2[0] = true;
+
+            address[] memory strategyManager3        = new address[](1);
+            bool[]    memory allowedStrategyManager3 = new bool[](1);
+
+            strategyManager3[0]        = bitcoinStrategy3Manager;
+            allowedStrategyManager3[0] = true;
+
+            IBitcoinStrategy(bitcoinStrategy1).setPermissions(
+                strategyManager1,
+                allowedStrategyManager1,
+                allowedStrategyManager1,
+                allowedStrategyManager1
+            );
+
+            IBitcoinStrategy(bitcoinStrategy2).setPermissions(
+                strategyManager2,
+                allowedStrategyManager2,
+                allowedStrategyManager2,
+                allowedStrategyManager2
+            );
+
+            IBitcoinStrategy(bitcoinStrategy3).setPermissions(
+                strategyManager3,
+                allowedStrategyManager3,
+                allowedStrategyManager3,
+                allowedStrategyManager3
+            );
+        }
 
         // Step 11.5: Operational admin sets pool permission level to be function level and sets bitmaps and lender bitmaps for the router
 

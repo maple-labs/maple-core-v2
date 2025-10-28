@@ -69,6 +69,12 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address mapleWithdrawalManagerV200Initializer;
     address mapleWithdrawalManagerV200Migrator;
 
+    address syrupBitcoinPoolDelegate = 0x7F21a3C90567B86417a386d52232B79381563408;
+
+    address bitcoinStrategy1Manager = 0x0DcD6029374bAE21074214834bB0DedD920A0C93;
+    address bitcoinStrategy2Manager = 0x4041b0d75e159095365034B28e3b9De0712E1475;
+    address bitcoinStrategy3Manager = 0x8f0D8e61dc9D604E6f4147a00994b40Df9d6F565;
+
     /**************************************************************************************************************************************/
     /*** Withdrawal Manager Upgrade Addresses                                                                                           ***/
     /**************************************************************************************************************************************/
