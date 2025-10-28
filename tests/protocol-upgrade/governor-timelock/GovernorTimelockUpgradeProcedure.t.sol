@@ -3,9 +3,9 @@ pragma solidity ^0.8.7;
 
 import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { ProtocolUpgradeBase } from "../ProtocolUpgradeBase.t.sol";
+import { GovernorTimelockUpgradeTestsBase } from "./GovernorTimelockUpgradeTestsBase.t.sol";
 
-contract GovernorTimelockUpgradeTestsBase is ProtocolUpgradeBase {
+contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBase {
 
     bool isUnschedulable;
 

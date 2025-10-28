@@ -2,21 +2,30 @@
 pragma solidity ^0.8.7;
 
 import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../contracts/interfaces/Interfaces.sol";
+import { Runner }                                  from "../../../contracts/Runner.sol";
 
-import { ProtocolUpgradeBase } from "../ProtocolUpgradeBase.t.sol";
+import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
 
-contract GovernorTimelockUpgradeTestsBase is ProtocolUpgradeBase {
+contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23428891);
 
-        upgradeProtocol();
+        deployGovernorTimelock();
 
         vm.startPrank(governor);
         IMapleGlobals(globals).setPendingGovernor(timelock);
         vm.stopPrank();
 
         _executeThroughTimelock(globals, IMapleGlobals.acceptGovernor.selector, "");
+    }
+
+    function deployGovernorTimelock() internal {
+        proposer  = makeAddr("proposer");
+        executor  = operationalAdmin;
+        canceller = securityAdmin;
+        roleAdmin = governor;
+        timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(governor, proposer, executor, canceller, roleAdmin));
     }
 
 

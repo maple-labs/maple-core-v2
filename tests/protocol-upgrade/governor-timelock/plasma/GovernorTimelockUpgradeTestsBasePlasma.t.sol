@@ -2,10 +2,11 @@
 pragma solidity ^0.8.7;
 
 import { IGovernorTimelock, ISyrupUSDTPlasmaLike } from "../../../../contracts/interfaces/Interfaces.sol";
+import { Runner }                                  from "../../../../contracts/Runner.sol";
 
-import { ProtocolUpgradeBase } from "../../ProtocolUpgradeBase.t.sol";
+import { UpgradeAddressRegistry } from "../../UpgradeAddressRegistry.sol";
 
-contract GovernorTimelockUpgradeTestsBasePlasma is ProtocolUpgradeBase {
+contract GovernorTimelockUpgradeTestsBasePlasma is Runner, UpgradeAddressRegistry {
 
     // TODO: Look at best way to manage multi-chain RPCs
     function setUp() public virtual {
@@ -23,6 +24,26 @@ contract GovernorTimelockUpgradeTestsBasePlasma is ProtocolUpgradeBase {
         );
 
         vm.stopPrank();
+    }
+
+    function deployGovernorTimelockPlasma() internal {
+        tokenWithdrawerPlasma = makeAddr("tokenWithdrawerPlasma");
+        proposerPlasma        = makeAddr("proposerPlasma");
+        executorPlasma        = makeAddr("executorPlasma");
+        cancellerPlasma       = makeAddr("cancellerPlasma");
+        roleAdminPlasma       = makeAddr("roleAdminPlasma");
+
+        timelockPlasma = deployFromFile(
+            "Contracts@25",
+            "Timelock",
+            abi.encode(
+                tokenWithdrawerPlasma,
+                proposerPlasma,
+                executorPlasma,
+                cancellerPlasma,
+                roleAdminPlasma
+            )
+        );
     }
 
     function testFork_setUp_governorTimelockUpgradeTestsPlasma() public {

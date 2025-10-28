@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IMapleProxyFactory, IPool, IWithdrawalManagerQueue } from "../../contracts/interfaces/Interfaces.sol";
+import { IMapleProxyFactory, IPool, IWithdrawalManagerQueue } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
+import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
+import { Runner }          from "../../../contracts/Runner.sol";
 
-import { ProtocolUpgradeBase } from "./ProtocolUpgradeBase.t.sol";
+import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
 
-contract MapleWithdrawalManagerUpgradeTest is ProtocolUpgradeBase, ProtocolActions {
+contract MapleWithdrawalManagerUpgradeBaseTest is Runner, UpgradeAddressRegistry, ProtocolActions {
 
     address accountA                = makeAddr("accountA");
     address accountB                = makeAddr("accountB");
@@ -27,7 +28,7 @@ contract MapleWithdrawalManagerUpgradeTest is ProtocolUpgradeBase, ProtocolActio
         uint256 accountBRequestId;
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         // Block 23211261 has no pending redemption requests.
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23211261);
 
@@ -41,7 +42,37 @@ contract MapleWithdrawalManagerUpgradeTest is ProtocolUpgradeBase, ProtocolActio
             queueStateBefore[wm] = _seedQueueRequests(pool, wm);
         }
 
-        upgradeProtocol();
+        _upgradeWithdrawalManagers();
+    }
+
+    function _upgradeWithdrawalManagers() internal {
+        mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
+        mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@7", "WithdrawalManagerQueueMigrator");
+        mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
+
+        vm.startPrank(governor);
+
+        IMapleProxyFactory(withdrawalManagerQueueFactory).registerImplementation(
+            200,
+            mapleWithdrawalManagerV200Implementation,
+            mapleWithdrawalManagerV200Initializer
+        );
+
+        IMapleProxyFactory(withdrawalManagerQueueFactory).enableUpgradePath(100, 200, mapleWithdrawalManagerV200Migrator);
+        IMapleProxyFactory(withdrawalManagerQueueFactory).setDefaultVersion(200);
+
+        vm.stopPrank();
+
+        for (uint256 i; i < withdrawalManagerQueuesToUpgrade.length; ++i) {
+            IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManagerQueuesToUpgrade[i]);
+
+            vm.prank(securityAdmin);
+            wm.upgrade(200, "");
+
+            assertEq(wm.implementation(), mapleWithdrawalManagerV200Implementation);
+            
+            assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).versionOf(wm.implementation()), 200);
+        }
     }
 
     function _seedQueueRequests(address pool_, address wmQueue_) internal returns (QueueState memory queueState) {
@@ -86,54 +117,6 @@ contract MapleWithdrawalManagerUpgradeTest is ProtocolUpgradeBase, ProtocolActio
         assertEq(queueState.lastRequestId, lastRequestIdBefore + 3);  // Note: +3 as 3 new requests were created during seeding.
 
         processRedemptions(pool_, accountAPartialProcessAmount);
-    }
-
-    function testFork_withdrawalManagers_migrate_success() external {
-        for (uint256 i; i < withdrawalManagerQueuesToUpgrade.length; ++i) {
-            address wmAddress                         = withdrawalManagerQueuesToUpgrade[i];
-            IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(wmAddress);
-
-            assertEq(
-                IMapleProxyFactory(withdrawalManagerQueueFactory).versionOf(withdrawalManager.implementation()),
-                200
-            );
-
-            ( uint256 nextRequestIdAfter, uint256 lastRequestIdAfter ) = withdrawalManager.queue();
-
-            assertEq(nextRequestIdAfter, queueStateBefore[wmAddress].nextRequestId);
-            assertEq(lastRequestIdAfter, queueStateBefore[wmAddress].lastRequestId);
-
-            assertEq(withdrawalManager.userEscrowedShares(accountA),                accountARequestAmount - accountAPartialProcessAmount);
-            assertEq(withdrawalManager.userEscrowedShares(accountB),                accountBRequestAmount);
-            assertEq(withdrawalManager.userEscrowedShares(cancelledRequestAccount), 0);
-
-            assertEq(withdrawalManager.requestIds(accountA),                queueStateBefore[wmAddress].accountARequestId);
-            assertEq(withdrawalManager.requestIds(cancelledRequestAccount), 0);
-            assertEq(withdrawalManager.requestIds(accountB),                queueStateBefore[wmAddress].accountBRequestId);
-            assertEq(withdrawalManager.requestIds(accountB),                queueStateBefore[wmAddress].lastRequestId);
-
-            uint256[] memory ids;
-            uint256[] memory shares;
-
-            ( ids, shares ) = withdrawalManager.requestsByOwner(accountA);
-
-            assertEq(ids.length,    1);
-            assertEq(shares.length, 1);
-            assertEq(ids[0],        queueStateBefore[wmAddress].accountARequestId);
-            assertEq(shares[0],     accountARequestAmount - accountAPartialProcessAmount);
-
-            ( ids, shares ) = withdrawalManager.requestsByOwner(accountB);
-
-            assertEq(ids.length,    1);
-            assertEq(shares.length, 1);
-            assertEq(ids[0],        queueStateBefore[wmAddress].accountBRequestId);
-            assertEq(shares[0],     accountBRequestAmount);
-
-            ( ids, shares ) = withdrawalManager.requestsByOwner(cancelledRequestAccount);
-
-            assertEq(ids.length,    0);
-            assertEq(shares.length, 0);
-        }
     }
 
 }
