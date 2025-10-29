@@ -209,7 +209,8 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
 
         assertEq(IPoolPermissionManager(poolPermissionManager).permissionLevels(syrupBitcoinPoolManager), 1);
 
-        uint256 bitmap = 2 ** 5;
+        uint256 bitmap        = 2 ** 5;
+        uint256 requestBitmap = 2 ** 6;
 
         assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:transfer"),          0);
         assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:transferFrom"),      0);
@@ -220,7 +221,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:redeem"),            bitmap);
         assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:withdraw"),          bitmap);
         assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:removeShares"),      bitmap);
-        assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:requestRedeem"),     bitmap + 1);
+        assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:requestRedeem"),     requestBitmap);
         assertEq(IPoolPermissionManager(poolPermissionManager).poolBitmaps(syrupBitcoinPoolManager, "P:requestWithdraw"),   bitmap);
 
         assertEq(IPoolPermissionManager(poolPermissionManager).lenderBitmaps(bitcoinRouterProxy), bitmap);

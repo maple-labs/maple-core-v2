@@ -293,7 +293,8 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         bytes32[] memory functionIdsToSet = new bytes32[](11);
         uint256[] memory bitmaps          = new uint256[](11);
 
-        uint256 bitmap = 2 ** 5;
+        uint256 bitmap              = 2 ** 5;
+        uint256 bitmapRequestRedeem = 2 ** 6;
 
         functionIdsToSet[0]  = "P:deposit";
         functionIdsToSet[1]  = "P:depositWithPermit";
@@ -316,7 +317,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         bitmaps[6]  = 0;
         bitmaps[7]  = 0;
         bitmaps[8]  = bitmap;
-        bitmaps[9]  = bitmap + 1;
+        bitmaps[9]  = bitmapRequestRedeem;
         bitmaps[10] = bitmap;
 
         IPoolPermissionManager(poolPermissionManager).setPoolBitmaps(syrupBitcoinPoolManager, functionIdsToSet, bitmaps);
