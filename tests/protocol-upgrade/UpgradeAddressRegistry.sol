@@ -91,4 +91,12 @@ contract UpgradeAddressRegistry is AddressRegistry {
         syrupUSDTWithdrawalManagerQueue
     ];
 
+    /**************************************************************************************************************************************/
+    /*** Core Strategy Deployment Addresses                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    address mapleCoreStrategyV100Implementation;
+    address mapleCoreStrategyV100Initializer;
+    address mapleCoreStrategyFactory;
+
 }

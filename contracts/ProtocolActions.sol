@@ -3,6 +3,7 @@ pragma solidity ^0.8.7;
 
 import {
     IBitcoinStrategy,
+    ICoreStrategy,
     IERC20,
     IERC20Like,
     IExemptionsManagerLike,
@@ -545,6 +546,22 @@ contract ProtocolActions is Runner {
         vm.startPrank(account_);
         sharesReturned_ = IPool(pool_).removeShares(amount_, account_);
         vm.stopPrank();
+    }
+
+    function removeSharesCoreStrategy(address strategy_, uint256 sharesToRemove_) internal {
+        address poolManager_  = IStrategyLike(strategy_).poolManager();
+        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ICoreStrategy(strategy_).removeShares(sharesToRemove_);
+    }
+
+    function removeSharesByIdCoreStrategy(address strategy_, uint256 requestId_, uint256 sharesToRemove_) internal {
+        address poolManager_  = IStrategyLike(strategy_).poolManager();
+        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
+
+        vm.prank(poolDelegate_);
+        ICoreStrategy(strategy_).removeSharesById(requestId_, sharesToRemove_);
     }
 
     function requestRedeem(address pool_, address account_, uint256 amount_) internal returns (uint256 escrowShares_) {
