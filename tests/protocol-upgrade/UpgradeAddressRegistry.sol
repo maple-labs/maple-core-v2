@@ -42,32 +42,34 @@ contract UpgradeAddressRegistry is AddressRegistry {
     /*** syrupBTC Procedure Addresses                                                                                                   ***/
     /**************************************************************************************************************************************/
 
-    address assetControllerImplementation;
-    address assetPriceOracleImplementation;
-    address bitcoinRouterImplementation;
-    address bitcoinStrategyImplementation;
-    address compositeTokenImplementation;
+    // syrupBTC Deployer 0x987cF164b7bfC45f833CF5f426F3FF9f341dD11E
 
-    address assetControllerInitializer;
-    address bitcoinRouterInitializer;
-    address bitcoinStrategyInitializer;
-    address compositeTokenInitializer;
+    address assetControllerImplementation  = 0x4911fA884Bb6Ba1Fc3bc9f6798006ED6aBB7d5f5;
+    address assetPriceOracleImplementation = 0x033B333d3fDBf10b66c79807AAA3b951d87b265e;
+    address bitcoinRouterImplementation    = 0xCFb0C41791CBA35691670Da366f4E2e0FA175DAA;
+    address bitcoinStrategyImplementation  = 0x88B040042Eb95Aa46Fd95971bBCd7ea2ebd4b149;
+    address compositeTokenImplementation   = 0x4Aa3466B78baD18F87fe2a510a1eff65eed5F1CC;
 
-    address assetControllerProxy;
-    address assetPriceOracleProxy;
-    address bitcoinRouterProxy;
-    address compositeTokenProxy;
+    address assetControllerInitializer = 0xA15cee00b256b9e5cC66c624E882629458549638;
+    address bitcoinRouterInitializer   = 0x9633c4304dDbBadb8f6F035490a86B72C4911cB2;
+    address bitcoinStrategyInitializer = 0xC345266f92b81BA3D4ed11848878eEbe72471b6f;
+    address compositeTokenInitializer  = 0x67685C6c39E862c57895d5782206829d5cc0aD8C;
 
-    address bitcoinStrategyFactory;
+    address assetControllerProxy  = 0xEC6e3B04b68D319d0bf74cC42a7bcFa4a1c247f5;
+    address assetPriceOracleProxy = 0x8ce6cA79Edb491609380A91Bc63B927A929404f4;
+    address bitcoinRouterProxy    = 0x6199CaFac0ddCE84a8eb1A94Cd76D255e3AA3e5b;
+    address compositeTokenProxy   = 0x67685C6c39E862c57895d5782206829d5cc0aD8C;
+
+    address bitcoinStrategyFactory = 0x9a05C78e021B15841D50DDFd92dde8Ef7d14508D;
     address bitcoinStrategy1;
     address bitcoinStrategy2;
     address bitcoinStrategy3;
     address syrupBitcoinPool;
     address syrupBitcoinPoolManager;
 
-    address mapleWithdrawalManagerV200Implementation;
-    address mapleWithdrawalManagerV200Initializer;
-    address mapleWithdrawalManagerV200Migrator;
+    address mapleWithdrawalManagerV200Implementation = 0xF95E5722226a1018d058CD757B75F1D10289e967;
+    address mapleWithdrawalManagerV200Initializer    = 0xD389BFE4A129525b486B098411336a4fCecF3024;
+    address mapleWithdrawalManagerV200Migrator       = 0x327ec27a6D898D865D7759D47d36a2c3FBbD23a5;
 
     address syrupBitcoinPoolDelegate = 0x7F21a3C90567B86417a386d52232B79381563408;
 

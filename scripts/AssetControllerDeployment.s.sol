@@ -18,14 +18,12 @@ contract AssetControllerDeployment is Script, MapleAddressRegistryETH {
     address deployer = vm.envAddress("ETH_SENDER");
 
     address assetControllerOracleProxy = vm.envAddress("ASSET_CONTROLLER_ORACLE");
-    address compositeTokenProxy        = vm.envAddress("COMPOSITE_TOKEN");
     address bitcoinRouterProxy         = vm.envAddress("SYRUP_BTC_ROUTER");
 
     function run() public {
         console.log("Deployer:", deployer, "\n");
 
         console.log("AssetControllerOracle proxy:", assetControllerOracleProxy);
-        console.log("CompositeToken proxy:       ", compositeTokenProxy);
         console.log("SyrupBitcoinRouter proxy:   ", bitcoinRouterProxy, "\n");
 
         vm.startBroadcast(deployer);
@@ -37,9 +35,8 @@ contract AssetControllerDeployment is Script, MapleAddressRegistryETH {
             implementation_: assetControllerImplementation,
             initializer_:    assetControllerInitializer,
             calldata_:       abi.encodeWithSignature(
-                "initialize(address,address,address)",
+                "initialize(address,address)",
                 assetControllerOracleProxy,
-                compositeTokenProxy,
                 bitcoinRouterProxy
             )
         }));

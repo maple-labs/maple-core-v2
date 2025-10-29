@@ -44,6 +44,24 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --broadcast \
 #     scripts/GovernorTimelockCrossChainDeployment.s.sol:GovernorTimelockCrossChainDeployment
 
+# For WithdrawalManagerDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/WithdrawalManagerDeployment.s.sol:WithdrawalManagerDeployment
+
+# For BitcoinStrategyDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/BitcoinStrategyDeployment.s.sol:BitcoinStrategyDeployment
+
 # For CompositeTokenDeployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
@@ -79,24 +97,6 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --slow \
 #     --sender $ETH_SENDER \
 #     scripts/AssetControllerDeployment.s.sol:AssetControllerDeployment
-
-# For BitcoinStrategyDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/BitcoinStrategyDeployment.s.sol:BitcoinStrategyDeployment
-
-# For WithdrawalManagerDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/WithdrawalManagerDeployment.s.sol:WithdrawalManagerDeployment
 
 # For Production
 
@@ -158,6 +158,28 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --gas-estimate-multiplier 150 \
 #     scripts/GovernorTimelockCrossChainDeployment.s.sol:GovernorTimelockCrossChainDeployment
 
+# For WithdrawalManagerDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 20 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     scripts/WithdrawalManagerDeployment.s.sol:WithdrawalManagerDeployment
+
+# For BitcoinStrategyDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 20 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     scripts/BitcoinStrategyDeployment.s.sol:BitcoinStrategyDeployment
+
 # For CompositeTokenDeployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
@@ -202,24 +224,3 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --gas-estimate-multiplier 150 \
 #     scripts/AssetControllerDeployment.s.sol:AssetControllerDeployment
 
-# For BitcoinStrategyDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/BitcoinStrategyDeployment.s.sol:BitcoinStrategyDeployment
-
-# For WithdrawalManagerDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/WithdrawalManagerDeployment.s.sol:WithdrawalManagerDeployment
