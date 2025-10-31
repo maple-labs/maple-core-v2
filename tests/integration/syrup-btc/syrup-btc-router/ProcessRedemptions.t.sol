@@ -107,13 +107,127 @@ contract SyrupBitcoinRouterProcessRedemptionsTests is SyrupBitcoinTestBase {
         bitcoinRouter.processRedemptions(new uint256[](0));
     }
 
-    function test_syrupBitcoinRouter_processRedemptions_revert_invalidRequestId() external {
-        uint256[] memory invalidRequestIds = new uint256[](1);
-        invalidRequestIds[0]               = 3;
+    function test_syrupBitcoinRouter_processRedemptions_success_skipCancelledRequestId() external {
+        uint256[] memory toCancel = new uint256[](1);
+        toCancel[0]               = requestIds[1];
+
+        vm.prank(depositorB);
+        bitcoinRouter.removeSharesById(requestIds[1], depositAmountB);
+
+        ( address routerReq2AssetBefore, address routerReq2OwnerBefore, uint256 routerReq2SharesBefore ) =
+            bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(routerReq2AssetBefore,  address(0));
+        assertEq(routerReq2OwnerBefore,  address(0));
+        assertEq(routerReq2SharesBefore, 0);
 
         vm.prank(redeemer);
-        vm.expectRevert("SBR:PR:INVALID_REQUESTID");
-        bitcoinRouter.processRedemptions(invalidRequestIds);
+        bitcoinRouter.processRedemptions(toCancel);
+
+        ( address routerReq1AssetAfter, address routerReq1OwnerAfter, uint256 routerReq1SharesAfter ) =
+            bitcoinRouter.redeemRequests(requestIds[0]);
+        ( address routerReq2AssetAfter, address routerReq2OwnerAfter, uint256 routerReq2SharesAfter ) =
+            bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(routerReq1AssetAfter,  address(depositAsset));
+        assertEq(routerReq1OwnerAfter,  depositorA);
+        assertEq(routerReq1SharesAfter, depositAmountA);
+
+        assertEq(routerReq2AssetAfter,  address(0));
+        assertEq(routerReq2OwnerAfter,  address(0));
+        assertEq(routerReq2SharesAfter, 0);
+
+        assertEq(depositAsset.balanceOf(address(treasury)), 0);
+        assertEq(depositAsset.balanceOf(depositorA),        0);
+        assertEq(depositAsset.balanceOf(depositorB),        0);
+    }
+
+    function test_syrupBitcoinRouter_processRedemptions_success_skipCancelledThenProcessValid() external {
+        uint256[] memory toCancel = new uint256[](1);
+        toCancel[0]               = requestIds[1];
+
+        vm.prank(depositorB);
+        bitcoinRouter.removeSharesById(requestIds[1], depositAmountB);
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(depositAmountA);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0]               = requestIds[1];  // Cancelled
+        ids[1]               = requestIds[0];  // Valid
+
+        ( address req2AssetBefore, address req2OwnerBefore, uint256 req2SharesBefore ) = bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(req2AssetBefore,  address(0));
+        assertEq(req2OwnerBefore,  address(0));
+        assertEq(req2SharesBefore, 0);
+
+        vm.prank(poolDelegate);
+        bitcoinRouter.processRedemptions(ids);
+
+        assertEq(depositAsset.balanceOf(depositorA),        depositAmountA);
+        assertEq(depositAsset.balanceOf(depositorB),        0);
+        assertEq(depositAsset.balanceOf(address(treasury)), 0);
+
+        ( address req1AssetAfter, address req1OwnerAfter, uint256 req1SharesAfter ) = bitcoinRouter.redeemRequests(requestIds[0]);
+        ( address req2AssetAfter, address req2OwnerAfter, uint256 req2SharesAfter ) = bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(req1AssetAfter,  address(0));
+        assertEq(req1OwnerAfter,  address(0));
+        assertEq(req1SharesAfter, 0);
+
+        assertEq(req2AssetAfter,  address(0));
+        assertEq(req2OwnerAfter,  address(0));
+        assertEq(req2SharesAfter, 0);
+    }
+
+    function test_syrupBitcoinRouter_processRedemptions_success_skipAlreadyProcessedRequests() external {
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(depositAmountA + depositAmountB);
+
+        vm.prank(poolDelegate);
+        bitcoinRouter.processRedemptions(requestIds);
+
+        ( , , uint256 r1SharesAfterFirst ) = bitcoinRouter.redeemRequests(requestIds[0]);
+        ( , , uint256 r2SharesAfterFirst ) = bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(r1SharesAfterFirst,                 0);
+        assertEq(r2SharesAfterFirst,                 0);
+        assertEq(depositAsset.balanceOf(depositorA), depositAmountA);
+        assertEq(depositAsset.balanceOf(depositorB), depositAmountB);
+
+        vm.prank(poolDelegate);
+        bitcoinRouter.processRedemptions(requestIds);
+
+        ( , , uint256 r1SharesAfterSecond ) = bitcoinRouter.redeemRequests(requestIds[0]);
+        ( , , uint256 r2SharesAfterSecond ) = bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(r1SharesAfterSecond,                       0);
+        assertEq(r2SharesAfterSecond,                       0);
+        assertEq(depositAsset.balanceOf(depositorA),        depositAmountA);
+        assertEq(depositAsset.balanceOf(depositorB),        depositAmountB);
+        assertEq(depositAsset.balanceOf(address(treasury)), 0);
+    }
+
+    function test_syrupBitcoinRouter_processRedemptions_success_skipFutureRequestIds() external {
+        uint256 futureRequestId = requestIds[1] + 100;
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0]               = futureRequestId;
+
+        vm.prank(poolDelegate);
+        bitcoinRouter.processRedemptions(ids);
+
+        ( , address owner1, uint256 shares1 ) = bitcoinRouter.redeemRequests(requestIds[0]);
+        ( , address owner2, uint256 shares2 ) = bitcoinRouter.redeemRequests(requestIds[1]);
+
+        assertEq(owner1,                                    depositorA);
+        assertEq(shares1,                                   depositAmountA);
+        assertEq(owner2,                                    depositorB);
+        assertEq(shares2,                                   depositAmountB);
+        assertEq(depositAsset.balanceOf(address(treasury)), 0);
+        assertEq(depositAsset.balanceOf(depositorA),        0);
+        assertEq(depositAsset.balanceOf(depositorB),        0);
     }
 
     function test_syrupBitcoinRouter_processRedemptions_revert_noAssetController() external {
