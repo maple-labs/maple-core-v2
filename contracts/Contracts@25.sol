@@ -41,7 +41,7 @@ import { MapleSkyStrategyInitializer as MSSI }
 
 import { MapleStrategyFactory as MSF } from "../modules/strategies/contracts/proxy/MapleStrategyFactory.sol";
 
-import { MockPSM as MPSM } from "../modules/strategies/tests/utils/Mocks.sol";
+import { MockAaveToken as StrategyMockAaveToken, MockPSM as MPSM } from "../modules/strategies/tests/utils/Mocks.sol";
 
 import { MapleBorrowerActions }          from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
 import { MapleRouter as MR }             from "../modules/syrup-utils/contracts/MapleRouter.sol";
@@ -83,6 +83,14 @@ contract MapleRouter is MR {}
 contract MapleRouterInitializer is MRI {}
 
 contract MockPSM is MPSM { }
+
+contract MockAaveToken is StrategyMockAaveToken {
+
+    constructor(address aavePool_, address underlyingAsset_, address incentivesController_)
+        StrategyMockAaveToken(aavePool_, underlyingAsset_, incentivesController_)
+    {}
+
+}
 
 contract NonTransparentProxyInitializable is NTPI {
 
