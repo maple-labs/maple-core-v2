@@ -17,7 +17,7 @@ import {
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console } from "../../contracts/Runner.sol";
+import { console } from "../../contracts/Runner.sol";
 
 import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
 

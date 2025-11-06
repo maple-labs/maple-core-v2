@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { Test, console2 } from "../modules/forge-std/src/Test.sol";
+import { Test, console } from "../modules/forge-std/src/Test.sol";
 
 import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 

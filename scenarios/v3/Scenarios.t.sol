@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { IERC20, IBitcoinStrategy }           from "../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console, stdJson, stdMath } from "../../modules/forge-std/src/Test.sol";
+import { console, stdJson, stdMath } from "../../modules/forge-std/src/Test.sol";
 
 import { SyrupBitcoinTestBase } from "../../tests/integration/syrup-btc/SyrupBitcoinTestBase.sol";
 

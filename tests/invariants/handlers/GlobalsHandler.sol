@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { IGlobals, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console } from "../../../contracts/Runner.sol";
+import { console } from "../../../contracts/Runner.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 

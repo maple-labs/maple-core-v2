@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { console2 } from "../../../modules/forge-std/src/console2.sol";
+import { console } from "../../../modules/forge-std/src/Test.sol";
 
 import { IMapleProxyFactory, IMockERC20, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 

@@ -31,7 +31,7 @@ import {
     Permit
 } from "./interfaces/Interfaces.sol";
 
-import { Runner, ERC20Helper, console2 as console } from "./Runner.sol";
+import { Runner, ERC20Helper, console } from "./Runner.sol";
 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Runner {

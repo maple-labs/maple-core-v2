@@ -5,7 +5,7 @@ import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
-import { console2 as console } from "../../../contracts/Runner.sol";
+import { console } from "../../../contracts/Runner.sol";
 
 contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 

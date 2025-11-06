@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { IERC4626Like, IMapleBasicStrategy, IMockERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console } from "../../../contracts/Runner.sol";
+import { console } from "../../../contracts/Runner.sol";
 
 import { StrategyTestBase } from "./StrategyTestBase.sol";
 

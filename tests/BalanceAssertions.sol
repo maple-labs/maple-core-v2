@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { IERC20 } from "../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console, Runner } from "../contracts/Runner.sol";
+import { console, Runner } from "../contracts/Runner.sol";
 
 contract BalanceAssertions is Runner {
 
