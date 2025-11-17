@@ -2,6 +2,10 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAavePoolLike,
+    IAaveStrategy,
+    IAaveTokenLike,
+    ICoreStrategy,
     IERC20,
     IFixedTermLoan,
     IFixedTermLoanManager,
@@ -64,6 +68,7 @@ contract FuzzedUtil is ProtocolActions {
     address _pool;
     address _poolManager;
 
+    uint256 expectedLoanCount;
     uint256 seed;
 
     address[] _fixedTermLoans;
@@ -82,7 +87,8 @@ contract FuzzedUtil is ProtocolActions {
     )
         internal
     {
-        seed = seed_;
+        seed              = seed_;
+        expectedLoanCount = fixedTermLoans + openTermLoans;
 
         // Create and fund fixed loans.
         for (uint256 i; i < fixedTermLoans; ++i) {
@@ -230,7 +236,6 @@ contract FuzzedUtil is ProtocolActions {
         }
 
     }
-
     function createAndFundLoan(function() returns (address) createLoan_) internal returns (address loan) {
         loan = createLoan_();
         loans.push(loan);
@@ -240,14 +245,18 @@ contract FuzzedUtil is ProtocolActions {
     function createSomeOpenTermLoan() internal returns (address loan) {
         require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
-        uint256 principal              = getSomeValue(100_000e6, 1_000_000e6);
-        uint256 noticePeriod           = getSomeValue(1 hours,   10 days);
-        uint256 gracePeriod            = getSomeValue(0,         10 days);
-        uint256 paymentInterval        = getSomeValue(10 days,   90 days);
-        uint256 delegateServiceFeeRate = getSomeValue(0,         0.1e6);
-        uint256 interestRate           = getSomeValue(0.01e6,    0.25e6);
-        uint256 lateFeeRate            = getSomeValue(0,         0.1e6);
-        uint256 lateInterestPremium    = getSomeValue(0,         0.1e6);
+        uint256 poolBalance  = IERC20(_fundsAsset).balanceOf(address(_pool));
+        uint256 maxPrincipal = poolBalance  / expectedLoanCount;
+        uint256 minPrincipal = maxPrincipal / 5;
+
+        uint256 principal              = getSomeValue(minPrincipal, maxPrincipal);
+        uint256 noticePeriod           = getSomeValue(1 hours,      10 days);
+        uint256 gracePeriod            = getSomeValue(0,            10 days);
+        uint256 paymentInterval        = getSomeValue(10 days,      90 days);
+        uint256 delegateServiceFeeRate = getSomeValue(0,            0.1e6);
+        uint256 interestRate           = getSomeValue(0.01e6,       0.25e6);
+        uint256 lateFeeRate            = getSomeValue(0,            0.1e6);
+        uint256 lateInterestPremium    = getSomeValue(0,            0.1e6);
         loan = createOpenTermLoan(
             address(_openTermLoanFactory),
             makeAddr("borrower"),
@@ -264,7 +273,11 @@ contract FuzzedUtil is ProtocolActions {
     function createSomeFixedTermLoan() internal returns (address loan) {
         require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
 
-        uint256 principal = getSomeValue(100_000e6, 1_000_000e6);
+        uint256 poolBalance  = IERC20(_fundsAsset).balanceOf(address(_pool));
+        uint256 maxPrincipal = poolBalance  / expectedLoanCount;
+        uint256 minPrincipal = maxPrincipal / 5;
+
+        uint256 principal = getSomeValue(minPrincipal, maxPrincipal);
 
         uint256[3] memory amounts = [
             0,                          // collateralRequired
@@ -370,15 +383,42 @@ contract FuzzedUtil is ProtocolActions {
         StrategyAction action = getSomeStrategyAction(strategy);
 
         if (action == StrategyAction.Fund) {
-            uint256 max = 1_000_000 * 10 ** IERC20(_fundsAsset).decimals();
-            fundStrategy(strategy, getSomeValue(1, max));
+            uint256 max = IERC20(_fundsAsset).balanceOf(address(_pool));
+            uint256 min = 1;
 
-            console.log("Strategy funded:", strategy);
+            if (_isCoreStrategy(strategy)) {
+                address strategyVault = ICoreStrategy(strategy).strategyVault();
+
+                uint256 liquidityCap       = IPoolManager(IPool(strategyVault).manager()).liquidityCap();
+                uint256 totalAssets        = IPool(strategyVault).totalAssets();
+                uint256 availableToDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
+
+                if (availableToDeposit < max) max = availableToDeposit;
+            }
+
+
+            if (_isAaveStrategy(strategy)) {
+                // We need to check what is supply cap on Aave on-chain so we don't exceed it.
+                uint256 availableToSupply = _getMaxAmountToSupplyAaveStrategy(strategy);
+
+                if (availableToSupply < max) max = availableToSupply;
+
+                // When depositing 1 wei on Aave it reverts because it rounds down aToken burning
+                // amount to 0 and fails with INVALID_BURN_AMOUNT error.
+                min = 2;
+            }
+
+            if (min > max) return;
+
+            fundStrategy(strategy, getSomeValue(min, max));
             return;
         }
 
         if (action == StrategyAction.Withdraw) {
             uint256 max = IStrategy(strategy).assetsUnderManagement();
+
+            if (max == 0) return;
+
             withdrawFromStrategy(strategy, getSomeValue(1, max));
 
             console.log("Strategy withdrawn from:", strategy);
@@ -654,6 +694,39 @@ contract FuzzedUtil is ProtocolActions {
         try IOpenTermLoanManager(loanManager_).paymentFor(address(0)) {
             isOpenTermLoanManager_ = true;
         } catch { }
+    }
+
+    function _getMaxAmountToSupplyAaveStrategy(address aaveStrategy) internal view returns (uint256) {
+        address aavePool = IAaveStrategy(aaveStrategy).aavePool();
+
+        IAavePoolLike.ReserveData             memory reserveData   = IAavePoolLike(aavePool).getReserveData(address(_fundsAsset));
+        IAavePoolLike.ReserveConfigurationMap memory reserveConfig = reserveData.configuration;
+
+        // All reserve config is packed on uint256 and supply cap is at bit 116-151.
+        // We need to extract the supply cap from the reserve config and calculate the max supply amount.
+
+        uint256 SUPPLY_CAP_LSB   = 116;
+        uint256 SUPPLY_CAP_WIDTH = 36;
+        uint256 SUPPLY_CAP_MASK  = (uint256(1) << SUPPLY_CAP_WIDTH) - 1;
+
+        uint256 supplyCapHumanReadable = (reserveConfig.data >> SUPPLY_CAP_LSB) & SUPPLY_CAP_MASK;
+        uint256 supplyCap              = supplyCapHumanReadable * IERC20(reserveData.aTokenAddress).decimals();
+        uint256 totalSupply            = IAaveTokenLike(reserveData.aTokenAddress).totalSupply();
+        uint256 availableToSupply      = supplyCap > totalSupply ? supplyCap - totalSupply : 0;
+
+        return availableToSupply;
+    }
+
+    function _isAaveStrategy(address strategy_) internal view returns (bool) {
+        bytes memory t = bytes(IStrategy(strategy_).STRATEGY_TYPE());
+
+        return keccak256(t) == keccak256("AAVE");
+    }
+
+    function _isCoreStrategy(address strategy_) internal view returns (bool) {
+        bytes memory t = bytes(IStrategy(strategy_).STRATEGY_TYPE());
+
+        return keccak256(t) == keccak256("CORE");
     }
 
 }

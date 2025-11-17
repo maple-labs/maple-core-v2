@@ -304,11 +304,6 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
 
         if (a_ >= b_) return result_;
 
-        if (result_ <= diff_) {
-            console.log("left ", a_);
-            console.log("right", b_);
-        }
-
         require(result_ <= diff_, "SWD: Diff exceeded");
     }
 

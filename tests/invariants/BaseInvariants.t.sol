@@ -129,7 +129,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
      * PoolManager (non-liquidating)
         * Invariant A: totalAssets == cash + ∑assetsUnderManagement[loanManager]
-        * Invariant B: hasSufficientCover == fundsAsset balance of cover > globals.minCoverAmount
+        * Invariant B: totalAssets >= unrealizedLosses
 
      * Withdrawal Manager (Cyclical)
         * Invariant A: WM LP balance == ∑lockedShares(user)

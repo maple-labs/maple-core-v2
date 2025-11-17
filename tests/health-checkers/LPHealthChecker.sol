@@ -123,6 +123,7 @@ contract LPHealthChecker {
         }
 
         sumBalanceOfAssets += IPool(pool_).balanceOfAssets(withdrawManager_);
+        sumBalanceOfAssets += IPool(pool_).convertToAssets(IPool(pool_).BOOTSTRAP_MINT());
 
         isMaintained_ = _getDiff(pool.totalAssets(), sumBalanceOfAssets) <= poolLps_.length;
     }
@@ -143,6 +144,7 @@ contract LPHealthChecker {
         }
 
         sumBalanceOf += IPool(pool_).balanceOf(withdrawManager_);
+        sumBalanceOf += IPool(pool_).BOOTSTRAP_MINT();
 
         isMaintained_ = pool.totalSupply() == sumBalanceOf;
     }

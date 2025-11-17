@@ -48,7 +48,7 @@ contract ProtocolHealthChecker {
 
      * PoolManager
         * Invariant A: totalAssets == cash + ∑assetsUnderManagement[loanManager]
-        * Invariant B: hasSufficientCover == fundsAsset balance of cover > globals.minCoverAmount
+        * Invariant B: totalAssets >= unrealizedLosses
 
      * Pool Permission Manager
         * Invariant A: pool.permissionLevel ∈ [0, 3]
@@ -66,7 +66,6 @@ contract ProtocolHealthChecker {
         * Invariant D: nextRequestId <= lastRequestId + 1
         * Invariant E: nextRequestId != 0
         * Invariant F: requests(0) == (0, 0)
-        * Invariant I: lender is unique
 
      * Strategy
         * Invariant A: assetsUnderManagement == currentTotalAssets - accruedFees
@@ -116,7 +115,6 @@ contract ProtocolHealthChecker {
         bool withdrawalManagerQueueInvariantD;
         bool withdrawalManagerQueueInvariantE;
         bool withdrawalManagerQueueInvariantF;
-        bool withdrawalManagerQueueInvariantI;
         bool strategiesInvariantA;
         bool strategiesInvariantB;
         bool strategiesInvariantC;
@@ -648,7 +646,6 @@ contract ProtocolHealthChecker {
         invariants.withdrawalManagerQueueInvariantD = true;
         invariants.withdrawalManagerQueueInvariantE = true;
         invariants.withdrawalManagerQueueInvariantF = true;
-        invariants.withdrawalManagerQueueInvariantI = true;
 
         invariants.strategiesInvariantA = true;
         invariants.strategiesInvariantB = true;

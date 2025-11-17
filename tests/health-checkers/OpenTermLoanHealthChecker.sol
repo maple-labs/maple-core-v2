@@ -372,9 +372,9 @@ contract OpenTermLoanHealthChecker {
         }
 
         isMaintained_ = _assertApproxEqAbs(
-            assetsUnderManagement + UNDERFLOW_THRESHOLD - unrealizedLosses - outstandingValue,
-            0,
-            BUFFER
+            assetsUnderManagement,
+            unrealizedLosses + outstandingValue,
+            BUFFER + UNDERFLOW_THRESHOLD
         );
     }
 

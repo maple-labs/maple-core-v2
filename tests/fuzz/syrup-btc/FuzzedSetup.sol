@@ -90,7 +90,7 @@ contract FuzzedUtils is ProtocolActions {
         uint256 amount = getSomeValue(0, maxDepositAmount);
 
         if (amount == 0) {
-            return; 
+            return;
         }
 
         depositInSyrupBtc(user, _bitcoinRouter, _depositAsset, amount);
@@ -103,7 +103,7 @@ contract FuzzedUtils is ProtocolActions {
         uint256 amount          = getSomeValue(0, maxAmount);
 
         if (amount == 0) {
-            return; 
+            return;
         }
 
         requestRedeemFromSyrupBtc(user, _bitcoinRouter, _depositAsset, amount);
@@ -212,7 +212,7 @@ contract FuzzedUtils is ProtocolActions {
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0]               = requestToProcess;
 
-        vm.prank(_redeemer); 
+        vm.prank(_redeemer);
         ISyrupBitcoinRouter(_bitcoinRouter).processRedemptions(requestIds);
     }
 
@@ -263,6 +263,12 @@ contract FuzzedUtils is ProtocolActions {
     }
 
     function scheduleYieldOnStrategy() internal {
+        // Do not allow for yield scheduling if the pool total supply is 0.
+        // This breaks the pool invariant A and pool invariant D and represent invalid production scenario.
+        if (IPool(_pool).totalSupply() == 0) {
+            return;
+        }
+
         uint256 currentTimestamp = block.timestamp;
         uint256 indexOfStrategy  = getSomeValue(0, strategies.length - 1);
         address strategy         = strategies[indexOfStrategy];
