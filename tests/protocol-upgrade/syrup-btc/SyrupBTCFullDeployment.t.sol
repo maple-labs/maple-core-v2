@@ -88,7 +88,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IBitcoinStrategy(bitcoinStrategy1).poolAsset(),             compositeTokenProxy);
         assertEq(IBitcoinStrategy(bitcoinStrategy1).factory(),               bitcoinStrategyFactory);
         assertEq(IBitcoinStrategy(bitcoinStrategy1).poolManager(),           syrupBitcoinPoolManager);
-        assertEq(IBitcoinStrategy(bitcoinStrategy1).implementation(),        bitcoinStrategyImplementation);
+        assertEq(IBitcoinStrategy(bitcoinStrategy1).implementation(),        bitcoinStrategyV100Implementation);
 
         assertEq(IBitcoinStrategy(bitcoinStrategy2).realizedFees(),          0);
         assertEq(IBitcoinStrategy(bitcoinStrategy2).outstandingAssets(),     0);
@@ -104,7 +104,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IBitcoinStrategy(bitcoinStrategy2).poolAsset(),             compositeTokenProxy);
         assertEq(IBitcoinStrategy(bitcoinStrategy2).factory(),               bitcoinStrategyFactory);
         assertEq(IBitcoinStrategy(bitcoinStrategy2).poolManager(),           syrupBitcoinPoolManager);
-        assertEq(IBitcoinStrategy(bitcoinStrategy2).implementation(),        bitcoinStrategyImplementation);
+        assertEq(IBitcoinStrategy(bitcoinStrategy2).implementation(),        bitcoinStrategyV100Implementation);
 
         assertEq(IBitcoinStrategy(bitcoinStrategy3).realizedFees(),          0);
         assertEq(IBitcoinStrategy(bitcoinStrategy3).outstandingAssets(),     0);
@@ -120,7 +120,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IBitcoinStrategy(bitcoinStrategy3).poolAsset(),             compositeTokenProxy);
         assertEq(IBitcoinStrategy(bitcoinStrategy3).factory(),               bitcoinStrategyFactory);
         assertEq(IBitcoinStrategy(bitcoinStrategy3).poolManager(),           syrupBitcoinPoolManager);
-        assertEq(IBitcoinStrategy(bitcoinStrategy3).implementation(),        bitcoinStrategyImplementation);
+        assertEq(IBitcoinStrategy(bitcoinStrategy3).implementation(),        bitcoinStrategyV100Implementation);
 
         (
             bool canDeploy,
@@ -159,10 +159,10 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(ISyrupBitcoinRouter(bitcoinRouterProxy).pool(),                syrupBitcoinPool);
         assertEq(ISyrupBitcoinRouter(bitcoinRouterProxy).assetController(wbtc), assetControllerProxy);
         assertEq(ISyrupBitcoinRouter(bitcoinRouterProxy).poolManager(),         syrupBitcoinPoolManager);
-        assertEq(ISyrupBitcoinRouter(bitcoinRouterProxy).implementation(),      bitcoinRouterImplementation);
+        assertEq(ISyrupBitcoinRouter(bitcoinRouterProxy).implementation(),      bitcoinRouterV100Implementation);
 
         assertEq(IAssetControllerOracle(assetPriceOracleProxy).globals(),        globals);
-        assertEq(IAssetControllerOracle(assetPriceOracleProxy).implementation(), assetPriceOracleImplementation);
+        assertEq(IAssetControllerOracle(assetPriceOracleProxy).implementation(), assetPriceOracleV100Implementation);
 
         assertEq(IAssetController(assetControllerProxy).locked(),            1);
         assertEq(IAssetController(assetControllerProxy).poolAssets(wbtc),    0);
@@ -171,7 +171,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IAssetController(assetControllerProxy).oracle(),            assetPriceOracleProxy);
         assertEq(IAssetController(assetControllerProxy).router(),            bitcoinRouterProxy);
         assertEq(IAssetController(assetControllerProxy).poolAsset(),         compositeTokenProxy);
-        assertEq(IAssetController(assetControllerProxy).implementation(),    assetControllerImplementation);
+        assertEq(IAssetController(assetControllerProxy).implementation(),    assetControllerV100Implementation);
 
         assertEq(IAssetController(assetControllerProxy).previewDeploy(wbtc,    1e8), 1e8);
         assertEq(IAssetController(assetControllerProxy).previewReconcile(wbtc, 1e8), 1e8);

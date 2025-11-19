@@ -46,21 +46,21 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 2: Deploy bitcoin strategy factory
 
-        bitcoinStrategyFactory        = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(globals));
-        bitcoinStrategyImplementation = deployFromFile("Contracts@25", "BitcoinStrategy");
-        bitcoinStrategyInitializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
+        bitcoinStrategyFactory            = deployFromFile("Contracts@25", "StrategyFactory", abi.encode(globals));
+        bitcoinStrategyV100Implementation = deployFromFile("Contracts@25", "BitcoinStrategy");
+        bitcoinStrategyV100Initializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
 
         // Step 3: Deploy composite token
 
-        compositeTokenImplementation = deployFromFile("Contracts@25", "CompositeToken");
-        compositeTokenInitializer    = deployFromFile("Contracts@25", "CompositeTokenInitializer");
-        compositeTokenProxy          = deployFromFile(
+        compositeTokenV100Implementation = deployFromFile("Contracts@25", "CompositeToken");
+        compositeTokenV100Initializer    = deployFromFile("Contracts@25", "CompositeTokenInitializer");
+        compositeTokenProxy              = deployFromFile(
             "Contracts@25",
             "NonTransparentProxyInitializable",
             abi.encode(
                 globals,
-                compositeTokenImplementation,
-                compositeTokenInitializer,
+                compositeTokenV100Implementation,
+                compositeTokenV100Initializer,
                 abi.encodeWithSignature("initialize(string,string,uint8)", "Synthetic Bitcoin", "synthBTC", 8)
             )
         );
@@ -108,8 +108,8 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         data[3] = abi.encodeWithSelector(
             IMapleProxyFactory.registerImplementation.selector,
             100,
-            bitcoinStrategyImplementation,
-            bitcoinStrategyInitializer
+            bitcoinStrategyV100Implementation,
+            bitcoinStrategyV100Initializer
         );
 
         data[4] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 100);
@@ -152,13 +152,13 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 7: Deploy AssetControllerOracle
 
-        assetPriceOracleImplementation = deployFromFile("Contracts@25", "AssetControllerOracle");
+        assetPriceOracleV100Implementation = deployFromFile("Contracts@25", "AssetControllerOracle");
         assetPriceOracleProxy          = deployFromFile(
             "Contracts@25",
             "NonTransparentProxyInitializable",
             abi.encode(
                 globals,
-                assetPriceOracleImplementation,
+                assetPriceOracleV100Implementation,
                 address(0),
                 ""
             )
@@ -166,15 +166,15 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 8: Deploy SyrupBitcoinRouter
 
-        bitcoinRouterImplementation = deployFromFile("Contracts@25", "SyrupBitcoinRouter");
-        bitcoinRouterInitializer    = deployFromFile("Contracts@25", "SyrupBitcoinRouterInitializer");
-        bitcoinRouterProxy          = deployFromFile(
+        bitcoinRouterV100Implementation = deployFromFile("Contracts@25", "SyrupBitcoinRouter");
+        bitcoinRouterV100Initializer    = deployFromFile("Contracts@25", "SyrupBitcoinRouterInitializer");
+        bitcoinRouterProxy              = deployFromFile(
             "Contracts@25",
             "NonTransparentProxyInitializable",
             abi.encode(
                 globals,
-                bitcoinRouterImplementation,
-                bitcoinRouterInitializer,
+                bitcoinRouterV100Implementation,
+                bitcoinRouterV100Initializer,
                 abi.encodeWithSignature("initialize(address)", syrupBitcoinPoolManager)
             )
         );
@@ -191,15 +191,15 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 10: Deploy AssetController
 
-        assetControllerImplementation = deployFromFile("Contracts@25", "AssetController");
-        assetControllerInitializer    = deployFromFile("Contracts@25", "AssetControllerInitializer");
-        assetControllerProxy          = deployFromFile(
+        assetControllerV100Implementation = deployFromFile("Contracts@25", "AssetController");
+        assetControllerV100Initializer    = deployFromFile("Contracts@25", "AssetControllerInitializer");
+        assetControllerProxy              = deployFromFile(
             "Contracts@25",
             "NonTransparentProxyInitializable",
             abi.encode(
                 globals,
-                assetControllerImplementation,
-                assetControllerInitializer,
+                assetControllerV100Implementation,
+                assetControllerV100Initializer,
                 abi.encodeWithSignature(
                     "initialize(address,address)",
                     assetPriceOracleProxy,

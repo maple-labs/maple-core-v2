@@ -11,3 +11,5 @@ broadcast/
 output/
 
 scenarios/data/json
+
+foundry.lock

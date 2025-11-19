@@ -44,28 +44,28 @@ contract UpgradeAddressRegistry is AddressRegistry {
 
     // syrupBTC Deployer 0x987cF164b7bfC45f833CF5f426F3FF9f341dD11E
 
-    address assetControllerImplementation  = 0x4911fA884Bb6Ba1Fc3bc9f6798006ED6aBB7d5f5;
-    address assetPriceOracleImplementation = 0x033B333d3fDBf10b66c79807AAA3b951d87b265e;
-    address bitcoinRouterImplementation    = 0xCFb0C41791CBA35691670Da366f4E2e0FA175DAA;
-    address bitcoinStrategyImplementation  = 0x88B040042Eb95Aa46Fd95971bBCd7ea2ebd4b149;
-    address compositeTokenImplementation   = 0x4Aa3466B78baD18F87fe2a510a1eff65eed5F1CC;
+    address assetControllerV100Implementation  = 0x4911fA884Bb6Ba1Fc3bc9f6798006ED6aBB7d5f5;
+    address assetPriceOracleV100Implementation = 0x033B333d3fDBf10b66c79807AAA3b951d87b265e;
+    address bitcoinRouterV100Implementation    = 0xCFb0C41791CBA35691670Da366f4E2e0FA175DAA;
+    address bitcoinStrategyV100Implementation  = 0x88B040042Eb95Aa46Fd95971bBCd7ea2ebd4b149;
+    address compositeTokenV100Implementation   = 0x4Aa3466B78baD18F87fe2a510a1eff65eed5F1CC;
 
-    address assetControllerInitializer = 0xA15cee00b256b9e5cC66c624E882629458549638;
-    address bitcoinRouterInitializer   = 0x9633c4304dDbBadb8f6F035490a86B72C4911cB2;
-    address bitcoinStrategyInitializer = 0xC345266f92b81BA3D4ed11848878eEbe72471b6f;
-    address compositeTokenInitializer  = 0x67685C6c39E862c57895d5782206829d5cc0aD8C;
+    address assetControllerV100Initializer = 0xA15cee00b256b9e5cC66c624E882629458549638;
+    address bitcoinRouterV100Initializer   = 0x9633c4304dDbBadb8f6F035490a86B72C4911cB2;
+    address bitcoinStrategyV100Initializer = 0xC345266f92b81BA3D4ed11848878eEbe72471b6f;
+    address compositeTokenV100Initializer  = 0x94F3f443086b0B2C8E72896a9AE82De499e8393d;
 
     address assetControllerProxy  = 0xEC6e3B04b68D319d0bf74cC42a7bcFa4a1c247f5;
     address assetPriceOracleProxy = 0x8ce6cA79Edb491609380A91Bc63B927A929404f4;
     address bitcoinRouterProxy    = 0x6199CaFac0ddCE84a8eb1A94Cd76D255e3AA3e5b;
     address compositeTokenProxy   = 0x67685C6c39E862c57895d5782206829d5cc0aD8C;
 
-    address bitcoinStrategyFactory = 0x9a05C78e021B15841D50DDFd92dde8Ef7d14508D;
-    address bitcoinStrategy1;
-    address bitcoinStrategy2;
-    address bitcoinStrategy3;
-    address syrupBitcoinPool;
-    address syrupBitcoinPoolManager;
+    address bitcoinStrategyFactory  = 0x9a05C78e021B15841D50DDFd92dde8Ef7d14508D;
+    address bitcoinStrategy1        = 0x56312e04C2A69864BD95E212E7651fC21f9d00cC;  // BTC
+    address bitcoinStrategy2        = 0x67a7450CC9235AD416620a79d2398719e6A2D865;  // Stablecoin
+    address bitcoinStrategy3        = 0x9B66Be315A68E4374F84B067d5a08f6524D58b73;  // Liquidity
+    address syrupBitcoinPool        = 0x0011bDd5f5629D842266E62bE6EF55106c96010C;
+    address syrupBitcoinPoolManager = 0x7f9c02bEcaD5E9f5d63831eBDBb318Ef8a8a7B86;
 
     address mapleWithdrawalManagerV200Implementation = 0xF95E5722226a1018d058CD757B75F1D10289e967;
     address mapleWithdrawalManagerV200Initializer    = 0xD389BFE4A129525b486B098411336a4fCecF3024;
