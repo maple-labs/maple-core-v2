@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../contracts/interfaces/Interfaces.sol";
+import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../../contracts/interfaces/Interfaces.sol";
 
 import { GovernorTimelockUpgradeTestsBase } from "./GovernorTimelockUpgradeTestsBase.t.sol";
 

@@ -8,9 +8,9 @@ import {
     IMapleProxyFactory,
     IMapleTreasuryLike,
     IMWMQ as IMapleWithdrawalManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+} from "../../../../contracts/interfaces/Interfaces.sol";
 
-import { MockMapleWithdrawalManager } from "../../mocks/Mocks.sol";
+import { MockMapleWithdrawalManager } from "../../../mocks/Mocks.sol";
 
 import { GovernorTimelockUpgradeTestsBase } from "./GovernorTimelockUpgradeTestsBase.t.sol";
 

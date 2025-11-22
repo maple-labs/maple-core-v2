@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../contracts/interfaces/Interfaces.sol";
-import { Runner }                                  from "../../../contracts/Runner.sol";
+import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../../contracts/interfaces/Interfaces.sol";
+import { Runner }                                  from "../../../../contracts/Runner.sol";
 
-import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
+import { UpgradeAddressRegistry } from "../../UpgradeAddressRegistry.sol";
 
 contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
 

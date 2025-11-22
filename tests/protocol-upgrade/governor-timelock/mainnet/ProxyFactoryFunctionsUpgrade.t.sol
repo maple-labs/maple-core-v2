@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IMG as IMapleGlobals, IMapleProxyFactory } from "../../../contracts/interfaces/Interfaces.sol";
+import { IMG as IMapleGlobals, IMapleProxyFactory } from "../../../../contracts/interfaces/Interfaces.sol";
 
-import { MockGlobals } from "../../mocks/Mocks.sol";
+import { MockGlobals } from "../../../mocks/Mocks.sol";
 
 import { GovernorTimelockUpgradeTestsBase } from "./GovernorTimelockUpgradeTestsBase.t.sol";
 

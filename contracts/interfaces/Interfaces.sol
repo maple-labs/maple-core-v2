@@ -518,7 +518,7 @@ interface IStrategyLike is IStrategy {
 
 }
 
-interface ISyrupUSDTPlasmaLike {
+interface ISyrupUSDCrossChainLike {
 
     function DEFAULT_ADMIN_ROLE() external view returns (bytes32 role);
 

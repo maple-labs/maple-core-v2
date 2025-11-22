@@ -1,25 +1,24 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IGovernorTimelock, ISyrupUSDTPlasmaLike } from "../../../../contracts/interfaces/Interfaces.sol";
-import { Runner }                                  from "../../../../contracts/Runner.sol";
+import { IGovernorTimelock, ISyrupUSDCrossChainLike } from "../../../../../contracts/interfaces/Interfaces.sol";
+import { Runner }                                     from "../../../../../contracts/Runner.sol";
 
-import { UpgradeAddressRegistry } from "../../UpgradeAddressRegistry.sol";
+import { UpgradeAddressRegistry } from "../../../UpgradeAddressRegistry.sol";
 
 contract GovernorTimelockUpgradeTestsBasePlasma is Runner, UpgradeAddressRegistry {
 
-    // TODO: Look at best way to manage multi-chain RPCs
     function setUp() public virtual {
-        vm.createSelectFork("https://plasma.gateway.tenderly.co", 3177303);  // Fix Block for Testing
+        vm.createSelectFork(vm.rpcUrl("plasma"), 3177303);  // Fix Block for Testing
 
         deployGovernorTimelockPlasma();
 
         vm.startPrank(syrupUSDTDefaultAdmin);
 
-        ISyrupUSDTPlasmaLike(syrupUSDTPlasma).grantRole(ISyrupUSDTPlasmaLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(), timelockPlasma);
+        ISyrupUSDCrossChainLike(syrupUSDTPlasma).grantRole(ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(), timelockPlasma);
 
-        ISyrupUSDTPlasmaLike(syrupUSDTPlasma).renounceRole(
-            ISyrupUSDTPlasmaLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
+        ISyrupUSDCrossChainLike(syrupUSDTPlasma).renounceRole(
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
             syrupUSDTDefaultAdmin
         );
 
@@ -46,7 +45,7 @@ contract GovernorTimelockUpgradeTestsBasePlasma is Runner, UpgradeAddressRegistr
         );
     }
 
-    function testFork_setUp_governorTimelockUpgradeTestsPlasma() public {
+    function testFork_setUp_governorTimelockUpgradeTests_Plasma() public view {
         assertEq(IGovernorTimelock(timelockPlasma).hasRole(proposerPlasma,  IGovernorTimelock(timelockPlasma).PROPOSER_ROLE()),  true);
         assertEq(IGovernorTimelock(timelockPlasma).hasRole(executorPlasma,  IGovernorTimelock(timelockPlasma).EXECUTOR_ROLE()),  true);
         assertEq(IGovernorTimelock(timelockPlasma).hasRole(cancellerPlasma, IGovernorTimelock(timelockPlasma).CANCELLER_ROLE()), true);
@@ -63,13 +62,16 @@ contract GovernorTimelockUpgradeTestsBasePlasma is Runner, UpgradeAddressRegistr
         assertEq(defaultExecutionWindow, IGovernorTimelock(timelockPlasma).MIN_EXECUTION_WINDOW());
 
         assertEq(
-            ISyrupUSDTPlasmaLike(syrupUSDTPlasma).hasRole(ISyrupUSDTPlasmaLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(), timelockPlasma),
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
+                ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
+                timelockPlasma
+            ),
             true
         );
 
         assertEq(
-            ISyrupUSDTPlasmaLike(syrupUSDTPlasma).hasRole(
-                ISyrupUSDTPlasmaLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
+                ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
                 syrupUSDTDefaultAdmin
             ),
             false

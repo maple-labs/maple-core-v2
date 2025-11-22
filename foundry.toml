@@ -58,3 +58,8 @@ depth     = 250  # The number of times to run the invariant tests
 test           = 'scenarios'
 fs_permissions = [{ access = "read", path = "./" }]
 verbosity      = 2
+
+[rpc_endpoints]
+mainnet = "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+base    = "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+plasma  = "https://plasma-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"

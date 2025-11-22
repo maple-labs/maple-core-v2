@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { console, Test } from "../../../contracts/Runner.sol";
+import { console, Test } from "../../../../../contracts/Runner.sol";
 
 import {
     IGlobals,
-    IGovernorTimelock
-} from "../../../contracts/interfaces/Interfaces.sol";
+    IGovernorTimelock,
+    ISyrupUSDCrossChainLike
+} from "../../../../../contracts/interfaces/Interfaces.sol";
 
-import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
+import { UpgradeAddressRegistry } from "../../../UpgradeAddressRegistry.sol";
 
 contract TimelockValidationScriptBase is UpgradeAddressRegistry, Test {
 
@@ -24,7 +25,7 @@ contract TimelockValidationScriptBase is UpgradeAddressRegistry, Test {
     }
 }
 
-contract ValidateTimelockDeployment is TimelockValidationScriptBase {
+contract ValidateTimelockDeploymentPlasma is TimelockValidationScriptBase {
 
     function run() external {
         assertEq(tl.CANCELLER_ROLE(), cancellerRole, "Invalid canceller role!");
@@ -35,8 +36,8 @@ contract ValidateTimelockDeployment is TimelockValidationScriptBase {
         assertEq(tl.MIN_DELAY(),            1 days, "Invalid minimum delay!");
         assertEq(tl.MIN_EXECUTION_WINDOW(), 1 days, "Invalid minimum window!");
 
-        assertEq(tl.pendingTokenWithdrawer(), address(0), "Pending token withdrawer is not the zero address!");
-        assertEq(tl.tokenWithdrawer(),        governor,   "Governor is not the token withdrawer!");
+        assertEq(tl.pendingTokenWithdrawer(), address(0),            "Pending token withdrawer is not the zero address!");
+        assertEq(tl.tokenWithdrawer(),        tokenWithdrawerPlasma, "Governor is not the token withdrawer!");
 
         assertEq(tl.latestProposalId(), 0);
 
@@ -45,27 +46,27 @@ contract ValidateTimelockDeployment is TimelockValidationScriptBase {
         assertEq(delay,  1 days);
         assertEq(window, 1 days);
 
-        assertEq(tl.hasRole(proposer,  proposerRole),  true, "Governor is not a proposer!");
-        assertEq(tl.hasRole(executor,  executorRole),  true, "Operational admin is not an executor!");
-        assertEq(tl.hasRole(canceller, cancellerRole), true, "Security admin is not a canceller!");
-        assertEq(tl.hasRole(proposer,  roleAdminRole), true, "Governor is not a role admin!");
+        assertEq(tl.hasRole(proposerPlasma,  proposerRole),  true, "Governor is not a proposer!");
+        assertEq(tl.hasRole(executorPlasma,  executorRole),  true, "Operational admin is not an executor!");
+        assertEq(tl.hasRole(cancellerPlasma, cancellerRole), true, "Security admin is not a canceller!");
+        assertEq(tl.hasRole(proposerPlasma,  roleAdminRole), true, "Governor is not a role admin!");
 
-        assertEq(tl.hasRole(backupExecutor,  executorRole),  false, "Backup executor is already set!");
-        assertEq(tl.hasRole(backupRoleAdmin, roleAdminRole), false, "Backup role admin is already set!");
+        assertEq(tl.hasRole(backupExecutorPlasma,  executorRole),  false, "Backup executor is already set!");
+        assertEq(tl.hasRole(backupRoleAdminPlasma, roleAdminRole), false, "Backup role admin is already set!");
     }
 
 }
 
-contract ValidateConfigurationScheduling is TimelockValidationScriptBase {
+contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
 
     bytes32 proposalHash_1 = _proposalHash(
         timelock,
-        abi.encodeWithSignature("updateRole(bytes32,address,bool)", roleAdminRole, backupRoleAdmin, true)
+        abi.encodeWithSignature("updateRole(bytes32,address,bool)", roleAdminRole, backupRoleAdminPlasma, true)
     );
 
     bytes32 proposalHash_2 = _proposalHash(
         timelock,
-        abi.encodeWithSignature("updateRole(bytes32,address,bool)", executorRole, backupExecutor, true)
+        abi.encodeWithSignature("updateRole(bytes32,address,bool)", executorRole, backupExecutorPlasma, true)
     );
 
     bytes32 proposalHash_3 = _proposalHash(
@@ -124,11 +125,11 @@ contract ValidateConfigurationScheduling is TimelockValidationScriptBase {
 
 }
 
-contract ValidateConfigurationExecution is TimelockValidationScriptBase {
+contract ValidateConfigurationExecutionPlasma is TimelockValidationScriptBase {
 
     function run() external {
-        assertEq(tl.hasRole(backupExecutor,  executorRole),  true, "Backup executor is not configured!");
-        assertEq(tl.hasRole(backupRoleAdmin, roleAdminRole), true, "Backup role admin is not configured!");
+        assertEq(tl.hasRole(backupExecutorPlasma,  executorRole),  true, "Backup executor is not configured!");
+        assertEq(tl.hasRole(backupRoleAdminPlasma, roleAdminRole), true, "Backup role admin is not configured!");
 
         ( uint256 delay, uint256 window ) = tl.defaultTimelockParameters();
 
@@ -138,41 +139,24 @@ contract ValidateConfigurationExecution is TimelockValidationScriptBase {
 
 }
 
-contract ValidateGovernorTransferScheduling is TimelockValidationScriptBase {
-
-    bytes32 proposalHash_4 = _proposalHash(globals, abi.encodeWithSignature("acceptGovernor()"));
-
-    // TODO: Replace with the timestamp of the proposal transaction.
-    uint32 proposalTimestamp = uint32(0);
+contract ValidateSyrupUSDTTokenAdminPlasma is TimelockValidationScriptBase {
 
     function run() external {
-        assertEq(IGlobals(globals).governor(),        address(governor), "Invalid governor!");
-        assertEq(IGlobals(globals).pendingGovernor(), address(tl),       "Invalid pending governor!");
+        assertEq(
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
+                ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
+                timelockPlasma
+            ),
+            true
+        );
 
-        (
-            bytes32 proposalHash,
-            bool    isUnschedulable,
-            uint32  scheduledAt,
-            uint32  delayedUntil,
-            uint32  validUntil
-        ) = tl.proposals(4);
-
-        assertEq(proposalHash,    proposalHash_4,             "Invalid proposal hash! (id: 4)");
-        assertEq(isUnschedulable, true,                       "Proposal is unschedulable! (id: 4)");
-        assertEq(scheduledAt,     proposalTimestamp,          "Proposal date is invalid! (id: 4)");
-        assertEq(delayedUntil,    proposalTimestamp + 3 days, "Execution window starting date is invalid! (id: 4)");
-        assertEq(validUntil,      proposalTimestamp + 5 days, "Execution window ending date is invalid! (id: 4)");
-
-        assertEq(tl.latestProposalId(), 4, "Invalid latest proposal id!");
-    }
-
-}
-
-contract ValidateGovernorTransferExecution is TimelockValidationScriptBase {
-
-    function run() external {
-        assertEq(IGlobals(globals).governor(),        address(tl), "Invalid governor!");
-        assertEq(IGlobals(globals).pendingGovernor(), address(0),  "Invalid pending governor!");
+        assertEq(
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
+                ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
+                syrupUSDTDefaultAdmin
+            ),
+            false
+        );
     }
 
 }

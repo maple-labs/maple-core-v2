@@ -39,6 +39,23 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address syrupUSDTDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
 
     /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Base                                                                                    ***/
+    /**************************************************************************************************************************************/
+
+    address timelockBase = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerBase       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorBase        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerBase        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminBase       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerBase = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorBase  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminBase = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCBase             = 0x660975730059246A68521a3e2FBD4740173100f5;
+    address syrupUSDCBaseDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
     /*** syrupBTC Procedure Addresses                                                                                                   ***/
     /**************************************************************************************************************************************/
 
