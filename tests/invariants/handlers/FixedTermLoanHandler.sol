@@ -69,6 +69,7 @@ contract FixedTermLoanHandler is HandlerBase {
     // Summed values
     uint256 public sum_loan_principal;
     uint256 public sum_loanManager_paymentIssuanceRate;
+    uint256 public sum_liquidationInterest;
 
     // Loan info
     uint256 public earliestPaymentDueDate;
@@ -159,16 +160,21 @@ contract FixedTermLoanHandler is HandlerBase {
             ),
             salt_: keccak256(abi.encodePacked(seed_, numCalls))
         });
+
         vm.stopPrank();
 
+        erc20_mint(address(collateralAsset), borrower_, amounts_[0]);
+        erc20_approve(address(collateralAsset), borrower_, address(loan_), amounts_[0]);
+
         vm.startPrank(borrower_);
-        collateralAsset.mint(borrower_, amounts_[0]);
-        collateralAsset.approve(loan_, amounts_[0]);
+
         IFixedTermLoan(loan_).acceptLoanTerms();
         IFixedTermLoan(loan_).postCollateral(amounts_[0]);
+
         vm.stopPrank();
 
         vm.prank(poolManager.poolDelegate());
+
         loanManager.fund(loan_);
 
         fundingTime[loan_] = block.timestamp;
@@ -192,6 +198,7 @@ contract FixedTermLoanHandler is HandlerBase {
         sum_loanManager_paymentIssuanceRate += issuanceRate;
 
         activeLoans.push(loan_);
+
         numLoans++;
     }
 
@@ -207,8 +214,6 @@ contract FixedTermLoanHandler is HandlerBase {
 
         address borrower_ = borrowers[_bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
 
-        vm.startPrank(borrower_);
-
         IFixedTermLoan loan_ = IFixedTermLoan(activeLoans[loanIndex_]);
 
         uint256 previousPaymentDueDate = loan_.nextPaymentDueDate();
@@ -217,8 +222,9 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256 amount_ = principal_ + interest_ + fees_;
 
-        fundsAsset.mint(borrower_, amount_);
-        fundsAsset.approve(address(loan_), amount_);
+        erc20_mint(address(fundsAsset), borrower_, amount_);
+        erc20_approve(address(fundsAsset), borrower_, address(loan_), amount_);
+        vm.startPrank(borrower_);
 
         ( , , , , , , uint256 issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
 
@@ -241,21 +247,13 @@ contract FixedTermLoanHandler is HandlerBase {
 
         require(earliestPaymentDueDate == loanManager.domainEnd(), "Not equal");
 
-        if (loan_.paymentsRemaining() == 0) {
-            activeLoans[loanIndex_] = activeLoans[activeLoans.length - 1];
-            activeLoans.pop();
-            numLoans--;
-            numMatures++;
-            return;
-        }
+        _removeLoanIfPaid(loanIndex_);
 
         if (block.timestamp > previousPaymentDueDate) {
             numLatePayments++;
         }
 
         paymentTimestamp[address(loan_)] = block.timestamp;
-
-        ( , interest_, ) = loan_.getNextPaymentBreakdown();
 
         ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
 
@@ -275,8 +273,6 @@ contract FixedTermLoanHandler is HandlerBase {
 
         address borrower_ = borrowers[_bound(_randomize(seed_, "borrower_"), 0, numBorrowers - 1)];
 
-        vm.startPrank(borrower_);
-
         address loan_ = activeLoans[loanIndex_];
 
         uint256 previousPaymentDueDate = IFixedTermLoan(loan_).nextPaymentDueDate();
@@ -285,8 +281,10 @@ contract FixedTermLoanHandler is HandlerBase {
 
         uint256 amount_ = principal_ + interest_ + fees_;
 
-        fundsAsset.mint(borrower_, amount_);
-        fundsAsset.approve(loan_, amount_);
+        erc20_mint(address(fundsAsset), borrower_, amount_);
+        erc20_approve(address(fundsAsset), borrower_, address(loan_), amount_);
+
+        vm.startPrank(borrower_);
 
         if (!ILoanLike(loan_).isImpaired()) {
             ( , , , , , , uint256 issuanceRate_ ) = loanManager.payments(loanManager.paymentIdOf(loan_));
@@ -311,21 +309,13 @@ contract FixedTermLoanHandler is HandlerBase {
 
         require(earliestPaymentDueDate == loanManager.domainEnd(), "Not equal");
 
-        if (IFixedTermLoan(loan_).paymentsRemaining() == 0) {
-            activeLoans[loanIndex_] = activeLoans[activeLoans.length - 1];
-            activeLoans.pop();
-            numLoans--;
-            numMatures++;
-            return;
-        }
+        _removeLoanIfPaid(loanIndex_);
 
         if (block.timestamp > previousPaymentDueDate) {
             numLatePayments++;
         }
 
         paymentTimestamp[loan_] = block.timestamp;
-
-        ( , interest_, ) = IFixedTermLoan(loan_).getNextPaymentBreakdown();
 
         uint256 issuanceRate;
 
@@ -389,6 +379,8 @@ contract FixedTermLoanHandler is HandlerBase {
         }
 
         loanImpaired[loanAddress] = true;
+
+        _removeLoanIfPaid(loanIndex_);
     }
 
     function triggerDefault(uint256 seed_) public {
@@ -438,6 +430,8 @@ contract FixedTermLoanHandler is HandlerBase {
         } else {
             earliestPaymentDueDate = block.timestamp;
         }
+
+        _removeLoanIfPaid(loanIndex_);
     }
 
     function finishCollateralLiquidation(uint256 seed_) public {
@@ -460,12 +454,12 @@ contract FixedTermLoanHandler is HandlerBase {
 
         address externalLiquidator = makeAddr("externalLiquidator");
 
+        erc20_mint(address(fundsAsset), externalLiquidator, expectedAmount_);
+        erc20_approve(address(fundsAsset), externalLiquidator, liquidator_, expectedAmount_);
+
         // Mint fund asset to external liquidator and liquidate collateral
-        vm.startPrank(externalLiquidator);
-        fundsAsset.mint(externalLiquidator, expectedAmount_);
-        fundsAsset.approve(liquidator_, expectedAmount_);
+        vm.prank(externalLiquidator);
         ILiquidator(liquidator_).liquidatePortion(collateralAmount_, expectedAmount_, bytes(""));
-        vm.stopPrank();
 
         vm.prank(poolManager.poolDelegate());
         poolManager.finishCollateralLiquidation(loanAddress);
@@ -480,6 +474,8 @@ contract FixedTermLoanHandler is HandlerBase {
         } else {
             earliestPaymentDueDate = block.timestamp;
         }
+
+        _removeLoanIfPaid(loanIndex_);
     }
 
     function refinance(uint256 seed_) public {
@@ -509,17 +505,22 @@ contract FixedTermLoanHandler is HandlerBase {
         // There's a need to pay origination fees during refinance, but it's impossible
         // to know how much it'll be. So an exorbitant amount is sent then is drawdown.
         address borrower = loan_.borrower();
-        fundsAsset.mint(borrower, 1e29);
+
+        erc20_mint(address(fundsAsset), borrower, 1e29);
+
         vm.startPrank(borrower);
+
         fundsAsset.approve(address(loan_), 1e29);
         loan_.returnFunds(1e29);
 
-        collateralAsset.mint(address(loan_), 1e29);
-        loan_.postCollateral(0);
         vm.stopPrank();
 
-        proposeRefinanceFT(address(loan_), refinancer, block.timestamp, calls_);
+        erc20_mint(address(collateralAsset), borrower, 1e29);
 
+        vm.prank(borrower);
+        loan_.postCollateral(0);
+
+        proposeRefinanceFT(address(loan_), refinancer, block.timestamp, calls_);
         acceptRefinanceFT(address(loan_), refinancer, block.timestamp, calls_, principalIncrease_);
 
         ( , , , , , , issuanceRate ) = loanManager.payments(loanManager.paymentIdOf(address(loan_)));
@@ -543,15 +544,20 @@ contract FixedTermLoanHandler is HandlerBase {
         uint256 drawable   = loan_.drawableFunds();
         uint256 collateral = loan_.getAdditionalCollateralRequiredFor(drawable);
 
-        collateralAsset.mint(address(loan_), collateral);
+        erc20_mint(address(collateralAsset), address(loan_), collateral);
 
         vm.startPrank(borrower);
         loan_.drawdownFunds(drawable, address(borrower));
         loan_.removeCollateral(loan_.excessCollateral(), address(borrower));
+
+        // This is replacement for burning
+        address burnAddress = makeAddr("burnAddress");
+        fundsAsset.transfer(burnAddress, fundsAsset.balanceOf(borrower));
+        collateralAsset.transfer(burnAddress, collateralAsset.balanceOf(borrower));
+
         vm.stopPrank();
 
-        fundsAsset.burn(borrower, fundsAsset.balanceOf(borrower));
-        collateralAsset.burn(borrower, collateralAsset.balanceOf(borrower));
+        _removeLoanIfPaid(loanIndex_);
     }
 
     function warp(uint256 seed_) public {
@@ -568,7 +574,22 @@ contract FixedTermLoanHandler is HandlerBase {
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-     function _availableLiquidity() internal view returns (uint256 availableLiquidity) {
+    function _removeLoanIfPaid(uint256 loanIndex_) internal {
+        address loan_ = activeLoans[loanIndex_];
+
+        if (IFixedTermLoan(loan_).paymentsRemaining() == 0) {
+            ( , , uint256 liquidationInterest , , , ) = loanManager.liquidationInfo(loan_);
+
+            sum_liquidationInterest += liquidationInterest;
+
+            activeLoans[loanIndex_] = activeLoans[activeLoans.length - 1];
+            activeLoans.pop();
+            numLoans--;
+            numMatures++;
+        }
+    }
+
+    function _availableLiquidity() internal view returns (uint256 availableLiquidity) {
         if (pool.totalSupply() == 0) return 0;
 
         uint256 lockedLiquidity = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();

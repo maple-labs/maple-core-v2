@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import {
+    IERC20,
     IGlobals,
     IMapleProxyFactory,
     IMockERC20,
@@ -27,9 +28,13 @@ contract OpenTermLoanHandler is HandlerBase {
     uint256 public numLoans;
     uint256 public maxLoans;
 
+    uint256 public totalUnrealizedLosses;
+
     address[] public borrowers;
     address[] public loans;
 
+    mapping(address => uint256) public unrealizedLossesByLoan;
+    mapping(address => bool) public isDefaulted;
     mapping(uint256 => bool) public refinanceCallUsed;
 
     IGlobals             public globals;
@@ -111,6 +116,15 @@ contract OpenTermLoanHandler is HandlerBase {
         address loan_ = _selectActiveLoan(seed_);
 
         if (loan_ == address(0)) return;
+        if (isDefaulted[loan_])  return;
+
+        if (unrealizedLossesByLoan[loan_] != 0) return;
+
+        uint256 principal_   = IOpenTermLoan(loan_).principal();
+        uint256 netInterest_ = _getLoanInterest(loan_);
+
+        totalUnrealizedLosses        += principal_ + netInterest_;
+        unrealizedLossesByLoan[loan_] = principal_ + netInterest_;
 
         address caller_ = _selectCaller(seed_);
 
@@ -127,6 +141,9 @@ contract OpenTermLoanHandler is HandlerBase {
         if (loan_ == address(0)) return;
 
         makePayment(loan_);
+
+        totalUnrealizedLosses        -= unrealizedLossesByLoan[loan_];
+        unrealizedLossesByLoan[loan_] = 0;
     }
 
     function refinance(uint256 seed_) public {
@@ -172,9 +189,14 @@ contract OpenTermLoanHandler is HandlerBase {
 
         proposeRefinance(loan_, refinancer, block.timestamp, calls_);
         acceptRefinanceOT(loan_, refinancer, block.timestamp, calls_);
+
+        totalUnrealizedLosses        -= unrealizedLossesByLoan[loan_];
+        unrealizedLossesByLoan[loan_] = 0;
     }
 
     function removeLoanCall(uint256 seed_) external {
+        console.log("otlHandler.removeLoanCall(%s)", seed_);
+
         numberOfCalls["removeLoanCall"]++;
 
         address loan_ = _selectCalledLoan(seed_);
@@ -185,6 +207,8 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function removeLoanImpairment(uint256 seed_) external {
+        console.log("otlHandler.removeLoanImpairment(%s)", seed_);
+
         numberOfCalls["removeLoanImpairment"]++;
 
         address loan_ = _selectImpairedLoan(seed_);
@@ -192,9 +216,14 @@ contract OpenTermLoanHandler is HandlerBase {
         if (loan_ == address(0)) return;
 
         removeLoanImpairment(loan_, globals.governor());
+
+        totalUnrealizedLosses        -= unrealizedLossesByLoan[loan_];
+        unrealizedLossesByLoan[loan_] = 0;
     }
 
     function triggerDefault(uint256 seed_) external {
+        console.log("otlHandler.triggerDefault(%s)", seed_);
+
         numberOfCalls["triggerDefault"]++;
 
         address loan_ = _selectOverdueLoan(seed_);
@@ -203,12 +232,43 @@ contract OpenTermLoanHandler is HandlerBase {
 
         address caller_ = _selectCaller(seed_);
 
+        if (unrealizedLossesByLoan[loan_] != 0) {
+            // Unrealized losses become realized losses when the loan is triggered default.
+            totalUnrealizedLosses        -= unrealizedLossesByLoan[loan_];
+            unrealizedLossesByLoan[loan_] = 0;
+        }
+
+        isDefaulted[loan_] = true;
+
         triggerDefault(loan_, address(liquidatorFactory), caller_);
     }
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
+
+    function _getLoanInterest(address loan_) internal view returns (uint256 netInterest_) {
+        ( uint256 principal_, , , , ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
+
+        // Override principal to get the original principal.
+        principal_ = IOpenTermLoan(loan_).principal();
+
+        (
+            uint256 platformManagementFeeRate_,
+            uint256 delegateManagementFeeRate_,
+            ,
+        ) = IOpenTermLoanManager(IOpenTermLoan(loan_).lender()).paymentFor(loan_);
+
+        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0
+            ? IOpenTermLoan(loan_).datePaid()
+            : IOpenTermLoan(loan_).dateFunded();
+
+        uint256 grossInterest_ =
+            IOpenTermLoan(loan_).principal() *  IOpenTermLoan(loan_).interestRate() * (block.timestamp - startTime_)
+            / (365 days * 1e6);
+
+        netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
+    }
 
     function _activeLoans(bool onlyOverdue_) internal view returns (address[] memory activeLoans_) {
         uint256 index_;

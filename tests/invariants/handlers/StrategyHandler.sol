@@ -7,6 +7,7 @@ import {
     IPool,
     IPSMLike,
     IStrategyLike,
+    IPoolManager,
     IWithdrawalManagerQueue as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
@@ -63,8 +64,36 @@ contract StrategyHandler is HandlerBase {
 
         uint256 liquidity_ = IERC20(asset_).balanceOf(pool_);
 
-        if (liquidity_ < minimumFunding) return;
         if (liquidity_ > maximumFunding) liquidity_ = maximumFunding;
+
+        uint256 totalAssets    = IPoolManager(IStrategyLike(strategy_).poolManager()).totalAssets();
+        uint256 liquidityCap   = IPoolManager(IStrategyLike(strategy_).poolManager()).liquidityCap();
+        uint256 maximumDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
+
+        if (liquidity_ > maximumDeposit) liquidity_ = maximumDeposit;
+
+        if (_isCoreStrategy(strategy_)) {
+            address strategyVault_      = IStrategyLike(strategy_).strategyVault();
+            uint256 totalVaultAssets_   = IPool(strategyVault_).totalAssets();
+            uint256 vaultLiquidityCap_  = IPoolManager(IPool(strategyVault_).manager()).liquidityCap();
+            uint256 maximumVaultDeposit = vaultLiquidityCap_ > totalVaultAssets_ ? vaultLiquidityCap_ - totalVaultAssets_ : 0;
+
+            if (liquidity_ > maximumVaultDeposit) liquidity_ = maximumVaultDeposit;
+        }
+
+        // This if statement must exist to cover special edge case where we accrued <= 1 wei of fees on Aave.
+        // During fundStrategy call we are firstly withdrawing earned fees from Aave and then depositing the remaining assets.
+        // Withdrawing funds that are <= 1 wei from Aave will revert with INVALID_BURN_AMOUNT (25) error.
+        if (_isAaveStrategy(strategy_)) {
+            address aaveToken_          = IStrategyLike(strategy_).aaveToken();
+            uint256 strategyAum_        = IStrategyLike(strategy_).assetsUnderManagement();
+            uint256 currentTotalAssets_ = IERC20(aaveToken_).balanceOf(address(strategy_));
+            uint256 currentAccruedFees_ = currentTotalAssets_ - strategyAum_;
+
+            if (currentAccruedFees_ <= 1) return;
+        }
+
+        if (liquidity_ < minimumFunding) return;
 
         uint256 assets_ = _bound(seed_, minimumFunding, liquidity_);
 
@@ -94,6 +123,8 @@ contract StrategyHandler is HandlerBase {
         if (available_ <= 1) return;
 
         uint256 assets_ = _bound(seed_, 1, available_ - 1);
+
+        if (assets_ <= 1) return; // On Aave it rounds it down to 0 and reverts with INVALID_BURN_AMOUNT error.
 
         withdrawFromStrategy(strategy_, assets_);
     }
@@ -278,6 +309,12 @@ contract StrategyHandler is HandlerBase {
         bytes memory t = bytes(IStrategyLike(strategy_).STRATEGY_TYPE());
 
         return keccak256(t) == keccak256("CORE");
+    }
+
+    function _isAaveStrategy(address strategy_) internal view returns (bool) {
+        bytes memory t = bytes(IStrategyLike(strategy_).STRATEGY_TYPE());
+
+        return keccak256(t) == keccak256("AAVE");
     }
 
     function _selectStrategy(

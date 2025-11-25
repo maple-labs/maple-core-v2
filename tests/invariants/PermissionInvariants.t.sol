@@ -57,14 +57,8 @@ contract PermissionInvariants is BaseInvariants {
         targetContract(distributionHandler);
     }
 
-    /**************************************************************************************************************************************/
-    /*** Invariants                                                                                                                     ***/
-    /**************************************************************************************************************************************/
-
-    function statefulFuzz_permissionManager_A_B_C() external {
-        assert_ppm_invariant_A(address(poolPermissionManager), address(poolManager));
-        assert_ppm_invariant_B(address(poolPermissionManager), address(poolManager), functionIds);
-        assert_ppm_invariant_C(address(poolPermissionManager), lps);
+    function statefulFuzz_permissionManager_invariants() external {
+        assert_ppm_invariants();
     }
 
 }

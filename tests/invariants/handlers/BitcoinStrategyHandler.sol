@@ -13,7 +13,6 @@ import { console } from "../../../contracts/Runner.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
-
 // TODO: Should the max and min values be different?
 contract BitcoinStrategyHandler is HandlerBase {
 

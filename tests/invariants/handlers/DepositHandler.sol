@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IMockERC20, IPool } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IMockERC20,
+    IPool,
+    IPoolManager
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console } from "../../../contracts/Runner.sol";
 
@@ -37,7 +41,15 @@ contract DepositHandler is HandlerBase {
         numberOfCalls["depositHandler.deposit"]++;
 
         // Set to max resolution / 10 of LM
-        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, 1_000_000e6);
+        uint256 totalAssets_  = pool.totalAssets();
+        uint256 liquidityCap_ = IPoolManager(pool.manager()).liquidityCap();
+        uint256 maxDeposit_   = 1_000_000e6;
+
+        if (liquidityCap_ - totalAssets_ < maxDeposit_) {
+            maxDeposit_ = liquidityCap_ - totalAssets_;
+        }
+
+        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, maxDeposit_);
         address lp_     = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
         vm.startPrank(lp_);

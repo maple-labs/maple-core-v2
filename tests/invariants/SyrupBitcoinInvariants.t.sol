@@ -73,22 +73,8 @@ contract SyrupBitcoinInvariants is BaseInvariants {
     /*** Strategy Invariants                                                                                                            ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_syrupBtc_A_B_C_D_E_F_G() external {
-        uint256[] memory wmShares = bitcoinRouterHandler.wmShares();
-        uint256 routerShares = bitcoinRouterHandler.routerShares();
-
-        assert_syrupBtc_invariant_A(address(depositAsset), address(assetController));
-        assert_syrupBtc_invariant_B(address(depositAsset), address(pool), address(assetController));
-        assert_syrupBtc_invariant_C(address(pool));
-        assert_syrupBtc_invariant_D(address(pool), routerShares);
-        assert_syrupBtc_invariant_E(address(bitcoinRouter), routerShares, wmShares);
-
-        for (uint i; i < strategyCount; i++) {
-            address strategy = address(bitcoinStrategyHandler.strategies(i));
-
-            assert_syrupBtc_invariant_F(strategy);
-            assert_syrupBtc_invariant_G(strategy);
-        }
+    function statefulFuzz_syrupBTCInvariants() external {
+        assert_syrupBTC_invariants();
     }
 
 }
