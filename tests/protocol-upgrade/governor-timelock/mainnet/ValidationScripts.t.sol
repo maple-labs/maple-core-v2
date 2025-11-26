@@ -26,7 +26,7 @@ contract TimelockValidationScriptBase is UpgradeAddressRegistry, Test {
 
 contract ValidateTimelockDeployment is TimelockValidationScriptBase {
 
-    function run() external {
+    function run() external view {
         assertEq(tl.CANCELLER_ROLE(), cancellerRole, "Invalid canceller role!");
         assertEq(tl.EXECUTOR_ROLE(),  executorRole,  "Invalid executor role!");
         assertEq(tl.PROPOSER_ROLE(),  proposerRole,  "Invalid proposer role!");
@@ -76,7 +76,7 @@ contract ValidateConfigurationScheduling is TimelockValidationScriptBase {
     // TODO: Replace with the timestamp of the proposal transaction.
     uint32 proposalTimestamp = uint32(0);
 
-    function run() external {
+    function run() external view {
         (
             bytes32 proposalHash,
             bool    isUnschedulable,
@@ -126,7 +126,7 @@ contract ValidateConfigurationScheduling is TimelockValidationScriptBase {
 
 contract ValidateConfigurationExecution is TimelockValidationScriptBase {
 
-    function run() external {
+    function run() external view {
         assertEq(tl.hasRole(backupExecutor,  executorRole),  true, "Backup executor is not configured!");
         assertEq(tl.hasRole(backupRoleAdmin, roleAdminRole), true, "Backup role admin is not configured!");
 
@@ -145,7 +145,7 @@ contract ValidateGovernorTransferScheduling is TimelockValidationScriptBase {
     // TODO: Replace with the timestamp of the proposal transaction.
     uint32 proposalTimestamp = uint32(0);
 
-    function run() external {
+    function run() external view {
         assertEq(IGlobals(globals).governor(),        address(governor), "Invalid governor!");
         assertEq(IGlobals(globals).pendingGovernor(), address(tl),       "Invalid pending governor!");
 
@@ -170,7 +170,7 @@ contract ValidateGovernorTransferScheduling is TimelockValidationScriptBase {
 
 contract ValidateGovernorTransferExecution is TimelockValidationScriptBase {
 
-    function run() external {
+    function run() external view {
         assertEq(IGlobals(globals).governor(),        address(tl), "Invalid governor!");
         assertEq(IGlobals(globals).pendingGovernor(), address(0),  "Invalid pending governor!");
     }

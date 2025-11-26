@@ -27,7 +27,7 @@ contract TimelockValidationScriptBase is UpgradeAddressRegistry, Test {
 
 contract ValidateTimelockDeploymentPlasma is TimelockValidationScriptBase {
 
-    function run() external {
+    function run() external view {
         assertEq(tl.CANCELLER_ROLE(), cancellerRole, "Invalid canceller role!");
         assertEq(tl.EXECUTOR_ROLE(),  executorRole,  "Invalid executor role!");
         assertEq(tl.PROPOSER_ROLE(),  proposerRole,  "Invalid proposer role!");
@@ -77,7 +77,7 @@ contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
     // TODO: Replace with the timestamp of the proposal transaction.
     uint32 proposalTimestamp = uint32(0);
 
-    function run() external {
+    function run() external view {
         (
             bytes32 proposalHash,
             bool    isUnschedulable,
@@ -127,7 +127,7 @@ contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
 
 contract ValidateConfigurationExecutionPlasma is TimelockValidationScriptBase {
 
-    function run() external {
+    function run() external view {
         assertEq(tl.hasRole(backupExecutorPlasma,  executorRole),  true, "Backup executor is not configured!");
         assertEq(tl.hasRole(backupRoleAdminPlasma, roleAdminRole), true, "Backup role admin is not configured!");
 
@@ -141,7 +141,7 @@ contract ValidateConfigurationExecutionPlasma is TimelockValidationScriptBase {
 
 contract ValidateSyrupUSDTTokenAdminPlasma is TimelockValidationScriptBase {
 
-    function run() external {
+    function run() external view {
         assertEq(
             ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
                 ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),

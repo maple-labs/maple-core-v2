@@ -280,7 +280,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         vm.stopPrank();
     }
 
-    function test_setUp() external {
+    function test_setUp() external view {
         address pool              = poolManager.pool();
         address withdrawalManager = poolManager.withdrawalManager();
 

@@ -7,7 +7,7 @@ import { MapleWithdrawalManagerUpgradeBaseTest } from "./MapleWithdrawalManagerU
 
 contract MigrateTest is MapleWithdrawalManagerUpgradeBaseTest {
 
-    function testFork_withdrawalManagers_migrate_success() external {
+    function testFork_withdrawalManagers_migrate_success() external view {
         for (uint256 i; i < withdrawalManagerQueuesToUpgrade.length; ++i) {
             address wmAddress                         = withdrawalManagerQueuesToUpgrade[i];
             IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(wmAddress);

@@ -37,7 +37,7 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
         queueWM = IWithdrawalManagerQueue(poolManager.withdrawalManager());
     }
 
-    function test_setUp() public {
+    function test_setUp() public view {
         assertEq(timelock.hasRole(proposer,  timelock.PROPOSER_ROLE()),  true);
         assertEq(timelock.hasRole(executor,  timelock.EXECUTOR_ROLE()),  true);
         assertEq(timelock.hasRole(canceller, timelock.CANCELLER_ROLE()), true);

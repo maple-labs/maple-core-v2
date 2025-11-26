@@ -5,7 +5,7 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract YieldRateTests is SyrupBitcoinTestBase {
 
-    function test_yieldRate_withoutSchedule() external {
+    function test_yieldRate_withoutSchedule() external view {
         assertEq(bitcoinStrategy.yieldRate(), 0);
     }
 

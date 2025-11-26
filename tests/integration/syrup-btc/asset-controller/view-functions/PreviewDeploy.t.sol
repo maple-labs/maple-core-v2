@@ -5,14 +5,14 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract PreviewDeployTests is SyrupBitcoinTestBase {
 
-    function test_previewDeploy_identicalOutput() external {
+    function test_previewDeploy_identicalOutput() external view {
         uint256 amount = 1e8;
         uint256 output = assetController.previewDeploy(address(depositAsset), amount);
 
         assertEq(output, amount);
     }
 
-    function test_previewDeploy_zero() external {
+    function test_previewDeploy_zero() external view {
         uint256 output = assetController.previewDeploy(address(depositAsset), 0);
 
         assertEq(output, 0);

@@ -26,7 +26,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         deposit(lp, 1_000e6);
     }
 
-    function test_factory() external {
+    function test_factory() external view {
         assertEq(queueWM.factory(), queueWMFactory);
     }
 
@@ -73,7 +73,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(queueWM.governor(), newGovernor);
     }
 
-    function test_isInExitWindow() external {
+    function test_isInExitWindow() external view {
         assertTrue(queueWM.isInExitWindow(lp));
     }
 
@@ -166,11 +166,11 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(sharesRem_, 0);
     }
 
-    function test_pool_address_constant() external {
+    function test_pool_address_constant() external view {
         assertEq(queueWM.pool(), address(pool));
     }
 
-    function test_poolManager_address_constant() external {
+    function test_poolManager_address_constant() external view {
         assertEq(queueWM.poolManager(), address(poolManager));
     }
 

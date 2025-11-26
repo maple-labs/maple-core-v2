@@ -5,7 +5,7 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract FeeRateTests is SyrupBitcoinTestBase {
 
-    function test_feeRate_default() external {
+    function test_feeRate_default() external view {
         assertEq(bitcoinStrategy.feeRate(), 0);
     }
 

@@ -7,7 +7,7 @@ contract OutstandingAssetsTests is SyrupBitcoinTestBase {
 
     address depositor = makeAddr("depositor");
 
-    function test_outstandingAssets_default() external {
+    function test_outstandingAssets_default() external view {
         assertEq(bitcoinStrategy.outstandingAssets(), 0);
     }
 

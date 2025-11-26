@@ -7,7 +7,7 @@ contract AccruedYieldTests is SyrupBitcoinTestBase {
 
     address depositor = makeAddr("depositor");
 
-    function test_accruedYield_withoutSchedule() external {
+    function test_accruedYield_withoutSchedule() external view {
         assertEq(bitcoinStrategy.accruedYield(), 0);
     }
 

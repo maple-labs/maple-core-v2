@@ -7,7 +7,7 @@ contract RealizedFeesTests is SyrupBitcoinTestBase {
 
     address depositor = makeAddr("depositor");
 
-    function test_realizedFees_withoutSchedule() external {
+    function test_realizedFees_withoutSchedule() external view {
         assertEq(bitcoinStrategy.realizedFees(), 0);
     }
 

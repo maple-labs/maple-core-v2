@@ -5,7 +5,7 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract LockedTests is SyrupBitcoinTestBase {
 
-    function test_locked_getter() external {
+    function test_locked_getter() external view {
         assertEq(bitcoinStrategy.locked(), 1);
     }
 

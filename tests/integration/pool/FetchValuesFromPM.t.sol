@@ -5,7 +5,7 @@ import { TestBase } from "../../TestBase.sol";
 
 contract PoolManagerGetterTests is TestBase {
 
-    function test_addressGetters() external {
+    function test_addressGetters() external view {
         assertEq(poolManager.governor(), governor);
         assertEq(poolManager.globals(),  address(globals));
     }

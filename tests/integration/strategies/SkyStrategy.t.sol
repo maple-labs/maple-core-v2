@@ -99,7 +99,7 @@ contract SkyStrategyTestBase is StrategyTestBase {
         return usdcOut_;
     }
 
-    function assertState(StrategyState actual, StrategyState expected) internal {
+    function assertState(StrategyState actual, StrategyState expected) internal pure {
         assertEq(uint256(actual), uint256(expected));
     }
 

@@ -115,11 +115,11 @@ contract CoreStrategyTestsBase is StrategyTestBase {
         coreStrategy.fundStrategy(amountToFund);
     }
 
-    function assertLastRequestId(address user_, uint256 requestId_) internal {
+    function assertLastRequestId(address user_, uint256 requestId_) internal view {
         assertEq(secondMapleWithdrawalManager.requestIds(user_), requestId_);
     }
 
-    function assertUserRequests(address user_, uint256[] memory expectedRequestIds_, uint256[] memory expectedShares_) internal {
+    function assertUserRequests(address user_, uint256[] memory expectedRequestIds_, uint256[] memory expectedShares_) internal view {
         ( uint256[] memory requestIds, uint256[] memory shares ) = secondMapleWithdrawalManager.requestsByOwner(user_);
 
         assertEq(requestIds.length, expectedRequestIds_.length);
@@ -131,7 +131,7 @@ contract CoreStrategyTestsBase is StrategyTestBase {
         }
     }
 
-    function assertRequest(uint256 requestId, address owner, uint256 shares) internal {
+    function assertRequest(uint256 requestId, address owner, uint256 shares) internal view {
         ( address owner_, uint256 shares_ ) = secondMapleWithdrawalManager.requests(requestId);
 
         assertEq(owner_,  owner);

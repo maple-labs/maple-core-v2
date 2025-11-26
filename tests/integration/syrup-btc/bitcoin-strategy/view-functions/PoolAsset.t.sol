@@ -5,7 +5,7 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract PoolAssetTests is SyrupBitcoinTestBase {
 
-    function test_poolAsset_getter() external {
+    function test_poolAsset_getter() external view {
         assertEq(bitcoinStrategy.poolAsset(), address(compositeAsset));
     }
 

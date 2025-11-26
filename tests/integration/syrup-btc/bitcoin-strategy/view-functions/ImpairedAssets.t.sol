@@ -9,7 +9,7 @@ contract ImpairedAssetsTests is SyrupBitcoinTestBase {
 
     uint256 principal = 21_000_000e8;
 
-    function test_impairedAssets_default() external {
+    function test_impairedAssets_default() external view {
         assertEq(bitcoinStrategy.impairedAssets(), 0);
     }
 

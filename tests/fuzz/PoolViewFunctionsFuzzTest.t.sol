@@ -61,7 +61,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(poolManager.unrealizedLosses(), pool.unrealizedLosses());
     }
 
-    function testFuzz_convertToAssets_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
+    function testFuzz_convertToAssets_whenTotalSupplyIsZero(uint256 sharesAmount_) external view {
         sharesAmount_ = bound(sharesAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),                  0);
@@ -95,7 +95,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(assetsAmount, (sharesAmount_ * pool.totalAssets()) / pool.totalSupply());
     }
 
-    function testFuzz_convertToShares_whenTotalSupplyIsZero(uint256 assetAmount_) external {
+    function testFuzz_convertToShares_whenTotalSupplyIsZero(uint256 assetAmount_) external view {
         assetAmount_ = bound(assetAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),                 0);
@@ -253,7 +253,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(pool.maxWithdraw(user), 0);
     }
 
-    function testFuzz_previewDeposit_whenTotalSupplyIsZero(uint256 assetAmount_) external {
+    function testFuzz_previewDeposit_whenTotalSupplyIsZero(uint256 assetAmount_) external view {
         assetAmount_ = bound(assetAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),                0);
@@ -275,7 +275,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(sharesAmount, (assetAmount_ * pool.totalSupply()) / pool.totalAssets());
     }
 
-    function testFuzz_previewMint_whenTotalSupplyIsZero(uint256 sharesAmount_) external {
+    function testFuzz_previewMint_whenTotalSupplyIsZero(uint256 sharesAmount_) external view {
         sharesAmount_ = bound(sharesAmount_, 0, 1e29);
 
         assertEq(pool.totalSupply(),              0);

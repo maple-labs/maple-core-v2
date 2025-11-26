@@ -57,7 +57,7 @@ contract PermissionInvariants is BaseInvariants {
         targetContract(distributionHandler);
     }
 
-    function statefulFuzz_permissionManager_invariants() external {
+    function statefulFuzz_permissionManager_invariants() external view {
         assert_ppm_invariants();
     }
 

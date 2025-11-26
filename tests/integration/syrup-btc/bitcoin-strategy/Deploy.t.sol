@@ -52,7 +52,7 @@ contract DeployTestBase is TestBase {
         uint256 accruedYield,
         uint256 accruedFees
     )
-        internal
+        internal view
     {
         assertEq(bitcoinStrategy.outstandingAssets(), outstandingAssets);
         assertEq(bitcoinStrategy.realizedFees(),      realizedFees);
@@ -69,7 +69,7 @@ contract DeployTestBase is TestBase {
         uint32  lastUpdated,
         uint32  remainingDuration
     )
-        internal
+        internal view
     {
         ( uint256 remainingYield_, uint32 lastUpdated_, uint32 remainingDuration_ ) = bitcoinStrategy.schedules(0);
 

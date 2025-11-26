@@ -7,7 +7,7 @@ contract AccruedFeesTests is SyrupBitcoinTestBase {
 
     address depositor = makeAddr("depositor");
 
-    function test_accruedFees_withoutSchedule() external {
+    function test_accruedFees_withoutSchedule() external view {
         assertEq(bitcoinStrategy.accruedFees(), 0);
     }
 

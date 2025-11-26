@@ -787,7 +787,7 @@ contract ConvertToAssetsTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_convertToAssets_zeroTotalSupply() external {
+    function test_convertToAssets_zeroTotalSupply() external view {
         assertEq(pool.convertToAssets(1),       1);
         assertEq(pool.convertToAssets(2),       2);
         assertEq(pool.convertToAssets(1_000e6), 1_000e6);
@@ -840,7 +840,7 @@ contract ConvertToSharesTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_convertToShares_zeroTotalSupply() external {
+    function test_convertToShares_zeroTotalSupply() external view {
         assertEq(pool.convertToShares(1),       1);
         assertEq(pool.convertToShares(2),       2);
         assertEq(pool.convertToShares(1_000e6), 1_000e6);
@@ -893,7 +893,7 @@ contract PreviewDepositTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_previewDeposit_zeroTotalSupply() external {
+    function test_previewDeposit_zeroTotalSupply() external view {
         assertEq(pool.previewDeposit(1),       1);
         assertEq(pool.previewDeposit(2),       2);
         assertEq(pool.previewDeposit(1_000e6), 1_000e6);
@@ -946,7 +946,7 @@ contract PreviewMintTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_previewMint_zeroTotalSupply() external {
+    function test_previewMint_zeroTotalSupply() external view {
         assertEq(pool.previewMint(1),       1);
         assertEq(pool.previewMint(2),       2);
         assertEq(pool.previewMint(1_000e6), 1_000e6);
@@ -1007,7 +1007,7 @@ contract TotalAssetsTests is TestBase {
         });
     }
 
-    function test_totalAssets_zeroTotalSupply() external {
+    function test_totalAssets_zeroTotalSupply() external view {
         assertEq(pool.totalAssets(), 0);
     }
 

@@ -9,7 +9,7 @@ contract UnrealizedLossesTests is SyrupBitcoinTestBase {
 
     uint256 principal = 21_000_000e8;
 
-    function test_unrealizedLosses_default() external {
+    function test_unrealizedLosses_default() external view {
         assertEq(bitcoinStrategy.unrealizedLosses(), 0);
     }
 

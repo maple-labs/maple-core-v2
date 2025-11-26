@@ -13,7 +13,7 @@ contract PermissionsTests is SyrupBitcoinTestBase {
     bool[] reconcilers = [false];
     bool[] schedulers  = [false];
 
-    function testFuzz_permissions_random(address target) external {
+    function testFuzz_permissions_random(address target) external view {
         vm.assume(target != strategyManager);
 
         ( bool canDeploy, bool canReconcile, bool canSchedule ) = bitcoinStrategy.permissions(target);

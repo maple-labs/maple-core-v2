@@ -29,7 +29,7 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
     }
 
 
-    function testFork_setUp_governorTimelockUpgradeTests() public {
+    function testFork_setUp_governorTimelockUpgradeTests() public view {
         assertEq(IGovernorTimelock(timelock).hasRole(proposer,         IGovernorTimelock(timelock).PROPOSER_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin,    IGovernorTimelock(timelock).CANCELLER_ROLE()), true);
@@ -138,7 +138,7 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
         );
     }
 
-    function _assertEmptyProposal(uint256 proposalId) internal {
+    function _assertEmptyProposal(uint256 proposalId) internal view {
         (
             bytes32 proposalHash,
             bool    isUnschedulable,

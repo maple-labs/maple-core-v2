@@ -21,7 +21,7 @@ import { SyrupBTCProtocolUpgradeBase } from "./SyrupBTCProtocolUpgradeBase.t.sol
 
 contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
 
-    function testFork_syrupBTCFullDeployment() public {
+    function testFork_syrupBTCFullDeployment() public view {
         assertEq(block.timestamp, startingTime + 6 days);
 
         address pool              = IPoolManager(syrupBitcoinPoolManager).pool();

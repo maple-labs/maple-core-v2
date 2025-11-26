@@ -27,7 +27,7 @@ contract MapleCoreStrategyUpgradeBaseTest is Runner, UpgradeAddressRegistry, Pro
         _addStrategyToSyrupUSDCPool();
     }
 
-    function test_setUp() public {
+    function test_setUp() public view {
         assertEq(IPoolManager(syrupUSDCPoolManager).strategyListLength(), 5);
         assertEq(IPoolManager(syrupUSDCPoolManager).strategyList(4),      strategy);
         assertEq(IPoolManager(syrupUSDCPoolManager).isStrategy(strategy), true);

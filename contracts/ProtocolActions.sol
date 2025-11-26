@@ -983,7 +983,7 @@ contract ProtocolActions is Runner {
     function scheduleYield_syrupBTC(
         address strategy_,
         address strategyManager_,
-        address asset_,
+        address /* asset_ */,
         uint256 yieldAmount_,
         uint32  deadline_
     ) internal {

@@ -5,7 +5,7 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract SchedulesTests is SyrupBitcoinTestBase {
 
-    function test_schedules_withoutSchedule() external {
+    function test_schedules_withoutSchedule() external view {
         ( uint256 remainingYield, uint32 lastUpdated, uint32 remainingDuration ) = bitcoinStrategy.schedules(0);
 
         assertEq(remainingYield,    0);

@@ -7,7 +7,7 @@ contract AssetsUnderManagementTests is SyrupBitcoinTestBase {
 
     address depositor = makeAddr("depositor");
 
-    function test_assetsUnderManagement_default() external {
+    function test_assetsUnderManagement_default() external view {
         assertEq(bitcoinStrategy.assetsUnderManagement(), 0);
     }
 

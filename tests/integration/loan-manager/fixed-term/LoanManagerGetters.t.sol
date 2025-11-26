@@ -31,12 +31,12 @@ contract LoanManagerGetterTests is TestBase {
         vm.stopPrank();
     }
 
-    function test_loanManagerGetters_addresses() external {
+    function test_loanManagerGetters_addresses() external view {
         assertEq(ILoanManagerLike(loanManager).fundsAsset(),  address(fundsAsset));
         assertEq(ILoanManagerLike(loanManager).poolManager(), address(poolManager));
     }
 
-    function test_loanManagerGetters_uints() external {
+    function test_loanManagerGetters_uints() external view {
         assertEq(ILoanManagerLike(loanManager).accountedInterest(),               0);
         assertEq(IFixedTermLoanManager(loanManager).domainEnd(),                  start + 1_000_000);
         assertEq(ILoanManagerLike(loanManager).domainStart(),                     start);
@@ -75,7 +75,7 @@ contract LoanManagerGetterTests is TestBase {
         assertTrue(!loanManager_.isLiquidationActive(loan));
     }
 
-    function test_loanManagerGetters_paymentInformation() external {
+    function test_loanManagerGetters_paymentInformation() external view {
         assertEq(IFixedTermLoanManager(loanManager).paymentIdOf(loan), 1);
 
         (

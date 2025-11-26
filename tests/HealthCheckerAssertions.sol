@@ -11,7 +11,7 @@ import { SyrupBTCHealthChecker }      from "./health-checkers/SyrupBTCHealthChec
 
 contract HealthCheckerAssertions is Runner {
 
-    function assertProtocolInvariants(address poolManager_, address healthChecker_) internal {
+    function assertProtocolInvariants(address poolManager_, address healthChecker_) internal view {
         ProtocolHealthChecker.Invariants memory results;
 
         results = ProtocolHealthChecker(healthChecker_).checkInvariants(poolManager_);
@@ -126,7 +126,7 @@ contract HealthCheckerAssertions is Runner {
         address bitcoinRouter_,
         address[] memory depositAssets_
     )
-        internal
+        internal view
     {
         SyrupBTCHealthChecker.Invariants memory results;
 

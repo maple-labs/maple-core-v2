@@ -27,7 +27,7 @@ contract LoanManagerIsLiquidationActiveGetterTests is TestBase {
         });
     }
 
-    function test_isLiquidationActive_beforeLiquidation() external {
+    function test_isLiquidationActive_beforeLiquidation() external view {
         assertTrue(!loanManager.isLiquidationActive(loan));
     }
 

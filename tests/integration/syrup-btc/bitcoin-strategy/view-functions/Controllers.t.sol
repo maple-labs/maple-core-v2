@@ -5,11 +5,11 @@ import { SyrupBitcoinTestBase } from "../../SyrupBitcoinTestBase.sol";
 
 contract ControllersTests is SyrupBitcoinTestBase {
 
-    function test_controllers_default() external {
+    function test_controllers_default() external view {
         assertEq(bitcoinStrategy.controllers(address(depositAsset)), address(assetController));
     }
 
-    function testFuzz_controllers_random(address asset) external {
+    function testFuzz_controllers_random(address asset) external view {
         vm.assume(asset != address(depositAsset));
 
         assertEq(bitcoinStrategy.controllers(asset), address(0));

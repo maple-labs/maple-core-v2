@@ -15,7 +15,7 @@ contract FactoryViewFunctionTests is TestBase {
         strategy = poolManager.strategyList(0);
     }
 
-    function test_factory() external {
+    function test_factory() external view {
         assertEq(IMapleProxied(strategy).factory(), bitcoinStrategyFactory);
     }
 

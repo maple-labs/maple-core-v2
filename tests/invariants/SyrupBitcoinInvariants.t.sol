@@ -73,7 +73,7 @@ contract SyrupBitcoinInvariants is BaseInvariants {
     /*** Strategy Invariants                                                                                                            ***/
     /**************************************************************************************************************************************/
 
-    function statefulFuzz_syrupBTCInvariants() external {
+    function statefulFuzz_syrupBTCInvariants() external view {
         assert_syrupBTC_invariants();
     }
 
