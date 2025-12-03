@@ -375,24 +375,27 @@ contract LPHealthChecker {
     ) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        uint256 requestId;
-
         uint256[] memory requestIdList = new uint256[](poolLps_.length);
 
+        uint256 validRequestIdCount;
+
         for (uint256 i; i < poolLps_.length; i++) {
+            uint256 requestId;
+
             ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
-            if (requests.length > 0) {
-                requestId = requests[requests.length - 1];
-            }
+            if (requests.length == 0) continue;
 
-            for (uint256 j; j < i; j++) {
-                if (requestId == requestIdList[j] && requestId != 0) {
+            requestId = requests[requests.length - 1];
+
+            for (uint256 j; j < validRequestIdCount; j++) {
+                if (requestId == requestIdList[j]) {
                     return false;
                 }
             }
 
-            requestIdList[i] = requestId;
+            requestIdList[validRequestIdCount] = requestId;
+            validRequestIdCount++;
         }
 
         return true;
