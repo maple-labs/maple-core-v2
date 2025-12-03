@@ -118,4 +118,12 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address mapleCoreStrategyV100Initializer;
     address mapleCoreStrategyFactory;
 
+    /**************************************************************************************************************************************/
+    /*** Health Checker Addresses                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    address updatedProtocolHealthChecker      = 0xfb8F87D716ac3fC54f33664F51E3961bc2DD3EDb;
+    address updatedOpenTermLoanHealthChecker  = 0xa2e3c1e3e2b8E2B8B5e3FF1d4c3b2A1f4e5d6C7d;
+    address updatedFixedTermLoanHealthChecker = 0xb3f4d2c1E5a6B7c8d9E0F1A2b3C4D5E6f7A8b9C0;
+
 }
