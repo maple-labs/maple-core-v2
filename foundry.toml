@@ -63,3 +63,4 @@ verbosity      = 2
 mainnet = "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 base    = "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 plasma  = "https://plasma-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+mantle  = "https://mantle-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
