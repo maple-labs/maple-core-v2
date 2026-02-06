@@ -14,6 +14,7 @@ import {
     ILoanLike,
     ILoanManagerLike,
     IMapleProxyFactory,
+    IMapleCCIPReceiverLike,
     INonTransparentProxy,
     IOpenTermLoan,
     IOpenTermLoanManager,
@@ -568,6 +569,40 @@ contract ProtocolActions is Runner {
         vm.startPrank(account_);
         escrowShares_ = IPool(pool_).requestRedeem(amount_, account_);
         vm.stopPrank();
+    }
+
+    function requestCrossChainRedeem(
+        address ccipReceiver_,
+        address pool_,
+        uint256 amount_,
+        uint64  sourceChainSelector_
+    ) internal {
+        IMapleCCIPReceiverLike.EVMTokenAmount memory tokenAmount = IMapleCCIPReceiverLike.EVMTokenAmount({
+            token:  pool_,
+            amount: amount_
+        });
+
+        IMapleCCIPReceiverLike.EVMTokenAmount[] memory destTokenAmounts = new IMapleCCIPReceiverLike.EVMTokenAmount[](1);
+        destTokenAmounts[0]                                             = tokenAmount;
+
+        address sender = makeAddr("universalSenderAddress");
+
+        IMapleCCIPReceiverLike.UniversalMessage memory universalMessage = IMapleCCIPReceiverLike.UniversalMessage({
+            universalSenderAddress: bytes32(uint256(uint160(sender))),
+            pool:                   pool_,
+            metaData:               bytes32(0)
+        });
+
+        IMapleCCIPReceiverLike.Any2EVMMessage memory message = IMapleCCIPReceiverLike.Any2EVMMessage({
+            messageId:           bytes32(0), // Not used
+            sourceChainSelector: sourceChainSelector_,
+            sender:              abi.encode(sender),
+            data:                abi.encode(universalMessage),
+            destTokenAmounts:    destTokenAmounts
+        });
+
+        vm.prank(ccipReceiver_);
+        IMapleCCIPReceiverLike(ccipReceiver_).processMessage(message);
     }
 
     function requestRedeemFromSyrupBtc(

@@ -109,22 +109,6 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address bitcoinStrategy3Manager = 0x8f0D8e61dc9D604E6f4147a00994b40Df9d6F565;
 
     /**************************************************************************************************************************************/
-    /*** Withdrawal Manager Upgrade Addresses                                                                                           ***/
-    /**************************************************************************************************************************************/
-
-    address[] withdrawalManagerQueuesToUpgrade = [
-        cashUSDCWithdrawalManagerQueue,
-        blueChipSecuredUSDCWithdrawalManagerQueue,
-        highYieldCorpUSDCWithdrawalManagerQueue,
-        highYieldCorpWETHWithdrawalManagerQueue,
-        securedLendingUSDCWithdrawalManagerQueue,
-        LendAndLongUSDC1WithdrawalManagerQueue,
-        LendAndLongUSDC2WithdrawalManagerQueue,
-        syrupUSDCWithdrawalManagerQueue,
-        syrupUSDTWithdrawalManagerQueue
-    ];
-
-    /**************************************************************************************************************************************/
     /*** Core Strategy Deployment Addresses                                                                                             ***/
     /**************************************************************************************************************************************/
 

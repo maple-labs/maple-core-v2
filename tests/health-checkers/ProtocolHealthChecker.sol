@@ -124,7 +124,11 @@ contract ProtocolHealthChecker {
         bool strategiesInvariantG;
     }
 
-    function checkInvariants(address poolManager_) external view returns (Invariants memory invariants_) {
+    function checkInvariants(address poolManager_, address[] calldata manualRedeemers_)
+        external
+        view
+        returns (Invariants memory invariants_)
+    {
         IPoolManager poolManager = IPoolManager(poolManager_);
 
         Strategies memory strategies = _getStrategies(poolManager_);
@@ -203,7 +207,7 @@ contract ProtocolHealthChecker {
             invariants_.withdrawalManagerCyclicalInvariantM = check_withdrawalManagerCyclical_invariant_M(pool_, withdrawalManager_);
             invariants_.withdrawalManagerCyclicalInvariantN = check_withdrawalManagerCyclical_invariant_N(pool_, withdrawalManager_);
         } else {
-            invariants_.withdrawalManagerQueueInvariantA = check_withdrawalManagerQueue_invariant_A(withdrawalManager_);
+            invariants_.withdrawalManagerQueueInvariantA = check_withdrawalManagerQueue_invariant_A(withdrawalManager_, manualRedeemers_);
             invariants_.withdrawalManagerQueueInvariantB = check_withdrawalManagerQueue_invariant_B(withdrawalManager_);
             invariants_.withdrawalManagerQueueInvariantD = check_withdrawalManagerQueue_invariant_D(withdrawalManager_);
             invariants_.withdrawalManagerQueueInvariantE = check_withdrawalManagerQueue_invariant_E(withdrawalManager_);
@@ -466,25 +470,25 @@ contract ProtocolHealthChecker {
     /*** Withdrawal Manager Invariants (Queue)                                                                                  ***/
     /******************************************************************************************************************************/
 
-    function check_withdrawalManagerQueue_invariant_A(address withdrawalManager_) public view returns (bool isMaintained_) {
+    function check_withdrawalManagerQueue_invariant_A(
+        address   withdrawalManager_,
+        address[] calldata manualRedeemers_
+    ) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        address owner;
-
-        uint256 shares;
         uint256 sumOfShares;
         uint256 totalShares = withdrawalManager.totalShares();
 
         ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
 
         for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
-            ( owner, shares ) = withdrawalManager.requests(requestId);
+            ( , uint256 shares ) = withdrawalManager.requests(requestId);
 
-            if (withdrawalManager.isManualWithdrawal(owner)) {
-                sumOfShares += withdrawalManager.manualSharesAvailable(owner);
-            } else {
-                sumOfShares += shares;
-            }
+            sumOfShares += shares;
+        }
+
+        for (uint256 i; i < manualRedeemers_.length; i++) {
+            sumOfShares += withdrawalManager.manualSharesAvailable(manualRedeemers_[i]);
         }
 
         isMaintained_ = sumOfShares == totalShares;

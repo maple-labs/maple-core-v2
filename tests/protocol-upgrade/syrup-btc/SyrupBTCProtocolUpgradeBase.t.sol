@@ -387,7 +387,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     function scheduleProposals(address[] memory targets, bytes[] memory data) internal returns (uint256[] memory proposalIds) {
         uint256 latestProposalId = IGovernorTimelock(timelock).latestProposalId();
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         IGovernorTimelock(timelock).scheduleProposals(targets, data);
 
         proposalIds = new uint256[](targets.length);

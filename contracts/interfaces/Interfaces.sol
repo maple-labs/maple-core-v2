@@ -395,6 +395,33 @@ interface ILoanManagerLike is IProxiedLike {
 
 }
 
+interface IMapleCCIPReceiverLike {
+
+    struct UniversalMessage {
+        bytes32 universalSenderAddress;
+        address pool;
+        bytes32 metaData;
+    }
+
+    struct EVMTokenAmount {
+        address token;
+        uint256 amount;
+    }
+
+    struct Any2EVMMessage {
+        bytes32          messageId;
+        uint64           sourceChainSelector;
+        bytes            sender;
+        bytes            data;
+        EVMTokenAmount[] destTokenAmounts;
+    }
+
+    function executeRedeemList(uint128[] calldata requestIds_) external;
+
+    function processMessage(Any2EVMMessage calldata message_) external;
+
+}
+
 interface IPolicyManagerLike {
 
     function getRoleAdmin(bytes32 role) external view returns (bytes32 admin);

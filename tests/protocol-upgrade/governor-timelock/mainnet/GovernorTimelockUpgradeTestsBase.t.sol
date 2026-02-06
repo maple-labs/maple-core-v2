@@ -13,7 +13,7 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
 
         deployGovernorTimelock();
 
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IMapleGlobals(globals).setPendingGovernor(timelock);
         vm.stopPrank();
 
@@ -24,8 +24,8 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
         proposer  = makeAddr("proposer");
         executor  = operationalAdmin;
         canceller = securityAdmin;
-        roleAdmin = governor;
-        timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(governor, proposer, executor, canceller, roleAdmin));
+        roleAdmin = daoMultisig;
+        timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(daoMultisig, proposer, executor, canceller, roleAdmin));
     }
 
 
@@ -33,9 +33,9 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
         assertEq(IGovernorTimelock(timelock).hasRole(proposer,         IGovernorTimelock(timelock).PROPOSER_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin,    IGovernorTimelock(timelock).CANCELLER_ROLE()), true);
-        assertEq(IGovernorTimelock(timelock).hasRole(governor,         IGovernorTimelock(timelock).ROLE_ADMIN()),     true);
+        assertEq(IGovernorTimelock(timelock).hasRole(daoMultisig,      IGovernorTimelock(timelock).ROLE_ADMIN()),     true);
 
-        assertEq(IGovernorTimelock(timelock).tokenWithdrawer(), governor);
+        assertEq(IGovernorTimelock(timelock).tokenWithdrawer(), daoMultisig);
 
         assertEq(IGovernorTimelock(timelock).MIN_DELAY(),            1 days);
         assertEq(IGovernorTimelock(timelock).MIN_EXECUTION_WINDOW(), 1 days);
@@ -50,7 +50,7 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
     }
 
     function _setGovernorOnOldGlobals() internal {
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IMapleGlobals(oldGlobalsOnTreasury).setPendingGovernor(timelock);
         vm.stopPrank();
 

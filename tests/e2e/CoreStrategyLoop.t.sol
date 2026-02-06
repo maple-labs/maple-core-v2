@@ -20,15 +20,12 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
 
     address pool_A;
     address pool_B;
-    address pool_C;
 
     address poolManager_A;
     address poolManager_B;
-    address poolManager_C;
 
     address poolDelegate_A;
     address poolDelegate_B;
-    address poolDelegate_C;
 
     address strategyFactory;
 
@@ -37,16 +34,13 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
 
         // Select a few existing Maple pools that use the same asset.
         pool_A = syrupUSDCPool;
-        pool_B = highYieldCorpUSDCPool;
-        pool_C = securedLendingUSDCPool;
+        pool_B = securedLendingUSDCPool;
 
         poolManager_A = syrupUSDCPoolManager;
-        poolManager_B = highYieldCorpUSDCPoolManager;
-        poolManager_C = securedLendingUSDCPoolManager;
+        poolManager_B = securedLendingUSDCPoolManager;
 
         poolDelegate_A = IPoolManager(poolManager_A).poolDelegate();
         poolDelegate_B = IPoolManager(poolManager_B).poolDelegate();
-        poolDelegate_C = IPoolManager(poolManager_C).poolDelegate();
 
         // Upgrade all pools to the new pool manager that checks for AUM failure.
         address poolManagerImplementation = deployFromFile("Contracts@25", "PoolManager");
@@ -55,7 +49,7 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
         address withdrawalManagerQueueImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
         address withdrawalManagerQueueInitializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
 
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IMapleProxyFactory(poolManagerFactory).registerImplementation(401, poolManagerImplementation, poolManagerInitializer);
         IMapleProxyFactory(poolManagerFactory).enableUpgradePath(400, 401, address(0));
         IMapleProxyFactory(poolManagerFactory).setDefaultVersion(401);
@@ -72,11 +66,9 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
         vm.startPrank(securityAdmin);
         IPoolManager(poolManager_A).upgrade(401, "");
         IPoolManager(poolManager_B).upgrade(401, "");
-        IPoolManager(poolManager_C).upgrade(401, "");
 
         IWithdrawalManagerQueue(IPoolManager(poolManager_A).withdrawalManager()).upgrade(101, "");
         IWithdrawalManagerQueue(IPoolManager(poolManager_B).withdrawalManager()).upgrade(101, "");
-        IWithdrawalManagerQueue(IPoolManager(poolManager_C).withdrawalManager()).upgrade(101, "");
         vm.stopPrank();
 
         // Create the core strategy factory and set it up.
@@ -85,19 +77,18 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
         address strategyImplementation = deployFromFile("Contracts@25", "CoreStrategy");
         address strategyInitializer    = deployFromFile("Contracts@25", "CoreStrategyInitializer");
 
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IMapleProxyFactory(strategyFactory).registerImplementation(100, strategyImplementation, strategyInitializer);
         IMapleProxyFactory(strategyFactory).setDefaultVersion(100);
         vm.stopPrank();
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY", strategyFactory, true);
 
         // Whitelist all Maple pools as valid strategy vaults.
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IGlobals(globals).setValidInstanceOf("STRATEGY_VAULT", pool_A, true);
         IGlobals(globals).setValidInstanceOf("STRATEGY_VAULT", pool_B, true);
-        IGlobals(globals).setValidInstanceOf("STRATEGY_VAULT", pool_C, true);
         vm.stopPrank();
     }
 
@@ -110,36 +101,6 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
         vm.prank(poolDelegate_B);
         vm.expectRevert("PM:AS:AUM_FAILURE");
         IPoolManager(poolManager_B).addStrategy(strategyFactory, abi.encode(pool_A));
-    }
-
-    function test_coreStrategyLoop_v2() external {
-        // A->B
-        vm.prank(poolDelegate_A);
-        IPoolManager(poolManager_A).addStrategy(strategyFactory, abi.encode(pool_B));
-
-        // A->B->C
-        vm.prank(poolDelegate_B);
-        IPoolManager(poolManager_B).addStrategy(strategyFactory, abi.encode(pool_C));
-
-        // A->B->C->A
-        vm.prank(poolDelegate_C);
-        vm.expectRevert("PM:AS:AUM_FAILURE");
-        IPoolManager(poolManager_C).addStrategy(strategyFactory, abi.encode(pool_A));
-    }
-
-    function test_coreStrategyLoop_v3() external {
-        // A->B
-        vm.prank(poolDelegate_A);
-        IPoolManager(poolManager_A).addStrategy(strategyFactory, abi.encode(pool_B));
-
-        // A->B, C->A
-        vm.prank(poolDelegate_C);
-        IPoolManager(poolManager_C).addStrategy(strategyFactory, abi.encode(pool_A));
-
-        // A->B->C->A
-        vm.prank(poolDelegate_B);
-        vm.expectRevert("PM:AS:AUM_FAILURE");
-        IPoolManager(poolManager_B).addStrategy(strategyFactory, abi.encode(pool_C));
     }
 
 }

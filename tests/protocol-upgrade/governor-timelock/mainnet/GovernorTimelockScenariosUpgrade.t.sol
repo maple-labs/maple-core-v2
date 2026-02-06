@@ -20,13 +20,13 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         uint256 amountToReclaim = 100e6;
 
         uint256 treasuryBalanceBefore = IERC20(usdc).balanceOf(address(treasury));
-        uint256 governorBalanceBefore = IERC20(usdc).balanceOf(governor);
+        uint256 governorBalanceBefore = IERC20(usdc).balanceOf(daoMultisig);
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         IMapleTreasuryLike(treasury).reclaimERC20(usdc, amountToReclaim);
 
-        assertEq(IERC20(usdc).balanceOf(address(treasury)), treasuryBalanceBefore - amountToReclaim);
-        assertEq(IERC20(usdc).balanceOf(address(governor)), governorBalanceBefore + amountToReclaim);
+        assertEq(IERC20(usdc).balanceOf(address(treasury)),    treasuryBalanceBefore - amountToReclaim);
+        assertEq(IERC20(usdc).balanceOf(address(daoMultisig)), governorBalanceBefore + amountToReclaim);
     }
 
     function testFork_withdrawERC20Token_afterChangingTokenWithdrawer_withNewGovernorOnOldGlobals() public {
@@ -41,14 +41,14 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         _executeThroughTimelock(treasury, IMapleTreasuryLike.reclaimERC20.selector, abi.encode(usdc, amountToPull));
 
         uint256 timelockBalanceBefore = IERC20(usdc).balanceOf(address(timelock));
-        uint256 governorBalanceBefore = IERC20(usdc).balanceOf(governor);
+        uint256 governorBalanceBefore = IERC20(usdc).balanceOf(daoMultisig);
 
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IGovernorTimelock(timelock).setPendingTokenWithdrawer(newTokenWithdrawer);
         IGovernorTimelock(timelock).withdrawERC20Token(usdc, amountToWithdraw);
         vm.stopPrank();
 
-        assertEq(IERC20(usdc).balanceOf(governor),          governorBalanceBefore + amountToWithdraw);
+        assertEq(IERC20(usdc).balanceOf(daoMultisig),       governorBalanceBefore + amountToWithdraw);
         assertEq(IERC20(usdc).balanceOf(address(timelock)), timelockBalanceBefore - amountToWithdraw);
         assertEq(IERC20(usdc).balanceOf(address(treasury)), treasuryBalanceBefore - amountToPull);
 
@@ -59,7 +59,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         vm.prank(newTokenWithdrawer);
         IGovernorTimelock(timelock).acceptTokenWithdrawer();
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         vm.expectRevert("GT:WET:NOT_AUTHORIZED");
         IGovernorTimelock(timelock).withdrawERC20Token(usdc, amountToWithdraw);
 

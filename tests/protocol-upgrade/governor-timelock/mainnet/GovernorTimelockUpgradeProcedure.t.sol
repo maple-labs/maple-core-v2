@@ -29,20 +29,20 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         /**********************************************************************************************************************************/
 
         // Deploy GovernorTimelock
-        proposer  = governor;
+        proposer  = daoMultisig;
         executor  = operationalAdmin;
         canceller = securityAdmin;
-        roleAdmin = governor;
-        timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(governor, proposer, executor, canceller, roleAdmin));
+        roleAdmin = daoMultisig;
+        timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(daoMultisig, proposer, executor, canceller, roleAdmin));
 
         // Assert Roles
         assertEq(IGovernorTimelock(timelock).hasRole(proposer,         IGovernorTimelock(timelock).PROPOSER_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()),  true);
         assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin,    IGovernorTimelock(timelock).CANCELLER_ROLE()), true);
-        assertEq(IGovernorTimelock(timelock).hasRole(governor,         IGovernorTimelock(timelock).ROLE_ADMIN()),     true);
+        assertEq(IGovernorTimelock(timelock).hasRole(daoMultisig,      IGovernorTimelock(timelock).ROLE_ADMIN()),     true);
 
         // Assert token withdrawer role
-        assertEq(IGovernorTimelock(timelock).tokenWithdrawer(), governor);
+        assertEq(IGovernorTimelock(timelock).tokenWithdrawer(), daoMultisig);
 
         // Assert Default Timelock
         assertEq(IGovernorTimelock(timelock).MIN_DELAY(),            1 days);
@@ -71,7 +71,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         accounts[1]         = backupExecutor;
         shouldGrantArray[1] = true;
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         IGovernorTimelock(timelock).proposeRoleUpdates(roles, accounts, shouldGrantArray);
 
         uint256 proposalId = IGovernorTimelock(timelock).latestProposalId();
@@ -117,7 +117,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
             2 days
         );
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         IGovernorTimelock(timelock).scheduleProposals(targets, data);
 
         proposalId = IGovernorTimelock(timelock).latestProposalId();
@@ -194,7 +194,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         vm.warp(start + 2 days);
 
         // Set pending governor on globals
-        vm.startPrank(governor);
+        vm.startPrank(daoMultisig);
         IMapleGlobals(globals).setPendingGovernor(timelock);
         vm.stopPrank();
 
@@ -205,7 +205,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         targets[0] = globals;
         data[0]    = abi.encodeWithSelector(IMapleGlobals.acceptGovernor.selector);
 
-        vm.prank(governor);
+        vm.prank(daoMultisig);
         IGovernorTimelock(timelock).scheduleProposals(targets, data);
 
         proposalId = IGovernorTimelock(timelock).latestProposalId();

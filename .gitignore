@@ -13,3 +13,5 @@ output/
 scenarios/data/json
 
 foundry.lock
+
+CLAUDE.md
