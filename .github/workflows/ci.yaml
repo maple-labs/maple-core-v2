@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents:      read
+  pull-requests: write
+
 env:
   SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
   SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
