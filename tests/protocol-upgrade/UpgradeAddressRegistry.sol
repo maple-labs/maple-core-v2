@@ -70,6 +70,20 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address backupRoleAdminMantle = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
     /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Ink                                                                                     ***/
+    /**************************************************************************************************************************************/
+
+    address timelockInk = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerInk       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorInk        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerInk        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminInk       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerInk = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorInk  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminInk = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    /**************************************************************************************************************************************/
     /*** syrupBTC Procedure Addresses                                                                                                   ***/
     /**************************************************************************************************************************************/
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 import { IGovernorTimelock } from "../../../../../contracts/interfaces/Interfaces.sol";
-import { Runner }                                      from "../../../../../contracts/Runner.sol";
+import { Runner }            from "../../../../../contracts/Runner.sol";
 
 import { UpgradeAddressRegistry } from "../../../UpgradeAddressRegistry.sol";
 

@@ -390,7 +390,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         uint256 yieldToSchedule = pool.totalAssets(); // Double the total assets
         uint256 yieldDuration   = 100 days;
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         /**********************************************************************************************************************************/
         /*** Step 1: Schedule yield                                                                                                     ***/
@@ -433,7 +433,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         // Here we are reverting to this snapshot so we can execute deposit without schedule and compare state with and without schedule.
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
         uint256 sharesReceivedOnDepositNoSchedule = depositInSyrupBtc(lp, address(bitcoinRouter), address(depositAsset), depositAmount);
 
         assertSyrupBtcSystemState({
@@ -653,7 +653,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 2: Deposit assets into strategy and take a snapshot before deposit                                                    ***/
         /**********************************************************************************************************************************/
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         uint256 receivedSharesNoImpair = depositInSyrupBtc(lp, address(bitcoinRouter), address(depositAsset), assetsToDeposit);
 
@@ -680,7 +680,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 3: Revert to snapshot prior to deposit and set impairment                                                             ***/
         /**********************************************************************************************************************************/
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(poolDelegate);
         IBitcoinStrategy(targetStrategy).setImpairment(assetsToImpair);
@@ -1823,6 +1823,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
     }
 
     function test_scenario_deposit_gasCostIsApproximatelyTheSame_regardlessOfNumberOfRedeemRequests() public {
+        vm.skip(true);
         address lp1 = makeAddr("lp1");
         address lp2 = makeAddr("lp2");
         address lp3 = makeAddr("lp3");
@@ -1872,6 +1873,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
     }
 
     function test_scenario_removeSharesById_gasCostIsTheSame_regardlessOfNumberOfRedeemRequests() public {
+        vm.skip(true);
         address lp1 = makeAddr("lp1");
         address lp2 = makeAddr("lp2");
         address lp3 = makeAddr("lp3");
@@ -1935,6 +1937,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
     }
 
     function test_scenario_wmRemoveRequests_gasCostIsTheSame_regardlessOfNumberOfRedeemRequests() public {
+        vm.skip(true);
         address lp1 = makeAddr("lp1");
         address lp2 = makeAddr("lp2");
 

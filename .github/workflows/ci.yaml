@@ -40,9 +40,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
       - name: Update submodules
         run: ./setup-ci.sh
       - name: Run integration tests
@@ -53,9 +53,9 @@ jobs:
       group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
       - name: Update submodules
         run: ./setup-ci.sh
       - name: Run end to end tests
@@ -66,9 +66,9 @@ jobs:
       group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
       - name: Update submodules
         run: ./setup-ci.sh
       - name: Run fuzz tests
@@ -79,9 +79,9 @@ jobs:
         group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
       - name: Update submodules
         run: ./setup-ci.sh
       - name: Run invariant tests
@@ -91,13 +91,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
         with:
           version: "nightly-0dceb536da7129c8e58b2c30c7059e247467838f"
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6
       - name: Update submodules
         run: ./setup-ci.sh
       - name: Run Scenarios v2
@@ -110,9 +110,9 @@ jobs:
         group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
       - name: Update submodules
         run: ./setup-ci.sh
       - name: Run Protocol Upgrade tests
