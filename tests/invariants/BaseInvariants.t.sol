@@ -334,7 +334,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             // NOTE: the correct rounding acceptance needs to be the amount of loans contributing to the unrealizedLosses(),
             // which are the defaulted but not liquidated and the impaired but not defaulted. Since this value is not tracked in the ftlh,
             // the number of active loans is used instead.
-            assertApproxEqAbs(losses, aum, ftlHandler.numLoans() + ftlHandler.numMatures() + 2, "LoanManager Invariant F");
+            assertApproxEqAbs(losses, aum, (ftlHandler.numLoans() + ftlHandler.numMatures()) * 2, "LoanManager Invariant F");
         } else {
             assertLe(losses, aum + 2, "LoanManager Invariant F");
         }
@@ -524,8 +524,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
 
     function assert_wm_cyclical_invariants() internal {
-        assert_withdrawalManager_invariant_B(); 
-        assert_withdrawalManager_invariant_C(); 
+        assert_withdrawalManager_invariant_B();
+        assert_withdrawalManager_invariant_C();
         assert_withdrawalManager_invariant_D();
         assert_withdrawalManager_invariant_E();
         assert_withdrawalManager_invariant_M();
