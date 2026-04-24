@@ -56,8 +56,9 @@ import { MapleWithdrawalManagerFactory as MWMQF }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerFactory.sol";
 import { MapleWithdrawalManagerInitializer as MWMQI }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
-import { MapleWithdrawalManagerMigratorV200 as MWMQM }
-    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV200.sol";
+// TODO: adjust deploy, upgrade scripts, etc. to use latest version of migrator. Get rid of V200
+import { MapleWithdrawalManagerMigratorV300 as MWMQM }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV300.sol";
 
 import { SyrupRouter } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 

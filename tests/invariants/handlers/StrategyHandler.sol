@@ -157,17 +157,28 @@ contract StrategyHandler is HandlerBase {
         IStrategyLike strategy_ = IStrategyLike(coreStrategy);
         IWithdrawalManager wm_  = IWithdrawalManager(strategy_.mapleWithdrawalManager());
 
-        uint256 sharesToProcess_ = _bound(seed_, 0, wm_.totalShares());
+        uint256[] memory activeRequestIds_ = _activeRequestIds(wm_);
 
-        if (sharesToProcess_ == 0) return;
+        if (activeRequestIds_.length == 0) return;
+
+        uint256 requestCount_ = _bound(_randomize(seed_, "requestCount_"), 1, activeRequestIds_.length);
 
         address pool_ = strategy_.strategyVault();
         address lp_   = makeAddr("lp");
 
-        uint256 assetsToDeposit_ = IPool(pool_).previewMint(sharesToProcess_);
+        uint256[] memory requestIds_ = randomSubset(seed_, requestCount_, activeRequestIds_);
+        uint256 totalShares_;
+
+        for (uint256 i; i < requestCount_; i++) {
+            ( , uint256 sharesToProcess_ ) = wm_.requests(requestIds_[i]);
+
+            totalShares_ += sharesToProcess_;
+        }
+
+        uint256 assetsToDeposit_ = IPool(pool_).convertToExitAssets(totalShares_);
 
         deposit(pool_, lp_, assetsToDeposit_);
-        processRedemptions(address(pool_), sharesToProcess_);
+        processRedemptionByIds(address(pool_), requestIds_);
     }
 
     function setStrategyFeeRate(uint256 seed_) external {

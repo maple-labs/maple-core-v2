@@ -81,7 +81,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(queueWM.lockedLiquidity(), 0);
 
         requestRedeem(lp, 50e6);
-        processRedemptions(address(pool), 50e6);
+        processRedemptionByOwners(address(pool), array(lp));
         assertEq(queueWM.lockedLiquidity(), 0);
     }
 
@@ -90,7 +90,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
 
         setManualWithdrawal(address(poolManager), lp, true);
         requestRedeem(lp, 100e6);
-        processRedemptions(address(pool), 100e6);
+        processRedemptionByOwners(address(pool), array(lp));
 
         assertEq(queueWM.lockedShares(lp), 100e6);
     }
@@ -120,7 +120,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
 
         setManualWithdrawal(address(poolManager), lp, true);
         requestRedeem(lp, 200e6);
-        processRedemptions(address(pool), 200e6);
+        processRedemptionByOwners(address(pool), array(lp));
 
         ( uint256 rs1, uint256 ra1 ) = queueWM.previewRedeem(lp, 50e6);
         assertEq(rs1, 50e6);
@@ -178,7 +178,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(queueWM.asset(), address(fundsAsset));
 
         requestRedeem(lp, 10e6);
-        processRedemptions(address(pool), 10e6);
+        processRedemptionByOwners(address(pool), array(lp));
 
         assertEq(queueWM.asset(), address(fundsAsset));
     }
@@ -194,7 +194,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(nextId1, 1);
         assertEq(lastId1, 1);
 
-        processRedemptions(address(pool), 100e6);
+        processRedemptionByOwners(address(pool), array(lp));
 
         ( uint128 nextId2, uint128 lastId2 ) = queueWM.queue();
         assertEq(nextId2, 2);

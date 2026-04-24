@@ -57,8 +57,7 @@ contract ManualRedeemTests is QueueRedeemBase {
     function test_manualRedeem_tooManyShares() external {
         requestRedeem(address(pool), lp2, 2_000e6);
 
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(2_000e6);
+        processRedemptionByOwners(address(pool), array(lp2));
 
         vm.expectRevert("WM:PE:TOO_MANY_SHARES");
         redeem(address(pool), address(lp2), 2_000e6 + 1);
@@ -97,8 +96,7 @@ contract ManualRedeemTests is QueueRedeemBase {
         redeem(address(pool), address(lp2), 2_000e6);
 
         // Pool Delegate's process redemptions
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(4_000e6);
+        processRedemptionByOwners(address(pool), array(lp1, lp2));
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
@@ -131,7 +129,7 @@ contract ManualRedeemTests is QueueRedeemBase {
         assertEq(queueWM.manualSharesAvailable(lp2), 0);
     }
 
-    function test_manualRedeem_partialLiquidity() external {
+    function test_manualRedeem_staggeredProcessing() external {
         assertEq(pool.balanceOf(lp1), 2_000e6);
         assertEq(pool.balanceOf(lp2), 2_000e6);
         assertEq(pool.balanceOf(wm), 0);
@@ -159,15 +157,14 @@ contract ManualRedeemTests is QueueRedeemBase {
         vm.expectRevert("WM:PE:TOO_MANY_SHARES");
         redeem(address(pool), address(lp2), 2_000e6);
 
-        // Pool Delegate's process redemptions
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(3_000e6);
+        // Pool Delegate processes LP1's request.
+        processRedemptionByOwners(address(pool), array(lp1));
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
 
         assertEq(queueWM.userEscrowedShares(lp1), 0);
-        assertEq(queueWM.userEscrowedShares(lp2), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
 
         assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
 
@@ -176,10 +173,9 @@ contract ManualRedeemTests is QueueRedeemBase {
         assertEq(pool.balanceOf(wm),  2_000e6);
         assertEq(pool.totalSupply(),  2_000e6);
 
-        assertEq(queueWM.manualSharesAvailable(lp2), 1_000e6);
+        assertEq(queueWM.manualSharesAvailable(lp2), 0);
 
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6);
+        processRedemptionByOwners(address(pool), array(lp2));
 
         assertQueue({ poolManager: address(poolManager), nextRequestId: 3, lastRequestId: 2 });
 
@@ -221,8 +217,7 @@ contract ManualRedeemTests is QueueRedeemBase {
 
         assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 0);
 
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6);
+        processRedemptionByIds(address(pool), array(1));
 
         assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 3 });
 
@@ -252,8 +247,7 @@ contract ManualRedeemTests is QueueRedeemBase {
         assertEq(pool.totalSupply(),                      3_000e6);
         assertEq(IERC20Like(pool.asset()).balanceOf(lp2), 1_000e6);
 
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6);
+        processRedemptionByIds(address(pool), array(2, 3));
 
         assertQueue({ poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 3 });
 
@@ -289,8 +283,7 @@ contract ManualRedeemTests is QueueRedeemBase {
     function test_manualRedeem_insufficientLiquidity() external {
         requestRedeem(address(pool), lp2, 2_000e6);
 
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(2_000e6);
+        processRedemptionByOwners(address(pool), array(lp2));
 
         // Fund a loan with all the cash on the pool
         uint32 gracePeriod     = 200_000;

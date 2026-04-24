@@ -33,7 +33,8 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
         address[10] memory lps,
         bool[10]    memory isManual,
         uint256[10] memory shares,
-        uint256            sharesToProcess
+        uint256            requestsToProcess,
+        uint256            seed
     )
         external
     {
@@ -58,60 +59,58 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
             requestRedeem(lps[i], sharesToRequest);
         }
 
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: lastRequestId });
         assertEq(queueWM.totalShares(), totalShares);
 
-        sharesToProcess = bound(sharesToProcess, MIN_SHARES, totalShares);
+        ( uint256[] memory allRequestIds_, , ) = queueWM.pendingRequestIds(0, type(uint256).max);
 
-        processRedemptions(address(pool), sharesToProcess);
+        if (allRequestIds_.length == 0) return;
 
-        ( uint256 nextRequestId_, uint256 lastRequestId_ ) = queueWM.queue();
+        requestsToProcess = bound(requestsToProcess, 1, allRequestIds_.length);
 
-        uint256 sharesProcessed;
+        uint256[] memory requestIdsToProcess_ = randomSubset(seed, requestsToProcess, allRequestIds_);
+        bool[]    memory processedRequestIds_ = new bool[](lastRequestId + 1);
 
-        for (uint256 i = 1; i < nextRequestId_; i++) {
+        uint256 autoProcessedShares_;
+
+        for (uint256 i = 0; i < requestIdsToProcess_.length; ++i) {
+            uint256 requestId_ = requestIdsToProcess_[i];
+            address lp_        = lpRequests[requestId_];
+            uint256 shares_    = lpShares[lp_];
+
+            processedRequestIds_[requestId_] = true;
+
+            if (!lpManuals[lp_]) autoProcessedShares_ += shares_;
+        }
+
+        processRedemptionByIds(address(pool), requestIdsToProcess_);
+
+        for (uint256 i = 1; i <= lastRequestId; ++i) {
             address lp = lpRequests[i];
 
-            assertRequest({
-                poolManager: address(poolManager),
-                requestId:   i,
-                shares:      0,
-                owner:       address(0)
-            });
+            if (processedRequestIds_[i]) {
+                assertRequest({
+                    poolManager: address(poolManager),
+                    requestId:   i,
+                    shares:      0,
+                    owner:       address(0)
+                });
 
-            if (lpManuals[lp]) {
-                assertEq(queueWM.manualSharesAvailable(lp), lpShares[lp]);
+                if (lpManuals[lp]) {
+                    assertEq(queueWM.manualSharesAvailable(lp), lpShares[lp]);
+                }
+            } else {
+                assertRequest({
+                    poolManager: address(poolManager),
+                    requestId:   i,
+                    shares:      lpShares[lp],
+                    owner:       lp
+                });
             }
-
-            sharesProcessed += lpShares[lp];
         }
 
-        address nextLp = lpRequests[nextRequestId_];
+        uint256 expectedTotalShares = totalShares - autoProcessedShares_;
 
-        // NOTE: The next request is fully or partially processed to calculate use the below.
-        uint256 nextLpProcessedShares = sharesToProcess - sharesProcessed;
-
-        assertRequest({
-            poolManager: address(poolManager),
-            requestId:   nextRequestId_,
-            shares:      lpShares[nextLp] - nextLpProcessedShares,
-            owner:       nextLp
-        });
-
-        if (lpManuals[nextLp]) {
-            assertEq(queueWM.manualSharesAvailable(nextLp), nextLpProcessedShares);
-        }
-
-        for (uint256 i = nextRequestId_ + 1; i <= lastRequestId_; i++) {
-            address lp = lpRequests[i];
-
-            assertRequest({
-                poolManager: address(poolManager),
-                requestId: i,
-                shares: lpShares[lp],
-                owner: lp
-            });
-        }
+        assertEq(queueWM.totalShares(), expectedTotalShares);
     }
 
 }

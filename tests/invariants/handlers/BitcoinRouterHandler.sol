@@ -91,30 +91,50 @@ contract BitcoinRouterHandler is HandlerBase {
         console.log("brh.processRedemptionOnWm(%s)", seed);
         numberOfCalls["brh.processRedemptionsOnWm"]++;
 
-        uint256 sharesToProcess = selectRequestsToProcess(seed);
+        uint256[] memory activeRequestIds = _activeRequestIds(withdrawalManager);
 
-        // Skip if nothing can be processed.
-        if (sharesToProcess == 0) {
+        if (activeRequestIds.length == 0) {
             return;
         }
 
-        vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(sharesToProcess);
-    }
+        uint256 requestCount = _bound(seed, 1, activeRequestIds.length);
+        uint256 totalShares;
+        uint256 processableCount;
 
-    function processEmptyRedemptionsOnWm(uint256 seed) external {
-        console.log("brh.processEmptyRedemptionsOnWm(%s)", seed);
-        numberOfCalls["brh.processEmptyRedemptionsOnWm"]++;
+        uint256[] memory randomRequestIds   = randomSubset(seed, requestCount, activeRequestIds);
+        uint256[] memory selectedRequestIds = new uint256[](requestCount);
 
-        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+        uint256 availableAssets = poolAsset.balanceOf(address(pool));
 
-        if (nextRequestId >= lastRequestId) return;
+        for (uint256 i; i < requestCount; ++i) {
+            uint256 requestId = randomRequestIds[i];
 
-        uint256 numberOfRequests = lastRequestId - nextRequestId;
-        uint256 numberOfRequestsToProcess = _bound(_randomize(seed, "numberOfRequestsToProcess"), 1, numberOfRequests);
+            ( , uint256 sharesToProcess ) = withdrawalManager.requests(requestId);
 
-        vm.prank(poolDelegate);
-        withdrawalManager.processEmptyRedemptions(numberOfRequestsToProcess);
+            totalShares += sharesToProcess;
+
+            uint256 assetsRequired = pool.convertToExitAssets(totalShares);
+
+            // If there are not enough assets in the pool, process only the requests selected so far.
+            if (assetsRequired > availableAssets) {
+                break;
+            }
+
+            selectedRequestIds[i] = requestId;
+            processableCount++;
+        }
+
+        if (processableCount == 0) {
+            return;
+        }
+
+        uint256[] memory requestIds = new uint256[](processableCount);
+
+        for (uint256 i; i < processableCount; ++i) {
+            requestIds[i] = selectedRequestIds[i];
+        }
+
+        processRedemptionByIds(address(pool), requestIds);
     }
 
     function removeRequests(uint256 seed) external {
@@ -261,41 +281,6 @@ contract BitcoinRouterHandler is HandlerBase {
         // NOTE: These values can be zero if the request has been cancelled but not yet processed.
         ( , lp, )    = bitcoinRouter.redeemRequests(requestId);
         ( , shares ) = withdrawalManager.requests(requestId);
-    }
-
-    function selectRequestsToProcess(uint256 seed) internal view returns (uint256 totalShares) {
-        ( uint256 nextRequestId, uint256 lastRequestId ) = withdrawalManager.queue();
-
-        uint256 liquidity = poolAsset.balanceOf(address(pool));
-
-        // Select as many requests as can be processed.
-        for ( ; nextRequestId <= lastRequestId; nextRequestId++) {
-
-            // Stop selecting requests once there is no liquidity left.
-            if (liquidity == 0) {
-                break;
-            }
-
-            ( , uint256 shares ) = withdrawalManager.requests(nextRequestId);
-
-            // Skip cancelled requests.
-            if (shares == 0) {
-                continue;
-            }
-
-            uint256 assets = pool.convertToExitAssets(shares);
-
-            // Stop selecting requests if you can't fully process the current one.
-            // TODO: Replace this with logic that partially processes the request instead.
-            if (liquidity < assets) {
-                break;
-            }
-
-            totalShares += shares;
-            liquidity -= assets;
-        }
-
-        totalShares = _bound(_randomize(seed, "totalShares"), 0, totalShares);
     }
 
     function selectRequestsToRedeem(uint256 seed) internal returns (uint256[] memory requestIds) {

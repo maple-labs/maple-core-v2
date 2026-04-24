@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IHandlerEntryPoint,
+    IWithdrawalManagerQueue
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
+import { Utils }           from "../../../contracts/Utils.sol";
 
 import { console } from "../../../contracts/Runner.sol";
 
-contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
+contract HandlerBase is ProtocolActions, Utils, IHandlerEntryPoint {
 
     uint256 constant internal WEIGHTS_RANGE = 10_000;
 
@@ -66,6 +70,10 @@ contract HandlerBase is ProtocolActions, IHandlerEntryPoint {
 
     function _randomize(uint256 seed, string memory salt) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(seed, salt)));
+    }
+
+    function _activeRequestIds(IWithdrawalManagerQueue withdrawalManager_) internal view returns (uint256[] memory requestIds_) {
+        ( requestIds_, , ) = withdrawalManager_.pendingRequestIds(0, type(uint256).max);
     }
 
 }

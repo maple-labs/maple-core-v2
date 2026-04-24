@@ -345,7 +345,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         requestIds[0]               = 1;
 
         vm.prank(syrupBitcoinPoolDelegate);
-        IWithdrawalManager(withdrawalManager).processRedemptions(requestAmount);
+        IWithdrawalManager(withdrawalManager).processRedemptions(requestIds);
 
         vm.prank(bitcoinRouterRedeemer);
         ISyrupBitcoinRouter(bitcoinRouterProxy).processRedemptions(requestIds);

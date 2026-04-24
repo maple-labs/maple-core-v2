@@ -41,8 +41,7 @@ contract SyrupBitcoinInvariants is BaseInvariants {
 
         bitcoinRouterHandler.setSelectorWeight("deposit(uint256)",                     4_500);
         bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnRouter(uint256)",  1_000);
-        bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnWm(uint256)",      900);
-        bitcoinRouterHandler.setSelectorWeight("processEmptyRedemptionsOnWm(uint256)", 100);
+        bitcoinRouterHandler.setSelectorWeight("processRedemptionsOnWm(uint256)",      1_000);
         bitcoinRouterHandler.setSelectorWeight("removeRequests(uint256)",              250);
         bitcoinRouterHandler.setSelectorWeight("removeSharesById(uint256)",            500);
         bitcoinRouterHandler.setSelectorWeight("requestRedeem(uint256)",               2_500);

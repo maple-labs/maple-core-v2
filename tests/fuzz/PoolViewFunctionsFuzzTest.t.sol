@@ -225,7 +225,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         vm.prank(user);
         pool.requestRedeem(assets, user);  // lock shares
 
-        processRedemptions(address(pool), assets);  // assets <> shares conversion rate 1:1 due to single LP
+        processRedemptionByOwners(address(pool), array(user));  // assets <> shares conversion rate 1:1 due to single LP
 
         uint256 shares = queueWM.lockedShares(user);
 

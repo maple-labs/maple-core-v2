@@ -345,18 +345,9 @@ contract MaxRedeemWMQueueTests is TestBase {
         assertEq(maxShares, 0);
     }
 
-    function test_maxRedeem_afterPartialRedeem() external {
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6 / 2);
-
-        maxShares = pool.maxRedeem(lp1);
-
-        assertEq(maxShares, 1_000e6 / 2);
-    }
-
     function test_maxRedeem_afterFullRedeem() external {
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6);
+        queueWM.processRedemptions(array(1));
 
         maxShares = pool.maxRedeem(lp1);
 
@@ -365,7 +356,7 @@ contract MaxRedeemWMQueueTests is TestBase {
 
     function test_maxRedeem_afterPartialManualRedeem() external {
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6);
+        queueWM.processRedemptions(array(1));
 
         redeem(address(pool), lp1, 1_000e6 / 2);
 
@@ -376,7 +367,7 @@ contract MaxRedeemWMQueueTests is TestBase {
 
     function test_maxRedeem_afterFullManualRedeem() external {
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(1_000e6);
+        queueWM.processRedemptions(array(1));
 
         redeem(address(pool), lp1, 1_000e6);
 
@@ -387,7 +378,7 @@ contract MaxRedeemWMQueueTests is TestBase {
 
     function test_maxRedeem_notManual() external {
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(2_000e6);
+        queueWM.processRedemptions(array(1, 2));
 
         maxShares = pool.maxRedeem(lp2);
 
@@ -544,7 +535,7 @@ contract PreviewRedeemWithQueueWMTests is TestBase {
         pool.requestRedeem(shares, lender);
 
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(shares);
+        queueWM.processRedemptions(array(1));
     }
 
     function test_previewRedeem_insufficientShares() external {
@@ -648,7 +639,7 @@ contract AutomatedPreviewRedeemWithQueueWMTests is TestBase {
 
     function testFuzz_previewRedeem_processed(uint256 sharesToRedeem) external {
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(shares);
+        queueWM.processRedemptions(array(1));
 
         vm.prank(lender);
         uint256 assets = pool.previewRedeem(sharesToRedeem);
@@ -739,30 +730,30 @@ contract PreviewWithdrawWithQueueWMTests is TestBase {
     function testFuzz_previewWithdraw(
         address lender,
         bool    isManual,
-        uint256 amountToRequest,
-        uint256 amountToProcess,
+        uint256 amountToDeposit,
+        uint256 amountToRequestRedeem,
         uint256 amountToWithdraw
     )
         external
     {
         vm.assume(lender != address(0));
 
-        amountToRequest = bound(amountToRequest,  0, 1e30);
-        amountToProcess = bound(amountToProcess,  0, amountToRequest);
+        amountToDeposit        = bound(amountToDeposit,       0, 1e30);
+        amountToRequestRedeem  = bound(amountToRequestRedeem, 0, amountToDeposit);
 
         vm.prank(poolDelegate);
         queueWM.setManualWithdrawal(lender, isManual);
 
-        if (amountToRequest > 0) {
-            deposit(lender, amountToRequest);
-
-            vm.prank(lender);
-            pool.requestRedeem(amountToRequest, lender);
+        if (amountToDeposit > 0) {
+            deposit(lender, amountToDeposit);
         }
 
-        if (amountToProcess > 0) {
+        if (amountToRequestRedeem > 0) {
+            vm.prank(lender);
+            pool.requestRedeem(amountToRequestRedeem, lender);
+
             vm.prank(poolDelegate);
-            queueWM.processRedemptions(amountToProcess);
+            queueWM.processRedemptions(array(1));
         }
 
         vm.prank(lender);

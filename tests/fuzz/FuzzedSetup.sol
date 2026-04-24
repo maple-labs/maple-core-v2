@@ -221,21 +221,35 @@ contract FuzzedUtil is ProtocolActions {
         IPoolManager            poolManager       = IPoolManager(_poolManager);
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
 
-        uint256 totalShares = withdrawalManager.totalShares();
+        ( uint256[] memory requestIds, , ) = withdrawalManager.pendingRequestIds(0, type(uint256).max);
 
-        // There's some rounding in the pools that prevent the last hundred or so shares from being redeemed.
-        if (totalShares > 100) {
+        // Process requests one by one because the queue WM checks liquidity against the
+        // entire batch. A full pending-request batch can revert with WM:PR:LOW_LIQUIDITY
+        // even when each individual request can be processed.
+        for (uint256 i; i < requestIds.length; ++i) {
+            uint256[] memory requestId_ = new uint256[](1);
+            requestId_[0]               = requestIds[i];
+
             vm.prank(poolManager.poolDelegate());
-            withdrawalManager.processRedemptions(totalShares - 100);
-            // Redeem all LP tokens.
-            for (uint256 i; i < lps.length; ++i) {
-                if (withdrawalManager.manualSharesAvailable(lps[i]) > 0) {
-                    redeem(address(_pool), lps[i], escrowedShares[i]);
+            withdrawalManager.processRedemptions(requestId_);
+        }
+
+        // Redeem all manually available shares that are currently backed by idle liquidity.
+        for (uint256 i; i < lps.length; ++i) {
+            uint256 manualSharesAvailable_ = withdrawalManager.manualSharesAvailable(lps[i]);
+
+            if (manualSharesAvailable_ > 0) {
+                // manualSharesAvailable is only the unlocked amount
+                // previewRedeem caps it to what can be redeemed without over-asking the pool for assets.
+                ( uint256 redeemableShares_, ) = withdrawalManager.previewRedeem(lps[i], manualSharesAvailable_);
+
+                if (redeemableShares_ > 0) {
+                    redeem(address(_pool), lps[i], redeemableShares_);
                 }
             }
         }
-
     }
+
     function createAndFundLoan(function() returns (address) createLoan_) internal returns (address loan) {
         loan = createLoan_();
         loans.push(loan);

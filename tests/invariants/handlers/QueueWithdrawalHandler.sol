@@ -47,14 +47,26 @@ contract QueueWithdrawalHandler is HandlerBase {
         console.log("qwm.processRedemptions(%s)", seed_);
         numberOfCalls["qwm.processRedemptions"]++;
 
-        uint256 sharesToProcess_ = _bound(_randomize(seed_, "shares"), 0, wm.totalShares());
+        uint256[] memory activeRequestIds_ = _activeRequestIds(wm);
 
-        if (sharesToProcess_ == 0) return;
+        if (activeRequestIds_.length == 0) return;
+
+        uint256 requestCount_ = _bound(_randomize(seed_, "requestCount_"), 1, activeRequestIds_.length);
+
+        uint256[] memory requestIds_ = randomSubset(seed_, requestCount_, activeRequestIds_);
+        
+        uint256 totalShares_;
+
+        for (uint256 i; i < requestCount_; ++i) {
+            ( , uint256 sharesToProcess_ ) = wm.requests(requestIds_[i]);
+
+            totalShares_ += sharesToProcess_;
+        }
 
         // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
         address depositLp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint256 assetsRequired_ = pool.previewMint(sharesToProcess_);
+        uint256 assetsRequired_ = pool.convertToExitAssets(totalShares_);
 
         vm.startPrank(depositLp_);
         asset.mint(depositLp_, assetsRequired_);
@@ -63,24 +75,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         pool.deposit(assetsRequired_, depositLp_);
         vm.stopPrank();
 
-        vm.prank(pm.poolDelegate());
-        wm.processRedemptions(sharesToProcess_);
-    }
-
-    function processEmptyRedemptions(uint256 seed_) external {
-        console.log("qwm.processEmptyRedemptions(%s)", seed_);
-        numberOfCalls["qwm.processEmptyRedemptions"]++;
-
-        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = wm.queue();
-
-        if (nextRequestId_ >= lastRequestId_) return;
-
-        uint256 numberOfRequests_ = lastRequestId_ - nextRequestId_;
-
-        uint256 numberOfRequestsToProcess_ = _bound(_randomize(seed_, "numberOfRequestsToProcess"), 1, numberOfRequests_);
-
-        vm.prank(pm.poolDelegate());
-        wm.processEmptyRedemptions(numberOfRequestsToProcess_);
+        processRedemptionByIds(address(pool), requestIds_);
     }
 
     function redeem(uint256 seed_) external {
@@ -98,7 +93,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
         address depositLp_ = lps[_bound(_randomize(seed_, "depositLp"), 0, lps.length - 1)];
 
-        uint256 assetsRequired_ = pool.previewMint(sharesToRedeem_);
+        uint256 assetsRequired_ = pool.convertToExitAssets(sharesToRedeem_);
 
         vm.startPrank(depositLp_);
         asset.mint(depositLp_, assetsRequired_);
@@ -159,7 +154,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         address lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
         ( uint256[] memory requestIds_, uint256[] memory sharesPerRequest_ ) = wm.requestsByOwner(lp_);
-        
+
         if (requestIds_.length == 0) return;
 
         uint256 indexOfRequestToRemove_ = _bound(_randomize(seed_, "indexOfRequestToRemove"), 0, requestIds_.length - 1);

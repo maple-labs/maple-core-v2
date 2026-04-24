@@ -81,7 +81,7 @@ contract PoolExitPermissionsFuzzTests is TestBase {
 
         requestRedeem(address(pool), lp, amount);
 
-        processRedemptions(address(pool), amount);  // assets <> shares conversion rate 1:1 due to single LP
+        processRedemptionByOwners(address(pool), array(lp));  // assets <> shares conversion rate 1:1 due to single LP
 
         assertEq(fundsAsset.balanceOf(receiver),      0);
         assertEq(fundsAsset.balanceOf(address(pool)), amount);

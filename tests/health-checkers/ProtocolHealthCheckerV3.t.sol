@@ -56,6 +56,14 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
         protocolHealthCheckerV3 = address(new ProtocolHealthChecker());
     }
 
+    function _processRedemptionsOnOldQueueWM(address withdrawalManager_, uint256 shares_) internal {
+        // TODO: Replace this low-level compatibility shim with a dedicated historical queue WM interface
+        // once we decide how we want to support fork tests against older deployed withdrawal managers.
+        vm.prank(redemptionExecutor);
+        ( bool success_, ) = withdrawalManager_.call(abi.encodeWithSignature("processRedemptions(uint256)", shares_));
+        require(success_, "OLD_WM:PROCESS_REDEMPTIONS_FAILED");
+    }
+
     function testFork_protocolHealthCheckerV2_syrupUSDC_reverts_withdrawalManagerQueueInvariantA() public view {
         ProtocolHealthChecker.Invariants memory results =
             IProtocolHealthCheckerV2(protocolHealthCheckerV2).checkInvariants(syrupUSDCPoolManager);
@@ -134,7 +142,7 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
         uint256 sharesToProcess    = expectedSharesAmountInTheQueue + redeemAmount / 2;
         uint256 expectedSharesLeft = redeemAmount / 2;
 
-        processRedemptions(syrupUSDCPool, sharesToProcess);
+        _processRedemptionsOnOldQueueWM(syrupUSDCWithdrawalManagerQueue, sharesToProcess);
 
         assertProtocolInvariants(syrupUSDCPoolManager, protocolHealthCheckerV3, manualRedeemers);
 
@@ -169,7 +177,7 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
         /*** Step 6: Process remaining shares                                                                                           ***/
         /**********************************************************************************************************************************/
 
-        processRedemptions(syrupUSDCPool, redeemAmount / 2);
+        _processRedemptionsOnOldQueueWM(syrupUSDCWithdrawalManagerQueue, redeemAmount / 2);
 
         assertProtocolInvariants(syrupUSDCPoolManager, protocolHealthCheckerV3, manualRedeemers);
 

@@ -34,12 +34,6 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         wm = address(queueWM);
     }
 
-    function test_processRedemptions_zeroShares() external {
-        vm.prank(poolDelegate);
-        vm.expectRevert("WM:PR:ZERO_SHARES");
-        queueWM.processRedemptions(0);
-    }
-
     function test_processRedemptions_lowLiquidity() external {
         uint32 gracePeriod     = 200_000;
         uint32 noticePeriod    = 100_000;
@@ -61,9 +55,12 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         // Request redemptions
         requestRedeem(lp1, 1_000e6);
 
+        uint256[] memory requestIds = new uint256[](1);
+        requestIds[0]               = queueWM.requestIds(lp1);
+
         vm.prank(poolDelegate);
         vm.expectRevert("WM:PR:LOW_LIQUIDITY");
-        queueWM.processRedemptions(1_000e6);
+        queueWM.processRedemptions(requestIds);
     }
 
     function test_processRedemptions_multipleLps() external {
@@ -105,8 +102,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 11_000e6);
 
         // Process full liquidity
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(10_000e6);
+        processRedemptionByOwners(address(pool), array(lp1, lp2, lp3, lp4));
 
         // Post-assertions
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
@@ -173,17 +169,16 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(wm),            0);
         assertEq(fundsAsset.balanceOf(address(pool)), 11_000e6);
 
-        // Process 1st and partially 2nd requests.
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(2_000e6);
+        // Process 1st request.
+        processRedemptionByOwners(address(pool), array(lp1));
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2,        shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2,        shares: 2_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3,        shares: 3_000e6 });
         assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4,        shares: 4_000e6 });
 
         assertEq(queueWM.userEscrowedShares(lp1), 0);
-        assertEq(queueWM.userEscrowedShares(lp2), 1_000e6);
+        assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
         assertEq(queueWM.userEscrowedShares(lp3), 3_000e6);
         assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
 
@@ -193,32 +188,31 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2),   0);
         assertEq(pool.balanceOf(lp3),   0);
         assertEq(pool.balanceOf(lp4),   0);
-        assertEq(pool.balanceOf(wm),    8_000e6);
-        assertEq(queueWM.totalShares(), 8_000e6);
+        assertEq(pool.balanceOf(wm),    9_000e6);
+        assertEq(queueWM.totalShares(), 9_000e6);
 
         assertEq(fundsAsset.balanceOf(lp1),           1_100e6);  // 1_000e6 * 1.1
-        assertEq(fundsAsset.balanceOf(lp2),           1_100e6);  // 1_000e6 * 1.1
+        assertEq(fundsAsset.balanceOf(lp2),           0);
         assertEq(fundsAsset.balanceOf(lp3),           0);
         assertEq(fundsAsset.balanceOf(lp4),           0);
         assertEq(fundsAsset.balanceOf(wm),            0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 8_800e6);  // 10_000e6 - 2_2000e6
+        assertEq(fundsAsset.balanceOf(address(pool)), 9_900e6);  // 11_000e6 - 1_100e6
 
-        // Exchange rate = 8_000e6 shares for 8_800e6 + 880e6  assets = 9_680e6 / 8_000e6 = 1.21
-        fundsAsset.mint(address(pool), 880e6);
+        // Exchange rate = 9_000e6 shares for 9_900e6 + 900e6 assets = 10_800e6 / 9_000e6 = 1.2.
+        fundsAsset.mint(address(pool), 900e6);
 
-        // Process 2nd, 3rd and partially 4th requests.
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(6_000e6);
+        // Process 2nd and 3rd requests.
+        processRedemptionByOwners(address(pool), array(lp2, lp3));
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 3, owner: address(0), shares: 0 });
-        assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4,        shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 4, owner: lp4,        shares: 4_000e6 });
 
         assertEq(queueWM.userEscrowedShares(lp1), 0);
         assertEq(queueWM.userEscrowedShares(lp2), 0);
         assertEq(queueWM.userEscrowedShares(lp3), 0);
-        assertEq(queueWM.userEscrowedShares(lp4), 2_000e6);
+        assertEq(queueWM.userEscrowedShares(lp4), 4_000e6);
 
         assertQueue({poolManager: address(poolManager), nextRequestId: 4, lastRequestId: 4 });
 
@@ -226,22 +220,21 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(lp2),   0);
         assertEq(pool.balanceOf(lp3),   0);
         assertEq(pool.balanceOf(lp4),   0);
-        assertEq(pool.balanceOf(wm),    2_000e6);
-        assertEq(queueWM.totalShares(), 2_000e6);
+        assertEq(pool.balanceOf(wm),    4_000e6);
+        assertEq(queueWM.totalShares(), 4_000e6);
 
         assertEq(fundsAsset.balanceOf(lp1),           1_100e6);
-        assertEq(fundsAsset.balanceOf(lp2),           2_310e6);  // 1_100e6 (previous redemption) + (1_000e6 * 1.21 = 1_210e6)
-        assertEq(fundsAsset.balanceOf(lp3),           3_630e6);  // 3_000e6 * 1.21
-        assertEq(fundsAsset.balanceOf(lp4),           2_420e6);  // 2_000e6 * 1.21
+        assertEq(fundsAsset.balanceOf(lp2),           2_400e6);  // 2_000e6 * 1.2
+        assertEq(fundsAsset.balanceOf(lp3),           3_600e6);  // 3_000e6 * 1.2
+        assertEq(fundsAsset.balanceOf(lp4),           0);
         assertEq(fundsAsset.balanceOf(wm),            0);
-        assertEq(fundsAsset.balanceOf(address(pool)), 2_420e6);  // 8_800e6 + 880e6 - 6_000e6(sum of requests)
+        assertEq(fundsAsset.balanceOf(address(pool)), 4_800e6);  // 10_800e6 - 2_400e6 - 3_600e6
 
-        // Exchange rate = 2_000e6 shares for 2_420e6 +  880e6 assets = 3_300e6 / 2_000e6 = 1.65
-        fundsAsset.mint(address(pool), 880e6);
+        // Exchange rate = 4_000e6 shares for 4_800e6 + 800e6 assets = 5_600e6 / 4_000e6 = 1.4.
+        fundsAsset.mint(address(pool), 800e6);
 
-        // Process 4th requests.
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(2_000e6);
+        // Process 4th request.
+        processRedemptionByOwners(address(pool), array(lp4));
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
@@ -263,9 +256,9 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(queueWM.totalShares(), 0);
 
         assertEq(fundsAsset.balanceOf(lp1),           1_100e6);
-        assertEq(fundsAsset.balanceOf(lp2),           2_310e6);
-        assertEq(fundsAsset.balanceOf(lp3),           3_630e6);
-        assertEq(fundsAsset.balanceOf(lp4),           5_720e6);  // 2_420e6 + (2_000e6 * 1.65)
+        assertEq(fundsAsset.balanceOf(lp2),           2_400e6);
+        assertEq(fundsAsset.balanceOf(lp3),           3_600e6);
+        assertEq(fundsAsset.balanceOf(lp4),           5_600e6);  // 4_000e6 * 1.4
         assertEq(fundsAsset.balanceOf(wm),            0);
         assertEq(fundsAsset.balanceOf(address(pool)), 0);
     }
@@ -311,8 +304,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(pool)), 9_000e6);
 
         // Process full liquidity
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(10_000e6);
+        processRedemptionByOwners(address(pool), array(lp1, lp2, lp3, lp4));
 
         // Post-assertions
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
@@ -366,8 +358,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
             assertRequest({ poolManager: address(poolManager), requestId: uint128(i + 1), owner: lp2, shares: 2_000e6});
             assertEq(queueWM.userEscrowedShares(lp2), 2_000e6);
 
-            vm.prank(poolDelegate);
-            queueWM.processRedemptions(2_000e6);
+            processRedemptionByOwners(address(pool), array(lp2));
 
             assertEq(queueWM.manualSharesAvailable(lp2), 2_000e6 * (i + 1));
         }
@@ -418,6 +409,8 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(wm),            0);
         assertEq(fundsAsset.balanceOf(address(pool)), 11_000e6);
 
+        uint256[] memory requestIds = array(1, 2, 3, 4);
+
         // LP3 cancels their request
         removeShares(address(pool), lp3, 3_000e6);
 
@@ -427,8 +420,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(queueWM.totalShares(), 7_000e6);
 
         // Process full liquidity
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(7_000e6);
+        processRedemptionByIds(address(pool), requestIds);
 
         // Post-assertions
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
@@ -460,7 +452,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         assertEq(queueWM.manualSharesAvailable(lp2), 2_000e6);
     }
 
-    function test_processRedemptions_overkill() external {
+    function test_processRedemptions_processMoreRequestsThanPending() external {
         // Request all withdrawals.
         requestRedeem(lp1, 1_000e6);
         requestRedeem(lp2, 2_000e6);
@@ -498,9 +490,8 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
 
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 4 });
 
-        // Process more than the total shares.
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(10_000e6 + 1_500e6);
+        // Process requested ids, including a missing request.
+        processRedemptionByIds(address(pool), array(1, 2, 3, 4, 5));
 
         // Post assertions.
         assertEq(fundsAsset.balanceOf(lp1),           1_000e6);
@@ -557,8 +548,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         // Impair loan
         impairLoan(address(loan));
 
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(6_000e6);
+        processRedemptionByOwners(address(pool), array(lp1, lp2, lp3));
 
         // Post assertions.
         assertEq(fundsAsset.balanceOf(lp1),           900e6);

@@ -160,7 +160,7 @@ contract SmartAccountETHTests is TestBase {
         assertEq(lastRequestId, 1);
 
         // Process withdrawals.
-        processRedemptions(address(pool), depositAmount);
+        processRedemptionByOwners(address(pool), array(smartAccount));
 
         // Assert balances.
         assertEq(IERC20Like(address(fundsAsset)).balanceOf(owner),         0);

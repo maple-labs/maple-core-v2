@@ -867,7 +867,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(sharesToRedeem);
+        withdrawalManager.processRedemptions(requestIds);
 
         assertSyrupBtcSystemState({
             strategyManagerBalance:    amountToDeploy,
@@ -1678,11 +1678,11 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
 
         assertEq(depositAsset.balanceOf(lp), 0);
 
-        vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(redeemAmount - sharesToRemove);
-
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0]               = 2;
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(requestIds);
 
         vm.prank(redeemer);
         bitcoinRouter.processRedemptions(requestIds);
@@ -1762,8 +1762,6 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
 
         assertUsersRequestsOnWm(address(bitcoinRouter), requestIds);
 
-        uint256 amountToProcess = redeemAmount1 + redeemAmount2 + redeemAmount3;
-
         /**********************************************************************************************************************************/
         /*** Step 2: Process all of them on WM but only 1 and 3 on router                                                               ***/
         /**********************************************************************************************************************************/
@@ -1771,7 +1769,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         assertEq(depositAsset.balanceOf(lp), 0);
 
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(amountToProcess);
+        withdrawalManager.processRedemptions(requestIds);
 
         uint256[] memory requestsToProcessOnRouter = new uint256[](2);
         requestsToProcessOnRouter[0]               = 1;

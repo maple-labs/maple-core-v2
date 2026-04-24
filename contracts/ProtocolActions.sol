@@ -883,13 +883,28 @@ contract ProtocolActions is Runner {
     }
 
     // NOTE: Only works for queued withdrawal managers.
-    function processRedemptions(address pool_, uint256 shares_) internal {
+    // NOTE: Processes last request for each owner.
+    function processRedemptionByOwners(address pool_, address[] memory owners_) internal {
+        address poolManager_       = IPool(pool_).manager();
+        address withdrawalManager_ = IPoolManager(poolManager_).withdrawalManager();
+
+        uint256[] memory requestIds_ = new uint256[](owners_.length);
+
+        for (uint256 i; i < owners_.length; ++i) {
+            requestIds_[i] = IWithdrawalManagerQueue(withdrawalManager_).requestIds(owners_[i]);
+        }
+
+        processRedemptionByIds(pool_, requestIds_);
+    }
+
+    // NOTE: Only works for queued withdrawal managers.
+    function processRedemptionByIds(address pool_, uint256[] memory requestIds_) internal {
         address poolManager_       = IPool(pool_).manager();
         address withdrawalManager_ = IPoolManager(poolManager_).withdrawalManager();
         address poolDelegate_      = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IWithdrawalManagerQueue(withdrawalManager_).processRedemptions(shares_);
+        IWithdrawalManagerQueue(withdrawalManager_).processRedemptions(requestIds_);
     }
 
     function removeLoanCall(address loan_) internal {

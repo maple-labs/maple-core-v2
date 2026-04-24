@@ -168,7 +168,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         uint256 assetsOut_1 = totalAssets * shares_1 / pool.totalSupply();
 
         requestRedeem(address(pool), lp_1, shares_1);
-        processRedemptions(address(pool), shares_1);
+        processRedemptionByOwners(address(pool), array(lp_1));
 
         totalAssets -= assetsOut_1;
 
@@ -200,7 +200,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         uint256 assetsOut_2 = totalAssets * shares_2 / pool.totalSupply();
 
         requestRedeem(address(pool), lp_2, shares_2);
-        processRedemptions(address(pool), shares_2);
+        processRedemptionByOwners(address(pool), array(lp_2));
 
         totalAssets -= assetsOut_2;
 
@@ -263,7 +263,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         uint256 assetsOut_1 = totalAssets * shares_1 / pool.totalSupply();
 
         requestRedeem(address(pool), lp_1, shares_1);
-        processRedemptions(address(pool), shares_1);
+        processRedemptionByOwners(address(pool), array(lp_1));
 
         totalAssets -= assetsOut_1;
 
@@ -290,7 +290,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         uint256 assetsOut_2 = (totalAssets - aum) * shares_2 / pool.totalSupply();
 
         requestRedeem(address(pool), lp_2, shares_2);
-        processRedemptions(address(pool), shares_2);
+        processRedemptionByOwners(address(pool), array(lp_2));
 
         totalAssets -= assetsOut_2;
 
@@ -364,7 +364,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         uint256 assetsOut_1 = totalAssets * shares_1 / pool.totalSupply();
 
         requestRedeem(address(pool), lp_1, shares_1);
-        processRedemptions(address(pool), shares_1);
+        processRedemptionByOwners(address(pool), array(lp_1));
 
         totalAssets -= assetsOut_1;
 
@@ -391,7 +391,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         uint256 assetsOut_2 = totalAssets * shares_2 / pool.totalSupply();
 
         requestRedeem(address(pool), lp_2, shares_2);
-        processRedemptions(address(pool), shares_2);
+        processRedemptionByOwners(address(pool), array(lp_2));
 
         totalAssets -= assetsOut_2;
 
@@ -455,7 +455,7 @@ contract StrategyScenarios is TestBaseWithAssertions {
         requestRedeem(address(pool), lp_1, 450_000e6);
         requestRedeem(address(pool), lp_2, 500_000e6);
 
-        processRedemptions(address(pool), 450_000e6 + 500_000e6);
+        processRedemptionByOwners(address(pool), array(lp_1, lp_2));
 
         uint256 assetsWithdrawn = totalAssets * (450_000e6 + 500_000e6) / totalSupply;
 

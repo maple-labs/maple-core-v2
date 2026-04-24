@@ -29,10 +29,11 @@ import {
 } from "../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
+import { Utils }           from "../contracts/Utils.sol";
 
 import { MockLiquidationStrategy } from "./mocks/Mocks.sol";
 
-contract TestBase is ProtocolActions {
+contract TestBase is ProtocolActions, Utils {
 
     uint256 constant MAX_TOKEN_AMOUNT         = 1e29;
     uint256 constant DEFAULT_STRATEGIES_COUNT = 4;
