@@ -39,13 +39,13 @@ contract ValidateTimelockDeploymentInk is TimelockValidationScriptInk {
 
         ( uint256 delay, uint256 window ) = tl.defaultTimelockParameters();
 
-        assertEq(delay,  1 days);
-        assertEq(window, 1 days);
+        assertEq(delay,  1 days, "Invalid minimum delay!");
+        assertEq(window, 1 days, "Invalid minimum window!");
 
         assertEq(tl.hasRole(proposerInk,  proposerRole),  true, "Governor is not a proposer!");
         assertEq(tl.hasRole(executorInk,  executorRole),  true, "Operational admin is not an executor!");
         assertEq(tl.hasRole(cancellerInk, cancellerRole), true, "Security admin is not a canceller!");
-        assertEq(tl.hasRole(proposerInk,  roleAdminRole), true, "Governor is not a role admin!");
+        assertEq(tl.hasRole(roleAdminInk, roleAdminRole), true, "Governor is not a role admin!");
 
         assertEq(tl.hasRole(backupExecutorInk,  executorRole),  false, "Backup executor is already set!");
         assertEq(tl.hasRole(backupRoleAdminInk, roleAdminRole), false, "Backup role admin is already set!");
@@ -129,8 +129,8 @@ contract ValidateConfigurationExecutionInk is TimelockValidationScriptInk {
 
         ( uint256 delay, uint256 window ) = tl.defaultTimelockParameters();
 
-        assertEq(delay,  3 days);
-        assertEq(window, 2 days);
+        assertEq(delay,  3 days, "Invalid minimum delay!");
+        assertEq(window, 2 days, "Invalid minimum window!");
     }
 
 }
