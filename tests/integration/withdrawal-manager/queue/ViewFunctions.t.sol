@@ -201,6 +201,78 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(lastId2, 1);
     }
 
+    function test_pendingRequestIds_updatesAfterProcessingWithPagination() external {
+        address lp2 = makeAddr("lp2");
+        address lp3 = makeAddr("lp3");
+
+        deposit(lp2, 2_000e6);
+        deposit(lp3, 3_000e6);
+
+        requestRedeem(lp,  1_000e6);
+        requestRedeem(lp2, 2_000e6);
+        requestRedeem(lp3, 3_000e6);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp,  shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
+
+        // remove the middle request
+        processRedemptionByIds(address(pool), array(2));
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp,         shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3,        shares: 3_000e6 });
+
+        (
+            uint256[] memory requestIds,
+            address[] memory owners,
+            uint256[] memory shares
+        ) = queueWM.pendingRequestIds(0, type(uint256).max);
+
+        assertEq(requestIds.length, 2);
+        assertEq(owners.length,     2);
+        assertEq(shares.length,     2);
+
+        assertEq(requestIds[0], 1);
+        assertEq(requestIds[1], 3);
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp,  shares: 1_000e6 });
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
+
+        // pagination should give first request
+        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(0, 1);
+
+        assertEq(requestIds.length, 1);
+        assertEq(owners.length,     1);
+        assertEq(shares.length,     1);
+
+        assertEq(requestIds[0], 1);
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp, shares: 1_000e6 });
+
+        // pagination should give second request
+        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(1, 1);
+
+        assertEq(requestIds.length, 1);
+        assertEq(owners.length,     1);
+        assertEq(shares.length,     1);
+
+        assertEq(requestIds[0], 3);
+        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
+
+        // pagination should return empty arrays when start is out of bounds
+        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(2, 1);
+
+        assertEq(requestIds.length, 0);
+        assertEq(owners.length,     0);
+        assertEq(shares.length,     0);
+
+        // pagination should return empty arrays when limit is zero
+        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(0, 0);
+
+        assertEq(requestIds.length, 0);
+        assertEq(owners.length,     0);
+        assertEq(shares.length,     0);
+    }
+
     function test_securityAdmin_updatesAfterChange() external {
         assertEq(queueWM.securityAdmin(), securityAdmin);
 
