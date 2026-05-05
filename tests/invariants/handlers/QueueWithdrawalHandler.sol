@@ -66,7 +66,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
         address depositLp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint256 assetsRequired_ = pool.convertToExitAssets(totalShares_);
+        uint256 assetsRequired_ = pool.convertToAssets(totalShares_);
 
         vm.startPrank(depositLp_);
         asset.mint(depositLp_, assetsRequired_);

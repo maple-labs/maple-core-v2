@@ -253,5 +253,4 @@ contract StrategyInvariants is BaseInvariants {
         assert_strategy_invariants();
     }
 
-
 }
