@@ -477,6 +477,12 @@ interface IWithdrawalManagerLike {
     function getCurrentCycleId() external view returns (uint256 cycleId_);
 }
 
+interface IWithdrawalManagerQueueV200Like {
+
+    function processRedemptions(uint256 maxSharesToProcess) external;
+
+}
+
 interface IPSMLike {
 
     function buyGem(address usr, uint256 gemAmt) external returns (uint256 daiInWad);

@@ -60,7 +60,7 @@ import { MapleWithdrawalManagerInitializer as MWMQI }
 import { MapleWithdrawalManagerMigratorV300 as MWMQM }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV300.sol";
 
-import { SyrupRouter } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
+import { SyrupRouter as SR } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
@@ -155,6 +155,12 @@ contract PoolManagerFactory is MPMF {
 contract PoolPermissionManager is MPPM { }
 
 contract PoolPermissionManagerInitializer is MPPMI { }
+
+contract SyrupRouter is SR {
+
+    constructor(address pool_) SR(pool_) { }
+
+}
 
 contract WithdrawalManagerCyclical is MWMC { }
 
