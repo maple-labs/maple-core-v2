@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1779200000000,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "SyrupUSDG: allowlist PoolManager + router + withdrawal manager on the PoolPermissionManager, and register turnkey signer + router as permission admins",
+    "txBuilderVersion": "2.0.1",
+    "createdFromSafeAddress": "0xCe1cE7c7F436DCc4E28Bc8bf86115514d3DC34E8",
+    "createdFromOwnerAddress": "",
+    "checksum": "0xd18d27e4862fa35b5eedc99a38058b19e06ab62da205ff4555f10ade2a332601"
+  },
+  "transactions": [
+    {
+      "to": "0xBe10aDcE8B6E3E02Db384E7FaDA5395DD113D8b3",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "poolManager_",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "lenders_",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "booleans_",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          }
+        ],
+        "name": "setLenderAllowlist",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "poolManager_": "0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327",
+        "lenders_": "[0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327,0x191ac16255f49F7C6cB2e3b2502064A805943849,0xAf63C06970086d535F338565D77c5fA3bDC5fD79]",
+        "booleans_": "[true,true,true]"
+      }
+    },
+    {
+      "to": "0xBe10aDcE8B6E3E02Db384E7FaDA5395DD113D8b3",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "permissionAdmin_",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "isPermissionAdmin_",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ],
+        "name": "setPermissionAdmin",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "permissionAdmin_": "0x4575e7E9eA9e3C6132b2ea94A69E61d407708655",
+        "isPermissionAdmin_": "true"
+      }
+    },
+    {
+      "to": "0xBe10aDcE8B6E3E02Db384E7FaDA5395DD113D8b3",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "permissionAdmin_",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "isPermissionAdmin_",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ],
+        "name": "setPermissionAdmin",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "permissionAdmin_": "0x191ac16255f49F7C6cB2e3b2502064A805943849",
+        "isPermissionAdmin_": "true"
+      }
+    }
+  ]
+}

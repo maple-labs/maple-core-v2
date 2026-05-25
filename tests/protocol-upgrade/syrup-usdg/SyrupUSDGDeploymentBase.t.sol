@@ -39,12 +39,12 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
 
     uint256 startingTime;
 
-    address openTermLoanManager;
-    address syrupUSDGPool;
-    address syrupUSDGPoolDelegateCover;
-    address syrupUSDGPoolManager;
-    address syrupUSDGSyrupRouter;
-    address syrupUSDGWithdrawalManager;
+    address usdgOpenTermLoanManager;
+    address usdgPool;
+    address usdgPoolDelegateCover;
+    address usdgPoolManager;
+    address usdgSyrupRouter;
+    address usdgWithdrawalManager;
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 25_070_219);
@@ -110,7 +110,7 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
 
         // NOTE: `deployPool` must be called by a valid pool delegate.
         vm.prank(poolDelegate);
-        syrupUSDGPoolManager = IPoolDeployer(poolDeployerV4).deployPool(
+        usdgPoolManager = IPoolDeployer(poolDeployerV4).deployPool(
             poolManagerFactory,
             withdrawalManagerQueueFactory,
             strategyFactories,
@@ -122,19 +122,19 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
             configParams
         );
 
-        syrupUSDGPool              = IPoolManager(syrupUSDGPoolManager).pool();
-        syrupUSDGWithdrawalManager = IPoolManager(syrupUSDGPoolManager).withdrawalManager();
-        syrupUSDGPoolDelegateCover = IPoolManager(syrupUSDGPoolManager).poolDelegateCover();
-        openTermLoanManager        = IPoolManager(syrupUSDGPoolManager).strategyList(0);
+        usdgPool                = IPoolManager(usdgPoolManager).pool();
+        usdgWithdrawalManager   = IPoolManager(usdgPoolManager).withdrawalManager();
+        usdgPoolDelegateCover   = IPoolManager(usdgPoolManager).poolDelegateCover();
+        usdgOpenTermLoanManager = IPoolManager(usdgPoolManager).strategyList(0);
 
         // Step 5: Operational admin executes post-deploy workflow (config, seed burn, router, allowlist)
 
         vm.startPrank(operationalAdmin);
 
-        IGlobals(globals).activatePoolManager(syrupUSDGPoolManager);
-        IGlobals(globals).setPlatformOriginationFeeRate(syrupUSDGPoolManager, PLATFORM_ORIGINATION_FEE_RATE);
-        IGlobals(globals).setPlatformServiceFeeRate(syrupUSDGPoolManager, PLATFORM_SERVICE_FEE_RATE);
-        IGlobals(globals).setPlatformManagementFeeRate(syrupUSDGPoolManager, PLATFORM_MANAGEMENT_FEE_RATE);
+        IGlobals(globals).activatePoolManager(usdgPoolManager);
+        IGlobals(globals).setPlatformOriginationFeeRate(usdgPoolManager, PLATFORM_ORIGINATION_FEE_RATE);
+        IGlobals(globals).setPlatformServiceFeeRate(usdgPoolManager, PLATFORM_SERVICE_FEE_RATE);
+        IGlobals(globals).setPlatformManagementFeeRate(usdgPoolManager, PLATFORM_MANAGEMENT_FEE_RATE);
 
         bytes32[] memory functionIdsToSet = new bytes32[](11);
         uint256[] memory bitmaps          = new uint256[](11);
@@ -164,7 +164,7 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
         bitmaps[10] = SYRUP_USDG_LENDER_BITMAP;
 
         IPoolPermissionManager(poolPermissionManager).configurePool(
-            syrupUSDGPoolManager,
+            usdgPoolManager,
             1,  // Function level pool permission
             functionIdsToSet,
             bitmaps
@@ -181,22 +181,22 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
         IPoolPermissionManager(poolPermissionManager).setLenderBitmaps(lenders, lenderBitmaps);
 
         deal(USDG, operationalAdmin, INITIAL_DEPOSIT);
-        IERC20(USDG).approve(syrupUSDGPool, INITIAL_DEPOSIT);
-        uint256 initialShares = IPool(syrupUSDGPool).deposit(INITIAL_DEPOSIT, operationalAdmin);
-        IPool(syrupUSDGPool).transfer(address(0), initialShares);
+        IERC20(USDG).approve(usdgPool, INITIAL_DEPOSIT);
+        uint256 initialShares = IPool(usdgPool).deposit(INITIAL_DEPOSIT, operationalAdmin);
+        IPool(usdgPool).transfer(address(0), initialShares);
 
-        syrupUSDGSyrupRouter = deployFromFile("Contracts@7", "SyrupRouter", abi.encode(syrupUSDGPool));
+        usdgSyrupRouter = deployFromFile("Contracts@7", "SyrupRouter", abi.encode(usdgPool));
 
         lenders = new address[](2);
         bool[] memory allowed = new bool[](2);
 
-        lenders[0] = syrupUSDGSyrupRouter;
-        lenders[1] = syrupUSDGWithdrawalManager;
+        lenders[0] = usdgSyrupRouter;
+        lenders[1] = usdgWithdrawalManager;
 
         allowed[0] = true;
         allowed[1] = true;
 
-        IPoolPermissionManager(poolPermissionManager).setLenderAllowlist(syrupUSDGPoolManager, lenders, allowed);
+        IPoolPermissionManager(poolPermissionManager).setLenderAllowlist(usdgPoolManager, lenders, allowed);
         vm.stopPrank();
     }
 

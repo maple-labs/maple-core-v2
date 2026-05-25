@@ -72,8 +72,8 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
 
             performAction(action);
             assertInvariants();
-            assertProtocolInvariants(syrupUSDGPoolManager, usdgProtocolHealthChecker, new address[](0));
-            assertOpenTermLoanInvariants(syrupUSDGPoolManager, loans, usdgOpenTermLoanHealthChecker);
+            assertProtocolInvariants(usdgPoolManager, usdgProtocolHealthChecker, new address[](0));
+            assertOpenTermLoanInvariants(usdgPoolManager, loans, usdgOpenTermLoanHealthChecker);
         }
     }
 
@@ -98,7 +98,7 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
     }
 
     function deposit() internal {
-        uint256 totalAssets = IPoolManager(syrupUSDGPoolManager).totalAssets();
+        uint256 totalAssets = IPoolManager(usdgPoolManager).totalAssets();
 
         if (totalAssets >= LIQUIDITY_CAP) return;
 
@@ -112,21 +112,21 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
         deal(USDG, lender, IERC20(USDG).balanceOf(lender) + amount);
 
         vm.startPrank(lender);
-        IERC20(USDG).approve(syrupUSDGSyrupRouter, amount);
-        ISyrupRouter(syrupUSDGSyrupRouter).deposit(amount, DEPOSIT_DATA);
+        IERC20(USDG).approve(usdgSyrupRouter, amount);
+        ISyrupRouter(usdgSyrupRouter).deposit(amount, DEPOSIT_DATA);
         vm.stopPrank();
     }
 
     function requestRedeem() internal {
         address lender = lenders[getSomeValue(0, lenders.length - 1)];
-        uint256 shares = IPool(syrupUSDGPool).balanceOf(lender);
+        uint256 shares = IPool(usdgPool).balanceOf(lender);
 
         if (shares == 0) return;
 
         uint256 sharesToRedeem = getSomeValue(1, shares);
 
         vm.prank(lender);
-        IPool(syrupUSDGPool).requestRedeem(sharesToRedeem, lender);
+        IPool(usdgPool).requestRedeem(sharesToRedeem, lender);
     }
 
     function removeSharesById() internal {
@@ -135,7 +135,7 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
         (
             uint256[] memory requestIds,
             uint256[] memory shares
-        ) = IWithdrawalManagerQueue(syrupUSDGWithdrawalManager).requestsByOwner(lender);
+        ) = IWithdrawalManagerQueue(usdgWithdrawalManager).requestsByOwner(lender);
 
         if (requestIds.length == 0) return;
 
@@ -143,19 +143,19 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
         uint256 sharesToRemove = getSomeValue(1, shares[index]);
 
         vm.prank(lender);
-        IWithdrawalManagerQueue(syrupUSDGWithdrawalManager).removeSharesById(requestIds[index], sharesToRemove);
+        IWithdrawalManagerQueue(usdgWithdrawalManager).removeSharesById(requestIds[index], sharesToRemove);
     }
 
     function processRedemptions() internal {
-        uint256 totalShares = IWithdrawalManagerQueue(syrupUSDGWithdrawalManager).totalShares();
+        uint256 totalShares = IWithdrawalManagerQueue(usdgWithdrawalManager).totalShares();
 
         if (totalShares == 0) return;
 
-        uint256 totalSupply           = IPool(syrupUSDGPool).totalSupply();
-        uint256 totalAssets           = IPoolManager(syrupUSDGPoolManager).totalAssets();
-        uint256 unrealizedLosses      = IPoolManager(syrupUSDGPoolManager).unrealizedLosses();
+        uint256 totalSupply           = IPool(usdgPool).totalSupply();
+        uint256 totalAssets           = IPoolManager(usdgPoolManager).totalAssets();
+        uint256 unrealizedLosses      = IPoolManager(usdgPoolManager).unrealizedLosses();
         uint256 totalAssetsWithLosses = totalAssets - unrealizedLosses;
-        uint256 idleAssets            = IERC20(USDG).balanceOf(syrupUSDGPool);
+        uint256 idleAssets            = IERC20(USDG).balanceOf(usdgPool);
 
         if (totalSupply == 0 || totalAssetsWithLosses == 0 || idleAssets == 0) return;
 
@@ -167,11 +167,11 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
         uint256 sharesToProcess = getSomeValue(1, maxSharesToProcess);
 
         vm.prank(poolDelegate);
-        IWithdrawalManagerQueueV200Like(syrupUSDGWithdrawalManager).processRedemptions(sharesToProcess);
+        IWithdrawalManagerQueueV200Like(usdgWithdrawalManager).processRedemptions(sharesToProcess);
     }
 
     function createAndFundOpenTermLoan() internal {
-        uint256 idleAssets = IERC20(USDG).balanceOf(syrupUSDGPool);
+        uint256 idleAssets = IERC20(USDG).balanceOf(usdgPool);
 
         if (idleAssets < MIN_ACTION_AMOUNT) return;
 
@@ -198,7 +198,7 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
         address loan = createOpenTermLoan(
             openTermLoanFactory,
             borrower,
-            openTermLoanManager,
+            usdgOpenTermLoanManager,
             USDG,
             principal,
             terms,
@@ -257,21 +257,21 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, Hea
     }
 
     function assertInvariants() internal view {
-        uint256 loanAssetsUnderManagement = IOpenTermLoanManager(openTermLoanManager).assetsUnderManagement();
-        uint256 principalOut              = IOpenTermLoanManager(openTermLoanManager).principalOut();
-        uint256 poolBalance               = IERC20(USDG).balanceOf(syrupUSDGPool);
+        uint256 loanAssetsUnderManagement = IOpenTermLoanManager(usdgOpenTermLoanManager).assetsUnderManagement();
+        uint256 principalOut              = IOpenTermLoanManager(usdgOpenTermLoanManager).principalOut();
+        uint256 poolBalance               = IERC20(USDG).balanceOf(usdgPool);
         uint256 expectedTotalAssets       = poolBalance + loanAssetsUnderManagement;
-        uint256 escrowedShares            = IPool(syrupUSDGPool).balanceOf(syrupUSDGWithdrawalManager);
-        uint256 totalQueuedShares         = IWithdrawalManagerQueue(syrupUSDGWithdrawalManager).totalShares();
+        uint256 escrowedShares            = IPool(usdgPool).balanceOf(usdgWithdrawalManager);
+        uint256 totalQueuedShares         = IWithdrawalManagerQueue(usdgWithdrawalManager).totalShares();
 
-        assertEq(IPool(syrupUSDGPool).totalAssets(),                   expectedTotalAssets);
-        assertEq(IPoolManager(syrupUSDGPoolManager).totalAssets(),     expectedTotalAssets);
-        assertEq(IERC20(USDG).balanceOf(syrupUSDGSyrupRouter),         0);
-        assertEq(IPool(syrupUSDGPool).balanceOf(syrupUSDGSyrupRouter), 0);
-        assertEq(escrowedShares,                                       totalQueuedShares);
-        assertEq(IPool(syrupUSDGPool).balanceOf(address(0)),           INITIAL_DEPOSIT);
-        assertEq(sumLoanPrincipal(),                                   principalOut);
-        assertGe(loanAssetsUnderManagement,                            principalOut);
+        assertEq(IPool(usdgPool).totalAssets(),               expectedTotalAssets);
+        assertEq(IPoolManager(usdgPoolManager).totalAssets(), expectedTotalAssets);
+        assertEq(IERC20(USDG).balanceOf(usdgSyrupRouter),     0);
+        assertEq(IPool(usdgPool).balanceOf(usdgSyrupRouter),  0);
+        assertEq(escrowedShares,                              totalQueuedShares);
+        assertEq(IPool(usdgPool).balanceOf(address(0)),       INITIAL_DEPOSIT);
+        assertEq(sumLoanPrincipal(),                          principalOut);
+        assertGe(loanAssetsUnderManagement,                   principalOut);
     }
 
     function getSomeActiveLoan(bool allowCalled_) internal returns (address loan_) {
