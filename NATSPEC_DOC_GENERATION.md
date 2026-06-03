@@ -1,6 +1,6 @@
 # Generating Contract Interface Docs from Natspec
 
-1. install `maple-tools` either globally (executable via `npx maple-tools`) or cloned locally beside this directory (executable via `node ../maple-tools/bin/index.js`)
+1. Install `maple-tools` either globally (executable via `npx maple-tools`) or cloned locally beside this directory (executable via `node ../maple-tools/bin/index.js`)
 
 2. run `make build` in each relevant module directory
 
