@@ -123,46 +123,6 @@ contract DepositTest is EnterBase {
         assertEq(poolManager.totalAssets(), 4_000_000e6);
     }
 
-    function testDeepFuzz_deposit_variableExchangeRate(uint256 depositAmount, uint256 warpTime) public {
-        address initialDepositor = makeAddr("initialDepositor");
-
-        deposit(address(pool), initialDepositor, 1_000_000e6);
-
-        // Fund loan
-        fundAndDrawdownLoan({
-            borrower:    makeAddr("borrower"),
-            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
-
-        // Constrict time to be within the first loan payment and amount to be within token amounts
-        warpTime      = bound(warpTime,      0, 1_000_000);
-        depositAmount = bound(depositAmount, 1, 1e32);
-
-        vm.warp(start + warpTime);
-
-        uint256 previewedShares = pool.previewDeposit(depositAmount);
-
-        if (previewedShares == 0) {
-            vm.expectRevert("P:M:ZERO_SHARES");
-            vm.prank(lp);
-            pool.deposit(depositAmount, lp);
-        } else {
-            uint256 expectedShares = depositAmount * pool.totalSupply() / poolManager.totalAssets();
-
-            uint256 shares = deposit(address(pool), lp, depositAmount);
-
-            assertEq(shares,                                  expectedShares);
-            assertEq(pool.totalSupply(),                      shares + 1_000_000e6);
-            assertEq(pool.balanceOf(lp),                      shares);
-            assertEq(fundsAsset.balanceOf(address(pool)),     depositAmount);
-            assertEq(fundsAsset.balanceOf(lp),                0);
-            assertEq(fundsAsset.allowance(lp, address(pool)), 0);
-        }
-    }
-
 }
 
 contract DepositWithPermitTests is EnterBase {
@@ -521,49 +481,6 @@ contract MintTest is EnterBase {
         assertEq(fundsAsset.allowance(lp2, address(pool)), 0);
 
         assertEq(poolManager.totalAssets(), 4_000_000e6);
-    }
-
-    function testDeepFuzz_mint_variableExchangeRate(uint256 assetAmount, uint256 warpTime) public {
-        address initialDepositor = makeAddr("initialDepositor");
-
-        mint(address(pool), initialDepositor, 1_000_000e6);
-
-        // Fund loan
-        fundAndDrawdownLoan({
-            borrower:    makeAddr("borrower"),
-            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(3.1536e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
-
-        // Constrict time to be within the first loan payment and amount to be within token amounts
-        warpTime    = bound(warpTime, 2, 1_000_000);
-        assetAmount = bound(assetAmount, 1e6, 1e32);
-
-        vm.warp(start + warpTime);
-
-        uint256 calculatedShares = pool.convertToShares(assetAmount);
-
-        if (calculatedShares == 0) {
-            vm.prank(lp);
-            vm.expectRevert("P:M:ZERO_SHARES");
-            pool.mint(assetAmount, lp);
-        } else {
-            uint256 expectedShares = assetAmount * pool.totalSupply() / poolManager.totalAssets();
-
-            uint256 assets = mint(address(pool), lp, calculatedShares);
-
-            assertEq(pool.balanceOf(lp), expectedShares);
-
-            assertApproxEqAbs(assets,                                  assetAmount,                    1);
-            assertApproxEqAbs(pool.totalSupply(),                      calculatedShares + 1_000_000e6, 1);
-            assertApproxEqAbs(pool.balanceOf(lp),                      calculatedShares,               0);
-            // Assets from initial depositor are in the loan
-            assertApproxEqAbs(fundsAsset.balanceOf(address(pool)),     assetAmount,                    1);
-            assertApproxEqAbs(fundsAsset.balanceOf(lp),                0,                              1);
-            assertApproxEqAbs(fundsAsset.allowance(lp, address(pool)), 0,                              1);
-        }
     }
 
 }

@@ -31,17 +31,15 @@ contract BasicStrategyTestsBase is StrategyTestBase {
         _configureGlobals();
         _createFactories();
 
-        address[] memory factories = new address[](3);
+        address[] memory factories = new address[](2);
 
-        bytes[] memory deploymentData = new bytes[](3);
+        bytes[] memory deploymentData = new bytes[](2);
 
-        factories[0] = (fixedTermLoanManagerFactory);
-        factories[1] = (openTermLoanManagerFactory);
-        factories[2] = (basicStrategyFactory);
+        factories[0] = (openTermLoanManagerFactory);
+        factories[1] = (basicStrategyFactory);
 
         deploymentData[0] = (abi.encode(new bytes(0)));
-        deploymentData[1] = (abi.encode(new bytes(0)));
-        deploymentData[2] = (abi.encode(SAVINGS_USDS));
+        deploymentData[1] = (abi.encode(SAVINGS_USDS));
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(SAVINGS_USDS),  true);

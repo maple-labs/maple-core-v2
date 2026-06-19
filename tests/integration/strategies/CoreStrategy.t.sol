@@ -63,22 +63,20 @@ contract CoreStrategyTestsBase is StrategyTestBase {
 
         secondMaplePoolManager  = IPoolManager(address(pm_));
 
-        address[] memory factories = new address[](5);
+        address[] memory factories = new address[](4);
 
-        bytes[] memory deploymentData = new bytes[](5);
+        bytes[] memory deploymentData = new bytes[](4);
 
         // Add both aave and sky strategy factories
-        factories[0] = (fixedTermLoanManagerFactory);
-        factories[1] = (openTermLoanManagerFactory);
-        factories[2] = (aaveStrategyFactory);
-        factories[3] = (skyStrategyFactory);
-        factories[4] = (coreStrategyFactory);
+        factories[0] = (openTermLoanManagerFactory);
+        factories[1] = (aaveStrategyFactory);
+        factories[2] = (skyStrategyFactory);
+        factories[3] = (coreStrategyFactory);
 
         deploymentData[0] = (abi.encode(new bytes(0)));
-        deploymentData[1] = (abi.encode(new bytes(0)));
-        deploymentData[2] = (abi.encode(AAVE_USDC));
-        deploymentData[3] = (abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
-        deploymentData[4] = (abi.encode(pool_));
+        deploymentData[1] = (abi.encode(AAVE_USDC));
+        deploymentData[2] = (abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
+        deploymentData[3] = (abi.encode(pool_));
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDC),     true);

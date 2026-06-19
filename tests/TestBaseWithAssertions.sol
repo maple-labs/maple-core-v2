@@ -4,9 +4,6 @@ pragma solidity ^0.8.7;
 import {
     IBitcoinStrategy,
     IERC20,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
-    IFixedTermLoanManagerStructs,
     IGovernorTimelock,
     ILoanLike,
     ILoanManagerLike,
@@ -42,45 +39,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(bitcoinStrategy.accruedYield(),          accruedYield);
         assertEq(bitcoinStrategy.accruedFees(),           accruedFees);
         assertEq(bitcoinStrategy.assetsUnderManagement(), assetsUnderManagement);
-    }
-
-    function assertFixedTermLoan(
-        address loan,
-        uint256 principal,
-        uint256 refinanceInterest,
-        uint256 paymentDueDate,
-        uint256 paymentsRemaining
-    )
-        internal view
-    {
-        assertEq(IFixedTermLoan(loan).principal(),          principal,         "principal");
-        assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
-    }
-
-    function assertFixedTermLoan(
-        address loan,
-        uint256 principal,
-        uint256 incomingPrincipal,
-        uint256 incomingInterest,
-        uint256 incomingFees,
-        uint256 refinanceInterest,
-        uint256 paymentDueDate,
-        uint256 paymentsRemaining
-    )
-        internal view
-    {
-        ( uint256 principalPayment, uint256 interest, uint256 fees ) = IFixedTermLoan(loan).getNextPaymentBreakdown();
-
-        assertEq(interest,         incomingInterest,  "interest");
-        assertEq(fees,             incomingFees,      "fees");
-        assertEq(principalPayment, incomingPrincipal, "incoming principal");
-
-        assertEq(ILoanLike(loan).principal(),               principal,         "principal");
-        assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
     }
 
     function assertImpairment(uint256 impairedAssets, uint256 unrealizedLosses) internal view {
@@ -133,38 +91,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IOpenTermLoan(loan).defaultDate(),    defaultDate,    "defaultDate");
     }
 
-    function assertLoanInfoWasDeleted(address loan) internal view {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
-
-        assertEq(loanManager.paymentIdOf(loan), 0);
-    }
-
-    function assertFixedTermPaymentInfo(
-        address loan,
-        uint256 incomingNetInterest,
-        uint256 refinanceInterest,
-        uint256 issuanceRate,
-        uint256 startDate,
-        uint256 paymentDueDate,
-        uint256 platformFeeRate,
-        uint256 delegateFeeRate
-    )
-        internal view
-    {
-        address loanManager = ILoanLike(loan).lender();
-
-        IFixedTermLoanManagerStructs.PaymentInfo memory loanInfo =
-            IFixedTermLoanManagerStructs(loanManager).payments(IFixedTermLoanManager(loanManager).paymentIdOf(loan));
-
-        assertEq(loanInfo.incomingNetInterest,       incomingNetInterest, "loanInfo.incomingNetInterest");
-        assertEq(loanInfo.refinanceInterest,         refinanceInterest,   "loanInfo.refinanceInterest");
-        assertEq(loanInfo.issuanceRate,              issuanceRate,        "loanInfo.issuanceRate");
-        assertEq(loanInfo.startDate,                 startDate,           "loanInfo.startDate");
-        assertEq(loanInfo.paymentDueDate,            paymentDueDate,      "loanInfo.paymentDueDate");
-        assertEq(loanInfo.platformManagementFeeRate, platformFeeRate,     "loanInfo.platformManagementFeeRate");
-        assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate,     "loanInfo.delegateFeeRate");
-    }
-
     function assertOpenTermPaymentInfo(
         address loan,
         uint256 platformFeeRate,
@@ -192,33 +118,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(issuanceRate_, issuanceRate);
     }
 
-    function assertFixedTermLoanManager(
-        address loanManager,
-        uint256 accountedInterest,
-        uint256 accruedInterest,
-        uint256 domainEnd,
-        uint256 domainStart,
-        uint256 issuanceRate,
-        uint256 principalOut,
-        uint256 unrealizedLosses
-    )
-        internal view
-    {
-        assertEq(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, "accountedInterest");
-        assertEq(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   "accruedInterest");
-        assertEq(IFixedTermLoanManager(loanManager).domainEnd(),    domainEnd,         "domainEnd");
-        assertEq(ILoanManagerLike(loanManager).domainStart(),       domainStart,       "domainStart");
-        assertEq(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      "issuanceRate");
-        assertEq(ILoanManagerLike(loanManager).principalOut(),      principalOut,      "principalOut");
-        assertEq(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  "unrealizedLosses");
-
-        assertEq(
-            ILoanManagerLike(loanManager).assetsUnderManagement(),
-            principalOut + accountedInterest + accruedInterest,
-            "assetsUnderManagement"
-        );
-    }
-
     function assertOpenTermLoanManager(
         address loanManager,
         uint256 accountedInterest,
@@ -240,35 +139,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(
             ILoanManagerLike(loanManager).assetsUnderManagement(),
             principalOut + accountedInterest + accruedInterest,
-            "assetsUnderManagement"
-        );
-    }
-
-    function assertFixedTermLoanManagerWithDiff(
-        address loanManager,
-        uint256 accountedInterest,
-        uint256 accruedInterest,
-        uint256 domainEnd,
-        uint256 domainStart,
-        uint256 issuanceRate,
-        uint256 principalOut,
-        uint256 unrealizedLosses,
-        uint256 diff
-    )
-        internal view
-    {
-        assertApproxEqAbs(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, diff, "accountedInterest");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   diff, "accruedInterest");
-        assertApproxEqAbs(IFixedTermLoanManager(loanManager).domainEnd(),    domainEnd,         diff, "domainEnd");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).domainStart(),       domainStart,       diff, "domainStart");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      diff, "issuanceRate");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).principalOut(),      principalOut,      diff, "principalOut");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  diff, "unrealizedLosses");
-
-        assertApproxEqAbs(
-            ILoanManagerLike(loanManager).assetsUnderManagement(),
-            principalOut + accountedInterest + accruedInterest,
-            diff,
             "assetsUnderManagement"
         );
     }
@@ -312,29 +182,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
     function assertLastRequestId(address withdrawalManager_, address user_, uint256 requestId_) internal view {
         assertEq(IWithdrawalManagerQueue(withdrawalManager_).requestIds(user_), requestId_);
-    }
-
-    function assertLiquidationInfo(
-        address loan,
-        uint256 principal,
-        uint256 interest,
-        uint256 lateInterest,
-        uint256 platformFees,
-        bool    liquidatorExists,
-        bool    triggeredByGovernor
-    )
-        internal view
-    {
-        IFixedTermLoanManagerStructs.LiquidationInfo memory liquidationInfo =
-            IFixedTermLoanManagerStructs(ILoanLike(loan).lender()).liquidationInfo(loan);
-
-        assertEq(liquidationInfo.principal,    principal,    "liquidationInfo.principal");
-        assertEq(liquidationInfo.interest,     interest,     "liquidationInfo.interest");
-        assertEq(liquidationInfo.lateInterest, lateInterest, "liquidationInfo.lateInterest");
-        assertEq(liquidationInfo.platformFees, platformFees, "liquidationInfo.platformFees");
-
-        assertTrue(liquidatorExists == (liquidationInfo.liquidator != address(0)), "liquidator exists");
-        assertTrue(liquidationInfo.triggeredByGovernor == triggeredByGovernor,     "triggeredByGovernor");
     }
 
     function assertPermissions(

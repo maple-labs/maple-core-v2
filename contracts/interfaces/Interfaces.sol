@@ -16,15 +16,6 @@ import { IMapleGlobals as IMG }      from "../../modules/globals/contracts/inter
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
-import { IMapleLiquidator as IML } from "../../modules/liquidations/contracts/interfaces/IMapleLiquidator.sol";
-
-import { IMapleLoan as IMFTL }           from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoan.sol";
-import { IMapleLoanFeeManager as IMLFM } from "../../modules/fixed-term-loan/contracts/interfaces/IMapleLoanFeeManager.sol";
-import { IMapleRefinancer as IMFTLR }    from "../../modules/fixed-term-loan/contracts/interfaces/IMapleRefinancer.sol";
-
-import { IMapleLoanManager as IMFTLM }         from "../../modules/fixed-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
-import { IMapleLoanManagerStructs as IMFTLMS } from "../../modules/fixed-term-loan-manager/tests/interfaces/IMapleLoanManagerStructs.sol";
-
 import { IMapleLoan as IMOTL }        from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 import { IMapleRefinancer as IMOTLR } from "../../modules/open-term-loan/contracts/interfaces/IMapleRefinancer.sol";
 
@@ -82,21 +73,9 @@ interface ICoreStrategy is IMapleCoreStrategy { }
 
 interface ICompositeToken is ICT { }
 
-interface IFeeManager is IMLFM { }
-
-interface IFixedTermLoan is IMFTL { }
-
-interface IFixedTermLoanManager is IMFTLM { }
-
-interface IFixedTermLoanManagerStructs is IMFTLMS { }
-
-interface IFixedTermRefinancer is IMFTLR { }
-
 interface IGlobals is IMG { }
 
 interface IGovernorTimelock is IGTL { }
-
-interface ILiquidator is IML { }
 
 interface IMapleRouter is IMR { }
 
@@ -284,14 +263,6 @@ interface IKycERC20Like {
 
 }
 
-interface ILiquidatorLike {
-
-    function getExpectedAmount(uint256 swapAmount_) external view returns (uint256 expectedAmount_);
-
-    function liquidatePortion(uint256 swapAmount_, uint256 maxReturnAmount_, bytes calldata data_) external;
-
-}
-
 interface IPoolDeployerV2Like {
 
     function deployPool(
@@ -433,12 +404,6 @@ interface IPolicyManagerLike {
     function policyAllowApprovedCounterparties(uint32 policyId) external view returns (bool isAllowed);
 
 }
-
-interface IFixedTermLoanFactory is IMapleProxyFactory {
-
-    function isLoan(address proxy_) external view returns (bool isLoan_);
-
- }
 
 // NOTE: Isn't it better to import the interface from the module instead of re-declaring it here?
 interface IProxyFactoryLike {

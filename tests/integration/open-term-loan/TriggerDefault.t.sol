@@ -1,56 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { ILoanManagerLike, IOpenTermLoan, IOpenTermLoanManager } from "../../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
-
-contract TriggerDefaultFailureTests is TestBaseWithAssertions {
-
-    address loan;
-
-    function setUp() public virtual override {
-        super.setUp();
-
-        deposit(makeAddr("depositor"), 1_500_000e6);
-
-        setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         275e6,
-            delegateManagementFeeRate:  0.02e6,
-            platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.0066e6,
-            platformManagementFeeRate:  0.08e6
-        });
-
-        loan = fundAndDrawdownLoan({
-            borrower:    makeAddr("borrower"),
-            termDetails: [uint256(5 days), uint256(30 days), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
-    }
-
-    function test_triggerDefault_notAuthorized() external {
-        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
-        poolManager.triggerDefault(loan, address(liquidatorFactory));
-    }
-
-    function test_triggerDefault_notFactory() external {
-        vm.prank(poolDelegate);
-        vm.expectRevert("PM:TD:NOT_FACTORY");
-        poolManager.triggerDefault(loan, address(1));
-    }
-
-    function test_triggerDefault_notPoolManager() external {
-        ILoanManagerLike loanManager = ILoanManagerLike(poolManager.strategyList(0));
-
-        vm.expectRevert("LM:NOT_PM");
-        loanManager.triggerDefault(loan, address(liquidatorFactory));
-    }
-
-}
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
@@ -91,7 +44,7 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
         deposit(lp, 1_500_000e6);
 
-        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,

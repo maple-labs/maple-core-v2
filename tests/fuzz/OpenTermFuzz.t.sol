@@ -13,7 +13,6 @@ import { StorageSnapshot } from "./StorageSnapshot.sol";
 contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
 
     uint256 constant ACTION_COUNT   = 10;
-    uint256 constant FTL_LOAN_COUNT = 1;
     uint256 constant OTL_LOAN_COUNT = 10;
 
     // Saving balances to storage to avoid stack too deep.
@@ -45,7 +44,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     PoolManagerStorage         poolManagerStorage;
 
     function testFuzz_otlFuzzedSetup_makePayment(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan        = IOpenTermLoan(getSomeActiveOpenTermLoan());
         loanManager = IOpenTermLoanManager(loan.lender());
@@ -157,7 +156,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
     }
 
     function testFuzz_otlFuzzedSetup_triggerDefault(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan        = IOpenTermLoan(getSomeActiveOpenTermLoan());
         loanManager = IOpenTermLoanManager(loan.lender());

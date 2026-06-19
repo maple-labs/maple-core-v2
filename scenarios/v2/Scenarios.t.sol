@@ -27,23 +27,6 @@ contract Scenario is TestBase {
         string  name;
     }
 
-    struct FundFixedTermLoanParameters {
-        uint256 closingFeeRate;
-        uint256 collateral;
-        uint256 delegateOriginationFee;
-        uint256 delegateServiceFee;
-        uint256 endingPrincipal;
-        uint256 gracePeriod;
-        uint256 interestRate;
-        bool    isOpenTerm;
-        uint256 lateFeeRate;
-        uint256 lateInterestPremiumRate;
-        string  name;
-        uint256 paymentInterval;
-        uint256 payments;
-        uint256 principal;
-    }
-
     struct FundOpenTermLoanParameters {
         uint256 delegateServiceFeeRate;
         uint256 gracePeriod;
@@ -111,8 +94,6 @@ contract Scenario is TestBase {
     mapping(string => address) loanNamed;
     mapping(string => address) poolNamed;
 
-    mapping(string => bool) isLoanOpenTerm;
-
     using stdJson for string;
 
     function concat(string memory a_, string memory b_) internal pure returns (string memory output_) {
@@ -153,45 +134,12 @@ contract Scenario is TestBase {
         deposit(address(pool), makeAddr(parameters.name), parameters.assets);
     }
 
-    function handleFundFixedTermLoan(bytes memory rawParameters_) internal returns (bool failure_) {
-        FundFixedTermLoanParameters memory parameters = abi.decode(rawParameters_, (FundFixedTermLoanParameters));
-
-        address loan = loanNamed[parameters.name] = createFixedTermLoan(
-            makeAddr("borrower"),
-            poolManager.strategyList(0),
-            address(fixedTermFeeManager),
-            [address(collateralAsset), address(fundsAsset)],
-            [
-                parameters.gracePeriod * 1 days,
-                parameters.paymentInterval * 1 days,
-                parameters.payments
-            ],
-            [
-                parameters.collateral,
-                parameters.principal,
-                parameters.endingPrincipal
-            ],
-            [
-                parameters.interestRate * 100,
-                parameters.closingFeeRate * 100,
-                parameters.lateFeeRate * 100,
-                parameters.lateInterestPremiumRate * 100
-            ],
-            [
-                parameters.delegateOriginationFee,
-                parameters.delegateServiceFee
-            ]
-        );
-
-        fundLoan(loan);
-    }
-
     function handleFundOpenTermLoan(bytes memory rawParameters_) internal returns (bool failure_) {
         FundOpenTermLoanParameters memory parameters = abi.decode(rawParameters_, (FundOpenTermLoanParameters));
 
         address loan = loanNamed[parameters.name] = createOpenTermLoan(
             makeAddr("borrower"),
-            poolManager.strategyList(1),
+            poolManager.strategyList(0),
             address(fundsAsset),
             parameters.principal,
             [
@@ -207,34 +155,7 @@ contract Scenario is TestBase {
             ]
         );
 
-        isLoanOpenTerm[parameters.name] = true;
-
         fundLoan(loan);
-    }
-
-    function _makeFixedTermLoanPayment(PayLoanParameters memory parameters) internal returns (bool failure_) {
-        ( uint256 principal_, uint256 interest_, uint256 fees_ ) = makePaymentFT(loanNamed[parameters.name]);
-
-        uint256 expectedFees_ =
-            parameters.delegateServiceFee +
-            parameters.platformServiceFee +
-            parameters.delegateManagementFee +
-            parameters.platformManagementFee;
-
-        if (stdMath.delta(principal_, parameters.principal) > 1) {
-            console.log("    Expected principal is", toString(parameters.principal), "but actually is", toString(principal_));
-            failure_ = true;
-        }
-
-        if (stdMath.delta(interest_, parameters.interest) > 3) {
-            console.log("    Expected principal is", toString(parameters.interest), "but actually is", toString(interest_));
-            failure_ = true;
-        }
-
-        if (stdMath.delta(fees_, expectedFees_) > 4) {
-            console.log("    Expected fees is", toString(expectedFees_), "but actually is", toString(fees_));
-            failure_ = true;
-        }
     }
 
     function _makeOpenTermLoanPayment(PayLoanParameters memory parameters) internal returns (bool failure_) {
@@ -286,11 +207,7 @@ contract Scenario is TestBase {
         uint256 poolDelegateBalance = fundsAsset.balanceOf(poolManager.poolDelegate());
         uint256 treasuryBalance     = fundsAsset.balanceOf(treasury);
 
-        if (isLoanOpenTerm[parameters.name]) {
-            _makeOpenTermLoanPayment(parameters);
-        } else {
-            _makeFixedTermLoanPayment(parameters);
-        }
+        _makeOpenTermLoanPayment(parameters);
 
         uint256 delegateFees_ = parameters.delegateServiceFee + parameters.delegateManagementFee;
         uint256 platformFees_ = parameters.platformServiceFee + parameters.platformManagementFee;
@@ -366,62 +283,33 @@ contract Scenario is TestBase {
 
         address refinancer_;
         uint256 principalDecrease_;
-        uint256 principalIncrease_;
 
         for (uint256 i; i < parameters.terms.length; ++i) {
             bytes32 term = bytes32(bytes(parameters.terms[i]));
 
-            if (isLoanOpenTerm[parameters.name]) {
-                if (term == "decreasePrincipal") {
-                    calls[i] = abi.encodeWithSignature("decreasePrincipal(uint256)", principalDecrease_ = parameters.values[i]);
-                } else if (term == "increasePrincipal") {
-                    calls[i] = abi.encodeWithSignature("increasePrincipal(uint256)", principalIncrease_ = parameters.values[i]);
-                } else if (term == "setDelegateServiceFeeRate") {
-                    calls[i] = abi.encodeWithSignature("setDelegateServiceFeeRate(uint64)", uint64(parameters.values[i]));
-                } else if (term == "setGracePeriod") {
-                    calls[i] = abi.encodeWithSignature("setGracePeriod(uint64)", uint32(parameters.values[i]));
-                } else if (term == "setInterestRate") {
-                    calls[i] = abi.encodeWithSignature("setInterestRate(uint64)", uint64(parameters.values[i]));
-                } else if (term == "setLateFeeRate") {
-                    calls[i] = abi.encodeWithSignature("setLateFeeRate(uint64)", uint64(parameters.values[i]));
-                } else if (term == "setLateInterestPremiumRate") {
-                    calls[i] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", uint64(parameters.values[i]));
-                } else if (term == "setNoticePeriod") {
-                    calls[i] = abi.encodeWithSignature("setNoticePeriod(uint64)", uint32(parameters.values[i]));
-                } else if (term == "setPaymentInterval") {
-                    calls[i] = abi.encodeWithSignature("setPaymentInterval(uint64)", uint32(parameters.values[i]));
-                } else {
-                    revert("UNSUPPORTED");
-                }
-
-                refinancer_ = address(openTermRefinancer);
+            if (term == "decreasePrincipal") {
+                calls[i] = abi.encodeWithSignature("decreasePrincipal(uint256)", principalDecrease_ = parameters.values[i]);
+            } else if (term == "increasePrincipal") {
+                calls[i] = abi.encodeWithSignature("increasePrincipal(uint256)", parameters.values[i]);
+            } else if (term == "setDelegateServiceFeeRate") {
+                calls[i] = abi.encodeWithSignature("setDelegateServiceFeeRate(uint64)", uint64(parameters.values[i]));
+            } else if (term == "setGracePeriod") {
+                calls[i] = abi.encodeWithSignature("setGracePeriod(uint32)", uint32(parameters.values[i]));
+            } else if (term == "setInterestRate") {
+                calls[i] = abi.encodeWithSignature("setInterestRate(uint64)", uint64(parameters.values[i]));
+            } else if (term == "setLateFeeRate") {
+                calls[i] = abi.encodeWithSignature("setLateFeeRate(uint64)", uint64(parameters.values[i]));
+            } else if (term == "setLateInterestPremiumRate") {
+                calls[i] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", uint64(parameters.values[i]));
+            } else if (term == "setNoticePeriod") {
+                calls[i] = abi.encodeWithSignature("setNoticePeriod(uint32)", uint32(parameters.values[i]));
+            } else if (term == "setPaymentInterval") {
+                calls[i] = abi.encodeWithSignature("setPaymentInterval(uint32)", uint32(parameters.values[i]));
             } else {
-                if (term == "increasePrincipal") {
-                    calls[i] = abi.encodeWithSignature("increasePrincipal(uint256)", principalIncrease_ = parameters.values[i]);
-                } else if (term == "setClosingRate") {
-                    calls[i] = abi.encodeWithSignature("setClosingRate(uint256)", parameters.values[i]);
-                } else if (term == "setCollateralRequired") {
-                    calls[i] = abi.encodeWithSignature("setCollateralRequired(uint256)", parameters.values[i]);
-                } else if (term == "setEndingPrincipal") {
-                    calls[i] = abi.encodeWithSignature("setEndingPrincipal(uint256)", parameters.values[i]);
-                } else if (term == "setGracePeriod") {
-                    calls[i] = abi.encodeWithSignature("setGracePeriod(uint256)", parameters.values[i]);
-                } else if (term == "setInterestRate") {
-                    calls[i] = abi.encodeWithSignature("setInterestRate(uint256)", parameters.values[i]);
-                } else if (term == "setLateFeeRate") {
-                    calls[i] = abi.encodeWithSignature("setLateFeeRate(uint256)", parameters.values[i]);
-                } else if (term == "setLateInterestPremiumRate") {
-                    calls[i] = abi.encodeWithSignature("setLateInterestPremiumRate(uint256)", parameters.values[i]);
-                } else if (term == "setPaymentInterval") {
-                    calls[i] = abi.encodeWithSignature("setPaymentInterval(uint256)", parameters.values[i]);
-                } else if (term == "setPaymentsRemaining") {
-                    calls[i] = abi.encodeWithSignature("setPaymentsRemaining(uint256)", parameters.values[i]);
-                } else {
-                    revert("UNSUPPORTED");
-                }
-
-                refinancer_ = address(fixedTermRefinancer);
+                revert("UNSUPPORTED");
             }
+
+            refinancer_ = address(openTermRefinancer);
         }
 
         if (principalDecrease_ > 0) {
@@ -436,17 +324,13 @@ contract Scenario is TestBase {
         }
 
         proposeRefinance(loanNamed[parameters.name], refinancer_, block.timestamp, calls);
-        acceptRefinance(loanNamed[parameters.name],  refinancer_, block.timestamp, calls, principalIncrease_);
+        acceptRefinance(loanNamed[parameters.name], refinancer_, block.timestamp, calls);
     }
 
     function handleDefaultLoan(bytes memory rawParameters_) internal returns (bool failure_) {
         DefaultLoanParameters memory parameters = abi.decode(rawParameters_, (DefaultLoanParameters));
 
         triggerDefault(loanNamed[parameters.name], liquidatorFactory);
-
-        if (isLoanOpenTerm[parameters.name]) return false;
-
-        finishCollateralLiquidation(loanNamed[parameters.name]);
     }
 
     function handleNone(bytes memory rawParameters_) internal returns (bool failure_) {}
@@ -454,9 +338,7 @@ contract Scenario is TestBase {
     function checkExpected(bytes memory rawExpected_) internal returns (bool failure_) {
         ExpectedValues memory parameters = abi.decode(rawExpected_, (ExpectedValues));
 
-        uint256 accruedInterest =
-            ILoanManagerLike(poolManager.strategyList(0)).accruedInterest() +
-            ILoanManagerLike(poolManager.strategyList(1)).accruedInterest();
+        uint256 accruedInterest = ILoanManagerLike(poolManager.strategyList(0)).accruedInterest();
 
         if (stdMath.delta(accruedInterest, parameters.accruedInterest) > 5) {
             console.log(
@@ -480,9 +362,7 @@ contract Scenario is TestBase {
             failure_ = true;
         }
 
-        uint256 principalOut =
-            ILoanManagerLike(poolManager.strategyList(0)).principalOut() +
-            ILoanManagerLike(poolManager.strategyList(1)).principalOut();
+        uint256 principalOut = ILoanManagerLike(poolManager.strategyList(0)).principalOut();
 
         if (stdMath.delta(principalOut, parameters.principalOutstanding) > 3e4) {
             console.log(
@@ -532,9 +412,7 @@ contract Scenario is TestBase {
 
         if (actionType_ == "deposit") return handleDeposit;
 
-        if (actionType_ == "fundLoan") {
-            return json_.readBool(concat(actionKey_, ".parameters.isOpenTerm")) ? handleFundOpenTermLoan : handleFundFixedTermLoan;
-        }
+        if (actionType_ == "fundLoan") return handleFundOpenTermLoan;
 
         if (actionType_ == "payLoan") return handleLoanPayment;
 

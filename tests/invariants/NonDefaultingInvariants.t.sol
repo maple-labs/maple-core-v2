@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IFixedTermLoanManager, ILoanLike } from "../../contracts/interfaces/Interfaces.sol";
-
 import { DepositHandler }            from "./handlers/DepositHandler.sol";
 import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
-import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
 import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
 import { TransferHandler }           from "./handlers/TransferHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
-contract NonLiquidatingInvariants is BaseInvariants {
+contract NonDefaultingInvariants is BaseInvariants {
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -57,17 +54,6 @@ contract NonLiquidatingInvariants is BaseInvariants {
         transferHandler        = new TransferHandler(address(pool), lps);
         queueWithdrawalHandler = new QueueWithdrawalHandler(address(pool), lps);
 
-        ftlHandler = new FixedTermLoanHandler({
-            collateralAsset_:   address(collateralAsset),
-            feeManager_:        address(fixedTermFeeManager),
-            governor_:          governor,
-            liquidatorFactory_: liquidatorFactory,
-            loanFactory_:       fixedTermLoanFactory,
-            poolManager_:       address(poolManager),
-            refinancer_:        address(fixedTermRefinancer),
-            numBorrowers_:      NUM_BORROWERS
-        });
-
         otlHandler = new OpenTermLoanHandler({
             loanFactory_:       address(openTermLoanFactory),
             liquidatorFactory_: address(liquidatorFactory),
@@ -90,15 +76,6 @@ contract NonLiquidatingInvariants is BaseInvariants {
         queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",           3_300);
         queueWithdrawalHandler.setSelectorWeight("setManualWithdrawal(uint256)",     1_000);
 
-        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           3_500);
-        ftlHandler.setSelectorWeight("makePayment(uint256)",                 5_000);
-        ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       0);
-        ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          0);
-        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  0);
-        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              0);
-        ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 0);
-        ftlHandler.setSelectorWeight("refinance(uint256)",                   1_500);
-
         otlHandler.setSelectorWeight("callLoan(uint256)",             1_000);
         otlHandler.setSelectorWeight("fundLoan(uint256)",             2_000);
         otlHandler.setSelectorWeight("impairLoan(uint256)",           0);
@@ -108,31 +85,26 @@ contract NonLiquidatingInvariants is BaseInvariants {
         otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 1_500);
         otlHandler.setSelectorWeight("triggerDefault(uint256)",       0);
 
-        address[] memory targetContracts = new address[](5);
+        address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);
         targetContracts[1] = address(depositHandler);
         targetContracts[2] = address(queueWithdrawalHandler);
-        targetContracts[3] = address(ftlHandler);
-        targetContracts[4] = address(otlHandler);
+        targetContracts[3] = address(otlHandler);
 
-        uint256[] memory weightsDistributorHandler = new uint256[](5);
+        uint256[] memory weightsDistributorHandler = new uint256[](4);
         weightsDistributorHandler[0] = 10;
         weightsDistributorHandler[1] = 10;
         weightsDistributorHandler[2] = 10;
-        weightsDistributorHandler[3] = 35;
-        weightsDistributorHandler[4] = 35;
+        weightsDistributorHandler[3] = 70;
 
         address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
 
         targetContract(distributionHandler);
     }
 
-    function statefulFuzz_nonLiquidatingInvariants() external {
+    function statefulFuzz_nonDefaultingInvariants() external {
         assert_pool_invariants_all();
         assert_pool_manager_invariants();
-
-        assert_ftl_invariants();
-        assert_ftlm_invariants_A_B_C_D_E_F_G_H_I_J_K_L_M_N();
 
         assert_otl_invariants();
         assert_otlm_invariants_A_B_C_D_E_F_G_H_I_J_L_M();

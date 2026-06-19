@@ -75,7 +75,7 @@ contract DeployPoolTests is DeployPoolTestsBase {
 
     function test_deployPool_failWithInvalidLMFactory() external {
         vm.prank(address(governor));
-        globals.setValidInstanceOf("STRATEGY_FACTORY", fixedTermLoanManagerFactory, false);
+        globals.setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:AS:INVALID_FACTORY");
@@ -520,12 +520,11 @@ contract DeployPoolWMQueueTests is DeployPoolTestsBase {
 
         vm.stopPrank();
 
-        IPoolManager            poolManager          = IPoolManager(poolManager_);
-        IPool                   pool                 = IPool(poolManager.pool());
-        IPoolPermissionManager  ppm                  = IPoolPermissionManager(poolManager.poolPermissionManager());
-        ILoanManagerLike        fixedTermLoanManager = ILoanManagerLike(poolManager.strategyList(0));
-        ILoanManagerLike        openTermLoanManager  = ILoanManagerLike(poolManager.strategyList(1));
-        IWithdrawalManagerQueue withdrawalManager    = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+        IPoolManager            poolManager         = IPoolManager(poolManager_);
+        IPool                   pool                = IPool(poolManager.pool());
+        IPoolPermissionManager  ppm                 = IPoolPermissionManager(poolManager.poolPermissionManager());
+        ILoanManagerLike        openTermLoanManager = ILoanManagerLike(poolManager.strategyList(0));
+        IWithdrawalManagerQueue withdrawalManager   = IWithdrawalManagerQueue(poolManager.withdrawalManager());
 
         assertEq(poolManager.asset(),                 address(fundsAsset));
         assertEq(poolManager.globals(),               address(globals));
@@ -540,7 +539,6 @@ contract DeployPoolWMQueueTests is DeployPoolTestsBase {
         assertTrue(poolManager.configured());
         assertTrue(poolManager.hasSufficientCover());
         assertTrue(poolManager.isStrategy(poolManager.strategyList(0)));
-        assertTrue(poolManager.isStrategy(poolManager.strategyList(1)));
 
         assertEq(pool.asset(),       address(fundsAsset));
         assertEq(pool.name(),        "Maple Pool");
@@ -550,9 +548,6 @@ contract DeployPoolWMQueueTests is DeployPoolTestsBase {
 
         assertEq(fundsAsset.allowance(poolDelegate, address(deployer)), 0);
         assertEq(fundsAsset.balanceOf(poolManager.poolDelegateCover()), 10e6);
-
-        assertEq(fixedTermLoanManager.fundsAsset(),  address(fundsAsset));
-        assertEq(fixedTermLoanManager.poolManager(), poolManager_);
 
         assertEq(openTermLoanManager.fundsAsset(),  address(fundsAsset));
         assertEq(openTermLoanManager.poolManager(), poolManager_);

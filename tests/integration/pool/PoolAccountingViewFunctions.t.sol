@@ -979,21 +979,21 @@ contract PreviewMintTests is TestBase {
 contract TotalAssetsTests is TestBase {
 
     address borrower;
-    address loan;
     address lp1;
+    address loan;
 
     function setUp() public override {
         super.setUp();
 
-        lp1      = makeAddr("lp1");
         borrower = makeAddr("borrower");
+        lp1      = makeAddr("lp1");
 
         setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,
+            delegateOriginationFee:     0,
+            delegateServiceFee:         0,
             delegateManagementFeeRate:  0.02e6,
-            platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.31536e6,  // 10k after 1m seconds
+            platformOriginationFeeRate: 0,
+            platformServiceFeeRate:     0.031536e6,  // 1000e6 platform service fee after 1m seconds on 1M principal
             platformManagementFeeRate:  0.08e6
         });
     }
@@ -1011,76 +1011,67 @@ contract TotalAssetsTests is TestBase {
     function test_totalAssets_singleLoanFunded() external {
         deposit(lp1, 1_500_000e6);
 
-        loan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
+        loan = createOpenTermLoan(
+            borrower,
+            poolManager.strategyList(0),
+            address(fundsAsset),
+            1_500_000e6,
+            [uint32(200_000), uint32(100_000), uint32(1_000_000)],
+            [uint64(0.015768e6), uint64(0.031536e6), uint64(0), uint64(0.015768e6)]
+        );
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 0);  // Funds moved out of pool
+        fundLoan(loan);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 0);  // All liquidity funded the loan
         assertEq(pool.totalAssets(),                  1_500_000e6);
     }
 
     function test_totalAssets_singleLoanFundedWithInterest() external {
         deposit(lp1, 1_500_000e6);
 
-        loan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
+        loan = createOpenTermLoan(
+            borrower,
+            poolManager.strategyList(0),
+            address(fundsAsset),
+            1_000_000e6,
+            [uint32(200_000), uint32(100_000), uint32(1_000_000)],
+            [uint64(0.015768e6), uint64(0.031536e6), uint64(0), uint64(0.015768e6)]
+        );
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool
+        fundLoan(loan);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
         assertEq(pool.totalAssets(),                  1_500_000e6);
 
-        vm.warp(start + ONE_MONTH);
+        vm.warp(start + 1_000_000);
 
-        // +------------+--------+--------+
-        // |    POOL    |   PD   |   MT   |
-        // +------------+--------+--------+
-        // |   500,000  |   500  |    250 |
-        // | +   6,250  | + 275  | +  550 | Interest and service fees paid
-        // | -     625  | + 125  | +  500 | Management fee distribution
-        // | = 505,625  | = 900  | = 1300 |
-        // +------------+--------+--------+
-        assertEq(pool.totalAssets(), 1_505_624_999999);  // Note: Rounding
+        // Gross interest 1000e6, 10% management fees skim 100e6 → 900e6 net accrued on the pool
+        assertEq(pool.totalAssets(), 1_500_000e6 + 900e6);
     }
 
     function test_totalAssets_singleLoanFundedWithPayment() external {
         deposit(lp1, 1_500_000e6);
 
-        loan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
+        loan = createOpenTermLoan(
+            borrower,
+            poolManager.strategyList(0),
+            address(fundsAsset),
+            1_000_000e6,
+            [uint32(200_000), uint32(100_000), uint32(1_000_000)],
+            [uint64(0.015768e6), uint64(0.031536e6), uint64(0), uint64(0.015768e6)]
+        );
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool
+        fundLoan(loan);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
         assertEq(pool.totalAssets(),                  1_500_000e6);
 
-        /************************/
-        /*** Make 1st Payment ***/
-        /************************/
-
-        vm.warp(start + ONE_MONTH);
+        vm.warp(start + 1_000_000);
         makePayment(loan);
 
-        // +------------+--------+--------+
-        // |    POOL    |   PD   |   MT   |
-        // +------------+--------+--------+
-        // |   500,000  |   500  |    250 |
-        // | +   6,250  | + 275  | +  550 | Interest and service fees paid
-        // | -     625  | + 125  | +  500 | Management fee distribution
-        // | = 505,625  | = 900  | = 1300 |
-        // +------------+--------+--------+
-        assertEq(pool.totalAssets(),                  1_505_625e6);
-        assertEq(fundsAsset.balanceOf(address(pool)), 505_625e6);
+        // OT loans don't amortize: principalOut stays 1M, cash gains the 900e6 net interest
+        assertEq(pool.totalAssets(),                  1_500_000e6 + 900e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6   + 900e6);
     }
 
 }

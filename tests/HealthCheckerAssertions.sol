@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import { console, Runner } from "../contracts/Runner.sol";
 
-import { FixedTermLoanHealthChecker } from "./health-checkers/FixedTermLoanHealthChecker.sol";
 import { LPHealthChecker }            from "./health-checkers/LPHealthChecker.sol";
 import { OpenTermLoanHealthChecker }  from "./health-checkers/OpenTermLoanHealthChecker.sol";
 import { ProtocolHealthChecker }      from "./health-checkers/ProtocolHealthChecker.sol";
@@ -15,13 +14,6 @@ contract HealthCheckerAssertions is Runner {
         ProtocolHealthChecker.Invariants memory results;
 
         results = ProtocolHealthChecker(healthChecker_).checkInvariants(poolManager_, manualRedeemers_);
-
-        assertTrue(results.fixedTermLoanManagerInvariantA, "FixedTermLoanManagerInvariantA");
-        assertTrue(results.fixedTermLoanManagerInvariantB, "FixedTermLoanManagerInvariantB");
-        assertTrue(results.fixedTermLoanManagerInvariantF, "FixedTermLoanManagerInvariantF");
-        assertTrue(results.fixedTermLoanManagerInvariantI, "FixedTermLoanManagerInvariantI");
-        assertTrue(results.fixedTermLoanManagerInvariantJ, "FixedTermLoanManagerInvariantJ");
-        assertTrue(results.fixedTermLoanManagerInvariantK, "FixedTermLoanManagerInvariantK");
 
         assertTrue(results.openTermLoanManagerInvariantE, "OpenTermLoanManagerInvariantE");
         assertTrue(results.openTermLoanManagerInvariantG, "OpenTermLoanManagerInvariantG");
@@ -81,21 +73,6 @@ contract HealthCheckerAssertions is Runner {
         assertTrue(results.openTermLoanManagerInvariantI, "OpenTermLoanManagerInvariantI");
         assertTrue(results.openTermLoanManagerInvariantJ, "OpenTermLoanManagerInvariantJ");
         assertTrue(results.openTermLoanManagerInvariantK, "OpenTermLoanManagerInvariantK");
-    }
-
-    function assertFixedTermLoanInvariants(address poolManager_, address[] memory loans_, address healthChecker_) internal view {
-        FixedTermLoanHealthChecker.Invariants memory results;
-
-        results = FixedTermLoanHealthChecker(healthChecker_).checkInvariants(poolManager_, loans_);
-
-        assertTrue(results.fixedTermLoanInvariantA, "FixedTermLoanInvariantA");
-        assertTrue(results.fixedTermLoanInvariantB, "FixedTermLoanInvariantB");
-        assertTrue(results.fixedTermLoanInvariantC, "FixedTermLoanInvariantC");
-
-        assertTrue(results.fixedTermLoanManagerInvariantD, "FixedTermLoanManagerInvariantD");
-        assertTrue(results.fixedTermLoanManagerInvariantE, "FixedTermLoanManagerInvariantE");
-        assertTrue(results.fixedTermLoanManagerInvariantM, "FixedTermLoanManagerInvariantM");
-        assertTrue(results.fixedTermLoanManagerInvariantN, "FixedTermLoanManagerInvariantN");
     }
 
     function assertLPInvariants(address pool_, address[] memory lps_, address healthChecker_) internal view {

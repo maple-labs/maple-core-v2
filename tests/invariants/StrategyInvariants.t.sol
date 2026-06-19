@@ -19,7 +19,6 @@ import { OpenTermLoanHandler }    from "./handlers/OpenTermLoanHandler.sol";
 import { QueueWithdrawalHandler } from "./handlers/QueueWithdrawalHandler.sol";
 import { StrategyHandler }        from "./handlers/StrategyHandler.sol";
 import { TransferHandler }        from "./handlers/TransferHandler.sol";
-import { FixedTermLoanHandler }   from "./handlers/FixedTermLoanHandler.sol";
 
 import { MockERC20 } from "../mocks/Mocks.sol";
 
@@ -74,20 +73,18 @@ contract StrategyInvariants is BaseInvariants {
         _createFactories();
         _upgradeSyrupUSDCWithdrawalManager();
 
-        address[] memory factories = new address[](5);
-        bytes[] memory deploymentData = new bytes[](5);
+        address[] memory factories = new address[](4);
+        bytes[] memory deploymentData = new bytes[](4);
 
-        factories[0] = fixedTermLoanManagerFactory;
-        factories[1] = openTermLoanManagerFactory;
-        factories[2] = aaveStrategyFactory;
-        factories[3] = skyStrategyFactory;
-        factories[4] = coreStrategyFactory;
+        factories[0] = openTermLoanManagerFactory;
+        factories[1] = aaveStrategyFactory;
+        factories[2] = skyStrategyFactory;
+        factories[3] = coreStrategyFactory;
 
         deploymentData[0] = "";
-        deploymentData[1] = "";
-        deploymentData[2] = abi.encode(AAVE_USDC);
-        deploymentData[3] = abi.encode(SAVINGS_USDS, USDS_LITE_PSM);
-        deploymentData[4] = abi.encode(SYRUP_USDC);
+        deploymentData[1] = abi.encode(AAVE_USDC);
+        deploymentData[2] = abi.encode(SAVINGS_USDS, USDS_LITE_PSM);
+        deploymentData[3] = abi.encode(SYRUP_USDC);
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDC),     true);
@@ -125,19 +122,9 @@ contract StrategyInvariants is BaseInvariants {
         transferHandler = new TransferHandler(address(pool), lps);
         queueWithdrawalHandler = new QueueWithdrawalHandler(address(pool), lps);
         strategyHandler = new StrategyHandler({
-            aaveStrategy_: poolManager.strategyList(2),
-            skyStrategy_:  poolManager.strategyList(3),
-            coreStrategy_: poolManager.strategyList(4)
-        });
-        ftlHandler = new FixedTermLoanHandler({
-            collateralAsset_:   address(collateralAsset),
-            feeManager_:        address(fixedTermFeeManager),
-            governor_:          governor,
-            liquidatorFactory_: liquidatorFactory,
-            loanFactory_:       fixedTermLoanFactory,
-            poolManager_:       address(poolManager),
-            refinancer_:        address(fixedTermRefinancer),
-            numBorrowers_:      NUM_BORROWERS
+            aaveStrategy_: poolManager.strategyList(1),
+            skyStrategy_:  poolManager.strategyList(2),
+            coreStrategy_: poolManager.strategyList(3)
         });
         otlHandler = new OpenTermLoanHandler({
             loanFactory_:       address(openTermLoanFactory),
@@ -169,15 +156,6 @@ contract StrategyInvariants is BaseInvariants {
         strategyHandler.setSelectorWeight("deactivateStrategy(uint256)",          1_000);
         strategyHandler.setSelectorWeight("reactivateStrategy(uint256)",          1_000);
 
-        ftlHandler.setSelectorWeight("createLoanAndFund(uint256)",           1_000);
-        ftlHandler.setSelectorWeight("makePayment(uint256)",                 0);
-        ftlHandler.setSelectorWeight("impairmentMakePayment(uint256)",       1_000);
-        ftlHandler.setSelectorWeight("defaultMakePayment(uint256)",          2_000);
-        ftlHandler.setSelectorWeight("impairLoan(uint256)",                  1_500);
-        ftlHandler.setSelectorWeight("triggerDefault(uint256)",              2_000);
-        ftlHandler.setSelectorWeight("finishCollateralLiquidation(uint256)", 1_500);
-        ftlHandler.setSelectorWeight("refinance(uint256)",                   1_000);
-
         otlHandler.setSelectorWeight("callLoan(uint256)",             1_000);
         otlHandler.setSelectorWeight("fundLoan(uint256)",             1_000);
         otlHandler.setSelectorWeight("impairLoan(uint256)",           500);
@@ -187,21 +165,19 @@ contract StrategyInvariants is BaseInvariants {
         otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 1_000);
         otlHandler.setSelectorWeight("triggerDefault(uint256)",       1_500);
 
-        address[] memory targetContracts = new address[](6);
+        address[] memory targetContracts = new address[](5);
         targetContracts[0] = address(depositHandler);
         targetContracts[1] = address(transferHandler);
         targetContracts[2] = address(queueWithdrawalHandler);
         targetContracts[3] = address(strategyHandler);
-        targetContracts[4] = address(ftlHandler);
-        targetContracts[5] = address(otlHandler);
+        targetContracts[4] = address(otlHandler);
 
-        uint256[] memory weightsDistributorHandler = new uint256[](6);
+        uint256[] memory weightsDistributorHandler = new uint256[](5);
         weightsDistributorHandler[0] = 10;
         weightsDistributorHandler[1] = 5;
         weightsDistributorHandler[2] = 10;
         weightsDistributorHandler[3] = 50;
-        weightsDistributorHandler[4] = 15;
-        weightsDistributorHandler[5] = 10;
+        weightsDistributorHandler[4] = 25;
 
         distributionHandler = new DistributionHandler(targetContracts, weightsDistributorHandler);
 
@@ -211,7 +187,6 @@ contract StrategyInvariants is BaseInvariants {
         console.log("targetContracts[2]", targetContracts[2]);
         console.log("targetContracts[3]", targetContracts[3]);
         console.log("targetContracts[4]", targetContracts[4]);
-        console.log("targetContracts[5]", targetContracts[5]);
 
         targetContract(address(distributionHandler));
     }
@@ -242,9 +217,6 @@ contract StrategyInvariants is BaseInvariants {
 
     function statefulFuzz_strategyInvariants() external {
         assert_poolManager_invariant_B();
-
-        assert_ftl_invariants();
-        assert_ftlm_invariants_A_B_C_D_E_F_H_I_J_K_L();
 
         assert_otl_invariants();
         assert_otlm_invariants_B_C_F_H_I_J_L_M();

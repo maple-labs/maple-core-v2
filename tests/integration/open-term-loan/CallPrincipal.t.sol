@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IOpenTermLoan, IOpenTermLoanManager } from "../../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract CallPrincipalTestsBase is TestBaseWithAssertions {
 
@@ -40,7 +40,7 @@ contract CallPrincipalTestsBase is TestBaseWithAssertions {
 
         deposit(lp, 1_500_000e6);
 
-        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
         loan = IOpenTermLoan(createOpenTermLoan(
             openTermLoanFactory,

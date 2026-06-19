@@ -8,12 +8,7 @@ import {
     IAssetControllerOracle,
     IBitcoinStrategy,
     ICompositeToken,
-    IFeeManager,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
-    IFixedTermRefinancer,
     IGlobals,
-    ILoanLike,
     IMapleProxyFactory,
     IMockERC20,
     IOpenTermRefinancer,
@@ -30,8 +25,6 @@ import {
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
 import { Utils }           from "../contracts/Utils.sol";
-
-import { MockLiquidationStrategy } from "./mocks/Mocks.sol";
 
 contract TestBase is ProtocolActions, Utils {
 
@@ -73,8 +66,6 @@ contract TestBase is ProtocolActions, Utils {
     address aaveStrategyFactory;
     address basicStrategyFactory;
     address cyclicalWMFactory;
-    address fixedTermLoanFactory;
-    address fixedTermLoanManagerFactory;
     address liquidatorFactory;
     address openTermLoanFactory;
     address openTermLoanManagerFactory;
@@ -87,9 +78,6 @@ contract TestBase is ProtocolActions, Utils {
     address aaveStrategyImplementation;
     address basicStrategyImplementation;
     address cyclicalWMImplementation;
-    address fixedTermLoanImplementation;
-    address fixedTermLoanManagerImplementation;
-    address liquidatorImplementation;
     address openTermLoanImplementation;
     address openTermLoanManagerImplementation;
     address poolManagerImplementation;
@@ -100,9 +88,6 @@ contract TestBase is ProtocolActions, Utils {
 
     address aaveStrategyInitializer;
     address basicStrategyInitializer;
-    address fixedTermLoanInitializer;
-    address fixedTermLoanManagerInitializer;
-    address liquidatorInitializer;
     address openTermLoanInitializer;
     address openTermLoanManagerInitializer;
     address poolManagerInitializer;
@@ -130,8 +115,6 @@ contract TestBase is ProtocolActions, Utils {
     // Avoid stack-too-deep error.
     bytes[] strategyDeploymentData_;
 
-    IFeeManager                fixedTermFeeManager;
-    IFixedTermRefinancer       fixedTermRefinancer;
     IGlobals                   globals;
     IOpenTermRefinancer        openTermRefinancer;
     IPool                      pool;
@@ -239,39 +222,25 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _createFactories() internal {
+        liquidatorFactory           = makeAddr("liquidatorFactoryStub");  // Stub: PM:TD validation passport; OTLM ignores its value.
         cyclicalWMFactory           = deployFromFile("Contracts@7", "WithdrawalManagerCyclicalFactory", abi.encode(address(globals)));
-        fixedTermLoanManagerFactory = deployFromFile("Contracts@7", "FixedTermLoanManagerFactory",      abi.encode(address(globals)));
-        liquidatorFactory           = deployFromFile("Contracts@7", "LiquidatorFactory",                abi.encode(address(globals)));
         openTermLoanFactory         = deployFromFile("Contracts@7", "OpenTermLoanFactory",              abi.encode(address(globals)));
         openTermLoanManagerFactory  = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory",       abi.encode(address(globals)));
         poolManagerFactory          = deployFromFile("Contracts@7", "PoolManagerFactory",               abi.encode(address(globals)));
         queueWMFactory              = deployFromFile("Contracts@7", "WithdrawalManagerQueueFactory",    abi.encode(address(globals)));
-        fixedTermLoanFactory        = deployFromFile(
-            "Contracts@7",
-            "FixedTermLoanFactory",
-            abi.encode(address(globals), address(0))
-        );
 
-        fixedTermLoanImplementation        = deployFromFile("Contracts@7",  "FixedTermLoan");
-        fixedTermLoanManagerImplementation = deployFromFile("Contracts@7",  "FixedTermLoanManager");
-        liquidatorImplementation           = deployFromFile("Contracts@7",  "Liquidator");
         openTermLoanImplementation         = deployFromFile("Contracts@7",  "OpenTermLoan");
         openTermLoanManagerImplementation  = deployFromFile("Contracts@7",  "OpenTermLoanManager");
         poolManagerImplementation          = deployFromFile("Contracts@25", "PoolManager");
         cyclicalWMImplementation           = deployFromFile("Contracts@7",  "WithdrawalManagerCyclical");
         queueWMImplementation              = deployFromFile("Contracts@7",  "WithdrawalManagerQueue");
 
-        fixedTermLoanInitializer        = deployFromFile("Contracts@7",  "FixedTermLoanInitializer");
-        fixedTermLoanManagerInitializer = deployFromFile("Contracts@7",  "FixedTermLoanManagerInitializer");
-        liquidatorInitializer           = deployFromFile("Contracts@7",  "LiquidatorInitializer");
         openTermLoanInitializer         = deployFromFile("Contracts@7",  "OpenTermLoanInitializer");
         openTermLoanManagerInitializer  = deployFromFile("Contracts@7",  "OpenTermLoanManagerInitializer");
         poolManagerInitializer          = deployFromFile("Contracts@25", "PoolManagerInitializer");
         cyclicalWMInitializer           = deployFromFile("Contracts@7",  "WithdrawalManagerCyclicalInitializer");
         queueWMInitializer              = deployFromFile("Contracts@7",  "WithdrawalManagerQueueInitializer");
 
-        fixedTermFeeManager = IFeeManager(deployFromFile("Contracts@7","FeeManager", abi.encode(address(globals))));
-        fixedTermRefinancer = IFixedTermRefinancer(deployFromFile("Contracts@7","FixedTermRefinancer"));
         openTermRefinancer  = IOpenTermRefinancer(deployFromFile("Contracts@7","OpenTermRefinancer"));
 
         address poolPermissionManagerImplementation = deployFromFile("Contracts@7","PoolPermissionManager");
@@ -303,13 +272,8 @@ contract TestBase is ProtocolActions, Utils {
         poolPermissionManager.setPermissionAdmin(permissionAdmin, true);
 
         globals.setValidInstanceOf("LIQUIDATOR_FACTORY",               liquidatorFactory,             true);
-        globals.setValidInstanceOf("LOAN_FACTORY",                     fixedTermLoanFactory,          true);
-        globals.setValidInstanceOf("FT_LOAN_FACTORY",                  fixedTermLoanFactory,          true);
         globals.setValidInstanceOf("LOAN_FACTORY",                     openTermLoanFactory,           true);
         globals.setValidInstanceOf("OT_LOAN_FACTORY",                  openTermLoanFactory,           true);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             fixedTermLoanManagerFactory,   true);
-        globals.setValidInstanceOf("STRATEGY_FACTORY",                 fixedTermLoanManagerFactory,   true);
-        globals.setValidInstanceOf("FT_LOAN_MANAGER_FACTORY",          fixedTermLoanManagerFactory,   true);
         globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",          openTermLoanManagerFactory,    true);
         globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             openTermLoanManagerFactory,    true);
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 openTermLoanManagerFactory,    true);
@@ -326,9 +290,6 @@ contract TestBase is ProtocolActions, Utils {
         globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
         globals.setValidInstanceOf("REFINANCER",                       address(openTermRefinancer),   true);
         globals.setValidInstanceOf("OT_REFINANCER",                    address(openTermRefinancer),   true);
-        globals.setValidInstanceOf("REFINANCER",                       address(fixedTermRefinancer),  true);
-        globals.setValidInstanceOf("FT_REFINANCER",                    address(fixedTermRefinancer),  true);
-        globals.setValidInstanceOf("FEE_MANAGER",                      address(fixedTermFeeManager),  true);
         globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
         globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),         true);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
@@ -336,26 +297,12 @@ contract TestBase is ProtocolActions, Utils {
 
         globals.setCanDeployFrom(aaveStrategyFactory,         address(deployer), true);
         globals.setCanDeployFrom(basicStrategyFactory,        address(deployer), true);
-        globals.setCanDeployFrom(fixedTermLoanManagerFactory, address(deployer), true);
         globals.setCanDeployFrom(poolManagerFactory,          address(deployer), true);
         globals.setCanDeployFrom(cyclicalWMFactory,           address(deployer), true);
         globals.setCanDeployFrom(queueWMFactory,              address(deployer), true);
         globals.setCanDeployFrom(skyStrategyFactory,          address(deployer), true);
         globals.setCanDeployFrom(coreStrategyFactory,         address(deployer), true);
         globals.setCanDeployFrom(bitcoinStrategyFactory,      address(deployer), true);
-
-        IMapleProxyFactory(liquidatorFactory).registerImplementation(1, liquidatorImplementation, liquidatorInitializer);
-        IMapleProxyFactory(liquidatorFactory).setDefaultVersion(1);
-
-        IMapleProxyFactory(fixedTermLoanFactory).registerImplementation(1, fixedTermLoanImplementation, fixedTermLoanInitializer);
-        IMapleProxyFactory(fixedTermLoanFactory).setDefaultVersion(1);
-
-        IMapleProxyFactory(fixedTermLoanManagerFactory).registerImplementation(
-            1,
-            fixedTermLoanManagerImplementation,
-            fixedTermLoanManagerInitializer
-        );
-        IMapleProxyFactory(fixedTermLoanManagerFactory).setDefaultVersion(1);
 
         IMapleProxyFactory(openTermLoanFactory).registerImplementation(1, openTermLoanImplementation, openTermLoanInitializer);
         IMapleProxyFactory(openTermLoanFactory).setDefaultVersion(1);
@@ -393,7 +340,6 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.stopPrank();
 
-        strategyFactories.push(fixedTermLoanManagerFactory);
         strategyFactories.push(openTermLoanManagerFactory);
     }
 
@@ -826,71 +772,6 @@ contract TestBase is ProtocolActions, Utils {
         }
     }
 
-    /**
-     *  @param termDetails Array of loan parameters:
-     *                       [0]: gracePeriod
-     *                       [1]: paymentInterval
-     *                       [2]: numberOfPayments
-     *  @param amounts     Requested amounts:
-     *                       [0]: collateralRequired
-     *                       [1]: principalRequested
-     *                       [2]: endingPrincipal
-     *  @param rates       Rates parameters:
-     *                       [0]: interestRate
-     *                       [1]: closingFeeRate
-     *                       [2]: lateFeeRate
-     *                       [3]: lateInterestPremium
-     */
-    function createFixedTermLoan(
-        address           borrower,
-        uint256[3] memory termDetails,
-        uint256[3] memory amounts,
-        uint256[4] memory rates,
-        address           loanManager
-    )
-        internal returns (address loan)
-    {
-        vm.prank(governor);
-        globals.setValidBorrower(borrower, true);
-
-        vm.prank(borrower);
-        loan = IMapleProxyFactory(fixedTermLoanFactory).createInstance({
-            arguments_: abi.encode(
-                borrower,
-                loanManager,
-                address(fixedTermFeeManager),
-                [address(collateralAsset), address(fundsAsset)],
-                termDetails,
-                amounts,
-                rates,
-                [nextDelegateOriginationFee, nextDelegateServiceFee]
-            ),
-            salt_: "SALT"
-        });
-    }
-
-    function createFixedTermLoan(
-        address           borrower,
-        address           lender,
-        address           feeManager,
-        address[2] memory assets,
-        uint256[3] memory terms,
-        uint256[3] memory amounts,
-        uint256[4] memory rates,
-        uint256[2] memory fees
-    )
-        internal returns (address loan)
-    {
-        vm.prank(governor);
-        globals.setValidBorrower(borrower, true);
-
-        vm.prank(borrower);
-        loan = IMapleProxyFactory(fixedTermLoanFactory).createInstance({
-            arguments_: abi.encode(borrower, lender, feeManager, assets, terms, amounts, rates, fees),
-            salt_: "SALT"
-        });
-    }
-
     function createOpenTermLoan(
         address          borrower,
         address          lender,
@@ -914,20 +795,6 @@ contract TestBase is ProtocolActions, Utils {
     function encodeWithSignatureAndUint(string memory signature, uint256 arg) internal pure returns (bytes[] memory calls) {
         calls    = new bytes[](1);
         calls[0] = abi.encodeWithSignature(signature, arg);
-    }
-
-    function liquidateCollateral(address loan) internal {
-        MockLiquidationStrategy mockLiquidationStrategy = MockLiquidationStrategy(deployMock("MockLiquidationStrategy"));
-
-        ( , , , , , address liquidator ) = IFixedTermLoanManager(ILoanLike(loan).lender()).liquidationInfo(loan);
-
-        mockLiquidationStrategy.flashBorrowLiquidation(
-            liquidator,
-            collateralAsset.balanceOf(address(liquidator)),
-            address(collateralAsset),
-            address(fundsAsset),
-            loan
-        );
     }
 
     function setupFees(
@@ -964,22 +831,6 @@ contract TestBase is ProtocolActions, Utils {
 
     function deposit(address lp, uint256 liquidity) internal returns (uint256 shares) {
         shares = deposit(address(pool), lp, liquidity);
-    }
-
-    function fundAndDrawdownLoan(
-        address           borrower,
-        uint256[3] memory termDetails,
-        uint256[3] memory amounts,
-        uint256[4] memory rates,
-        address           loanManager
-    )
-        internal returns (address loan)
-    {
-        loan = createFixedTermLoan(borrower, termDetails, amounts, rates, loanManager);
-
-        fundLoan(address(loan));
-
-        drawdown(address(loan), IFixedTermLoan(loan).drawableFunds());
     }
 
     function requestRedeem(address lp, uint256 amount) internal {

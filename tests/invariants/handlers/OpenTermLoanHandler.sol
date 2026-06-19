@@ -64,7 +64,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         asset       = IMockERC20(poolManager.asset());
         globals     = IGlobals(loanFactory.mapleGlobals());
-        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
         pool        = IPool(poolManager.pool());
 
         refinancer = refinancer_;

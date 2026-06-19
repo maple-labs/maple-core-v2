@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import {
     IERC20,
     IERC4626Like,
-    IFixedTermLoanManager,
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
@@ -20,20 +19,11 @@ import {
 // NOTE: This contract assumes one strategy type is deployed per Pool.
 contract ProtocolHealthChecker {
 
-    uint256 constant internal BUFFER_MULTIPLE = 4;
-    uint256 constant internal BUFFER          = 1e6;
+    uint256 constant internal BUFFER = 1e6;
 
     /******************************************************************************************************************************/
     /*** Invariant Tests                                                                                                        ***/
     /*******************************************************************************************************************************
-     * Fixed Term Loan Manager
-        * Invariant A: domainStart <= domainEnd
-        * Invariant B: sortedPayments is always sorted
-        * Invariant F: unrealizedLosses <= assetsUnderManagement()
-        * Invariant I: domainStart <= block.timestamp
-        * Invariant J: if (loanManager.paymentWithEarliestDueDate != 0) then issuanceRate > 0
-        * Invariant K: if (loanManager.paymentWithEarliestDueDate != 0) then domainEnd == paymentWithEarliestDueDate
-
      * Open Term Loan Manager
         * Invariant E: unrealizedLosses <= assetsUnderManagement()
         * Invariant G: block.timestamp >= domainStart
@@ -79,7 +69,6 @@ contract ProtocolHealthChecker {
     *******************************************************************************************************************************/
 
     struct Strategies {
-        address fixedTermLoanManager;
         address openTermLoanManager;
         address aaveStrategy;
         address skyStrategy;
@@ -88,12 +77,6 @@ contract ProtocolHealthChecker {
 
     // Struct to avoid stack too deep compiler error.
     struct Invariants {
-        bool fixedTermLoanManagerInvariantA;
-        bool fixedTermLoanManagerInvariantB;
-        bool fixedTermLoanManagerInvariantF;
-        bool fixedTermLoanManagerInvariantI;
-        bool fixedTermLoanManagerInvariantJ;
-        bool fixedTermLoanManagerInvariantK;
         bool openTermLoanManagerInvariantE;
         bool openTermLoanManagerInvariantG;
         bool poolInvariantA;
@@ -138,15 +121,6 @@ contract ProtocolHealthChecker {
         address pool_              = poolManager.pool();
         address fundsAsset_        = IPool(pool_).asset();
         address withdrawalManager_ = poolManager.withdrawalManager();
-
-        if (strategies.fixedTermLoanManager != address(0)) {
-            invariants_.fixedTermLoanManagerInvariantA = check_fixedTermLoanManager_invariant_A(strategies.fixedTermLoanManager);
-            invariants_.fixedTermLoanManagerInvariantB = check_fixedTermLoanManager_invariant_B(strategies.fixedTermLoanManager);
-            invariants_.fixedTermLoanManagerInvariantF = check_fixedTermLoanManager_invariant_F(strategies.fixedTermLoanManager);
-            invariants_.fixedTermLoanManagerInvariantI = check_fixedTermLoanManager_invariant_I(strategies.fixedTermLoanManager);
-            invariants_.fixedTermLoanManagerInvariantJ = check_fixedTermLoanManager_invariant_J(strategies.fixedTermLoanManager);
-            invariants_.fixedTermLoanManagerInvariantK = check_fixedTermLoanManager_invariant_K(strategies.fixedTermLoanManager);
-        }
 
         if (strategies.openTermLoanManager != address(0)) {
             invariants_.openTermLoanManagerInvariantE = check_openTermLoanManager_invariant_E(strategies.openTermLoanManager);
@@ -212,81 +186,6 @@ contract ProtocolHealthChecker {
             invariants_.withdrawalManagerQueueInvariantD = check_withdrawalManagerQueue_invariant_D(withdrawalManager_);
             invariants_.withdrawalManagerQueueInvariantE = check_withdrawalManagerQueue_invariant_E(withdrawalManager_);
             invariants_.withdrawalManagerQueueInvariantF = check_withdrawalManagerQueue_invariant_F(withdrawalManager_);
-        }
-    }
-
-    /******************************************************************************************************************************/
-    /*** Fixed Term Loan Manager Invariants                                                                                     ***/
-    /******************************************************************************************************************************/
-
-    function check_fixedTermLoanManager_invariant_A(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        isMaintained_ =
-            IFixedTermLoanManager(fixedTermLoanManager_).domainStart() <= IFixedTermLoanManager(fixedTermLoanManager_).domainEnd();
-    }
-
-    function check_fixedTermLoanManager_invariant_B(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(fixedTermLoanManager_);
-
-        uint256 next = loanManager.paymentWithEarliestDueDate();
-
-        uint256 previousPaymentDueDate;
-        uint256 nextPaymentDueDate;
-
-        if (next == 0) isMaintained_ = true;
-
-        while (next != 0) {
-            uint256 current = next;
-
-            ( , next, ) = loanManager.sortedPayments(current);  // Overwrite `next` in loop
-
-            ( , , nextPaymentDueDate ) = loanManager.sortedPayments(next);  // Get the next payment due date
-
-            // End of list
-            if (next == 0 && nextPaymentDueDate == 0) {
-                isMaintained_ = true;
-                break;
-            }
-
-            isMaintained_ = previousPaymentDueDate <= nextPaymentDueDate;
-
-            previousPaymentDueDate = nextPaymentDueDate;  // Set the previous payment due date
-        }
-    }
-
-    function check_fixedTermLoanManager_invariant_F(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(fixedTermLoanManager_);
-
-        isMaintained_ =
-            loanManager.unrealizedLosses() <= loanManager.assetsUnderManagement() + (loanManager.paymentCounter() * BUFFER_MULTIPLE);
-    }
-
-    function check_fixedTermLoanManager_invariant_I(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        isMaintained_ = IFixedTermLoanManager(fixedTermLoanManager_).domainStart() <= block.timestamp;
-    }
-
-    function check_fixedTermLoanManager_invariant_J(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        if (IFixedTermLoanManager(fixedTermLoanManager_).paymentWithEarliestDueDate() == 0) {
-            isMaintained_ = true;
-        }
-
-        if (IFixedTermLoanManager(fixedTermLoanManager_).paymentWithEarliestDueDate() != 0) {
-            isMaintained_ = IFixedTermLoanManager(fixedTermLoanManager_).issuanceRate() > 0;
-        }
-    }
-
-    function check_fixedTermLoanManager_invariant_K(address fixedTermLoanManager_) public view returns (bool isMaintained_) {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(fixedTermLoanManager_);
-
-        uint256 paymentWithEarliestDueDate = loanManager.paymentWithEarliestDueDate();
-
-        ( , , uint256 earliestPaymentDueDate ) = loanManager.sortedPayments(paymentWithEarliestDueDate);
-
-        if (paymentWithEarliestDueDate == 0) {
-            isMaintained_ = true;
-        }
-
-        if (paymentWithEarliestDueDate != 0) {
-            isMaintained_ = loanManager.domainEnd() == earliestPaymentDueDate;
         }
     }
 
@@ -617,13 +516,6 @@ contract ProtocolHealthChecker {
     }
 
     function _bootstrapInvariantsResults() internal pure returns (Invariants memory invariants) {
-        invariants.fixedTermLoanManagerInvariantA = true;
-        invariants.fixedTermLoanManagerInvariantB = true;
-        invariants.fixedTermLoanManagerInvariantF = true;
-        invariants.fixedTermLoanManagerInvariantI = true;
-        invariants.fixedTermLoanManagerInvariantJ = true;
-        invariants.fixedTermLoanManagerInvariantK = true;
-
         invariants.openTermLoanManagerInvariantE = true;
         invariants.openTermLoanManagerInvariantG = true;
 
@@ -738,19 +630,12 @@ contract ProtocolHealthChecker {
 
         for (uint256 i = 0; i < length; i++) {
             address strategy = IPoolManager(poolManager).strategyList(i);
-            if (_isFixedTermLoanManager(strategy)) strategies.fixedTermLoanManager = strategy;
             if (_isOpenTermLoanManager(strategy))  strategies.openTermLoanManager  = strategy;
             if (_isAaveStrategy(strategy))         strategies.aaveStrategy         = strategy;
             if (_isSkyStrategy(strategy))          strategies.skyStrategy          = strategy;
             if (_isCoreStrategy(strategy))         strategies.coreStrategy         = strategy;
         }
 
-    }
-
-    function _isFixedTermLoanManager(address loan) internal view returns (bool isFixedTermLoanManager_) {
-        try IFixedTermLoanManager(loan).domainEnd() {
-            isFixedTermLoanManager_ = true;
-        } catch { }
     }
 
     function _isOpenTermLoanManager(address loan) internal view returns (bool isOpenTermLoanManager_) {

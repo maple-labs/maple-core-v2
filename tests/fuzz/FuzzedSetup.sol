@@ -7,11 +7,7 @@ import {
     IAaveTokenLike,
     ICoreStrategy,
     IERC20,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
-    IGlobals,
     ILoanLike,
-    IProxyFactoryLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
@@ -57,10 +53,6 @@ contract FuzzedUtil is ProtocolActions {
     uint256 constant WITHDRAW_STRATEGY_FACTOR = 75;
 
     // Local addresses that will be overridden by implementers.
-    address _collateralAsset;
-    address _feeManager;
-    address _fixedTermLoanManager;
-    address _fixedTermLoanFactory;
     address _fundsAsset;
     address _liquidatorFactory;
     address _openTermLoanFactory;
@@ -71,7 +63,6 @@ contract FuzzedUtil is ProtocolActions {
     uint256 expectedLoanCount;
     uint256 seed;
 
-    address[] _fixedTermLoans;
     address[] _openTermLoans;
     address[] lps;
     address[] loans;
@@ -79,7 +70,6 @@ contract FuzzedUtil is ProtocolActions {
     uint256[] escrowedShares;
 
     function fuzzedSetup(
-        uint256 fixedTermLoans,
         uint256 openTermLoans,
         uint256 loanActionCount,
         uint256 strategyActionCount,
@@ -88,13 +78,7 @@ contract FuzzedUtil is ProtocolActions {
         internal
     {
         seed              = seed_;
-        expectedLoanCount = fixedTermLoans + openTermLoans;
-
-        // Create and fund fixed loans.
-        for (uint256 i; i < fixedTermLoans; ++i) {
-            vm.warp(block.timestamp + 1 days);
-            createAndFundLoan(createSomeFixedTermLoan);
-        }
+        expectedLoanCount = openTermLoans;
 
         // Create and fund open loans.
         for (uint256 i; i < openTermLoans; ++i) {
@@ -139,28 +123,23 @@ contract FuzzedUtil is ProtocolActions {
         }
     }
 
-    function payOffLoansAndRedeemAllLps() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
-        ( lastDomainStartFTLM_, lastDomainStartOTLM_ ) = payOffAllLoans();
+    function payOffLoansAndRedeemAllLps() internal returns (uint256 lastDomainStartOTLM_) {
+        lastDomainStartOTLM_ = payOffAllLoans();
 
         requestRedeemAllLps();
         redeemAllLps();
     }
 
-    function payOffAllLoans() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
+    function payOffAllLoans() internal returns (uint256 lastDomainStartOTLM_) {
         ( address loan , ) = getEarliestDueDate();
 
-        lastDomainStartFTLM_ = IFixedTermLoanManager(_fixedTermLoanManager).domainStart();
         lastDomainStartOTLM_ = IOpenTermLoanManager(_openTermLoanManager).domainStart();
 
         while (loan != address(0)) {
-            bool isOpenTermLoan = isOpenTermLoan(loan);
-
-            uint256 nextPaymentDueDate = isOpenTermLoan
-                ? IOpenTermLoan(loan).paymentDueDate()
-                : IFixedTermLoan(loan).nextPaymentDueDate();
+            uint256 nextPaymentDueDate = IOpenTermLoan(loan).paymentDueDate();
 
             // Call open terms after 5 payments on average
-            if (isOpenTermLoan && uint256(keccak256(abi.encode(nextPaymentDueDate))) % 5 == 0) {
+            if (uint256(keccak256(abi.encode(nextPaymentDueDate))) % 5 == 0) {
                 callLoan(loan, IOpenTermLoan(loan).principal());
             }
 
@@ -170,7 +149,7 @@ contract FuzzedUtil is ProtocolActions {
 
             makePayment(loan);
 
-            isOpenTermLoan ? lastDomainStartOTLM_ = block.timestamp : lastDomainStartFTLM_ = block.timestamp;
+            lastDomainStartOTLM_ = block.timestamp;
 
             if (ILoanLike(loan).principal() == 0) {
                 removeLoan(loan);
@@ -284,61 +263,6 @@ contract FuzzedUtil is ProtocolActions {
         console.log("Open-term loan created:", loan);
     }
 
-    function createSomeFixedTermLoan() internal returns (address loan) {
-        require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
-
-        uint256 poolBalance  = IERC20(_fundsAsset).balanceOf(address(_pool));
-        uint256 maxPrincipal = poolBalance  / expectedLoanCount;
-        uint256 minPrincipal = maxPrincipal / 5;
-
-        uint256 principal = getSomeValue(minPrincipal, maxPrincipal);
-
-        uint256[3] memory amounts = [
-            0,                          // collateralRequired
-            principal,                  // principalRequested
-            getSomeValue(0, principal)  // endingPrincipal
-        ];
-
-        uint256[3] memory term = [
-            getSomeValue(12 hours, 10 days),  // gracePeriod
-            getSomeValue(10 days,  90 days),  // paymentInterval
-            getSomeValue(1,        12)        // payments
-        ];
-
-        uint256[4] memory rates = [
-            getSomeValue(0.01e6, 0.25e6),  // interestRate
-            getSomeValue(0.01e6, 0.25e6),  // closingFeeRate
-            getSomeValue(0,      0.1e6),   // lateFeeRate
-            getSomeValue(0,      0.1e6)    // lateInterestPremiumRate
-        ];
-
-        uint256[2] memory fees = [
-            getSomeValue(0, principal * 0.025e6 / 1e6),  // delegateOriginationFee
-            getSomeValue(0, 100_000e6)                   // delegateServiceFee
-        ];
-
-        IGlobals globals = IGlobals(IProxyFactoryLike(_fixedTermLoanFactory).mapleGlobals());
-
-        if (!globals.isCollateralAsset(_collateralAsset)) {
-            vm.prank(globals.governor());
-            globals.setValidCollateralAsset(_collateralAsset, true);
-        }
-
-        loan = createFixedTermLoan(
-            address(_fixedTermLoanFactory),
-            makeAddr(string(abi.encode("borrower", getSomeValue(0, 100)))),
-            address(_fixedTermLoanManager),
-            address(_feeManager),
-            [address(_collateralAsset), address(_fundsAsset)],
-            amounts,
-            term,
-            rates,
-            fees
-        );
-
-        console.log("Fixed-term loan created:", loan);
-    }
-
     function removeLoan(address loan) internal {
         for (uint256 i; i < loans.length; ++i) {
             if (loan != loans[i]) continue;
@@ -352,8 +276,7 @@ contract FuzzedUtil is ProtocolActions {
     }
 
     function performSomeLoanAction(address loan) internal {
-        // Randomly select an action that can be performed on the loan.
-        LoanAction action = isOpenTermLoan(loan) ? getSomeOpenTermAction(loan) : getSomeFixedTermAction(loan);
+        LoanAction action = getSomeOpenTermAction(loan);
 
         if (action == LoanAction.Payment) {
             makePayment(loan);
@@ -442,46 +365,6 @@ contract FuzzedUtil is ProtocolActions {
         require(false, "INVALID_STRATEGY_ACTION");
     }
 
-    // NOTE: Code duplication with `getSomeOpenTermAction` because can not yet identify cleaner way to do this.
-    function getSomeFixedTermAction(address loan) internal returns (LoanAction action) {
-        // Always enable payments to be performed.
-        uint256 total = PAYMENT_FACTOR;
-
-        bool isImpaired  = IFixedTermLoan(loan).isImpaired();
-        bool isInDefault = block.timestamp > IFixedTermLoan(loan).nextPaymentDueDate() + IFixedTermLoan(loan).gracePeriod();
-
-        // If the loan is not impaired, enable impairment, else if the loan is impaired and not late, enable impairment removal.
-        if (!isImpaired) {
-            total += IMPAIR_FACTOR;
-        } else if (block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
-            total += REMOVE_IMPAIRMENT_FACTOR;
-        }
-
-        // If the loan is past the default date also enable default triggering.
-        if (isInDefault) {
-            total += DEFAULT_FACTOR;
-        }
-
-        uint256 draw = getSomeValue(0, total - 1);
-
-        if (draw < PAYMENT_FACTOR) return LoanAction.Payment;
-
-        draw -= PAYMENT_FACTOR;
-
-        if (!isImpaired) {
-            if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
-
-            draw -= IMPAIR_FACTOR;
-        } else if (block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
-            if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
-
-            draw -= REMOVE_IMPAIRMENT_FACTOR;
-        }
-
-        return LoanAction.TriggerDefault;
-    }
-
-    // NOTE: Code duplication with `getSomeFixedTermAction` because can not yet identify cleaner way to do this.
     function getSomeOpenTermAction(address loan) internal returns (LoanAction action) {
         // Always enable payments, calls, impairments to be performed.
         uint256 total = PAYMENT_FACTOR + CALL_FACTOR;
@@ -551,8 +434,7 @@ contract FuzzedUtil is ProtocolActions {
     function getEarliestDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
-            uint256 paymentDueDate = isOpenTermLoan(loan) ?
-                IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
+            uint256 paymentDueDate = IOpenTermLoan(loan).paymentDueDate();
 
             if (paymentDueDate < dueDate_ || (paymentDueDate > 0 && dueDate_ == 0)) {
                 loan_    = loan;
@@ -564,8 +446,7 @@ contract FuzzedUtil is ProtocolActions {
     function getNextDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
-            uint256 paymentDueDate = isOpenTermLoan(loan) ?
-                IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
+            uint256 paymentDueDate = IOpenTermLoan(loan).paymentDueDate();
 
             if (paymentDueDate < dueDate_ || (paymentDueDate > block.timestamp && dueDate_ == 0)) {
                 loan_    = loan;
@@ -576,10 +457,6 @@ contract FuzzedUtil is ProtocolActions {
 
     function getSomeActiveLoan() internal returns (address loan_) {
         loan_ = getSomeLoan(isActiveLoan);
-    }
-
-    function getSomeActiveFixedTermLoan() internal returns (address loan_) {
-        loan_ = getSomeLoan(isActiveFixedTermLoan);
     }
 
     function getSomeActiveOpenTermLoan() internal returns (address loan_) {
@@ -598,20 +475,16 @@ contract FuzzedUtil is ProtocolActions {
         isActiveLoan_ = ILoanLike(loan_).principal() > 0;
     }
 
-    function isActiveFixedTermLoan(address loan_) internal view returns (bool isActiveFixedTermLoan_) {
-        isActiveFixedTermLoan_ = isFixedTermLoan(loan_) && isActiveLoan(loan_);
-    }
-
     function isActiveOpenTermLoan(address loan_) internal view returns (bool isActiveOpenTermLoan_) {
-        isActiveOpenTermLoan_ = isOpenTermLoan(loan_) && isActiveLoan(loan_);
+        isActiveOpenTermLoan_ = isActiveLoan(loan_);
     }
 
     function isCalledOpenTermLoan(address loan_) internal view returns (bool isCalledOpenTermLoan_) {
-        isCalledOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isCalled();
+        isCalledOpenTermLoan_ = IOpenTermLoan(loan_).isCalled();
     }
 
     function isImpairedOpenTermLoan(address loan_) internal view returns (bool isImpairedOpenTermLoan_) {
-        isImpairedOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isImpaired();
+        isImpairedOpenTermLoan_ = IOpenTermLoan(loan_).isImpaired();
     }
 
     function isWMQueue(address poolManager_) internal view returns (bool isWMQueue_) {
@@ -620,16 +493,6 @@ contract FuzzedUtil is ProtocolActions {
         try IWithdrawalManagerQueue(wm).queue() {
             isWMQueue_ = true;
         } catch { }
-    }
-
-    function getAllActiveFixedTermLoans() internal returns (address[] memory loans_) {
-        for (uint256 i; i < loans.length; ++i) {
-            if (isActiveFixedTermLoan(loans[i])) {
-                _fixedTermLoans.push(loans[i]);
-            }
-        }
-
-        return abi.decode(abi.encode(_fixedTermLoans), (address[]));
     }
 
     function getAllActiveOpenTermLoans() internal returns (address[] memory loans_) {
@@ -664,19 +527,19 @@ contract FuzzedUtil is ProtocolActions {
         uint256 strategyCount = IPoolManager(_poolManager).strategyListLength();
         uint256 index;
 
-        // Pool only has loan managers.
-        if (strategyCount == 2) {
+        // Pool only has loan manager.
+        if (strategyCount == 1) {
             return address(0);
         }
 
-        // Pool only has one strategy, select it.
-        if (strategyCount == 3) {
-            index = 2;
+        // Pool has only the OT loan manager plus one strategy, select it.
+        if (strategyCount == 2) {
+            index = 1;
         }
 
         // Pool has two strategies, choose one randomly.
-        if (strategyCount == 4) {
-            index = getSomeValue(2, 3);
+        if (strategyCount == 3) {
+            index = getSomeValue(1, 2);
         }
 
         strategy = IPoolManager(_poolManager).strategyList(index);
@@ -691,23 +554,7 @@ contract FuzzedUtil is ProtocolActions {
         _poolManager = IPool(pool).manager();
         _fundsAsset  = IPool(pool).asset();
 
-        address lm1 = IPoolManager(_poolManager).strategyList(0);
-        address lm2 = IPoolManager(_poolManager).strategyList(1);
-
-        if (_isOpenTermLoanManager(lm1)) {
-            _openTermLoanManager  = lm1;
-            _fixedTermLoanManager = lm2;
-        } else {
-            _openTermLoanManager  = lm2;
-            _fixedTermLoanManager = lm1;
-        }
-
-    }
-
-    function _isOpenTermLoanManager(address loanManager_) internal view returns (bool isOpenTermLoanManager_) {
-        try IOpenTermLoanManager(loanManager_).paymentFor(address(0)) {
-            isOpenTermLoanManager_ = true;
-        } catch { }
+        _openTermLoanManager = IPoolManager(_poolManager).strategyList(0);
     }
 
     function _getMaxAmountToSupplyAaveStrategy(address aaveStrategy) internal view returns (uint256) {
@@ -752,11 +599,8 @@ contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
 
         setAddresses(address(pool));
 
-        _collateralAsset      = address(collateralAsset);
-        _feeManager           = address(fixedTermFeeManager);
-        _fixedTermLoanFactory = address(fixedTermLoanFactory);
-        _liquidatorFactory    = address(liquidatorFactory);
-        _openTermLoanFactory  = address(openTermLoanFactory);
+        _liquidatorFactory   = address(liquidatorFactory);
+        _openTermLoanFactory = address(openTermLoanFactory);
 
         // Deposit the initial liquidity.
         lps.push(makeAddr("lp1"));

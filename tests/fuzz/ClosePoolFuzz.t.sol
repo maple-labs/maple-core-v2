@@ -6,14 +6,13 @@ import { FuzzedSetup, IPoolManager, IWithdrawalManagerQueue } from "./FuzzedSetu
 contract ClosePoolFuzz is FuzzedSetup {
 
     uint256 constant ACTION_COUNT   = 10;
-    uint256 constant FTL_LOAN_COUNT = 3;
     uint256 constant OTL_LOAN_COUNT = 7;
     uint256 constant ALLOWED_DIFF   = 1000;
 
     function testFuzz_fuzzedSetup_closePool(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
-        ( uint256 lastDomainStartFTLM, uint256 lastDomainStartOTLM ) = payOffLoansAndRedeemAllLps();
+        uint256 lastDomainStartOTLM = payOffLoansAndRedeemAllLps();
 
         assertOpenTermLoanManagerWithDiff({
             loanManager:       _openTermLoanManager,
@@ -22,18 +21,6 @@ contract ClosePoolFuzz is FuzzedSetup {
             domainStart:       lastDomainStartOTLM,
             issuanceRate:      0,
             principalOut:      0,
-            unrealizedLosses:  0,
-            diff:              ALLOWED_DIFF
-        });
-
-        assertFixedTermLoanManagerWithDiff({
-            loanManager:       _fixedTermLoanManager,
-            accruedInterest:   0,
-            accountedInterest: 0,
-            principalOut:      0,
-            issuanceRate:      0,
-            domainStart:       lastDomainStartFTLM,
-            domainEnd:         lastDomainStartFTLM,
             unrealizedLosses:  0,
             diff:              ALLOWED_DIFF
         });
@@ -54,7 +41,6 @@ contract ClosePoolFuzz is FuzzedSetup {
 contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
 
     uint256 constant ACTION_COUNT   = 10;
-    uint256 constant FTL_LOAN_COUNT = 4;
     uint256 constant OTL_LOAN_COUNT = 6;
     uint256 constant ALLOWED_DIFF   = 1000;
 
@@ -71,11 +57,8 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
 
         setAddresses(address(pool));
 
-        _collateralAsset      = address(collateralAsset);
-        _feeManager           = address(fixedTermFeeManager);
-        _fixedTermLoanFactory = address(fixedTermLoanFactory);
-        _liquidatorFactory    = address(liquidatorFactory);
-        _openTermLoanFactory  = address(openTermLoanFactory);
+        _liquidatorFactory   = address(liquidatorFactory);
+        _openTermLoanFactory = address(openTermLoanFactory);
 
         // Deposit the initial liquidity.
         lps.push(makeAddr("lp1"));
@@ -95,9 +78,9 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
     }
 
     function testFuzz_fuzzedSetup_closePool_withQueueWM(uint256 seed_) external {
-        fuzzedSetup(FTL_LOAN_COUNT, OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
-        ( uint256 lastDomainStartFTLM, uint256 lastDomainStartOTLM ) = payOffLoansAndRedeemAllLps();
+        uint256 lastDomainStartOTLM = payOffLoansAndRedeemAllLps();
 
         assertOpenTermLoanManagerWithDiff({
             loanManager:       _openTermLoanManager,
@@ -106,18 +89,6 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
             domainStart:       lastDomainStartOTLM,
             issuanceRate:      0,
             principalOut:      0,
-            unrealizedLosses:  0,
-            diff:              ALLOWED_DIFF
-        });
-
-        assertFixedTermLoanManagerWithDiff({
-            loanManager:       _fixedTermLoanManager,
-            accruedInterest:   0,
-            accountedInterest: 0,
-            principalOut:      0,
-            issuanceRate:      0,
-            domainStart:       lastDomainStartFTLM,
-            domainEnd:         lastDomainStartFTLM,
             unrealizedLosses:  0,
             diff:              ALLOWED_DIFF
         });

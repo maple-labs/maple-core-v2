@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { MapleLoanManager as FixedTermLoanManager } from "../../../modules/fixed-term-loan-manager/contracts/MapleLoanManager.sol";
+import { MapleLoanManager as OpenTermLoanManager } from "../../../modules/open-term-loan-manager/contracts/MapleLoanManager.sol";
 
-contract FixedTermLoanManagerHarness is FixedTermLoanManager {
+contract OpenTermLoanManagerHarness is OpenTermLoanManager {
 
     function __setAccountedInterest(uint256 accountedInterest_) external {
         accountedInterest = uint112(accountedInterest_);

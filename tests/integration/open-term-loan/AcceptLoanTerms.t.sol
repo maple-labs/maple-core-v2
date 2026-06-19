@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IFixedTermLoan, IOpenTermLoan } from "../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -35,7 +35,7 @@ contract AcceptLoanTermsOTLTests is AcceptLoanTermsTestBase {
     function setUp() public override {
         super.setUp();
 
-        address loanManager = poolManager.strategyList(1);
+        address loanManager = poolManager.strategyList(0);
 
         loan = createOpenTermLoan(
             address(borrower),
@@ -82,56 +82,3 @@ contract AcceptLoanTermsOTLTests is AcceptLoanTermsTestBase {
 
 }
 
-contract AcceptLoanTermsFTLTests is AcceptLoanTermsTestBase {
-
-    function setUp() public override {
-        super.setUp();
-
-        address loanManager = poolManager.strategyList(0);
-
-        loan = createFixedTermLoan({
-            borrower:   address(borrower),
-            lender:     address(loanManager),
-            feeManager: address(fixedTermFeeManager),
-            assets:     [address(collateralAsset), address(fundsAsset)],
-            terms:      [uint256(gracePeriod), uint256(paymentInterval), uint256(3)],
-            amounts:    [uint256(0), uint256(principal), uint256(principal)],
-            rates:      [uint256(interestRate), uint256(0), uint256(0), uint256(0)],
-            fees:       [uint256(0), uint256(0)]
-        });
-
-    }
-
-    function test_acceptLoanTerms_FTL_failIfPaused() external {
-        vm.prank(governor);
-        globals.setProtocolPause(true);
-
-        vm.expectRevert("L:PAUSED");
-        vm.prank(borrower);
-        IFixedTermLoan(loan).acceptLoanTerms();
-    }
-
-    function test_acceptLoanTerms_FTL_failIfNotBorrower() external {
-        vm.expectRevert("ML:NOT_BORROWER");
-        IFixedTermLoan(loan).acceptLoanTerms();
-    }
-
-    function test_acceptLoanTerms_FTL_failIfAlreadyAccepted() external {
-        vm.prank(borrower);
-        IOpenTermLoan(loan).acceptLoanTerms();
-
-        vm.expectRevert("ML:ALT:ALREADY_ACCEPTED");
-        vm.prank(borrower);
-        IOpenTermLoan(loan).acceptLoanTerms();
-    }
-
-    function test_acceptLoanTerms_FTL_success() external {
-        assertTrue(!IFixedTermLoan(loan).loanTermsAccepted());
-
-        vm.prank(borrower);
-        IFixedTermLoan(loan).acceptLoanTerms();
-
-        assertTrue(IFixedTermLoan(loan).loanTermsAccepted());
-    }
-
-}

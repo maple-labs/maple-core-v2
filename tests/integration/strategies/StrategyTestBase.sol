@@ -21,20 +21,18 @@ contract StrategyTestBase is TestBase {
         _configureGlobals();
         _createFactories();
 
-        address[] memory factories = new address[](4);
+        address[] memory factories = new address[](3);
 
-        bytes[] memory deploymentData = new bytes[](4);
+        bytes[] memory deploymentData = new bytes[](3);
 
         // Add both aave and sky strategy factories
-        factories[0] = (fixedTermLoanManagerFactory);
-        factories[1] = (openTermLoanManagerFactory);
-        factories[2] = (aaveStrategyFactory);
-        factories[3] = (skyStrategyFactory);
+        factories[0] = (openTermLoanManagerFactory);
+        factories[1] = (aaveStrategyFactory);
+        factories[2] = (skyStrategyFactory);
 
         deploymentData[0] = (abi.encode(new bytes(0)));
-        deploymentData[1] = (abi.encode(new bytes(0)));
-        deploymentData[2] = (abi.encode(AAVE_USDC));
-        deploymentData[3] = (abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
+        deploymentData[1] = (abi.encode(AAVE_USDC));
+        deploymentData[2] = (abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDC),     true);

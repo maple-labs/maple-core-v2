@@ -5,7 +5,7 @@ import { IPoolPermissionManager } from "../../contracts/interfaces/Interfaces.so
 
 import { TestBase } from "../TestBase.sol";
 
-import { FixedTermLoanManagerHarness } from "./utils/FixedTermLoanManagerHarness.sol";
+import { OpenTermLoanManagerHarness } from "./utils/OpenTermLoanManagerHarness.sol";
 
 contract PoolViewFunctionsFuzzTests is TestBase {
 
@@ -21,7 +21,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     uint256 constant POOL_LEVEL     = 2;
     uint256 constant PUBLIC         = 3;
 
-    FixedTermLoanManagerHarness loanManagerHarness;
+    OpenTermLoanManagerHarness loanManagerHarness;
 
     function setUp() public override {
         _createAccounts();
@@ -38,9 +38,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
 
         address loanManager = poolManager.strategyList(0);
 
-        vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
+        vm.etch(loanManager, address(new OpenTermLoanManagerHarness()).code);
 
-        loanManagerHarness = FixedTermLoanManagerHarness(loanManager);
+        loanManagerHarness = OpenTermLoanManagerHarness(loanManager);
     }
 
     function testFuzz_getTotalAssetsFromPM(uint256 principalOut_, uint256 accountedInterest_) external {

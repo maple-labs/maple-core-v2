@@ -10,11 +10,6 @@ import {
     IERC20,
     IERC20Like,
     IERC4626Like,
-    IFeeManager,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
-    ILoanLike,
-    ILoanManagerLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
@@ -23,17 +18,14 @@ import {
     IPSMLike,
     IStrategyLike,
     ISyrupBitcoinRouter,
-    IWithdrawalManagerQueue,
-    IWithdrawalManagerCyclical
+    IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 import { BitcoinRouterHandler }      from "./handlers/BitcoinRouterHandler.sol";
 import { BitcoinStrategyHandler }    from "./handlers/BitcoinStrategyHandler.sol";
-import { CyclicalWithdrawalHandler } from "./handlers/CyclicalWithdrawalHandler.sol";
 import { DepositHandler }            from "./handlers/DepositHandler.sol";
-import { FixedTermLoanHandler }      from "./handlers/FixedTermLoanHandler.sol";
 import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
 import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
@@ -54,9 +46,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     BitcoinRouterHandler      bitcoinRouterHandler;
     BitcoinStrategyHandler    bitcoinStrategyHandler;
-    CyclicalWithdrawalHandler cyclicalWithdrawalHandler;
     DepositHandler            depositHandler;
-    FixedTermLoanHandler      ftlHandler;
     OpenTermLoanHandler       otlHandler;
     PermissionHandler         permissionHandler;
     QueueWithdrawalHandler    queueWithdrawalHandler;
@@ -70,27 +60,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /**************************************************************************************************************************************/
     /*** Invariant Tests                                                                                                                ***/
     /***************************************************************************************************************************************
-
-     * Fixed Term Loan
-        * Invariant A: collateral balance >= _collateral`
-        * Invariant B: fundsAsset >= _drawableFunds`
-        * Invariant C: `_collateral >= collateralRequired_ * (principal_ - drawableFunds_) / principalRequested_`
-
-     * Fixed Term Loan Manager (non-liquidating)
-        * Invariant A: domainStart <= domainEnd
-        * Invariant B: sortedPayments is always sorted
-        * Invariant C: outstandingInterest = ∑outstandingInterest(loan) (theoretical)
-        * Invariant D: totalPrincipal = ∑loan.principal()
-        * Invariant E: issuanceRate = ∑issuanceRate(payment)
-        * Invariant F: unrealizedLosses <= assetsUnderManagement()
-        * Invariant G: unrealizedLosses == 0
-        * Invariant H: assetsUnderManagement == ∑loan.principal() + ∑outstandingInterest(loan)
-        * Invariant I: domainStart <= block.timestamp
-        * Invariant J: if (loanManager.paymentWithEarliestDueDate != 0) then issuanceRate > 0
-        * Invariant K: if (loanManager.paymentWithEarliestDueDate != 0) then domainEnd == paymentWithEarliestDueDate
-        * Invariant L: refinanceInterest[payment] = loan.refinanceInterest()
-        * Invariant M: paymentDueDate[payment] = loan.paymentDueDate()
-        * Invariant N: startDate[payment] <= loan.paymentDueDate() - loan.paymentInterval()
 
      * Open Term Loan
         * Invariant A: dateFunded <= datePaid, dateCalled, dateImpaired (if not zero)
@@ -130,24 +99,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant K: convertToExitShares == poolManager.convertToExitShares()
 
      * PoolManager (non-liquidating)
-        * Invariant A: totalAssets == cash + ∑assetsUnderManagement[fixedTermLoanManager] + ∑assetsUnderManagement[openTermLoanManager]
+        * Invariant A: totalAssets == cash + ∑assetsUnderManagement[openTermLoanManager]
         * Invariant B: totalAssets >= unrealizedLosses
-
-     * Withdrawal Manager (Cyclical)
-        * Invariant A: WM LP balance == ∑lockedShares(user)
-        * Invariant B: totalCycleShares == ∑lockedShares(user)[cycle] (for all cycles)
-        * Invariant C: windowStart[currentCycle] <= block.timestamp
-        * Invariant D: initialCycleTime[currentConfig] <= block.timestamp
-        * Invariant E: initialCycleId[currentConfig] <= currentCycle
-        * Invariant F: getRedeemableAmounts.shares[owner] <= WM LP balance
-        * Invariant G: getRedeemableAmounts.shares[owner] <= lockedShares[user]
-        * Invariant H: getRedeemableAmounts.shares[owner] <= totalCycleShares[exitCycleId[user]]
-        * Invariant I: getRedeemableAmounts.assets[owner] <= fundsAsset balance of pool
-        * Invariant J: getRedeemableAmounts.assets[owner] <= totalCycleShares[exitCycleId[user]] * exchangeRate
-        * Invariant K: getRedeemableAmounts.assets[owner] <= lockedShares[user] * exchangeRate
-        * Invariant L: getRedeemableAmounts.partialLiquidity == (lockedShares[user] * exchangeRate < fundsAsset balance of pool)
-        * Invariant M: lockedLiquidity <= pool.totalAssets()
-        * Invariant N: lockedLiquidity <= totalCycleShares[exitCycleId[user]] * exchangeRate
 
      * Pool Permission Manager
         * Invariant A: pool.permissionLevel ∈ [0, 3]
@@ -188,217 +141,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant E: Σrouter.request.shares == Σwm.request.shares + manualShares(router)
         * Invariant F: (remainingYield > 0) == (remainingDuration > 0)
         * Invariant G: accruedFees() <= accruedYield()
-
-    /**************************************************************************************************************************************/
-    /*** Fixed Term Loan Invariants                                                                                                     ***/
-    /**************************************************************************************************************************************/
-
-    function assert_ftl_invariants() internal view {
-        for (uint256 i; i < ftlHandler.numLoans(); ++i) {
-            address loan = ftlHandler.activeLoans(i);
-
-            assert_ftl_invariant_A(loan);
-            assert_ftl_invariant_B(loan);
-            assert_ftl_invariant_C(loan, ftlHandler.platformOriginationFee(loan));
-        }
-    }
-
-    function assert_ftl_invariant_A(address loan) internal view {
-        assertGe(collateralAsset.balanceOf(loan), IFixedTermLoan(loan).collateral(), "Loan Invariant A");
-    }
-
-    function assert_ftl_invariant_B(address loan) internal view {
-        assertGe(fundsAsset.balanceOf(loan), IFixedTermLoan(loan).drawableFunds(), "Loan Invariant B");
-    }
-
-    function assert_ftl_invariant_C(address loan_, uint256 platformOriginationFee_) internal view {
-        IFixedTermLoan loan       = IFixedTermLoan(loan_);
-        IFeeManager    feeManager = IFeeManager(loan.feeManager());
-
-        // The loan is matured or repossessed, the invariant will underflow because delegateOriginationFee > 0
-        if (loan.nextPaymentDueDate() == 0) return;
-
-        // If the drawableFunds is greater than the current principal, no collateral is required.
-        if (loan.drawableFunds() >= loan.principal()) return;
-
-        uint256 delegateOriginationFee = feeManager.delegateOriginationFee(address(loan));
-
-        uint256 fundedAmount = loan.principalRequested() - delegateOriginationFee - platformOriginationFee_;
-
-        // If drawableFunds exactly equals the funded amount, assume funds haven't been drawn down.
-        if (loan.drawableFunds() == fundedAmount) return;
-
-        assertGe(
-            loan.collateral(),
-            (
-                loan.collateralRequired() * (loan.principal() - loan.drawableFunds()) + loan.principalRequested() - 1
-            ) / loan.principalRequested(),
-            "Loan Invariant C"
-        );
-    }
-
-    /**************************************************************************************************************************************/
-    /*** Fixed Term Loan Manager Invariants                                                                                             ***/
-    /**************************************************************************************************************************************/
-
-    function assert_ftlm_invariants_A_B_C_D_E_F_G_H_I_J_K_L_M_N() internal view {
-        assert_ftlm_invariants_A_B_C_D_E_F_H_I_J_K_L();
-
-        assert_ftlm_invariant_G(poolManager.strategyList(0));
-
-        for (uint256 i; i < ftlHandler.numLoans(); ++i) {
-            address               loan        = ftlHandler.activeLoans(i);
-            IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
-
-            (
-                ,
-                ,
-                uint256 startDate,
-                uint256 paymentDueDate,
-                ,
-                ,
-            ) = loanManager.payments(loanManager.paymentIdOf(loan));
-
-            assert_ftlm_invariant_M(loan, paymentDueDate);
-            assert_ftlm_invariant_N(loan, startDate);
-        }
-    }
-
-    function assert_ftlm_invariants_A_B_C_D_E_F_H_I_J_K_L() internal view {
-        address fixedTermLoanManager = poolManager.strategyList(0);
-
-        assert_ftlm_invariant_A(fixedTermLoanManager);
-        assert_ftlm_invariant_B(fixedTermLoanManager);
-        assert_ftlm_invariant_C(fixedTermLoanManager);
-        assert_ftlm_invariant_D(fixedTermLoanManager);
-        assert_ftlm_invariant_E(fixedTermLoanManager);
-        assert_ftlm_invariant_F(fixedTermLoanManager);
-        assert_ftlm_invariant_H(fixedTermLoanManager);
-        assert_ftlm_invariant_I(fixedTermLoanManager);
-        assert_ftlm_invariant_J(fixedTermLoanManager);
-        assert_ftlm_invariant_K(fixedTermLoanManager);
-
-        for (uint256 i; i < ftlHandler.numLoans(); ++i) {
-            address               loan        = ftlHandler.activeLoans(i);
-            IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
-
-            ( , , , , , uint256 refinanceInterest , ) = loanManager.payments(loanManager.paymentIdOf(loan));
-
-            assert_ftlm_invariant_L(loan, refinanceInterest);
-        }
-    }
-
-    function assert_ftlm_invariant_A(address loanManager) internal view {
-        assertLe(ILoanManagerLike(loanManager).domainStart(), IFixedTermLoanManager(loanManager).domainEnd(), "LoanManager Invariant A");
-    }
-
-    function assert_ftlm_invariant_B(address loanManager) internal view {
-        uint256 next = IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate();
-
-        uint256 previousPaymentDueDate;
-        uint256 nextPaymentDueDate;
-
-        while (next != 0) {
-            uint256 current = next;
-
-            ( , next, ) = IFixedTermLoanManager(loanManager).sortedPayments(current);  // Overwrite `next` in loop
-
-            ( , , nextPaymentDueDate ) = IFixedTermLoanManager(loanManager).sortedPayments(next);  // Get the next payment due date
-
-            if (next == 0 && nextPaymentDueDate == 0) break;  // End of list
-
-            assertLe(previousPaymentDueDate, nextPaymentDueDate, "LoanManager Invariant B");
-
-            previousPaymentDueDate = nextPaymentDueDate;  // Set the previous payment due date
-        }
-    }
-
-    function assert_ftlm_invariant_C(address loanManager) internal view {
-        uint256 sumOutstandingInterest = getAllOutstandingInterest();
-
-        assertApproxEqAbs(
-            ILoanManagerLike(loanManager).accountedInterest() + ILoanManagerLike(loanManager).accruedInterest(),
-            sumOutstandingInterest,
-            max(ftlHandler.numPayments(), ftlHandler.numLoans() + ftlHandler.numMatures()) * 2,
-            "LoanManager Invariant C"
-        );
-    }
-
-    function assert_ftlm_invariant_D(address loanManager) internal view {
-        assertEq(ILoanManagerLike(loanManager).principalOut(), ftlHandler.sum_loan_principal(), "LoanManager Invariant D");
-    }
-
-    function assert_ftlm_invariant_E(address loanManager) internal view {
-        assertEq(ILoanManagerLike(loanManager).issuanceRate(), getSumIssuanceRates(), "LoanManager Invariant E");
-    }
-
-    function assert_ftlm_invariant_F(address loanManager) internal view {
-        // NOTE: To account for precision errors for unrealizedLosses(), we add 1 to the AUM
-        uint256 losses = ILoanManagerLike(loanManager).unrealizedLosses();
-        uint256 aum    = ILoanManagerLike(loanManager).assetsUnderManagement();
-
-        if (losses > aum) {
-            // NOTE: the correct rounding acceptance needs to be the amount of loans contributing to the unrealizedLosses(),
-            // which are the defaulted but not liquidated and the impaired but not defaulted. Since this value is not tracked in the ftlh,
-            // the number of active loans is used instead.
-            assertApproxEqAbs(losses, aum, (ftlHandler.numLoans() + ftlHandler.numMatures()) * 2, "LoanManager Invariant F");
-        } else {
-            assertLe(losses, aum + 2, "LoanManager Invariant F");
-        }
-    }
-
-    function assert_ftlm_invariant_G(address loanManager) internal view {
-        assertEq(ILoanManagerLike(loanManager).unrealizedLosses(), 0, "LoanManager Invariant G");
-    }
-
-    function assert_ftlm_invariant_H(address loanManager) internal view {
-        assertApproxEqAbs(
-            ILoanManagerLike(loanManager).assetsUnderManagement(),
-            getAllOutstandingInterest() + ftlHandler.sum_loan_principal(),
-            max(ftlHandler.numPayments(), ftlHandler.numLoans() + ftlHandler.numMatures()) * 2,
-            "LoanManager Invariant H"
-        );
-    }
-
-    function assert_ftlm_invariant_I(address loanManager) internal view {
-        assertLe(ILoanManagerLike(loanManager).domainStart(), block.timestamp, "LoanManager Invariant I");
-    }
-
-    function assert_ftlm_invariant_J(address loanManager) internal view {
-        if (IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate() != 0) {
-            assertGt(ILoanManagerLike(loanManager).issuanceRate(), 0, "LoanManager Invariant J");
-        }
-    }
-
-    function assert_ftlm_invariant_K(address loanManager) internal view {
-        uint256 paymentWithEarliestDueDate = IFixedTermLoanManager(loanManager).paymentWithEarliestDueDate();
-
-        ( , , uint256 earliestPaymentDueDate ) = IFixedTermLoanManager(loanManager).sortedPayments(paymentWithEarliestDueDate);
-
-        if (paymentWithEarliestDueDate != 0) {
-            assertEq(IFixedTermLoanManager(loanManager).domainEnd(), earliestPaymentDueDate, "LoanManager Invariant K");
-        }
-    }
-
-    function assert_ftlm_invariant_L(address loan, uint256 refinanceInterest) internal view {
-        uint256 platformManagementFeeRate_ = globals.platformManagementFeeRate(address(poolManager));
-        uint256 delegateManagementFeeRate_ = poolManager.delegateManagementFeeRate();
-        uint256 managementFeeRate_         = platformManagementFeeRate_ + delegateManagementFeeRate_;
-
-        assertEq(
-            refinanceInterest,
-            _getNetInterest(IFixedTermLoan(loan).refinanceInterest(), managementFeeRate_),
-            "LoanManager Invariant L"
-        );
-    }
-
-    function assert_ftlm_invariant_M(address loan, uint256 paymentDueDate) internal view {
-        assertEq(paymentDueDate, IFixedTermLoan(loan).nextPaymentDueDate(), "LoanManager Invariant M");
-    }
-
-    function assert_ftlm_invariant_N(address loan, uint256 startDate) internal view {
-        assertLe(startDate, IFixedTermLoan(loan).nextPaymentDueDate() - ILoanLike(loan).paymentInterval(), "LoanManager Invariant N");
-    }
 
     /**************************************************************************************************************************************/
     /*** Pool Invariants                                                                                                                ***/
@@ -506,174 +248,22 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_poolManager_invariant_A() internal view {
-        uint256 aumUnderFixedTermLoans = ftlHandler.sum_loan_principal() + getAllOutstandingInterest();
-        uint256 aumUnderOpenTermLoans  = getExpectedAumOtl();
+        uint256 aumUnderOpenTermLoans = getExpectedAumOtl();
 
-        uint256 expectedTotalAssets = aumUnderFixedTermLoans + aumUnderOpenTermLoans + fundsAsset.balanceOf(address(pool));
+        uint256 expectedTotalAssets = aumUnderOpenTermLoans + fundsAsset.balanceOf(address(pool));
 
-        uint256 allowedFixedTermLoanCalcError = max(ftlHandler.numPayments(), ftlHandler.numLoans() + ftlHandler.numMatures()) * 2;
-        uint256 allowedOpenTermLoanCalcError  = address(otlHandler) == address(0) ? 0 : ALLOWED_OTL_AUM_DIFF;
+        uint256 allowedOpenTermLoanCalcError = address(otlHandler) == address(0) ? 0 : ALLOWED_OTL_AUM_DIFF;
 
         assertApproxEqAbs(
             poolManager.totalAssets(),
             expectedTotalAssets,
-            allowedFixedTermLoanCalcError + allowedOpenTermLoanCalcError,
+            allowedOpenTermLoanCalcError,
             "PoolManager Invariant A"
         );
     }
 
     function assert_poolManager_invariant_B() internal view {
         assertTrue(poolManager.unrealizedLosses() <= poolManager.totalAssets(), "PoolManager Invariant B");
-    }
-
-    /**************************************************************************************************************************************/
-    /*** Withdrawal Manager Invariants                                                                                                  ***/
-    /**************************************************************************************************************************************/
-
-    function assert_wm_cyclical_invariants() internal {
-        assert_withdrawalManager_invariant_B();
-        assert_withdrawalManager_invariant_C();
-        assert_withdrawalManager_invariant_D();
-        assert_withdrawalManager_invariant_E();
-        assert_withdrawalManager_invariant_M();
-        assert_withdrawalManager_invariant_N();
-
-        address pool = IWithdrawalManagerCyclical(cyclicalWM).pool();
-
-        if (IPool(pool).totalSupply() == 0 || IPool(pool).totalAssets() == 0) return;
-
-        uint256 sumLockedShares;
-
-        for (uint256 i; i < lps.length; ++i) {
-            address lp = lps[i];
-
-            uint256 lockedShares = IWithdrawalManagerCyclical(cyclicalWM).lockedShares(lp);
-            sumLockedShares     += lockedShares;
-
-            uint256 exitCycleId             = IWithdrawalManagerCyclical(cyclicalWM).exitCycleId(lp);
-            uint256 totalCycleShares        = IWithdrawalManagerCyclical(cyclicalWM).totalCycleShares(exitCycleId);
-            uint256 totalRequestedLiquidity =
-                totalCycleShares * (IPool(pool).totalAssets() - IPool(pool).unrealizedLosses()) / IPool(pool).totalSupply();
-
-            (
-                uint256 shares,
-                uint256 assets,
-                bool partialLiquidity
-            ) = IWithdrawalManagerCyclical(cyclicalWM).getRedeemableAmounts(lockedShares, lp);
-
-            assert_withdrawalManager_invariant_F(shares);
-            assert_withdrawalManager_invariant_G(lp, shares);
-            assert_withdrawalManager_invariant_H(lp, shares);
-
-            assert_withdrawalManager_invariant_I(assets);
-            assert_withdrawalManager_invariant_J(assets, totalRequestedLiquidity);
-            assert_withdrawalManager_invariant_K(lp, assets);
-
-            assert_withdrawalManager_invariant_L(partialLiquidity, totalRequestedLiquidity);
-        }
-
-        assertEq(IERC20(pool).balanceOf(address(cyclicalWM)), sumLockedShares, "WM Cyclical: Invalid Balance");
-    }
-
-    function assert_withdrawalManager_invariant_A(uint256 sumLockedShares) internal view {
-        assertEq(pool.balanceOf(address(cyclicalWM)), sumLockedShares, "WithdrawalManager Invariant A1");
-    }
-
-    function assert_withdrawalManager_invariant_B() internal view {
-        uint256 currentCycleId = cyclicalWM.getCurrentCycleId();
-
-        for (uint256 cycleId = 1; cycleId <= currentCycleId; ++cycleId) {
-            uint256 sumCycleShares;
-
-            for (uint256 i; i < lps.length; ++i) {
-                if (cyclicalWM.exitCycleId(lps[i]) == cycleId) {
-                    sumCycleShares += cyclicalWM.lockedShares(lps[i]);
-                }
-            }
-
-            assertEq(cyclicalWM.totalCycleShares(cycleId), sumCycleShares, "WithdrawalManager Invariant B");
-        }
-    }
-
-    function assert_withdrawalManager_invariant_C() internal view {
-        uint256 withdrawalWindowStart = cyclicalWM.getWindowStart(cyclicalWM.getCurrentCycleId());
-
-        assertLe(withdrawalWindowStart, block.timestamp, "WithdrawalManager Invariant C");
-    }
-
-    function assert_withdrawalManager_invariant_D() internal {
-        ( , uint256 initialCycleTime , , ) = cyclicalWM.cycleConfigs(cyclicalWM.getCurrentCycleId());
-
-        assertLe(initialCycleTime, block.timestamp, "WithdrawalManager Invariant D");
-    }
-
-    function assert_withdrawalManager_invariant_E() internal {
-        ( uint256 initialCycleId , , , ) = cyclicalWM.cycleConfigs(cyclicalWM.getCurrentCycleId());
-
-        assertLe(initialCycleId, cyclicalWM.getCurrentCycleId(), "WithdrawalManager Invariant e");
-    }
-
-    function assert_withdrawalManager_invariant_F(uint256 shares) internal view {
-        assertLe(shares, pool.balanceOf(address(cyclicalWM)), "WithdrawalManager Invariant F");
-    }
-
-    function assert_withdrawalManager_invariant_G(address lp, uint256 shares) internal view {
-        assertLe(shares, cyclicalWM.lockedShares(lp), "WithdrawalManager Invariant G");
-    }
-
-    function assert_withdrawalManager_invariant_H(address lp, uint256 shares) internal view {
-        assertLe(shares, cyclicalWM.totalCycleShares(cyclicalWM.exitCycleId(lp)), "WithdrawalManager Invariant H");
-    }
-
-    function assert_withdrawalManager_invariant_I(uint256 assets) internal view {
-        assertLe(assets, fundsAsset.balanceOf(address(pool)), "WithdrawalManager Invariant I");
-    }
-
-    function assert_withdrawalManager_invariant_J(uint256 assets, uint256 totalRequestedLiquidity) internal pure {
-        assertLe(assets, totalRequestedLiquidity, "WithdrawalManager Invariant J");
-    }
-
-    function assert_withdrawalManager_invariant_K(address lp, uint256 assets) internal view {
-        uint256 lpRequestedLiquidity =
-            cyclicalWM.lockedShares(lp) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply();
-
-        assertLe(assets, lpRequestedLiquidity, "WithdrawalManager Invariant K");
-    }
-
-    function assert_withdrawalManager_invariant_L(bool partialLiquidity, uint256 totalRequestedLiquidity) internal view {
-        assertTrue(partialLiquidity == (fundsAsset.balanceOf(address(pool)) < totalRequestedLiquidity), "WithdrawalManager Invariant L");
-    }
-
-    function assert_withdrawalManager_invariant_M() internal view {
-        if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
-
-        uint256 cycleId = cyclicalWM.getCurrentCycleId();
-
-        ( uint256 windowStart, uint256 windowEnd ) = cyclicalWM.getWindowAtId(cycleId);
-
-        if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
-            assertLe(cyclicalWM.lockedLiquidity(), pool.totalAssets(), "WithdrawalManager Invariant M1");
-        } else {
-            assertEq(cyclicalWM.lockedLiquidity(), 0, "WithdrawalManager Invariant M2");
-        }
-    }
-
-    function assert_withdrawalManager_invariant_N() internal view {
-        if (pool.totalSupply() == 0 || pool.totalAssets() == 0) return;
-
-        uint256 currentCycle = cyclicalWM.getCurrentCycleId();
-
-        ( uint256 windowStart, uint256 windowEnd ) = cyclicalWM.getWindowAtId(currentCycle);
-
-        if (block.timestamp >= windowStart && block.timestamp < windowEnd) {
-            assertLe(
-                cyclicalWM.lockedLiquidity(),
-                cyclicalWM.totalCycleShares(currentCycle) * (pool.totalAssets() - pool.unrealizedLosses()) / pool.totalSupply(),
-                "WithdrawalManager Invariant N1"
-            );
-        } else {
-            assertEq(cyclicalWM.lockedLiquidity(), 0, "WithdrawalManager Invariant N2");
-        }
     }
 
     /**************************************************************************************************************************************/
@@ -1564,46 +1154,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function _getCurrentOutstandingInterest(address loan_, uint256 earliestPaymentDueDate)
-        internal view
-        returns (uint256 interestAccrued_)
-    {
-        IFixedTermLoan        loan        = IFixedTermLoan(loan_);
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(loan.lender());
-
-        if (loan.nextPaymentDueDate() == 0) {
-            ( , , uint256 liquidationInterest , , , ) = loanManager.liquidationInfo(loan_);
-            return liquidationInterest;
-        }
-
-        if (loan.isImpaired()) {
-            ( , , uint256 regularInterest , , , ) = loanManager.liquidationInfo(loan_);
-            return regularInterest;
-        }
-
-        ( , uint256[3] memory interestArray, ) = loan.getNextPaymentDetailedBreakdown();
-
-        uint256 fundingTime      = ftlHandler.fundingTime(loan_);
-        uint256 paymentTimestamp = ftlHandler.paymentTimestamp(loan_);
-
-        uint256 platformManagementRate = globals.platformManagementFeeRate(address(poolManager));
-        uint256 delegateManagementRate = poolManager.delegateManagementFeeRate();
-
-        uint256 netInterest          = (interestArray[0]) * (1e6 - platformManagementRate - delegateManagementRate) / 1e6;
-        uint256 netRefinanceInterest = (interestArray[2]) * (1e6 - platformManagementRate - delegateManagementRate) / 1e6;
-
-        uint256 startDate = paymentTimestamp == 0 ? fundingTime : min(paymentTimestamp, loan.nextPaymentDueDate() - loan.paymentInterval());
-        uint256 endDate   = min(block.timestamp, min(earliestPaymentDueDate, loan.nextPaymentDueDate()));
-
-        uint256 accrued_ =
-            endDate < startDate
-                ? netInterest
-                // Use longer if early payment made
-                : netInterest * (endDate - startDate) / max(loan.nextPaymentDueDate() - startDate, loan.paymentInterval());
-
-        interestAccrued_ = accrued_ + netRefinanceInterest;
-    }
-
     function _getCurrentTotalAssets(IStrategyLike strategy) internal view returns (uint256 currentTotalAssets) {
         bytes memory t = bytes(strategy.STRATEGY_TYPE());
 
@@ -1716,10 +1266,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         loanManager_ = address(otlHandler.loanManager());
     }
 
-    function _getNetInterest(uint256 interest_, uint256 feeRate_) internal pure returns (uint256 netInterest_) {
-        netInterest_ = interest_ * (1e6 - feeRate_) / 1e6;
-    }
-
     function _getOutstandingValue(address loan_) internal view returns (uint256 outstandingValue_) {
         if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
         if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
@@ -1773,33 +1319,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         if (address(otlHandler) != address(0)) {
             expectedAum += otlHandler.totalUnrealizedLosses();
-        }
-    }
-
-    function getAllOutstandingInterest() public view returns (uint256 sumOutstandingInterest_) {
-        for (uint256 i; i < ftlHandler.numLoans(); ++i) {
-            ILoanLike loan_ = ILoanLike(ftlHandler.activeLoans(i));
-
-            assertTrue(ftlHandler.earliestPaymentDueDate() == IFixedTermLoanManager(loan_.lender()).domainEnd());
-
-            sumOutstandingInterest_ += _getCurrentOutstandingInterest(ftlHandler.activeLoans(i), ftlHandler.earliestPaymentDueDate());
-        }
-
-        sumOutstandingInterest_ += ftlHandler.sum_liquidationInterest();
-    }
-
-    function getSumIssuanceRates() public view returns (uint256 sumIssuanceRate_) {
-        for (uint256 i; i < ftlHandler.numLoans(); ++i) {
-            ILoanLike             loan_        = ILoanLike(ftlHandler.activeLoans(i));
-            IFixedTermLoanManager loanManager_ = IFixedTermLoanManager(loan_.lender());
-
-            ( , , , , , , uint256 issuanceRate ) = loanManager_.payments(loanManager_.paymentIdOf(address(loan_)));
-
-            sumIssuanceRate_ += issuanceRate;
-
-            if (loan_.isImpaired()) {
-                sumIssuanceRate_ -= issuanceRate;  // If the loan is impaired the issuance rate is 0
-            }
         }
     }
 

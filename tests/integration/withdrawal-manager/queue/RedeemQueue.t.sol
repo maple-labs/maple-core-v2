@@ -4,8 +4,6 @@ pragma solidity ^0.8.7;
 import {
     IERC20Like,
     IMapleProxyFactory,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
     ILoanLike
 } from "../../../../contracts/interfaces/Interfaces.sol";
 
@@ -294,7 +292,7 @@ contract ManualRedeemTests is QueueRedeemBase {
         // Need to fund a loan so the exchange rate isn't affected by funds in the pool
         address loan = createOpenTermLoan(
             address(makeAddr("borrower")),
-            address(poolManager.strategyList(1)),
+            address(poolManager.strategyList(0)),
             address(fundsAsset),
             4_000e6,
             [gracePeriod, noticePeriod, paymentInterval],

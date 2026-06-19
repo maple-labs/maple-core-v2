@@ -14,11 +14,8 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
     function setUp() public override {
         super.setUp();
 
-        proxyFactories.push(fixedTermLoanFactoryV2);
-        proxyFactories.push(fixedTermLoanManagerFactory);
         proxyFactories.push(poolManagerFactory);
         proxyFactories.push(withdrawalManagerCyclicalFactory);
-        proxyFactories.push(liquidatorFactory);
         proxyFactories.push(openTermLoanFactory);
         proxyFactories.push(openTermLoanManagerFactory);
         proxyFactories.push(withdrawalManagerQueueFactory);

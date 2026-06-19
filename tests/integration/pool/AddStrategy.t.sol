@@ -154,17 +154,6 @@ contract AddStrategyTests is TestBase {
 
         assertEq(poolManager.isStrategy(skyStrategy),                            true);
         assertEq(IMapleProxyFactory(skyStrategyFactory).isInstance(skyStrategy), true);
-
-        // Add a Fixed term loan manager
-        vm.prank(poolDelegate);
-        poolManager.addStrategy(fixedTermLoanManagerFactory, new bytes(0));
-
-        assertEq(poolManager.strategyListLength(), 4);
-
-        address ftmStrategy = poolManager.strategyList(3);
-
-        assertEq(poolManager.isStrategy(ftmStrategy),                                     true);
-        assertEq(IMapleProxyFactory(fixedTermLoanManagerFactory).isInstance(ftmStrategy), true);
     }
 
 }

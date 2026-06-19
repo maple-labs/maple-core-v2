@@ -7,8 +7,6 @@ import {
     IERC20,
     IERC20Like,
     IExemptionsManagerLike,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
     IGlobals,
     IKycERC20Like,
     ILoanLike,
@@ -93,10 +91,6 @@ contract ProtocolActions is Runner {
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }
 
-    function isFixedTermLoan(address loan) internal view returns (bool isFixedTermLoan_) {
-        isFixedTermLoan_ = !isOpenTermLoan(loan);
-    }
-
     function isOpenTermLoan(address loan) internal view returns (bool isOpenTermLoan_) {
         try IOpenTermLoan(loan).dateCalled() {
             isOpenTermLoan_ = true;
@@ -113,58 +107,6 @@ contract ProtocolActions is Runner {
     /**************************************************************************************************************************************/
     /*** Borrow Functions                                                                                                               ***/
     /**************************************************************************************************************************************/
-
-    function close(address loan_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).getClosingPaymentBreakdown();
-
-        address borrower_   = ILoanLike(loan_).borrower();
-        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
-        uint256 payment_    = principal_ + interest_ + fees_;
-
-        erc20_mint(fundsAsset_, borrower_, payment_);
-        erc20_approve(fundsAsset_, borrower_, loan_, payment_);
-
-        vm.startPrank(borrower_);
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).closeLoan(payment_);
-        vm.stopPrank();
-    }
-
-    function createFixedTermLoan(
-        address           factory_,
-        address           borrower_,
-        address           lender_,
-        address           feeManager_,
-        address[2] memory assets_,
-        uint256[3] memory amounts_,
-        uint256[3] memory terms_,
-        uint256[4] memory rates_,
-        uint256[2] memory fees_
-    )
-        internal returns (address loan_)
-    {
-        address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
-        address governor_ = IGlobals(globals_).governor();
-
-        vm.prank(governor_);
-        IGlobals(globals_).setValidBorrower(borrower_, true);
-
-        vm.prank(borrower_);
-        loan_ = IMapleProxyFactory(factory_).createInstance({
-            arguments_: abi.encode(
-                borrower_,
-                lender_,
-                feeManager_,
-                assets_,
-                terms_,
-                amounts_,
-                rates_,
-                fees_
-            ),
-            salt_: "SALT"
-        });
-    }
 
     function createOpenTermLoan(
         address           factory_,
@@ -197,71 +139,27 @@ contract ProtocolActions is Runner {
         });
     }
 
-    function drawdown(address loan_, uint256 amount_) internal returns (uint256 collateralPosted_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_           = ILoanLike(loan_).borrower();
-        address collateralAsset_    = IFixedTermLoan(loan_).collateralAsset();
-        uint256 collateralRequired_ = IFixedTermLoan(loan_).getAdditionalCollateralRequiredFor(amount_);
-
-        erc20_mint(collateralAsset_, borrower_, collateralRequired_);
-        erc20_approve(collateralAsset_, borrower_, loan_, collateralRequired_);
-
-        vm.startPrank(borrower_);
-        ( collateralPosted_ ) = IFixedTermLoan(loan_).drawdownFunds(amount_, borrower_);
-        vm.stopPrank();
-    }
-
     function makePayment(address loan_) internal returns (uint256 principal_, uint256 totalInterest_, uint256 totalFees_) {
-        if (isOpenTermLoan(loan_)) {
-            uint256 interest_;
-            uint256 lateInterest_;
-            uint256 delegateServiceFee_;
-            uint256 platformServiceFee_;
+        uint256 interest_;
+        uint256 lateInterest_;
+        uint256 delegateServiceFee_;
+        uint256 platformServiceFee_;
 
-            ( principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = makePaymentOT(loan_);
+        ( principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = makePaymentOT(loan_);
 
-            ( principal_, totalInterest_, totalFees_ )
-                = ( principal_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
-        } else {
-            ( principal_, totalInterest_, totalFees_ ) = makePaymentFT(loan_);
-        }
+        ( principal_, totalInterest_, totalFees_ )
+            = ( principal_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
     }
 
     function makePayment(address loan_, uint256 amount_) internal returns (uint256 principal_, uint256 totalInterest_, uint256 totalFees_) {
-        if (isOpenTermLoan(loan_)) {
-            uint256 interest_;
-            uint256 lateInterest_;
-            uint256 delegateServiceFee_;
-            uint256 platformServiceFee_;
+        uint256 interest_;
+        uint256 lateInterest_;
+        uint256 delegateServiceFee_;
+        uint256 platformServiceFee_;
 
-            ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = makePaymentOT(loan_, amount_);
+        ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = makePaymentOT(loan_, amount_);
 
-            ( principal_, totalInterest_, totalFees_ ) = ( amount_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
-        } else {
-            ( principal_, totalInterest_, totalFees_ ) = makePaymentFT(loan_, amount_);
-        }
-    }
-
-    function makePaymentFT(address loan_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).getNextPaymentBreakdown();
-        ( principal_, interest_, fees_ ) = _makePaymentFT(loan_, principal_ + interest_ + fees_);
-    }
-
-    function makePaymentFT(address loan_, uint256 amount_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        ( principal_, interest_, fees_ ) = _makePaymentFT(loan_, amount_);
-    }
-
-    function _makePaymentFT(address loan_, uint256 amount_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        address borrower_   = ILoanLike(loan_).borrower();
-        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
-
-        erc20_mint(fundsAsset_, borrower_, amount_);
-        erc20_approve(fundsAsset_, borrower_, loan_, amount_);
-
-        vm.startPrank(borrower_);
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).makePayment(amount_);
-        vm.stopPrank();
+        ( principal_, totalInterest_, totalFees_ ) = ( amount_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
     }
 
     function makePaymentOT(address loan_) internal
@@ -310,82 +208,12 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
-    function postCollateral(address loan_, uint256 amount_) internal returns (uint256 collateralPosted_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_        = ILoanLike(loan_).borrower();
-        address collateralAsset_ = IFixedTermLoan(loan_).collateralAsset();
-
-        erc20_mint(collateralAsset_, borrower_, amount_);
-        erc20_approve(collateralAsset_, borrower_, loan_, amount_);
-
-        vm.startPrank(borrower_);
-        collateralPosted_ = IFixedTermLoan(loan_).postCollateral(amount_);
-        vm.stopPrank();
-    }
-
-    function removeCollateral(address loan_, uint256 amount_) internal {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_ = ILoanLike(loan_).borrower();
-
-        vm.startPrank(borrower_);
-        IFixedTermLoan(loan_).removeCollateral(amount_, borrower_);
-        vm.stopPrank();
-    }
-
-    function returnFunds(address loan_, uint256 amount_) internal returns (uint256 fundsReturned_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_   = ILoanLike(loan_).borrower();
-        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
-
-        erc20_mint(fundsAsset_, borrower_, amount_);
-        erc20_approve(fundsAsset_, borrower_, loan_, amount_);
-
-        vm.startPrank(borrower_);
-        fundsReturned_ = IFixedTermLoan(loan_).returnFunds(amount_);
-        vm.stopPrank();
-    }
-
     /**************************************************************************************************************************************/
     /*** Refinance Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
 
     function acceptRefinance(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        if (isOpenTermLoan(loan_)) return acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
-
-        acceptRefinanceFT(loan_, refinancer_, expiry_, refinanceCalls_, 0);
-    }
-
-    function acceptRefinance(
-        address        loan_,
-        address        refinancer_,
-        uint256        expiry_,
-        bytes[] memory refinanceCalls_,
-        uint256        principalIncrease_
-    ) internal {
-        if (isOpenTermLoan(loan_)) return acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
-
-        acceptRefinanceFT(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
-    }
-
-    function acceptRefinanceFT(
-        address        loan_,
-        address        refinancer_,
-        uint256        expiry_,
-        bytes[] memory refinanceCalls_,
-        uint256        principalIncrease_
-    ) internal {
-        address loanManager_ = ILoanLike(loan_).lender();
-
-        address poolDelegate_ = IPoolManager(
-            ILoanManagerLike(loanManager_).poolManager()
-        ).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IFixedTermLoanManager(loanManager_).acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
-        vm.stopPrank();
+        acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
     }
 
     function acceptRefinanceOT(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
@@ -417,15 +245,7 @@ contract ProtocolActions is Runner {
     }
 
     function proposeRefinance(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        (isOpenTermLoan(loan_) ? proposeRefinanceOT : proposeRefinanceFT)(loan_, refinancer_, expiry_, refinanceCalls_);
-    }
-
-    function proposeRefinanceFT(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        address borrower_ = ILoanLike(loan_).borrower();
-
-        vm.startPrank(borrower_);
-        ILoanLike(loan_).proposeNewTerms(refinancer_, expiry_, refinanceCalls_);
-        vm.stopPrank();
+        proposeRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
     }
 
     function proposeRefinanceOT(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
@@ -684,8 +504,6 @@ contract ProtocolActions is Runner {
     }
 
     function callLoan(address loan_, uint256 principal_) internal {
-        require(isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_FT_LOAN");
-
         address loanManager_ = ILoanLike(loan_).lender();
 
         address poolDelegate_ = IPoolManager(
@@ -828,22 +646,6 @@ contract ProtocolActions is Runner {
         assertEq(IERC20(asset_).balanceOf(IPoolManager(poolManager_).poolDelegateCover()), amount_);
     }
 
-    function finishCollateralLiquidation(address loan_) internal {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        IPoolManager poolManager_ = IPoolManager(
-            ILoanManagerLike(
-                ILoanLike(loan_).lender()
-            ).poolManager()
-        );
-
-        address poolDelegate_ = poolManager_.poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        poolManager_.finishCollateralLiquidation(loan_);
-        vm.stopPrank();
-    }
-
     function fundLoan(address loan_) internal {
         address borrower = ILoanLike(loan_).borrower();
 
@@ -908,8 +710,6 @@ contract ProtocolActions is Runner {
     }
 
     function removeLoanCall(address loan_) internal {
-        require(isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_FT_LOAN");
-
         IOpenTermLoanManager loanManager_ = IOpenTermLoanManager(ILoanLike(loan_).lender());
 
         address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
@@ -1001,14 +801,6 @@ contract ProtocolActions is Runner {
 
         vm.startPrank(poolDelegate_);
         IPoolManager(poolManager_).withdrawCover(amount_, poolDelegate_);
-        vm.stopPrank();
-    }
-
-    function updateAccounting(address loanManager_) internal {
-        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IFixedTermLoanManager(loanManager_).updateAccounting();
         vm.stopPrank();
     }
 

@@ -50,7 +50,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         // Need to fund a loan so the exchange rate isn't affected by funds in the pool
         address loan = createOpenTermLoan({
             borrower:  makeAddr("borrower"),
-            lender:    poolManager.strategyList(1),
+            lender:    poolManager.strategyList(0),
             asset:     address(fundsAsset),
             principal: 10_000e6,
             terms:     [gracePeriod, noticePeriod, paymentInterval],
@@ -78,7 +78,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
 
         address loan = createOpenTermLoan({
             borrower:  makeAddr("borrower"),
-            lender:    poolManager.strategyList(1),
+            lender:    poolManager.strategyList(0),
             asset:     address(fundsAsset),
             principal: 8_500e6,
             terms:     [gracePeriod, noticePeriod, paymentInterval],
@@ -1150,7 +1150,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
         // Need to fund a loan so the exchange rate isn't affected by funds in the pool
         address loan = createOpenTermLoan({
             borrower:  makeAddr("borrower"),
-            lender:    poolManager.strategyList(1),
+            lender:    poolManager.strategyList(0),
             asset:     address(fundsAsset),
             principal: 1_000e6,
             terms:     [gracePeriod, noticePeriod, paymentInterval],

@@ -16,9 +16,6 @@ contract PauseTests is TestBaseWithAssertions {
     address pausePoolDelegate = makeAddr("pausePoolDelegate");
     address defaultCaller     = makeAddr("DEFAULT_CALLER");
 
-    address fixedTermLoan;
-    address fixedTermLoanManager;
-    address liquidator;
     address openTermLoan;
     address openTermLoanManager;
     address aaveStrategy;
@@ -29,58 +26,6 @@ contract PauseTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
     /*** Functions Mappings (Need to be continuously updated with new functions)                                                        ***/
     /**************************************************************************************************************************************/
-
-    bytes[] fixedTermLoanFunctions = [
-        abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
-        abi.encodeWithSignature("setImplementation(address)", address(0)),
-        abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
-        abi.encodeWithSignature("acceptBorrower()"),
-        abi.encodeWithSignature("acceptLoanTerms()"),
-        abi.encodeWithSignature("closeLoan(uint256)", 0),
-        abi.encodeWithSignature("drawdownFunds(uint256,address)", 0, address(0)),
-        abi.encodeWithSignature("makePayment(uint256)", 0),
-        abi.encodeWithSignature("postCollateral(uint256)", 0),
-        abi.encodeWithSignature("proposeNewTerms(address,uint256,bytes[])", address(0), 0, new bytes[](0)),
-        abi.encodeWithSignature("removeCollateral(uint256,address)", 0, address(0)),
-        abi.encodeWithSignature("returnFunds(uint256)", 0),
-        abi.encodeWithSignature("setPendingBorrower(address)", address(0)),
-        abi.encodeWithSignature("acceptLender()"),
-        abi.encodeWithSignature("acceptNewTerms(address,uint256,bytes[])", address(0), 0, new bytes[](0)),
-        abi.encodeWithSignature("fundLoan()"),
-        abi.encodeWithSignature("removeLoanImpairment()"),
-        abi.encodeWithSignature("repossess(address)", address(0)),
-        abi.encodeWithSignature("setPendingLender(address)", address(0)),
-        abi.encodeWithSignature("impairLoan()"),
-        abi.encodeWithSignature("rejectNewTerms(address,uint256,bytes[])", address(0), 0, new bytes[](0)),
-        abi.encodeWithSignature("skim(address,address)", address(0), address(0))
-    ];
-
-    bytes[] fixedTermLoanManagerFunctions = [
-        abi.encodeWithSignature("fund(address)", address(0)),
-        abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
-        abi.encodeWithSignature("setImplementation(address)", address(0)),
-        abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
-        abi.encodeWithSignature("setAllowedSlippage(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("setMinRatio(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("updateAccounting()"),
-        abi.encodeWithSignature("acceptNewTerms(address,address,uint256,bytes[],uint256)",  address(0), address(0), 0, new bytes[](0), 0),
-        abi.encodeWithSignature("rejectNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
-        abi.encodeWithSignature("claim(uint256,uint256,uint256,uint256)", 0, 0, 0, 0),
-        abi.encodeWithSignature("impairLoan(address)", address(0)),
-        abi.encodeWithSignature("removeLoanImpairment(address)", address(0)),
-        abi.encodeWithSignature("finishCollateralLiquidation(address)", address(0)),
-        abi.encodeWithSignature("triggerDefault(address,address)", address(0), address(0))
-    ];
-
-    bytes[] liquidatorFunctions = [
-        // NOTE: Commented functions currently don't implement paused modifier.
-        // abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
-        // abi.encodeWithSignature("setImplementation(address)", address(0)),
-        // abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
-        // abi.encodeWithSignature("setCollateralRemaining(uint256)", 0),
-        // abi.encodeWithSignature("pullFunds(address,address,uint256)", address(0), address(0), 0)
-        abi.encodeWithSignature("liquidatePortion(uint256,uint256,bytes)", 0, 0, new bytes(0))
-    ];
 
     bytes[] assetControllerFunctions = [
         // onlyRouter functions
@@ -304,16 +249,7 @@ contract PauseTests is TestBaseWithAssertions {
         super.setUp();
         deposit(makeAddr("depositor"), 3_500_000e6);
 
-        fixedTermLoanManager = poolManager.strategyList(0);
-        openTermLoanManager  = poolManager.strategyList(1);
-
-        fixedTermLoan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(12 hours), uint256(1_000_000), uint256(3)],
-            amounts:     [uint256(100e18), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.31536e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: fixedTermLoanManager
-        });
+        openTermLoanManager = poolManager.strategyList(0);
 
         openTermLoan = createOpenTermLoan(
             address(borrower),
@@ -328,9 +264,6 @@ contract PauseTests is TestBaseWithAssertions {
         globals.setValidPoolDelegate(address(pausePoolDelegate), true);
 
         _createPoolWithQueue(pausePoolDelegate, "pool with queue");
-
-        vm.prank(fixedTermLoanManager);
-        liquidator = IProxyFactoryLike(liquidatorFactory).createInstance(abi.encode(address(this), collateralAsset, fundsAsset), "salt");
 
         address[] memory strategiesFactories_ = new address[](1);
         bytes[]   memory strategiesData_      = new bytes[](1);
@@ -393,10 +326,7 @@ contract PauseTests is TestBaseWithAssertions {
         skyStrategy = IPoolManager(btcPoolManager).addStrategy(skyStrategyFactory, abi.encode(btcPool, address(mockPSM)));
 
         // Set up all mappings
-        functions[liquidatorFactory]              = proxyFactoryFunctions;
         functions[poolManagerFactory]             = proxyFactoryFunctions;
-        functions[fixedTermLoanFactory]           = proxyFactoryFunctions;
-        functions[fixedTermLoanManagerFactory]    = proxyFactoryFunctions;
         functions[openTermLoanFactory]            = proxyFactoryFunctions;
         functions[openTermLoanManagerFactory]     = proxyFactoryFunctions;
         functions[queueWMFactory]                 = proxyFactoryFunctions;
@@ -405,9 +335,6 @@ contract PauseTests is TestBaseWithAssertions {
         functions[coreStrategyFactory]            = proxyFactoryFunctions;
         functions[skyStrategyFactory]             = proxyFactoryFunctions;
         functions[bitcoinStrategyFactory]         = proxyFactoryFunctions;
-        functions[fixedTermLoan]                  = fixedTermLoanFunctions;
-        functions[fixedTermLoanManager]           = fixedTermLoanManagerFunctions;
-        functions[address(liquidator)]            = liquidatorFunctions;
         functions[address(assetController)]       = assetControllerFunctions;
         functions[address(bitcoinRouter)]         = bitcoinRouterFunctions;
         functions[address(compositeAsset)]        = compositeTokenFunctions;
@@ -423,10 +350,7 @@ contract PauseTests is TestBaseWithAssertions {
         functions[address(poolPermissionManager)] = poolPermissionManagerFunctions;
         functions[address(bitcoinStrategy)]       = bitcoinStrategyFunctions;
 
-        messages[liquidatorFactory]              = "MPF:PROTOCOL_PAUSED";
         messages[poolManagerFactory]             = "MPF:PROTOCOL_PAUSED";
-        messages[fixedTermLoanFactory]           = "MPF:PROTOCOL_PAUSED";
-        messages[fixedTermLoanManagerFactory]    = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanFactory]            = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanManagerFactory]     = "MPF:PROTOCOL_PAUSED";
         messages[aaveStrategyFactory]            = "MPF:PROTOCOL_PAUSED";
@@ -434,9 +358,6 @@ contract PauseTests is TestBaseWithAssertions {
         messages[coreStrategyFactory]            = "MPF:PROTOCOL_PAUSED";
         messages[skyStrategyFactory]             = "MPF:PROTOCOL_PAUSED";
         messages[bitcoinStrategyFactory]         = "MPF:PROTOCOL_PAUSED";
-        messages[fixedTermLoan]                  = "L:PAUSED";
-        messages[fixedTermLoanManager]           = "LM:PAUSED";
-        messages[address(liquidator)]            = "LIQ:PROTOCOL_PAUSED";
         messages[openTermLoan]                   = "ML:PAUSED";
         messages[openTermLoanManager]            = "LM:PAUSED";
         messages[address(pool)]                  = "PM:CC:PAUSED";
@@ -454,10 +375,7 @@ contract PauseTests is TestBaseWithAssertions {
         messages[address(skyStrategy)]           = "MS:PAUSED";
 
         // Caller overrides for factories where the implementation expects a specific contract context.
-        caller[liquidatorFactory]           = address(fixedTermLoanManager);
         caller[poolManagerFactory]          = address(deployer);
-        caller[fixedTermLoanManagerFactory] = address(poolManager);
-        caller[fixedTermLoanFactory]        = address(borrower);
         caller[openTermLoanManagerFactory]  = address(poolManager);
         caller[openTermLoanFactory]         = address(borrower);
         caller[queueWMFactory]              = address(deployer);
@@ -471,10 +389,7 @@ contract PauseTests is TestBaseWithAssertions {
         functionCallerOverride[address(assetController)][bytes4(keccak256("reconcile(address,uint256)"))] = address(bitcoinStrategy);
 
         bytes4 upgradeSelector = bytes4(keccak256("upgradeInstance(uint256,bytes)"));
-        functionCallerOverride[liquidatorFactory][upgradeSelector]           = address(liquidator);
         functionCallerOverride[poolManagerFactory][upgradeSelector]          = address(poolManager);
-        functionCallerOverride[fixedTermLoanFactory][upgradeSelector]        = address(fixedTermLoan);
-        functionCallerOverride[fixedTermLoanManagerFactory][upgradeSelector] = address(fixedTermLoanManager);
         functionCallerOverride[openTermLoanFactory][upgradeSelector]         = address(openTermLoan);
         functionCallerOverride[openTermLoanManagerFactory][upgradeSelector]  = address(openTermLoanManager);
         functionCallerOverride[queueWMFactory][upgradeSelector]              = address(queueWM);
@@ -486,9 +401,7 @@ contract PauseTests is TestBaseWithAssertions {
 
         // Ensure factory ACL checks pass before pause checks in tests.
         vm.startPrank(governor);
-        globals.setCanDeployFrom(fixedTermLoanFactory,        borrower,             true);
         globals.setCanDeployFrom(openTermLoanFactory,         borrower,             true);
-        globals.setCanDeployFrom(fixedTermLoanManagerFactory, address(poolManager), true);
         globals.setCanDeployFrom(openTermLoanManagerFactory,  address(poolManager), true);
         globals.setCanDeployFrom(aaveStrategyFactory,         btcPoolManager,       true);
         globals.setCanDeployFrom(basicStrategyFactory,        btcPoolManager,       true);
@@ -501,10 +414,7 @@ contract PauseTests is TestBaseWithAssertions {
     function test_globalPause() external {
         // All contracts are affected by the global pause
         contracts = [
-            address(liquidatorFactory),
             address(poolManagerFactory),
-            address(fixedTermLoanFactory),
-            address(fixedTermLoanManagerFactory),
             address(openTermLoanFactory),
             address(openTermLoanManagerFactory),
             address(aaveStrategyFactory),
@@ -512,9 +422,6 @@ contract PauseTests is TestBaseWithAssertions {
             address(coreStrategyFactory),
             address(skyStrategyFactory),
             address(bitcoinStrategyFactory),
-            address(fixedTermLoan),
-            address(fixedTermLoanManager),
-            address(liquidator),
             address(openTermLoan),
             address(openTermLoanManager),
             address(pool),
@@ -549,8 +456,6 @@ contract PauseTests is TestBaseWithAssertions {
     function test_contractPause() external {
         // Contracts that implement the newer globals pause structure.
         contracts = [
-            address(fixedTermLoan),
-            address(fixedTermLoanManager),
             address(openTermLoan),
             address(openTermLoanManager),
             address(poolManager),
@@ -579,8 +484,6 @@ contract PauseTests is TestBaseWithAssertions {
 
     function test_functionUnpauseAfterProtocolPause() external {
         contracts = [
-            address(fixedTermLoan),
-            address(fixedTermLoanManager),
             address(openTermLoan),
             address(openTermLoanManager),
             address(poolManager),
@@ -626,8 +529,6 @@ contract PauseTests is TestBaseWithAssertions {
 
     function test_functionUnpauseAfterContractPause() external {
         contracts = [
-            address(fixedTermLoan),
-            address(fixedTermLoanManager),
             address(openTermLoan),
             address(openTermLoanManager),
             address(poolManager)

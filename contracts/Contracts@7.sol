@@ -8,18 +8,6 @@ import { MapleAddressRegistryBASEL2 as ARB } from "../modules/address-registry/c
 
 import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
-import { MapleLoan as MFTL }                  from "../modules/fixed-term-loan/contracts/MapleLoan.sol";
-import { MapleLoanFactory as MFTLF }          from "../modules/fixed-term-loan/contracts/MapleLoanFactory.sol";
-import { MapleLoanFeeManager as MFTLFM }      from "../modules/fixed-term-loan/contracts/MapleLoanFeeManager.sol";
-import { MapleLoanInitializer as MFTLI }      from "../modules/fixed-term-loan/contracts/MapleLoanInitializer.sol";
-import { MapleLoanV5Migrator as MFTLV5M }     from "../modules/fixed-term-loan/contracts/MapleLoanV5Migrator.sol";
-import { MapleLoanV502Migrator as MFTLV502M } from "../modules/fixed-term-loan/contracts/MapleLoanV502Migrator.sol";
-import { MapleRefinancer as MFTLR }           from "../modules/fixed-term-loan/contracts/MapleRefinancer.sol";
-
-import { MapleLoanManager as MFTLM }             from "../modules/fixed-term-loan-manager/contracts/MapleLoanManager.sol";
-import { MapleLoanManagerFactory as MFTLMF }     from "../modules/fixed-term-loan-manager/contracts/proxy/MapleLoanManagerFactory.sol";
-import { MapleLoanManagerInitializer as MFTLMI } from "../modules/fixed-term-loan-manager/contracts/proxy/MapleLoanManagerInitializer.sol";
-
 import { MapleLoan as MOTL }                  from "../modules/open-term-loan/contracts/MapleLoan.sol";
 import { MapleLoanV202Migrator as MOTLV202M } from "modules/open-term-loan/contracts/MapleLoanV202Migrator.sol";
 import { MapleLoanFactory as MOTLF }          from "../modules/open-term-loan/contracts/MapleLoanFactory.sol";
@@ -29,10 +17,6 @@ import { MapleRefinancer as MOTLR }           from "../modules/open-term-loan/co
 import { MapleLoanManager as MOTLM }             from "../modules/open-term-loan-manager/contracts/MapleLoanManager.sol";
 import { MapleLoanManagerFactory as MOTLMF }     from "../modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol";
 import { MapleLoanManagerInitializer as MOTLMI } from "../modules/open-term-loan-manager/contracts/MapleLoanManagerInitializer.sol";
-
-import { MapleLiquidator as ML }             from "../modules/liquidations/contracts/MapleLiquidator.sol";
-import { MapleLiquidatorFactory as MLF }     from "../modules/liquidations/contracts/MapleLiquidatorFactory.sol";
-import { MapleLiquidatorInitializer as MLI } from "../modules/liquidations/contracts/MapleLiquidatorInitializer.sol";
 
 import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
@@ -73,48 +57,6 @@ contract AddressRegistry is AR { }
 contract AddressRegistryBaseL2 is ARB { }
 
 contract EmptyContract { }
-
-contract FeeManager is MFTLFM {
-
-    constructor(address globals_) MFTLFM(globals_) { }
-
-}
-
-contract FixedTermLoan is MFTL { }
-
-contract FixedTermLoanFactory is MFTLF {
-
-    constructor(address globals_, address oldFactory_) MFTLF(globals_, oldFactory_) { }
-
-}
-
-contract FixedTermLoanInitializer is MFTLI { }
-
-contract FixedTermLoanManager is MFTLM { }
-
-contract FixedTermLoanManagerFactory is MFTLMF {
-
-    constructor(address globals_) MFTLMF(globals_) { }
-
-}
-
-contract FixedTermLoanManagerInitializer is MFTLMI { }
-
-contract FixedTermLoanV5Migrator is MFTLV5M { }
-
-contract FixedTermLoanV502Migrator is MFTLV502M { }
-
-contract FixedTermRefinancer is MFTLR { }
-
-contract Liquidator is ML { }
-
-contract LiquidatorFactory is MLF {
-
-    constructor(address globals_) MLF(globals_) { }
-
-}
-
-contract LiquidatorInitializer is MLI { }
 
 contract MockERC20 is ConfigurableMockERC20 {
 
