@@ -13,15 +13,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     address lp = makeAddr("lp");
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         deposit(lp, 1_000e6);
     }

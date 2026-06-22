@@ -18,14 +18,7 @@ contract PoolTransferPermissionTestBase is TestBase {
     uint256 shares = 100e6;
 
     function setUp() public virtual override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
 
         erc20_mint(address(fundsAsset), from, assets);
         erc20_approve(address(fundsAsset), from, address(pool), assets);

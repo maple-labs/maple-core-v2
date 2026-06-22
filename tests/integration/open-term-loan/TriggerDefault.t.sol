@@ -24,16 +24,7 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
     IOpenTermLoanManager loanManager;
 
     function setUp() public virtual override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
-
-        openPool(address(poolManager));
+        super.setUp();
 
         vm.startPrank(governor);
         globals.setPlatformServiceFeeRate(address(poolManager)   , platformServiceFeeRate);

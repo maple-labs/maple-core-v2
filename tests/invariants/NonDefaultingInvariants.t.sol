@@ -24,15 +24,7 @@ contract NonDefaultingInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        _setupPoolWithQueueWM();
 
         for (uint256 i; i < NUM_LPS; i++) {
             address lp = makeAddr(string(abi.encode("lp", i)));

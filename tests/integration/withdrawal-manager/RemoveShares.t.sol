@@ -10,7 +10,7 @@ contract RemoveSharesCyclicalTests is TestBase {
     address wm;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
@@ -196,7 +196,7 @@ contract RemoveSharesCyclicalFailureTests is TestBase {
     address wm;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
@@ -314,17 +314,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
     address wm;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
@@ -557,17 +547,7 @@ contract RemoveSharesQueueFailureTests is TestBaseWithAssertions {
     address wm;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");

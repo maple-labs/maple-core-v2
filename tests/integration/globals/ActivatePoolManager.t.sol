@@ -13,7 +13,7 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
         _createAssets();
         _configureGlobals();
         _createFactories();
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithQueue();
     }
 
     function test_activatePoolManager() external {
@@ -53,7 +53,7 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         _createAssets();
         _configureGlobals();
         _createFactories();
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithQueue();
     }
 
     function test_activatePoolManager_failIfNotGovernor() public {

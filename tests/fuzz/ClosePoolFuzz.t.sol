@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { FuzzedSetup, IPoolManager, IWithdrawalManagerQueue } from "./FuzzedSetup.sol";
+import { FuzzedSetup } from "./FuzzedSetup.sol";
 
 contract ClosePoolFuzz is FuzzedSetup {
 
     uint256 constant ACTION_COUNT   = 10;
     uint256 constant OTL_LOAN_COUNT = 7;
     uint256 constant ALLOWED_DIFF   = 1000;
+
+    function setUp() public override {
+        _setupPoolWithCyclicalWM();
+
+        _initFuzzedSetup();
+    }
 
     function testFuzz_fuzzedSetup_closePool(uint256 seed_) external {
         fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
@@ -45,36 +51,10 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
     uint256 constant ALLOWED_DIFF   = 1000;
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
-
-        setAddresses(address(pool));
-
-        _liquidatorFactory   = address(liquidatorFactory);
-        _openTermLoanFactory = address(openTermLoanFactory);
-
-        // Deposit the initial liquidity.
-        lps.push(makeAddr("lp1"));
-        lps.push(makeAddr("lp2"));
-        lps.push(makeAddr("lp3"));
-        lps.push(makeAddr("lp4"));
-        lps.push(makeAddr("lp5"));
-
-        for (uint256 i; i < lps.length; ++i) {
-            deposit(address(pool), lps[i], 100_000_000e6);
-        }
-
-        address withdrawalManager = IPoolManager(_poolManager).withdrawalManager();
+        super.setUp();
 
         vm.prank(poolManager.poolDelegate());
-        IWithdrawalManagerQueue(withdrawalManager).setManualWithdrawal(lps[2], true);
+        queueWM.setManualWithdrawal(lps[2], true);
     }
 
     function testFuzz_fuzzedSetup_closePool_withQueueWM(uint256 seed_) external {

@@ -17,14 +17,7 @@ contract HasPermissionFuzzTests is TestBase {
     address lender = vm.addr(privateKey);
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithCyclicalWM();
 
         // NOTE: Pool and Withdrawal manager need to be whitelisted to allow redemption workflow to work.
         setLenderAllowlist(address(poolManager), address(poolManager), true);

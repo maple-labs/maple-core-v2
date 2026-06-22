@@ -16,14 +16,7 @@ contract PoolExitPermissionTestBase is TestBase {
     uint256 shares = 100e6;
 
     function setUp() public virtual override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithCyclicalWM();
 
         erc20_mint(address(fundsAsset), lp, assets);
         erc20_approve(address(fundsAsset), lp, address(pool), assets);

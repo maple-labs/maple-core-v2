@@ -16,17 +16,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
     mapping(uint256 => address) lpRequests;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
     }
 
     function testFuzz_processExit(

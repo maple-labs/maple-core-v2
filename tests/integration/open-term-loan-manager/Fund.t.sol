@@ -33,7 +33,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         vm.startPrank(governor);
         globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);

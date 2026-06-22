@@ -137,6 +137,35 @@ contract TestBase is ProtocolActions, Utils {
     IMockERC20 fundsAsset;
 
     function setUp() public virtual {
+        _setupPoolWithQueueWM();
+    }
+
+    function _setupPoolWithQueueWM() internal {
+        _setupClosedPoolWithQueueWM();
+
+        openPool(address(poolManager));
+    }
+
+    function _setupClosedPoolWithQueueWM() internal {
+        _prePoolDeploymentSetup();
+
+        _createPoolWithQueue();
+        _configurePool();
+    }
+
+    function _setupPoolWithCyclicalWM() internal {
+        _setupClosedPoolWithCyclicalWM();
+
+        openPool(address(poolManager));
+    }
+
+    function _setupClosedPoolWithCyclicalWM() internal {
+        _prePoolDeploymentSetup();
+
+        _createAndConfigurePool(start, 1 weeks, 2 days);
+    }
+
+    function _prePoolDeploymentSetup() internal {
         start = block.timestamp;
 
         _createAccounts();
@@ -144,9 +173,6 @@ contract TestBase is ProtocolActions, Utils {
         _createAssets();
         _configureGlobals();
         _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
-
-        openPool(address(poolManager));
     }
 
     /**************************************************************************************************************************************/
@@ -692,7 +718,7 @@ contract TestBase is ProtocolActions, Utils {
 
     function _configurePool() internal {
         activatePool(address(poolManager), HUNDRED_PERCENT);
-        allowLender(address(poolManager), address(cyclicalWM));
+        allowLender(address(poolManager), address(queueWM));
     }
 
     function _createAndConfigurePool(uint256 startTime, uint256 withdrawalCycle, uint256 windowDuration) internal {

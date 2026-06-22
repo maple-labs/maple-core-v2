@@ -15,17 +15,7 @@ contract ProcessRedemptionsTests is TestBaseWithAssertions {
     address wm;  // Helper to avoid casting
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         deposit(lp1, 1_000e6);
         deposit(lp2, 2_000e6);

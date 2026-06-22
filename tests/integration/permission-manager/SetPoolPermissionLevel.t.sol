@@ -9,14 +9,7 @@ contract SetPoolPermissionLevelTests is TestBase {
     uint256 constant PUBLIC  = 3;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
     }
 
     function test_setPoolPermissionLevel_notAuthorized() external {

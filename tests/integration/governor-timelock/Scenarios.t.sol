@@ -9,6 +9,12 @@ import { GovernorTimelockTestBase } from "./GovernorTimelockTestBase.t.sol";
 
 contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
 
+    function setUp() public override {
+        _setupPoolWithCyclicalWM();
+
+        _initTimelock();
+    }
+
     function test_withdrawERC20Token_revert_afterChangingTokenWithdrawer() public {
         uint256 balanceBefore    = 100e18;
         uint256 amountToWithdraw = 40e18;

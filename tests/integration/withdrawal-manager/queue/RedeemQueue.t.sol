@@ -12,17 +12,7 @@ import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
 contract QueueRedeemBase is TestBaseWithAssertions {
 
     function setUp() public override virtual {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
     }
 
 }

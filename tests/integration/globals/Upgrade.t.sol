@@ -401,7 +401,7 @@ contract WithdrawalManagerUpgradeTests is TestBase {
     bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         vm.startPrank(governor);
 

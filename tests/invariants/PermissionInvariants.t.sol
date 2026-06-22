@@ -15,14 +15,7 @@ contract PermissionInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
 
         for (uint256 i; i < NUM_LPS; i++) {
             lps.push(makeAddr(string(abi.encode("lp", i))));

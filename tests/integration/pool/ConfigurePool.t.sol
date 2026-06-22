@@ -11,14 +11,7 @@ contract ConfigurePoolTests is TestBase {
     uint256[] bitmaps;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
 
         functionIds.push("P:transfer");
         functionIds.push("P:deposit");

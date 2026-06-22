@@ -10,15 +10,7 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
     address wm;
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -193,15 +185,7 @@ contract AddSharesQueueFailureTests is TestBase {
     address wm;
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         lp  = makeAddr("lp");
 

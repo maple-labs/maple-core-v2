@@ -64,14 +64,7 @@ contract MaxDepositTests is TestBase {
     address lp2;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -137,14 +130,7 @@ contract MaxMintTests is TestBase {
     address lp2;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -253,7 +239,7 @@ contract MaxRedeemTests is TestBase {
     address lp;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         lp = makeAddr("lp");
     }
@@ -312,15 +298,7 @@ contract MaxRedeemWMQueueTests is TestBase {
     uint256 maxShares;
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -392,7 +370,7 @@ contract MaxWithdrawTests is TestBase {
     address lp;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         lp = makeAddr("lp");
     }
@@ -465,7 +443,7 @@ contract PreviewRedeemTests is TestBase {
     address lp;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         lp = makeAddr("lp");
     }
@@ -514,18 +492,9 @@ contract PreviewRedeemWithQueueWMTests is TestBase {
 
     uint256 shares = 1_000e6;
 
-    function setUp() public override virtual {
-        start = block.timestamp;
+    function setUp() public override {
+        super.setUp();
 
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
         deposit(lender, shares);
 
         vm.prank(poolDelegate);
@@ -612,18 +581,9 @@ contract AutomatedPreviewRedeemWithQueueWMTests is TestBase {
 
     uint256 shares = 1_000e6;
 
-    function setUp() public override virtual {
-        start = block.timestamp;
+    function setUp() public override {
+        super.setUp();
 
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
         deposit(lender, shares);
 
         vm.prank(lender);
@@ -712,20 +672,6 @@ contract PreviewWithdrawTests is TestBase {
 }
 
 contract PreviewWithdrawWithQueueWMTests is TestBase {
-
-    function setUp() public override virtual {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
-    }
 
     function testFuzz_previewWithdraw(
         address lender,

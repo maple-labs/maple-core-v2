@@ -595,8 +595,12 @@ contract FuzzedUtil is ProtocolActions {
 contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
 
     function setUp() public virtual override {
-        super.setUp();
+        _setupPoolWithQueueWM();
 
+        _initFuzzedSetup();
+    }
+
+    function _initFuzzedSetup() internal {
         setAddresses(address(pool));
 
         _liquidatorFactory   = address(liquidatorFactory);
@@ -612,7 +616,6 @@ contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
         for (uint256 i; i < lps.length; ++i) {
             deposit(address(pool), lps[i], 100_000_000e6);
         }
-
     }
 
 }

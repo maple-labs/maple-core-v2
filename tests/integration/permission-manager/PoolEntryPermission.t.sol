@@ -22,14 +22,7 @@ contract PoolEntryPermissionTestBase is TestBase {
     bytes32 s;
 
     function setUp() public virtual override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setupClosedPoolWithQueueWM();
 
         lp = vm.addr(privateKey);
 

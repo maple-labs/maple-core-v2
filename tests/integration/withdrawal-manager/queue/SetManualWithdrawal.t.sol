@@ -9,17 +9,7 @@ contract SetManualWithdrawalTests is TestBaseWithAssertions {
     address wm;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         lp = makeAddr("lp");
         wm = address(queueWM);

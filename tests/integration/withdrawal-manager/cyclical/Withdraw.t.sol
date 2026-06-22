@@ -10,7 +10,7 @@ contract RequestWithdrawTests is TestBase {
     address wm;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
@@ -99,7 +99,7 @@ contract RequestWithdrawFailureTests is TestBase {
     address wm;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");
@@ -138,7 +138,7 @@ contract WithdrawFailureTests is TestBase {
     address wm;
 
     function setUp() public override {
-        super.setUp();
+        _setupPoolWithCyclicalWM();
 
         borrower = makeAddr("borrower");
         lp       = makeAddr("lp");

@@ -19,6 +19,10 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
+        _initTimelock();
+    }
+
+    function _initTimelock() internal {
         executor  = operationalAdmin;
         canceller = securityAdmin;
         roleAdmin = governor;

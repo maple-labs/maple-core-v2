@@ -24,13 +24,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     OpenTermLoanManagerHarness loanManagerHarness;
 
     function setUp() public override {
-        _createAccounts();
-        _createGlobals();
-        _createAssets();
-        _configureGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
+        _setupClosedPoolWithQueueWM();
 
         allowLender(address(poolManager), address(queueWM));
 
