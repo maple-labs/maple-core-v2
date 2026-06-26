@@ -195,7 +195,7 @@ contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
 
         // Perform the action
         vm.prank(poolManager.poolDelegate());
-        poolManager.triggerDefault(address(loan), liquidatorFactory);
+        poolManager.triggerDefault(address(loan));
 
         // Assert Values
         assertOpenTermLoan({

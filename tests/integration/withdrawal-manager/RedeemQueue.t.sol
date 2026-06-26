@@ -5,9 +5,9 @@ import {
     IERC20Like,
     IMapleProxyFactory,
     ILoanLike
-} from "../../../../contracts/interfaces/Interfaces.sol";
+} from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract QueueRedeemBase is TestBaseWithAssertions {
 

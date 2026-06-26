@@ -76,7 +76,7 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
     function test_impairLoan_loanInactive() external {
         vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), liquidatorFactory);
+        poolManager.triggerDefault(address(loan));
 
         vm.expectRevert("LM:NOT_LOAN");
         vm.prank(poolDelegate);

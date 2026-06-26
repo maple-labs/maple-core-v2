@@ -31,24 +31,7 @@ contract MapleGlobalsFunctionsTests is GovernorTimelockTestBase {
         address poolDelegate = makeAddr("newPoolDelegate");
         _executeThroughTimelock(address(globals), IMapleGlobals.setValidPoolDelegate.selector, abi.encode(poolDelegate, true));
 
-        uint256 startTime       = block.timestamp;
-        uint256 withdrawalCycle = 1;
-        uint256 windowDuration  = 1;
-
-        uint256[7] memory configParams_ = [type(uint256).max, 0, 0, withdrawalCycle, windowDuration, 1, startTime];
-        address poolManager = deployPoolWithCyclical(
-            poolDelegate,
-            address(deployer),
-            poolManagerFactory,
-            cyclicalWMFactory,
-            strategyFactories,
-            strategyDeploymentData_,
-            address(fundsAsset),
-            address(poolPermissionManager),
-            POOL_NAME,
-            POOL_SYMBOL,
-            configParams_
-        );
+        ( , address poolManager, ) = _createPoolWithOTLM(poolDelegate);
 
         assertEq(globals.ownedPoolManager(poolDelegate),  address(0));
         assertEq(IMaplePoolManager(poolManager).active(), false);

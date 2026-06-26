@@ -22,7 +22,7 @@ contract PoolEntryPermissionTestBase is TestBase {
     bytes32 s;
 
     function setUp() public virtual override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         lp = vm.addr(privateKey);
 

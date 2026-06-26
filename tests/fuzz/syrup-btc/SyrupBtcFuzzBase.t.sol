@@ -9,7 +9,7 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 contract SyrupBtcFuzzBase is TestBaseWithAssertions {
 
     function setUp() public override {
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
     }
 
     function _setUpSyrupBtcState(

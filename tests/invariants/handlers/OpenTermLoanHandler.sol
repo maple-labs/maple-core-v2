@@ -10,7 +10,7 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IWithdrawalManagerCyclical as IWithdrawalManager
+    IWithdrawalManagerQueue as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console } from "../../../contracts/Runner.sol";
@@ -240,7 +240,7 @@ contract OpenTermLoanHandler is HandlerBase {
 
         isDefaulted[loan_] = true;
 
-        triggerDefault(loan_, address(liquidatorFactory), caller_);
+        triggerDefault(loan_, caller_);
     }
 
     /**************************************************************************************************************************************/

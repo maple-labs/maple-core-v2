@@ -17,15 +17,14 @@ import {
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
-    IPoolDeployer,
     IPoolManager,
     IPoolPermissionManager,
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IStrategyLike,
+    IStrategyManager,
     ISyrupBitcoinRouter,
     IUSDCLike,
-    IWithdrawalManagerCyclical as IWithdrawalManager,
     IWithdrawalManagerQueue,
     Permit
 } from "./interfaces/Interfaces.sol";
@@ -474,18 +473,40 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
+    // TODO: Add salt parameter when writing tests for addStrategy function
     function addStrategy(address poolManager_, address strategyFactory_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IPoolManager(poolManager_).addStrategy(strategyFactory_, abi.encode(poolManager_));
+        IPoolManager(poolManager_).addStrategy(
+            strategyFactory_,
+            keccak256(abi.encode(strategyFactory_, poolManager_)),
+            abi.encode(poolManager_)
+        );
     }
 
+    // TODO: Add salt parameter when writing tests for addStrategy function
     function addStrategy(address poolManager_, address strategyFactory_, bytes memory data_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IPoolManager(poolManager_).addStrategy(strategyFactory_, data_);
+        IPoolManager(poolManager_).addStrategy(strategyFactory_, keccak256(abi.encode(strategyFactory_, data_)), data_);
+    }
+
+    function addStrategyManagerToPool(address poolManager_, address strategyManager_) internal {
+        address globals_          = IPoolManager(poolManager_).globals();
+        address governor_         = IGlobals(globals_).governor();
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.startPrank(governor_);
+        IPoolManager(poolManager_).addStrategyManager(strategyManager_);
+        IPoolManager(poolManager_).setStrategyCap(strategyManager_, type(uint256).max);
+        vm.stopPrank();
+
+        vm.startPrank(strategyDelegate_);
+        IStrategyManager(strategyManager_).setStrategyLiquidityCap(type(uint256).max);
+        IStrategyManager(strategyManager_).setPoolManagerCap(poolManager_, type(uint256).max);
+        vm.stopPrank();
     }
 
     function allowLender(address poolManager_, address lender_) internal {
@@ -513,137 +534,6 @@ contract ProtocolActions is Runner {
         vm.startPrank(poolDelegate_);
         IOpenTermLoanManager(loanManager_).callPrincipal(loan_, principal_);
         vm.stopPrank();
-    }
-
-    // TODO: This can only deploy pools with loan managers but not with strategies.
-    function deployAndActivatePool(
-        address           deployer_,
-        address           fundsAsset_,
-        address           globals_,
-        address           poolDelegate_,
-        address           poolManagerFactory_,
-        address           withdrawalManagerFactory_,
-        string     memory name_,
-        string     memory symbol_,
-        address[]  memory strategyFactories_,
-        uint256[7] memory configParams_
-    )
-        internal returns (address poolManager_)
-    {
-        if (configParams_[2] > 0) {
-            erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
-
-            erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
-        }
-
-        // Set Valid PD
-        {
-            IGlobals globals = IGlobals(globals_);
-            vm.prank(globals.governor());
-            globals.setValidPoolDelegate(poolDelegate_, true);
-        }
-
-        address ppm_ = _deployPoolPermissionManager(globals_);
-
-        address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory_).getInstanceAddress(
-            abi.encode(poolDelegate_, fundsAsset_, 0, name_, symbol_), // 0 is the initial supply
-            keccak256(abi.encode(poolDelegate_))
-        );
-
-        bytes[] memory strategyDeploymentData_ = new bytes[](strategyFactories_.length);
-        for (uint256 i = 0; i < strategyFactories_.length; i++) {
-            strategyDeploymentData_[i] = abi.encode(poolManagerDeployment);
-        }
-
-        poolManager_ = deployPoolWithCyclical(
-            poolDelegate_,
-            deployer_,
-            poolManagerFactory_,
-            withdrawalManagerFactory_,
-            strategyFactories_,
-            strategyDeploymentData_,
-            fundsAsset_,
-            ppm_,
-            name_,
-            symbol_,
-            configParams_
-        );
-
-        // Governor activates the pool
-        activatePool(poolManager_, HUNDRED_PERCENT);
-    }
-
-    function deployPoolWithCyclical(
-        address           poolDelegate_,
-        address           deployer_,
-        address           poolManagerFactory_,
-        address           cyclicalWMFactory_,
-        address[]  memory strategyFactories_,
-        bytes[]    memory strategyDeploymentData_,
-        address           fundsAsset_,
-        address           poolPermissionManager_,
-        string     memory name_,
-        string     memory symbol_,
-        uint256[7] memory configParams_
-    )
-        internal
-        returns (address poolManager_)
-    {
-        vm.prank(poolDelegate_);
-        poolManager_ = IPoolDeployer(deployer_).deployPool({
-            poolManagerFactory_:       poolManagerFactory_,
-            withdrawalManagerFactory_: cyclicalWMFactory_,
-            strategyFactories_:        strategyFactories_,
-            strategyDeploymentData_:   strategyDeploymentData_,
-            asset_:                    fundsAsset_,
-            poolPermissionManager_:    poolPermissionManager_,
-            name_:                     name_,
-            symbol_:                   symbol_,
-            configParams_:             configParams_
-        });
-    }
-
-    function deployPoolWithQueue(
-        address           poolDelegate_,
-        address           deployer_,
-        address           poolManagerFactory_,
-        address           queueWMFactory_,
-        address[]  memory strategyFactories_,
-        bytes[]    memory strategyDeploymentData_,
-        address           fundsAsset_,
-        address           poolPermissionManager_,
-        string     memory name_,
-        string     memory symbol_,
-        uint256[4] memory configParams_
-    )
-        internal returns (address poolManager_)
-    {
-        vm.prank(poolDelegate_);
-        poolManager_ = IPoolDeployer(deployer_).deployPool({
-            poolManagerFactory_:       poolManagerFactory_,
-            withdrawalManagerFactory_: queueWMFactory_,
-            strategyFactories_:        strategyFactories_,
-            strategyDeploymentData_:   strategyDeploymentData_,
-            asset_:                    fundsAsset_,
-            poolPermissionManager_:    poolPermissionManager_,
-            name_:                     name_,
-            symbol_:                   symbol_,
-            configParams_:             configParams_
-        });
-    }
-
-    function depositCover(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-        address asset_        = IPool(IPoolManager(poolManager_).pool()).asset();
-
-        erc20_mint(asset_, poolDelegate_, amount_);
-        erc20_approve(asset_, poolDelegate_, poolManager_, amount_);
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).depositCover(amount_);
-        vm.stopPrank();
-
-        assertEq(IERC20(asset_).balanceOf(IPoolManager(poolManager_).poolDelegateCover()), amount_);
     }
 
     function fundLoan(address loan_) internal {
@@ -740,14 +630,6 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
-    function setExitConfig(address withdrawalManager_, uint256 cycleDuration_, uint256 windowDuration_) internal {
-        address poolDelegate_ = IPoolManager(IWithdrawalManager(withdrawalManager_).poolManager()).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IWithdrawalManager(withdrawalManager_).setExitConfig(cycleDuration_, windowDuration_);
-        vm.stopPrank();
-    }
-
     function setLiquidityCap(address poolManager_, uint256 amount_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -783,25 +665,17 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
-    function triggerDefault(address loan_, address liquidatorFactory_) internal {
+    function triggerDefault(address loan_) internal {
         address poolDelegate_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager()).poolDelegate();
 
-        triggerDefault(loan_, liquidatorFactory_, poolDelegate_);
+        triggerDefault(loan_, poolDelegate_);
     }
 
-    function triggerDefault(address loan_, address liquidatorFactory_, address caller_) internal {
+    function triggerDefault(address loan_, address caller_) internal {
         IPoolManager poolManager_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager());
 
         vm.prank(caller_);
-        poolManager_.triggerDefault(loan_, liquidatorFactory_);
-    }
-
-    function withdrawCover(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).withdrawCover(amount_, poolDelegate_);
-        vm.stopPrank();
+        poolManager_.triggerDefault(loan_);
     }
 
     function reconcile_syrupBTC(

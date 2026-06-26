@@ -28,7 +28,7 @@ contract SyrupBitcoinInvariants is BaseInvariants {
         // Set up a Syrup BTC pool with multiple strategies.
         initialStrategiesCount = strategyCount;
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         // Create multiple distinct LPs that can interact with the protocol.
         for (uint256 i; i < lpCount; i++) {

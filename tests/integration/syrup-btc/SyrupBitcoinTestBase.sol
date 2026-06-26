@@ -11,7 +11,7 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 contract SyrupBitcoinTestBase is TestBaseWithAssertions {
 
     function setUp() public virtual override {
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
     }
 
     function calculateFee(uint256 amount, uint256 fee) internal pure returns (uint256 fee_) {

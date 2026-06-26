@@ -54,8 +54,15 @@ contract CoreStrategyTestsBase is StrategyTestBase {
         vm.prank(globals.governor());
         globals.setValidPoolDelegate(secondPoolDelegate, true);
 
-        (address pool_, address pm_, ) = _createAdditionalPoolWithQueueAndStrategies(
-            address(fundsAsset), secondPoolDelegate, strategyFactories, strategyDeploymentData
+        (
+            address pool_,
+            address pm_,
+        ) = _createPoolWithMultipleStrategies(
+            secondPoolDelegate,
+            address(fundsAsset),
+            POOL_NAME,
+            strategyFactories,
+            strategyDeploymentData
         );
 
         activatePool(address(pm_), HUNDRED_PERCENT);
@@ -85,7 +92,7 @@ contract CoreStrategyTestsBase is StrategyTestBase {
         globals.setValidInstanceOf("PSM",            address(USDS_LITE_PSM), true);
         vm.stopPrank();
 
-        _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
+        _createPoolWithMultipleStrategies(poolDelegate, address(fundsAsset), POOL_NAME, factories, deploymentData);
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
         allowLender(address(poolManager), address(queueWM));
@@ -182,7 +189,7 @@ contract CoreStrategyFundTests is CoreStrategyTestsBase {
 
     function testFork_coreStrategy_fund_failIfZeroAmount() external {
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_PRINCIPAL");
+        vm.expectRevert("PM:RF:ZERO_AMOUNT");
         coreStrategy.fundStrategy(0);
     }
 
@@ -191,7 +198,7 @@ contract CoreStrategyFundTests is CoreStrategyTestsBase {
         globals.setValidInstanceOf("STRATEGY_FACTORY", coreStrategyFactory, false);
 
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         coreStrategy.fundStrategy(amountToFund);
     }
 

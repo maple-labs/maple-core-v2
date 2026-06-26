@@ -27,20 +27,16 @@ contract AssetControllerInitializerTests is SyrupBitcoinTestBase {
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET", compositeTokenProxy, true);
         vm.stopPrank();
 
-        uint256[4] memory configParams = [uint256(0), uint256(0), uint256(0), uint256(0)];
-
-        vm.prank(poolDelegate);
-        poolManager = IPoolManager(deployer.deployPool(
-            poolManagerFactory,
-            queueWMFactory,
-            strategyFactories,
-            strategyDeploymentData_,
-            compositeTokenProxy,
-            address(poolPermissionManager),
-            "Syrup Bitcoin",
-            "SyrupBTC",
-            configParams
-        ));
+        poolManager = IPoolManager(_deployPoolWithQueue({
+            poolDelegate_:              poolDelegate,
+            fundsAsset_:                compositeTokenProxy,
+            strategyFactories_:         strategyFactories,
+            strategyData_:    strategyDeploymentData_,
+            name_:                      "Syrup Bitcoin",
+            symbol_:                    "SyrupBTC",
+            liquidityCap_:              0,
+            delegateManagementFeeRate_: 0
+        }));
 
         priceOracleImplementation = deployFromFile("Contracts@25", "AssetControllerOracle");
         priceOracleProxy          = deployFromFile(

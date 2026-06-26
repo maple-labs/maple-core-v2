@@ -12,7 +12,6 @@ import {
     IOpenTermLoanManagerStructs,
     IPool,
     IPoolManager,
-    IWithdrawalManagerCyclical,
     IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
 
@@ -353,28 +352,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertUserRequests(address(poolManager), user, requestIds);
     }
 
-    function assertWithdrawalManagerState(
-        address pool,
-        address lp,
-        uint256 lockedShares,
-        uint256 previousExitCycleId,
-        uint256 previousCycleTotalShares,
-        uint256 currentExitCycleId,
-        uint256 currentCycleTotalShares,
-        uint256 withdrawalManagerTotalShares
-    )
-        internal view
-    {
-        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(IPool(pool).manager()).withdrawalManager());
-
-        assertEq(withdrawalManager.lockedShares(lp), lockedShares);
-        assertEq(withdrawalManager.exitCycleId(lp),  currentExitCycleId);
-
-        assertEq(withdrawalManager.totalCycleShares(previousExitCycleId), previousCycleTotalShares);
-        assertEq(withdrawalManager.totalCycleShares(currentExitCycleId),  currentCycleTotalShares);
-
-        assertEq(IPool(pool).balanceOf(address(withdrawalManager)), withdrawalManagerTotalShares);
-    }
 
     function assertProposal(address timelock, uint256 proposalId, IGovernorTimelock.Proposal memory proposal ) internal view {
         (

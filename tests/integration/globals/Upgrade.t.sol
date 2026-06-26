@@ -396,17 +396,17 @@ contract LoanManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts@7","WithdrawalManagerCyclical");
+    address newImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
 
     bytes upgradeCallData = new bytes(0);
 
     function setUp() public override {
-        _setupPoolWithCyclicalWM();
+        _setUpOpenPool();
 
         vm.startPrank(governor);
 
-        IMapleProxyFactory(cyclicalWMFactory).registerImplementation(2, newImplementation, address(0));
-        IMapleProxyFactory(cyclicalWMFactory).enableUpgradePath(1, 2, address(0));
+        IMapleProxyFactory(queueWMFactory).registerImplementation(2, newImplementation, address(0));
+        IMapleProxyFactory(queueWMFactory).enableUpgradePath(1, 2, address(0));
 
         vm.stopPrank();
     }
@@ -417,14 +417,14 @@ contract WithdrawalManagerUpgradeTests is TestBase {
         vm.startPrank(poolDelegate);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
-        globals.scheduleCall(address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Wait for delay duration.
         vm.warp(start + 1 weeks);
 
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
     }
 
     function test_upgradeWithdrawalManager_delayNotPassed() external {
@@ -432,16 +432,16 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks);
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
     }
 
     function test_upgradeWithdrawalManager_durationPassed() external {
@@ -449,104 +449,104 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Warp to right after duration end.
         vm.warp(start + 1 weeks + 2 days + 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         vm.warp(start + 1 weeks + 2 days);
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
     }
 
     function test_upgradeWithdrawalManager_timelockExtended() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
 
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        bool isValid = globals.isValidScheduledCall(poolDelegate, address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Should be valid before we change the timelock settings.
         assertTrue(isValid);
 
         vm.prank(governor);
-        globals.setTimelockWindow(address(cyclicalWM), "WM:UPGRADE", 2 weeks, 1 weeks);
+        globals.setTimelockWindow(address(queueWM), "WM:UPGRADE", 2 weeks, 1 weeks);
 
-        isValid = globals.isValidScheduledCall(poolDelegate, address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        isValid = globals.isValidScheduledCall(poolDelegate, address(queueWM), "WM:UPGRADE", scheduleArgs);
         assertTrue(!isValid);
 
         vm.startPrank(poolDelegate);
 
         // With timelock change, upgrade should now revert.
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 weeks - 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 weeks + 1 weeks + 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
         vm.warp(start + 2 weeks + 1 weeks);
 
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
     }
 
     function test_upgradeWithdrawalManager_timelockShortened() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
 
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        bool isValid = globals.isValidScheduledCall(poolDelegate, address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Should be valid before we change the timelock settings.
         assertTrue(isValid);
 
         vm.prank(governor);
-        globals.setTimelockWindow(address(cyclicalWM), "WM:UPGRADE", 2 days, 1 days);
+        globals.setTimelockWindow(address(queueWM), "WM:UPGRADE", 2 days, 1 days);
 
-        isValid = globals.isValidScheduledCall(poolDelegate, address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        isValid = globals.isValidScheduledCall(poolDelegate, address(queueWM), "WM:UPGRADE", scheduleArgs);
         assertTrue(!isValid);
 
         vm.startPrank(poolDelegate);
 
         // With timelock change, we should be past the duration.
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Warp to right before duration begin
         vm.warp(start + 2 days - 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Warp to past duration.
         vm.warp(start + 2 days + 1 days + 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Warp to right at duration end.
         vm.warp(start + 2 days + 1 days);
 
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
     }
 
     function test_upgradeWithdrawalManager_securityAdmin_noTimelockNeeded() external {
@@ -554,19 +554,19 @@ contract WithdrawalManagerUpgradeTests is TestBase {
 
         vm.startPrank(poolDelegate);
 
-        globals.scheduleCall(address(cyclicalWM), "WM:UPGRADE", scheduleArgs);
+        globals.scheduleCall(address(queueWM), "WM:UPGRADE", scheduleArgs);
 
         // Warp to right before clearing delay.
         vm.warp(start + 1 weeks - 1);
 
         vm.expectRevert("WM:U:INVALID_SCHED_CALL");
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
 
         // Call upgrade using governor instead, unaffected by withdrawal delegate's scheduled timelock.
         vm.stopPrank();
 
         vm.prank(securityAdmin);
-        cyclicalWM.upgrade(2, upgradeCallData);
+        queueWM.upgrade(2, upgradeCallData);
     }
 
 }

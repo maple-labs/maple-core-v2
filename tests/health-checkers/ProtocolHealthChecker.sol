@@ -77,6 +77,15 @@ contract ProtocolHealthChecker {
 
     // Struct to avoid stack too deep compiler error.
     struct Invariants {
+        // TODO: Fixed-term loans are deprecated; these are always `true` and only kept so this struct's layout
+        //       matches the currently-deployed (pre-deprecation) on-chain health checker. Remove them in the
+        //       next health checker release once a struct-aligned checker is deployed.
+        bool fixedTermLoanManagerInvariantA;
+        bool fixedTermLoanManagerInvariantB;
+        bool fixedTermLoanManagerInvariantF;
+        bool fixedTermLoanManagerInvariantI;
+        bool fixedTermLoanManagerInvariantJ;
+        bool fixedTermLoanManagerInvariantK;
         bool openTermLoanManagerInvariantE;
         bool openTermLoanManagerInvariantG;
         bool poolInvariantA;
@@ -516,6 +525,15 @@ contract ProtocolHealthChecker {
     }
 
     function _bootstrapInvariantsResults() internal pure returns (Invariants memory invariants) {
+        // TODO: Fixed-term loans are deprecated; kept always-true only to preserve the deployed checker's struct
+        //       layout. Remove in the next health checker release.
+        invariants.fixedTermLoanManagerInvariantA = true;
+        invariants.fixedTermLoanManagerInvariantB = true;
+        invariants.fixedTermLoanManagerInvariantF = true;
+        invariants.fixedTermLoanManagerInvariantI = true;
+        invariants.fixedTermLoanManagerInvariantJ = true;
+        invariants.fixedTermLoanManagerInvariantK = true;
+
         invariants.openTermLoanManagerInvariantE = true;
         invariants.openTermLoanManagerInvariantG = true;
 

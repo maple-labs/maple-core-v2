@@ -103,7 +103,7 @@ contract StrategyInvariants is BaseInvariants {
         vm.stopPrank();
 
         // Create a new pool, activate and open it.
-        _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
+        _createPoolWithMultipleStrategies(poolDelegate, address(fundsAsset), POOL_NAME, factories, deploymentData);
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));
@@ -130,7 +130,7 @@ contract StrategyInvariants is BaseInvariants {
             loanFactory_:       address(openTermLoanFactory),
             liquidatorFactory_: address(liquidatorFactory),
             poolManager_:       address(poolManager),
-            refinancer_:        address(openTermRefinancer),
+            refinancer_:        openTermRefinancer,
             maxBorrowers_:      NUM_BORROWERS,
             maxLoans_:          NUM_OT_LOANS
         });

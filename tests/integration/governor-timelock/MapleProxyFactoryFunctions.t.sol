@@ -16,7 +16,6 @@ contract MapleProxyFactoryFunctionsTests is GovernorTimelockTestBase {
 
         proxyFactories.push(aaveStrategyFactory);
         proxyFactories.push(basicStrategyFactory);
-        proxyFactories.push(cyclicalWMFactory);
         proxyFactories.push(openTermLoanFactory);
         proxyFactories.push(openTermLoanManagerFactory);
         proxyFactories.push(poolManagerFactory);

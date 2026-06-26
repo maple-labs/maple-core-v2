@@ -29,7 +29,7 @@ contract DeployTestBase is TestBase {
     uint256 partialFees    = partialYield * feeRate / 1e6;
 
     function setUp() public virtual override {
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         deadline = startingTime + fullDuration;
 
@@ -123,7 +123,7 @@ contract DeployFailureTests is DeployTestBase {
             abi.encodeWithSignature("previewDeploy(address,uint256)", address(depositAsset), partialDeposit),
             abi.encode(0)
         );
-        vm.expectRevert("PM:RF:INVALID_PRINCIPAL");
+        vm.expectRevert("PM:RF:ZERO_AMOUNT");
         bitcoinStrategy.deploy(address(depositAsset), partialDeposit);
     }
 
@@ -132,7 +132,7 @@ contract DeployFailureTests is DeployTestBase {
         globals.setValidInstanceOf("STRATEGY_FACTORY", address(bitcoinStrategyFactory), false);
 
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         bitcoinStrategy.deploy(address(depositAsset), partialDeposit);
     }
 

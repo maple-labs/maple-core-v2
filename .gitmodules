@@ -43,3 +43,9 @@
 [submodule "modules/controller"]
 	path = modules/controller
 	url = git@github.com:maple-labs/maple-controller-private.git
+[submodule "modules/trading-strategy"]
+	path = modules/trading-strategy
+	url = git@github.com:maple-labs/trading-strategy-private.git
+[submodule "modules/strategy-manager"]
+	path = modules/strategy-manager
+	url = git@github.com:maple-labs/strategy-manager-private.git

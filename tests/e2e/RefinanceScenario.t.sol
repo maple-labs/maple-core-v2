@@ -183,9 +183,9 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         vm.prank(borrower1);
         fundsAsset.approve(address(otLoan1), decreasePrincipalBy + interestPayment + lateInterestPayment + serviceFees);
 
-        proposeRefinance(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinance(address(otLoan1), openTermRefinancer, block.timestamp + 1, calls);
 
-        acceptRefinanceOT(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(otLoan1), openTermRefinancer, block.timestamp + 1, calls);
 
         // Calculate new issuance rate for otLoan1
         grossInterest1 = (principal1 - decreasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e6;
@@ -292,9 +292,9 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         vm.prank(borrower1);
         fundsAsset.approve(address(otLoan1), interestPayment + lateInterestPayment + serviceFees);
 
-        proposeRefinance(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinance(address(otLoan1), openTermRefinancer, block.timestamp + 1, calls);
 
-        acceptRefinanceOT(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(otLoan1), openTermRefinancer, block.timestamp + 1, calls);
 
         // Calculate new issuance rate for otLoan1
         grossInterest1 = (principal1 + increasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e6;
@@ -470,9 +470,9 @@ contract RefinanceScenariosTests is TestBaseWithAssertions {
         vm.prank(borrower1);
         fundsAsset.approve(address(otLoan1), interestPayment + lateInterestPayment + serviceFees);
 
-        proposeRefinance(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinance(address(otLoan1), openTermRefinancer, block.timestamp + 1, calls);
 
-        acceptRefinanceOT(address(otLoan1), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(otLoan1), openTermRefinancer, block.timestamp + 1, calls);
 
         // Calculate new issuance rate for otLoan1
         grossInterest1 = (principal1 + increasePrincipalBy) * interestRate1 * paymentInterval / 365 days / 1e6;

@@ -64,7 +64,7 @@ contract MaxDepositTests is TestBase {
     address lp2;
 
     function setUp() public override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -130,7 +130,7 @@ contract MaxMintTests is TestBase {
     address lp2;
 
     function setUp() public override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -234,61 +234,6 @@ contract MaxMintTests is TestBase {
 
 }
 
-contract MaxRedeemTests is TestBase {
-
-    address lp;
-
-    function setUp() public override {
-        _setupPoolWithCyclicalWM();
-
-        lp = makeAddr("lp");
-    }
-
-    function test_maxRedeem_noLockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxRedeem(lp), 0);
-    }
-
-    function test_maxRedeem_lockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks - 1);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxRedeem(lp), 0);
-    }
-
-    function test_maxRedeem_lockedShares_inExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        uint256 shares = pool.requestRedeem(1_000e6, lp);
-
-        assertEq(shares, 1_000e6);
-        assertEq(pool.maxRedeem(lp), 0);
-
-        vm.warp(start + 2 weeks);
-
-        assertTrue(cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxRedeem(lp), shares);
-    }
-
-}
-
 contract MaxRedeemWMQueueTests is TestBase {
 
     address lp1;
@@ -361,127 +306,6 @@ contract MaxRedeemWMQueueTests is TestBase {
         maxShares = pool.maxRedeem(lp2);
 
         assertEq(maxShares, 0);
-    }
-
-}
-
-contract MaxWithdrawTests is TestBase {
-
-    address lp;
-
-    function setUp() public override {
-        _setupPoolWithCyclicalWM();
-
-        lp = makeAddr("lp");
-    }
-
-    function test_maxWithdraw_noLockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-    function test_maxWithdraw_lockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks - 1);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-    function test_maxWithdraw_lockedShares_inExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        assertEq(pool.maxWithdraw(lp), 0);
-
-        vm.warp(start + 2 weeks);
-
-        assertTrue(cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-    function testDeepFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
-        assets_ = bound(assets_, 1, 1_000e6);
-
-        deposit(lp, assets_);
-
-        assertEq(pool.balanceOf(lp), assets_);
-
-        vm.prank(lp);
-        pool.requestRedeem(assets_, lp);
-
-        assertEq(pool.maxWithdraw(lp), 0);
-
-        vm.warp(start + 2 weeks);
-
-        assertTrue(cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-}
-
-contract PreviewRedeemTests is TestBase {
-
-    address lp;
-
-    function setUp() public override {
-        _setupPoolWithCyclicalWM();
-
-        lp = makeAddr("lp");
-    }
-
-    function test_previewRedeem_invalidShares() external {
-        deposit(lp, 1_000e6);
-
-        vm.startPrank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        assertEq(pool.previewRedeem(1), 0);
-    }
-
-    function test_previewRedeem_noLockedShares_notInExitWindow() external {
-        vm.prank(lp);
-        assertEq(pool.previewRedeem(0), 0);
-    }
-
-    function test_previewRedeem_lockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        vm.startPrank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks - 1);
-
-        assertEq(pool.previewRedeem(1_000e6), 0);
-    }
-
-    function test_previewRedeem_lockedShares_inExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        vm.startPrank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks);
-
-        assertEq(pool.previewRedeem(1_000e6), 1_000e6);
     }
 
 }

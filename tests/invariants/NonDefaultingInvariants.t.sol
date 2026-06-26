@@ -24,7 +24,7 @@ contract NonDefaultingInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function setUp() public override {
-        _setupPoolWithQueueWM();
+        _setUpOpenPool();
 
         for (uint256 i; i < NUM_LPS; i++) {
             address lp = makeAddr(string(abi.encode("lp", i)));
@@ -50,7 +50,7 @@ contract NonDefaultingInvariants is BaseInvariants {
             loanFactory_:       address(openTermLoanFactory),
             liquidatorFactory_: address(liquidatorFactory),
             poolManager_:       address(poolManager),
-            refinancer_:        address(openTermRefinancer),
+            refinancer_:        openTermRefinancer,
             maxBorrowers_:      NUM_BORROWERS,
             maxLoans_:          NUM_OT_LOANS
         });

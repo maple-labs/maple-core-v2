@@ -28,7 +28,7 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
     Vm.Wallet liquidityProviderWallet;
 
     function setUp() public virtual override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         syrupRouter = new SyrupRouter(address(pool));
 
@@ -968,7 +968,7 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
     Vm.Wallet ppaWallet;
 
     function setUp() public virtual override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         syrupRouter = new SyrupRouter(address(pool));
 

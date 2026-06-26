@@ -33,7 +33,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
-        _setupPoolWithCyclicalWM();
+        super.setUp();
 
         vm.startPrank(governor);
         globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);
@@ -107,7 +107,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         vm.warp(start + paymentInterval + gracePeriod + 1 seconds);
 
         vm.prank(poolDelegate);
-        poolManager.triggerDefault(address(loan), address(liquidatorFactory));
+        poolManager.triggerDefault(address(loan));
 
         vm.prank(poolDelegate);
         vm.expectRevert("LM:F:LOAN_NOT_ACTIVE");
@@ -115,15 +115,19 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     }
 
     function test_fund_invalidLoanManagerFactory() external {
+        deposit(address(pool), lp, principal);
+
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, false);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         loanManager.fund(address(loan));
     }
 
     function test_fund_notLoanManager() external {
+        deposit(address(pool), lp, principal);
+
         vm.prank(address(poolManager));
         IOpenTermLoanManager fakeLoanManager = IOpenTermLoanManager(
             IProxyFactoryLike(openTermLoanManagerFactory).createInstance(
@@ -133,7 +137,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         );
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:RF:NOT_STRATEGY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         fakeLoanManager.fund(address(loan));
     }
 
@@ -141,23 +145,10 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         deposit(address(pool), lp, principal);
         requestRedeem(address(pool), lp, pool.balanceOf(lp));
 
-        vm.warp(start + 2 weeks);
-
-        redeem(address(pool), lp, cyclicalWM.lockedShares(lp));
+        processRedemptionByOwners(address(pool), array(lp));
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:ZERO_SUPPLY");
-        loanManager.fund(address(loan));
-    }
-
-    function test_fund_insufficientCover() external {
-        deposit(address(pool), lp, principal);
-
-        vm.prank(governor);
-        globals.setMinCoverAmount(address(poolManager), cover);
-
-        vm.prank(poolDelegate);
-        vm.expectRevert("PM:RF:INSUFFICIENT_COVER");
         loanManager.fund(address(loan));
     }
 
@@ -166,18 +157,6 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:TRANSFER_FAIL");
-        loanManager.fund(address(loan));
-    }
-
-    function test_fund_lockedLiquidity() external {
-        deposit(address(pool), lp, principal);
-
-        requestRedeem(address(pool), lp, pool.balanceOf(lp));
-
-        vm.warp(start + 2 weeks);
-
-        vm.prank(poolDelegate);
-        vm.expectRevert("PM:RF:LOCKED_LIQUIDITY");
         loanManager.fund(address(loan));
     }
 

@@ -10,7 +10,6 @@ import {
     IOpenTermLoanManager,
     IPool,
     IPoolDeployer,
-    IPoolDelegateCover,
     IPoolManager,
     IPoolPermissionManager,
     ISyrupRouter,
@@ -125,7 +124,6 @@ contract ValidateUSDGPoolDeployment is SyrupUSDGValidationScriptBase {
 
         assertEq(IPoolManager(poolManager).pool(),              syrupUSDGPool,                   "Invalid PM pool!");
         assertEq(IPoolManager(poolManager).withdrawalManager(), syrupUSDGWithdrawalManagerQueue, "Invalid PM WM!");
-        assertEq(IPoolManager(poolManager).poolDelegateCover(), syrupUSDGPoolDelegateCover,      "Invalid PM PDC!");
         assertEq(IPoolManager(poolManager).strategyList(0),     syrupUSDGOpenTermLoanManager,    "Invalid PM strategy!");
 
         assertEq(IPoolManager(poolManager).configured(), true,  "PM not configured!");
@@ -150,10 +148,6 @@ contract ValidateUSDGPoolDeployment is SyrupUSDGValidationScriptBase {
             mapleWithdrawalManagerV200Implementation,
             "Invalid WM implementation!"
         );
-
-        assertEq(IPoolDelegateCover(syrupUSDGPoolDelegateCover).asset(),       USDG,        "Invalid PDC asset!");
-        assertEq(IPoolDelegateCover(syrupUSDGPoolDelegateCover).poolManager(), poolManager, "Invalid PDC PM!");
-        assertEq(IERC20Like(USDG).balanceOf(syrupUSDGPoolDelegateCover),       0,           "Invalid PDC balance!");
 
         address otlm = syrupUSDGOpenTermLoanManager;
 

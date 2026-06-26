@@ -115,7 +115,8 @@ contract Scenario is TestBase {
     function handleCreatePool(bytes memory rawParameters_) internal returns (bool failure_) {
         CreatePoolParameters memory parameters = abi.decode(rawParameters_, (CreatePoolParameters));
 
-        _createAndConfigurePool(block.timestamp, 1, 1);
+        _createPoolWithOTLM(poolDelegate);
+        _configurePool();
         openPool(address(poolManager));
 
         setupFees({
@@ -330,7 +331,7 @@ contract Scenario is TestBase {
     function handleDefaultLoan(bytes memory rawParameters_) internal returns (bool failure_) {
         DefaultLoanParameters memory parameters = abi.decode(rawParameters_, (DefaultLoanParameters));
 
-        triggerDefault(loanNamed[parameters.name], liquidatorFactory);
+        triggerDefault(loanNamed[parameters.name]);
     }
 
     function handleNone(bytes memory rawParameters_) internal returns (bool failure_) {}

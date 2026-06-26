@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import {
     IPool,
     IPoolManager,
-    IWithdrawalManagerCyclical,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -41,9 +40,9 @@ contract GlobalPermissionTests is TestBase {
         vm.prank(governor);
         globals.setValidPoolDelegate(poolDelegate2, true);
 
-        // Create two pools.
-        ( pool1, poolManager1, withdrawalManager1 ) = _createPoolWithCyclical(start, 1 weeks, 2 days);
-        ( pool2, poolManager2, withdrawalManager2 ) = _createPoolWithQueue(poolDelegate2, "Maple Pool 2");
+        // Create two pools, one per delegate.
+        ( pool1, poolManager1, withdrawalManager1 ) = _createPoolWithOTLM(poolDelegate);
+        ( pool2, poolManager2, withdrawalManager2 ) = _createPoolWithOTLM(poolDelegate2);
 
         // Active both pools.
         activatePoolManager(poolManager1);
@@ -88,25 +87,28 @@ contract GlobalPermissionTests is TestBase {
         assertEq(fundsAsset.balanceOf(lender),     0);
         assertEq(fundsAsset.balanceOf(integrator), 0);
 
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(lender),     250_000e6);
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(integrator), 500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(lender),     250_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(integrator), 500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).totalShares(),                  750_000e6);
 
         vm.warp(start + 2 weeks);
         requestRedeem(pool2, lender,     500_000e6);
         requestRedeem(pool2, integrator, 1_500_000e6);
 
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(lender),     500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(integrator), 1_500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).totalShares(),                  2_000_000e6);
 
         vm.warp(start + 3 weeks);
-        redeem(pool1, lender,     250_000e6);
-        redeem(pool1, integrator, 500_000e6);
+        processRedemptionByOwners(pool1, array(lender));
+        processRedemptionByOwners(pool1, array(integrator));
 
         assertEq(fundsAsset.balanceOf(lender),     250_000e6);
         assertEq(fundsAsset.balanceOf(integrator), 500_000e6);
 
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(lender),     0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).totalShares(),                  0);
 
         vm.warp(start + 4 weeks);
         processRedemptionByOwners(pool2, array(lender));
@@ -114,22 +116,25 @@ contract GlobalPermissionTests is TestBase {
         assertEq(fundsAsset.balanceOf(lender),     250_000e6 + 500_000e6);
         assertEq(fundsAsset.balanceOf(integrator), 500_000e6 + 0);
 
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(lender),     0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(integrator), 1_500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).totalShares(),                  1_500_000e6);
 
         vm.warp(start + 5 weeks);
         processRedemptionByOwners(pool2, array(integrator));
 
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(integrator), 1_500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(lender),     0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).totalShares(),                  1_500_000e6);
 
         redeem(pool2, integrator, 1_250_000e6);
 
         assertEq(fundsAsset.balanceOf(lender),     250_000e6 + 500_000e6);
         assertEq(fundsAsset.balanceOf(integrator), 500_000e6 + 1_250_000e6);
 
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(integrator), 250_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(lender),     0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).totalShares(),                  250_000e6);
     }
 
 }

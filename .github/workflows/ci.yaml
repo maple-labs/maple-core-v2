@@ -24,6 +24,8 @@ env:
   SSH_KEY_STRATEGIES: ${{secrets.SSH_KEY_STRATEGIES}}
   SSH_KEY_SYRUP_UTILS: ${{secrets.SSH_KEY_SYRUP_UTILS}}
   SSH_KEY_MAPLE_CONTROLLER: ${{secrets.SSH_KEY_MAPLE_CONTROLLER}}
+  SSH_KEY_TRADING_STRATEGY: ${{secrets.SSH_KEY_TRADING_STRATEGY}}
+  SSH_KEY_STRATEGY_MANAGER: ${{secrets.SSH_KEY_STRATEGY_MANAGER}}
 
   BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
   ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
@@ -91,8 +93,6 @@ jobs:
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
-        with:
-          version: "nightly-0dceb536da7129c8e58b2c30c7059e247467838f"
       - name: Install Node
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6
       - name: Update submodules

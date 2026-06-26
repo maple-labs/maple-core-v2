@@ -291,33 +291,24 @@ contract SkyStrategyFundStrategyTests is SkyStrategyTestBase {
 
     function testFork_fundStrategy_zeroPrincipal() external {
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_PRINCIPAL");
+        vm.expectRevert("PM:RF:ZERO_AMOUNT");
         skyStrategy.fundStrategy(0);
     }
 
     function testFork_fundStrategy_invalidStrategyFactory() external {
+        deposit(address(this), poolLiquidity);
+
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_FACTORY", skyStrategyFactory, false);
 
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         skyStrategy.fundStrategy(usdcIn);
     }
 
     function testFork_fundStrategy_zeroSupply() external {
         vm.prank(strategyManager);
         vm.expectRevert("PM:RF:ZERO_SUPPLY");
-        skyStrategy.fundStrategy(usdcIn);
-    }
-
-    function testFork_fundStrategy_insufficientCover() external {
-        vm.prank(governor);
-        globals.setMinCoverAmount(address(poolManager), 1);
-
-        deposit(address(this), poolLiquidity);
-
-        vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INSUFFICIENT_COVER");
         skyStrategy.fundStrategy(usdcIn);
     }
 

@@ -40,7 +40,7 @@ contract StrategyTestBase is TestBase {
         globals.setValidInstanceOf("PSM",            address(USDS_LITE_PSM), true);
         vm.stopPrank();
 
-        _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
+        _createPoolWithMultipleStrategies(poolDelegate, address(fundsAsset), POOL_NAME, factories, deploymentData);
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
         allowLender(address(poolManager), address(queueWM));

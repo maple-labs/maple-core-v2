@@ -15,7 +15,7 @@ contract PermissionInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function setUp() public override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         for (uint256 i; i < NUM_LPS; i++) {
             lps.push(makeAddr(string(abi.encode("lp", i))));

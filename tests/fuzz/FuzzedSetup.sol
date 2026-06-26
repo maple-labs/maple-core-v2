@@ -13,7 +13,6 @@ import {
     IPool,
     IPoolManager,
     IStrategy,
-    IWithdrawalManagerCyclical,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -171,29 +170,7 @@ contract FuzzedUtil is ProtocolActions {
     }
 
     function redeemAllLps() internal {
-        if (isWMQueue(_poolManager)) {
-            redeemFromQueue();
-            return;
-        }
-
-        for (uint256 i; i < lps.length; ++i) {
-            redeemFromCyclical(lps[i], escrowedShares[i]);
-        }
-    }
-
-    function redeemFromCyclical(address lp, uint256 shares) internal {
-        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(_poolManager).withdrawalManager());
-
-        uint256 exitCycleId = withdrawalManager.exitCycleId(lp);
-
-        uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(exitCycleId);
-
-        if (withdrawalWindowStart > block.timestamp) {
-            vm.warp(withdrawalWindowStart);
-        }
-
-        // Redeem all LP tokens.
-        redeem(address(_pool), lp, shares);
+        redeemFromQueue();
     }
 
     function redeemFromQueue() internal {
@@ -297,7 +274,7 @@ contract FuzzedUtil is ProtocolActions {
         }
 
         if (action == LoanAction.TriggerDefault) {
-            triggerDefault(loan, address(_liquidatorFactory));
+            triggerDefault(loan);
             console.log("Default triggered:", loan);
             return;
         }
@@ -506,6 +483,8 @@ contract FuzzedUtil is ProtocolActions {
     }
 
     function getSomeLoan(function (address) returns (bool) filter_) internal returns (address loan) {
+        if (loans.length == 0) return address(0);
+
         // Choose the starting loan.
         uint256 index = getSomeValue(0, loans.length - 1);
 
@@ -595,7 +574,7 @@ contract FuzzedUtil is ProtocolActions {
 contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
 
     function setUp() public virtual override {
-        _setupPoolWithQueueWM();
+        _setUpOpenPool();
 
         _initFuzzedSetup();
     }

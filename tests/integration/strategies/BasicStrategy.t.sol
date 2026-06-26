@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IERC4626Like, IMapleBasicStrategy, IMockERC20 } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IBasicStrategy,
+    IERC4626Like,
+    IMockERC20
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { console } from "../../../contracts/Runner.sol";
 
@@ -16,8 +20,8 @@ contract BasicStrategyTestsBase is StrategyTestBase {
     uint256 secondAmountToFund = 200e18;
     uint256 strategyFeeRate    = 0.01e6;
 
-    IMapleBasicStrategy basicStrategy;
-    IERC4626Like        strategyVault;
+    IBasicStrategy basicStrategy;
+    IERC4626Like   strategyVault;
 
     function setUp() public virtual override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
@@ -45,14 +49,14 @@ contract BasicStrategyTestsBase is StrategyTestBase {
         globals.setValidInstanceOf("STRATEGY_VAULT", address(SAVINGS_USDS),  true);
         vm.stopPrank();
 
-        _createPoolWithQueueAndStrategies(address(fundsAsset), factories, deploymentData);
+        _createPoolWithMultipleStrategies(poolDelegate, address(fundsAsset), POOL_NAME, factories, deploymentData);
 
         _configurePool();
 
         openPool(address(poolManager));
         deposit(lp, poolLiquidity);
 
-        basicStrategy = IMapleBasicStrategy(_getStrategy(address(basicStrategyFactory)));
+        basicStrategy = IBasicStrategy(_getStrategy(address(basicStrategyFactory)));
 
         vm.prank(governor);
         basicStrategy.setStrategyFeeRate(strategyFeeRate);
@@ -106,7 +110,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
 
     function testFork_basicStrategy_fund_failIfZeroAmount() external {
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_PRINCIPAL");
+        vm.expectRevert("PM:RF:ZERO_AMOUNT");
         basicStrategy.fundStrategy(0, 0);
     }
 
@@ -115,7 +119,7 @@ contract BasicStrategyFundTests is BasicStrategyTestsBase {
         globals.setValidInstanceOf("STRATEGY_FACTORY", basicStrategyFactory, false);
 
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         basicStrategy.fundStrategy(amountToFund, 0);
     }
 

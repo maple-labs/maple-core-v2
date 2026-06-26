@@ -74,7 +74,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         /*** Step 1: PD creates pool ***/
         /*******************************/
 
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithOTLM(poolDelegate);
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
@@ -91,36 +91,21 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        /*****************************************************/
-        /*** Step 3: Governor sets max liquidation percent ***/
-        /*****************************************************/
-
-        vm.prank(governor);
-        globals.setMaxCoverLiquidationPercent(address(poolManager), 50_0000);
-
-        /*****************************/
-        /*** Step 4: PD adds cover ***/
-        /*****************************/
-
-        fundsAsset.mint(address(poolDelegate), 1_000_000e6);
-
-        depositCover(address(poolManager), 1_000_000e6);
-
         /*******************************************/
-        /*** Step 5: Governor activates the Pool ***/
+        /*** Step 3: Governor activates the Pool ***/
         /*******************************************/
 
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
 
         /******************************************/
-        /*** Step 6: PD sets the Pool to public ***/
+        /*** Step 4: PD sets the Pool to public ***/
         /******************************************/
 
         openPool(address(poolManager));
 
         /***********************************************/
-        /*** Step 7: 2 LPs deposit 5m each at ER = 1 ***/
+        /*** Step 5: 2 LPs deposit 5m each at ER = 1 ***/
         /***********************************************/
 
         vm.warp(start + 1 days);
@@ -144,7 +129,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /*******************************************************/
-        /*** Step 8: Fund Loan 1 on Day 2 for 2.5m at 8% APR ***/
+        /*** Step 6: Fund Loan 1 on Day 2 for 2.5m at 8% APR ***/
         /*******************************************************/
 
         vm.warp(start + 2 days);
@@ -258,7 +243,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /******************************************************/
-        /*** Step 9: Fund Loan 2 on Day 3 for 1m at 10% APR ***/
+        /*** Step 7: Fund Loan 2 on Day 3 for 1m at 10% APR ***/
         /******************************************************/
 
         vm.warp(start + 3 days);
@@ -384,7 +369,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /******************************************/
-        /*** Step 10: LP3 deposits 5m at ER > 1 ***/
+        /*** Step 8: LP3 deposits 5m at ER > 1 ***/
         /******************************************/
 
         vm.warp(start + 5 days);
@@ -413,31 +398,24 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /************************************************/
-        /*** Step 11: LP1 requests to redeem on Day 6 ***/
+        /*** Step 9: LP1 requests to redeem on Day 6 ***/
         /************************************************/
 
         vm.warp(start + 6 days);
 
-        // LP1 requests to withdraw full liquidity before cycle 1 finishes to hit cycle 3
+        // LP1 requests to withdraw full liquidity.
         uint256 lp1Shares = pool.balanceOf(lp1);
+
+        vm.prank(poolDelegate);
+        queueWM.setManualWithdrawal(lp1, true);
 
         requestRedeem(address(pool), lp1, lp1Shares);
 
-        assertEq(pool.balanceOf(lp1), 0);
-
-        assertWithdrawalManagerState({
-            pool:                         address(pool),
-            lp:                           lp1,
-            lockedShares:                 lp1Shares,
-            previousExitCycleId:          0,
-            previousCycleTotalShares:     0,
-            currentExitCycleId:           3,
-            currentCycleTotalShares:      lp1Shares,
-            withdrawalManagerTotalShares: lp1Shares
-        });
+        assertEq(pool.balanceOf(lp1),              0);
+        assertEq(pool.balanceOf(address(queueWM)), lp1Shares);
 
         /****************************************************************************/
-        /*** Step 12: LP1 redeems on Day 14, one day into their withdrawal window ***/
+        /*** Step 10: LP1 redeems on Day 14, one day into their withdrawal window ***/
         /****************************************************************************/
 
         // Warp to one day into WW to let LP1 redeem
@@ -459,6 +437,8 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             availableLiquidity: expectedCash
         });
 
+        processRedemptionByOwners(address(pool), array(lp1));
+
         uint256 lp1Assets = redeem(address(pool), lp1, lp1Shares);
 
         assertEq(lp1Assets, (lp1Shares * expectedTotalAssets) / expectedTotalSupply);
@@ -467,21 +447,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets -= lp1Assets;
         expectedTotalSupply -= lp1Shares;
 
-        assertEq(pool.balanceOf(lp1),                 0);
-        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
-        assertEq(fundsAsset.balanceOf(lp1),           lp1Assets);
-
-        // Full withdrawal
-        assertWithdrawalManagerState({
-            pool:                         address(pool),
-            lp:                           lp1,
-            lockedShares:                 0,
-            previousExitCycleId:          0,
-            previousCycleTotalShares:     0,
-            currentExitCycleId:           0,
-            currentCycleTotalShares:      0,
-            withdrawalManagerTotalShares: 0
-        });
+        assertEq(pool.balanceOf(lp1),              0);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
+        assertEq(fundsAsset.balanceOf(lp1),        lp1Assets);
 
         assertPoolState({
             pool:               address(pool),
@@ -492,7 +460,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /*******************************************************/
-        /*** Step 13: Fund Loan 3 on Day 21 for 3m at 7% APR ***/
+        /*** Step 11: Fund Loan 3 on Day 21 for 3m at 7% APR ***/
         /*******************************************************/
 
         vm.warp(start + 21 days);
@@ -619,7 +587,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /**************************************/
-        /*** Step 13: Call Loan 2 on Day 25 ***/
+        /*** Step 12: Call Loan 2 on Day 25 ***/
         /**************************************/
 
         vm.warp(start + 25 days);
@@ -724,7 +692,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /*********************************************************/
-        /*** Step 14: Make Closing Payment on Loan 2 on Day 26 ***/
+        /*** Step 13: Make Closing Payment on Loan 2 on Day 26 ***/
         /*********************************************************/
 
         vm.warp(start + 26 days);
@@ -849,7 +817,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /**************************************/
-        /*** Step 15: Call Loan 3 on Day 27 ***/
+        /*** Step 14: Call Loan 3 on Day 27 ***/
         /**************************************/
 
         vm.warp(start + 27 days);
@@ -954,7 +922,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /************************************************/
-        /*** Step 16: Remove Call on Loan 3 on Day 31 ***/
+        /*** Step 15: Remove Call on Loan 3 on Day 31 ***/
         /************************************************/
 
         vm.warp(start + 31 days);

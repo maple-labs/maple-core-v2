@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IProxyFactoryLike, IBitcoinStrategy, IPoolManager, Permit } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IBitcoinStrategy,
+    IPool,
+    IPoolManager,
+    IProxyFactoryLike,
+    IWithdrawalManagerQueue,
+    Permit
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 interface IMockPSMLike {
     function __setGem(address gem_) external;
@@ -22,6 +29,8 @@ contract PauseTests is TestBaseWithAssertions {
     address skyStrategy;
     address basicStrategy;
     address coreStrategy;
+    address tradingStrategy;
+    address tradingStrategyManager;
 
     /**************************************************************************************************************************************/
     /*** Functions Mappings (Need to be continuously updated with new functions)                                                        ***/
@@ -124,22 +133,21 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("acceptPoolDelegate()"),
         abi.encodeWithSignature("setPendingPoolDelegate(address)", address(0)),
         abi.encodeWithSignature("setActive(bool)", false),
-        abi.encodeWithSignature("addStrategy(address,bytes)", address(0), new bytes(0)),
+        abi.encodeWithSignature("addStrategy(address,bytes32,bytes)", address(0), bytes32(0), new bytes(0)),
+        abi.encodeWithSignature("addStrategyManager(address)", address(0)),
+        abi.encodeWithSignature("removeStrategyManager(address)", address(0)),
         abi.encodeWithSignature("setDelegateManagementFeeRate(uint256)", 0),
-        abi.encodeWithSignature("setIsStrategy(address,bool)", address(0), false),
+        abi.encodeWithSignature("setStrategyCap(address,uint256)", address(0), 0),
         abi.encodeWithSignature("setLiquidityCap(uint256)", 0),
         abi.encodeWithSignature("setWithdrawalManager(address)", address(0)),
         abi.encodeWithSignature("setPoolPermissionManager(address)", address(0)),
         abi.encodeWithSignature("requestFunds(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("finishCollateralLiquidation(address)", address(0)),
-        abi.encodeWithSignature("triggerDefault(address,address)", address(0), address(0)),
+        abi.encodeWithSignature("triggerDefault(address)", address(0)),
         abi.encodeWithSignature("processRedeem(uint256,address,address)", 0, address(0), address(0)),
         abi.encodeWithSignature("processWithdraw(uint256,address,address)", 0, address(0), address(0)),
         abi.encodeWithSignature("removeShares(uint256,address)", 0, address(0)),
         abi.encodeWithSignature("requestRedeem(uint256,address,address)", 0, address(0), address(0)),
-        abi.encodeWithSignature("requestWithdraw(uint256,uint256,address,address)", 0, 0, address(0), address(0)),
-        abi.encodeWithSignature("depositCover(uint256)", 0),
-        abi.encodeWithSignature("withdrawCover(uint256,address)", 0, address(0))
+        abi.encodeWithSignature("requestWithdraw(uint256,uint256,address,address)", 0, 0, address(0), address(0))
     ];
 
     bytes[] proxyFactoryFunctions = [
@@ -237,6 +245,43 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("reactivateStrategy()")
     ];
 
+    bytes[] strategyManagerFunctions = [
+        abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
+        abi.encodeWithSignature("setImplementation(address)", address(0)),
+        abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
+        abi.encodeWithSignature("completeConfiguration()"),
+        abi.encodeWithSignature("setUnderlyingStrategy(address)", address(0)),
+        abi.encodeWithSignature("setActive(bool)", false),
+        abi.encodeWithSignature("acceptStrategyDelegate()"),
+        abi.encodeWithSignature("setPendingStrategyDelegate(address)", address(0)),
+        abi.encodeWithSignature("cancelRedemption(address,uint256)", address(0), 0),
+        abi.encodeWithSignature("fundStrategyManager(address,uint256,bytes)", address(0), 0, new bytes(0)),
+        abi.encodeWithSignature("processRedemption(address,uint256,bytes)", address(0), 0, new bytes(0)),
+        abi.encodeWithSignature("requestRedeem(address,uint256)", address(0), 0),
+        abi.encodeWithSignature("setPoolManagerCap(address,uint256)", address(0), 0),
+        abi.encodeWithSignature("setStrategyLiquidityCap(uint256)", 0)
+    ];
+
+    bytes[] tradingStrategyFunctions = [
+        abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
+        abi.encodeWithSignature("setImplementation(address)", address(0)),
+        abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
+        abi.encodeWithSignature("deployAssets(uint256,bytes)", 0, new bytes(0)),
+        abi.encodeWithSignature("returnAssets(uint256,address,bytes)", 0, address(0), new bytes(0)),
+        abi.encodeWithSignature("realizeYield(uint256,uint32,bytes)", 0, 0, new bytes(0)),
+        abi.encodeWithSignature("cancelYield(uint256,address)", 0, address(0)),
+        abi.encodeWithSignature("impair(uint256)", 0),
+        abi.encodeWithSignature("removeImpairment(uint256)", 0),
+        abi.encodeWithSignature("recognizeLoss(uint256,address)", 0, address(0)),
+        abi.encodeWithSignature("setDeploymentCaps(address[],uint256[])", new address[](0), new uint256[](0)),
+        abi.encodeWithSignature("setMetadata(string)", ""),
+        abi.encodeWithSignature("setPermissions(address[],bool[],bool[],bool[])", new address[](0), new bool[](0), new bool[](0), new bool[](0)),
+        abi.encodeWithSignature("setStrategyDelegateFeeRate(uint32)", 0),
+        abi.encodeWithSignature("setStrategyProtocolFeeRate(uint32)", 0),
+        abi.encodeWithSignature("fundUnderlyingStrategy(uint256,bytes)", 0, new bytes(0)),
+        abi.encodeWithSignature("withdrawFromUnderlyingStrategy(address,uint256,bytes)", address(0), 0, new bytes(0))
+    ];
+
     address[] contracts;
 
     mapping(address => bytes[]) functions;
@@ -263,7 +308,7 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(address(pausePoolDelegate), true);
 
-        _createPoolWithQueue(pausePoolDelegate, "pool with queue");
+        ( address pwqPool, address pwqPoolManager, address pwqWithdrawalManager ) = _createPoolWithOTLM(pausePoolDelegate);
 
         address[] memory strategiesFactories_ = new address[](1);
         bytes[]   memory strategiesData_      = new bytes[](1);
@@ -275,12 +320,18 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(btcPoolDelegate, true);
 
-        ( address btcPool, address btcPoolManager, ) = _createAdditionalPoolWithQueueAndStrategies(
-            address(compositeAsset),
+        ( address btcPool, address btcPoolManager, ) = _createPoolWithMultipleStrategies(
             btcPoolDelegate,
+            address(compositeAsset),
+            "Syrup BTC Pool",
             strategiesFactories_,
             strategiesData_
         );
+
+        // Restore the "pool with queue" as the active pool (the btc pool above is referenced via its locals only).
+        poolManager = IPoolManager(pwqPoolManager);
+        pool        = IPool(pwqPool);
+        queueWM     = IWithdrawalManagerQueue(pwqWithdrawalManager);
 
         address bitcoinStrategy_ = IPoolManager(btcPoolManager).strategyList(0);
 
@@ -292,11 +343,19 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", btcPool, true);
 
-        vm.prank(btcPoolDelegate);
-        basicStrategy = IPoolManager(btcPoolManager).addStrategy(basicStrategyFactory, abi.encode(btcPool));
+        vm.prank(governor);
+        basicStrategy = IPoolManager(btcPoolManager).addStrategy(
+            basicStrategyFactory,
+            keccak256(abi.encode(basicStrategyFactory, abi.encode(btcPool))),
+            abi.encode(btcPool)
+        );
 
-        vm.prank(btcPoolDelegate);
-        coreStrategy = IPoolManager(btcPoolManager).addStrategy(coreStrategyFactory, abi.encode(btcPool));
+        vm.prank(governor);
+        coreStrategy = IPoolManager(btcPoolManager).addStrategy(
+            coreStrategyFactory,
+            keccak256(abi.encode(coreStrategyFactory, abi.encode(btcPool))),
+            abi.encode(btcPool)
+        );
 
         address mockAaveToken = deployFromFile(
             "Contracts@25",
@@ -307,8 +366,12 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", mockAaveToken, true);
 
-        vm.prank(btcPoolDelegate);
-        aaveStrategy = IPoolManager(btcPoolManager).addStrategy(aaveStrategyFactory, abi.encode(mockAaveToken));
+        vm.prank(governor);
+        aaveStrategy = IPoolManager(btcPoolManager).addStrategy(
+            aaveStrategyFactory,
+            keccak256(abi.encode(aaveStrategyFactory, abi.encode(mockAaveToken))),
+            abi.encode(mockAaveToken)
+        );
 
         IMockPSMLike mockPSM = IMockPSMLike(deployFromFile("Contracts@25", "MockPSM"));
 
@@ -322,8 +385,15 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidInstanceOf("PSM", address(mockPSM), true);
 
-        vm.prank(btcPoolDelegate);
-        skyStrategy = IPoolManager(btcPoolManager).addStrategy(skyStrategyFactory, abi.encode(btcPool, address(mockPSM)));
+        vm.prank(governor);
+        skyStrategy = IPoolManager(btcPoolManager).addStrategy(
+            skyStrategyFactory,
+            keccak256(abi.encode(skyStrategyFactory, abi.encode(btcPool, address(mockPSM)))),
+            abi.encode(btcPool, address(mockPSM))
+        );
+
+        ( tradingStrategyManager, tradingStrategy ) = _deployTradingStrategy();
+        addStrategyManagerToPool(address(poolManager), tradingStrategyManager);
 
         // Set up all mappings
         functions[poolManagerFactory]             = proxyFactoryFunctions;
@@ -349,6 +419,8 @@ contract PauseTests is TestBaseWithAssertions {
         functions[address(skyStrategy)]           = skyStrategyFunctions;
         functions[address(poolPermissionManager)] = poolPermissionManagerFunctions;
         functions[address(bitcoinStrategy)]       = bitcoinStrategyFunctions;
+        functions[tradingStrategyManager]         = strategyManagerFunctions;
+        functions[tradingStrategy]                = tradingStrategyFunctions;
 
         messages[poolManagerFactory]             = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanFactory]            = "MPF:PROTOCOL_PAUSED";
@@ -373,12 +445,14 @@ contract PauseTests is TestBaseWithAssertions {
         messages[address(coreStrategy)]          = "MS:PAUSED";
         messages[address(aaveStrategy)]          = "MS:PAUSED";
         messages[address(skyStrategy)]           = "MS:PAUSED";
+        messages[tradingStrategyManager]         = "MSM:PAUSED";
+        messages[tradingStrategy]                = "MTS:PAUSED";
 
         // Caller overrides for factories where the implementation expects a specific contract context.
-        caller[poolManagerFactory]          = address(deployer);
+        caller[poolManagerFactory]          = address(poolDeployer);
         caller[openTermLoanManagerFactory]  = address(poolManager);
         caller[openTermLoanFactory]         = address(borrower);
-        caller[queueWMFactory]              = address(deployer);
+        caller[queueWMFactory]              = address(poolDeployer);
         caller[aaveStrategyFactory]         = btcPoolManager;
         caller[basicStrategyFactory]        = btcPoolManager;
         caller[coreStrategyFactory]         = btcPoolManager;
@@ -434,7 +508,9 @@ contract PauseTests is TestBaseWithAssertions {
             address(basicStrategy),
             address(coreStrategy),
             address(aaveStrategy),
-            address(skyStrategy)
+            address(skyStrategy),
+            tradingStrategyManager,
+            tradingStrategy
         ];
 
         vm.prank(governor);
@@ -466,7 +542,9 @@ contract PauseTests is TestBaseWithAssertions {
             address(basicStrategy),
             address(coreStrategy),
             address(aaveStrategy),
-            address(skyStrategy)
+            address(skyStrategy),
+            tradingStrategyManager,
+            tradingStrategy
         ];
 
         for (uint256 i = 0; i < contracts.length; i++) {
@@ -494,7 +572,9 @@ contract PauseTests is TestBaseWithAssertions {
             address(basicStrategy),
             address(coreStrategy),
             address(aaveStrategy),
-            address(skyStrategy)
+            address(skyStrategy),
+            tradingStrategyManager,
+            tradingStrategy
         ];
 
         // Set global pause

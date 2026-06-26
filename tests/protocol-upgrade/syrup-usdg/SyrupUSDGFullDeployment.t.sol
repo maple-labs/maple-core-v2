@@ -8,7 +8,6 @@ import {
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
-    IPoolDelegateCover,
     IPoolManager,
     IPoolPermissionManager,
     ISyrupRouter,
@@ -16,11 +15,9 @@ import {
     IWithdrawalManagerQueueV200Like
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
-
 import { SyrupUSDGDeploymentBase } from "./SyrupUSDGDeploymentBase.t.sol";
 
-contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase, ProtocolActions {
+contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
 
     function testFork_usdgDeployment_staticConfiguration() public view {
         assertEq(block.timestamp, startingTime + 3 days);
@@ -42,7 +39,6 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase, ProtocolAction
         assertEq(IPoolManager(usdgPoolManager).asset(),                     USDG);
         assertEq(IPoolManager(usdgPoolManager).pool(),                      usdgPool);
         assertEq(IPoolManager(usdgPoolManager).withdrawalManager(),         usdgWithdrawalManager);
-        assertEq(IPoolManager(usdgPoolManager).poolDelegateCover(),         usdgPoolDelegateCover);
         assertEq(IPoolManager(usdgPoolManager).poolPermissionManager(),     poolPermissionManager);
         assertEq(IPoolManager(usdgPoolManager).poolDelegate(),              poolDelegate);
         assertEq(IPoolManager(usdgPoolManager).governor(),                  timelock);
@@ -75,10 +71,6 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase, ProtocolAction
         assertEq(IOpenTermLoanManager(usdgOpenTermLoanManager).implementation(),        OpenTermLoanManagerV100Implementation);
         assertEq(IOpenTermLoanManager(usdgOpenTermLoanManager).assetsUnderManagement(), 0);
         assertEq(IOpenTermLoanManager(usdgOpenTermLoanManager).unrealizedLosses(),      0);
-
-        assertEq(IPoolDelegateCover(usdgPoolDelegateCover).asset(),       USDG);
-        assertEq(IPoolDelegateCover(usdgPoolDelegateCover).poolManager(), usdgPoolManager);
-        assertEq(IERC20(USDG).balanceOf(usdgPoolDelegateCover),           0);
 
         assertEq(ISyrupRouter(usdgSyrupRouter).asset(),                 USDG);
         assertEq(ISyrupRouter(usdgSyrupRouter).pool(),                  usdgPool);

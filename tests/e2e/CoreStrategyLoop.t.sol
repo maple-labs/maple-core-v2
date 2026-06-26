@@ -94,13 +94,21 @@ contract CoreStrategyLoopTests is ProtocolActions, MapleAddressRegistryETH {
 
     function test_coreStrategyLoop_v1() external {
         // A->B
-        vm.prank(poolDelegate_A);
-        IPoolManager(poolManager_A).addStrategy(strategyFactory, abi.encode(pool_B));
+        vm.prank(daoMultisig);
+        IPoolManager(poolManager_A).addStrategy(
+            strategyFactory,
+            keccak256(abi.encode(strategyFactory, abi.encode(pool_B))),
+            abi.encode(pool_B)
+        );
 
         // A->B->A
-        vm.prank(poolDelegate_B);
+        vm.prank(daoMultisig);
         vm.expectRevert("PM:AS:AUM_FAILURE");
-        IPoolManager(poolManager_B).addStrategy(strategyFactory, abi.encode(pool_A));
+        IPoolManager(poolManager_B).addStrategy(
+            strategyFactory,
+            keccak256(abi.encode(strategyFactory, abi.encode(pool_A))),
+            abi.encode(pool_A)
+        );
     }
 
 }

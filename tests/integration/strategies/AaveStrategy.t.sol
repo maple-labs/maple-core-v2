@@ -83,7 +83,7 @@ contract AaveStrategyFundTests is AaveStrategyTestsBase {
 
     function testFork_aaveStrategy_fund_failIfZeroAmount() external {
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_PRINCIPAL");
+        vm.expectRevert("PM:RF:ZERO_AMOUNT");
         aaveStrategy.fundStrategy(0);
     }
 
@@ -92,7 +92,7 @@ contract AaveStrategyFundTests is AaveStrategyTestsBase {
         globals.setValidInstanceOf("STRATEGY_FACTORY", aaveStrategyFactory, false);
 
         vm.prank(strategyManager);
-        vm.expectRevert("PM:RF:INVALID_FACTORY");
+        vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");
         aaveStrategy.fundStrategy(amountToFund);
     }
 
@@ -2156,7 +2156,7 @@ contract AaveClaimRewardsTests is AaveStrategyTestsBase {
         factories[0] = aaveStrategyFactory;
         deploymentData[0] = abi.encode(AAVE_USDS);
 
-        _createPoolWithQueueAndStrategies(USDS, factories, deploymentData);
+        _createPoolWithMultipleStrategies(poolDelegate, USDS, POOL_NAME, factories, deploymentData);
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));
         deposit(lp, liquidity);

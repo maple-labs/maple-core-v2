@@ -11,7 +11,7 @@ contract ConfigurePoolTests is TestBase {
     uint256[] bitmaps;
 
     function setUp() public override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         functionIds.push("P:transfer");
         functionIds.push("P:deposit");

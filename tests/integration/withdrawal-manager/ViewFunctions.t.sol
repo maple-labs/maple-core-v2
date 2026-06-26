@@ -4,9 +4,9 @@ pragma solidity ^0.8.7;
 import { 
     IMapleProxyFactory,
     IProxiedLike
-} from "../../../../contracts/interfaces/Interfaces.sol";
+} from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAssertions {
 

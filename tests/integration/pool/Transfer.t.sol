@@ -9,7 +9,7 @@ contract TransferTests is TestBase {
     address lp       = makeAddr("lp");
 
     function setUp() public override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
         // NOTE: As opposed to super.setUp(), do not open the pool,
         // as tests need to validate that only valid lenders are allowed to transfer Pool tokens.
     }

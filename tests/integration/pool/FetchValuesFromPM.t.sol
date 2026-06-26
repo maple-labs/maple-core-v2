@@ -22,46 +22,4 @@ contract PoolManagerGetterTests is TestBase {
         assertEq(destination,    address(poolManager));
     }
 
-    function test_hasSufficientCover_insufficientCover(uint256 amount) external {
-        amount = bound(amount, 0, 1e29);
-
-        assertEq(poolManager.poolDelegateCover(), address(poolCover));
-
-        assertEq(globals.minCoverAmount(address(poolManager)), 0);
-        assertEq(fundsAsset.balanceOf(address(poolCover)),     0);
-
-        fundsAsset.mint(address(poolCover), amount);
-
-        vm.prank(governor);
-        globals.setMinCoverAmount(address(poolManager), amount + 1);
-
-        assertEq(globals.minCoverAmount(address(poolManager)), amount + 1);
-        assertEq(fundsAsset.balanceOf(address(poolCover)),     amount);
-
-        assertTrue(!poolManager.hasSufficientCover());
-    }
-
-    function test_hasSufficientCover_sufficientCover(uint256 amount) external {
-        amount = bound(amount, 0, 1e29);
-
-        assertEq(poolManager.poolDelegateCover(), address(poolCover));
-
-        assertEq(globals.minCoverAmount(address(poolManager)), 0);
-        assertEq(fundsAsset.balanceOf(address(poolCover)),     0);
-
-        fundsAsset.mint(address(poolCover), amount);
-
-        vm.prank(governor);
-        globals.setMinCoverAmount(address(poolManager), amount);
-
-        assertEq(globals.minCoverAmount(address(poolManager)), amount);
-        assertEq(fundsAsset.balanceOf(address(poolCover)),     amount);
-
-        assertTrue(poolManager.hasSufficientCover());
-
-        fundsAsset.mint(address(poolCover), 1);
-
-        assertTrue(poolManager.hasSufficientCover());  // Maintains sufficient cover if funds are added
-    }
-
 }

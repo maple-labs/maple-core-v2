@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { TestBaseWithAssertions } from "../../../TestBaseWithAssertions.sol";
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
-import { IERC20 } from "../../../../contracts/interfaces/Interfaces.sol";
+import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract RemoveSharesByIdQueueFailureTests is TestBaseWithAssertions {
 

@@ -17,11 +17,11 @@ contract HasPermissionFuzzTests is TestBase {
     address lender = vm.addr(privateKey);
 
     function setUp() public override {
-        _setupClosedPoolWithCyclicalWM();
+        _setUpClosedPool();
 
         // NOTE: Pool and Withdrawal manager need to be whitelisted to allow redemption workflow to work.
         setLenderAllowlist(address(poolManager), address(poolManager), true);
-        setLenderAllowlist(address(poolManager), address(cyclicalWM),  true);
+        setLenderAllowlist(address(poolManager), address(queueWM),  true);
     }
 
     /**************************************************************************************************************************************/
@@ -292,8 +292,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         bool isAllowed = hasPermission(permissionLevel, isAllowlisted, poolBitmap, lenderBitmap);
 
-        assertEq(pool.balanceOf(lender),              0);
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRequest);
+        assertEq(pool.balanceOf(lender),           0);
+        assertEq(pool.balanceOf(address(queueWM)), sharesToRequest);
 
         if (!isAllowed) vm.expectRevert("PM:CC:NOT_ALLOWED");
 
@@ -303,8 +303,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         if (!isAllowed) return;
 
-        assertEq(pool.balanceOf(lender),              sharesToRemove);
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRequest - sharesToRemove);
+        assertEq(pool.balanceOf(lender),           sharesToRemove);
+        assertEq(pool.balanceOf(address(queueWM)), sharesToRequest - sharesToRemove);
     }
 
     function testFuzz_hasPermission_redeem(
@@ -324,7 +324,13 @@ contract HasPermissionFuzzTests is TestBase {
         sharesToRedeem  = bound(sharesToRedeem,  1, MAX_AMOUNT);
 
         setupDeposit(lender, sharesToRedeem);
+
+        vm.prank(poolDelegate);
+        queueWM.setManualWithdrawal(lender, true);
+
         setupRequest(lender, sharesToRedeem);
+        processRedemptionByOwners(address(pool), array(lender));
+
         setupPoolPermissions(permissionLevel, "P:redeem", "P:transfer", poolBitmap);
         setupLenderPermissions(lender, isAllowlisted, lenderBitmap);
 
@@ -332,11 +338,10 @@ contract HasPermissionFuzzTests is TestBase {
 
         uint256 receiverBalance = fundsAsset.balanceOf(receiver);
 
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
+        assertEq(pool.balanceOf(address(queueWM)), sharesToRedeem);
 
         if (!isAllowed) vm.expectRevert("PM:CC:NOT_ALLOWED");
 
-        vm.warp(start + 2 weeks);
         vm.prank(lender);
         pool.redeem(sharesToRedeem, receiver, lender);
 
@@ -344,7 +349,7 @@ contract HasPermissionFuzzTests is TestBase {
 
         assertEq(fundsAsset.balanceOf(receiver), receiverBalance + sharesToRedeem);
 
-        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
     }
 
     function testFuzz_hasPermission_requestRedeem(
@@ -365,8 +370,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         bool isAllowed = hasPermission(permissionLevel, isAllowlisted, poolBitmap, lenderBitmap);
 
-        assertEq(pool.balanceOf(lender),              sharesToRedeem);
-        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+        assertEq(pool.balanceOf(lender),           sharesToRedeem);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
 
         if (!isAllowed) vm.expectRevert("PM:CC:NOT_ALLOWED");
 
@@ -375,8 +380,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         if (!isAllowed) return;
 
-        assertEq(pool.balanceOf(lender),              0);
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
+        assertEq(pool.balanceOf(lender),           0);
+        assertEq(pool.balanceOf(address(queueWM)), sharesToRedeem);
     }
 
     function testFuzz_hasPermission_requestWithdraw(

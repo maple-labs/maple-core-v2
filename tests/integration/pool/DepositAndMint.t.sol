@@ -15,7 +15,7 @@ contract EnterBase is TestBase {
         _createAssets();
         _configureGlobals();
         _createFactories();
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithOTLM(poolDelegate);
         // NOTE: As opposed to super.setUp(), do not configure the pool or perform any later steps,
         //       because pool configuration will be validated in the tests.
     }

@@ -13,6 +13,7 @@ import {
     IGovernorTimelock,
     IMapleProxyFactory,
     IPoolDeployer,
+    IPoolDeployerV4Like,
     IPoolManager,
     IPoolPermissionManager,
     ISyrupBitcoinRouter,
@@ -133,7 +134,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         uint256[4] memory configParams = [liquidityCap, delegateManagementFeeRate, uint256(0), uint256(0)];
 
         vm.prank(syrupBitcoinPoolDelegate);
-        syrupBitcoinPoolManager = IPoolDeployer(poolDeployerV4).deployPool(
+        syrupBitcoinPoolManager = IPoolDeployerV4Like(poolDeployerV4).deployPool(
             poolManagerFactory,
             withdrawalManagerQueueFactory,
             strategyFactories,
@@ -153,7 +154,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         // Step 7: Deploy AssetControllerOracle
 
         assetPriceOracleV100Implementation = deployFromFile("Contracts@25", "AssetControllerOracle");
-        assetPriceOracleProxy          = deployFromFile(
+        assetPriceOracleProxy              = deployFromFile(
             "Contracts@25",
             "NonTransparentProxyInitializable",
             abi.encode(

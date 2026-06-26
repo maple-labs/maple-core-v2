@@ -71,20 +71,16 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         strategyDeploymentData_[1] = new bytes(0);
         strategyDeploymentData_[2] = new bytes(0);
 
-        uint256[4] memory configParams = [liquidityCap, delegateManagementFeeRate, uint256(0), uint256(0)];
-
-        vm.prank(poolDelegate);
-        poolManager = IPoolManager(deployer.deployPool(
-            poolManagerFactory,
-            queueWMFactory,
-            strategyFactories,
-            strategyDeploymentData_,
-            compositeTokenProxy,
-            address(poolPermissionManager),
-            "Syrup Bitcoin",
-            "syrupBTC",
-            configParams
-        ));
+        poolManager = IPoolManager(_deployPoolWithQueue({
+            poolDelegate_:              poolDelegate,
+            fundsAsset_:                compositeTokenProxy,
+            strategyFactories_:         strategyFactories,
+            strategyData_:    strategyDeploymentData_,
+            name_:                      "Syrup Bitcoin",
+            symbol_:                    "syrupBTC",
+            liquidityCap_:              liquidityCap,
+            delegateManagementFeeRate_: delegateManagementFeeRate
+        }));
 
         pool             = IPool(poolManager.pool());
         bitcoinStrategy1 = poolManager.strategyList(0);
@@ -315,7 +311,6 @@ contract SyrupBTCFullDeploymentTests is SyrupBitcoinTestBase {
         assertNotEq(poolManager.strategyList(1),     address(0));
         assertNotEq(poolManager.strategyList(2),     address(0));
         assertNotEq(poolManager.withdrawalManager(), address(0));
-        assertNotEq(poolManager.poolDelegateCover(), address(0));
 
         assertEq(IWithdrawalManager(withdrawalManager).totalShares(),                          0);
         assertEq(IWithdrawalManager(withdrawalManager).pool(),                                 pool);

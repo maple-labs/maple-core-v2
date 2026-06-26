@@ -7,15 +7,16 @@ import {
     IGovernorTimelock,
     IPool,
     IPoolDeployer,
+    IPoolDeployerV4Like,
     IPoolManager,
     IPoolPermissionManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { Runner } from "../../../contracts/Runner.sol";
+import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
 import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
 
-contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
+contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
     address constant USDG = 0xe343167631d89B6Ffc58B88d6b7fB0228795491D;
 
@@ -110,7 +111,7 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
 
         // NOTE: `deployPool` must be called by a valid pool delegate.
         vm.prank(poolDelegate);
-        usdgPoolManager = IPoolDeployer(poolDeployerV4).deployPool(
+        usdgPoolManager = IPoolDeployerV4Like(poolDeployerV4).deployPool(
             poolManagerFactory,
             withdrawalManagerQueueFactory,
             strategyFactories,
@@ -124,7 +125,6 @@ contract SyrupUSDGDeploymentBase is Runner, UpgradeAddressRegistry {
 
         usdgPool                = IPoolManager(usdgPoolManager).pool();
         usdgWithdrawalManager   = IPoolManager(usdgPoolManager).withdrawalManager();
-        usdgPoolDelegateCover   = IPoolManager(usdgPoolManager).poolDelegateCover();
         usdgOpenTermLoanManager = IPoolManager(usdgPoolManager).strategyList(0);
 
         // Step 5: Operational admin executes post-deploy workflow (config, seed burn, router, allowlist)

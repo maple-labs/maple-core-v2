@@ -10,7 +10,7 @@ contract GlobalsViewFunctionTests is TestBase {
     address strategy;
 
     function setUp() public override {
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         strategy = poolManager.strategyList(0);
     }

@@ -15,7 +15,6 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
         super.setUp();
 
         proxyFactories.push(poolManagerFactory);
-        proxyFactories.push(withdrawalManagerCyclicalFactory);
         proxyFactories.push(openTermLoanFactory);
         proxyFactories.push(openTermLoanManagerFactory);
         proxyFactories.push(withdrawalManagerQueueFactory);

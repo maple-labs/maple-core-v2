@@ -16,15 +16,21 @@ import { IMapleGlobals as IMG }      from "../../modules/globals/contracts/inter
 import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
 import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
-import { IMapleLoan as IMOTL }        from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
-import { IMapleRefinancer as IMOTLR } from "../../modules/open-term-loan/contracts/interfaces/IMapleRefinancer.sol";
+import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 
 import { IMapleLoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
 import { IMapleLoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
-import { IMaplePool as IMP }                from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
-import { IMaplePoolDelegateCover as IMPDC } from "../../modules/pool/contracts/interfaces/IMaplePoolDelegateCover.sol";
-import { IMaplePoolDeployer as IMPD }       from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
+import { IMaplePool as IMP } from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
+
+import {
+    IMaplePoolDeployer as IMPD,
+    PoolConfigParams,
+    PoolManagerInitParams,
+    StrategyDeployParams,
+    StrategyManagerParams
+} from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
+
 import { IMaplePoolManager as IMPM }        from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
 import { IMapleProxied }                    from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
 import { IMapleProxyFactory }               from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
@@ -36,7 +42,6 @@ import { IMaplePoolPermissionManagerInitializer as IMPPMI }
     from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManagerInitializer.sol";
 
 import { ISyrupRouter as ISR } from "../../modules/syrup-utils/contracts/interfaces/ISyrupRouter.sol";
-import { IMapleRouter as IMR } from "../../modules/syrup-utils/contracts/interfaces/IMapleRouter.sol";
 
 import { IMapleWithdrawalManager as IMWMC }
     from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
@@ -52,6 +57,11 @@ import { IMapleBitcoinStrategy } from "../../modules/strategies/contracts/interf
 import { IMapleSkyStrategy }     from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
 import { IMapleCoreStrategy }    from "../../modules/strategies/contracts/interfaces/coreStrategy/IMapleCoreStrategy.sol";
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
+
+import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
+import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
+
+import { TradingStrategyInitializerParams } from "../../modules/trading-strategy/contracts/interfaces/IMapleTradingStrategyInitializer.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
@@ -77,19 +87,13 @@ interface IGlobals is IMG { }
 
 interface IGovernorTimelock is IGTL { }
 
-interface IMapleRouter is IMR { }
-
 interface IOpenTermLoan is IMOTL { }
-
-interface IOpenTermRefinancer is IMOTLR { }
 
 interface IOpenTermLoanManager is IMOTLM { }
 
 interface IOpenTermLoanManagerStructs is IMOTLMS { }
 
 interface IPool is IMP { }
-
-interface IPoolDelegateCover is IMPDC { }
 
 interface IPoolDeployer is IMPD { }
 
@@ -100,6 +104,10 @@ interface IPoolPermissionManager is IMPPM { }
 interface IPoolPermissionManagerInitializer is IMPPMI { }
 
 interface IStrategy is IMapleStrategy, IMapleFeeStrategy { }
+
+interface IStrategyDeployer is IMSD { }
+
+interface IStrategyManager is IMSM { }
 
 interface ISkyStrategy is IMapleSkyStrategy { }
 
@@ -278,6 +286,21 @@ interface IPoolDeployerV2Like {
         returns (address poolManager_);
 }
 
+interface IPoolDeployerV4Like {
+
+    function deployPool(
+        address           poolManagerFactory_,
+        address           withdrawalManagerFactory_,
+        address[]  memory strategyFactories_,
+        bytes[]    memory strategyDeploymentData_,
+        address           asset_,
+        address           poolPermissionManager_,
+        string     memory name_,
+        string     memory symbol_,
+        uint256[4] memory configParams_
+    ) external returns (address poolManager_);
+}
+
 interface IProxiedLike {
 
     function factory() external view returns (address factory_);
@@ -390,18 +413,6 @@ interface IMapleCCIPReceiverLike {
     function executeRedeemList(uint128[] calldata requestIds_) external;
 
     function processMessage(Any2EVMMessage calldata message_) external;
-
-}
-
-interface IPolicyManagerLike {
-
-    function getRoleAdmin(bytes32 role) external view returns (bytes32 admin);
-
-    function grantRole(bytes32 role, address account) external;
-
-    function policyDisabled(uint32 policyId) external view returns (bool isDisabled);
-
-    function policyAllowApprovedCounterparties(uint32 policyId) external view returns (bool isAllowed);
 
 }
 
@@ -544,90 +555,9 @@ interface IUSDCLike {
 
 }
 
-interface IMapleRouterLike {
-
-    function globals() external view returns (address globals_);
-
-    function ppm() external view returns (address ppm_);
-
-    function implementation() external view returns (address implementation_);
-
-    function assetWhitelisting() external view returns (bool assetWhitelisting_);
-
-}
-
 interface IMapleTreasuryLike {
 
     function reclaimERC20(address asset_, uint256 amount_) external;
-
-}
-
-/******************************************************************************************************************************************/
-/*** Smart Account Interfaces                                                                                                           ***/
-/******************************************************************************************************************************************/
-
-struct UserOperation {
-    address sender;
-    uint256 nonce;
-    bytes initCode;
-    bytes callData;
-    uint256 callGasLimit;
-    uint256 verificationGasLimit;
-    uint256 preVerificationGas;
-    uint256 maxFeePerGas;
-    uint256 maxPriorityFeePerGas;
-    bytes paymasterAndData;
-    bytes signature;
-}
-
-struct Call {
-    address target;
-    uint256 value;
-    bytes data;
-}
-
-interface IEntryPointLike {
-
-    function depositTo(address) external payable;
-
-    function addStake(uint32) external payable;
-
-    function unlockStake() external;
-
-    function withdrawStake(address payable) external;
-
-    function handleOps(UserOperation[] calldata, address payable) external;
-
-    function getNonce(address, uint192) external view returns (uint256);
-
-    function getUserOpHash(UserOperation calldata) external view returns (bytes32);
-
-}
-
-interface IMultiOwnerModularAccountFactoryLike {
-
-    function createAccount(uint256 salt, address[] calldata owners) external returns (address addr);
-
-    function getAddress(uint256 salt, address[] calldata owners) external view returns (address);
-
-}
-
-interface IModularAccountLike {
-
-    function execute(address target, uint256 value, bytes calldata data) external payable returns (bytes memory result);
-
-    function executeBatch(Call[] calldata calls) external payable returns (bytes[] memory results);
-
-    function getInstalledPlugins() external view returns (address[] memory pluginAddresses);
-
-    function getNonce() external view returns (uint256);
-
-    function installPlugin(
-        address plugin,
-        bytes32 manifestHash,
-        bytes calldata pluginInstallData,
-        bytes21[] calldata dependencies
-    ) external;
 
 }
 

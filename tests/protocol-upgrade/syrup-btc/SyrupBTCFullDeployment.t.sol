@@ -61,7 +61,6 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertNotEq(IPoolManager(syrupBitcoinPoolManager).strategyList(1),     address(0));
         assertNotEq(IPoolManager(syrupBitcoinPoolManager).strategyList(2),     address(0));
         assertNotEq(IPoolManager(syrupBitcoinPoolManager).withdrawalManager(), address(0));
-        assertNotEq(IPoolManager(syrupBitcoinPoolManager).poolDelegateCover(), address(0));
 
         assertEq(IWithdrawalManager(withdrawalManager).totalShares(),                          0);
         assertEq(IWithdrawalManager(withdrawalManager).pool(),                                 pool);

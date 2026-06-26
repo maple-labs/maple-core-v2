@@ -54,18 +54,15 @@ contract StrategyScenarios is TestBaseWithAssertions {
         _configureGlobals();
         _createFactories();
 
-        poolManager = IPoolManager(deployPoolWithQueue({
-            poolDelegate_:           address(poolDelegate),
-            deployer_:               address(deployer),
-            poolManagerFactory_:     address(poolManagerFactory),
-            queueWMFactory_:         address(queueWMFactory),
-            strategyFactories_:      new address[](0),
-            strategyDeploymentData_: new bytes[](0),
-            fundsAsset_:             USDC,
-            poolPermissionManager_:  address(poolPermissionManager),
-            name_:                   "Pool",
-            symbol_:                 "MP",
-            configParams_:           [type(uint256).max, 0, 0, 0]
+        poolManager = IPoolManager(_deployPoolWithQueue({
+            poolDelegate_:              address(poolDelegate),
+            fundsAsset_:                USDC,
+            strategyFactories_:         new address[](0),
+            strategyData_:              new bytes[](0),
+            name_:                      "Pool",
+            symbol_:                    "MP",
+            liquidityCap_:              type(uint256).max,
+            delegateManagementFeeRate_: 0
         }));
 
         vm.startPrank(governor);
@@ -75,15 +72,27 @@ contract StrategyScenarios is TestBaseWithAssertions {
         vm.stopPrank();
 
         vm.prank(governor);
-        poolManager.addStrategy(address(skyStrategyFactory), abi.encode(SAVINGS_USDS, USDS_LITE_PSM));
+        poolManager.addStrategy(
+            address(skyStrategyFactory),
+            keccak256(abi.encode(address(skyStrategyFactory), abi.encode(SAVINGS_USDS, USDS_LITE_PSM))),
+            abi.encode(SAVINGS_USDS, USDS_LITE_PSM)
+        );
 
         vm.prank(governor);
-        poolManager.addStrategy(address(aaveStrategyFactory), abi.encode(AAVE_USDC));
+        poolManager.addStrategy(
+            address(aaveStrategyFactory),
+            keccak256(abi.encode(address(aaveStrategyFactory), abi.encode(AAVE_USDC))), abi.encode(AAVE_USDC)
+        );
 
         pool         = IPool(poolManager.pool());
         queueWM      = IWithdrawalManager(poolManager.withdrawalManager());
         skyStrategy  = ISkyStrategy(poolManager.strategyList(0));
         aaveStrategy = IAaveStrategy(poolManager.strategyList(1));
+
+        vm.startPrank(governor);
+        poolManager.setStrategyCap(address(skyStrategy),  type(uint256).max);
+        poolManager.setStrategyCap(address(aaveStrategy), type(uint256).max);
+        vm.stopPrank();
 
         activatePool(address(poolManager), HUNDRED_PERCENT);
         openPool(address(poolManager));

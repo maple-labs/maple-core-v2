@@ -15,12 +15,11 @@ import { NonTransparentProxyInitializable as NTPI } from "../modules/controller/
 import { GovernorTimelock as GT } from "../modules/globals/contracts/GovernorTimelock.sol";
 import { MapleGlobals as MG }     from "../modules/globals/contracts/MapleGlobals.sol";
 
-import { MaplePool as MP }                     from "../modules/pool/contracts/MaplePool.sol";
-import { MaplePoolDelegateCover as MPDC }      from "../modules/pool/contracts/MaplePoolDelegateCover.sol";
-import { MaplePoolDeployer as MPD }            from "../modules/pool/contracts/MaplePoolDeployer.sol";
-import { MaplePoolManager as MPM }             from "../modules/pool/contracts/MaplePoolManager.sol";
-import { MaplePoolManagerInitializer as MPMI } from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
-import { MaplePoolManagerMigrator as MPMM }    from "../modules/pool/contracts/proxy/MaplePoolManagerMigrator.sol";
+import { MaplePool as MP }                      from "../modules/pool/contracts/MaplePool.sol";
+import { MaplePoolDeployer as MPD }             from "../modules/pool/contracts/MaplePoolDeployer.sol";
+import { MaplePoolManager as MPM }              from "../modules/pool/contracts/MaplePoolManager.sol";
+import { MaplePoolManagerInitializer as MPMI }  from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
+import { MaplePoolManagerMigratorV500 as MPMM } from "../modules/pool/contracts/proxy/MaplePoolManagerMigratorV500.sol";
 
 import { MapleAaveStrategy as MAS }      from "../modules/strategies/contracts/MapleAaveStrategy.sol";
 import { MapleBasicStrategy as MBS }     from "../modules/strategies/contracts/MapleBasicStrategy.sol";
@@ -114,12 +113,6 @@ contract Pool is MP {
         string  memory name_,
         string  memory symbol_
     ) MP(manager_, asset_, destination_, bootstrapMint_, initialSupply_, name_, symbol_) { }
-
-}
-
-contract PoolDelegateCover is MPDC {
-
-    constructor(address poolManager_, address asset_) MPDC(poolManager_, asset_) { }
 
 }
 

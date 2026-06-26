@@ -9,12 +9,6 @@ import { GovernorTimelockTestBase } from "./GovernorTimelockTestBase.t.sol";
 
 contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
 
-    function setUp() public override {
-        _setupPoolWithCyclicalWM();
-
-        _initTimelock();
-    }
-
     function test_withdrawERC20Token_revert_afterChangingTokenWithdrawer() public {
         uint256 balanceBefore    = 100e18;
         uint256 amountToWithdraw = 40e18;
@@ -98,8 +92,8 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
     function test_upgradeWithdrawalManager() public {
         address newPoolManager = makeAddr("newPoolManager");
 
-        assertNotEq(cyclicalWM.poolManager(), newPoolManager);
-        assertEq(cyclicalWM.poolManager(), address(poolManager));
+        assertNotEq(queueWM.poolManager(), newPoolManager);
+        assertEq(queueWM.poolManager(), address(poolManager));
 
         address newImplementation = address(new MockMapleWithdrawalManager(newPoolManager));
         uint256 version           = 200;
@@ -110,20 +104,20 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
         bytes memory parameters1 = abi.encode(version, newImplementation, address(0));
         bytes memory parameters2 = abi.encode(1, version, address(0));
 
-        _scheduleProposal(address(cyclicalWMFactory), functionToExecute1, parameters1);
-        _scheduleProposal(address(cyclicalWMFactory), functionToExecute2, parameters2);
+        _scheduleProposal(address(queueWMFactory), functionToExecute1, parameters1);
+        _scheduleProposal(address(queueWMFactory), functionToExecute2, parameters2);
 
         uint32 scheduledAt = uint32(block.timestamp);
         ( uint32 delay, )  = timelock.defaultTimelockParameters();
 
         vm.warp(scheduledAt + delay);
-        _executeProposal(2, address(cyclicalWMFactory), functionToExecute1, parameters1);
-        _executeProposal(3, address(cyclicalWMFactory), functionToExecute2, parameters2);
+        _executeProposal(2, address(queueWMFactory), functionToExecute1, parameters1);
+        _executeProposal(3, address(queueWMFactory), functionToExecute2, parameters2);
 
         vm.prank(securityAdmin);
-        cyclicalWM.upgrade(version, "");
+        queueWM.upgrade(version, "");
 
-        assertEq(cyclicalWM.poolManager(), newPoolManager);
+        assertEq(queueWM.poolManager(), newPoolManager);
     }
 
 }

@@ -21,7 +21,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
     function setUp() public override {
         initialStrategiesCount = 2;
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
     }
@@ -252,7 +252,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        address strategy3 = poolManager.addStrategy(bitcoinStrategyFactory, "");
+        address strategy3 = poolManager.addStrategy(bitcoinStrategyFactory, keccak256(abi.encode(bitcoinStrategyFactory, "")), "");
 
         assertBitcoinStrategyState({
             strategy:              strategy1,
@@ -284,6 +284,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("BITCOIN_STRATEGY", strategy3, true);
+        poolManager.setStrategyCap(strategy3, type(uint256).max);
 
         address[] memory addresses = new address[](1);
         bool[]    memory allowed   = new bool[](1);
@@ -1830,7 +1831,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 1: Deploy fresh instance of SyrupBTC system and measure gas cost of deposit with 1 redeem request                     ***/
         /**********************************************************************************************************************************/
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp1, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1842,7 +1843,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 2: Deploy fresh instance of SyrupBTC system and measure gas cost of deposit with 500 redeem requests                  ***/
         /**********************************************************************************************************************************/
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp2, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1854,7 +1855,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 3: Deploy fresh instance of SyrupBTC system and measure gas cost of deposit with 5,000 redeem requests                ***/
         /**********************************************************************************************************************************/
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp3, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1882,7 +1883,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 1: Deploy fresh instance of SyrupBTC system and measure gas cost of remove shares with 1 redeem request               ***/
         /**********************************************************************************************************************************/
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp1, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1898,7 +1899,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 2: Deploy fresh instance of SyrupBTC system and measure gas cost of remove shares with 500 redeem requests            ***/
         /**********************************************************************************************************************************/
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp2, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1914,7 +1915,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /*** Step 3: Deploy fresh instance of SyrupBTC system and measure gas cost of remove shares with 5,000 redeem requests          ***/
         /**********************************************************************************************************************************/
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp3, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1946,7 +1947,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         uint256 numberOfRequests = 3;
         uint256 requestToRemove  = 2;
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp1, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 
@@ -1961,7 +1962,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         numberOfRequests = 5_000;
         requestToRemove  = 2_500;
 
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         depositInSyrupBtc(lp2, address(bitcoinRouter), address(depositAsset), initialDepositAmount);
 

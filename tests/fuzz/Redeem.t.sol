@@ -17,10 +17,8 @@ contract RedeemFuzzTests is FuzzBase {
     uint256 sharesToRedeem;
     uint256 receiverAssets;
     uint256 availableAssets;
-    uint256 withdrawalDelay;
 
-    // TODO: This test is showing inconsistent behavior running locally vs on CI, even with same parameters.
-    function skip_testDeepFuzz_redeem_all(address[3] memory addresses, uint256[8] memory amounts) external {
+    function testDeepFuzz_redeem_all(address[3] memory addresses, uint256[7] memory amounts) external {
         caller   = addresses[0];
         owner    = addresses[1];
         receiver = addresses[2];
@@ -32,7 +30,6 @@ contract RedeemFuzzTests is FuzzBase {
         sharesToRedeem   = amounts[4];
         receiverAssets   = amounts[5];
         availableAssets  = amounts[6];
-        withdrawalDelay  = amounts[7];
 
         if (owner    == address(0)) owner    = address(1);
         if (caller   == address(0)) caller   = address(1);
@@ -42,6 +39,9 @@ contract RedeemFuzzTests is FuzzBase {
         vm.assume(caller   != address(pool));
         vm.assume(receiver != address(pool));
         vm.assume(receiver != address(this));
+        vm.assume(owner    != address(queueWM));
+        vm.assume(caller   != address(queueWM));
+        vm.assume(receiver != address(queueWM));
 
         totalSupply      = bound(totalSupply,      1, 1e30);
         totalAssets      = bound(totalAssets,      0, 1e30);
@@ -49,8 +49,10 @@ contract RedeemFuzzTests is FuzzBase {
         ownerShares      = bound(ownerShares,      1, totalSupply);
         sharesToRedeem   = bound(sharesToRedeem,   1, ownerShares);
         receiverAssets   = bound(receiverAssets,   0, 1e30);
-        availableAssets  = bound(availableAssets,  0, totalAssets - unrealizedLosses);
-        withdrawalDelay  = bound(withdrawalDelay,  0, 4 weeks);
+
+        uint256 assetsToWithdraw = sharesToRedeem * (totalAssets - unrealizedLosses) / totalSupply;
+
+        availableAssets = bound(availableAssets, assetsToWithdraw, totalAssets - unrealizedLosses);
 
         mintShares(owner, ownerShares, totalSupply);
         mintAssets(receiver, receiverAssets);
@@ -58,67 +60,46 @@ contract RedeemFuzzTests is FuzzBase {
 
         bool sameCaller = caller == owner;
 
-        uint256 lpStartingBalance = pool.balanceOf(address(owner));
+        uint256 lpStartingBalance = pool.balanceOf(owner);
+
+        setManualWithdrawal(address(poolManager), owner, true);
 
         vm.prank(owner);
         pool.approve(caller, sharesToRedeem);
 
-        assertEq(pool.allowance(owner, caller),       sharesToRedeem);
-        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance);
-        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
+        assertEq(pool.allowance(owner, caller),    sharesToRedeem);
+        assertEq(pool.balanceOf(owner),            lpStartingBalance);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
 
         vm.prank(caller);
         pool.requestRedeem(sharesToRedeem, owner);
 
-        assertEq(pool.allowance(owner, caller),       sameCaller ? sharesToRedeem : 0);
-        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance - sharesToRedeem);
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
+        assertEq(pool.allowance(owner, caller),    sameCaller ? sharesToRedeem : 0);
+        assertEq(pool.balanceOf(owner),            lpStartingBalance - sharesToRedeem);
+        assertEq(pool.balanceOf(address(queueWM)), sharesToRedeem);
 
-        vm.warp(start + withdrawalDelay);
+        // Pool delegate processes the request, making the shares available for manual withdrawal.
+        processRedemptionByOwners(address(pool), array(owner));
+
+        assertEq(queueWM.manualSharesAvailable(owner), sharesToRedeem);
+        assertEq(pool.balanceOf(address(queueWM)),     sharesToRedeem);
+        assertEq(pool.totalSupply(),                   totalSupply);
 
         vm.prank(owner);
         pool.approve(caller, sharesToRedeem);
 
-        if (withdrawalDelay < 2 weeks || withdrawalDelay >= 2 weeks + 2 days) {
-            vm.prank(caller);
-            vm.expectRevert("WM:PE:NOT_IN_WINDOW");
-            pool.redeem(sharesToRedeem, receiver, owner);
-            return;
-        }
-
-        uint256 assetsToWithdraw = sharesToRedeem * (totalAssets - unrealizedLosses) / totalSupply;
-
-        uint256 redeemableShares =
-            availableAssets < assetsToWithdraw
-                ? sharesToRedeem * availableAssets / assetsToWithdraw
-                : sharesToRedeem;
-
-       uint256 withdrawableAssets = (totalAssets - unrealizedLosses) * redeemableShares / totalSupply;
-
-        assertEq(pool.allowance(owner, caller), sharesToRedeem);
-
-        assertEq(pool.totalSupply(),                  totalSupply);
-        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance - sharesToRedeem);
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem);
-        assertEq(fundsAsset.balanceOf(receiver),      receiverAssets);
-
-        assertEq(cyclicalWM.lockedShares(owner), sharesToRedeem);
-        assertEq(cyclicalWM.exitCycleId(owner),  3);
-
         vm.prank(caller);
         uint256 withdrawnAssets = pool.redeem(sharesToRedeem, receiver, owner);
 
-        assertEq(withdrawnAssets, withdrawableAssets);
+        assertEq(withdrawnAssets, assetsToWithdraw);
 
-        assertEq(pool.allowance(owner, caller), sameCaller ? sharesToRedeem : sharesToRedeem - redeemableShares);
+        assertEq(pool.allowance(owner, caller), sameCaller ? sharesToRedeem : 0);
 
-        assertEq(pool.totalSupply(),                  totalSupply       - redeemableShares);
-        assertEq(pool.balanceOf(address(owner)),      lpStartingBalance - sharesToRedeem);
-        assertEq(pool.balanceOf(address(cyclicalWM)), sharesToRedeem    - redeemableShares);
-        assertEq(fundsAsset.balanceOf(receiver),      receiverAssets    + withdrawnAssets);
-
-        assertEq(cyclicalWM.lockedShares(owner), sharesToRedeem - redeemableShares);
-        assertEq(cyclicalWM.exitCycleId(owner),  redeemableShares < sharesToRedeem ? 4 : 0);
+        assertEq(pool.totalSupply(),                   totalSupply - sharesToRedeem);
+        assertEq(pool.balanceOf(owner),                lpStartingBalance - sharesToRedeem);
+        assertEq(pool.balanceOf(address(queueWM)),     0);
+        assertEq(queueWM.manualSharesAvailable(owner), 0);
+        assertEq(fundsAsset.balanceOf(receiver),       receiverAssets + withdrawnAssets);
     }
 
 }

@@ -27,13 +27,6 @@ import { MaplePoolPermissionManager as MPPM }
 import { MaplePoolPermissionManagerInitializer as MPPMI }
     from "../modules/pool-permission-manager/contracts/proxy/MaplePoolPermissionManagerInitializer.sol";
 
-import { MapleWithdrawalManager as MWMC } from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManager.sol";
-
-import { MapleWithdrawalManagerFactory as MWMCF }
-    from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerFactory.sol";
-import { MapleWithdrawalManagerInitializer as MWMCI }
-    from "../modules/withdrawal-manager-cyclical/contracts/MapleWithdrawalManagerInitializer.sol";
-
 import { MapleWithdrawalManager as MWMQ } from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
 
 import { MapleWithdrawalManagerFactory as MWMQF }
@@ -103,16 +96,6 @@ contract SyrupRouter is SR {
     constructor(address pool_) SR(pool_) { }
 
 }
-
-contract WithdrawalManagerCyclical is MWMC { }
-
-contract WithdrawalManagerCyclicalFactory is MWMCF {
-
-    constructor(address globals_) MWMCF(globals_) { }
-
-}
-
-contract WithdrawalManagerCyclicalInitializer is MWMCI { }
 
 contract WithdrawalManagerQueue is MWMQ { }
 

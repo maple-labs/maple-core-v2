@@ -143,14 +143,14 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  2_000_000e6);
 
-        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         assertEq(fundsAsset.allowance(address(loanManager), address(loan)), 0);
 
         assertEq(fundsAsset.balanceOf(address(loanManager)), 0);
         assertEq(fundsAsset.balanceOf(address(loan)),        0);
 
-        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         assertEq(fundsAsset.allowance(address(loanManager), address(loan)), 0);
 
@@ -272,9 +272,9 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  2_000_000e6);
 
-        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
-        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         /*********************************/
         /*** Post Refinance Assertions ***/
@@ -387,9 +387,9 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         vm.prank(borrower);
         fundsAsset.approve(address(loan), 500_000e6 + 26_300e6);
 
-        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
-        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         /*********************************/
         /*** Post Refinance Assertions ***/
@@ -523,9 +523,9 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         assertEq(loan.paymentInterval(),         1_000_000);
         assertEq(loan.dateCalled(),              start + 400_000);
 
-        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
-        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         /*********************************/
         /*** Post Refinance Assertions ***/
@@ -645,14 +645,14 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  dueInterestAndFees);
 
-        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         assertEq(fundsAsset.allowance(address(loanManager), address(loan)), 0);
 
         assertEq(fundsAsset.balanceOf(address(loanManager)), 0);
         assertEq(fundsAsset.balanceOf(address(loan)),        0);
 
-        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         assertEq(fundsAsset.allowance(address(loanManager), address(loan)), 0);
 
@@ -779,14 +779,14 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  desiredPrincipal + dueInterestAndFees);
 
-        proposeRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         assertEq(fundsAsset.allowance(address(loanManager), address(loan)), 0);
 
         assertEq(fundsAsset.balanceOf(address(loanManager)), 0);
         assertEq(fundsAsset.balanceOf(address(loan)),        0);
 
-        acceptRefinanceOT(address(loan), address(openTermRefinancer), block.timestamp + 1, calls);
+        acceptRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
         assertEq(fundsAsset.allowance(address(loanManager), address(loan)), 0);
 

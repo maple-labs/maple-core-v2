@@ -25,7 +25,7 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
     IPoolPermissionManager ppm;
 
     function setUp() public virtual override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
 
         allowLender(address(poolManager), address(queueWM));
 

@@ -9,7 +9,7 @@ contract SetPoolPermissionLevelTests is TestBase {
     uint256 constant PUBLIC  = 3;
 
     function setUp() public override {
-        _setupClosedPoolWithQueueWM();
+        _setUpClosedPool();
     }
 
     function test_setPoolPermissionLevel_notAuthorized() external {

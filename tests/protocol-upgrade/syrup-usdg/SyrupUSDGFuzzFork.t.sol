@@ -13,8 +13,6 @@ import {
     IWithdrawalManagerQueueV200Like
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
-
 import { OpenTermLoanHealthChecker } from "../../health-checkers/OpenTermLoanHealthChecker.sol";
 import { ProtocolHealthChecker }     from "../../health-checkers/ProtocolHealthChecker.sol";
 
@@ -33,7 +31,7 @@ enum SyrupUSDGAction {
     Warp
 }
 
-contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, ProtocolActions, HealthCheckerAssertions {
+contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAssertions {
 
     uint256 constant ACTION_COUNT       = 50;
     uint256 constant MAX_DEPOSIT_AMOUNT = 5_000_000e6;

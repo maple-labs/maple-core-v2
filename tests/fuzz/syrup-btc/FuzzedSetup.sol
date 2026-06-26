@@ -306,7 +306,7 @@ contract FuzzedUtils is ProtocolActions {
 contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtils {
 
     function setUp() public virtual override {
-        _setupBitcoinPool();
+        _setUpBitcoinPool();
 
         _depositAsset      = address(depositAsset);
         _pool              = address(pool);
