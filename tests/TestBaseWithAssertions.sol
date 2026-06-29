@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAaveV3Strategy,
     IBitcoinStrategy,
     IERC20,
     IGovernorTimelock,
@@ -12,6 +13,8 @@ import {
     IOpenTermLoanManagerStructs,
     IPool,
     IPoolManager,
+    IStrategyManager,
+    ITradingStrategy,
     IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
 
@@ -317,6 +320,39 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(depositAsset.balanceOf(assetControllerProxy), assetControllerBalance);
         assertEq(compositeAsset.balanceOf(address(pool)),      poolCompositeTokenBalance);
         assertEq(pool.totalAssets(),                           poolTotalAssets);
+    }
+
+    function assertAaveV3Strategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {
+        address strategy = IStrategyManager(strategyManager).underlyingStrategy();
+
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(),         aum);
+        assertEq(IAaveV3Strategy(strategy).assetsUnderManagement(),                 aum);
+        assertEq(IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy), aum);
+        assertEq(IAaveV3Strategy(strategy).unrealizedLosses(),                      unrealizedLosses);
+    }
+
+    function assertTradingStrategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {
+        address strategy = IStrategyManager(strategyManager).underlyingStrategy();
+
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(), aum);
+        assertEq(ITradingStrategy(strategy).assetsUnderManagement(),        aum);
+        assertEq(ITradingStrategy(strategy).unrealizedLosses(),             unrealizedLosses);
+    }
+
+    function assertStrategyManagerPosition(
+        address strategyManager,
+        address poolManager,
+        uint256 assets,
+        uint256 shares,
+        uint256 pendingShares,
+        uint256 unrealizedLosses
+    )
+        internal view
+    {
+        assertEq(IStrategyManager(strategyManager).assetsOf(poolManager),           assets);
+        assertEq(IStrategyManager(strategyManager).sharesOf(poolManager),           shares);
+        assertEq(IStrategyManager(strategyManager).pendingSharesOf(poolManager),    pendingShares);
+        assertEq(IStrategyManager(strategyManager).unrealizedLossesOf(poolManager), unrealizedLosses);
     }
 
     function assertBitcoinStrategyState(

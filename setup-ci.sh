@@ -43,4 +43,7 @@ git submodule update --init --recursive modules/trading-strategy
 echo "$SSH_KEY_STRATEGY_MANAGER" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/strategy-manager
 
+echo "$SSH_KEY_DEFI_STRATEGIES" > $HOME/.ssh/id_rsa
+git submodule update --init --recursive modules/defi-strategies
+
 git submodule update --init --recursive

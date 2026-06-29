@@ -49,3 +49,6 @@
 [submodule "modules/strategy-manager"]
 	path = modules/strategy-manager
 	url = git@github.com:maple-labs/strategy-manager-private.git
+[submodule "modules/defi-strategies"]
+	path = modules/defi-strategies
+	url = git@github.com:maple-labs/defi-strategies-private.git

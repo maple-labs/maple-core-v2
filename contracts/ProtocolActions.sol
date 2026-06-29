@@ -863,6 +863,27 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
+    function fundStrategyManager(address poolManager_, address strategyManager_, uint256 assetsIn_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).fundStrategyManager(poolManager_, assetsIn_, "");
+    }
+
+    function requestRedeemFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).requestRedeem(poolManager_, shares_);
+    }
+
+    function processRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).processRedemption(poolManager_, shares_, "");
+    }
+
     function impairStrategy(address strategy_) internal {
         IStrategyLike s_ = IStrategyLike(strategy_);
         IPoolManager pm_ = IPoolManager(s_.poolManager());

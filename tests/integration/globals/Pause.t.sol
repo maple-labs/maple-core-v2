@@ -29,8 +29,6 @@ contract PauseTests is TestBaseWithAssertions {
     address skyStrategy;
     address basicStrategy;
     address coreStrategy;
-    address tradingStrategy;
-    address tradingStrategyManager;
 
     /**************************************************************************************************************************************/
     /*** Functions Mappings (Need to be continuously updated with new functions)                                                        ***/
@@ -392,7 +390,7 @@ contract PauseTests is TestBaseWithAssertions {
             abi.encode(btcPool, address(mockPSM))
         );
 
-        ( tradingStrategyManager, tradingStrategy ) = _deployTradingStrategy();
+        _deployTradingStrategy();
         addStrategyManagerToPool(address(poolManager), tradingStrategyManager);
 
         // Set up all mappings
@@ -420,7 +418,7 @@ contract PauseTests is TestBaseWithAssertions {
         functions[address(poolPermissionManager)] = poolPermissionManagerFunctions;
         functions[address(bitcoinStrategy)]       = bitcoinStrategyFunctions;
         functions[tradingStrategyManager]         = strategyManagerFunctions;
-        functions[tradingStrategy]                = tradingStrategyFunctions;
+        functions[tradingUnderlyingStrategy]      = tradingStrategyFunctions;
 
         messages[poolManagerFactory]             = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanFactory]            = "MPF:PROTOCOL_PAUSED";
@@ -446,7 +444,7 @@ contract PauseTests is TestBaseWithAssertions {
         messages[address(aaveStrategy)]          = "MS:PAUSED";
         messages[address(skyStrategy)]           = "MS:PAUSED";
         messages[tradingStrategyManager]         = "MSM:PAUSED";
-        messages[tradingStrategy]                = "MTS:PAUSED";
+        messages[tradingUnderlyingStrategy]      = "MTS:PAUSED";
 
         // Caller overrides for factories where the implementation expects a specific contract context.
         caller[poolManagerFactory]          = address(poolDeployer);
@@ -510,7 +508,7 @@ contract PauseTests is TestBaseWithAssertions {
             address(aaveStrategy),
             address(skyStrategy),
             tradingStrategyManager,
-            tradingStrategy
+            tradingUnderlyingStrategy
         ];
 
         vm.prank(governor);
@@ -544,7 +542,7 @@ contract PauseTests is TestBaseWithAssertions {
             address(aaveStrategy),
             address(skyStrategy),
             tradingStrategyManager,
-            tradingStrategy
+            tradingUnderlyingStrategy
         ];
 
         for (uint256 i = 0; i < contracts.length; i++) {
@@ -574,7 +572,7 @@ contract PauseTests is TestBaseWithAssertions {
             address(aaveStrategy),
             address(skyStrategy),
             tradingStrategyManager,
-            tradingStrategy
+            tradingUnderlyingStrategy
         ];
 
         // Set global pause

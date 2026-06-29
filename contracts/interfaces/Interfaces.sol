@@ -61,6 +61,12 @@ import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/inter
 import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
 import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
 
+import { IMapleAaveV3Strategy as IMAV3S } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3Strategy.sol";
+
+import { AaveV3StrategyInitializerParams } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3StrategyInitializer.sol";
+
+import { IMapleTradingStrategy as IMTS } from "../../modules/trading-strategy/contracts/interfaces/IMapleTradingStrategy.sol";
+
 import { TradingStrategyInitializerParams } from "../../modules/trading-strategy/contracts/interfaces/IMapleTradingStrategyInitializer.sol";
 
 /******************************************************************************************************************************************/
@@ -68,6 +74,8 @@ import { TradingStrategyInitializerParams } from "../../modules/trading-strategy
 /******************************************************************************************************************************************/
 
 interface IAaveStrategy is IMapleAaveStrategy { }
+
+interface IAaveV3Strategy is IMAV3S { }
 
 interface IAssetController is IAC { }
 
@@ -114,6 +122,8 @@ interface ISkyStrategy is IMapleSkyStrategy { }
 interface ISyrupBitcoinRouter is ISBR { }
 
 interface ISyrupRouter is ISR { }
+
+interface ITradingStrategy is IMTS { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
 

@@ -7,13 +7,10 @@ contract TradingStrategyTestBase is TestBaseWithAssertions {
 
     address lp = makeAddr("lp");
 
-    address tradingStrategy;
-    address tradingStrategyManager;
-
     function setUp() public virtual override {
         super.setUp();
 
-        ( tradingStrategyManager, tradingStrategy ) = _deployTradingStrategy();
+        _deployTradingStrategy();
 
         addStrategyManagerToPool(address(poolManager), tradingStrategyManager);
     }

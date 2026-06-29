@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import { console } from "../modules/forge-std/src/Test.sol";
 
 import {
+    AaveV3StrategyInitializerParams,
     IAssetController,
     IAssetControllerOracle,
     IBitcoinStrategy,
@@ -69,6 +70,7 @@ contract TestBase is ProtocolActions, Utils {
     address bitcoinRouterProxy;
 
     address aaveStrategyFactory;
+    address aaveV3StrategyFactory;
     address basicStrategyFactory;
     address liquidatorFactory;
     address openTermLoanFactory;
@@ -82,6 +84,7 @@ contract TestBase is ProtocolActions, Utils {
     address tradingStrategyFactory;
 
     address aaveStrategyImplementation;
+    address aaveV3StrategyImplementation;
     address basicStrategyImplementation;
     address openTermLoanImplementation;
     address openTermLoanManagerImplementation;
@@ -95,6 +98,7 @@ contract TestBase is ProtocolActions, Utils {
     address tradingStrategyImplementation;
 
     address aaveStrategyInitializer;
+    address aaveV3StrategyInitializer;
     address basicStrategyInitializer;
     address openTermLoanInitializer;
     address openTermLoanManagerInitializer;
@@ -106,6 +110,12 @@ contract TestBase is ProtocolActions, Utils {
     address bitcoinStrategyInitializer;
     address strategyManagerInitializer;
     address tradingStrategyInitializer;
+
+    address aaveV3StrategyManager;
+    address tradingStrategyManager;
+
+    address aaveV3UnderlyingStrategy;
+    address tradingUnderlyingStrategy;
 
     address borrowerActions;
     address openTermRefinancer;
@@ -219,7 +229,29 @@ contract TestBase is ProtocolActions, Utils {
     /*** Strategy Manager Deployment                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function _deployTradingStrategy() internal returns (address strategyManager_, address tradingStrategy_) {
+    function _deployAaveV3Strategy(address aaveToken_) internal {
+        AaveV3StrategyInitializerParams memory params = AaveV3StrategyInitializerParams({
+            aaveToken:               aaveToken_,
+            strategyDelegateFeeRate: 0,
+            strategyProtocolFeeRate: 0,
+            referralCode:            0
+        });
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken_, true);
+
+        vm.prank(strategyDelegate);
+
+        (
+            aaveV3StrategyManager,
+            aaveV3UnderlyingStrategy
+        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, abi.encode(params));
+
+        vm.prank(governor);
+        globals.activateStrategyManager(aaveV3StrategyManager);
+    }
+
+    function _deployTradingStrategy() internal {
         TradingStrategyInitializerParams memory params = TradingStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
@@ -230,12 +262,12 @@ contract TestBase is ProtocolActions, Utils {
         vm.prank(strategyDelegate);
 
         (
-            strategyManager_,
-            tradingStrategy_
+            tradingStrategyManager,
+            tradingUnderlyingStrategy
         ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, abi.encode(params));
 
         vm.prank(governor);
-        globals.activateStrategyManager(strategyManager_);
+        globals.activateStrategyManager(tradingStrategyManager);
     }
 
     /**************************************************************************************************************************************/
@@ -583,10 +615,13 @@ contract TestBase is ProtocolActions, Utils {
         coreStrategyInitializer       = deployFromFile("Contracts@25", "CoreStrategyInitializer");
         bitcoinStrategyInitializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
 
+        aaveV3StrategyFactory         = deployFromFile("Contracts@28", "AaveV3StrategyFactory", abi.encode(address(globals)));
         strategyManagerFactory        = deployFromFile("Contracts@28", "StrategyManagerFactory", abi.encode(address(globals)));
         tradingStrategyFactory        = deployFromFile("Contracts@28", "TradingStrategyFactory", abi.encode(address(globals)));
+        aaveV3StrategyImplementation  = deployFromFile("Contracts@28", "AaveV3Strategy");
         strategyManagerImplementation = deployFromFile("Contracts@28", "StrategyManager");
         tradingStrategyImplementation = deployFromFile("Contracts@28", "TradingStrategy");
+        aaveV3StrategyInitializer     = deployFromFile("Contracts@28", "AaveV3StrategyInitializer");
         strategyManagerInitializer    = deployFromFile("Contracts@28", "StrategyManagerInitializer");
         tradingStrategyInitializer    = deployFromFile("Contracts@28", "TradingStrategyInitializer");
 
@@ -612,10 +647,11 @@ contract TestBase is ProtocolActions, Utils {
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 coreStrategyFactory,           true);
         globals.setValidInstanceOf("STRATEGY_FACTORY",                 bitcoinStrategyFactory,        true);
         globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
-        globals.setValidInstanceOf("REFINANCER",                       openTermRefinancer,   true);
-        globals.setValidInstanceOf("OT_REFINANCER",                    openTermRefinancer,   true);
+        globals.setValidInstanceOf("REFINANCER",                       openTermRefinancer,            true);
+        globals.setValidInstanceOf("OT_REFINANCER",                    openTermRefinancer,            true);
         globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
         globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY",         strategyManagerFactory,        true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      aaveV3StrategyFactory,         true);
         globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      tradingStrategyFactory,        true);
         globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),         true);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
@@ -628,6 +664,7 @@ contract TestBase is ProtocolActions, Utils {
         globals.setCanDeployFrom(skyStrategyFactory,     address(poolDeployer),     true);
         globals.setCanDeployFrom(coreStrategyFactory,    address(poolDeployer),     true);
         globals.setCanDeployFrom(bitcoinStrategyFactory, address(poolDeployer),     true);
+        globals.setCanDeployFrom(aaveV3StrategyFactory,  address(strategyDeployer), true);
         globals.setCanDeployFrom(strategyManagerFactory, address(strategyDeployer), true);
         globals.setCanDeployFrom(tradingStrategyFactory, address(strategyDeployer), true);
 
@@ -664,6 +701,9 @@ contract TestBase is ProtocolActions, Utils {
 
         IMapleProxyFactory(bitcoinStrategyFactory).registerImplementation(1, bitcoinStrategyImplementation, bitcoinStrategyInitializer);
         IMapleProxyFactory(bitcoinStrategyFactory).setDefaultVersion(1);
+
+        IMapleProxyFactory(aaveV3StrategyFactory).registerImplementation(1, aaveV3StrategyImplementation, aaveV3StrategyInitializer);
+        IMapleProxyFactory(aaveV3StrategyFactory).setDefaultVersion(1);
 
         IMapleProxyFactory(strategyManagerFactory).registerImplementation(1, strategyManagerImplementation, strategyManagerInitializer);
         IMapleProxyFactory(strategyManagerFactory).setDefaultVersion(1);

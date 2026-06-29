@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
-
 import { TradingStrategyTestBase } from "./TradingStrategyTestBase.sol";
 
 contract TradingStrategyFundTests is TradingStrategyTestBase {
@@ -20,11 +18,22 @@ contract TradingStrategyFundTests is TradingStrategyTestBase {
             availableLiquidity: assets
         });
 
-        assertEq(fundsAsset.balanceOf(tradingStrategy),                                   0);
-        assertEq(IStrategyManager(tradingStrategyManager).assetsOf(address(poolManager)), 0);
+        assertTradingStrategy({
+            strategyManager:  tradingStrategyManager,
+            aum:              0,
+            unrealizedLosses: 0
+        });
 
-        vm.prank(strategyDelegate);
-        IStrategyManager(tradingStrategyManager).fundStrategyManager(address(poolManager), assets, "");
+        assertStrategyManagerPosition({
+            strategyManager:  tradingStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           0,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        fundStrategyManager(address(poolManager), tradingStrategyManager, assets);
 
         assertPoolState({
             pool:               address(pool),
@@ -34,8 +43,20 @@ contract TradingStrategyFundTests is TradingStrategyTestBase {
             availableLiquidity: 0
         });
 
-        assertEq(fundsAsset.balanceOf(tradingStrategy),                                   assets);
-        assertEq(IStrategyManager(tradingStrategyManager).assetsOf(address(poolManager)), assets);
+        assertTradingStrategy({
+            strategyManager:  tradingStrategyManager,
+            aum:              assets,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  tradingStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           assets,
+            shares:           assets,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
     }
 
 }
