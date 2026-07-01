@@ -28,12 +28,6 @@ contract HealthCheckerAssertions is Runner {
         assertTrue(results.poolManagerInvariantA, "PoolManagerInvariantA");
         assertTrue(results.poolManagerInvariantB, "PoolManagerInvariantB");
 
-        assertTrue(results.withdrawalManagerCyclicalInvariantC, "WithdrawalManagerCyclicalInvariantC");
-        assertTrue(results.withdrawalManagerCyclicalInvariantD, "WithdrawalManagerCyclicalInvariantD");
-        assertTrue(results.withdrawalManagerCyclicalInvariantE, "WithdrawalManagerCyclicalInvariantE");
-        assertTrue(results.withdrawalManagerCyclicalInvariantM, "WithdrawalManagerCyclicalInvariantM");
-        assertTrue(results.withdrawalManagerCyclicalInvariantN, "WithdrawalManagerCyclicalInvariantN");
-
         assertTrue(results.withdrawalManagerQueueInvariantA, "WithdrawalManagerQueueInvariantA");
         assertTrue(results.withdrawalManagerQueueInvariantB, "WithdrawalManagerQueueInvariantB");
         assertTrue(results.withdrawalManagerQueueInvariantD, "WithdrawalManagerQueueInvariantD");

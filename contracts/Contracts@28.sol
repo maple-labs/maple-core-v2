@@ -5,6 +5,10 @@ import { MapleAaveV3Strategy as MAV3S }             from "../modules/defi-strate
 import { MapleAaveV3StrategyFactory as MAV3SF }     from "../modules/defi-strategies/contracts/aaveV3/MapleAaveV3StrategyFactory.sol";
 import { MapleAaveV3StrategyInitializer as MAV3SI } from "../modules/defi-strategies/contracts/aaveV3/MapleAaveV3StrategyInitializer.sol";
 
+import { MapleSkyStrategy as MSS }             from "../modules/defi-strategies/contracts/sky/MapleSkyStrategy.sol";
+import { MapleSkyStrategyFactory as MSSF }     from "../modules/defi-strategies/contracts/sky/MapleSkyStrategyFactory.sol";
+import { MapleSkyStrategyInitializer as MSSI } from "../modules/defi-strategies/contracts/sky/MapleSkyStrategyInitializer.sol";
+
 import { MapleStrategyDeployer as MSD }            from "../modules/strategy-manager/contracts/MapleStrategyDeployer.sol";
 import { MapleStrategyManager as MSM }             from "../modules/strategy-manager/contracts/MapleStrategyManager.sol";
 import { MapleStrategyManagerFactory as MSMF }     from "../modules/strategy-manager/contracts/MapleStrategyManagerFactory.sol";
@@ -42,10 +46,20 @@ contract StrategyManagerFactory is MSMF {
 
 contract TradingStrategy is MTS { }
 
-contract TradingStrategyInitializer is MTSI { }
-
 contract TradingStrategyFactory is MTSF {
 
     constructor(address globals_) MTSF(globals_) { }
 
 }
+
+contract TradingStrategyInitializer is MTSI { }
+
+contract SkyStrategy is MSS { }
+
+contract SkyStrategyFactory is MSSF {
+
+    constructor(address globals_) MSSF(globals_) { }
+
+}
+
+contract SkyStrategyInitializer is MSSI { }

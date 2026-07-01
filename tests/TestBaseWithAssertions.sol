@@ -14,6 +14,7 @@ import {
     IPool,
     IPoolManager,
     IStrategyManager,
+    ISkyStrategy,
     ITradingStrategy,
     IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
@@ -329,6 +330,14 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IAaveV3Strategy(strategy).assetsUnderManagement(),                 aum);
         assertEq(IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy), aum);
         assertEq(IAaveV3Strategy(strategy).unrealizedLosses(),                      unrealizedLosses);
+    }
+
+    function assertSkyStrategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {
+        address strategy = IStrategyManager(strategyManager).underlyingStrategy();
+
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(), aum);
+        assertEq(ISkyStrategy(strategy).assetsUnderManagement(),            aum);
+        assertEq(ISkyStrategy(strategy).unrealizedLosses(),                 unrealizedLosses);
     }
 
     function assertTradingStrategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {

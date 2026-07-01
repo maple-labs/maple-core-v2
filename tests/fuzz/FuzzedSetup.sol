@@ -2,10 +2,6 @@
 pragma solidity ^0.8.7;
 
 import {
-    IAavePoolLike,
-    IAaveStrategy,
-    IAaveTokenLike,
-    ICoreStrategy,
     IERC20,
     ILoanLike,
     IOpenTermLoan,
@@ -300,28 +296,6 @@ contract FuzzedUtil is ProtocolActions {
             uint256 max = IERC20(_fundsAsset).balanceOf(address(_pool));
             uint256 min = 1;
 
-            if (_isCoreStrategy(strategy)) {
-                address strategyVault = ICoreStrategy(strategy).strategyVault();
-
-                uint256 liquidityCap       = IPoolManager(IPool(strategyVault).manager()).liquidityCap();
-                uint256 totalAssets        = IPool(strategyVault).totalAssets();
-                uint256 availableToDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
-
-                if (availableToDeposit < max) max = availableToDeposit;
-            }
-
-
-            if (_isAaveStrategy(strategy)) {
-                // We need to check what is supply cap on Aave on-chain so we don't exceed it.
-                uint256 availableToSupply = _getMaxAmountToSupplyAaveStrategy(strategy);
-
-                if (availableToSupply < max) max = availableToSupply;
-
-                // When depositing 1 wei on Aave it reverts because it rounds down aToken burning
-                // amount to 0 and fails with INVALID_BURN_AMOUNT error.
-                min = 2;
-            }
-
             if (min > max) return;
 
             fundStrategy(strategy, getSomeValue(min, max));
@@ -534,39 +508,6 @@ contract FuzzedUtil is ProtocolActions {
         _fundsAsset  = IPool(pool).asset();
 
         _openTermLoanManager = IPoolManager(_poolManager).strategyList(0);
-    }
-
-    function _getMaxAmountToSupplyAaveStrategy(address aaveStrategy) internal view returns (uint256) {
-        address aavePool = IAaveStrategy(aaveStrategy).aavePool();
-
-        IAavePoolLike.ReserveData             memory reserveData   = IAavePoolLike(aavePool).getReserveData(address(_fundsAsset));
-        IAavePoolLike.ReserveConfigurationMap memory reserveConfig = reserveData.configuration;
-
-        // All reserve config is packed on uint256 and supply cap is at bit 116-151.
-        // We need to extract the supply cap from the reserve config and calculate the max supply amount.
-
-        uint256 SUPPLY_CAP_LSB   = 116;
-        uint256 SUPPLY_CAP_WIDTH = 36;
-        uint256 SUPPLY_CAP_MASK  = (uint256(1) << SUPPLY_CAP_WIDTH) - 1;
-
-        uint256 supplyCapHumanReadable = (reserveConfig.data >> SUPPLY_CAP_LSB) & SUPPLY_CAP_MASK;
-        uint256 supplyCap              = supplyCapHumanReadable * IERC20(reserveData.aTokenAddress).decimals();
-        uint256 totalSupply            = IAaveTokenLike(reserveData.aTokenAddress).totalSupply();
-        uint256 availableToSupply      = supplyCap > totalSupply ? supplyCap - totalSupply : 0;
-
-        return availableToSupply;
-    }
-
-    function _isAaveStrategy(address strategy_) internal view returns (bool) {
-        bytes memory t = bytes(IStrategy(strategy_).STRATEGY_TYPE());
-
-        return keccak256(t) == keccak256("AAVE");
-    }
-
-    function _isCoreStrategy(address strategy_) internal view returns (bool) {
-        bytes memory t = bytes(IStrategy(strategy_).STRATEGY_TYPE());
-
-        return keccak256(t) == keccak256("CORE");
     }
 
 }

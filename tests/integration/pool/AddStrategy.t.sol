@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { console } from "../../../modules/forge-std/src/Test.sol";
 
-import { IMapleProxyFactory, IMockERC20, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
+import { IMockERC20, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../../TestBase.sol";
 
@@ -26,18 +26,12 @@ contract AddStrategyTests is TestBase {
             poolDelegate_:              address(poolDelegate),
             fundsAsset_:                address(fundsAsset),
             strategyFactories_:         new address[](0),
-            strategyData_:    new bytes[](0),
+            strategyData_:              new bytes[](0),
             name_:                      "Pool",
             symbol_:                    "MP",
             liquidityCap_:              type(uint256).max,
             delegateManagementFeeRate_: 0
         }));
-
-        vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", address(AAVE_USDC),     true);
-        globals.setValidInstanceOf("STRATEGY_VAULT", address(SAVINGS_USDS),  true);
-        globals.setValidInstanceOf("PSM",            address(USDS_LITE_PSM), true);
-        vm.stopPrank();
     }
 
     // TODO: Write the rest of the tests for addStrategy()
@@ -48,24 +42,6 @@ contract AddStrategyTests is TestBase {
 
         vm.expectRevert("PM:PAUSED");
         poolManager.addStrategy(openTermLoanManagerFactory, keccak256(abi.encode(openTermLoanManagerFactory, new bytes(0))), new bytes(0));
-    }
-
-    function test_addStrategy_withExtraArguments_withGovernor() external {
-        assertEq(poolManager.strategyListLength(), 0);
-
-        vm.prank(governor);
-        poolManager.addStrategy(
-            skyStrategyFactory,
-            keccak256(abi.encode(skyStrategyFactory, abi.encode(SAVINGS_USDS, USDS_LITE_PSM))),
-            abi.encode(SAVINGS_USDS, USDS_LITE_PSM)
-        );
-
-        assertEq(poolManager.strategyListLength(), 1);
-
-        address strategy = poolManager.strategyList(0);
-
-        assertEq(poolManager.isStrategy(strategy),                            true);
-        assertEq(IMapleProxyFactory(skyStrategyFactory).isInstance(strategy), true);
     }
 
 }

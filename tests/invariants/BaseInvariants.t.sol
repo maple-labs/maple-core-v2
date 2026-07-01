@@ -15,7 +15,6 @@ import {
     IPool,
     IPoolManager,
     IPoolPermissionManager,
-    IPSMLike,
     IStrategyLike,
     ISyrupBitcoinRouter,
     IWithdrawalManagerQueue
@@ -29,7 +28,6 @@ import { DepositHandler }            from "./handlers/DepositHandler.sol";
 import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
 import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
 import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
-import { StrategyHandler }           from "./handlers/StrategyHandler.sol";
 import { TransferHandler }           from "./handlers/TransferHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
@@ -50,7 +48,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     OpenTermLoanHandler       otlHandler;
     PermissionHandler         permissionHandler;
     QueueWithdrawalHandler    queueWithdrawalHandler;
-    StrategyHandler           strategyHandler;
     TransferHandler           transferHandler;
 
     address[] lps;
@@ -123,15 +120,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant L: pendingRequestIds includes all active requests
         * Invariant M: requestsByOwner lists are strictly increasing
         * Invariant N: requestsByOwner lists match active requests exactly
-
-     * Strategy
-        * Invariant A: assetsUnderManagement == currentTotalAssets - accruedFees
-        * Invariant B: currentAccruedFees <= currentTotalAssets
-        * Invariant C: strategyState == ACTIVE -> unrealizedLosses == 0
-        * Invariant D: strategyState == IMPAIRED -> assetsUnderManagement == unrealizedLosses
-        * Invariant E: strategyState == INACTIVE -> assetsUnderManagement == unrealizedLosses == 0
-        * Invariant F: strategyState ∈ [0, 2]
-        * Invariant G: strategyFeeRate <= 1e6
 
      * Syrup BTC
         * Invariant A: depositAssets(wBTC) == poolAssets(wBTC)
@@ -942,90 +930,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     /**************************************************************************************************************************************/
-    /*** Strategy Invariants                                                                                                            ***/
-    /**************************************************************************************************************************************/
-
-    function assert_strategy_invariants() internal view {
-        uint256 strategyCount = strategyHandler.strategyCount();
-
-        for (uint256 i; i < strategyCount; i++) {
-            address strategy = strategyHandler.strategies(i);
-
-            assert_strategy_invariant_A(strategy);
-            assert_strategy_invariant_B(strategy);
-            assert_strategy_invariant_C(strategy);
-            assert_strategy_invariant_D(strategy);
-            assert_strategy_invariant_E(strategy);
-            assert_strategy_invariant_F(strategy);
-            assert_strategy_invariant_G(strategy);
-        }
-    }
-
-    function assert_strategy_invariant_A(address strategy) internal view {
-        IStrategyLike s = IStrategyLike(strategy);
-
-        // Ignore inactive strategies.
-        if (s.strategyState() == 2) {
-            return;
-        }
-
-        uint256 assetsUnderManagement = s.assetsUnderManagement();
-        uint256 currentTotalAssets    = _getCurrentTotalAssets(s);
-        uint256 currentAccruedFees    = _getCurrentAccruedFees(s);
-
-        assertEq(assetsUnderManagement, currentTotalAssets - currentAccruedFees, "Strategy Invariant A");
-    }
-
-    function assert_strategy_invariant_B(address strategy) internal view {
-        IStrategyLike s = IStrategyLike(strategy);
-
-        uint256 currentTotalAssets = _getCurrentTotalAssets(s);
-        uint256 currentAccruedFees = _getCurrentAccruedFees(s);
-
-        assertLe(currentAccruedFees, currentTotalAssets, "Strategy Invariant B");
-    }
-
-    function assert_strategy_invariant_C(address strategy) internal view {
-        IStrategyLike s = IStrategyLike(strategy);
-
-        if (s.strategyState() == 0) {
-            assertEq(s.unrealizedLosses(), 0, "Strategy Invariant C");
-        }
-    }
-
-    function assert_strategy_invariant_D(address strategy) internal view {
-        IStrategyLike s = IStrategyLike(strategy);
-
-        if (s.strategyState() == 1) {
-            assertEq(s.assetsUnderManagement(), s.unrealizedLosses(), "Strategy Invariant D");
-        }
-    }
-
-    function assert_strategy_invariant_E(address strategy) internal view {
-        IStrategyLike s = IStrategyLike(strategy);
-
-        if (s.strategyState() == 2) {
-            assertEq(s.assetsUnderManagement(), 0, "Strategy Invariant E");
-            assertEq(s.unrealizedLosses(),      0, "Strategy Invariant E");
-        }
-    }
-
-    function assert_strategy_invariant_F(address strategy) internal view {
-        assertLe(IStrategyLike(strategy).strategyState(), 2, "Strategy Invariant F");
-    }
-
-    function assert_strategy_invariant_G(address strategy) internal view {
-        bytes memory t = bytes(IStrategyLike(strategy).STRATEGY_TYPE());
-
-        // Core strategies have no fees.
-        if (keccak256(t) == keccak256("CORE")) {
-            return;
-        }
-
-        assertLe(IStrategyLike(strategy).strategyFeeRate(), 1e6, "Strategy Invariant G");
-    }
-
-    /**************************************************************************************************************************************/
     /*** Syrup BTC Invariants                                                                                                           ***/
     /**************************************************************************************************************************************/
 
@@ -1114,25 +1018,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** Internal Helpers Functions                                                                                                     ***/
     /**************************************************************************************************************************************/
 
-    function _getCurrentAccruedFees(IStrategyLike strategy) internal view returns (uint256 currentAccruedFees) {
-        bytes memory t = bytes(strategy.STRATEGY_TYPE());
-
-        // Core strategies have no fees.
-        if (keccak256(t) == keccak256("CORE")) {
-            return 0;
-        }
-
-        uint256 currentTotalAssets      = _getCurrentTotalAssets(strategy);
-        uint256 lastRecordedTotalAssets = strategy.lastRecordedTotalAssets();
-        uint256 strategyFeeRate         = strategy.strategyFeeRate();
-
-        if (currentTotalAssets <= lastRecordedTotalAssets) {
-            return 0;
-        }
-
-        currentAccruedFees = (currentTotalAssets - lastRecordedTotalAssets) * strategyFeeRate / 1e6;
-    }
-
     function _getActiveLoans() internal view returns (address[] memory loans) {
         if (address(otlHandler) == address(0)) return loans;
 
@@ -1151,52 +1036,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             if (IOpenTermLoan(loan).dateFunded() != 0) {
                 loans[index++] = loan;
             }
-        }
-    }
-
-    function _getCurrentTotalAssets(IStrategyLike strategy) internal view returns (uint256 currentTotalAssets) {
-        bytes memory t = bytes(strategy.STRATEGY_TYPE());
-
-        if (keccak256(t) == keccak256("BASIC")) {
-            IERC4626Like strategyVault = IERC4626Like(strategy.strategyVault());
-            uint256 currentTotalShares = strategyVault.balanceOf(address(strategy));
-
-            currentTotalAssets = IERC4626Like(strategyVault).previewRedeem(currentTotalShares);
-        }
-
-        else if (keccak256(t) == keccak256("AAVE")) {
-            IERC20Like aaveToken = IERC20Like(strategy.aaveToken());
-
-            currentTotalAssets = aaveToken.balanceOf(address(strategy));
-        }
-
-        else if (keccak256(t) == keccak256("SKY")) {
-            IERC4626Like savingsUsds = IERC4626Like(strategy.savingsUsds());
-            IPSMLike psm             = IPSMLike(strategy.psm());
-
-            uint256 psmTout          = psm.tout();
-            uint256 conversionFactor = psm.to18ConversionFactor();
-            uint256 usdsAmount       = savingsUsds.previewRedeem(savingsUsds.balanceOf(address(strategy)));
-
-            currentTotalAssets = (usdsAmount * 1e18) / (conversionFactor * (1e18 + psmTout));
-        }
-
-        else if (keccak256(t) == keccak256("CORE")) {
-            IERC20Like asset = IERC20Like(strategy.fundsAsset());
-            IPool      pool  = IPool(strategy.strategyVault());
-
-            IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(strategy.mapleWithdrawalManager());
-
-            ( , uint256 escrowedShares ) = wm.requests(wm.requestIds(address(strategy)));
-
-            uint256 shares = pool.balanceOf(address(strategy)) + escrowedShares;
-            uint256 assets = asset.balanceOf(address(strategy));
-
-            currentTotalAssets = pool.convertToExitAssets(shares) + assets;
-        }
-
-        else {
-            require(false, "INVALID_STRATEGY");
         }
     }
 

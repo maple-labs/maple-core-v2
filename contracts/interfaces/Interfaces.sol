@@ -51,19 +51,17 @@ import { IMapleWithdrawalManager as IMWMQ }
 
 import { IMapleStrategy }        from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
 import { IMapleFeeStrategy }     from "../../modules/strategies/contracts/interfaces/IMapleFeeStrategy.sol";
-import { IMapleAaveStrategy }    from "../../modules/strategies/contracts/interfaces/aaveStrategy/IMapleAaveStrategy.sol";
-import { IMapleBasicStrategy }   from "../../modules/strategies/contracts/interfaces/basicStrategy/IMapleBasicStrategy.sol";
 import { IMapleBitcoinStrategy } from "../../modules/strategies/contracts/interfaces/bitcoinStrategy/IMapleBitcoinStrategy.sol";
-import { IMapleSkyStrategy }     from "../../modules/strategies/contracts/interfaces/skyStrategy/IMapleSkyStrategy.sol";
-import { IMapleCoreStrategy }    from "../../modules/strategies/contracts/interfaces/coreStrategy/IMapleCoreStrategy.sol";
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
 
 import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
 import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
 
 import { IMapleAaveV3Strategy as IMAV3S } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3Strategy.sol";
+import { IMapleSkyStrategy as IMSS }      from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategy.sol";
 
 import { AaveV3StrategyInitializerParams } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3StrategyInitializer.sol";
+import { SkyStrategyInitializerParams }    from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategyInitializer.sol";
 
 import { IMapleTradingStrategy as IMTS } from "../../modules/trading-strategy/contracts/interfaces/IMapleTradingStrategy.sol";
 
@@ -73,8 +71,6 @@ import { TradingStrategyInitializerParams } from "../../modules/trading-strategy
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
 
-interface IAaveStrategy is IMapleAaveStrategy { }
-
 interface IAaveV3Strategy is IMAV3S { }
 
 interface IAssetController is IAC { }
@@ -83,11 +79,7 @@ interface IAssetControllerOracle is IACO { }
 
 interface IBorrowerActions is IMapleBorrowerActions { }
 
-interface IBasicStrategy is IMapleBasicStrategy { }
-
 interface IBitcoinStrategy is IMapleBitcoinStrategy { }
-
-interface ICoreStrategy is IMapleCoreStrategy { }
 
 interface ICompositeToken is ICT { }
 
@@ -117,11 +109,11 @@ interface IStrategyDeployer is IMSD { }
 
 interface IStrategyManager is IMSM { }
 
-interface ISkyStrategy is IMapleSkyStrategy { }
-
 interface ISyrupBitcoinRouter is ISBR { }
 
 interface ISyrupRouter is ISR { }
+
+interface ISkyStrategy is IMSS { }
 
 interface ITradingStrategy is IMTS { }
 
@@ -132,84 +124,6 @@ interface IWithdrawalManagerQueue is IMWMQ { }
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
-
-interface IAaveConfiguratorLike {
-
-    function setSupplyCap(address asset, uint256 newSupplyCap) external;
-
-}
-
-interface IAavePoolLike {
-
-    struct ReserveData {
-        ReserveConfigurationMap configuration;
-
-        uint128 liquidityIndex;
-        uint128 currentLiquidityRate;
-        uint128 variableBorrowIndex;
-        uint128 currentVariableBorrowRate;
-        uint128 currentStableBorrowRate;
-
-        uint40 lastUpdateTimestamp;
-
-        uint16 id;
-
-        address aTokenAddress;
-        address stableDebtTokenAddress;
-        address variableDebtTokenAddress;
-        address interestRateStrategyAddress;
-
-        uint128 accruedToTreasury;
-        uint128 unbacked;
-        uint128 isolationModeTotalDebt;
-    }
-
-    struct ReserveConfigurationMap {
-        //bit 0-15: LTV
-        //bit 16-31: Liq. threshold
-        //bit 32-47: Liq. bonus
-        //bit 48-55: Decimals
-        //bit 56: reserve is active
-        //bit 57: reserve is frozen
-        //bit 58: borrowing is enabled
-        //bit 59: stable rate borrowing enabled
-        //bit 60: asset is paused
-        //bit 61: borrowing in isolation mode is enabled
-        //bit 62: siloed borrowing enabled
-        //bit 63: flashloaning enabled
-        //bit 64-79: reserve factor
-        //bit 80-115 borrow cap in whole tokens, borrowCap == 0 => no cap
-        //bit 116-151 supply cap in whole tokens, supplyCap == 0 => no cap
-        //bit 152-167 liquidation protocol fee
-        //bit 168-175 eMode category
-        //bit 176-211 unbacked mint cap in whole tokens, unbackedMintCap == 0 => minting disabled
-        //bit 212-251 debt ceiling for isolation mode with (ReserveConfiguration::DEBT_CEILING_DECIMALS) decimals
-        //bit 252-255 unused
-
-        uint256 data;
-    }
-
-    function getReserveData(address asset_) external view returns (ReserveData memory);
-
-}
-
-interface IAaveRewardsControllerLike {
-
-    function getRewardsList() external view returns (address[] memory);
-
-    function getRewardsByAsset(address asset) external view returns (address[] memory);
-
-    function getUserRewards(address[] calldata assets, address user, address reward) external view returns (uint256);
-
-}
-
-interface IAaveTokenLike {
-
-    function getIncentivesController() external view returns (address controller);
-
-    function totalSupply() external view returns (uint256 totalSupply);
-
-}
 
 interface IERC20Like {
 
@@ -469,35 +383,7 @@ interface IWithdrawalManagerQueueV200Like {
 
 }
 
-interface IPSMLike {
-
-    function buyGem(address usr, uint256 gemAmt) external returns (uint256 daiInWad);
-
-    function file(bytes32 what, uint256 data) external;
-
-    function gem() external view returns (address gem);
-
-    function psm() external view returns (address pms);
-
-    function sellGem(address usr, uint256 gemAmt) external returns (uint256 daiOutWad);
-
-    function tin() external view returns (uint256 tin); // Sell side fee
-
-    function tout() external view returns (uint256 tout); // Buy side fee
-
-    function to18ConversionFactor() external view returns (uint256 to18ConversionFactor);
-
-    function usds() external view returns (address usds);
-
-    function __setGem(address gem_) external;
-
-    function __setUsds(address usds_) external;
-
-}
-
 interface IStrategyLike is IStrategy {
-
-    function aaveToken() external view returns (address aaveToken);
 
     function fundsAsset() external view returns (address fundsAsset);
 
@@ -505,31 +391,9 @@ interface IStrategyLike is IStrategy {
 
     function fundStrategy(uint256 assetsIn, uint256 minSharesOut) external;
 
-    function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
-
-    function mapleWithdrawalManager() external view returns (address withdrawalManager);
-
     function pool() external view returns (address pool);
 
     function poolManager() external view returns (address poolManager);
-
-    function psm() external view returns (address psm);
-
-    function pushAssetsToPool() external;
-
-    function reactivateStrategy() external;
-
-    function reactivateStrategy(bool updateAccounting) external;
-
-    function requestWithdrawFromStrategy(uint256 assets) external;
-
-    function savingsUsds() external view returns (address savingsUsds);
-
-    function strategyFeeRate() external view returns (uint256 strategyFeeRate);
-
-    function strategyState() external view returns (uint256 strategyState);
-
-    function strategyVault() external view returns (address strategyVault);
 
     function withdrawFromStrategy(uint256 assetsOut) external;
 

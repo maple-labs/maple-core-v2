@@ -14,14 +14,10 @@ contract MapleProxyFactoryFunctionsTests is GovernorTimelockTestBase {
     function setUp() public override {
         super.setUp();
 
-        proxyFactories.push(aaveStrategyFactory);
-        proxyFactories.push(basicStrategyFactory);
         proxyFactories.push(openTermLoanFactory);
         proxyFactories.push(openTermLoanManagerFactory);
         proxyFactories.push(poolManagerFactory);
         proxyFactories.push(queueWMFactory);
-        proxyFactories.push(skyStrategyFactory);
-        proxyFactories.push(coreStrategyFactory);
     }
 
     function test_disableUpgradePath() public {

@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import {
     IBitcoinStrategy,
-    ICoreStrategy,
     IERC20,
     IERC20Like,
     IExemptionsManagerLike,
@@ -53,13 +52,8 @@ contract ProtocolActions is Runner {
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
-    address AAVE_ACL      = address(0xc2aaCf6553D20d1e9d78E365AAba8032af9c85b0);
-    address AAVE_CONFIG   = address(0x64b761D848206f447Fe2dd461b0c635Ec39EbB27);
     address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
-    address AAVE_USDS     = address(0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259);
-    address AAVE_USDT     = address(0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a);
     address SAVINGS_USDS  = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
-    address SYRUP_USDC    = address(0x80ac24aA929eaF5013f6436cdA2a7ba190f5Cc0b);
     address USDS_LITE_PSM = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
     address USDS          = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
 
@@ -366,22 +360,6 @@ contract ProtocolActions is Runner {
         vm.startPrank(account_);
         sharesReturned_ = IPool(pool_).removeShares(amount_, account_);
         vm.stopPrank();
-    }
-
-    function removeSharesCoreStrategy(address strategy_, uint256 sharesToRemove_) internal {
-        address poolManager_  = IStrategyLike(strategy_).poolManager();
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.prank(poolDelegate_);
-        ICoreStrategy(strategy_).removeShares(sharesToRemove_);
-    }
-
-    function removeSharesByIdCoreStrategy(address strategy_, uint256 requestId_, uint256 sharesToRemove_) internal {
-        address poolManager_  = IStrategyLike(strategy_).poolManager();
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.prank(poolDelegate_);
-        ICoreStrategy(strategy_).removeSharesById(requestId_, sharesToRemove_);
     }
 
     function requestRedeem(address pool_, address account_, uint256 amount_) internal returns (uint256 escrowShares_) {
@@ -838,16 +816,6 @@ contract ProtocolActions is Runner {
     /*** Strategy Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
-    function deactivateStrategy(address strategy_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.deactivateStrategy();
-    }
-
     function fundStrategy(address strategy_, uint256 assetsIn_) internal {
         IStrategyLike s_ = IStrategyLike(strategy_);
         IPoolManager pm_ = IPoolManager(s_.poolManager());
@@ -882,66 +850,6 @@ contract ProtocolActions is Runner {
 
         vm.prank(strategyDelegate_);
         IStrategyManager(strategyManager_).processRedemption(poolManager_, shares_, "");
-    }
-
-    function impairStrategy(address strategy_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.impairStrategy();
-    }
-
-    function pushAssetsToPool(address strategy_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.pushAssetsToPool();
-    }
-
-    function reactivateStrategy(address strategy_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.reactivateStrategy();
-    }
-
-    function reactivateStrategy(address strategy_, bool updateAccounting_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.reactivateStrategy(updateAccounting_);
-    }
-
-    function requestWithdrawFromStrategy(address strategy_, uint256 assets_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.requestWithdrawFromStrategy(assets_);
-    }
-
-    function setStrategyFeeRate(address strategy_, uint256 feeRate_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
-
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.setStrategyFeeRate(feeRate_);
     }
 
     function withdrawFromStrategy(address strategy_, uint256 assetsOut_) internal {
