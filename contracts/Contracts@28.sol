@@ -9,6 +9,12 @@ import { MapleSkyStrategy as MSS }             from "../modules/defi-strategies/
 import { MapleSkyStrategyFactory as MSSF }     from "../modules/defi-strategies/contracts/sky/MapleSkyStrategyFactory.sol";
 import { MapleSkyStrategyInitializer as MSSI } from "../modules/defi-strategies/contracts/sky/MapleSkyStrategyInitializer.sol";
 
+import { MaplePool as MP }                      from "../modules/pool/contracts/MaplePool.sol";
+import { MaplePoolDeployer as MPD }             from "../modules/pool/contracts/MaplePoolDeployer.sol";
+import { MaplePoolManager as MPM }              from "../modules/pool/contracts/MaplePoolManager.sol";
+import { MaplePoolManagerInitializer as MPMI }  from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
+import { MaplePoolManagerMigratorV500 as MPMM } from "../modules/pool/contracts/proxy/MaplePoolManagerMigratorV500.sol";
+
 import { MapleStrategyDeployer as MSD }            from "../modules/strategy-manager/contracts/MapleStrategyDeployer.sol";
 import { MapleStrategyManager as MSM }             from "../modules/strategy-manager/contracts/MapleStrategyManager.sol";
 import { MapleStrategyManagerFactory as MSMF }     from "../modules/strategy-manager/contracts/MapleStrategyManagerFactory.sol";
@@ -27,6 +33,32 @@ contract AaveV3StrategyFactory is MAV3SF {
 }
 
 contract AaveV3StrategyInitializer is MAV3SI { }
+
+contract Pool is MP {
+
+    constructor(
+        address manager_,
+        address asset_,
+        address destination_,
+        uint256 bootstrapMint_,
+        uint256 initialSupply_,
+        string  memory name_,
+        string  memory symbol_
+    ) MP(manager_, asset_, destination_, bootstrapMint_, initialSupply_, name_, symbol_) { }
+
+}
+
+contract PoolDeployer is MPD {
+
+    constructor(address globals_) MPD(globals_) { }
+
+}
+
+contract PoolManager is MPM { }
+
+contract PoolManagerInitializer is MPMI { }
+
+contract PoolManagerMigrator is MPMM { }
 
 contract StrategyDeployer is MSD {
 

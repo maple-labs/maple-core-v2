@@ -39,7 +39,7 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts@25","PoolManager");
+    address newImplementation = deployFromFile("Contracts@28","PoolManager");
 
     bytes upgradeCallData = new bytes(0);
 

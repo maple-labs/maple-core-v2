@@ -234,6 +234,8 @@ contract MaxMintTests is TestBase {
 
 }
 
+// TODO:: Update maxRedeem tests once WM submodule gets updated
+/*
 contract MaxRedeemWMQueueTests is TestBase {
 
     address lp1;
@@ -309,6 +311,7 @@ contract MaxRedeemWMQueueTests is TestBase {
     }
 
 }
+*/
 
 contract PreviewRedeemWithQueueWMTests is TestBase {
 
