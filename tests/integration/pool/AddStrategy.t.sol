@@ -10,7 +10,7 @@ import { TestBase } from "../../TestBase.sol";
 contract AddStrategyTests is TestBase {
 
     function setUp() public override {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), MAINNET_FORK_BLOCK);
 
         start = block.timestamp;
 

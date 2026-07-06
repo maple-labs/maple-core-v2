@@ -10,7 +10,7 @@ contract SkyStrategyTestBase is TestBaseWithAssertions {
     address lp = makeAddr("lp");
 
     function setUp() public virtual override {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), MAINNET_FORK_BLOCK);
 
         start = block.timestamp;
 
