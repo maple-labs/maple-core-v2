@@ -392,12 +392,11 @@ contract OpenTermLoanHandler is HandlerBase {
 
     function _getPrincipalIncrease(uint256 seed_) internal view returns (uint256 principal_) {
         uint256 availableAssets_ = asset.balanceOf(address(pool)) / 2;
-        uint256 lockedLiquidity_ = IWithdrawalManager(poolManager.withdrawalManager()).lockedLiquidity();
 
         // Do nothing if there are no assets available for utilization.
-        if (availableAssets_ <= lockedLiquidity_) return 0;
+        if (availableAssets_ == 0) return 0;
 
-        principal_ = _bound(_hash(seed_, "principal"), 1, availableAssets_ - lockedLiquidity_);
+        principal_ = _bound(_hash(seed_, "principal"), 1, availableAssets_);
     }
 
     function _hash(uint256 number_, string memory salt) internal pure returns (uint256 hash_) {

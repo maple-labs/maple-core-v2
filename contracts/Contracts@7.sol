@@ -8,8 +8,10 @@ import { MapleAddressRegistryBASEL2 as ARB } from "../modules/address-registry/c
 
 import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
+import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+
 import { MapleLoan as MOTL }                  from "../modules/open-term-loan/contracts/MapleLoan.sol";
-import { MapleLoanV202Migrator as MOTLV202M } from "modules/open-term-loan/contracts/MapleLoanV202Migrator.sol";
+import { MapleLoanV202Migrator as MOTLV202M } from "../modules/open-term-loan/contracts/MapleLoanV202Migrator.sol";
 import { MapleLoanFactory as MOTLF }          from "../modules/open-term-loan/contracts/MapleLoanFactory.sol";
 import { MapleLoanInitializer as MOTLI }      from "../modules/open-term-loan/contracts/MapleLoanInitializer.sol";
 import { MapleRefinancer as MOTLR }           from "../modules/open-term-loan/contracts/MapleRefinancer.sol";
@@ -18,8 +20,6 @@ import { MapleLoanManager as MOTLM }             from "../modules/open-term-loan
 import { MapleLoanManagerFactory as MOTLMF }     from "../modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol";
 import { MapleLoanManagerInitializer as MOTLMI } from "../modules/open-term-loan-manager/contracts/MapleLoanManagerInitializer.sol";
 
-import { NonTransparentProxy } from "../modules/globals/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
-
 import { MaplePoolManagerFactory as MPMF } from "../modules/pool/contracts/proxy/MaplePoolManagerFactory.sol";
 
 import { MaplePoolPermissionManager as MPPM }
@@ -27,17 +27,10 @@ import { MaplePoolPermissionManager as MPPM }
 import { MaplePoolPermissionManagerInitializer as MPPMI }
     from "../modules/pool-permission-manager/contracts/proxy/MaplePoolPermissionManagerInitializer.sol";
 
-import { MapleWithdrawalManager as MWMQ } from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
+import { SyrupRouter as SR } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 import { MapleWithdrawalManagerFactory as MWMQF }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerFactory.sol";
-import { MapleWithdrawalManagerInitializer as MWMQI }
-    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
-// TODO: adjust deploy, upgrade scripts, etc. to use latest version of migrator. Get rid of V200
-import { MapleWithdrawalManagerMigratorV300 as MWMQM }
-    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV300.sol";
-
-import { SyrupRouter as SR } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
@@ -97,14 +90,8 @@ contract SyrupRouter is SR {
 
 }
 
-contract WithdrawalManagerQueue is MWMQ { }
-
 contract WithdrawalManagerQueueFactory is MWMQF {
 
     constructor(address globals_) MWMQF(globals_) { }
 
 }
-
-contract WithdrawalManagerQueueInitializer is MWMQI { }
-
-contract WithdrawalManagerQueueMigrator is MWMQM { }

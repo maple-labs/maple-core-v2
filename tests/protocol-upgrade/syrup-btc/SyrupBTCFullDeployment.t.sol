@@ -51,7 +51,7 @@ contract SyrupBTCFullDeploymentTests is SyrupBTCProtocolUpgradeBase {
         assertEq(IPoolManager(syrupBitcoinPoolManager).factory(),                   poolManagerFactory);
         assertEq(IPoolManager(syrupBitcoinPoolManager).poolPermissionManager(),     poolPermissionManager);
         assertEq(IPoolManager(syrupBitcoinPoolManager).delegateManagementFeeRate(), delegateManagementFeeRate);
-        assertEq(IPoolManager(syrupBitcoinPoolManager).implementation(),            PoolManagerV400Implementation);
+        assertEq(IPoolManager(syrupBitcoinPoolManager).implementation(),            poolManagerV500Implementation);
 
         assertEq(IPoolManager(syrupBitcoinPoolManager).strategyList(0), bitcoinStrategy1);
         assertEq(IPoolManager(syrupBitcoinPoolManager).strategyList(1), bitcoinStrategy2);

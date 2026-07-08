@@ -203,27 +203,19 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(pool.maxMint(user), maxShares);
     }
 
-    // TODO: Fix this test when WM submodule gets updated
-    /*
     function testFuzz_maxRedeem(uint256 assets) external {
         assets = bound(assets, 1, 1e29);
 
         openPool(address(poolManager));
-
-        setManualWithdrawal(address(poolManager), user, true);
-
         deposit(user, assets);
-
-        assertEq(pool.balanceOf(user), assets);
+        setManualWithdrawal(address(poolManager), user, true);
 
         assertEq(pool.maxRedeem(user), 0);
 
-        vm.prank(user);
-        pool.requestRedeem(assets, user);  // lock shares
+        requestRedeem(address(pool), user, assets);
+        processRedemptionByOwners(address(pool), array(user));
 
-        processRedemptionByOwners(address(pool), array(user));  // assets <> shares conversion rate 1:1 due to single LP
-
-        uint256 shares = queueWM.lockedShares(user);
+        uint256 shares = queueWM.manualSharesAvailable(user);
 
         assertEq(pool.maxRedeem(user), shares);
 
@@ -231,7 +223,6 @@ contract PoolViewFunctionsFuzzTests is TestBase {
 
         assertEq(pool.maxRedeem(user), 0);
     }
-    */
 
     function testFuzz_maxWithdraw(uint256 assets) external {
         assets = bound(assets, 1, 1e29);

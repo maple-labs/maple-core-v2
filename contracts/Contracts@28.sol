@@ -24,6 +24,13 @@ import { MapleTradingStrategy as MTS }             from "../modules/trading-stra
 import { MapleTradingStrategyFactory as MTSF }     from "../modules/trading-strategy/contracts/MapleTradingStrategyFactory.sol";
 import { MapleTradingStrategyInitializer as MTSI } from "../modules/trading-strategy/contracts/MapleTradingStrategyInitializer.sol";
 
+import { MapleWithdrawalManager as MWMQ }
+    from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
+import { MapleWithdrawalManagerInitializer as MWMQI }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
+import { MapleWithdrawalManagerMigratorV300 as MWMQM }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV300.sol";
+
 contract AaveV3Strategy is MAV3S { }
 
 contract AaveV3StrategyFactory is MAV3SF {
@@ -95,3 +102,9 @@ contract SkyStrategyFactory is MSSF {
 }
 
 contract SkyStrategyInitializer is MSSI { }
+
+contract WithdrawalManagerQueue is MWMQ { }
+
+contract WithdrawalManagerQueueInitializer is MWMQI { }
+
+contract WithdrawalManagerQueueMigrator is MWMQM { }

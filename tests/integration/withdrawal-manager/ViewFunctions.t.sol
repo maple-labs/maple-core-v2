@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { 
+import {
     IMapleProxyFactory,
     IProxiedLike
 } from "../../../contracts/interfaces/Interfaces.sol";
@@ -25,7 +25,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     function test_implementation_updatesAfterUpgrade() external {
         address oldImplementation = queueWM.implementation();
 
-        address newImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
+        address newImplementation = deployFromFile("Contracts@28", "WithdrawalManagerQueue");
 
         uint256 oldVersion = IMapleProxyFactory(queueWMFactory).versionOf(oldImplementation);
         uint256 newVersion = 201;
@@ -65,26 +65,14 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(queueWM.governor(), newGovernor);
     }
 
-    function test_isInExitWindow() external view {
-        assertTrue(queueWM.isInExitWindow(lp));
-    }
-
-    function test_lockedLiquidity_constantZero() external {
-        assertEq(queueWM.lockedLiquidity(), 0);
-
-        requestRedeem(lp, 50e6);
-        processRedemptionByOwners(address(pool), array(lp));
-        assertEq(queueWM.lockedLiquidity(), 0);
-    }
-
-    function test_lockedShares_updatesAfterProcessing() external {
-        assertEq(queueWM.lockedShares(lp), 0);
+    function test_maxRedeem_updatesAfterProcessing() external {
+        assertEq(queueWM.maxRedeem(lp), 0);
 
         setManualWithdrawal(address(poolManager), lp, true);
         requestRedeem(lp, 100e6);
         processRedemptionByOwners(address(pool), array(lp));
 
-        assertEq(queueWM.lockedShares(lp), 100e6);
+        assertEq(queueWM.maxRedeem(lp), 100e6);
     }
 
     function test_poolDelegate_updatesAfterTransfer() external {

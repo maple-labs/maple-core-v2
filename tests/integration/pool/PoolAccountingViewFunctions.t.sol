@@ -234,8 +234,6 @@ contract MaxMintTests is TestBase {
 
 }
 
-// TODO:: Update maxRedeem tests once WM submodule gets updated
-/*
 contract MaxRedeemWMQueueTests is TestBase {
 
     address lp1;
@@ -264,54 +262,37 @@ contract MaxRedeemWMQueueTests is TestBase {
         requestRedeem(lp2, 1_000e6);
     }
 
-    function test_maxRedeem_beforeRedeem() external {
-        maxShares = pool.maxRedeem(lp1);
-
-        assertEq(maxShares, 0);
+    function test_maxRedeem_beforeRedeem() external view {
+        assertEq(pool.maxRedeem(lp1), 0);
     }
 
     function test_maxRedeem_afterFullRedeem() external {
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(array(1));
+        processRedemptionByIds(address(pool), array(1));
 
-        maxShares = pool.maxRedeem(lp1);
-
-        assertEq(maxShares, 1_000e6);
+        assertEq(pool.maxRedeem(lp1), 1_000e6);
     }
 
     function test_maxRedeem_afterPartialManualRedeem() external {
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(array(1));
+        processRedemptionByIds(address(pool), array(1));
+        redeem(address(pool), lp1, 150e6);
 
-        redeem(address(pool), lp1, 1_000e6 / 2);
-
-        maxShares = pool.maxRedeem(lp1);
-
-        assertEq(maxShares, 1_000e6 / 2);
+        assertEq(pool.maxRedeem(lp1), 850e6);
     }
 
     function test_maxRedeem_afterFullManualRedeem() external {
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(array(1));
-
+        processRedemptionByIds(address(pool), array(1));
         redeem(address(pool), lp1, 1_000e6);
 
-        maxShares = pool.maxRedeem(lp1);
-
-        assertEq(maxShares, 0);
+        assertEq(pool.maxRedeem(lp1), 0);
     }
 
     function test_maxRedeem_notManual() external {
-        vm.prank(poolDelegate);
-        queueWM.processRedemptions(array(1, 2));
+        processRedemptionByIds(address(pool), array(1, 2));
 
-        maxShares = pool.maxRedeem(lp2);
-
-        assertEq(maxShares, 0);
+        assertEq(pool.maxRedeem(lp2), 0);
     }
 
 }
-*/
 
 contract PreviewRedeemWithQueueWMTests is TestBase {
 

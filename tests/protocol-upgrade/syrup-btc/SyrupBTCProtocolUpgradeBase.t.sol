@@ -2,10 +2,8 @@
 pragma solidity ^0.8.7;
 
 import { IAssetController } from "../../../modules/controller/contracts/interfaces/IAssetController.sol";
-import { ICompositeToken } from "../../../modules/controller/contracts/interfaces/ICompositeToken.sol";
-import { IMapleGlobals }   from "../../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
-
-import { Runner } from "../../../contracts/Runner.sol";
+import { ICompositeToken }  from "../../../modules/controller/contracts/interfaces/ICompositeToken.sol";
+import { IMapleGlobals }    from "../../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
 
 import {
     IBitcoinStrategy,
@@ -13,12 +11,20 @@ import {
     IGovernorTimelock,
     IMapleProxyFactory,
     IPoolDeployer,
-    IPoolDeployerV4Like,
     IPoolManager,
     IPoolPermissionManager,
     ISyrupBitcoinRouter,
     IWithdrawalManagerQueue
 } from "../../../contracts/interfaces/Interfaces.sol";
+
+import {
+    PoolConfigParams,
+    PoolManagerInitParams,
+    StrategyDeployParams,
+    StrategyManagerParams
+} from "../../../contracts/interfaces/Interfaces.sol";
+
+import { Runner } from "../../../contracts/Runner.sol";
 
 import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
 
@@ -38,12 +44,31 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         upgradeProtocol();
     }
 
+    // TODO: Update upgrade procedure after modular strategy release.
     function upgradeProtocol() internal {
+        // Step -2: Deploy new pool deployer
+
+        address poolDeployer = deployFromFile("Contracts@28", "PoolDeployer", abi.encode(globals));
+
+        // Step -1: Whitelist the new pool deployer.
+
+        vm.startPrank(governor);
+        IMapleGlobals(globals).setCanDeployFrom(poolManagerFactory,            poolDeployer, true);
+        IMapleGlobals(globals).setCanDeployFrom(withdrawalManagerQueueFactory, poolDeployer, true);
+        IMapleGlobals(globals).setCanDeployFrom(bitcoinStrategyFactory,        poolDeployer, true);
+        vm.stopPrank();
+
+        // Step 0: Deploy new version of pool manager
+
+        poolManagerV500Implementation = deployFromFile("Contracts@28", "PoolManager");
+        poolManagerV500Initializer    = deployFromFile("Contracts@28", "PoolManagerInitializer");
+        poolManagerV500Migrator       = deployFromFile("Contracts@28", "PoolManagerMigrator");
+
         // Step 1: Deploy new version of withdrawal manager queue
 
-        mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
-        mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
-        mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@7", "WithdrawalManagerQueueMigrator");
+        mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@28", "WithdrawalManagerQueue");
+        mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@28", "WithdrawalManagerQueueInitializer");
+        mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@28", "WithdrawalManagerQueueMigrator");
 
         // Step 2: Deploy bitcoin strategy factory
 
@@ -76,45 +101,64 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY",        bitcoinStrategyFactory, true);
         vm.stopPrank();
 
-        // Step 5: Governor registers new withdrawal manager version, enables upgrade path and sets default version.
+        // Step 5: Governor registers new pool manager version, enables upgrade path and sets default version.
+        //         Governor registers new withdrawal manager version, enables upgrade path and sets default version.
         //         Governor registers new bitcoin strategy version and sets default version
         //         Governor whitelists composite token as pool asset
 
-        address[] memory targets = new address[](6);
-        bytes[]   memory data    = new bytes[](6);
+        address[] memory targets = new address[](9);
+        bytes[]   memory data    = new bytes[](9);
 
-        targets[0] = withdrawalManagerQueueFactory;
-        targets[1] = withdrawalManagerQueueFactory;
-        targets[2] = withdrawalManagerQueueFactory;
-        targets[3] = bitcoinStrategyFactory;
-        targets[4] = bitcoinStrategyFactory;
-        targets[5] = globals;
+        targets[0] = poolManagerFactory;
+        targets[1] = poolManagerFactory;
+        targets[2] = poolManagerFactory;
+        targets[3] = withdrawalManagerQueueFactory;
+        targets[4] = withdrawalManagerQueueFactory;
+        targets[5] = withdrawalManagerQueueFactory;
+        targets[6] = bitcoinStrategyFactory;
+        targets[7] = bitcoinStrategyFactory;
+        targets[8] = globals;
 
         data[0] = abi.encodeWithSelector(
+            IMapleProxyFactory.registerImplementation.selector,
+            500,
+            poolManagerV500Implementation,
+            poolManagerV500Initializer
+        );
+
+        data[1] = abi.encodeWithSelector(IMapleProxyFactory.enableUpgradePath.selector,
+            400,
+            500,
+            poolManagerV500Migrator
+        );
+
+        data[2] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 500);
+
+        data[3] = abi.encodeWithSelector(
             IMapleProxyFactory.registerImplementation.selector,
             200,
             mapleWithdrawalManagerV200Implementation,
             mapleWithdrawalManagerV200Initializer
         );
 
-        data[1] = abi.encodeWithSelector(
+        data[4] = abi.encodeWithSelector(
             IMapleProxyFactory.enableUpgradePath.selector,
             100,
             200,
             mapleWithdrawalManagerV200Migrator
         );
 
-        data[2] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 200);
+        data[5] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 200);
 
-        data[3] = abi.encodeWithSelector(
+        data[6] = abi.encodeWithSelector(
             IMapleProxyFactory.registerImplementation.selector,
             100,
             bitcoinStrategyV100Implementation,
             bitcoinStrategyV100Initializer
         );
 
-        data[4] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 100);
-        data[5] = abi.encodeWithSelector(IMapleGlobals.setValidPoolAsset.selector, compositeTokenProxy, true);
+        data[7] = abi.encodeWithSelector(IMapleProxyFactory.setDefaultVersion.selector, 100);
+        data[8] = abi.encodeWithSelector(IMapleGlobals.setValidPoolAsset.selector, compositeTokenProxy, true);
 
         uint256[] memory proposalIds = scheduleProposals(targets, data);
         executeProposals(proposalIds, targets, data);
@@ -131,20 +175,24 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
         strategyDeploymentData[1] = new bytes(0);
         strategyDeploymentData[2] = new bytes(0);
 
-        uint256[4] memory configParams = [liquidityCap, delegateManagementFeeRate, uint256(0), uint256(0)];
-
         vm.prank(syrupBitcoinPoolDelegate);
-        syrupBitcoinPoolManager = IPoolDeployerV4Like(poolDeployerV4).deployPool(
-            poolManagerFactory,
-            withdrawalManagerQueueFactory,
-            strategyFactories,
-            strategyDeploymentData,
-            compositeTokenProxy,
-            poolPermissionManager,
-            "Syrup Bitcoin",
-            "syrupBTC",
-            configParams
-        );
+        syrupBitcoinPoolManager = IPoolDeployer(poolDeployer).deployPool({
+            poolManagerFactory:       poolManagerFactory,
+            withdrawalManagerFactory: withdrawalManagerQueueFactory,
+            poolManagerInitParams:    PoolManagerInitParams({
+                asset:         compositeTokenProxy,
+                initialSupply: 0,
+                name:          "Syrup Bitcoin",
+                symbol:        "syrupBTC"
+            }),
+            poolConfigParams: PoolConfigParams({
+                poolPermissionManager:     address(poolPermissionManager),
+                delegateManagementFeeRate: delegateManagementFeeRate,
+                liquidityCap:              liquidityCap
+            }),
+            strategiesParams:       buildStrategyDeployParams(strategyFactories, strategyDeploymentData, "Bitcoin Strategies"),
+            strategyManagersParams: new StrategyManagerParams[](0)
+        });
 
         syrupBitcoinPool = IPoolManager(syrupBitcoinPoolManager).pool();
         bitcoinStrategy1 = IPoolManager(syrupBitcoinPoolManager).strategyList(0);
@@ -403,6 +451,25 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         vm.prank(executor);
         IGovernorTimelock(timelock).executeProposals(proposalIds, targets, data);
+    }
+
+    function buildStrategyDeployParams(
+        address[] memory strategyFactories,
+        bytes[]   memory strategyData,
+        string    memory name
+    )
+        internal pure returns (StrategyDeployParams[] memory strategies)
+    {
+        strategies = new StrategyDeployParams[](strategyFactories.length);
+
+        for (uint256 i; i < strategyFactories.length; i++) {
+            strategies[i] = StrategyDeployParams({
+                factory:        strategyFactories[i],
+                cap:            type(uint256).max,
+                salt:           keccak256(abi.encode(name, i)),
+                deploymentData: strategyData[i]
+            });
+        }
     }
 
 }

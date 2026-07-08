@@ -602,20 +602,20 @@ contract TestBase is ProtocolActions, Utils {
 
     function _createFactories() internal {
         liquidatorFactory          = makeAddr("liquidatorFactoryStub");  // Stub: PM:TD validation passport; OTLM ignores its value.
-        openTermLoanFactory        = deployFromFile("Contracts@7", "OpenTermLoanFactory",              abi.encode(address(globals)));
-        openTermLoanManagerFactory = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory",       abi.encode(address(globals)));
-        poolManagerFactory         = deployFromFile("Contracts@7", "PoolManagerFactory",               abi.encode(address(globals)));
-        queueWMFactory             = deployFromFile("Contracts@7", "WithdrawalManagerQueueFactory",    abi.encode(address(globals)));
+        openTermLoanFactory        = deployFromFile("Contracts@7", "OpenTermLoanFactory",           abi.encode(address(globals)));
+        openTermLoanManagerFactory = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory",    abi.encode(address(globals)));
+        poolManagerFactory         = deployFromFile("Contracts@7", "PoolManagerFactory",            abi.encode(address(globals)));
+        queueWMFactory             = deployFromFile("Contracts@7", "WithdrawalManagerQueueFactory", abi.encode(address(globals)));
 
         openTermLoanImplementation        = deployFromFile("Contracts@7",  "OpenTermLoan");
         openTermLoanManagerImplementation = deployFromFile("Contracts@7",  "OpenTermLoanManager");
         poolManagerImplementation         = deployFromFile("Contracts@28", "PoolManager");
-        queueWMImplementation             = deployFromFile("Contracts@7",  "WithdrawalManagerQueue");
+        queueWMImplementation             = deployFromFile("Contracts@28", "WithdrawalManagerQueue");
 
         openTermLoanInitializer        = deployFromFile("Contracts@7",  "OpenTermLoanInitializer");
         openTermLoanManagerInitializer = deployFromFile("Contracts@7",  "OpenTermLoanManagerInitializer");
         poolManagerInitializer         = deployFromFile("Contracts@28", "PoolManagerInitializer");
-        queueWMInitializer             = deployFromFile("Contracts@7",  "WithdrawalManagerQueueInitializer");
+        queueWMInitializer             = deployFromFile("Contracts@28", "WithdrawalManagerQueueInitializer");
 
         openTermRefinancer = deployFromFile("Contracts@7", "OpenTermRefinancer");
 
