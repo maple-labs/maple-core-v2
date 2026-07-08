@@ -5,11 +5,18 @@ import {
     IERC20,
     IGlobals,
     IGovernorTimelock,
+    IMapleProxyFactory,
     IPool,
     IPoolDeployer,
-    IPoolDeployerV4Like,
     IPoolManager,
     IPoolPermissionManager
+} from "../../../contracts/interfaces/Interfaces.sol";
+
+import {
+    PoolConfigParams,
+    PoolManagerInitParams,
+    StrategyDeployParams,
+    StrategyManagerParams
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
@@ -22,7 +29,6 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
     uint256 constant INITIAL_DEPOSIT = 10e6;
     uint256 constant BOOTSTRAP_MINT  = 0;
-    uint256 constant COVER_AMOUNT    = 0;
     uint256 constant INITIAL_SUPPLY  = 0;
     uint256 constant LIQUIDITY_CAP   = 100_000_000e6;
 
@@ -55,15 +61,46 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
         setupPool();
     }
 
+    // TODO: Update the procedure once modular strategies are released.
     function setupPool() internal {
+        // Step -2: Deploy the modular pool deployer and the new pool manager version
+
+        address poolDeployer = deployFromFile("Contracts@28", "PoolDeployer", abi.encode(globals));
+
+        poolManagerV500Implementation = deployFromFile("Contracts@28", "PoolManager");
+        poolManagerV500Initializer    = deployFromFile("Contracts@28", "PoolManagerInitializer");
+
+        // Step -1: Whitelist the modular pool deployer, register the modular pool manager and register the
+        //          open-term loan manager factory as a valid strategy factory.
+
+        vm.startPrank(governor);
+        IGlobals(globals).setCanDeployFrom(poolManagerFactory,            poolDeployer, true);
+        IGlobals(globals).setCanDeployFrom(withdrawalManagerQueueFactory, poolDeployer, true);
+        IGlobals(globals).setCanDeployFrom(openTermLoanManagerFactory,    poolDeployer, true);
+
+        IMapleProxyFactory(poolManagerFactory).registerImplementation(
+            500,
+            poolManagerV500Implementation,
+            poolManagerV500Initializer
+        );
+        IMapleProxyFactory(poolManagerFactory).setDefaultVersion(500);
+
+        IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, true);
+        vm.stopPrank();
+
         // Step 1: Assert pre-deployment state
 
         assertEq(IERC20(USDG).name(),     "Global Dollar");
         assertEq(IERC20(USDG).symbol(),   "USDG");
         assertEq(IERC20(USDG).decimals(), 6);
 
-        assertEq(IPoolDeployer(poolDeployerV4).globals(), globals);
-        assertTrue(IGlobals(globals).canDeployFrom(poolManagerFactory, poolDeployerV4));
+        assertEq(IPoolDeployer(poolDeployer).globals(), globals);
+
+        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory,            poolDeployer), true);
+        assertEq(IGlobals(globals).canDeployFrom(withdrawalManagerQueueFactory, poolDeployer), true);
+        assertEq(IGlobals(globals).canDeployFrom(openTermLoanManagerFactory,    poolDeployer), true);
+
+        assertEq(IMapleProxyFactory(poolManagerFactory).defaultVersion(), 500);
 
         // Step 2: Governor whitelists USDG as pool asset
 
@@ -96,32 +133,34 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
         // Step 4: Pool delegate deploys Syrup USDG pool
 
-        address[] memory strategyFactories      = new address[](1);
-        bytes[]   memory strategyDeploymentData = new bytes[](1);
+        StrategyDeployParams[] memory strategiesParams = new StrategyDeployParams[](1);
 
-        strategyFactories[0]      = openTermLoanManagerFactory;
-        strategyDeploymentData[0] = new bytes(0);
-
-        uint256[4] memory configParams = [
-            LIQUIDITY_CAP,
-            DELEGATE_MANAGEMENT_FEE_RATE,
-            COVER_AMOUNT,
-            INITIAL_SUPPLY
-        ];
+        strategiesParams[0] = StrategyDeployParams({
+            factory:        openTermLoanManagerFactory,
+            cap:            type(uint256).max,
+            salt:           keccak256("Syrup USDG"),
+            deploymentData: new bytes(0)
+        });
 
         // NOTE: `deployPool` must be called by a valid pool delegate.
         vm.prank(poolDelegate);
-        usdgPoolManager = IPoolDeployerV4Like(poolDeployerV4).deployPool(
-            poolManagerFactory,
-            withdrawalManagerQueueFactory,
-            strategyFactories,
-            strategyDeploymentData,
-            USDG,
-            poolPermissionManager,
-            "Syrup USDG",
-            "syrupUSDG",
-            configParams
-        );
+        usdgPoolManager = IPoolDeployer(poolDeployer).deployPool({
+            poolManagerFactory:       poolManagerFactory,
+            withdrawalManagerFactory: withdrawalManagerQueueFactory,
+            poolManagerInitParams:    PoolManagerInitParams({
+                asset:         USDG,
+                initialSupply: INITIAL_SUPPLY,
+                name:          "Syrup USDG",
+                symbol:        "syrupUSDG"
+            }),
+            poolConfigParams: PoolConfigParams({
+                poolPermissionManager:     poolPermissionManager,
+                delegateManagementFeeRate: DELEGATE_MANAGEMENT_FEE_RATE,
+                liquidityCap:              LIQUIDITY_CAP
+            }),
+            strategiesParams:       strategiesParams,
+            strategyManagersParams: new StrategyManagerParams[](0)
+        });
 
         usdgPool                = IPoolManager(usdgPoolManager).pool();
         usdgWithdrawalManager   = IPoolManager(usdgPoolManager).withdrawalManager();

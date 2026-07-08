@@ -210,21 +210,6 @@ interface IPoolDeployerV2Like {
         returns (address poolManager_);
 }
 
-interface IPoolDeployerV4Like {
-
-    function deployPool(
-        address           poolManagerFactory_,
-        address           withdrawalManagerFactory_,
-        address[]  memory strategyFactories_,
-        bytes[]    memory strategyDeploymentData_,
-        address           asset_,
-        address           poolPermissionManager_,
-        string     memory name_,
-        string     memory symbol_,
-        uint256[4] memory configParams_
-    ) external returns (address poolManager_);
-}
-
 interface IProxiedLike {
 
     function factory() external view returns (address factory_);
