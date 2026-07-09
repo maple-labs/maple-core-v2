@@ -277,6 +277,10 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _deployTradingStrategy() internal {
+        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployTradingStrategyFor(strategyDelegate);
+    }
+
+    function _deployTradingStrategyFor(address strategyDelegate_) internal returns (address strategyManager_, address underlyingStrategy_) {
         TradingStrategyInitializerParams memory params = TradingStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
@@ -284,15 +288,18 @@ contract TestBase is ProtocolActions, Utils {
             strategyProtocolFeeRate: 0
         });
 
-        vm.prank(strategyDelegate);
+        vm.prank(governor);
+        globals.setValidStrategyDelegate(strategyDelegate_, true);
+
+        vm.prank(strategyDelegate_);
 
         (
-            tradingStrategyManager,
-            tradingUnderlyingStrategy
+            strategyManager_,
+            underlyingStrategy_
         ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, abi.encode(params));
 
         vm.prank(governor);
-        globals.activateStrategyManager(tradingStrategyManager);
+        globals.activateStrategyManager(strategyManager_);
     }
 
     /**************************************************************************************************************************************/

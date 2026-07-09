@@ -49,6 +49,60 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(bitcoinStrategy.unrealizedLosses(), unrealizedLosses);
     }
 
+    function assertDeployedPool(
+        address poolManager_,
+        uint256 initialSupply_,
+        uint256 liquidityCap_,
+        uint256 delegateManagementFeeRate_,
+        uint256 strategyListLength_
+    )
+        internal view returns (IPoolManager pm_, IPool pool_)
+    {
+        pm_                        = IPoolManager(poolManager_);
+        pool_                      = IPool(pm_.pool());
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(pm_.withdrawalManager());
+
+        ( address expectedPoolManager, address expectedPool ) = poolDeployer.getPoolDeploymentAddresses(
+            poolManagerFactory, poolDelegate, address(fundsAsset), initialSupply_, POOL_NAME, POOL_SYMBOL
+        );
+
+        address expectedWithdrawalManager =
+            poolDeployer.getQueueWithdrawalManagerAddress(queueWMFactory, expectedPool, expectedPoolManager);
+
+        assertEq(poolManager_,   expectedPoolManager);
+        assertEq(address(pool_), expectedPool);
+        assertEq(address(wm),    expectedWithdrawalManager);
+
+        assertEq(pm_.globals(),                   address(globals));
+        assertEq(pm_.poolDelegate(),              poolDelegate);
+        assertEq(pm_.asset(),                     address(fundsAsset));
+        assertEq(pm_.poolPermissionManager(),     address(poolPermissionManager));
+        assertEq(pm_.withdrawalManager(),         address(wm));
+        assertEq(pm_.liquidityCap(),              liquidityCap_);
+        assertEq(pm_.delegateManagementFeeRate(), delegateManagementFeeRate_);
+
+        assertEq(pm_.configured(),         true);
+        assertEq(pm_.active(),             false);
+        assertEq(pm_.hasSufficientCover(), true);
+
+        assertEq(pool_.asset(),       address(fundsAsset));
+        assertEq(pool_.name(),        POOL_NAME);
+        assertEq(pool_.symbol(),      POOL_SYMBOL);
+        assertEq(pool_.manager(),     poolManager_);
+        assertEq(pool_.totalSupply(), initialSupply_);
+
+        if (initialSupply_ != 0) {
+            assertEq(pool_.balanceOf(globals.migrationAdmin()), initialSupply_);
+        }
+
+        assertEq(wm.pool(),        address(pool_));
+        assertEq(wm.poolManager(), poolManager_);
+
+        assertEq(pm_.strategyListLength(), strategyListLength_);
+
+        assertPoolManager(poolManager_, 0, 0);
+    }
+
     function assertOpenTermLoan(
         address loan,
         uint256 dateCalled,
