@@ -228,12 +228,13 @@ contract TestBase is ProtocolActions, Utils {
     /*** Strategy Manager Deployment                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function _deployAaveV3Strategy(address aaveToken_) internal {
+    function _deployAaveV3Strategy(address aaveToken_, bool useVirtualUnderlyingBalance_) internal {
         AaveV3StrategyInitializerParams memory params = AaveV3StrategyInitializerParams({
-            aaveToken:               aaveToken_,
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            referralCode:            0
+            aaveToken:                   aaveToken_,
+            strategyDelegateFeeRate:     0,
+            strategyProtocolFeeRate:     0,
+            referralCode:                0,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance_
         });
 
         vm.prank(governor);

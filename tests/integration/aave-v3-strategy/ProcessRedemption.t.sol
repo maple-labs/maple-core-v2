@@ -13,8 +13,7 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         /*** Step 1: Execute first deposit                                                                                              ***/
         /**********************************************************************************************************************************/
 
-        uint256 assets               = 1_000e6;
-        uint256 expectedRoundingGain = 1;  // Aave mints 1 wei of interest on supply at the fork block.
+        uint256 assets = 1_000e6;
 
         deposit(lp, assets);
 
@@ -129,6 +128,18 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
             pendingShares:    0,
             unrealizedLosses: 0
         });
+    }
+
+}
+
+contract SparkLendStrategyProcessRedemptionTests is AaveV3StrategyProcessRedemptionTests {
+
+    function setUp() public override {
+        aaveToken                   = SPARK_USDC;
+        useVirtualUnderlyingBalance = false;
+        expectedRoundingGain        = 0;
+
+        super.setUp();
     }
 
 }

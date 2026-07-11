@@ -315,7 +315,10 @@ contract TradingStrategyDeployTests is TestBase {
 
 contract AaveV3StrategyDeployTests is TestBase {
 
-    function setUp() public override {
+    address aaveToken                   = AAVE_USDC;
+    bool    useVirtualUnderlyingBalance = true;
+
+    function setUp() public virtual override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
 
         start      = block.timestamp;
@@ -332,10 +335,11 @@ contract AaveV3StrategyDeployTests is TestBase {
         globals.setCanDeployFrom(aaveV3StrategyFactory, address(strategyDeployer), false);
 
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               AAVE_USDC,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                0,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         vm.prank(strategyDelegate);
@@ -345,10 +349,11 @@ contract AaveV3StrategyDeployTests is TestBase {
 
     function test_deploy_revert_zeroAaveToken() external {
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               address(0),
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            aaveToken:                   address(0),
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                0,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         vm.prank(strategyDelegate);
@@ -358,10 +363,11 @@ contract AaveV3StrategyDeployTests is TestBase {
 
     function test_deploy_revert_invalidFeeRateSum() external {
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               AAVE_USDC,
-            strategyDelegateFeeRate: 0.5e6,      // 50% Fee
-            strategyProtocolFeeRate: 0.5e6 + 1,  // 50.0001% Fee
-            referralCode:            0
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.5e6,      // 50% Fee
+            strategyProtocolFeeRate:     0.5e6 + 1,  // 50.0001% Fee
+            referralCode:                0,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         vm.prank(strategyDelegate);
@@ -371,10 +377,11 @@ contract AaveV3StrategyDeployTests is TestBase {
 
     function test_deploy_revert_invalidStrategyVault() external {
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               AAVE_USDC,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                0,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         vm.prank(strategyDelegate);
@@ -384,15 +391,16 @@ contract AaveV3StrategyDeployTests is TestBase {
 
     function test_deploy_revert_invalidAsset() external {
         vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", AAVE_USDC, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
         globals.setValidPoolAsset(USDC, false);
         vm.stopPrank();
 
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               AAVE_USDC,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                0,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         vm.prank(strategyDelegate);
@@ -402,13 +410,14 @@ contract AaveV3StrategyDeployTests is TestBase {
 
     function test_deploy_success() external {
         vm.prank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", AAVE_USDC, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
 
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               AAVE_USDC,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                7,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         (
@@ -420,7 +429,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         (
             address aaveStrategyManager_,
-            address aaveUnderlyingStrategy_ 
+            address aaveUnderlyingStrategy_
         ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
 
         assertEq(aaveStrategyManager_,    expectedStrategyManager);
@@ -442,15 +451,16 @@ contract AaveV3StrategyDeployTests is TestBase {
         assertEq(IStrategyManager(aaveStrategyManager_).configured(), true);
         assertEq(IStrategyManager(aaveStrategyManager_).active(),     false);
 
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyManager(),         aaveStrategyManager_);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aaveToken(),               AAVE_USDC);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).fundsAsset(),              USDC);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).referralCode(),            7);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).impairedAssets(),          0);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).lastRecordedTotalAssets(), 0);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).isLossRecognized(),        false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyManager(),             aaveStrategyManager_);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aaveToken(),                   aaveToken);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).fundsAsset(),                  USDC);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyDelegateFeeRate(),     0.001e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyProtocolFeeRate(),     0.002e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).referralCode(),                7);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).impairedAssets(),              0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).lastRecordedTotalAssets(),     0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).isLossRecognized(),            false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).useVirtualUnderlyingBalance(), useVirtualUnderlyingBalance);
 
         assertNotEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aavePool(), address(0));
     }
@@ -462,14 +472,15 @@ contract AaveV3StrategyDeployTests is TestBase {
         vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate1, true);
         globals.setValidStrategyDelegate(strategyDelegate2, true);
-        globals.setValidInstanceOf("STRATEGY_VAULT", AAVE_USDC, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
         vm.stopPrank();
 
         bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:               AAVE_USDC,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                7,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
         (
@@ -486,7 +497,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         (
             address aaveStrategyManager1,
-            address aaveUnderlyingStrategy1 
+            address aaveUnderlyingStrategy1
         ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
 
         vm.prank(strategyDelegate2);
@@ -521,25 +532,38 @@ contract AaveV3StrategyDeployTests is TestBase {
         assertEq(IStrategyManager(aaveStrategyManager2).active(),                false);
         assertEq(IStrategyManager(aaveStrategyManager2).assetsUnderManagement(), 0);
 
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).strategyManager(),         aaveStrategyManager1);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).aaveToken(),               AAVE_USDC);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).fundsAsset(),              USDC);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).referralCode(),            7);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).impairedAssets(),          0);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).lastRecordedTotalAssets(), 0);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).isLossRecognized(),        false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).strategyManager(),             aaveStrategyManager1);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).aaveToken(),                   aaveToken);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).fundsAsset(),                  USDC);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).strategyDelegateFeeRate(),     0.001e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).strategyProtocolFeeRate(),     0.002e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).referralCode(),                7);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).impairedAssets(),              0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).lastRecordedTotalAssets(),     0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).isLossRecognized(),            false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy1).useVirtualUnderlyingBalance(), useVirtualUnderlyingBalance);
 
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).strategyManager(),         aaveStrategyManager2);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).aaveToken(),               AAVE_USDC);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).fundsAsset(),              USDC);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).referralCode(),            7);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).impairedAssets(),          0);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).lastRecordedTotalAssets(), 0);
-        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).isLossRecognized(),        false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).strategyManager(),             aaveStrategyManager2);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).aaveToken(),                   aaveToken);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).fundsAsset(),                  USDC);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).strategyDelegateFeeRate(),     0.001e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).strategyProtocolFeeRate(),     0.002e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).referralCode(),                7);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).impairedAssets(),              0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).lastRecordedTotalAssets(),     0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).isLossRecognized(),            false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy2).useVirtualUnderlyingBalance(), useVirtualUnderlyingBalance);
+    }
+
+}
+
+contract SparkLendStrategyDeployTests is AaveV3StrategyDeployTests {
+
+    function setUp() public override {
+        aaveToken                   = SPARK_USDC;
+        useVirtualUnderlyingBalance = false;
+
+        super.setUp();
     }
 
 }

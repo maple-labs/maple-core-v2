@@ -9,6 +9,11 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
 
     address lp = makeAddr("lp");
 
+    address aaveToken                   = AAVE_USDC;
+    bool    useVirtualUnderlyingBalance = true;
+
+    uint256 expectedRoundingGain = 1;  // Aave USDC aToken balance rounds up by 1 asset unit at the fork block.
+
     function setUp() public virtual override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), MAINNET_FORK_BLOCK);
 
@@ -22,7 +27,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         _createPoolWithOTLM(poolDelegate);
         _configurePool();
 
-        _deployAaveV3Strategy(AAVE_USDC);
+        _deployAaveV3Strategy(aaveToken, useVirtualUnderlyingBalance);
 
         addStrategyManagerToPool(address(poolManager), aaveV3StrategyManager);
     }

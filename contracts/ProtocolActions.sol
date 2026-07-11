@@ -53,6 +53,7 @@ contract ProtocolActions is Runner {
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
     address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
+    address SPARK_USDC    = address(0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815);
     address SAVINGS_USDS  = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
     address USDS_LITE_PSM = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
     address USDS          = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
