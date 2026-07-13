@@ -224,6 +224,27 @@ contract TestBase is ProtocolActions, Utils {
         allowLender(address(poolManager), address(queueWM));
     }
 
+    function _createPoolSharingStrategy(string memory delegateLabel_, address strategyManager_)
+        internal returns (address pool_, address poolManager_)
+    {
+        address poolDelegate_ = makeAddr(delegateLabel_);
+
+        vm.prank(governor);
+        globals.setValidPoolDelegate(poolDelegate_, true);
+
+        ( pool_, poolManager_, ) = _createPoolWithOTLM(poolDelegate_);
+
+        activatePool(poolManager_, HUNDRED_PERCENT);
+
+        vm.startPrank(governor);
+        IPoolManager(poolManager_).addStrategyManager(strategyManager_);
+        IPoolManager(poolManager_).setStrategyCap(strategyManager_, type(uint256).max);
+        vm.stopPrank();
+
+        vm.prank(IStrategyManager(strategyManager_).strategyDelegate());
+        IStrategyManager(strategyManager_).setPoolManagerCap(poolManager_, type(uint256).max);
+    }
+
     /**************************************************************************************************************************************/
     /*** Strategy Manager Deployment                                                                                                    ***/
     /**************************************************************************************************************************************/

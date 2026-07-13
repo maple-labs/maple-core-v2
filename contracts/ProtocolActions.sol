@@ -20,6 +20,7 @@ import {
     IPoolPermissionManager,
     IPoolPermissionManagerInitializer,
     IProxiedLike,
+    IPSMLike,
     IStrategyLike,
     IStrategyManager,
     ISyrupBitcoinRouter,
@@ -52,11 +53,14 @@ contract ProtocolActions is Runner {
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
-    address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
-    address SPARK_USDC    = address(0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815);
-    address SAVINGS_USDS  = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
-    address USDS_LITE_PSM = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
-    address USDS          = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
+    address AAVE_USDC    = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
+    address SPARK_USDC   = address(0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815);
+    address SAVINGS_USDS = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
+    address USDS         = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
+
+    address USDS_LITE_PSM   = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
+    address DSS_LITE_PSM    = address(0xf6e72Db5454dd049d0788e411b06CfAF16853042);
+    address SKY_PAUSE_PROXY = address(0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -96,6 +100,16 @@ contract ProtocolActions is Runner {
         IUSDCLike(USDC).configureMinter(address(this), type(uint256).max);
 
         if (amount_ > 0) IUSDCLike(USDC).mint(account_, amount_);
+    }
+
+    function setSkyTin(uint256 tin_) internal {
+        vm.prank(SKY_PAUSE_PROXY);
+        IPSMLike(DSS_LITE_PSM).file("tin", tin_);
+    }
+
+    function setSkyTout(uint256 tout_) internal {
+        vm.prank(SKY_PAUSE_PROXY);
+        IPSMLike(DSS_LITE_PSM).file("tout", tout_);
     }
 
     /**************************************************************************************************************************************/

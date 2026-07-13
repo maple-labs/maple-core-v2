@@ -353,6 +353,16 @@ interface IProxyFactoryLike {
     function upgradeInstance(uint256 toVersion_, bytes calldata arguments_) external;
 }
 
+interface IPSMLike {
+
+    function file(bytes32 what, uint256 data) external;
+
+    function tin() external view returns (uint256 tin_);
+
+    function tout() external view returns (uint256 tout_);
+
+}
+
 // NOTE: cycleConfigs() is not defined as a view function in the submodule which needs updating.
 interface IWithdrawalManagerLike {
 
