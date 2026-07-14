@@ -24,6 +24,7 @@ import {
     IStrategyLike,
     IStrategyManager,
     ISyrupBitcoinRouter,
+    ITradingStrategy,
     IUSDCLike,
     IWithdrawalManagerQueue,
     Permit
@@ -851,6 +852,56 @@ contract ProtocolActions is Runner {
 
         vm.prank(strategyDelegate_);
         IStrategyManager(strategyManager_).fundStrategyManager(poolManager_, assetsIn_, "");
+    }
+
+    function realizeYield(address strategy_, address trader_, uint256 yieldAssets_, uint32 duration_) internal {
+        address asset_ = ITradingStrategy(strategy_).fundsAsset();
+
+        erc20_mint(asset_, trader_, yieldAssets_);
+
+        vm.startPrank(trader_);
+        IERC20(asset_).approve(strategy_, yieldAssets_);
+        ITradingStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
+        vm.stopPrank();
+    }
+
+    function setTradingAddress(
+        address strategy_,
+        address tradingAddress_,
+        bool    canDeployAssets_,
+        bool    canReturnAssets_,
+        bool    canRealizeYield_,
+        uint256 deploymentCap_
+    )
+        internal
+    {
+        address globals_  = ITradingStrategy(strategy_).globals();
+        address governor_ = IGlobals(globals_).governor();
+        address admin_    = ITradingStrategy(strategy_).strategyDelegate();
+
+        address[] memory accounts        = new address[](1);
+        bool[]    memory canDeployAssets = new bool[](1);
+        bool[]    memory canReturnAssets = new bool[](1);
+        bool[]    memory canRealizeYield = new bool[](1);
+        uint256[] memory deploymentCaps  = new uint256[](1);
+
+        accounts[0]        = tradingAddress_;
+        canDeployAssets[0] = canDeployAssets_;
+        canReturnAssets[0] = canReturnAssets_;
+        canRealizeYield[0] = canRealizeYield_;
+        deploymentCaps[0]  = deploymentCap_;
+
+        vm.prank(governor_);
+        IGlobals(globals_).setValidGovernedInstanceOf("TRADING_ADDRESS", tradingAddress_);
+
+        vm.startPrank(admin_);
+        ITradingStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
+
+        if (deploymentCap_ != 0) {
+            ITradingStrategy(strategy_).setDeploymentCaps(accounts, deploymentCaps);
+        }
+
+        vm.stopPrank();
     }
 
     function requestRedeemFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {

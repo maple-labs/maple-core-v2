@@ -28,6 +28,8 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         assertTradingStrategy({
             strategyManager:  tradingStrategyManager,
             aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
             unrealizedLosses: 0
         });
 
@@ -57,6 +59,8 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         assertTradingStrategy({
             strategyManager:  tradingStrategyManager,
             aum:              assets,
+            deployedAssets:   0,
+            unrealizedYield:  0,
             unrealizedLosses: 0
         });
 
@@ -88,6 +92,8 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         assertTradingStrategy({
             strategyManager:  tradingStrategyManager,
             aum:              assets,
+            deployedAssets:   0,
+            unrealizedYield:  0,
             unrealizedLosses: 0
         });
 
@@ -117,6 +123,8 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         assertTradingStrategy({
             strategyManager:  tradingStrategyManager,
             aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
             unrealizedLosses: 0
         });
 

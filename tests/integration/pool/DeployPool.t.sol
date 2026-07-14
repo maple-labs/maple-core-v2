@@ -572,7 +572,13 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         assertEq(pm.isStrategyManager(tradingStrategyManager_), true);
         assertEq(pm.isStrategy(tradingStrategyManager_),        false);
 
-        assertTradingStrategy({ strategyManager: tradingStrategyManager_, aum: 0, unrealizedLosses: 0 });
+        assertTradingStrategy({
+            strategyManager:  tradingStrategyManager_,
+            aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
+            unrealizedLosses: 0
+        });
     }
 
     function test_deployPool_success_otlmAndMultipleModularStrategies() external {
@@ -627,8 +633,21 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         assertEq(pm.isStrategy(tradingStrategyManager0),        false);
         assertEq(pm.isStrategy(tradingStrategyManager1),        false);
 
-        assertTradingStrategy({ strategyManager: tradingStrategyManager0, aum: 0, unrealizedLosses: 0 });
-        assertTradingStrategy({ strategyManager: tradingStrategyManager1, aum: 0, unrealizedLosses: 0 });
+        assertTradingStrategy({
+            strategyManager:  tradingStrategyManager0,
+            aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
+            unrealizedLosses: 0
+        });
+
+        assertTradingStrategy({
+            strategyManager:  tradingStrategyManager1,
+            aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
+            unrealizedLosses: 0
+        });
     }
 
     function test_deployPool_success_modularStrategyOnly() external {
@@ -660,7 +679,13 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         assertEq(pm.isStrategyManager(tradingStrategyManager_), true);
         assertEq(pm.isStrategy(tradingStrategyManager_),        false);
 
-        assertTradingStrategy({ strategyManager: tradingStrategyManager_, aum: 0, unrealizedLosses: 0 });
+        assertTradingStrategy({
+            strategyManager:  tradingStrategyManager_,
+            aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
+            unrealizedLosses: 0
+        });
     }
 
     function test_deployPool_success_withInitialSupply() external {
