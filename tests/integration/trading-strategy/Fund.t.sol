@@ -178,7 +178,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the strategy for the first time                                                                               ***/
@@ -271,7 +271,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund as the liquidity bot                                                                                          ***/
@@ -357,7 +357,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the full position                                                                                             ***/
@@ -517,7 +517,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the first tranche                                                                                             ***/
@@ -650,7 +650,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the strategy                                                                                                  ***/
@@ -780,7 +780,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the strategy                                                                                                  ***/
@@ -911,7 +911,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the strategy                                                                                                  ***/
@@ -1090,7 +1090,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Set the strategy fee rates and fund the strategy                                                                   ***/
@@ -1260,7 +1260,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the strategy                                                                                                  ***/
@@ -1391,7 +1391,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund the strategy and deploy assets                                                                                ***/
@@ -1524,7 +1524,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Configure exact funding caps                                                                                       ***/
@@ -1592,7 +1592,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Assert initial state                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        assertInitialState(INITIAL_LIQUIDITY);
+        assertInitialStateWithTrading(tradingStrategyManager, INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund from the first pool at an exchange rate of one                                                                ***/

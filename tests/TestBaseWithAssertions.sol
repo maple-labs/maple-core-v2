@@ -426,6 +426,39 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IERC20(asset).balanceOf(strategyManager), 0);
     }
 
+    function assertInitialStateWithTrading(address strategyManager, uint256 initialLiquidity) internal view {
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialLiquidity,
+            totalSupply:        initialLiquidity,
+            unrealizedLosses:   0,
+            availableLiquidity: initialLiquidity
+        });
+
+        assertTradingStrategy({
+            strategyManager:  strategyManager,
+            aum:              0,
+            deployedAssets:   0,
+            unrealizedYield:  0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  strategyManager,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           0,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerShares({
+            strategyManager:    strategyManager,
+            totalShares:        0,
+            totalPendingShares: 0
+        });
+    }
+
     function assertStrategyManagerShares(address strategyManager, uint256 totalShares, uint256 totalPendingShares) internal view {
         assertEq(IStrategyManager(strategyManager).totalShares(),        totalShares);
         assertEq(IStrategyManager(strategyManager).totalPendingShares(), totalPendingShares);
