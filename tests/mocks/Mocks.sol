@@ -107,3 +107,13 @@ contract FakeLoan {
     }
 
 }
+
+contract FakePoolManager {
+
+    address public factory;
+
+    function __setFactory(address factory_) external {
+        factory = factory_;
+    }
+
+}

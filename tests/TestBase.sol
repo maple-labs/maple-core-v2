@@ -37,6 +37,7 @@ import { Utils }           from "../contracts/Utils.sol";
 
 contract TestBase is ProtocolActions, Utils {
 
+    uint256 constant AAVE_V3_FORK_BLOCK = 25523119;
     uint256 constant MAINNET_FORK_BLOCK = 21073000;
 
     uint256 constant MAX_TOKEN_AMOUNT         = 1e29;

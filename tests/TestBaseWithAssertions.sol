@@ -377,12 +377,20 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(pool.totalAssets(),                           poolTotalAssets);
     }
 
-    function assertAaveV3Strategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {
+    function assertAaveV3Strategy(
+        address strategyManager,
+        uint256 aum,
+        uint256 lastRecordedTotalAssets,
+        uint256 unrealizedLosses
+    )
+        internal view
+    {
         address strategy = IStrategyManager(strategyManager).underlyingStrategy();
 
         assertEq(IStrategyManager(strategyManager).assetsUnderManagement(),         aum);
         assertEq(IAaveV3Strategy(strategy).assetsUnderManagement(),                 aum);
         assertEq(IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy), aum);
+        assertEq(IAaveV3Strategy(strategy).lastRecordedTotalAssets(),               lastRecordedTotalAssets);
         assertEq(IAaveV3Strategy(strategy).unrealizedLosses(),                      unrealizedLosses);
     }
 

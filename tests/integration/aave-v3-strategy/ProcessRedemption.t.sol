@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "./AaveV3StrategyTestBase.sol";
 
@@ -26,9 +26,16 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         });
 
         assertAaveV3Strategy({
-            strategyManager:  aaveV3StrategyManager,
-            aum:              0,
-            unrealizedLosses: 0
+            strategyManager:         aaveV3StrategyManager,
+            aum:                     0,
+            lastRecordedTotalAssets: 0,
+            unrealizedLosses:        0
+        });
+
+        assertStrategyManagerShares({
+            strategyManager:    aaveV3StrategyManager,
+            totalShares:        0,
+            totalPendingShares: 0
         });
 
         assertStrategyManagerPosition({
@@ -46,25 +53,34 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, assets);
 
+        uint256 fundedAssets = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
+
         assertPoolState({
             pool:               address(pool),
-            totalAssets:        assets + expectedRoundingGain,
+            totalAssets:        fundedAssets,
             totalSupply:        assets,
             unrealizedLosses:   0,
             availableLiquidity: 0
         });
 
         assertAaveV3Strategy({
-            strategyManager:  aaveV3StrategyManager,
-            aum:              assets + expectedRoundingGain,
-            unrealizedLosses: 0
+            strategyManager:         aaveV3StrategyManager,
+            aum:                     fundedAssets,
+            lastRecordedTotalAssets: fundedAssets,
+            unrealizedLosses:        0
+        });
+
+        assertStrategyManagerShares({
+            strategyManager:    aaveV3StrategyManager,
+            totalShares:        fundedAssets,
+            totalPendingShares: 0
         });
 
         assertStrategyManagerPosition({
             strategyManager:  aaveV3StrategyManager,
             poolManager:      address(poolManager),
-            assets:           assets + expectedRoundingGain,
-            shares:           assets + expectedRoundingGain,
+            assets:           fundedAssets,
+            shares:           fundedAssets,
             pendingShares:    0,
             unrealizedLosses: 0
         });
@@ -79,24 +95,31 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         assertPoolState({
             pool:               address(pool),
-            totalAssets:        assets + expectedRoundingGain,
+            totalAssets:        fundedAssets,
             totalSupply:        assets,
             unrealizedLosses:   0,
             availableLiquidity: 0
         });
 
         assertAaveV3Strategy({
-            strategyManager:  aaveV3StrategyManager,
-            aum:              assets + expectedRoundingGain,
-            unrealizedLosses: 0
+            strategyManager:         aaveV3StrategyManager,
+            aum:                     fundedAssets,
+            lastRecordedTotalAssets: fundedAssets,
+            unrealizedLosses:        0
+        });
+
+        assertStrategyManagerShares({
+            strategyManager:    aaveV3StrategyManager,
+            totalShares:        fundedAssets,
+            totalPendingShares: fundedAssets
         });
 
         assertStrategyManagerPosition({
             strategyManager:  aaveV3StrategyManager,
             poolManager:      address(poolManager),
-            assets:           assets + expectedRoundingGain,
-            shares:           assets + expectedRoundingGain,
-            pendingShares:    assets + expectedRoundingGain,
+            assets:           fundedAssets,
+            shares:           fundedAssets,
+            pendingShares:    fundedAssets,
             unrealizedLosses: 0
         });
 
@@ -108,16 +131,23 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         assertPoolState({
             pool:               address(pool),
-            totalAssets:        assets + expectedRoundingGain,
+            totalAssets:        fundedAssets,
             totalSupply:        assets,
             unrealizedLosses:   0,
-            availableLiquidity: assets + expectedRoundingGain
+            availableLiquidity: fundedAssets
         });
 
         assertAaveV3Strategy({
-            strategyManager:  aaveV3StrategyManager,
-            aum:              0,
-            unrealizedLosses: 0
+            strategyManager:         aaveV3StrategyManager,
+            aum:                     0,
+            lastRecordedTotalAssets: 0,
+            unrealizedLosses:        0
+        });
+
+        assertStrategyManagerShares({
+            strategyManager:    aaveV3StrategyManager,
+            totalShares:        0,
+            totalPendingShares: 0
         });
 
         assertStrategyManagerPosition({
@@ -137,7 +167,6 @@ contract SparkLendStrategyProcessRedemptionTests is AaveV3StrategyProcessRedempt
     function setUp() public override {
         aaveToken                   = SPARK_USDC;
         useVirtualUnderlyingBalance = false;
-        expectedRoundingGain        = 0;
 
         super.setUp();
     }

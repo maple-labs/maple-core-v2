@@ -57,6 +57,7 @@ import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/inter
 import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
 import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
 
+import { IAavePoolLike }                  from "../../modules/defi-strategies/contracts/interfaces/Interfaces.sol";
 import { IMapleAaveV3Strategy as IMAV3S } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3Strategy.sol";
 import { IMapleSkyStrategy as IMSS }      from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategy.sol";
 
@@ -124,6 +125,24 @@ interface IWithdrawalManagerQueue is IMWMQ { }
 /******************************************************************************************************************************************/
 /*** Like Interfaces                                                                                                                    ***/
 /******************************************************************************************************************************************/
+
+interface IAavePoolAddressesProviderLike {
+
+    function getACLAdmin() external view returns (address aclAdmin_);
+
+    function getPoolConfigurator() external view returns (address poolConfigurator_);
+
+}
+
+interface IAavePoolConfiguratorLike {
+
+    function setReserveFreeze(address asset_, bool freeze_) external;
+
+    function setReservePause(address asset_, bool pause_) external;
+
+    function setSupplyCap(address asset_, uint256 supplyCap_) external;
+
+}
 
 interface IERC20Like {
 
