@@ -26,11 +26,11 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -41,6 +41,9 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
             pendingShares:    0,
             unrealizedLosses: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             assets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Fund strategy manager                                                                                              ***/
@@ -57,11 +60,11 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              assets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: assets,
+            availableToWithdraw:   assets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -72,6 +75,9 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
             pendingShares:    0,
             unrealizedLosses: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), assets);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Request redemption from strategy manager                                                                           ***/
@@ -90,11 +96,11 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              assets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: assets,
+            availableToWithdraw:   assets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -105,6 +111,9 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
             pendingShares:    assets,
             unrealizedLosses: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), assets);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Process redemption                                                                                                 ***/
@@ -121,11 +130,11 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -136,6 +145,9 @@ contract TradingStrategyProcessRedemptionTests is TradingStrategyTestBase {
             pendingShares:    0,
             unrealizedLosses: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             assets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
     }
 
 }

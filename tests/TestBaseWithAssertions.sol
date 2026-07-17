@@ -403,30 +403,41 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     }
 
     function assertTradingStrategy(
-        address strategyManager,
-        uint256 aum,
-        uint256 deployedAssets,
-        uint256 unrealizedYield,
+        address tradingStrategy,
+        uint256 assetsUnderManagement,
+        uint256 availableToWithdraw,
+        uint256 totalDeployedAssets,
         uint256 unrealizedLosses
     )
         internal view
     {
-        address strategy = IStrategyManager(strategyManager).underlyingStrategy();
-        address asset    = ITradingStrategy(strategy).fundsAsset();
+        assertEq(ITradingStrategy(tradingStrategy).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(ITradingStrategy(tradingStrategy).availableToWithdraw(),   availableToWithdraw);
+        assertEq(ITradingStrategy(tradingStrategy).totalDeployedAssets(),   totalDeployedAssets);
+        assertEq(ITradingStrategy(tradingStrategy).unrealizedLosses(),      unrealizedLosses);
+    }
 
-        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(), aum);
-        assertEq(ITradingStrategy(strategy).assetsUnderManagement(),        aum);
-        assertEq(ITradingStrategy(strategy).totalDeployedAssets(),          deployedAssets);
-        assertEq(ITradingStrategy(strategy).unrealizedYield(),              unrealizedYield);
-        assertEq(ITradingStrategy(strategy).availableToWithdraw(),          aum - deployedAssets);
-        assertEq(ITradingStrategy(strategy).unrealizedLosses(),             unrealizedLosses);
+    function assertTradingStrategyYield(
+        address tradingStrategy,
+        uint256 scheduledYieldAssets,
+        uint32  yieldStart,
+        uint32  yieldDeadline,
+        uint256 realizedYield
+    )
+        internal view
+    {
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
-        // The strategy custodies idle funds plus unvested yield; the strategy manager never custodies funds.
-        assertEq(IERC20(asset).balanceOf(strategy),        aum - deployedAssets + unrealizedYield);
-        assertEq(IERC20(asset).balanceOf(strategyManager), 0);
+        assertEq(ITradingStrategy(tradingStrategy).scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(ITradingStrategy(tradingStrategy).yieldStart(),           yieldStart);
+        assertEq(ITradingStrategy(tradingStrategy).yieldDeadline(),        yieldDeadline);
+        assertEq(ITradingStrategy(tradingStrategy).realizedYield(),        realizedYield);
+        assertEq(ITradingStrategy(tradingStrategy).unrealizedYield(),      unrealizedYield);
     }
 
     function assertInitialStateWithTrading(address strategyManager, uint256 initialLiquidity) internal view {
+        address tradingStrategy = IStrategyManager(strategyManager).underlyingStrategy();
+
         assertPoolState({
             pool:               address(pool),
             totalAssets:        initialLiquidity,
@@ -436,11 +447,19 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -462,6 +481,24 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     function assertStrategyManagerShares(address strategyManager, uint256 totalShares, uint256 totalPendingShares) internal view {
         assertEq(IStrategyManager(strategyManager).totalShares(),        totalShares);
         assertEq(IStrategyManager(strategyManager).totalPendingShares(), totalPendingShares);
+    }
+
+    function assertStrategyManager(
+        address strategyManager,
+        uint256 totalShares,
+        uint256 totalPendingShares,
+        uint256 assetsUnderManagement,
+        uint256 availableToWithdraw,
+        uint256 unrealizedLosses
+    )
+        internal view
+    {
+        assertEq(IStrategyManager(strategyManager).totalShares(),        totalShares);
+        assertEq(IStrategyManager(strategyManager).totalPendingShares(), totalPendingShares);
+
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),   availableToWithdraw);
+        assertEq(IStrategyManager(strategyManager).unrealizedLosses(),      unrealizedLosses);
     }
 
     function assertStrategyManagerPosition(

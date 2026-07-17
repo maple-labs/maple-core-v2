@@ -159,6 +159,8 @@ contract TestBase is ProtocolActions, Utils {
     /**************************************************************************************************************************************/
 
     function setUp() public virtual {
+        startingTime = uint32(block.timestamp);
+
         _setUpOpenPool();
     }
 

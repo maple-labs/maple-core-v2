@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import {
     IMapleProxyFactory,
     IPoolManager,
+    IStrategyManager,
     ITradingStrategy,
     PoolConfigParams,
     PoolManagerInitParams,
@@ -572,12 +573,22 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         assertEq(pm.isStrategyManager(tradingStrategyManager_), true);
         assertEq(pm.isStrategy(tradingStrategyManager_),        false);
 
+        address tradingUnderlyingStrategy_ = IStrategyManager(tradingStrategyManager_).underlyingStrategy();
+
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager_,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy_,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy_,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
     }
 
@@ -633,20 +644,39 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         assertEq(pm.isStrategy(tradingStrategyManager0),        false);
         assertEq(pm.isStrategy(tradingStrategyManager1),        false);
 
+        address tradingUnderlyingStrategy0 = IStrategyManager(tradingStrategyManager1).underlyingStrategy();
+        address tradingUnderlyingStrategy1 = IStrategyManager(tradingStrategyManager0).underlyingStrategy();
+
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager0,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy0,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager1,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy1,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy0,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy1,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
     }
 
@@ -679,12 +709,22 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         assertEq(pm.isStrategyManager(tradingStrategyManager_), true);
         assertEq(pm.isStrategy(tradingStrategyManager_),        false);
 
+        address tradingUnderlyingStrategy_ = IStrategyManager(tradingStrategyManager_).underlyingStrategy();
+
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager_,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy_,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy_,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
     }
 

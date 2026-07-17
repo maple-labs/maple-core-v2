@@ -161,11 +161,19 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -203,11 +211,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -240,11 +248,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -294,11 +302,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -332,11 +340,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -370,11 +378,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -412,11 +420,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -455,11 +463,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: impairment
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      impairment
         });
 
         assertStrategyManagerPosition({
@@ -492,11 +500,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: impairment
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      impairment
         });
 
         assertStrategyManagerPosition({
@@ -567,11 +575,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerShares({
@@ -621,11 +629,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerShares({
@@ -675,11 +683,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerShares({
@@ -729,11 +737,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerShares({
@@ -783,11 +791,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         });
 
         assertTradingStrategy({
-            strategyManager:  strategyManager,
-            aum:              INITIAL_LIQUIDITY + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerShares({

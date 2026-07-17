@@ -832,6 +832,11 @@ contract ProtocolActions is Runner {
     /*** Strategy Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
+    function deployAssets(address strategy_, address trader_, uint256 amount_) internal {
+        vm.prank(trader_);
+        ITradingStrategy(strategy_).deployAssets(amount_, "");
+    }
+
     function fundStrategy(address strategy_, uint256 assetsIn_) internal {
         IStrategyLike s_ = IStrategyLike(strategy_);
         IPoolManager pm_ = IPoolManager(s_.poolManager());
@@ -852,6 +857,33 @@ contract ProtocolActions is Runner {
 
         vm.prank(strategyDelegate_);
         IStrategyManager(strategyManager_).fundStrategyManager(poolManager_, assetsIn_, "");
+    }
+
+    function impairTradingStrategy(address strategy_, uint256 amount_) internal {
+        address strategyManager_  = ITradingStrategy(strategy_).strategyManager();
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        ITradingStrategy(strategy_).impair(amount_);
+    }
+
+    function returnAssets(address strategy_, address deployer_, uint256 amount_) internal {
+        address asset_ = ITradingStrategy(strategy_).fundsAsset();
+
+        erc20_mint(asset_, deployer_, amount_);
+
+        vm.startPrank(deployer_);
+        IERC20(asset_).approve(strategy_, amount_);
+        ITradingStrategy(strategy_).returnAssets(amount_, deployer_, "");
+        vm.stopPrank();
+    }
+
+    function recognizeLoss(address strategy_, address deployer_, uint256 amount_) internal {
+        address strategyManager_  = ITradingStrategy(strategy_).strategyManager();
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        ITradingStrategy(strategy_).recognizeLoss(amount_, deployer_);
     }
 
     function realizeYield(address strategy_, address trader_, uint256 yieldAssets_, uint32 duration_) internal {

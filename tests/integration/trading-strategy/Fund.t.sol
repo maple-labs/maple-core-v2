@@ -195,11 +195,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              firstAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: firstAssets,
+            availableToWithdraw:   firstAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -217,6 +217,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             INITIAL_LIQUIDITY - firstAssets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstAssets);
+
         /**********************************************************************************************************************************/
         /*** Step 3: Fund the same pool manager position again                                                                          ***/
         /**********************************************************************************************************************************/
@@ -232,11 +235,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -253,6 +256,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
     }
 
     function test_fundUnderlyingStrategy_success_withOperatorRoles() external {
@@ -289,11 +295,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              firstAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: firstAssets,
+            availableToWithdraw:   firstAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -311,6 +317,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             INITIAL_LIQUIDITY - firstAssets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstAssets);
+
         /**********************************************************************************************************************************/
         /*** Step 3: Fund as the liquidity router                                                                                       ***/
         /**********************************************************************************************************************************/
@@ -327,11 +336,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -348,6 +357,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
     }
 
     function test_fundUnderlyingStrategy_success_afterFullExit() external {
@@ -374,11 +386,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -396,6 +408,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
+
         /**********************************************************************************************************************************/
         /*** Step 3: Request a full redemption                                                                                          ***/
         /**********************************************************************************************************************************/
@@ -411,11 +426,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -433,6 +448,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: INITIAL_LIQUIDITY
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
+
         /**********************************************************************************************************************************/
         /*** Step 4: Process the full redemption                                                                                        ***/
         /**********************************************************************************************************************************/
@@ -448,11 +466,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              0,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -470,6 +488,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
+
         /**********************************************************************************************************************************/
         /*** Step 5: Fund again from zero strategy manager shares                                                                       ***/
         /**********************************************************************************************************************************/
@@ -485,11 +506,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: secondAssets,
+            availableToWithdraw:   secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -506,6 +527,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        secondAssets,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             INITIAL_LIQUIDITY - secondAssets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), secondAssets);
     }
 
     function test_fundUnderlyingStrategy_success_afterAssetsDeployed() external {
@@ -534,11 +558,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              firstAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: firstAssets,
+            availableToWithdraw:   firstAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -556,8 +580,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),                                         0);
         assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             secondAssets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstAssets);
+        assertEq(fundsAsset.balanceOf(trader),                    0);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy assets from the trading strategy                                                                            ***/
@@ -575,11 +602,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              firstAssets,
-            deployedAssets:   deployedAssets,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: firstAssets,
+            availableToWithdraw:   firstAssets - deployedAssets,
+            totalDeployedAssets:   deployedAssets,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -597,8 +624,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),                                         deployedAssets);
         assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             secondAssets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstAssets - deployedAssets);
+        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Fund more assets while the strategy has deployed exposure                                                          ***/
@@ -615,11 +645,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   deployedAssets,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets,
+            totalDeployedAssets:   deployedAssets,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -637,8 +667,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),                                         deployedAssets);
         assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets);
+        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
     }
 
     function test_fundUnderlyingStrategy_success_withUnrealizedYield() external {
@@ -667,11 +700,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -688,6 +729,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Add yield that remains unrealized                                                                                  ***/
@@ -704,11 +748,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  unrealizedYield,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: unrealizedYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -726,7 +778,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + unrealizedYield);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Fund again while the yield is still excluded from AUM                                                              ***/
@@ -744,11 +797,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  unrealizedYield,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -766,7 +819,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + secondAssets + unrealizedYield);
     }
 
     function test_fundUnderlyingStrategy_success_withFullyRealizedYield() external {
@@ -797,11 +851,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -818,6 +880,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Realize yield and warp past the yield deadline                                                                     ***/
@@ -836,11 +901,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + yieldAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        yieldAssets
         });
 
         assertStrategyManagerPosition({
@@ -858,7 +931,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Fund again at an exchange rate above one                                                                           ***/
@@ -876,11 +950,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + yieldAssets + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        yieldAssets
         });
 
         assertStrategyManagerPosition({
@@ -897,6 +979,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY + expectedShares,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets + secondAssets);
     }
 
     function test_fundUnderlyingStrategy_success_withMidVestingYield() external {
@@ -928,11 +1013,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -949,6 +1042,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Realize yield and warp partway through the vesting period                                                          ***/
@@ -968,11 +1064,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + vestedYield,
-            deployedAssets:   0,
-            unrealizedYield:  yieldAssets - vestedYield,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield,
+            availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        vestedYield
         });
 
         assertStrategyManagerPosition({
@@ -990,9 +1094,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader), 0);
-
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).realizedYield(), vestedYield);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Fund mid-vesting at an exchange rate above one                                                                     ***/
@@ -1010,11 +1113,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + vestedYield + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  yieldAssets - vestedYield,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        vestedYield
         });
 
         assertStrategyManagerPosition({
@@ -1032,6 +1143,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + secondAssets + yieldAssets);
+
         /**********************************************************************************************************************************/
         /*** Step 5: Warp past the deadline so remaining yield accrues to the position                                                  ***/
         /**********************************************************************************************************************************/
@@ -1047,11 +1161,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + yieldAssets + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        yieldAssets
         });
 
         assertStrategyManagerPosition({
@@ -1069,7 +1191,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).realizedYield(), yieldAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets + secondAssets);
     }
 
     function test_fundUnderlyingStrategy_success_withStrategyFees() external {
@@ -1113,11 +1236,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -1134,6 +1265,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),          0);
+        assertEq(fundsAsset.balanceOf(treasury),                  0);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Realize yield, paying the delegate and protocol fees upfront                                                       ***/
@@ -1150,11 +1286,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  netYield,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -1172,9 +1316,10 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),           0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate), delegateFee);
-        assertEq(fundsAsset.balanceOf(treasury),         protocolFee);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + netYield);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),          delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                  protocolFee);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Warp past the yield deadline so the net yield vests                                                                ***/
@@ -1191,11 +1336,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + netYield,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + netYield,
+            availableToWithdraw:   INITIAL_LIQUIDITY + netYield,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        netYield
         });
 
         assertStrategyManagerPosition({
@@ -1213,6 +1366,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + netYield);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),          delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                  protocolFee);
+
         /**********************************************************************************************************************************/
         /*** Step 5: Fund again at the post-fee exchange rate                                                                           ***/
         /**********************************************************************************************************************************/
@@ -1229,11 +1387,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + netYield + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + netYield + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + netYield + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        netYield
         });
 
         assertStrategyManagerPosition({
@@ -1250,6 +1416,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY + expectedShares,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + netYield + secondAssets);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),          delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                  protocolFee);
     }
 
     function test_fundUnderlyingStrategy_success_withImpairment() external {
@@ -1277,11 +1448,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -1298,6 +1469,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Impair the strategy                                                                                                ***/
@@ -1315,11 +1489,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: impairment
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      impairment
         });
 
         assertStrategyManagerPosition({
@@ -1337,7 +1511,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).impairedAssets(), impairment);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Fund again while the impairment remains active                                                                     ***/
@@ -1355,11 +1530,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: impairment
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      impairment
         });
 
         assertStrategyManagerPosition({
@@ -1377,7 +1552,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).impairedAssets(), impairment);
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + secondAssets);
     }
 
     function test_fundUnderlyingStrategy_success_afterLossRecognition() external {
@@ -1411,11 +1587,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   deployed,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY - deployed,
+            totalDeployedAssets:   deployed,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -1433,8 +1609,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),                                         deployed);
         assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployed);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployed);
+        assertEq(fundsAsset.balanceOf(trader),                    deployed);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Recognize a loss on the deployed assets                                                                            ***/
@@ -1452,11 +1631,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY - loss,
-            deployedAssets:   deployed - loss,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY - loss,
+            availableToWithdraw:   INITIAL_LIQUIDITY - deployed,
+            totalDeployedAssets:   deployed - loss,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -1474,8 +1653,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),                                         deployed);
         assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployed - loss);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployed);
+        assertEq(fundsAsset.balanceOf(trader),                    deployed);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Fund at an exchange rate below one                                                                                 ***/
@@ -1493,11 +1675,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY - loss + secondAssets,
-            deployedAssets:   deployed - loss,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY - loss + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY - deployed + secondAssets,
+            totalDeployedAssets:   deployed - loss,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -1515,8 +1697,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader),                                         deployed);
         assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployed - loss);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployed + secondAssets);
+        assertEq(fundsAsset.balanceOf(trader),                    deployed);
     }
 
     function test_fundUnderlyingStrategy_success_atPoolManagerAndStrategyLiquidityCaps() external {
@@ -1553,11 +1738,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
         });
 
         assertStrategyManagerPosition({
@@ -1574,6 +1759,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),             0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
     }
 
     function test_fundUnderlyingStrategy_success_multiplePoolManagers() external {
@@ -1609,11 +1799,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY,
+            availableToWithdraw:   INITIAL_LIQUIDITY,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            realizedYield:        0
         });
 
         assertStrategyManagerPosition({
@@ -1630,6 +1828,9 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(pool1),                     0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Fully vest yield into the first pool position                                                                      ***/
@@ -1648,11 +1849,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + yieldAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        yieldAssets
         });
 
         assertStrategyManagerPosition({
@@ -1670,7 +1879,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
-        assertEq(fundsAsset.balanceOf(trader), 0);
+        assertEq(fundsAsset.balanceOf(pool1),                     0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Create a second pool and add the same strategy manager                                                             ***/
@@ -1706,6 +1916,10 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(pool1),                     0);
+        assertEq(fundsAsset.balanceOf(pool2),                     0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets);
+
         /**********************************************************************************************************************************/
         /*** Step 5: Deposit liquidity into the second pool                                                                             ***/
         /**********************************************************************************************************************************/
@@ -1721,11 +1935,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         });
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + yieldAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        yieldAssets
         });
 
         assertStrategyManagerPosition({
@@ -1761,6 +1983,10 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalPendingShares: 0
         });
 
+        assertEq(fundsAsset.balanceOf(pool1),                     0);
+        assertEq(fundsAsset.balanceOf(pool2),                     secondAssets);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets);
+
         /**********************************************************************************************************************************/
         /*** Step 6: Fund from the second pool at the higher exchange rate                                                              ***/
         /**********************************************************************************************************************************/
@@ -1768,11 +1994,19 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         fundStrategyManager(poolManager2, tradingStrategyManager, secondAssets);
 
         assertTradingStrategy({
-            strategyManager:  tradingStrategyManager,
-            aum:              INITIAL_LIQUIDITY + yieldAssets + secondAssets,
-            deployedAssets:   0,
-            unrealizedYield:  0,
-            unrealizedLosses: 0
+            tradingStrategy:       tradingUnderlyingStrategy,
+            assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertTradingStrategyYield({
+            tradingStrategy:      tradingUnderlyingStrategy,
+            scheduledYieldAssets: yieldAssets,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + duration,
+            realizedYield:        yieldAssets
         });
 
         assertPoolState({
@@ -1815,6 +2049,10 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
             totalShares:        INITIAL_LIQUIDITY + expectedShares,
             totalPendingShares: 0
         });
+
+        assertEq(fundsAsset.balanceOf(pool1),                     0);
+        assertEq(fundsAsset.balanceOf(pool2),                     0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + yieldAssets + secondAssets);
     }
 
 }
