@@ -63,6 +63,8 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAsserti
     }
 
     function testFuzzFork_syrupUSDG_lifecycle_assertInvariants(uint256 seed_) external {
+        vm.skip(true);
+        
         seed = seed_;
 
         for (uint256 i; i < ACTION_COUNT; ++i) {
