@@ -497,10 +497,8 @@ contract ProtocolActions is Runner {
         IPoolManager(poolManager_).setStrategyCap(strategyManager_, type(uint256).max);
         vm.stopPrank();
 
-        vm.startPrank(strategyDelegate_);
+        vm.prank(strategyDelegate_);
         IStrategyManager(strategyManager_).setStrategyLiquidityCap(type(uint256).max);
-        IStrategyManager(strategyManager_).setPoolManagerCap(poolManager_, type(uint256).max);
-        vm.stopPrank();
     }
 
     function allowLender(address poolManager_, address lender_) internal {

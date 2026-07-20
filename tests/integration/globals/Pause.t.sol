@@ -186,7 +186,7 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
         abi.encodeWithSignature("setImplementation(address)", address(0)),
         abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
-        abi.encodeWithSignature("completeConfiguration()"),
+        abi.encodeWithSignature("completeConfiguration(uint256,bytes)", 0, new bytes(0)),
         abi.encodeWithSignature("setUnderlyingStrategy(address)", address(0)),
         abi.encodeWithSignature("setActive(bool)", false),
         abi.encodeWithSignature("acceptStrategyDelegate()"),

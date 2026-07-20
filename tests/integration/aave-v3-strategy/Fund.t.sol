@@ -75,7 +75,8 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
         });
 
         vm.prank(inactiveDelegate);
-        ( address inactiveStrategyManager, ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, abi.encode(params));
+        ( address inactiveStrategyManager, ) =
+            strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(inactiveDelegate);
         vm.expectRevert("MSM:FSM:NOT_ACTIVE");
@@ -105,15 +106,6 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:INVALID_PM");
         IStrategyManager(aaveV3StrategyManager).fundStrategyManager(nonInstancePoolManager, assets, "");
-    }
-
-    function testFork_fund_failWithZeroPoolManagerCap() external {
-        vm.prank(strategyDelegate);
-        IStrategyManager(aaveV3StrategyManager).setPoolManagerCap(address(poolManager), 0);
-
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSM:FSM:PM_ZERO_CAP");
-        IStrategyManager(aaveV3StrategyManager).fundStrategyManager(address(poolManager), assets, "");
     }
 
     function testFork_fund_failWhenRequestFundsPaused() external {
@@ -245,6 +237,17 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:ZERO_SHARES");
         IStrategyManager(aaveV3StrategyManager).fundStrategyManager(address(poolManager), 2, "");
+    }
+
+    function testFork_fund_failWithBlockedPoolManager() external {
+        deposit(lp, assets);
+
+        vm.prank(strategyDelegate);
+        IStrategyManager(aaveV3StrategyManager).setPoolManagerCap(address(poolManager), type(uint256).max);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:POOL_MANAGER_CAP");
+        IStrategyManager(aaveV3StrategyManager).fundStrategyManager(address(poolManager), assets, "");
     }
 
     function testFork_fund_failWhenExceedingPoolManagerCap() external {

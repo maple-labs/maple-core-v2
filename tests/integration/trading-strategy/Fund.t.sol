@@ -66,7 +66,7 @@ contract TradingStrategyFundFailureTests is TradingStrategyTestBase {
 
         vm.prank(inactiveStrategyDelegate);
         ( address inactiveStrategyManager, ) =
-            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, abi.encode(params));
+            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(inactiveStrategyDelegate);
         vm.expectRevert("MSM:FSM:NOT_ACTIVE");
@@ -93,15 +93,6 @@ contract TradingStrategyFundFailureTests is TradingStrategyTestBase {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:INVALID_PM");
         IStrategyManager(tradingStrategyManager).fundStrategyManager(fakePoolManager, INITIAL_LIQUIDITY, "");
-    }
-
-    function test_fundUnderlyingStrategy_revert_zeroPoolManagerCap() external {
-        vm.prank(strategyDelegate);
-        IStrategyManager(tradingStrategyManager).setPoolManagerCap(address(poolManager), 0);
-
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSM:FSM:PM_ZERO_CAP");
-        IStrategyManager(tradingStrategyManager).fundStrategyManager(address(poolManager), INITIAL_LIQUIDITY, "");
     }
 
     function test_fundUnderlyingStrategy_revert_exceedingPoolStrategyCap() external {
@@ -136,6 +127,15 @@ contract TradingStrategyFundFailureTests is TradingStrategyTestBase {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:ZERO_SHARES");
         IStrategyManager(tradingStrategyManager).fundStrategyManager(address(poolManager), 1, "");
+    }
+
+    function test_fundUnderlyingStrategy_revert_blockedPoolManager() external {
+        vm.prank(strategyDelegate);
+        IStrategyManager(tradingStrategyManager).setPoolManagerCap(address(poolManager), type(uint256).max);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:POOL_MANAGER_CAP");
+        IStrategyManager(tradingStrategyManager).fundStrategyManager(address(poolManager), INITIAL_LIQUIDITY, "");
     }
 
     function test_fundUnderlyingStrategy_revert_poolManagerCapExceeded_boundary() external {

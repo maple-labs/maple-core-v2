@@ -71,7 +71,8 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         });
 
         vm.prank(inactiveDelegate);
-        ( address inactiveStrategyManager, ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, abi.encode(params));
+        ( address inactiveStrategyManager, ) =
+            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(inactiveDelegate);
         vm.expectRevert("MSM:FSM:NOT_ACTIVE");
@@ -99,15 +100,6 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:INVALID_PM");
         IStrategyManager(skyStrategyManager).fundStrategyManager(nonInstancePoolManager, assets, "");
-    }
-
-    function testFork_fund_failWithZeroPoolManagerCap() external {
-        vm.prank(strategyDelegate);
-        IStrategyManager(skyStrategyManager).setPoolManagerCap(address(poolManager), 0);
-
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSM:FSM:PM_ZERO_CAP");
-        IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), assets, "");
     }
 
     function testFork_fund_failWhenRequestFundsPaused() external {
@@ -231,6 +223,17 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:ZERO_SHARES");
         IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), 1, "");
+    }
+
+    function testFork_fund_failWithBlockedPoolManager() external {
+        deposit(lp, assets);
+
+        vm.prank(strategyDelegate);
+        IStrategyManager(skyStrategyManager).setPoolManagerCap(address(poolManager), type(uint256).max);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:POOL_MANAGER_CAP");
+        IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), assets, "");
     }
 
     function testFork_fund_failWhenExceedingPoolManagerCap() external {

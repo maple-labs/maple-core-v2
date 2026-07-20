@@ -247,9 +247,6 @@ contract TestBase is ProtocolActions, Utils {
         IPoolManager(poolManager_).addStrategyManager(strategyManager_);
         IPoolManager(poolManager_).setStrategyCap(strategyManager_, type(uint256).max);
         vm.stopPrank();
-
-        vm.prank(IStrategyManager(strategyManager_).strategyDelegate());
-        IStrategyManager(strategyManager_).setPoolManagerCap(poolManager_, type(uint256).max);
     }
 
     /**************************************************************************************************************************************/
@@ -273,7 +270,7 @@ contract TestBase is ProtocolActions, Utils {
         (
             aaveV3StrategyManager,
             aaveV3UnderlyingStrategy
-        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, abi.encode(params));
+        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(governor);
         globals.activateStrategyManager(aaveV3StrategyManager);
@@ -299,7 +296,7 @@ contract TestBase is ProtocolActions, Utils {
         (
             skyStrategyManager,
             skyUnderlyingStrategy
-        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, abi.encode(params));
+        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(governor);
         globals.activateStrategyManager(skyStrategyManager);
@@ -325,7 +322,7 @@ contract TestBase is ProtocolActions, Utils {
         (
             strategyManager_,
             underlyingStrategy_
-        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, abi.encode(params));
+        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);

@@ -38,7 +38,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(notDelegate);
         vm.expectRevert("MSD:D:INVALID_SD");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_invalidStrategyManagerFactory() external {
@@ -46,7 +46,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_SM_FACTORY");
-        strategyDeployer.deploy(invalidStrategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(invalidStrategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_invalidStrategyFactory() external {
@@ -54,7 +54,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_STRATEGY_FACTORY");
-        strategyDeployer.deploy(strategyManagerFactory, invalidStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, invalidStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_cannotDeployStrategyManager() external {
@@ -63,7 +63,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSMF:CI:CANNOT_DEPLOY");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_protocolPaused() external {
@@ -72,7 +72,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_strategyManagerFactoryWithoutDefaultVersion() external {
@@ -85,16 +85,16 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert(freshFactory);
-        strategyDeployer.deploy(freshFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(freshFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_duplicateDeployment() external {
         vm.prank(strategyDelegate);
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
 
         vm.prank(strategyDelegate);
         vm.expectRevert(strategyManagerFactory);
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_setUnderlyingStrategyPaused() external {
@@ -108,7 +108,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:PAUSED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_completeConfigurationPaused() external {
@@ -123,7 +123,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:PAUSED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, deploymentData);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
     }
 
 }
@@ -143,7 +143,7 @@ contract TradingStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTSF:CI:CANNOT_DEPLOY");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidAsset() external {
@@ -156,7 +156,7 @@ contract TradingStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
@@ -169,7 +169,7 @@ contract TradingStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
     }
 
     function test_deploy_success() external {
@@ -180,17 +180,13 @@ contract TradingStrategyDeployTests is TestBase {
             strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
         }));
 
-        (
-            address expectedStrategyManager,
-            address expectedUnderlyingStrategy
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        (
-            address tradingStrategyManager_,
-            address tradingUnderlyingStrategy_ 
-        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, data);
+        ( address tradingStrategyManager_, address tradingUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
 
         assertEq(tradingStrategyManager_,    expectedStrategyManager);
         assertEq(tradingUnderlyingStrategy_, expectedUnderlyingStrategy);
@@ -204,6 +200,116 @@ contract TradingStrategyDeployTests is TestBase {
         assertEq(IStrategyManager(tradingStrategyManager_).pendingStrategyDelegate(), address(0));
         assertEq(IStrategyManager(tradingStrategyManager_).underlyingStrategy(),      tradingUnderlyingStrategy_);
         assertEq(IStrategyManager(tradingStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(tradingStrategyManager_).totalShares(),             0);
+        assertEq(IStrategyManager(tradingStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(tradingStrategyManager_).assetsUnderManagement(),   0);
+
+        assertEq(IStrategyManager(tradingStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(tradingStrategyManager_).active(),     false);
+
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyManager(),         tradingStrategyManager_);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyMetadata(),        "Trading Strategy");
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).scheduledYieldAssets(),    0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).totalDeployedAssets(),     0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldDeadline(),           0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldStart(),              0);
+    }
+
+    function test_deploy_success_withBootstrapMint() external {
+        uint256 bootstrapMint = 1e6;
+
+        vm.prank(governor);
+        globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
+
+        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+            fundsAsset:              address(fundsAsset),
+            strategyMetadata:        "Trading Strategy",
+            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
+        }));
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+
+        erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
+
+        vm.prank(strategyDelegate);
+        fundsAsset.approve(address(strategyDeployer), bootstrapMint);
+
+        vm.prank(strategyDelegate);
+
+        ( address tradingStrategyManager_, address tradingUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+
+        assertEq(tradingStrategyManager_,    expectedStrategyManager);
+        assertEq(tradingUnderlyingStrategy_, expectedUnderlyingStrategy);
+
+        assertEq(fundsAsset.balanceOf(strategyDelegate),           0);
+        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy_), bootstrapMint);
+
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager_),    true);
+        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy_), true);
+
+        assertEq(IStrategyManager(tradingStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(tradingStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(tradingStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(tradingStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(tradingStrategyManager_).underlyingStrategy(),      tradingUnderlyingStrategy_);
+        assertEq(IStrategyManager(tradingStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(tradingStrategyManager_).totalShares(),             bootstrapMint);
+        assertEq(IStrategyManager(tradingStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(tradingStrategyManager_).sharesOf(address(0)),      bootstrapMint);
+        assertEq(IStrategyManager(tradingStrategyManager_).assetsUnderManagement(),   bootstrapMint);
+
+        assertEq(IStrategyManager(tradingStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(tradingStrategyManager_).active(),     false);
+
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyManager(),         tradingStrategyManager_);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyMetadata(),        "Trading Strategy");
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).scheduledYieldAssets(),    0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).totalDeployedAssets(),     0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldDeadline(),           0);
+        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldStart(),              0);
+    }
+
+    function test_deploy_success_withStrategyLiquidityCap() external {
+        uint256 strategyLiquidityCap = 1_000_000e6;
+
+        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+            fundsAsset:              address(fundsAsset),
+            strategyMetadata:        "Trading Strategy",
+            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
+        }));
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+
+        vm.prank(strategyDelegate);
+
+        ( address tradingStrategyManager_, address tradingUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, strategyLiquidityCap, data, "");
+
+        assertEq(tradingStrategyManager_,    expectedStrategyManager);
+        assertEq(tradingUnderlyingStrategy_, expectedUnderlyingStrategy);
+
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager_),    true);
+        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy_), true);
+
+        assertEq(IStrategyManager(tradingStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(tradingStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(tradingStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(tradingStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(tradingStrategyManager_).underlyingStrategy(),      tradingUnderlyingStrategy_);
+        assertEq(IStrategyManager(tradingStrategyManager_).strategyLiquidityCap(),    strategyLiquidityCap);
         assertEq(IStrategyManager(tradingStrategyManager_).totalShares(),             0);
         assertEq(IStrategyManager(tradingStrategyManager_).totalPendingShares(),      0);
         assertEq(IStrategyManager(tradingStrategyManager_).assetsUnderManagement(),   0);
@@ -239,29 +345,21 @@ contract TradingStrategyDeployTests is TestBase {
             strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
         }));
 
-        (
-            address expectedStrategyManager1,
-            address expectedUnderlyingStrategy1
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, tradingStrategyFactory, data);
+        ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, tradingStrategyFactory, data);
 
-        (
-            address expectedStrategyManager2,
-            address expectedUnderlyingStrategy2
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, tradingStrategyFactory, data);
+        ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, tradingStrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        (
-            address tradingStrategyManager1,
-            address tradingUnderlyingStrategy1
-        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, data);
+        ( address tradingStrategyManager1, address tradingUnderlyingStrategy1 ) =
+            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        (
-            address tradingStrategyManager2,
-            address tradingUnderlyingStrategy2
-        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, data);
+        ( address tradingStrategyManager2, address tradingUnderlyingStrategy2 ) =
+            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
 
         assertEq(tradingStrategyManager1,    expectedStrategyManager1);
         assertEq(tradingStrategyManager2,    expectedStrategyManager2);
@@ -344,7 +442,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MAV3SF:CI:CANNOT_DEPLOY");
-        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_zeroAaveToken() external {
@@ -358,7 +456,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
@@ -372,7 +470,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidStrategyVault() external {
@@ -386,7 +484,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidAsset() external {
@@ -405,7 +503,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
     }
 
     function test_deploy_success() external {
@@ -420,17 +518,13 @@ contract AaveV3StrategyDeployTests is TestBase {
             useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
-        (
-            address expectedStrategyManager,
-            address expectedUnderlyingStrategy
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        (
-            address aaveStrategyManager_,
-            address aaveUnderlyingStrategy_
-        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        ( address aaveStrategyManager_, address aaveUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         assertEq(aaveStrategyManager_,    expectedStrategyManager);
         assertEq(aaveUnderlyingStrategy_, expectedUnderlyingStrategy);
@@ -444,6 +538,130 @@ contract AaveV3StrategyDeployTests is TestBase {
         assertEq(IStrategyManager(aaveStrategyManager_).pendingStrategyDelegate(), address(0));
         assertEq(IStrategyManager(aaveStrategyManager_).underlyingStrategy(),      aaveUnderlyingStrategy_);
         assertEq(IStrategyManager(aaveStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(aaveStrategyManager_).totalShares(),             0);
+        assertEq(IStrategyManager(aaveStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(aaveStrategyManager_).assetsUnderManagement(),   0);
+
+        assertEq(IStrategyManager(aaveStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(aaveStrategyManager_).active(),     false);
+
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyManager(),             aaveStrategyManager_);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aaveToken(),                   aaveToken);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).fundsAsset(),                  USDC);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyDelegateFeeRate(),     0.001e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyProtocolFeeRate(),     0.002e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).referralCode(),                7);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).impairedAssets(),              0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).lastRecordedTotalAssets(),     0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).isLossRecognized(),            false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).useVirtualUnderlyingBalance(), useVirtualUnderlyingBalance);
+
+        assertNotEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aavePool(), address(0));
+    }
+
+    function test_deploy_success_withBootstrapMint() external {
+        uint256 bootstrapMint = 1e6;
+
+        vm.startPrank(governor);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
+        globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
+        vm.stopPrank();
+
+        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                7,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+        }));
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
+
+        erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
+
+        vm.prank(strategyDelegate);
+        fundsAsset.approve(address(strategyDeployer), bootstrapMint);
+
+        vm.prank(strategyDelegate);
+
+        ( address aaveStrategyManager_, address aaveUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
+
+        uint256 assetsDeposited = IStrategyManager(aaveStrategyManager_).assetsUnderManagement();
+
+        assertEq(aaveStrategyManager_,    expectedStrategyManager);
+        assertEq(aaveUnderlyingStrategy_, expectedUnderlyingStrategy);
+
+        assertEq(fundsAsset.balanceOf(strategyDelegate), 0);
+
+        assertApproxEqAbs(assetsDeposited, bootstrapMint, 1);
+
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(aaveStrategyManager_),   true);
+        assertEq(IMapleProxyFactory(aaveV3StrategyFactory).isInstance(aaveUnderlyingStrategy_), true);
+
+        assertEq(IStrategyManager(aaveStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(aaveStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(aaveStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(aaveStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(aaveStrategyManager_).underlyingStrategy(),      aaveUnderlyingStrategy_);
+        assertEq(IStrategyManager(aaveStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(aaveStrategyManager_).totalShares(),             assetsDeposited);
+        assertEq(IStrategyManager(aaveStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(aaveStrategyManager_).sharesOf(address(0)),      assetsDeposited);
+        assertEq(IStrategyManager(aaveStrategyManager_).assetsUnderManagement(),   assetsDeposited);
+
+        assertEq(IStrategyManager(aaveStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(aaveStrategyManager_).active(),     false);
+
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyManager(),             aaveStrategyManager_);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aaveToken(),                   aaveToken);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).fundsAsset(),                  USDC);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyDelegateFeeRate(),     0.001e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).strategyProtocolFeeRate(),     0.002e6);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).referralCode(),                7);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).impairedAssets(),              0);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).lastRecordedTotalAssets(),     assetsDeposited);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).isLossRecognized(),            false);
+        assertEq(IAaveV3Strategy(aaveUnderlyingStrategy_).useVirtualUnderlyingBalance(), useVirtualUnderlyingBalance);
+
+        assertNotEq(IAaveV3Strategy(aaveUnderlyingStrategy_).aavePool(), address(0));
+    }
+
+    function test_deploy_success_withStrategyLiquidityCap() external {
+        uint256 strategyLiquidityCap = 1_000_000e6;
+
+        vm.prank(governor);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
+
+        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
+            aaveToken:                   aaveToken,
+            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
+            referralCode:                7,
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+        }));
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
+
+        vm.prank(strategyDelegate);
+
+        ( address aaveStrategyManager_, address aaveUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, strategyLiquidityCap, data, "");
+
+        assertEq(aaveStrategyManager_,    expectedStrategyManager);
+        assertEq(aaveUnderlyingStrategy_, expectedUnderlyingStrategy);
+
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(aaveStrategyManager_),   true);
+        assertEq(IMapleProxyFactory(aaveV3StrategyFactory).isInstance(aaveUnderlyingStrategy_), true);
+
+        assertEq(IStrategyManager(aaveStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(aaveStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(aaveStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(aaveStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(aaveStrategyManager_).underlyingStrategy(),      aaveUnderlyingStrategy_);
+        assertEq(IStrategyManager(aaveStrategyManager_).strategyLiquidityCap(),    strategyLiquidityCap);
         assertEq(IStrategyManager(aaveStrategyManager_).totalShares(),             0);
         assertEq(IStrategyManager(aaveStrategyManager_).totalPendingShares(),      0);
         assertEq(IStrategyManager(aaveStrategyManager_).assetsUnderManagement(),   0);
@@ -483,29 +701,21 @@ contract AaveV3StrategyDeployTests is TestBase {
             useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
         }));
 
-        (
-            address expectedStrategyManager1,
-            address expectedUnderlyingStrategy1
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, aaveV3StrategyFactory, data);
+        ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, aaveV3StrategyFactory, data);
 
-        (
-            address expectedStrategyManager2,
-            address expectedUnderlyingStrategy2
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, aaveV3StrategyFactory, data);
+        ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, aaveV3StrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        (
-            address aaveStrategyManager1,
-            address aaveUnderlyingStrategy1
-        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        ( address aaveStrategyManager1, address aaveUnderlyingStrategy1 ) =
+            strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        (
-            address aaveStrategyManager2,
-            address aaveUnderlyingStrategy2
-        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, data);
+        ( address aaveStrategyManager2, address aaveUnderlyingStrategy2 ) =
+            strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         assertEq(aaveStrategyManager1,    expectedStrategyManager1);
         assertEq(aaveStrategyManager2,    expectedStrategyManager2);
@@ -599,7 +809,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSSF:CI:CANNOT_DEPLOY");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_zeroSavingsUsds() external {
@@ -614,7 +824,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_zeroPsm() external {
@@ -629,7 +839,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
@@ -644,7 +854,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidAsset() external {
@@ -659,7 +869,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidStrategyVault() external {
@@ -677,7 +887,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidPsm() external {
@@ -695,7 +905,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidGemPsm() external {
@@ -716,7 +926,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidUsdsPsm() external {
@@ -736,7 +946,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
     }
 
     function test_deploy_success() external {
@@ -754,17 +964,13 @@ contract SkyStrategyDeployTests is TestBase {
             referralCode:            7
         }));
 
-        (
-            address expectedStrategyManager,
-            address expectedUnderlyingStrategy
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        (
-            address skyStrategyManager_,
-            address skyUnderlyingStrategy_ 
-        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        ( address skyStrategyManager_, address skyUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         assertEq(skyStrategyManager_,    expectedStrategyManager);
         assertEq(skyUnderlyingStrategy_, expectedUnderlyingStrategy);
@@ -778,6 +984,135 @@ contract SkyStrategyDeployTests is TestBase {
         assertEq(IStrategyManager(skyStrategyManager_).pendingStrategyDelegate(), address(0));
         assertEq(IStrategyManager(skyStrategyManager_).underlyingStrategy(),      skyUnderlyingStrategy_);
         assertEq(IStrategyManager(skyStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(skyStrategyManager_).totalShares(),             0);
+        assertEq(IStrategyManager(skyStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(skyStrategyManager_).assetsUnderManagement(),   0);
+
+        assertEq(IStrategyManager(skyStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(skyStrategyManager_).active(),     false);
+
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).strategyManager(),         skyStrategyManager_);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).fundsAsset(),              USDC);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).psm(),                     USDS_LITE_PSM);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).savingsUsds(),             SAVINGS_USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).usds(),                    USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).referralCode(),            7);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).fallbackTout(),            0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).lastRecordedTotalAssets(), 0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).isLossRecognized(),        false);
+    }
+
+    function test_deploy_success_withBootstrapMint() external {
+        uint256 bootstrapMint = 1e6;
+
+        vm.startPrank(governor);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
+        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
+        vm.stopPrank();
+
+        bytes memory data = abi.encode(SkyStrategyInitializerParams({
+            fundsAsset:              USDC,
+            psm:                     USDS_LITE_PSM,
+            savingsUsds:             SAVINGS_USDS,
+            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
+            referralCode:            7
+        }));
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
+
+        erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
+
+        vm.prank(strategyDelegate);
+        fundsAsset.approve(address(strategyDeployer), bootstrapMint);
+
+        vm.prank(strategyDelegate);
+
+        ( address skyStrategyManager_, address skyUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
+
+        uint256 assetsDeposited = IStrategyManager(skyStrategyManager_).assetsUnderManagement();
+
+        assertEq(skyStrategyManager_,    expectedStrategyManager);
+        assertEq(skyUnderlyingStrategy_, expectedUnderlyingStrategy);
+
+        assertEq(fundsAsset.balanceOf(strategyDelegate), 0);
+
+        assertApproxEqAbs(assetsDeposited, bootstrapMint, 1);
+
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(skyStrategyManager_), true);
+        assertEq(IMapleProxyFactory(skyStrategyFactory).isInstance(skyUnderlyingStrategy_),  true);
+
+        assertEq(IStrategyManager(skyStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(skyStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(skyStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(skyStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(skyStrategyManager_).underlyingStrategy(),      skyUnderlyingStrategy_);
+        assertEq(IStrategyManager(skyStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(skyStrategyManager_).totalShares(),             assetsDeposited);
+        assertEq(IStrategyManager(skyStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(skyStrategyManager_).sharesOf(address(0)),      assetsDeposited);
+        assertEq(IStrategyManager(skyStrategyManager_).assetsUnderManagement(),   assetsDeposited);
+
+        assertEq(IStrategyManager(skyStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(skyStrategyManager_).active(),     false);
+
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).strategyManager(),         skyStrategyManager_);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).fundsAsset(),              USDC);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).psm(),                     USDS_LITE_PSM);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).savingsUsds(),             SAVINGS_USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).usds(),                    USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).referralCode(),            7);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).fallbackTout(),            0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).lastRecordedTotalAssets(), assetsDeposited);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy_).isLossRecognized(),        false);
+    }
+
+    function test_deploy_success_withStrategyLiquidityCap() external {
+        uint256 strategyLiquidityCap = 1_000_000e6;
+
+        vm.startPrank(governor);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
+        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        vm.stopPrank();
+
+        bytes memory data = abi.encode(SkyStrategyInitializerParams({
+            fundsAsset:              USDC,
+            psm:                     USDS_LITE_PSM,
+            savingsUsds:             SAVINGS_USDS,
+            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
+            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
+            referralCode:            7
+        }));
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
+
+        vm.prank(strategyDelegate);
+
+        ( address skyStrategyManager_, address skyUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, strategyLiquidityCap, data, "");
+
+        assertEq(skyStrategyManager_,    expectedStrategyManager);
+        assertEq(skyUnderlyingStrategy_, expectedUnderlyingStrategy);
+
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(skyStrategyManager_), true);
+        assertEq(IMapleProxyFactory(skyStrategyFactory).isInstance(skyUnderlyingStrategy_),  true);
+
+        assertEq(IStrategyManager(skyStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(skyStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(skyStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(skyStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(skyStrategyManager_).underlyingStrategy(),      skyUnderlyingStrategy_);
+        assertEq(IStrategyManager(skyStrategyManager_).strategyLiquidityCap(),    strategyLiquidityCap);
         assertEq(IStrategyManager(skyStrategyManager_).totalShares(),             0);
         assertEq(IStrategyManager(skyStrategyManager_).totalPendingShares(),      0);
         assertEq(IStrategyManager(skyStrategyManager_).assetsUnderManagement(),   0);
@@ -819,29 +1154,21 @@ contract SkyStrategyDeployTests is TestBase {
             referralCode:            7
         }));
 
-        (
-            address expectedStrategyManager1,
-            address expectedUnderlyingStrategy1
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, skyStrategyFactory, data);
+        ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, skyStrategyFactory, data);
 
-        (
-            address expectedStrategyManager2,
-            address expectedUnderlyingStrategy2
-        ) = strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, skyStrategyFactory, data);
+        ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, skyStrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        (
-            address skyStrategyManager1,
-            address skyUnderlyingStrategy1
-        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        ( address skyStrategyManager1, address skyUnderlyingStrategy1 ) =
+            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        (
-            address skyStrategyManager2,
-            address skyUnderlyingStrategy2
-        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, data);
+        ( address skyStrategyManager2, address skyUnderlyingStrategy2 ) =
+            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         assertEq(skyStrategyManager1,    expectedStrategyManager1);
         assertEq(skyStrategyManager2,    expectedStrategyManager2);
