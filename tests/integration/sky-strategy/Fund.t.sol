@@ -50,11 +50,6 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         ISkyStrategy(skyUnderlyingStrategy).impair(assets / 4);
 
-        address liquidityBot = makeAddr("liquidityBot");
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
-
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:NOT_OPERATOR");
         IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), assets / 4, "");
@@ -359,11 +354,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_partial_asLiquidityBot() external {
-        address liquidityBot = makeAddr("liquidityBot");
         uint256 fundAmount   = poolLiquidity / 4;
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
 
         assertPoolState({
             pool:               address(pool),

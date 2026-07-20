@@ -55,11 +55,6 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(assets / 4);
 
-        address liquidityBot = makeAddr("liquidityBot");
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
-
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:NOT_OPERATOR");
         IStrategyManager(aaveV3StrategyManager).fundStrategyManager(address(poolManager), assets / 4, "");
@@ -412,8 +407,6 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
     }
 
     function testFork_fund_partial_asLiquidityBot() external {
-        address liquidityBot = makeAddr("liquidityBot");
-
         uint256 fundAmount                 = 250_000e6;
         uint256 expectedAum                = fundAmount - expectedRoundingError;
         uint256 expectedShares             = expectedAum;
@@ -421,9 +414,6 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
         // 750_000e6 available liquidity + 250_000e6 nominal strategy AUM - the protocol-specific rounding adjustment.
         uint256 expectedTotalAssets = 1_000_000e6 - expectedRoundingError;
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
 
         assertPoolState({
             pool:               address(pool),

@@ -9,6 +9,7 @@ import {
     IBitcoinStrategy,
     ICompositeToken,
     IGlobals,
+    IMapleLiquidityRouter,
     IMapleProxyFactory,
     IMockERC20,
     IPool,
@@ -51,15 +52,17 @@ contract TestBase is ProtocolActions, Utils {
     string constant POOL_SYMBOL = "MP";
 
     address governor;
+    address liquidityBot;
+    address liquidityRouterBot;
     address migrationAdmin;
     address operationalAdmin;
-    address poolDelegate;
     address permissionAdmin;
+    address poolDelegate;
+    address redeemer;
     address securityAdmin;
     address strategyDelegate;
     address strategyManager;
     address treasury;
-    address redeemer;
 
     address assetControllerImplementation;
     address assetControllerInitializer;
@@ -136,6 +139,7 @@ contract TestBase is ProtocolActions, Utils {
     bytes[] strategyDeploymentData_;
 
     IGlobals                   globals;
+    IMapleLiquidityRouter      liquidityRouter;
     IPool                      pool;
     IPoolDeployer              poolDeployer;
     IPoolManager               poolManager;
@@ -580,16 +584,18 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _createAccounts() internal {
-        governor         = makeAddr("governor");
-        migrationAdmin   = makeAddr("migrationAdmin");
-        operationalAdmin = makeAddr("operationalAdmin");
-        poolDelegate     = makeAddr("poolDelegate");
-        permissionAdmin  = makeAddr("permissionAdmin");
-        securityAdmin    = makeAddr("securityAdmin");
-        strategyDelegate = makeAddr("strategyDelegate");
-        strategyManager  = makeAddr("strategyManager");
-        treasury         = makeAddr("treasury");
-        redeemer         = makeAddr("redeemer");
+        governor           = makeAddr("governor");
+        liquidityBot       = makeAddr("liquidityBot");
+        liquidityRouterBot = makeAddr("liquidityRouterBot");
+        migrationAdmin     = makeAddr("migrationAdmin");
+        operationalAdmin   = makeAddr("operationalAdmin");
+        permissionAdmin    = makeAddr("permissionAdmin");
+        poolDelegate       = makeAddr("poolDelegate");
+        redeemer           = makeAddr("redeemer");
+        securityAdmin      = makeAddr("securityAdmin");
+        strategyDelegate   = makeAddr("strategyDelegate");
+        strategyManager    = makeAddr("strategyManager");
+        treasury           = makeAddr("treasury");
     }
 
     function _createGlobals() internal {
@@ -675,32 +681,39 @@ contract TestBase is ProtocolActions, Utils {
 
         borrowerActions = deployNTP(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
+        liquidityRouter = IMapleLiquidityRouter(
+            deployFromFile("Contracts@28", "LiquidityRouter", abi.encode(address(globals)))
+        );
+
         vm.startPrank(governor);
 
         IPoolPermissionManagerInitializer(address(poolPermissionManager)).initialize(poolPermissionManagerImplementation, address(globals));
         poolPermissionManager.setPermissionAdmin(permissionAdmin, true);
 
-        globals.setValidInstanceOf("LIQUIDATOR_FACTORY",               liquidatorFactory,             true);
-        globals.setValidInstanceOf("LOAN_FACTORY",                     openTermLoanFactory,           true);
-        globals.setValidInstanceOf("OT_LOAN_FACTORY",                  openTermLoanFactory,           true);
-        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",          openTermLoanManagerFactory,    true);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             openTermLoanManagerFactory,    true);
-        globals.setValidInstanceOf("STRATEGY_FACTORY",                 openTermLoanManagerFactory,    true);
-        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",             poolManagerFactory,            true);
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                true);
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                true);
-        globals.setValidInstanceOf("STRATEGY_FACTORY",                 bitcoinStrategyFactory,        true);
-        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager),true);
-        globals.setValidInstanceOf("REFINANCER",                       openTermRefinancer,            true);
-        globals.setValidInstanceOf("OT_REFINANCER",                    openTermRefinancer,            true);
-        globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,               true);
-        globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY",         strategyManagerFactory,        true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      aaveV3StrategyFactory,         true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      skyStrategyFactory,            true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      tradingStrategyFactory,        true);
-        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),         true);
-        globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,           true);
-        globals.setValidInstanceOf("SYRUP_BTC_REDEEMER",               redeemer,                      true);
+        globals.setValidInstanceOf("LIQUIDATOR_FACTORY",               liquidatorFactory,              true);
+        globals.setValidInstanceOf("LOAN_FACTORY",                     openTermLoanFactory,            true);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY",                  openTermLoanFactory,            true);
+        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",          openTermLoanManagerFactory,     true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             openTermLoanManagerFactory,     true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 openTermLoanManagerFactory,     true);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",             poolManagerFactory,             true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                 true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                 true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY",                 bitcoinStrategyFactory,         true);
+        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager), true);
+        globals.setValidInstanceOf("REFINANCER",                       openTermRefinancer,             true);
+        globals.setValidInstanceOf("OT_REFINANCER",                    openTermRefinancer,             true);
+        globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,                true);
+        globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY",         strategyManagerFactory,         true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      aaveV3StrategyFactory,          true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      skyStrategyFactory,             true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      tradingStrategyFactory,         true);
+        globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),          true);
+        globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,            true);
+        globals.setValidInstanceOf("SYRUP_BTC_REDEEMER",               redeemer,                       true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT",                    liquidityBot,                   true);
+        globals.setValidInstanceOf("LIQUIDITY_ROUTER",                 address(liquidityRouter),       true);
+        globals.setValidInstanceOf("LIQUIDITY_ROUTER_BOT",             liquidityRouterBot,             true);
 
         globals.setCanDeployFrom(poolManagerFactory,       address(poolDeployer),     true);
         globals.setCanDeployFrom(queueWMFactory,           address(poolDeployer),     true);

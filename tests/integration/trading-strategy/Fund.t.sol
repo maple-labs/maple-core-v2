@@ -265,11 +265,11 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         uint256 firstAssets  = 400_000e6;
         uint256 secondAssets = 600_000e6;
 
-        address liquidityBot    = makeAddr("liquidityBot");
+        address newLiquidityBot = makeAddr("newLiquidityBot");
         address liquidityRouter = makeAddr("liquidityRouter");
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT",    liquidityBot,    true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT",    newLiquidityBot, true);
         globals.setValidInstanceOf("LIQUIDITY_ROUTER", liquidityRouter, true);
         vm.stopPrank();
 
@@ -283,7 +283,7 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 2: Fund as the liquidity bot                                                                                          ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(liquidityBot);
+        vm.prank(newLiquidityBot);
         IStrategyManager(tradingStrategyManager).fundStrategyManager(address(poolManager), firstAssets, "");
 
         assertPoolState({

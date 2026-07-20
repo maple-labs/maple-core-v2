@@ -55,11 +55,6 @@ contract StrategyManagerRequestRedeemFailureTests is StrategyManagerRequestRedee
     function test_requestRedeem_revert_liquidityBotWhenImpaired() external {
         uint256 impairment = INITIAL_LIQUIDITY / 5;
 
-        address liquidityBot = makeAddr("liquidityBot");
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
-
         deposit(lp, INITIAL_LIQUIDITY);
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
@@ -275,10 +270,10 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         uint256 firstRequest  = INITIAL_LIQUIDITY * 2 / 5;
         uint256 secondRequest = INITIAL_LIQUIDITY - firstRequest;
 
-        address liquidityBot    = makeAddr("liquidityBot");
+        address newLiquidityBot = makeAddr("newLiquidityBot");
         address liquidityRouter = makeAddr("liquidityRouter");
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    liquidityBot),    false);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    newLiquidityBot), false);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", liquidityRouter), false);
 
         /**********************************************************************************************************************************/
@@ -286,11 +281,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         /**********************************************************************************************************************************/
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT",    liquidityBot,    true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT",    newLiquidityBot, true);
         globals.setValidInstanceOf("LIQUIDITY_ROUTER", liquidityRouter, true);
         vm.stopPrank();
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    liquidityBot),    true);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    newLiquidityBot), true);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", liquidityRouter), true);
 
         assertPoolState({
@@ -328,7 +323,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         /*** Step 2: Request as the liquidity bot                                                                                       ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(liquidityBot);
+        vm.prank(newLiquidityBot);
         IStrategyManager(strategyManager).requestRedeem(address(poolManager), firstRequest);
 
         assertPoolState({

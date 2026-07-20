@@ -832,6 +832,13 @@ contract ProtocolActions is Runner {
     /*** Strategy Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
+    function cancelRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).cancelRedemption(poolManager_, shares_);
+    }
+
     function deployAssets(address strategy_, address trader_, uint256 amount_) internal {
         vm.prank(trader_);
         ITradingStrategy(strategy_).deployAssets(amount_, "");

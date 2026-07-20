@@ -54,6 +54,12 @@ import { IMapleFeeStrategy }     from "../../modules/strategies/contracts/interf
 import { IMapleBitcoinStrategy } from "../../modules/strategies/contracts/interfaces/bitcoinStrategy/IMapleBitcoinStrategy.sol";
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
 
+import {
+    Action,
+    ActionType,
+    IMapleLiquidityRouter as IMLR
+} from "../../modules/strategy-manager/contracts/interfaces/IMapleLiquidityRouter.sol";
+
 import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
 import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
 
@@ -87,6 +93,8 @@ interface ICompositeToken is ICT { }
 interface IGlobals is IMG { }
 
 interface IGovernorTimelock is IGTL { }
+
+interface IMapleLiquidityRouter is IMLR { }
 
 interface IOpenTermLoan is IMOTL { }
 

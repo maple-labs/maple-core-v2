@@ -15,10 +15,11 @@ import { MaplePoolManager as MPM }              from "../modules/pool/contracts/
 import { MaplePoolManagerInitializer as MPMI }  from "../modules/pool/contracts/proxy/MaplePoolManagerInitializer.sol";
 import { MaplePoolManagerMigratorV500 as MPMM } from "../modules/pool/contracts/proxy/MaplePoolManagerMigratorV500.sol";
 
-import { MapleStrategyDeployer as MSD }            from "../modules/strategy-manager/contracts/MapleStrategyDeployer.sol";
-import { MapleStrategyManager as MSM }             from "../modules/strategy-manager/contracts/MapleStrategyManager.sol";
-import { MapleStrategyManagerFactory as MSMF }     from "../modules/strategy-manager/contracts/MapleStrategyManagerFactory.sol";
-import { MapleStrategyManagerInitializer as MSMI } from "../modules/strategy-manager/contracts/MapleStrategyManagerInitializer.sol";
+import { MapleLiquidityRouter as MLR }              from "../modules/strategy-manager/contracts/MapleLiquidityRouter.sol";
+import { MapleStrategyDeployer as MSD }             from "../modules/strategy-manager/contracts/MapleStrategyDeployer.sol";
+import { MapleStrategyManager as MSM }              from "../modules/strategy-manager/contracts/MapleStrategyManager.sol";
+import { MapleStrategyManagerFactory as MSMF }      from "../modules/strategy-manager/contracts/MapleStrategyManagerFactory.sol";
+import { MapleStrategyManagerInitializer as MSMI }  from "../modules/strategy-manager/contracts/MapleStrategyManagerInitializer.sol";
 
 import { MapleTradingStrategy as MTS }             from "../modules/trading-strategy/contracts/MapleTradingStrategy.sol";
 import { MapleTradingStrategyFactory as MTSF }     from "../modules/trading-strategy/contracts/MapleTradingStrategyFactory.sol";
@@ -66,6 +67,12 @@ contract PoolManager is MPM { }
 contract PoolManagerInitializer is MPMI { }
 
 contract PoolManagerMigrator is MPMM { }
+
+contract LiquidityRouter is MLR {
+
+    constructor(address globals_) MLR(globals_) { }
+
+}
 
 contract StrategyDeployer is MSD {
 
