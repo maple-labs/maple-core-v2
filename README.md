@@ -58,7 +58,7 @@ To make it easier to perform some tasks within the repo, a few commands are avai
 
 | Command | Description |
 |---|---|
-| `make test`        | Run all tests located in `contracts/tests/`. |
+| `make test`        | Run all tests located in `tests/`. |
 | `make e2e`         | Run all end-to-end tests. |
 | `make fuzz`        | Run all fuzz tests. |
 | `make integration` | Run all integration tests (Must have `ETH_RPC_URL` configured to mainnet). |
