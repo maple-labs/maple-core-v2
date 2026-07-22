@@ -26,6 +26,7 @@ import {
     ISyrupBitcoinRouter,
     ITradingStrategy,
     IUSDCLike,
+    IUnderlyingStrategyLike,
     IWithdrawalManagerQueue,
     Permit
 } from "./interfaces/Interfaces.sol";
@@ -864,6 +865,14 @@ contract ProtocolActions is Runner {
         IStrategyManager(strategyManager_).fundStrategyManager(poolManager_, assetsIn_, "");
     }
 
+    function impairStrategy(address strategy_, uint256 amount_) internal {
+        address globals_  = IUnderlyingStrategyLike(strategy_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        IUnderlyingStrategyLike(strategy_).impair(amount_);
+    }
+
     function impairTradingStrategy(address strategy_, uint256 amount_) internal {
         address strategyManager_  = ITradingStrategy(strategy_).strategyManager();
         address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
@@ -900,6 +909,21 @@ contract ProtocolActions is Runner {
         IERC20(asset_).approve(strategy_, yieldAssets_);
         ITradingStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
         vm.stopPrank();
+    }
+
+    function setStrategyDelegateFeeRate(address strategy_, uint32 feeRate_) internal {
+        address strategyDelegate_ = IUnderlyingStrategyLike(strategy_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IUnderlyingStrategyLike(strategy_).setStrategyDelegateFeeRate(feeRate_);
+    }
+
+    function setStrategyProtocolFeeRate(address strategy_, uint32 feeRate_) internal {
+        address globals_  = IUnderlyingStrategyLike(strategy_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        IUnderlyingStrategyLike(strategy_).setStrategyProtocolFeeRate(feeRate_);
     }
 
     function setTradingAddress(

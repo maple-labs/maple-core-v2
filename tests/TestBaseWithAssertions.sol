@@ -380,6 +380,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     function assertAaveV3Strategy(
         address strategyManager,
         uint256 aum,
+        uint256 aTokenBalance,
         uint256 lastRecordedTotalAssets,
         uint256 unrealizedLosses
     )
@@ -387,11 +388,11 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     {
         address strategy = IStrategyManager(strategyManager).underlyingStrategy();
 
-        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(),         aum);
-        assertEq(IAaveV3Strategy(strategy).assetsUnderManagement(),                 aum);
-        assertEq(IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy), aum);
-        assertEq(IAaveV3Strategy(strategy).lastRecordedTotalAssets(),               lastRecordedTotalAssets);
-        assertEq(IAaveV3Strategy(strategy).unrealizedLosses(),                      unrealizedLosses);
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(),         aum ,                    "manager aum");
+        assertEq(IAaveV3Strategy(strategy).assetsUnderManagement(),                 aum,                     "underlying aum");
+        assertEq(IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy), aTokenBalance,           "aTokenBalance");
+        assertEq(IAaveV3Strategy(strategy).lastRecordedTotalAssets(),               lastRecordedTotalAssets, "lastRecordedTotalAssets");
+        assertEq(IAaveV3Strategy(strategy).unrealizedLosses(),                      unrealizedLosses,        "unrealizedLosses");
     }
 
     function assertSkyStrategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {

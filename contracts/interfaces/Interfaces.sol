@@ -63,7 +63,7 @@ import {
 import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
 import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
 
-import { IAavePoolLike }                  from "../../modules/defi-strategies/contracts/interfaces/Interfaces.sol";
+import { IAavePoolLike as IAPL }          from "../../modules/defi-strategies/contracts/interfaces/Interfaces.sol";
 import { IMapleAaveV3Strategy as IMAV3S } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3Strategy.sol";
 import { IMapleSkyStrategy as IMSS }      from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategy.sol";
 
@@ -149,6 +149,18 @@ interface IAavePoolConfiguratorLike {
     function setReservePause(address asset_, bool pause_) external;
 
     function setSupplyCap(address asset_, uint256 supplyCap_) external;
+
+}
+
+interface IAavePoolLike is IAPL {
+
+    function borrow(
+        address asset_,
+        uint256 amount_,
+        uint256 interestRateMode_,
+        uint16  referralCode_,
+        address onBehalfOf_
+    ) external;
 
 }
 
@@ -387,6 +399,20 @@ interface IPSMLike {
     function tin() external view returns (uint256 tin_);
 
     function tout() external view returns (uint256 tout_);
+
+}
+
+interface IUnderlyingStrategyLike {
+
+    function globals() external view returns (address globals);
+
+    function impair(uint256 amount) external;
+
+    function strategyDelegate() external view returns (address strategyDelegate);
+
+    function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate) external;
+
+    function setStrategyProtocolFeeRate(uint32 strategyProtocolFeeRate) external;
 
 }
 

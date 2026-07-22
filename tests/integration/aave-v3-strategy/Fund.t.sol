@@ -196,7 +196,7 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
 
     function testFork_fund_failWhenReservePaused() external {
         deposit(lp, assets);
-        _setAaveV3ReservePause(true);
+        setAaveV3ReservePause(true);
 
         vm.prank(strategyDelegate);
         vm.expectRevert(expectedReservePausedError);
@@ -205,7 +205,7 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
 
     function testFork_fund_failWhenReserveFrozen() external {
         deposit(lp, assets);
-        _setAaveV3ReserveFreeze(true);
+        setAaveV3ReserveFreeze(true);
 
         vm.prank(strategyDelegate);
         vm.expectRevert(expectedReserveFrozenError);
@@ -214,7 +214,7 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
 
     function testFork_fund_failWhenSupplyCapExceeded() external {
         deposit(lp, assets);
-        _setAaveV3SupplyCap(1);
+        setAaveV3SupplyCap(1);
 
         vm.prank(strategyDelegate);
         vm.expectRevert(expectedSupplyCapExceededError);
@@ -351,6 +351,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -386,6 +387,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAum,
+            aTokenBalance:           expectedAum,
             lastRecordedTotalAssets: expectedAum,
             unrealizedLosses:        0
         });
@@ -429,6 +431,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -465,6 +468,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAum,
+            aTokenBalance:           expectedAum,
             lastRecordedTotalAssets: expectedAum,
             unrealizedLosses:        0
         });
@@ -503,6 +507,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -538,6 +543,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAum,
+            aTokenBalance:           expectedAum,
             lastRecordedTotalAssets: expectedAum,
             unrealizedLosses:        0
         });
@@ -596,6 +602,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -650,6 +657,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -713,6 +721,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedFirstPoolAum,
+            aTokenBalance:           expectedFirstPoolAum,
             lastRecordedTotalAssets: expectedFirstPoolAum,
             unrealizedLosses:        0
         });
@@ -779,6 +788,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedFirstPoolAum,
+            aTokenBalance:           expectedFirstPoolAum,
             lastRecordedTotalAssets: expectedFirstPoolAum,
             unrealizedLosses:        0
         });
@@ -845,6 +855,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAum,
+            aTokenBalance:           expectedAum,
             lastRecordedTotalAssets: expectedAum,
             unrealizedLosses:        0
         });
@@ -903,6 +914,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -950,6 +962,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     firstAum,
+            aTokenBalance:           firstAum,
             lastRecordedTotalAssets: firstAum,
             unrealizedLosses:        0
         });
@@ -1048,6 +1061,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAumAfter,
+            aTokenBalance:           expectedAumAfter,
             lastRecordedTotalAssets: expectedAumAfter,
             unrealizedLosses:        0
         });
@@ -1116,6 +1130,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedInitialAum,
+            aTokenBalance:           expectedInitialAum,
             lastRecordedTotalAssets: expectedInitialAum,
             unrealizedLosses:        0
         });
@@ -1162,6 +1177,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     positionValue,
+            aTokenBalance:           positionValue,
             lastRecordedTotalAssets: expectedInitialAum,
             unrealizedLosses:        0
         });
@@ -1249,6 +1265,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAum,
+            aTokenBalance:           expectedAum,
             lastRecordedTotalAssets: expectedAum,
             unrealizedLosses:        0
         });
@@ -1299,6 +1316,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     0,
+            aTokenBalance:           0,
             lastRecordedTotalAssets: 0,
             unrealizedLosses:        0
         });
@@ -1334,6 +1352,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAumAfterFirstFund,
+            aTokenBalance:           expectedAumAfterFirstFund,
             lastRecordedTotalAssets: expectedAumAfterFirstFund,
             unrealizedLosses:        0
         });
@@ -1374,6 +1393,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAumAfterFirstFund,  // Impairment does not reduce the reported AUM.
+            aTokenBalance:           expectedAumAfterFirstFund,
             lastRecordedTotalAssets: expectedAumAfterFirstFund,
             unrealizedLosses:        impairment
         });
@@ -1423,6 +1443,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedAumAfterSecondFund,
+            aTokenBalance:           expectedAumAfterSecondFund,
             lastRecordedTotalAssets: expectedAumAfterSecondFund,
             unrealizedLosses:        impairment
         });
@@ -1487,6 +1508,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     firstPoolPosition,
+            aTokenBalance:           firstPoolPosition,
             lastRecordedTotalAssets: firstPoolPosition,
             unrealizedLosses:        0
         });
@@ -1544,6 +1566,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     firstPoolPosition,
+            aTokenBalance:           firstPoolPosition,
             lastRecordedTotalAssets: firstPoolPosition,
             unrealizedLosses:        impairment
         });
@@ -1611,6 +1634,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
             aum:                     expectedTotalAum,
+            aTokenBalance:           expectedTotalAum,
             lastRecordedTotalAssets: expectedTotalAum,
             unrealizedLosses:        impairment
         });

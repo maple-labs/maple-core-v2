@@ -36,7 +36,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         addStrategyManagerToPool(address(poolManager), aaveV3StrategyManager);
     }
 
-    function _setAaveV3ReserveFreeze(bool freeze_) internal {
+    function setAaveV3ReserveFreeze(bool freeze_) internal {
         address aavePool_ = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
 
         IAavePoolAddressesProviderLike addressesProvider_ = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool_).ADDRESSES_PROVIDER());
@@ -46,7 +46,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         poolConfigurator_.setReserveFreeze(address(fundsAsset), freeze_);
     }
 
-    function _setAaveV3ReservePause(bool pause_) internal {
+    function setAaveV3ReservePause(bool pause_) internal {
         address aavePool_ = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
 
         IAavePoolAddressesProviderLike addressesProvider_ = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool_).ADDRESSES_PROVIDER());
@@ -56,7 +56,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         poolConfigurator_.setReservePause(address(fundsAsset), pause_);
     }
 
-    function _setAaveV3SupplyCap(uint256 supplyCap_) internal {
+    function setAaveV3SupplyCap(uint256 supplyCap_) internal {
         address aavePool_ = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
 
         IAavePoolAddressesProviderLike addressesProvider_ = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool_).ADDRESSES_PROVIDER());
