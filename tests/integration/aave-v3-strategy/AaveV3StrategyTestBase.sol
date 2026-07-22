@@ -13,13 +13,15 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract AaveV3StrategyTestBase is TestBaseWithAssertions {
 
-    address lp = makeAddr("lp");
+    address lp        = makeAddr("lp");
+    address aaveToken = AAVE_USDC;
 
-    address aaveToken                   = AAVE_USDC;
-    bool    useVirtualUnderlyingBalance = true;
+    bool useVirtualUnderlyingBalance = true;
+
+    uint256 forkBlock = AAVE_V3_FORK_BLOCK;
 
     function setUp() public virtual override {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), AAVE_V3_FORK_BLOCK);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), forkBlock);
 
         start      = block.timestamp;
         fundsAsset = IMockERC20(USDC);
