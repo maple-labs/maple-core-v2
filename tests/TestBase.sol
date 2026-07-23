@@ -313,7 +313,8 @@ contract TestBase is ProtocolActions, Utils {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0
+            strategyProtocolFeeRate: 0,
+            yieldCap:                type(uint256).max
         });
 
         vm.startPrank(governor);

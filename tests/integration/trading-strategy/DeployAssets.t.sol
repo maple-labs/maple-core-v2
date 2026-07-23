@@ -39,7 +39,7 @@ contract TradingStrategyDeployAssetsFailureTests is TradingStrategyTestBase {
         address notTrader = makeAddr("notTrader");
 
         vm.prank(notTrader);
-        vm.expectRevert("MTS:NOT_TRADING_ADDRESS");
+        vm.expectRevert("MTS:NOT_MAPLE_MANAGED_WALLET");
         ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 

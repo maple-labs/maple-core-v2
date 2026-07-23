@@ -29,7 +29,8 @@ contract StrategyDeployerRevertTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0
+            strategyProtocolFeeRate: 0,
+            yieldCap:                type(uint256).max
         }));
     }
 
@@ -138,7 +139,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0
+            strategyProtocolFeeRate: 0,
+            yieldCap:                type(uint256).max
         }));
 
         vm.prank(strategyDelegate);
@@ -151,7 +153,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              makeAddr("notPoolAsset"),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0
+            strategyProtocolFeeRate: 0,
+            yieldCap:                type(uint256).max
         }));
 
         vm.prank(strategyDelegate);
@@ -164,7 +167,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0.5e6,      // 50% Fee
-            strategyProtocolFeeRate: 0.5e6 + 1   // 50.0001% Fee
+            strategyProtocolFeeRate: 0.5e6 + 1,  // 50.0001% Fee
+            yieldCap:                type(uint256).max
         }));
 
         vm.prank(strategyDelegate);
@@ -177,7 +181,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
+            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
+            yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -229,7 +234,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
+            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
+            yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -287,7 +293,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
+            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
+            yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -342,7 +349,8 @@ contract TradingStrategyDeployTests is TestBase {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6   // 0.2% Fee
+            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
+            yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =

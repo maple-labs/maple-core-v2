@@ -953,7 +953,7 @@ contract ProtocolActions is Runner {
         deploymentCaps[0]  = deploymentCap_;
 
         vm.prank(governor_);
-        IGlobals(globals_).setValidGovernedInstanceOf("TRADING_ADDRESS", tradingAddress_);
+        IGlobals(globals_).setValidMapleManagedWallet(tradingAddress_, true);
 
         vm.startPrank(admin_);
         ITradingStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);

@@ -27,7 +27,8 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0
+            strategyProtocolFeeRate: 0,
+            yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -126,7 +127,8 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0
+            strategyProtocolFeeRate: 0,
+            yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
