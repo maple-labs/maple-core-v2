@@ -303,10 +303,12 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _deployTradingStrategy() internal {
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployTradingStrategyFor(strategyDelegate);
+        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployTradingStrategyFor(strategyDelegate, 0);
     }
 
-    function _deployTradingStrategyFor(address strategyDelegate_) internal returns (address strategyManager_, address underlyingStrategy_) {
+    function _deployTradingStrategyFor(address strategyDelegate_, uint256 bootstrapMint_)
+        internal returns (address strategyManager_, address underlyingStrategy_)
+    {
         TradingStrategyInitializerParams memory params = TradingStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
             strategyMetadata:        "Trading Strategy",
@@ -314,8 +316,15 @@ contract TestBase is ProtocolActions, Utils {
             strategyProtocolFeeRate: 0
         });
 
-        vm.prank(governor);
+        vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate_, true);
+        globals.setBootstrapMint(address(fundsAsset), bootstrapMint_);
+        vm.stopPrank();
+
+        if (bootstrapMint_ != 0) {
+            erc20_mint(address(fundsAsset), strategyDelegate_, bootstrapMint_);
+            erc20_approve(address(fundsAsset), strategyDelegate_, address(strategyDeployer), bootstrapMint_);
+        }
 
         vm.prank(strategyDelegate_);
 
