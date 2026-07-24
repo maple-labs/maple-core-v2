@@ -396,6 +396,8 @@ interface IPSMLike {
 
     function file(bytes32 what, uint256 data) external;
 
+    function pocket() external view returns (address pocket_);
+
     function tin() external view returns (uint256 tin_);
 
     function tout() external view returns (uint256 tout_);
