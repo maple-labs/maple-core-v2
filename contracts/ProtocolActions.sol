@@ -881,12 +881,19 @@ contract ProtocolActions is Runner {
         ITradingStrategy(strategy_).impair(amount_);
     }
 
-    function returnAssets(address strategy_, address deployer_, uint256 amount_) internal {
+    function processRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).processRedemption(poolManager_, shares_, "");
+    }
+
+    function returnAssets(address strategy_, address caller_, address deployer_, uint256 amount_) internal {
         address asset_ = ITradingStrategy(strategy_).fundsAsset();
 
-        erc20_mint(asset_, deployer_, amount_);
+        erc20_mint(asset_, caller_, amount_);
 
-        vm.startPrank(deployer_);
+        vm.startPrank(caller_);
         IERC20(asset_).approve(strategy_, amount_);
         ITradingStrategy(strategy_).returnAssets(amount_, deployer_, "");
         vm.stopPrank();
@@ -900,6 +907,13 @@ contract ProtocolActions is Runner {
         ITradingStrategy(strategy_).recognizeLoss(amount_, deployer_);
     }
 
+    function requestRedeemFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).requestRedeem(poolManager_, shares_);
+    }
+
     function realizeYield(address strategy_, address trader_, uint256 yieldAssets_, uint32 duration_) internal {
         address asset_ = ITradingStrategy(strategy_).fundsAsset();
 
@@ -909,6 +923,44 @@ contract ProtocolActions is Runner {
         IERC20(asset_).approve(strategy_, yieldAssets_);
         ITradingStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
         vm.stopPrank();
+    }
+
+    function setDeploymentCap(address strategy_, address account_, uint256 cap_) internal {
+        address strategyDelegate_ = ITradingStrategy(strategy_).strategyDelegate();
+
+        address[] memory accounts = new address[](1);
+        uint256[] memory caps     = new uint256[](1);
+
+        accounts[0] = account_;
+        caps[0]     = cap_;
+
+        vm.prank(strategyDelegate_);
+        ITradingStrategy(strategy_).setDeploymentCaps(accounts, caps);
+    }
+
+    function setPermissions(
+        address strategy_,
+        address account_,
+        bool    canDeployAssets_,
+        bool    canReturnAssets_,
+        bool    canRealizeYield_
+    )
+        internal
+    {
+        address strategyDelegate_ = ITradingStrategy(strategy_).strategyDelegate();
+
+        address[] memory accounts        = new address[](1);
+        bool[]    memory canDeployAssets = new bool[](1);
+        bool[]    memory canReturnAssets = new bool[](1);
+        bool[]    memory canRealizeYield = new bool[](1);
+
+        accounts[0]        = account_;
+        canDeployAssets[0] = canDeployAssets_;
+        canReturnAssets[0] = canReturnAssets_;
+        canRealizeYield[0] = canRealizeYield_;
+
+        vm.prank(strategyDelegate_);
+        ITradingStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
     }
 
     function setStrategyDelegateFeeRate(address strategy_, uint32 feeRate_) internal {
@@ -963,20 +1015,6 @@ contract ProtocolActions is Runner {
         }
 
         vm.stopPrank();
-    }
-
-    function requestRedeemFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
-        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
-
-        vm.prank(strategyDelegate_);
-        IStrategyManager(strategyManager_).requestRedeem(poolManager_, shares_);
-    }
-
-    function processRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
-        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
-
-        vm.prank(strategyDelegate_);
-        IStrategyManager(strategyManager_).processRedemption(poolManager_, shares_, "");
     }
 
     function withdrawFromStrategy(address strategy_, uint256 assetsOut_) internal {

@@ -1304,7 +1304,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Return assets                                                                                                              ***/
         /**********************************************************************************************************************************/
 
-        returnAssets(tradingUnderlyingStrategy, trader, returnedAssets);
+        returnAssets(tradingUnderlyingStrategy, trader, trader, returnedAssets);
 
         assertPoolState({
             pool:               address(pool),

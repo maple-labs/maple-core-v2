@@ -630,7 +630,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 returnAmount = 100_000e6;
 
-        returnAssets(tradingUnderlyingStrategy, cappedTrader, returnAmount);
+        returnAssets(tradingUnderlyingStrategy, cappedTrader, cappedTrader, returnAmount);
 
         assertPoolState({
             pool:               address(pool),

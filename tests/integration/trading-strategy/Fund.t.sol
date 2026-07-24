@@ -1220,11 +1220,8 @@ contract TradingStrategyFundSuccessTests is TradingStrategyTestBase {
         /*** Step 2: Set the strategy fee rates and fund the strategy                                                                   ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(strategyDelegate);
-        ITradingStrategy(tradingUnderlyingStrategy).setStrategyDelegateFeeRate(delegateFeeRate);
-
-        vm.prank(governor);
-        ITradingStrategy(tradingUnderlyingStrategy).setStrategyProtocolFeeRate(protocolFeeRate);
+        setStrategyDelegateFeeRate(tradingUnderlyingStrategy, delegateFeeRate);
+        setStrategyProtocolFeeRate(tradingUnderlyingStrategy, protocolFeeRate);
 
         fundStrategyManager(address(poolManager), tradingStrategyManager, INITIAL_LIQUIDITY);
 
