@@ -21,9 +21,10 @@ import {
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IPSMLike,
+    ISyrupBitcoinRouter,
     IStrategyLike,
     IStrategyManager,
-    ISyrupBitcoinRouter,
+    ISkyStrategy,
     ITradingStrategy,
     IUSDCLike,
     IUnderlyingStrategyLike,
@@ -102,6 +103,14 @@ contract ProtocolActions is Runner {
         IUSDCLike(USDC).configureMinter(address(this), type(uint256).max);
 
         if (amount_ > 0) IUSDCLike(USDC).mint(account_, amount_);
+    }
+
+    function setFallbackTout(address strategy_, uint256 fallbackTout_) internal {
+        address globals_  = ISkyStrategy(strategy_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        ISkyStrategy(strategy_).setFallbackTout(fallbackTout_);
     }
 
     function setSkyTin(uint256 tin_) internal {
