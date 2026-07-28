@@ -33,7 +33,15 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         _createPoolWithOTLM(poolDelegate);
         _configurePool();
 
-        _deployAaveV3Strategy(aaveToken, useVirtualUnderlyingBalance);
+        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+            strategyDelegate_:            strategyDelegate,
+            aaveToken_:                   aaveToken,
+            useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
+            strategyDelegateFeeRate_:     0,
+            strategyProtocolFeeRate_:     0,
+            strategyLiquidityCap_:        0,
+            bootstrapMint_:               0
+        });
 
         addStrategyManagerToPool(address(poolManager), aaveV3StrategyManager);
     }

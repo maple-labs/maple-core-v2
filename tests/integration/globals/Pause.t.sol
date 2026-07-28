@@ -277,7 +277,15 @@ contract PauseTests is TestBaseWithAssertions {
 
         bitcoinStrategy = IBitcoinStrategy(bitcoinStrategy_);
 
-        _deployTradingStrategy();
+        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:         strategyDelegate,
+            fundsAsset_:               address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
+
         addStrategyManagerToPool(address(poolManager), tradingStrategyManager);
 
         // Set up all mappings

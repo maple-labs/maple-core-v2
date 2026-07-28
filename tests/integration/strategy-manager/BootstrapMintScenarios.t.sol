@@ -46,8 +46,14 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         /*** Deployment without bootstrap mint leaves the donation sitting in the strategy against zero shares                          ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) =
-            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address strategyManager_, address underlyingStrategy_ ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
@@ -147,8 +153,14 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         /*** Deployment with bootstrap mint completes successfully and the dead shares absorb the donation                              ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) =
-            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), bootstrapMint);
+        ( address strategyManager_, address underlyingStrategy_ ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           bootstrapMint
+        });
 
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
@@ -265,8 +277,23 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
     function setUp() public override {
         super.setUp();
 
-        ( noBootstrapManager, noBootstrapStrategy ) = _deployTradingStrategyForAsset(delegateA, address(fundsAsset), 0);
-        ( bootstrapManager,   bootstrapStrategy )   = _deployTradingStrategyForAsset(delegateB, address(fundsAsset), bootstrapMint);
+        ( noBootstrapManager, noBootstrapStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        delegateA,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
+
+        ( bootstrapManager, bootstrapStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        delegateB,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           bootstrapMint
+        });
 
         ( poolA, poolManagerA ) = _createPoolSharingStrategy("poolDelegateA", noBootstrapManager);
         ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolDelegateB", bootstrapManager);
@@ -418,8 +445,23 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
     function setUp() public override {
         super.setUp();
 
-        ( noBootstrapManager, noBootstrapStrategy ) = _deployTradingStrategyForAsset(delegateA, address(fundsAsset), 0);
-        ( bootstrapManager,   bootstrapStrategy )   = _deployTradingStrategyForAsset(delegateB, address(fundsAsset), bootstrapMint);
+        ( noBootstrapManager, noBootstrapStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        delegateA,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
+
+        ( bootstrapManager, bootstrapStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        delegateB,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           bootstrapMint
+        });
 
         ( attackerPool, attackerPoolManager ) = _createPoolSharingStrategy("attackerDelegate", noBootstrapManager);
         ( victimPool,   victimPoolManager )   = _createPoolSharingStrategy("victimDelegate",   bootstrapManager);

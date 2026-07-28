@@ -257,68 +257,21 @@ contract TestBase is ProtocolActions, Utils {
     /*** Strategy Manager Deployment                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    function _deployAaveV3Strategy(address aaveToken_, bool useVirtualUnderlyingBalance_) internal {
-        AaveV3StrategyInitializerParams memory params = AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken_,
-            strategyDelegateFeeRate:     0,
-            strategyProtocolFeeRate:     0,
-            referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance_
-        });
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken_, true);
-
-        vm.prank(strategyDelegate);
-
-        (
-            aaveV3StrategyManager,
-            aaveV3UnderlyingStrategy
-        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, abi.encode(params), "");
-
-        vm.prank(governor);
-        globals.activateStrategyManager(aaveV3StrategyManager);
-    }
-
-    function _deploySkyStrategy(address savingsUsds_, address psm_) internal {
-        SkyStrategyInitializerParams memory params = SkyStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            psm:                     psm_,
-            savingsUsds:             savingsUsds_,
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            referralCode:            0
-        });
-
-        vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", savingsUsds_, true);
-        globals.setValidInstanceOf("PSM",            psm_,         true);
-        vm.stopPrank();
-
-        vm.prank(strategyDelegate);
-
-        (
-            skyStrategyManager,
-            skyUnderlyingStrategy
-        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
-
-        vm.prank(governor);
-        globals.activateStrategyManager(skyStrategyManager);
-    }
-
-    function _deployTradingStrategy() internal {
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) =
-            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
-    }
-
-    function _deployTradingStrategyForAsset(address strategyDelegate_, address fundsAsset_, uint256 bootstrapMint_)
+    function _deployAllocationStrategy(
+        address strategyDelegate_,
+        address fundsAsset_,
+        uint32  strategyDelegateFeeRate_,
+        uint32  strategyProtocolFeeRate_,
+        uint256 strategyLiquidityCap_,
+        uint256 bootstrapMint_
+    )
         internal returns (address strategyManager_, address underlyingStrategy_)
     {
         TradingStrategyInitializerParams memory params = TradingStrategyInitializerParams({
             fundsAsset:              fundsAsset_,
             strategyMetadata:        "Trading Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
+            strategyDelegateFeeRate: strategyDelegateFeeRate_,
+            strategyProtocolFeeRate: strategyProtocolFeeRate_,
             yieldCap:                type(uint256).max
         });
 
@@ -334,29 +287,40 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(strategyDelegate_);
 
-        (
-            strategyManager_,
-            underlyingStrategy_
-        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, abi.encode(params), "");
+        ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
+            strategyManagerFactory: strategyManagerFactory,
+            strategyFactory:        tradingStrategyFactory,
+            strategyLiquidityCap:   strategyLiquidityCap_,
+            strategyDeploymentData: abi.encode(params),
+            bootstrapFundingData:   ""
+        });
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);
     }
 
-    function _deployAaveV3StrategyFor(address strategyDelegate_, uint256 bootstrapMint_)
+    function _deployAaveV3Strategy(
+        address strategyDelegate_,
+        address aaveToken_,
+        bool    useVirtualUnderlyingBalance_,
+        uint32  strategyDelegateFeeRate_,
+        uint32  strategyProtocolFeeRate_,
+        uint256 strategyLiquidityCap_,
+        uint256 bootstrapMint_
+    )
         internal returns (address strategyManager_, address underlyingStrategy_)
     {
         AaveV3StrategyInitializerParams memory params = AaveV3StrategyInitializerParams({
-            aaveToken:                   AAVE_USDC,
-            strategyDelegateFeeRate:     0,
-            strategyProtocolFeeRate:     0,
+            aaveToken:                   aaveToken_,
+            strategyDelegateFeeRate:     strategyDelegateFeeRate_,
+            strategyProtocolFeeRate:     strategyProtocolFeeRate_,
             referralCode:                0,
-            useVirtualUnderlyingBalance: true
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance_
         });
 
         vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate_, true);
-        globals.setValidInstanceOf("STRATEGY_VAULT", AAVE_USDC, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken_, true);
         globals.setBootstrapMint(address(fundsAsset), bootstrapMint_);
         vm.stopPrank();
 
@@ -367,45 +331,60 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(strategyDelegate_);
 
-        (
-            strategyManager_,
-            underlyingStrategy_
-        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, abi.encode(params), "");
+        ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
+            strategyManagerFactory: strategyManagerFactory,
+            strategyFactory:        aaveV3StrategyFactory,
+            strategyLiquidityCap:   strategyLiquidityCap_,
+            strategyDeploymentData: abi.encode(params),
+            bootstrapFundingData:   ""
+        });
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);
     }
 
-    function _deploySkyStrategyFor(address strategyDelegate_, uint256 bootstrapMint_)
+    function _deploySkyStrategy(
+        address strategyDelegate_,
+        address fundsAsset_,
+        address savingsUsds_,
+        address psm_,
+        uint32  strategyDelegateFeeRate_,
+        uint32  strategyProtocolFeeRate_,
+        uint256 strategyLiquidityCap_,
+        uint256 bootstrapMint_
+    )
         internal returns (address strategyManager_, address underlyingStrategy_)
     {
         SkyStrategyInitializerParams memory params = SkyStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
+            fundsAsset:              fundsAsset_,
+            psm:                     psm_,
+            savingsUsds:             savingsUsds_,
+            strategyDelegateFeeRate: strategyDelegateFeeRate_,
+            strategyProtocolFeeRate: strategyProtocolFeeRate_,
             referralCode:            0
         });
 
         vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate_, true);
-        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
-        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
-        globals.setBootstrapMint(address(fundsAsset), bootstrapMint_);
+        globals.setValidInstanceOf("STRATEGY_VAULT", savingsUsds_, true);
+        globals.setValidInstanceOf("PSM",            psm_,         true);
+        globals.setBootstrapMint(fundsAsset_, bootstrapMint_);
         vm.stopPrank();
 
         if (bootstrapMint_ != 0) {
-            erc20_mint(address(fundsAsset), strategyDelegate_, bootstrapMint_);
-            erc20_approve(address(fundsAsset), strategyDelegate_, address(strategyDeployer), bootstrapMint_);
+            erc20_mint(fundsAsset_, strategyDelegate_, bootstrapMint_);
+            erc20_approve(fundsAsset_, strategyDelegate_, address(strategyDeployer), bootstrapMint_);
         }
 
         vm.prank(strategyDelegate_);
 
-        (
-            strategyManager_,
-            underlyingStrategy_
-        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
+        ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
+            strategyManagerFactory: strategyManagerFactory,
+            strategyFactory:        skyStrategyFactory,
+            strategyLiquidityCap:   strategyLiquidityCap_,
+            strategyDeploymentData: abi.encode(params),
+            bootstrapFundingData:   ""
+        });
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);

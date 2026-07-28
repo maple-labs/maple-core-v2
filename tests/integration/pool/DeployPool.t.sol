@@ -151,7 +151,14 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_createInstance_revert_directOpenTermLoanManagerFactoryCall() external {
-        ( address tradingStrategyManager_, ) = _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         vm.prank(tradingStrategyManager_);
         vm.expectRevert("LMF:CI:CANNOT_DEPLOY");
@@ -343,7 +350,14 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_invalidStrategyManager() external {
-        ( address tradingStrategyManager_, ) = _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory, false);
@@ -363,7 +377,14 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_duplicateStrategyManager() external {
-        ( address tradingStrategyManager_, ) = _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         StrategyManagerParams[] memory managers = createStrategyManagerParams(
             tradingStrategyManager_,
@@ -385,8 +406,14 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_strategyManagerAssetNotSupported() external {
-        ( address tradingStrategyManager_, address underlyingStrategy ) =
-            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address tradingStrategyManager_, address underlyingStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         assertEq(ITradingStrategy(underlyingStrategy).fundsAsset(), address(fundsAsset));
 
@@ -537,7 +564,14 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_otlmAndModularStrategy() external {
-        ( address tradingStrategyManager_, ) = _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         StrategyDeployParams[]  memory strategies = createOtlmStrategyParams(type(uint256).max);
         StrategyManagerParams[] memory managers   = createStrategyManagerParams(tradingStrategyManager_, type(uint256).max);
@@ -594,8 +628,23 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_otlmAndMultipleModularStrategies() external {
-        ( address tradingStrategyManager0, ) = _deployTradingStrategyForAsset(makeAddr("strategyDelegate0"), address(fundsAsset), 0);
-        ( address tradingStrategyManager1, ) = _deployTradingStrategyForAsset(makeAddr("strategyDelegate1"), address(fundsAsset), 0);
+        ( address tradingStrategyManager0, ) = _deployAllocationStrategy({
+            strategyDelegate_:        makeAddr("strategyDelegate0"),
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
+
+        ( address tradingStrategyManager1, ) = _deployAllocationStrategy({
+            strategyDelegate_:        makeAddr("strategyDelegate1"),
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         assertNotEq(tradingStrategyManager0, tradingStrategyManager1);
 
@@ -682,7 +731,14 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_modularStrategyOnly() external {
-        ( address tradingStrategyManager_, ) = _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
+        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: 0,
+            strategyProtocolFeeRate_: 0,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           0
+        });
 
         StrategyManagerParams[] memory managers = createStrategyManagerParams(tradingStrategyManager_, 0);
 
