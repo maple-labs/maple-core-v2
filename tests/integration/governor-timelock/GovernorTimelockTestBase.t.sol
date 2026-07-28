@@ -5,6 +5,7 @@ import { IGovernorTimelock, IMG as IMapleGlobals, IWithdrawalManagerQueue } from
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
+// TODO: Consider removing timelock wrappers and add/use timelock wrappers in ProtocolActions
 contract GovernorTimelockTestBase is TestBaseWithAssertions {
 
     address public proposer  = makeAddr("proposer");
@@ -67,16 +68,13 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
     )
         internal returns (uint256 proposalId, uint32 delayedUntil)
     {
-        address[] memory targets = new address[](1);
-        bytes[] memory data      = new bytes[](1);
+        proposalId = scheduleProposal({
+            timelock_: address(timelock),
+            caller_:   proposer,
+            target_:   target,
+            callData_: bytes.concat(functionSelector, parameters)
+        });
 
-        targets[0] = target;
-        data[0]    = bytes.concat(functionSelector, parameters);
-
-        vm.prank(proposer);
-        timelock.scheduleProposals(targets, data);
-
-        proposalId              = timelock.latestProposalId();
         ( , , , delayedUntil, ) = timelock.proposals(proposalId);
     }
 
@@ -88,16 +86,13 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
     )
         internal
     {
-        uint256[] memory proposalsToExecute = new uint256[](1);
-        address[] memory targets            = new address[](1);
-        bytes[] memory data                 = new bytes[](1);
-
-        proposalsToExecute[0] = proposalId;
-        targets[0]            = target;
-        data[0]               = bytes.concat(functionSelector, parameters);
-
-        vm.prank(executor);
-        timelock.executeProposals(proposalsToExecute, targets, data);
+        executeProposal({
+            timelock_:   address(timelock),
+            caller_:     executor,
+            proposalId_: proposalId,
+            target_:     target,
+            callData_:   bytes.concat(functionSelector, parameters)
+        });
     }
 
     function _executeThroughTimelock(
@@ -107,10 +102,13 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
     )
         internal
     {
-        ( uint256 proposalId, uint32 delayedUntil ) = _scheduleProposal(target, functionSelector, parameters);
-
-        vm.warp(delayedUntil);
-        _executeProposal(proposalId, target, functionSelector, parameters);
+        executeThroughTimelock({
+            timelock_: address(timelock),
+            proposer_: proposer,
+            executor_: executor,
+            target_:   target,
+            callData_: bytes.concat(functionSelector, parameters)
+        });
     }
 
     function _proposeRoleUpdate(bytes32 role_, address account_, bool shouldGrant_) internal {
@@ -130,9 +128,12 @@ contract GovernorTimelockTestBase is TestBaseWithAssertions {
         ( , , , uint32 delayedUntil_, ) = timelock.proposals(proposalId_);
 
         vm.warp(delayedUntil_);
-        _executeProposal(
-            proposalId_, address(timelock), timelock.updateRole.selector, abi.encode(role_, account_, shouldGrant_)
-        );
+        _executeProposal({
+            proposalId:       proposalId_,
+            target:           address(timelock),
+            functionSelector: timelock.updateRole.selector,
+            parameters:       abi.encode(role_, account_, shouldGrant_)
+        });
     }
 
 }

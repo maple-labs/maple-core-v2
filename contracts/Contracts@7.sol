@@ -27,6 +27,8 @@ import { MaplePoolPermissionManager as MPPM }
 import { MaplePoolPermissionManagerInitializer as MPPMI }
     from "../modules/pool-permission-manager/contracts/proxy/MaplePoolPermissionManagerInitializer.sol";
 
+import { Proxy as P } from "../modules/strategy-manager/modules/maple-proxy-factory/modules/proxy-factory/contracts/Proxy.sol";
+
 import { SyrupRouter as SR } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 import { MapleWithdrawalManagerFactory as MWMQF }
@@ -83,6 +85,12 @@ contract PoolManagerFactory is MPMF {
 contract PoolPermissionManager is MPPM { }
 
 contract PoolPermissionManagerInitializer is MPPMI { }
+
+contract Proxy is P {
+
+    constructor(address factory_, address implementation_) P(factory_, implementation_) { }
+
+}
 
 contract SyrupRouter is SR {
 

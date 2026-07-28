@@ -9,6 +9,7 @@ import {
     IBitcoinStrategy,
     ICompositeToken,
     IGlobals,
+    IGovernorTimelock,
     IMapleLiquidityRouter,
     IMapleProxyFactory,
     IMockERC20,
@@ -52,6 +53,8 @@ contract TestBase is ProtocolActions, Utils {
     string constant POOL_SYMBOL = "MP";
 
     address governor;
+    address governorTimelockProposer;
+    address governorTimelockRoleAdmin;
     address liquidityBot;
     address liquidityRouterBot;
     address migrationAdmin;
@@ -139,6 +142,7 @@ contract TestBase is ProtocolActions, Utils {
     bytes[] strategyDeploymentData_;
 
     IGlobals                   globals;
+    IGovernorTimelock          governorTimelock;
     IMapleLiquidityRouter      liquidityRouter;
     IPool                      pool;
     IPoolDeployer              poolDeployer;
@@ -303,14 +307,15 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _deployTradingStrategy() internal {
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployTradingStrategyFor(strategyDelegate, 0);
+        ( tradingStrategyManager, tradingUnderlyingStrategy ) =
+            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
     }
 
-    function _deployTradingStrategyFor(address strategyDelegate_, uint256 bootstrapMint_)
+    function _deployTradingStrategyForAsset(address strategyDelegate_, address fundsAsset_, uint256 bootstrapMint_)
         internal returns (address strategyManager_, address underlyingStrategy_)
     {
         TradingStrategyInitializerParams memory params = TradingStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
+            fundsAsset:              fundsAsset_,
             strategyMetadata:        "Trading Strategy",
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
@@ -319,6 +324,39 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate_, true);
+        globals.setBootstrapMint(fundsAsset_, bootstrapMint_);
+        vm.stopPrank();
+
+        if (bootstrapMint_ != 0) {
+            erc20_mint(fundsAsset_, strategyDelegate_, bootstrapMint_);
+            erc20_approve(fundsAsset_, strategyDelegate_, address(strategyDeployer), bootstrapMint_);
+        }
+
+        vm.prank(strategyDelegate_);
+
+        (
+            strategyManager_,
+            underlyingStrategy_
+        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, abi.encode(params), "");
+
+        vm.prank(governor);
+        globals.activateStrategyManager(strategyManager_);
+    }
+
+    function _deployAaveV3StrategyFor(address strategyDelegate_, uint256 bootstrapMint_)
+        internal returns (address strategyManager_, address underlyingStrategy_)
+    {
+        AaveV3StrategyInitializerParams memory params = AaveV3StrategyInitializerParams({
+            aaveToken:                   AAVE_USDC,
+            strategyDelegateFeeRate:     0,
+            strategyProtocolFeeRate:     0,
+            referralCode:                0,
+            useVirtualUnderlyingBalance: true
+        });
+
+        vm.startPrank(governor);
+        globals.setValidStrategyDelegate(strategyDelegate_, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", AAVE_USDC, true);
         globals.setBootstrapMint(address(fundsAsset), bootstrapMint_);
         vm.stopPrank();
 
@@ -332,7 +370,42 @@ contract TestBase is ProtocolActions, Utils {
         (
             strategyManager_,
             underlyingStrategy_
-        ) = strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, abi.encode(params), "");
+        ) = strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, abi.encode(params), "");
+
+        vm.prank(governor);
+        globals.activateStrategyManager(strategyManager_);
+    }
+
+    function _deploySkyStrategyFor(address strategyDelegate_, uint256 bootstrapMint_)
+        internal returns (address strategyManager_, address underlyingStrategy_)
+    {
+        SkyStrategyInitializerParams memory params = SkyStrategyInitializerParams({
+            fundsAsset:              address(fundsAsset),
+            psm:                     USDS_LITE_PSM,
+            savingsUsds:             SAVINGS_USDS,
+            strategyDelegateFeeRate: 0,
+            strategyProtocolFeeRate: 0,
+            referralCode:            0
+        });
+
+        vm.startPrank(governor);
+        globals.setValidStrategyDelegate(strategyDelegate_, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
+        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setBootstrapMint(address(fundsAsset), bootstrapMint_);
+        vm.stopPrank();
+
+        if (bootstrapMint_ != 0) {
+            erc20_mint(address(fundsAsset), strategyDelegate_, bootstrapMint_);
+            erc20_approve(address(fundsAsset), strategyDelegate_, address(strategyDeployer), bootstrapMint_);
+        }
+
+        vm.prank(strategyDelegate_);
+
+        (
+            strategyManager_,
+            underlyingStrategy_
+        ) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);
@@ -609,6 +682,34 @@ contract TestBase is ProtocolActions, Utils {
         globals          = IGlobals(deployNTP(governor, deploy("MapleGlobals")));
         poolDeployer     = IPoolDeployer(deploy("MaplePoolDeployer", abi.encode(address(globals))));
         strategyDeployer = IStrategyDeployer(deployFromFile("Contracts@28", "StrategyDeployer", abi.encode(address(globals))));
+    }
+
+    // Deploys a governor timelock and reassigns the globals governor to it. Only for use in the setup of tests
+    // that specifically exercise governance through the timelock.
+    function _deployTimelockAndReassignGovernor() internal {
+        governorTimelockProposer  = makeAddr("governorTimelockProposer");
+        governorTimelockRoleAdmin = makeAddr("governorTimelockRoleAdmin");
+
+        governorTimelock = IGovernorTimelock(
+            deployFromFile(
+                "Contracts@25",
+                "Timelock",
+                abi.encode(governor, governorTimelockProposer, operationalAdmin, securityAdmin, governorTimelockRoleAdmin)
+            )
+        );
+
+        vm.prank(governor);
+        globals.setPendingGovernor(address(governorTimelock));
+
+        executeThroughTimelock({
+            timelock_: address(governorTimelock),
+            proposer_: governorTimelockProposer,
+            executor_: operationalAdmin,
+            target_:   address(globals),
+            callData_: abi.encodeWithSignature("acceptGovernor()")
+        });
+
+        governor = address(governorTimelock);
     }
 
     function _createAssets() internal {

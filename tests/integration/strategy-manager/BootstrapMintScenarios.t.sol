@@ -46,7 +46,8 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         /*** Deployment without bootstrap mint leaves the donation sitting in the strategy against zero shares                          ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) = _deployTradingStrategyFor(strategyDelegate, 0);
+        ( address strategyManager_, address underlyingStrategy_ ) =
+            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), 0);
 
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
@@ -146,7 +147,8 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         /*** Deployment with bootstrap mint completes successfully and the dead shares absorb the donation                              ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) = _deployTradingStrategyFor(strategyDelegate, bootstrapMint);
+        ( address strategyManager_, address underlyingStrategy_ ) =
+            _deployTradingStrategyForAsset(strategyDelegate, address(fundsAsset), bootstrapMint);
 
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
@@ -263,8 +265,8 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
     function setUp() public override {
         super.setUp();
 
-        ( noBootstrapManager, noBootstrapStrategy ) = _deployTradingStrategyFor(delegateA, 0);
-        ( bootstrapManager,   bootstrapStrategy )   = _deployTradingStrategyFor(delegateB, bootstrapMint);
+        ( noBootstrapManager, noBootstrapStrategy ) = _deployTradingStrategyForAsset(delegateA, address(fundsAsset), 0);
+        ( bootstrapManager,   bootstrapStrategy )   = _deployTradingStrategyForAsset(delegateB, address(fundsAsset), bootstrapMint);
 
         ( poolA, poolManagerA ) = _createPoolSharingStrategy("poolDelegateA", noBootstrapManager);
         ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolDelegateB", bootstrapManager);
@@ -416,8 +418,8 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
     function setUp() public override {
         super.setUp();
 
-        ( noBootstrapManager, noBootstrapStrategy ) = _deployTradingStrategyFor(delegateA, 0);
-        ( bootstrapManager,   bootstrapStrategy )   = _deployTradingStrategyFor(delegateB, bootstrapMint);
+        ( noBootstrapManager, noBootstrapStrategy ) = _deployTradingStrategyForAsset(delegateA, address(fundsAsset), 0);
+        ( bootstrapManager,   bootstrapStrategy )   = _deployTradingStrategyForAsset(delegateB, address(fundsAsset), bootstrapMint);
 
         ( attackerPool, attackerPoolManager ) = _createPoolSharingStrategy("attackerDelegate", noBootstrapManager);
         ( victimPool,   victimPoolManager )   = _createPoolSharingStrategy("victimDelegate",   bootstrapManager);

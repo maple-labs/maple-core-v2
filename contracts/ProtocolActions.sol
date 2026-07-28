@@ -7,6 +7,7 @@ import {
     IERC20Like,
     IExemptionsManagerLike,
     IGlobals,
+    IGovernorTimelock,
     IKycERC20Like,
     ILoanLike,
     ILoanManagerLike,
@@ -34,6 +35,7 @@ import {
 
 import { Runner, ERC20Helper, console } from "./Runner.sol";
 
+// TODO: Consider removing _ from all function variables in this file to align with test code standards. 
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Runner {
 
@@ -725,6 +727,58 @@ contract ProtocolActions is Runner {
 
         vm.prank(governor);
         INonTransparentProxy(globals_).setImplementation(newImplementation_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Governor Timelock Functions                                                                                                    ***/
+    /**************************************************************************************************************************************/
+
+    function executeProposal(address timelock_, address caller_, uint256 proposalId_, address target_, bytes memory callData_)
+        internal
+    {
+        uint256[] memory proposalIds = new uint256[](1);
+        address[] memory targets     = new address[](1);
+        bytes[]   memory data        = new bytes[](1);
+
+        proposalIds[0] = proposalId_;
+        targets[0]     = target_;
+        data[0]        = callData_;
+
+        vm.prank(caller_);
+        IGovernorTimelock(timelock_).executeProposals(proposalIds, targets, data);
+    }
+
+    function executeThroughTimelock(
+        address      timelock_,
+        address      proposer_,
+        address      executor_,
+        address      target_,
+        bytes memory callData_
+    )
+        internal returns (uint256 proposalId_)
+    {
+        proposalId_ = scheduleProposal(timelock_, proposer_, target_, callData_);
+
+        ( , , , uint32 delayedUntil_, ) = IGovernorTimelock(timelock_).proposals(proposalId_);
+
+        vm.warp(delayedUntil_);
+
+        executeProposal(timelock_, executor_, proposalId_, target_, callData_);
+    }
+
+    function scheduleProposal(address timelock_, address caller_, address target_, bytes memory callData_)
+        internal returns (uint256 proposalId_)
+    {
+        address[] memory targets = new address[](1);
+        bytes[]   memory data    = new bytes[](1);
+
+        targets[0] = target_;
+        data[0]    = callData_;
+
+        vm.prank(caller_);
+        IGovernorTimelock(timelock_).scheduleProposals(targets, data);
+
+        proposalId_ = IGovernorTimelock(timelock_).latestProposalId();
     }
 
     /**************************************************************************************************************************************/
