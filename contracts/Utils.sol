@@ -100,6 +100,10 @@ contract Utils is Test {
         values[4] = value5;
     }
 
+    function divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {
+        result_ = (numerator_ + divisor_ - 1) / divisor_;
+    }
+
     /// @dev Returns `count` pseudo-random values sampled from `values` without selecting the same index twice.
     ///      Mutates `values` in memory while building the subset.
     function randomSubset(

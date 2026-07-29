@@ -44,7 +44,7 @@ contract MintFuzzTests is FuzzBase {
 
         sharesToMint = bound(sharesToMint, 0, maxShares);
 
-        uint256 assetsToDeposit = totalSupply == 0 ? sharesToMint : _divRoundUp(sharesToMint * totalAssets, totalSupply);
+        uint256 assetsToDeposit = totalSupply == 0 ? sharesToMint : divRoundUp(sharesToMint * totalAssets, totalSupply);
 
         vm.startPrank(depositor);
         fundsAsset.approve(address(pool), assetsToDeposit);
@@ -85,10 +85,6 @@ contract MintFuzzTests is FuzzBase {
         assertEq(pool.totalAssets(),                  totalAssets     + assetsToDeposit);
         assertEq(fundsAsset.balanceOf(depositor),     depositorAssets - assetsToDeposit);
         assertEq(fundsAsset.balanceOf(address(pool)), cash            + assetsToDeposit);
-    }
-
-    function _divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {
-        result_ = (numerator_ + divisor_ - 1) / divisor_;
     }
 
 }

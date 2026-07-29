@@ -410,6 +410,8 @@ interface IUnderlyingStrategyLike {
 
     function impair(uint256 amount) external;
 
+    function removeImpairment(uint256 amount) external;
+
     function strategyDelegate() external view returns (address strategyDelegate);
 
     function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate) external;

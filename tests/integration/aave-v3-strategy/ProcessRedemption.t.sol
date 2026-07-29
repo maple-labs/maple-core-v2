@@ -1431,10 +1431,10 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairmentAmount);
 
         expectedFirstAssets           = firstShares;
-        expectedFirstUnrealizedLosses = (firstShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares;
-        expectedSecondUnrealizedLosses = (secondShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
         assertPoolState({
             pool:               IPoolManager(firstPoolManager).pool(),
@@ -1500,10 +1500,10 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         uint256 firstExitAssets = exitAssets;
 
         expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
-        expectedFirstUnrealizedLosses = (firstShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
-        expectedSecondUnrealizedLosses = (secondShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
         assertEq(fundsAsset.balanceOf(IPoolManager(firstPoolManager).pool()), poolLiquidity - firstPoolFunding + exitAssets);
 
@@ -1569,10 +1569,10 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         totalAum             = totalAum - exitAssets - expectedRoundingError;
 
         expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
-        expectedFirstUnrealizedLosses = (firstShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
-        expectedSecondUnrealizedLosses = (secondShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
         assertEq(fundsAsset.balanceOf(IPoolManager(secondPoolManager).pool()), poolLiquidity - secondPoolFunding + exitAssets);
 

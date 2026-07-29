@@ -1697,9 +1697,9 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         uint256 totalAum            = expectedTotalShares;
 
         uint256 expectedFirstAssets            = firstShares;
-        uint256 expectedFirstUnrealizedLosses  = (firstShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        uint256 expectedFirstUnrealizedLosses  = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
         uint256 expectedSecondAssets           = secondShares;
-        uint256 expectedSecondUnrealizedLosses = (secondShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        uint256 expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
         requestRedeemFromStrategyManager(firstPoolManager,  skyStrategyManager, firstShares / 2);
         requestRedeemFromStrategyManager(secondPoolManager, skyStrategyManager, secondShares / 2);
@@ -1772,10 +1772,10 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         uint256 firstExitAssets = exitAssets;
 
         expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
-        expectedFirstUnrealizedLosses = (firstShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
-        expectedSecondUnrealizedLosses = (secondShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
         assertPoolState({
             pool:               IPoolManager(firstPoolManager).pool(),
@@ -1840,10 +1840,10 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         expectedTotalShares -= sharesToProcess;
 
         expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
-        expectedFirstUnrealizedLosses = (firstShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
-        expectedSecondUnrealizedLosses = (secondShares * impairmentAmount + expectedTotalShares - 1) / expectedTotalShares;
+        expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
         assertPoolState({
             pool:               IPoolManager(firstPoolManager).pool(),

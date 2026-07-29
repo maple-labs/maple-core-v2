@@ -1566,8 +1566,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
         {
             uint256 totalShares = firstPoolAssets + secondPoolAssets;
-            uint256 firstLoss   = (firstPoolAssets * impairment + totalShares - 1) / totalShares;
-            uint256 secondLoss  = (secondPoolAssets * impairment + totalShares - 1) / totalShares;
+            uint256 firstLoss   = divRoundUp(firstPoolAssets  * impairment, totalShares);
+            uint256 secondLoss  = divRoundUp(secondPoolAssets * impairment, totalShares);
 
             assertPoolState({
                 pool:               firstPool,
@@ -1659,8 +1659,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
             uint256 shareBalanceAfterFirstRedemption   = firstPoolAssets - firstPoolSharesToProcess;
             uint256 assetBalanceAfterFirstRedemption   = shareBalanceAfterFirstRedemption * strategyAssets / strategyShares;
-            uint256 unrealizedLossAfterFirstRedemption =
-                (shareBalanceAfterFirstRedemption * impairment + strategyShares - 1) / strategyShares;
+            uint256 unrealizedLossAfterFirstRedemption = divRoundUp(shareBalanceAfterFirstRedemption * impairment, strategyShares);
 
             assertPoolState({
                 pool:               firstPool,
@@ -1686,8 +1685,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             uint256 strategyAssets = firstPoolAssets + secondPoolAssets - firstAssetsOut;
 
             uint256 assetBalanceAfterFirstRedemption   = secondPoolAssets * strategyAssets / strategyShares;
-            uint256 unrealizedLossAfterFirstRedemption =
-                (secondPoolAssets * impairment + strategyShares - 1) / strategyShares;
+            uint256 unrealizedLossAfterFirstRedemption = divRoundUp(secondPoolAssets * impairment, strategyShares);
 
             assertPoolState({
                 pool:               secondPool,
@@ -1748,8 +1746,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
             uint256 shareBalanceAfterSecondRedemption   = firstPoolAssets - firstPoolSharesToProcess;
             uint256 assetBalanceAfterSecondRedemption   = shareBalanceAfterSecondRedemption * strategyAssets / strategyShares;
-            uint256 unrealizedLossAfterSecondRedemption =
-                (shareBalanceAfterSecondRedemption * impairment + strategyShares - 1) / strategyShares;
+            uint256 unrealizedLossAfterSecondRedemption = divRoundUp(shareBalanceAfterSecondRedemption * impairment, strategyShares);
 
             assertPoolState({
                 pool:               firstPool,
@@ -1776,8 +1773,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
             uint256 shareBalanceAfterSecondRedemption   = secondPoolAssets - secondPoolSharesToProcess;
             uint256 assetBalanceAfterSecondRedemption   = shareBalanceAfterSecondRedemption * strategyAssets / strategyShares;
-            uint256 unrealizedLossAfterSecondRedemption =
-                (shareBalanceAfterSecondRedemption * impairment + strategyShares - 1) / strategyShares;
+            uint256 unrealizedLossAfterSecondRedemption = divRoundUp(shareBalanceAfterSecondRedemption * impairment, strategyShares);
 
             assertPoolState({
                 pool:               secondPool,
@@ -2496,8 +2492,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
         uint256 totalAssets = firstPoolAssets + secondPoolAssets;
         uint256 assetsOut   = secondPoolAssets * (totalAssets - impairment) / totalAssets;
-        uint256 firstLoss   = (firstPoolAssets * impairment + totalAssets - 1) / totalAssets;
-        uint256 secondLoss  = (secondPoolAssets * impairment + totalAssets - 1) / totalAssets;
+        uint256 firstLoss   = divRoundUp(firstPoolAssets  * impairment, totalAssets);
+        uint256 secondLoss  = divRoundUp(secondPoolAssets * impairment, totalAssets);
 
         /**********************************************************************************************************************************/
         /*** Impair the strategy                                                                                                        ***/

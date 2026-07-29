@@ -420,8 +420,8 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             unrealizedLosses: 0
         });
 
-        uint256 firstLoss  = (firstShares  * impairment) / totalShares + 1; // Round up
-        uint256 secondLoss = (secondShares * impairment) / totalShares + 1; // Round up
+        uint256 firstLoss  = divRoundUp(firstShares  * impairment, totalShares);
+        uint256 secondLoss = divRoundUp(secondShares * impairment, totalShares);
 
         vm.prank(governor);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);

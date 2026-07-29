@@ -63,8 +63,4 @@ contract WithdrawFuzzTests is FuzzBase {
         pool.withdraw(assetsToWithdraw, receiver, owner);
     }
 
-    function divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {
-        result_ = (numerator_ + divisor_ - 1) / divisor_;
-    }
-
 }

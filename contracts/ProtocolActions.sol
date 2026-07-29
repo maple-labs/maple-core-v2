@@ -977,6 +977,14 @@ contract ProtocolActions is Runner {
         IStrategyManager(strategyManager_).requestRedeem(poolManager_, shares_);
     }
 
+    function removeStrategyImpairment(address strategy_, uint256 amount_) internal {
+        address globals_          = IUnderlyingStrategyLike(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IUnderlyingStrategyLike(strategy_).removeImpairment(amount_);
+    }
+
     function realizeYield(address strategy_, address trader_, uint256 yieldAssets_, uint32 duration_) internal {
         address asset_ = ITradingStrategy(strategy_).fundsAsset();
 
