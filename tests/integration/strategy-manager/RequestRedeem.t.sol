@@ -175,6 +175,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 

@@ -35,7 +35,7 @@ import {
 
 import { Runner, ERC20Helper, console } from "./Runner.sol";
 
-// TODO: Consider removing _ from all function variables in this file to align with test code standards. 
+// TODO: Consider removing _ from all function variables in this file to align with test code standards.
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Runner {
 
@@ -951,6 +951,7 @@ contract ProtocolActions is Runner {
         IStrategyManager(strategyManager_).processRedemption(poolManager_, shares_, "");
     }
 
+    // TODO: Add a bool flag that decides if assets will be minted before being returned.
     function returnAssets(address strategy_, address caller_, address deployer_, uint256 amount_) internal {
         address asset_ = ITradingStrategy(strategy_).fundsAsset();
 

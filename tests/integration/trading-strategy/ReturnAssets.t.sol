@@ -58,6 +58,7 @@ contract TradingStrategyReturnAssetsTestBase is TradingStrategyTestBase {
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -677,6 +678,7 @@ contract TradingStrategyReturnAssetsSuccessTests is TradingStrategyReturnAssetsT
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
+            yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
 
@@ -730,6 +732,7 @@ contract TradingStrategyReturnAssetsSuccessTests is TradingStrategyReturnAssetsT
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
+            yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
 
@@ -802,6 +805,7 @@ contract TradingStrategyReturnAssetsSuccessTests is TradingStrategyReturnAssetsT
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
+            yieldLastRealized:    startingTime,
             realizedYield:        0
         });
 
@@ -857,6 +861,7 @@ contract TradingStrategyReturnAssetsSuccessTests is TradingStrategyReturnAssetsT
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
+            yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
 
@@ -912,6 +917,7 @@ contract TradingStrategyReturnAssetsSuccessTests is TradingStrategyReturnAssetsT
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
+            yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
 

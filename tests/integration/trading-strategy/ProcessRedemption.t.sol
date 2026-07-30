@@ -1861,6 +1861,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -1933,6 +1934,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -2004,6 +2006,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -2077,6 +2080,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -2170,6 +2174,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        vestedYield
         });
 
@@ -2225,6 +2230,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        vestedYield
         });
 
@@ -2289,6 +2295,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        vestedYield
         });
 
@@ -2348,6 +2355,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: 0,
             yieldStart:           cancellationTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        0
         });
 
@@ -2401,6 +2409,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: 0,
             yieldStart:           cancellationTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        0
         });
 
@@ -2454,6 +2463,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: 0,
             yieldStart:           cancellationTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        0
         });
 
@@ -2768,6 +2778,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        0
         });
 
@@ -2820,6 +2831,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -2872,6 +2884,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -2924,6 +2937,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 

@@ -216,6 +216,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -278,6 +279,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -323,6 +325,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -369,6 +372,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -415,6 +419,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -465,6 +470,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -511,6 +517,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -561,6 +568,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -606,6 +614,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -651,6 +660,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -698,6 +708,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -743,6 +754,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -788,6 +800,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -874,6 +887,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -936,6 +950,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -998,6 +1013,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1060,6 +1076,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1122,6 +1139,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1164,6 +1182,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1209,6 +1228,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1254,6 +1274,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1308,6 +1329,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1357,6 +1379,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1406,6 +1429,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -1464,6 +1488,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        0
         });
 
@@ -1509,6 +1534,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -1554,6 +1580,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 
@@ -1599,6 +1626,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
+            yieldLastRealized:    startingTime,
             realizedYield:        yieldAssets
         });
 

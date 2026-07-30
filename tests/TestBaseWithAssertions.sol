@@ -423,6 +423,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 scheduledYieldAssets,
         uint32  yieldStart,
         uint32  yieldDeadline,
+        uint32  yieldLastRealized,
         uint256 realizedYield
     )
         internal view
@@ -432,6 +433,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(ITradingStrategy(tradingStrategy).scheduledYieldAssets(), scheduledYieldAssets);
         assertEq(ITradingStrategy(tradingStrategy).yieldStart(),           yieldStart);
         assertEq(ITradingStrategy(tradingStrategy).yieldDeadline(),        yieldDeadline);
+        assertEq(ITradingStrategy(tradingStrategy).yieldLastRealized(),    yieldLastRealized);
         assertEq(ITradingStrategy(tradingStrategy).realizedYield(),        realizedYield);
         assertEq(ITradingStrategy(tradingStrategy).unrealizedYield(),      unrealizedYield);
     }
@@ -460,6 +462,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 

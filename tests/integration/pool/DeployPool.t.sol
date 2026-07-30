@@ -623,6 +623,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
     }
@@ -718,6 +719,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
 
@@ -726,6 +728,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
     }
@@ -781,6 +784,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
+            yieldLastRealized:    0,
             realizedYield:        0
         });
     }
