@@ -2,9 +2,9 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     IPool,
-    IStrategyManager,
-    ITradingStrategy
+    IStrategyManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
@@ -18,7 +18,7 @@ contract StrategyManagerRequestRedeemTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployAllocationStrategy({
+        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -27,7 +27,7 @@ contract StrategyManagerRequestRedeemTestBase is TestBaseWithAssertions {
             bootstrapMint_:           0
         });
 
-        strategyManager = tradingStrategyManager;
+        strategyManager = allocationStrategyManager;
 
         addStrategyManagerToPool(address(poolManager), strategyManager);
     }
@@ -66,7 +66,7 @@ contract StrategyManagerRequestRedeemFailureTests is StrategyManagerRequestRedee
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
         vm.prank(strategyDelegate);
-        ITradingStrategy(tradingUnderlyingStrategy).impair(impairment);
+        IAllocationStrategy(allocationUnderlyingStrategy).impair(impairment);
 
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
@@ -85,7 +85,7 @@ contract StrategyManagerRequestRedeemFailureTests is StrategyManagerRequestRedee
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
         vm.prank(strategyDelegate);
-        ITradingStrategy(tradingUnderlyingStrategy).impair(impairment);
+        IAllocationStrategy(allocationUnderlyingStrategy).impair(impairment);
 
         vm.prank(liquidityRouter);
         vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
@@ -140,14 +140,14 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
     function setUp() public override {
         super.setUp();
 
-        assertInitialStateWithTrading({
+        assertInitialStateWithAllocation({
             strategyManager:  strategyManager,
             initialLiquidity: 0
         });
 
         deposit(lp, INITIAL_LIQUIDITY);
 
-        assertInitialStateWithTrading({
+        assertInitialStateWithAllocation({
             strategyManager:  strategyManager,
             initialLiquidity: INITIAL_LIQUIDITY
         });
@@ -162,16 +162,16 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -213,8 +213,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -250,8 +250,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -304,8 +304,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -342,8 +342,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -380,8 +380,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -422,8 +422,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -455,7 +455,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         /**********************************************************************************************************************************/
 
         vm.prank(strategyDelegate);
-        ITradingStrategy(tradingUnderlyingStrategy).impair(impairment);
+        IAllocationStrategy(allocationUnderlyingStrategy).impair(impairment);
 
         assertPoolState({
             pool:               address(pool),
@@ -465,8 +465,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -502,8 +502,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -577,8 +577,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -631,8 +631,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -685,8 +685,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
@@ -739,8 +739,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
@@ -793,8 +793,8 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,

@@ -2,12 +2,12 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     Action,
     ActionType,
     IPool,
     IPoolManager,
-    IStrategyManager,
-    ITradingStrategy
+    IStrategyManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
@@ -16,13 +16,13 @@ contract StrategyManagerCancelRedemptionTestBase is TestBaseWithAssertions {
 
     uint256 constant INITIAL_LIQUIDITY = 1_000_000e6;
 
-    address lp     = makeAddr("lp");
-    address trader = makeAddr("trader");
+    address lp            = makeAddr("lp");
+    address managedWallet = makeAddr("managedWallet");
 
     function setUp() public virtual override {
         super.setUp();
 
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployAllocationStrategy({
+        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -31,13 +31,13 @@ contract StrategyManagerCancelRedemptionTestBase is TestBaseWithAssertions {
             bootstrapMint_:           0
         });
 
-        strategyManager = tradingStrategyManager;
+        strategyManager = allocationStrategyManager;
 
         addStrategyManagerToPool(address(poolManager), strategyManager);
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  trader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   managedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
@@ -100,7 +100,7 @@ contract StrategyManagerCancelRedemptionFailureTests is StrategyManagerCancelRed
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
@@ -114,7 +114,7 @@ contract StrategyManagerCancelRedemptionFailureTests is StrategyManagerCancelRed
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         Action[] memory actions = new Action[](1);
 
@@ -181,14 +181,14 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
     function setUp() public override {
         super.setUp();
 
-        assertInitialStateWithTrading({
+        assertInitialStateWithAllocation({
             strategyManager:  strategyManager,
             initialLiquidity: 0
         });
 
         deposit(lp, INITIAL_LIQUIDITY);
 
-        assertInitialStateWithTrading({
+        assertInitialStateWithAllocation({
             strategyManager:  strategyManager,
             initialLiquidity: INITIAL_LIQUIDITY
         });
@@ -203,16 +203,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -266,16 +266,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -312,16 +312,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -359,16 +359,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -406,16 +406,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -457,16 +457,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -504,16 +504,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -555,16 +555,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -601,16 +601,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -647,16 +647,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -695,16 +695,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -741,16 +741,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -787,16 +787,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -874,16 +874,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -937,16 +937,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1000,16 +1000,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1063,16 +1063,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1126,16 +1126,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1169,16 +1169,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1205,7 +1205,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
         /*** Step 2: Impair strategy assets                                                                                             ***/
         /**********************************************************************************************************************************/
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         assertPoolState({
             pool:               address(pool),
@@ -1215,16 +1215,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1261,16 +1261,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1298,15 +1298,15 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
         uint256 request      = INITIAL_LIQUIDITY * 2 / 5;
         uint256 cancellation = request / 3;
 
-        assertEq(fundsAsset.balanceOf(trader),                                         0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                                               0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
         /**********************************************************************************************************************************/
         /*** Step 1: Deploy all strategy assets                                                                                         ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(trader);
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(INITIAL_LIQUIDITY, "");
+        vm.prank(managedWallet);
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(INITIAL_LIQUIDITY, "");
 
         assertPoolState({
             pool:               address(pool),
@@ -1316,16 +1316,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   0,
             totalDeployedAssets:   INITIAL_LIQUIDITY,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1348,9 +1348,9 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             totalPendingShares: 0
         });
 
-        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),              0);
-        assertEq(fundsAsset.balanceOf(trader),                                         INITIAL_LIQUIDITY);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), INITIAL_LIQUIDITY);
+        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),                           0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                                               INITIAL_LIQUIDITY);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Request shares from the illiquid strategy                                                                          ***/
@@ -1366,16 +1366,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   0,
             totalDeployedAssets:   INITIAL_LIQUIDITY,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1398,9 +1398,9 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             totalPendingShares: request
         });
 
-        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),              0);
-        assertEq(fundsAsset.balanceOf(trader),                                         INITIAL_LIQUIDITY);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), INITIAL_LIQUIDITY);
+        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),                           0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                                               INITIAL_LIQUIDITY);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), INITIAL_LIQUIDITY);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Cancel shares from the illiquid strategy                                                                           ***/
@@ -1416,16 +1416,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   0,
             totalDeployedAssets:   INITIAL_LIQUIDITY,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -1448,9 +1448,9 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             totalPendingShares: request - cancellation
         });
 
-        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),              0);
-        assertEq(fundsAsset.balanceOf(trader),                                         INITIAL_LIQUIDITY);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), INITIAL_LIQUIDITY);
+        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),                           0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                                               INITIAL_LIQUIDITY);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), INITIAL_LIQUIDITY);
     }
 
     function test_cancelRedemption_success_increasingExchangeRate() external {
@@ -1465,7 +1465,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
         /*** Step 1: Add yield that remains unrealized                                                                                  ***/
         /**********************************************************************************************************************************/
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, duration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, duration);
 
         assertPoolState({
             pool:               address(pool),
@@ -1475,16 +1475,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -1521,16 +1521,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -1567,16 +1567,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -1613,16 +1613,16 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,

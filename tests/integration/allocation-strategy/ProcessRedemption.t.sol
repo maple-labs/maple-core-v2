@@ -6,22 +6,22 @@ import {
     ActionType,
     IPool,
     IStrategyManager,
-    ITradingStrategy
+    IAllocationStrategy
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TradingStrategyTestBase } from "./TradingStrategyTestBase.sol";
+import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
-contract TradingStrategyProcessRedemptionTestBase is TradingStrategyTestBase {
+contract AllocationStrategyProcessRedemptionTestBase is AllocationStrategyTestBase {
 
     function setUp() public virtual override {
         super.setUp();
 
-        strategyManager = tradingStrategyManager;
+        strategyManager = allocationStrategyManager;
     }
 
 }
 
-contract TradingStrategyProcessRedemptionFailureTests is TradingStrategyProcessRedemptionTestBase {
+contract AllocationStrategyProcessRedemptionFailureTests is AllocationStrategyProcessRedemptionTestBase {
 
     function test_processRedemption_revert_protocolPaused() external {
         vm.prank(governor);
@@ -58,7 +58,7 @@ contract TradingStrategyProcessRedemptionFailureTests is TradingStrategyProcessR
         deposit(lp, INITIAL_LIQUIDITY);
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:NOT_OPERATOR");
@@ -71,7 +71,7 @@ contract TradingStrategyProcessRedemptionFailureTests is TradingStrategyProcessR
         deposit(lp, INITIAL_LIQUIDITY);
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         Action[] memory actions = new Action[](1);
 
@@ -137,7 +137,7 @@ contract TradingStrategyProcessRedemptionFailureTests is TradingStrategyProcessR
         deposit(lp, INITIAL_LIQUIDITY);
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, 1);
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         // One share converts to zero assets because one net asset remains across all shares and the exit conversion rounds down.
         vm.prank(strategyDelegate);
@@ -151,7 +151,7 @@ contract TradingStrategyProcessRedemptionFailureTests is TradingStrategyProcessR
 
         deposit(lp, INITIAL_LIQUIDITY);
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
-        deployAssets(tradingUnderlyingStrategy, trader, deployedAssets);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployedAssets);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, request);
 
         vm.prank(strategyDelegate);
@@ -167,16 +167,16 @@ contract TradingStrategyProcessRedemptionFailureTests is TradingStrategyProcessR
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, request);
 
         vm.prank(governor);
-        globals.setContractPause(tradingUnderlyingStrategy, true);
+        globals.setContractPause(allocationUnderlyingStrategy, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         IStrategyManager(strategyManager).processRedemption(address(poolManager), request, "");
     }
 
 }
 
-contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessRedemptionTestBase {
+contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyProcessRedemptionTestBase {
 
     uint256 firstPoolAssets;
     uint256 secondPoolAssets;
@@ -192,25 +192,25 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
     function setUp() public override {
         super.setUp();
 
-        assertInitialStateWithTrading({
+        assertInitialStateWithAllocation({
             strategyManager:  strategyManager,
             initialLiquidity: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), 0);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         deposit(lp, INITIAL_LIQUIDITY);
 
-        assertInitialStateWithTrading({
+        assertInitialStateWithAllocation({
             strategyManager:  strategyManager,
             initialLiquidity: INITIAL_LIQUIDITY
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), 0);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         fundStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
@@ -222,8 +222,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -248,9 +248,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
     function test_processRedemption_success_fullRedemption() external {
@@ -269,8 +269,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -295,9 +295,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process all shares                                                                                                         ***/
@@ -313,8 +313,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: INITIAL_LIQUIDITY
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
@@ -339,9 +339,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), 0);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
     function test_processRedemption_success_withOperatorRoles() external {
@@ -365,8 +365,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -391,9 +391,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Request shares                                                                                                             ***/
@@ -409,8 +409,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -435,9 +435,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process shares as the liquidity bot                                                                                        ***/
@@ -454,8 +454,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: botProcessAmount
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - botProcessAmount,
             availableToWithdraw:   INITIAL_LIQUIDITY - botProcessAmount,
             totalDeployedAssets:   0,
@@ -480,9 +480,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             botProcessAmount);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - botProcessAmount);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                botProcessAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY - botProcessAmount);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process shares as the liquidity router                                                                                     ***/
@@ -509,8 +509,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: totalProcessed
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - totalProcessed,
             availableToWithdraw:   INITIAL_LIQUIDITY - totalProcessed,
             totalDeployedAssets:   0,
@@ -535,9 +535,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             totalProcessed);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - totalProcessed);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                totalProcessed);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY - totalProcessed);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
     function test_processRedemption_success_multiplePoolManagers() external {
@@ -578,8 +578,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
             totalDeployedAssets:   0,
@@ -613,10 +613,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Request shares from both pools                                                                                             ***/
@@ -641,8 +641,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
             totalDeployedAssets:   0,
@@ -676,10 +676,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process shares for the first pool                                                                                          ***/
@@ -703,8 +703,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets - firstPoolSharesToProcess,
             availableToWithdraw:   totalAssets - firstPoolSharesToProcess,
             totalDeployedAssets:   0,
@@ -738,10 +738,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 firstPoolSharesToProcess);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets - firstPoolSharesToProcess);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    firstPoolSharesToProcess);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - firstPoolSharesToProcess);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process shares for the second pool                                                                                         ***/
@@ -765,8 +765,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: secondPoolSharesToProcess
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess,
             availableToWithdraw:   totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess,
             totalDeployedAssets:   0,
@@ -803,10 +803,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 firstPoolSharesToProcess);
-        assertEq(fundsAsset.balanceOf(secondPool),                secondPoolSharesToProcess);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    firstPoolSharesToProcess);
+        assertEq(fundsAsset.balanceOf(secondPool),                   secondPoolSharesToProcess);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
     function test_processRedemption_success_withImpairment() external {
@@ -837,8 +837,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -863,15 +863,15 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Impair the strategy                                                                                                        ***/
         /**********************************************************************************************************************************/
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         assertPoolState({
             pool:               address(pool),
@@ -881,8 +881,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -907,9 +907,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: impairment
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         assertEq(IStrategyManager(strategyManager).convertToAssets(INITIAL_LIQUIDITY), INITIAL_LIQUIDITY);
         assertEq(IStrategyManager(strategyManager).convertToShares(INITIAL_LIQUIDITY), INITIAL_LIQUIDITY);
@@ -928,8 +928,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: remainingAssets,
             availableToWithdraw:   remainingAssets,
             totalDeployedAssets:   0,
@@ -954,9 +954,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: impairment
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             assetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), remainingAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), remainingAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         assertEq(IStrategyManager(strategyManager).convertToAssets(INITIAL_LIQUIDITY), expectedAssetsPerShare);
         assertEq(IStrategyManager(strategyManager).convertToShares(INITIAL_LIQUIDITY), expectedSharesPerAsset);
@@ -980,8 +980,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -1006,15 +1006,15 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Impair the strategy                                                                                                        ***/
         /**********************************************************************************************************************************/
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         assertPoolState({
             pool:               address(pool),
@@ -1024,8 +1024,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
@@ -1050,9 +1050,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: impairment
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process all shares at the impaired exit rate                                                                               ***/
@@ -1068,8 +1068,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: impairment,
             availableToWithdraw:   impairment,
             totalDeployedAssets:   0,
@@ -1094,9 +1094,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             assetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), impairment);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), impairment);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
     function test_processRedemption_success_withDeployedAssets() external {
@@ -1109,7 +1109,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Deploy strategy assets                                                                                                     ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployedAssets);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployedAssets);
 
         assertPoolState({
             pool:               address(pool),
@@ -1119,8 +1119,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   liquidAssets,
             totalDeployedAssets:   deployedAssets,
@@ -1145,12 +1145,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), liquidAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), liquidAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployedAssets);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployedAssets);
 
         /**********************************************************************************************************************************/
         /*** Request a liquid amount of shares                                                                                          ***/
@@ -1166,8 +1166,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   liquidAssets,
             totalDeployedAssets:   deployedAssets,
@@ -1192,12 +1192,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), liquidAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), liquidAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployedAssets);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployedAssets);
 
         /**********************************************************************************************************************************/
         /*** Process the liquid tranche                                                                                                 ***/
@@ -1213,8 +1213,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: processAmount
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - processAmount,
             availableToWithdraw:   liquidAssets - processAmount,
             totalDeployedAssets:   deployedAssets,
@@ -1239,12 +1239,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             processAmount);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), liquidAssets - processAmount);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),                processAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), liquidAssets - processAmount);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployedAssets);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployedAssets);
     }
 
     function test_processRedemption_success_afterReturnAssetsProvidesLiquidity() external {
@@ -1256,7 +1256,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Deploy assets and request shares                                                                                           ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployedAssets);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployedAssets);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, request);
 
         assertPoolState({
@@ -1267,8 +1267,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets,
             totalDeployedAssets:   deployedAssets,
@@ -1293,18 +1293,18 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployedAssets);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployedAssets);
 
         /**********************************************************************************************************************************/
         /*** Return assets                                                                                                              ***/
         /**********************************************************************************************************************************/
 
-        returnAssets(tradingUnderlyingStrategy, trader, trader, returnedAssets);
+        returnAssets(allocationUnderlyingStrategy, managedWallet, managedWallet, returnedAssets);
 
         assertPoolState({
             pool:               address(pool),
@@ -1314,8 +1314,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets + returnedAssets,
             totalDeployedAssets:   deployedAssets - returnedAssets,
@@ -1340,12 +1340,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets + returnedAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets + returnedAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployedAssets);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets - returnedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployedAssets - returnedAssets);
 
         /**********************************************************************************************************************************/
         /*** Process the requested shares                                                                                               ***/
@@ -1361,8 +1361,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: request
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - request,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets + returnedAssets - request,
             totalDeployedAssets:   deployedAssets - returnedAssets,
@@ -1387,12 +1387,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             request);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets + returnedAssets - request);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    deployedAssets);
+        assertEq(fundsAsset.balanceOf(address(pool)),                request);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY - deployedAssets + returnedAssets - request);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployedAssets);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployedAssets - returnedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployedAssets - returnedAssets);
     }
 
     function test_processRedemption_success_partialAndFullAfterRecognizedLoss() external {
@@ -1405,8 +1405,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Recognize a loss and request all shares                                                                                    ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, trader, loss);
-        recognizeLoss(tradingUnderlyingStrategy, trader, loss);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, loss);
+        recognizeLoss(allocationUnderlyingStrategy, managedWallet, loss);
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, INITIAL_LIQUIDITY);
 
         assertPoolState({
@@ -1417,8 +1417,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsAfterLoss,
             availableToWithdraw:   assetsAfterLoss,
             totalDeployedAssets:   0,
@@ -1443,10 +1443,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), assetsAfterLoss);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), assetsAfterLoss);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                loss);
 
         /**********************************************************************************************************************************/
         /*** Process some shares                                                                                                        ***/
@@ -1462,8 +1462,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: partialAssets
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsAfterLoss - partialAssets,
             availableToWithdraw:   assetsAfterLoss - partialAssets,
             totalDeployedAssets:   0,
@@ -1488,10 +1488,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             partialAssets);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), assetsAfterLoss - partialAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),                partialAssets);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), assetsAfterLoss - partialAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                loss);
 
         /**********************************************************************************************************************************/
         /*** Process all remaining shares                                                                                               ***/
@@ -1507,8 +1507,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsAfterLoss
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
@@ -1533,10 +1533,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             assetsAfterLoss);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    loss);
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsAfterLoss);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), 0);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                loss);
     }
 
     function test_processRedemption_success_multiplePoolManagersWithImpairment() external {
@@ -1560,7 +1560,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
         deposit(secondPool, makeAddr("lp2"), secondPoolAssets);
         fundStrategyManager(secondPoolManager, strategyManager, secondPoolAssets);
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
         requestRedeemFromStrategyManager(firstPoolManager, strategyManager, firstPoolSharesRequested);
         requestRedeemFromStrategyManager(secondPoolManager, strategyManager, secondPoolSharesRequested);
 
@@ -1585,8 +1585,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
                 availableLiquidity: 0
             });
 
-            assertTradingStrategy({
-                tradingStrategy:       tradingUnderlyingStrategy,
+            assertAllocationStrategy({
+                allocationStrategy:    allocationUnderlyingStrategy,
                 assetsUnderManagement: totalShares,
                 availableToWithdraw:   totalShares,
                 totalDeployedAssets:   0,
@@ -1621,10 +1621,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             });
         }
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstPoolAssets + secondPoolAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         uint256 firstAssetsOut = firstPoolSharesToProcess * (firstPoolAssets + secondPoolAssets - impairment) /
             (firstPoolAssets + secondPoolAssets);
@@ -1635,8 +1635,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
         processRedemptionFromStrategyManager(firstPoolManager, strategyManager, firstPoolSharesToProcess);
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets - firstAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets - firstAssetsOut,
             totalDeployedAssets:   0,
@@ -1705,10 +1705,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             });
         }
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 firstAssetsOut);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstPoolAssets + secondPoolAssets - firstAssetsOut);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    firstAssetsOut);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets - firstAssetsOut);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         uint256 secondAssetsOut = secondPoolSharesToProcess * (firstPoolAssets + secondPoolAssets - firstAssetsOut - impairment) /
             (firstPoolAssets + secondPoolAssets - firstPoolSharesToProcess);
@@ -1722,8 +1722,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         uint256 pendingSharesAfterSecondRedemption =
             firstPoolSharesRequested + secondPoolSharesRequested - firstPoolSharesToProcess - secondPoolSharesToProcess;
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut,
             totalDeployedAssets:   0,
@@ -1793,10 +1793,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             });
         }
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 firstAssetsOut);
-        assertEq(fundsAsset.balanceOf(secondPool),                secondAssetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    firstAssetsOut);
+        assertEq(fundsAsset.balanceOf(secondPool),                   secondAssetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
     function test_processRedemption_success_multiplePoolManagersWithYield() external {
@@ -1828,7 +1828,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
         deposit(secondPool, makeAddr("lp2"), secondPoolAssets);
         fundStrategyManager(secondPoolManager, strategyManager, secondPoolAssets);
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, duration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, duration);
 
         vm.warp(block.timestamp + duration);
 
@@ -1848,16 +1848,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -1892,11 +1892,11 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstPoolAssets + secondPoolAssets + yieldAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets + yieldAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Request shares from both pool managers                                                                                     ***/
@@ -1921,16 +1921,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -1965,11 +1965,11 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstPoolAssets + secondPoolAssets + yieldAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets + yieldAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Process shares for the first pool manager                                                                                  ***/
@@ -1993,16 +1993,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2039,11 +2039,11 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
 
         uint256 strategyBalanceAfterFirstRedemption = firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut;
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 firstPoolYieldAssetsOut);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), strategyBalanceAfterFirstRedemption);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    firstPoolYieldAssetsOut);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), strategyBalanceAfterFirstRedemption);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Process shares for the second pool manager                                                                                 ***/
@@ -2067,16 +2067,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: secondPoolYieldAssetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut - secondPoolYieldAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut - secondPoolYieldAssetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2119,11 +2119,11 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         uint256 expectedStrategyBalance =
             firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut - secondPoolYieldAssetsOut;
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 firstPoolYieldAssetsOut);
-        assertEq(fundsAsset.balanceOf(secondPool),                secondPoolYieldAssetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), expectedStrategyBalance);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    firstPoolYieldAssetsOut);
+        assertEq(fundsAsset.balanceOf(secondPool),                   secondPoolYieldAssetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), expectedStrategyBalance);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
     }
 
     function test_processRedemption_success_fullAvailableAmountWithPartiallyRealizedYieldAndFees() external {
@@ -2144,12 +2144,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /**********************************************************************************************************************************/
 
         vm.prank(strategyDelegate);
-        ITradingStrategy(tradingUnderlyingStrategy).setStrategyDelegateFeeRate(delegateFeeRate);
+        IAllocationStrategy(allocationUnderlyingStrategy).setStrategyDelegateFeeRate(delegateFeeRate);
 
         vm.prank(governor);
-        ITradingStrategy(tradingUnderlyingStrategy).setStrategyProtocolFeeRate(protocolFeeRate);
+        IAllocationStrategy(allocationUnderlyingStrategy).setStrategyProtocolFeeRate(protocolFeeRate);
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, duration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, duration);
 
         vm.warp(block.timestamp + duration / 2);
 
@@ -2161,16 +2161,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsOut,
             availableToWithdraw:   assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2196,12 +2196,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + netYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),          delegateFee);
-        assertEq(fundsAsset.balanceOf(treasury),                  protocolFee);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY + netYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Request all shares                                                                                                         ***/
@@ -2217,16 +2217,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsOut,
             availableToWithdraw:   assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2252,12 +2252,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + netYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),          delegateFee);
-        assertEq(fundsAsset.balanceOf(treasury),                  protocolFee);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY + netYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Process all shares                                                                                                         ***/
@@ -2273,8 +2273,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
@@ -2290,8 +2290,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: netYield,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2308,11 +2308,11 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses:      0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             assetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), netYield - vestedYield);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),          delegateFee);
-        assertEq(fundsAsset.balanceOf(treasury),                  protocolFee);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), netYield - vestedYield);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
     }
 
     function test_processRedemption_success_afterPartiallyRealizedYieldCancelled() external {
@@ -2327,12 +2327,12 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Partially realize and cancel yield                                                                                         ***/
         /**********************************************************************************************************************************/
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, duration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, duration);
 
         vm.warp(cancellationTime);
 
         vm.prank(strategyDelegate);
-        ITradingStrategy(tradingUnderlyingStrategy).cancelYield(type(uint256).max, trader);
+        IAllocationStrategy(allocationUnderlyingStrategy).cancelYield(type(uint256).max, managedWallet);
 
         assertPoolState({
             pool:               address(pool),
@@ -2342,16 +2342,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           cancellationTime,
             yieldDeadline:        startingTime + duration,
@@ -2377,10 +2377,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + vestedYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    yieldAssets - vestedYield);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY + vestedYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                yieldAssets - vestedYield);
 
         /**********************************************************************************************************************************/
         /*** Request shares                                                                                                             ***/
@@ -2396,16 +2396,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           cancellationTime,
             yieldDeadline:        startingTime + duration,
@@ -2431,10 +2431,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + vestedYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    yieldAssets - vestedYield);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY + vestedYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                yieldAssets - vestedYield);
 
         /**********************************************************************************************************************************/
         /*** Process shares                                                                                                             ***/
@@ -2450,16 +2450,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield - assetsOut,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield - assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           cancellationTime,
             yieldDeadline:        startingTime + duration,
@@ -2485,10 +2485,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             assetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), INITIAL_LIQUIDITY + vestedYield - assetsOut);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(fundsAsset.balanceOf(trader),                    yieldAssets - vestedYield);
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), INITIAL_LIQUIDITY + vestedYield - assetsOut);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                yieldAssets - vestedYield);
     }
 
     function test_processRedemption_success_immediatelyAfterFundingImpairedStrategy() external {
@@ -2509,7 +2509,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Impair the strategy                                                                                                        ***/
         /**********************************************************************************************************************************/
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairment);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         assertPoolState({
             pool:               firstPool,
@@ -2519,8 +2519,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets,
             availableToWithdraw:   firstPoolAssets,
             totalDeployedAssets:   0,
@@ -2545,9 +2545,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: impairment
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), firstPoolAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Fund the impaired strategy from a second pool manager                                                                      ***/
@@ -2574,8 +2574,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
             totalDeployedAssets:   0,
@@ -2609,10 +2609,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: secondLoss
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Request all shares from the second pool manager                                                                            ***/
@@ -2636,8 +2636,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
             totalDeployedAssets:   0,
@@ -2671,10 +2671,10 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: secondLoss
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process all shares from the second pool manager                                                                            ***/
@@ -2698,8 +2698,8 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets - assetsOut,
             availableToWithdraw:   totalAssets - assetsOut,
             totalDeployedAssets:   0,
@@ -2733,11 +2733,11 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: impairment
         });
 
-        assertEq(fundsAsset.balanceOf(firstPool),                 0);
-        assertEq(fundsAsset.balanceOf(secondPool),                assetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), totalAssets - assetsOut);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
-        assertEq(secondPoolAssets - assetsOut,                    secondLoss);
+        assertEq(fundsAsset.balanceOf(firstPool),                    0);
+        assertEq(fundsAsset.balanceOf(secondPool),                   assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - assetsOut);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
+        assertEq(secondPoolAssets - assetsOut,                       secondLoss);
     }
 
     function test_processRedemption_success_increasingExchangeRate() external {
@@ -2755,7 +2755,7 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
         /*** Add yield that remains unrealized                                                                                          ***/
         /**********************************************************************************************************************************/
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, duration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, duration);
 
         assertPoolState({
             pool:               address(pool),
@@ -2765,16 +2765,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2800,9 +2800,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), aumAfterYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), aumAfterYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Warp to the yield deadline                                                                                                 ***/
@@ -2818,16 +2818,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2853,9 +2853,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), aumAfterYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), aumAfterYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Request shares at the higher exchange rate                                                                                 ***/
@@ -2871,16 +2871,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2906,9 +2906,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), aumAfterYield);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), aumAfterYield);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
         /**********************************************************************************************************************************/
         /*** Process shares at the higher exchange rate                                                                                 ***/
@@ -2924,16 +2924,16 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             availableLiquidity: assetsOut
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield - assetsOut,
             availableToWithdraw:   aumAfterYield - assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -2959,9 +2959,9 @@ contract TradingStrategyProcessRedemptionSuccessTests is TradingStrategyProcessR
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),             assetsOut);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), aumAfterYield - assetsOut);
-        assertEq(fundsAsset.balanceOf(strategyManager),           0);
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), aumAfterYield - assetsOut);
+        assertEq(fundsAsset.balanceOf(strategyManager),              0);
     }
 
 }

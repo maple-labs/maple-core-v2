@@ -70,13 +70,16 @@ import { IMapleSkyStrategy as IMSS }      from "../../modules/defi-strategies/co
 import { AaveV3StrategyInitializerParams } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3StrategyInitializer.sol";
 import { SkyStrategyInitializerParams }    from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategyInitializer.sol";
 
-import { IMapleTradingStrategy as IMTS } from "../../modules/trading-strategy/contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy as IMAS } from "../../modules/allocation-strategy/contracts/interfaces/IMapleAllocationStrategy.sol";
 
-import { TradingStrategyInitializerParams } from "../../modules/trading-strategy/contracts/interfaces/IMapleTradingStrategyInitializer.sol";
+import { AllocationStrategyInitializerParams }
+    from "../../modules/allocation-strategy/contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
 /******************************************************************************************************************************************/
+
+interface IAllocationStrategy is IMAS { }
 
 interface IAaveV3Strategy is IMAV3S { }
 
@@ -123,8 +126,6 @@ interface ISyrupBitcoinRouter is ISBR { }
 interface ISyrupRouter is ISR { }
 
 interface ISkyStrategy is IMSS { }
-
-interface ITradingStrategy is IMTS { }
 
 interface IWithdrawalManagerCyclical is IMWMC { }
 

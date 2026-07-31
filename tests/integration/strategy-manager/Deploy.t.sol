@@ -2,17 +2,17 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     IAaveV3Strategy,
     IMockERC20,
     IMapleProxyFactory,
     ISkyStrategy,
-    IStrategyManager,
-    ITradingStrategy
+    IStrategyManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import {
+    AllocationStrategyInitializerParams,
     AaveV3StrategyInitializerParams,
-    TradingStrategyInitializerParams,
     SkyStrategyInitializerParams
 } from "../../../contracts/interfaces/Interfaces.sol";
 
@@ -25,9 +25,9 @@ contract StrategyDeployerRevertTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        deploymentData = abi.encode(TradingStrategyInitializerParams({
+        deploymentData = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
             yieldCap:                type(uint256).max
@@ -39,7 +39,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(notDelegate);
         vm.expectRevert("MSD:D:INVALID_SD");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_invalidStrategyManagerFactory() external {
@@ -47,7 +47,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_SM_FACTORY");
-        strategyDeployer.deploy(invalidStrategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(invalidStrategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_invalidStrategyFactory() external {
@@ -64,7 +64,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSMF:CI:CANNOT_DEPLOY");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_protocolPaused() external {
@@ -73,7 +73,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_strategyManagerFactoryWithoutDefaultVersion() external {
@@ -86,12 +86,12 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert(freshFactory);
-        strategyDeployer.deploy(freshFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(freshFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_duplicateDeployment() external {
         vm.prank(strategyDelegate);
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
 
         vm.prank(strategyDelegate);
         vm.expectRevert(strategyManagerFactory);
@@ -100,7 +100,7 @@ contract StrategyDeployerRevertTests is TestBase {
 
     function test_deploy_revert_setUnderlyingStrategyPaused() external {
         ( address strategyManager, ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, deploymentData);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, deploymentData);
 
         vm.startPrank(governor);
         globals.setContractPause(strategyManager, true);
@@ -109,12 +109,12 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:PAUSED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
     function test_deploy_revert_completeConfigurationPaused() external {
         ( address strategyManager, ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, deploymentData);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, deploymentData);
 
         vm.startPrank(governor);
         globals.setContractPause(strategyManager, true);
@@ -124,34 +124,34 @@ contract StrategyDeployerRevertTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:PAUSED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, deploymentData, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
     }
 
 }
 
-contract TradingStrategyDeployTests is TestBase {
+contract AllocationStrategyDeployTests is TestBase {
 
     function test_deploy_revert_cannotDeployUnderlyingStrategy() external {
         vm.prank(governor);
-        globals.setCanDeployFrom(tradingStrategyFactory, address(strategyDeployer), false);
+        globals.setCanDeployFrom(allocationStrategyFactory, address(strategyDeployer), false);
 
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
             yieldCap:                type(uint256).max
         }));
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTSF:CI:CANNOT_DEPLOY");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        vm.expectRevert("MASF:CI:CANNOT_DEPLOY");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidAsset() external {
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              makeAddr("notPoolAsset"),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
             yieldCap:                type(uint256).max
@@ -159,13 +159,13 @@ contract TradingStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0.5e6,      // 50% Fee
             strategyProtocolFeeRate: 0.5e6 + 1,  // 50.0001% Fee
             yieldCap:                type(uint256).max
@@ -173,55 +173,55 @@ contract TradingStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
-        strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
     }
 
     function test_deploy_success() external {
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
             yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address tradingStrategyManager_, address tradingUnderlyingStrategy_ ) =
-            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        ( address allocationStrategyManager_, address allocationUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
-        assertEq(tradingStrategyManager_,    expectedStrategyManager);
-        assertEq(tradingUnderlyingStrategy_, expectedUnderlyingStrategy);
+        assertEq(allocationStrategyManager_,    expectedStrategyManager);
+        assertEq(allocationUnderlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager_),    true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(allocationStrategyManager_),       true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(allocationUnderlyingStrategy_), true);
 
-        assertEq(IStrategyManager(tradingStrategyManager_).globals(),                 address(globals));
-        assertEq(IStrategyManager(tradingStrategyManager_).factory(),                 strategyManagerFactory);
-        assertEq(IStrategyManager(tradingStrategyManager_).strategyDelegate(),        strategyDelegate);
-        assertEq(IStrategyManager(tradingStrategyManager_).pendingStrategyDelegate(), address(0));
-        assertEq(IStrategyManager(tradingStrategyManager_).underlyingStrategy(),      tradingUnderlyingStrategy_);
-        assertEq(IStrategyManager(tradingStrategyManager_).strategyLiquidityCap(),    0);
-        assertEq(IStrategyManager(tradingStrategyManager_).totalShares(),             0);
-        assertEq(IStrategyManager(tradingStrategyManager_).totalPendingShares(),      0);
-        assertEq(IStrategyManager(tradingStrategyManager_).assetsUnderManagement(),   0);
+        assertEq(IStrategyManager(allocationStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(allocationStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(allocationStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(allocationStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(allocationStrategyManager_).underlyingStrategy(),      allocationUnderlyingStrategy_);
+        assertEq(IStrategyManager(allocationStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(allocationStrategyManager_).totalShares(),             0);
+        assertEq(IStrategyManager(allocationStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(allocationStrategyManager_).assetsUnderManagement(),   0);
 
-        assertEq(IStrategyManager(tradingStrategyManager_).configured(), true);
-        assertEq(IStrategyManager(tradingStrategyManager_).active(),     false);
+        assertEq(IStrategyManager(allocationStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(allocationStrategyManager_).active(),     false);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyManager(),         tradingStrategyManager_);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyMetadata(),        "Trading Strategy");
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).impairedAssets(),          0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).scheduledYieldAssets(),    0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).totalDeployedAssets(),     0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldDeadline(),           0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldStart(),              0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyManager(),         allocationStrategyManager_);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyMetadata(),        "Allocation Strategy");
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).scheduledYieldAssets(),    0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).totalDeployedAssets(),     0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).yieldDeadline(),           0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).yieldStart(),              0);
     }
 
     function test_deploy_success_withBootstrapMint() external {
@@ -230,16 +230,16 @@ contract TradingStrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
 
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
             yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
 
@@ -248,92 +248,92 @@ contract TradingStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
 
-        ( address tradingStrategyManager_, address tradingUnderlyingStrategy_ ) =
-            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        ( address allocationStrategyManager_, address allocationUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
-        assertEq(tradingStrategyManager_,    expectedStrategyManager);
-        assertEq(tradingUnderlyingStrategy_, expectedUnderlyingStrategy);
+        assertEq(allocationStrategyManager_,    expectedStrategyManager);
+        assertEq(allocationUnderlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(fundsAsset.balanceOf(strategyDelegate),           0);
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy_), bootstrapMint);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),              0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy_), bootstrapMint);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager_),    true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(allocationStrategyManager_),       true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(allocationUnderlyingStrategy_), true);
 
-        assertEq(IStrategyManager(tradingStrategyManager_).globals(),                 address(globals));
-        assertEq(IStrategyManager(tradingStrategyManager_).factory(),                 strategyManagerFactory);
-        assertEq(IStrategyManager(tradingStrategyManager_).strategyDelegate(),        strategyDelegate);
-        assertEq(IStrategyManager(tradingStrategyManager_).pendingStrategyDelegate(), address(0));
-        assertEq(IStrategyManager(tradingStrategyManager_).underlyingStrategy(),      tradingUnderlyingStrategy_);
-        assertEq(IStrategyManager(tradingStrategyManager_).strategyLiquidityCap(),    0);
-        assertEq(IStrategyManager(tradingStrategyManager_).totalShares(),             bootstrapMint);
-        assertEq(IStrategyManager(tradingStrategyManager_).totalPendingShares(),      0);
-        assertEq(IStrategyManager(tradingStrategyManager_).sharesOf(address(0)),      bootstrapMint);
-        assertEq(IStrategyManager(tradingStrategyManager_).assetsUnderManagement(),   bootstrapMint);
+        assertEq(IStrategyManager(allocationStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(allocationStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(allocationStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(allocationStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(allocationStrategyManager_).underlyingStrategy(),      allocationUnderlyingStrategy_);
+        assertEq(IStrategyManager(allocationStrategyManager_).strategyLiquidityCap(),    0);
+        assertEq(IStrategyManager(allocationStrategyManager_).totalShares(),             bootstrapMint);
+        assertEq(IStrategyManager(allocationStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(allocationStrategyManager_).sharesOf(address(0)),      bootstrapMint);
+        assertEq(IStrategyManager(allocationStrategyManager_).assetsUnderManagement(),   bootstrapMint);
 
-        assertEq(IStrategyManager(tradingStrategyManager_).configured(), true);
-        assertEq(IStrategyManager(tradingStrategyManager_).active(),     false);
+        assertEq(IStrategyManager(allocationStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(allocationStrategyManager_).active(),     false);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyManager(),         tradingStrategyManager_);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyMetadata(),        "Trading Strategy");
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).impairedAssets(),          0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).scheduledYieldAssets(),    0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).totalDeployedAssets(),     0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldDeadline(),           0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldStart(),              0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyManager(),         allocationStrategyManager_);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyMetadata(),        "Allocation Strategy");
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).scheduledYieldAssets(),    0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).totalDeployedAssets(),     0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).yieldDeadline(),           0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).yieldStart(),              0);
     }
 
     function test_deploy_success_withStrategyLiquidityCap() external {
         uint256 strategyLiquidityCap = 1_000_000e6;
 
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
             yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address tradingStrategyManager_, address tradingUnderlyingStrategy_ ) =
-            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, strategyLiquidityCap, data, "");
+        ( address allocationStrategyManager_, address allocationUnderlyingStrategy_ ) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, strategyLiquidityCap, data, "");
 
-        assertEq(tradingStrategyManager_,    expectedStrategyManager);
-        assertEq(tradingUnderlyingStrategy_, expectedUnderlyingStrategy);
+        assertEq(allocationStrategyManager_,    expectedStrategyManager);
+        assertEq(allocationUnderlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager_),    true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(allocationStrategyManager_),       true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(allocationUnderlyingStrategy_), true);
 
-        assertEq(IStrategyManager(tradingStrategyManager_).globals(),                 address(globals));
-        assertEq(IStrategyManager(tradingStrategyManager_).factory(),                 strategyManagerFactory);
-        assertEq(IStrategyManager(tradingStrategyManager_).strategyDelegate(),        strategyDelegate);
-        assertEq(IStrategyManager(tradingStrategyManager_).pendingStrategyDelegate(), address(0));
-        assertEq(IStrategyManager(tradingStrategyManager_).underlyingStrategy(),      tradingUnderlyingStrategy_);
-        assertEq(IStrategyManager(tradingStrategyManager_).strategyLiquidityCap(),    strategyLiquidityCap);
-        assertEq(IStrategyManager(tradingStrategyManager_).totalShares(),             0);
-        assertEq(IStrategyManager(tradingStrategyManager_).totalPendingShares(),      0);
-        assertEq(IStrategyManager(tradingStrategyManager_).assetsUnderManagement(),   0);
+        assertEq(IStrategyManager(allocationStrategyManager_).globals(),                 address(globals));
+        assertEq(IStrategyManager(allocationStrategyManager_).factory(),                 strategyManagerFactory);
+        assertEq(IStrategyManager(allocationStrategyManager_).strategyDelegate(),        strategyDelegate);
+        assertEq(IStrategyManager(allocationStrategyManager_).pendingStrategyDelegate(), address(0));
+        assertEq(IStrategyManager(allocationStrategyManager_).underlyingStrategy(),      allocationUnderlyingStrategy_);
+        assertEq(IStrategyManager(allocationStrategyManager_).strategyLiquidityCap(),    strategyLiquidityCap);
+        assertEq(IStrategyManager(allocationStrategyManager_).totalShares(),             0);
+        assertEq(IStrategyManager(allocationStrategyManager_).totalPendingShares(),      0);
+        assertEq(IStrategyManager(allocationStrategyManager_).assetsUnderManagement(),   0);
 
-        assertEq(IStrategyManager(tradingStrategyManager_).configured(), true);
-        assertEq(IStrategyManager(tradingStrategyManager_).active(),     false);
+        assertEq(IStrategyManager(allocationStrategyManager_).configured(), true);
+        assertEq(IStrategyManager(allocationStrategyManager_).active(),     false);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyManager(),         tradingStrategyManager_);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyMetadata(),        "Trading Strategy");
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).impairedAssets(),          0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).scheduledYieldAssets(),    0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).totalDeployedAssets(),     0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldDeadline(),           0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy_).yieldStart(),              0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyManager(),         allocationStrategyManager_);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).fundsAsset(),              address(fundsAsset));
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyMetadata(),        "Allocation Strategy");
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).impairedAssets(),          0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).scheduledYieldAssets(),    0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).totalDeployedAssets(),     0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).yieldDeadline(),           0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy_).yieldStart(),              0);
     }
 
     function test_deploy_success_multipleDelegates() external {
@@ -345,76 +345,76 @@ contract TradingStrategyDeployTests is TestBase {
         globals.setValidStrategyDelegate(strategyDelegate2, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
             yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, allocationStrategyFactory, data);
 
         ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, allocationStrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        ( address tradingStrategyManager1, address tradingUnderlyingStrategy1 ) =
-            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        ( address allocationStrategyManager1, address allocationUnderlyingStrategy1 ) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        ( address tradingStrategyManager2, address tradingUnderlyingStrategy2 ) =
-            strategyDeployer.deploy(strategyManagerFactory, tradingStrategyFactory, 0, data, "");
+        ( address allocationStrategyManager2, address allocationUnderlyingStrategy2 ) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
-        assertEq(tradingStrategyManager1,    expectedStrategyManager1);
-        assertEq(tradingStrategyManager2,    expectedStrategyManager2);
-        assertEq(tradingUnderlyingStrategy1, expectedUnderlyingStrategy1);
-        assertEq(tradingUnderlyingStrategy2, expectedUnderlyingStrategy2);
+        assertEq(allocationStrategyManager1,    expectedStrategyManager1);
+        assertEq(allocationStrategyManager2,    expectedStrategyManager2);
+        assertEq(allocationUnderlyingStrategy1, expectedUnderlyingStrategy1);
+        assertEq(allocationUnderlyingStrategy2, expectedUnderlyingStrategy2);
 
-        assertNotEq(tradingStrategyManager1,    tradingStrategyManager2);
-        assertNotEq(tradingUnderlyingStrategy1, tradingUnderlyingStrategy2);
+        assertNotEq(allocationStrategyManager1,    allocationStrategyManager2);
+        assertNotEq(allocationUnderlyingStrategy1, allocationUnderlyingStrategy2);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager1),    true);
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(tradingStrategyManager2),    true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy1), true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(tradingUnderlyingStrategy2), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(allocationStrategyManager1),       true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(allocationStrategyManager2),       true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(allocationUnderlyingStrategy1), true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(allocationUnderlyingStrategy2), true);
 
-        assertEq(IStrategyManager(tradingStrategyManager1).strategyDelegate(),      strategyDelegate1);
-        assertEq(IStrategyManager(tradingStrategyManager1).underlyingStrategy(),    tradingUnderlyingStrategy1);
-        assertEq(IStrategyManager(tradingStrategyManager1).configured(),            true);
-        assertEq(IStrategyManager(tradingStrategyManager1).active(),                false);
-        assertEq(IStrategyManager(tradingStrategyManager1).assetsUnderManagement(), 0);
+        assertEq(IStrategyManager(allocationStrategyManager1).strategyDelegate(),      strategyDelegate1);
+        assertEq(IStrategyManager(allocationStrategyManager1).underlyingStrategy(),    allocationUnderlyingStrategy1);
+        assertEq(IStrategyManager(allocationStrategyManager1).configured(),            true);
+        assertEq(IStrategyManager(allocationStrategyManager1).active(),                false);
+        assertEq(IStrategyManager(allocationStrategyManager1).assetsUnderManagement(), 0);
 
-        assertEq(IStrategyManager(tradingStrategyManager2).strategyDelegate(),      strategyDelegate2);
-        assertEq(IStrategyManager(tradingStrategyManager2).underlyingStrategy(),    tradingUnderlyingStrategy2);
-        assertEq(IStrategyManager(tradingStrategyManager2).configured(),            true);
-        assertEq(IStrategyManager(tradingStrategyManager2).active(),                false);
-        assertEq(IStrategyManager(tradingStrategyManager2).assetsUnderManagement(), 0);
+        assertEq(IStrategyManager(allocationStrategyManager2).strategyDelegate(),      strategyDelegate2);
+        assertEq(IStrategyManager(allocationStrategyManager2).underlyingStrategy(),    allocationUnderlyingStrategy2);
+        assertEq(IStrategyManager(allocationStrategyManager2).configured(),            true);
+        assertEq(IStrategyManager(allocationStrategyManager2).active(),                false);
+        assertEq(IStrategyManager(allocationStrategyManager2).assetsUnderManagement(), 0);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).strategyManager(),         tradingStrategyManager1);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).fundsAsset(),              address(fundsAsset));
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).strategyMetadata(),        "Trading Strategy");
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).impairedAssets(),          0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).scheduledYieldAssets(),    0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).totalDeployedAssets(),     0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).yieldDeadline(),           0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy1).yieldStart(),              0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).strategyManager(),         allocationStrategyManager1);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).fundsAsset(),              address(fundsAsset));
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).strategyMetadata(),        "Allocation Strategy");
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).impairedAssets(),          0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).scheduledYieldAssets(),    0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).totalDeployedAssets(),     0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).yieldDeadline(),           0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy1).yieldStart(),              0);
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).strategyManager(),         tradingStrategyManager2);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).fundsAsset(),              address(fundsAsset));
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).strategyMetadata(),        "Trading Strategy");
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).strategyDelegateFeeRate(), 0.001e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).strategyProtocolFeeRate(), 0.002e6);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).impairedAssets(),          0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).scheduledYieldAssets(),    0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).totalDeployedAssets(),     0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).yieldDeadline(),           0);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy2).yieldStart(),              0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).strategyManager(),         allocationStrategyManager2);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).fundsAsset(),              address(fundsAsset));
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).strategyMetadata(),        "Allocation Strategy");
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).impairedAssets(),          0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).scheduledYieldAssets(),    0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).totalDeployedAssets(),     0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).yieldDeadline(),           0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy2).yieldStart(),              0);
     }
 
 }
@@ -788,7 +788,8 @@ contract SparkLendStrategyDeployTests is AaveV3StrategyDeployTests {
 
 contract SkyStrategyDeployTests is TestBase {
 
-    address constant SDAI = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;  // sDAI (asset: DAI), a real ERC4626 whose asset differs from the PSM's usds.
+    // sDAI (asset: DAI), a real ERC4626 whose asset differs from the PSM's usds.
+    address constant SDAI = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 21073000);
@@ -1203,31 +1204,31 @@ contract SkyStrategyDeployTests is TestBase {
         assertEq(IStrategyManager(skyStrategyManager2).active(),                false);
         assertEq(IStrategyManager(skyStrategyManager2).assetsUnderManagement(), 0);
 
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).strategyManager(),          skyStrategyManager1);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).fundsAsset(),               USDC);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).psm(),                      USDS_LITE_PSM);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).savingsUsds(),              SAVINGS_USDS);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).usds(),                     USDS);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).strategyDelegateFeeRate(),  0.001e6);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).strategyProtocolFeeRate(),  0.002e6);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).referralCode(),             7);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).fallbackTout(),             0);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).impairedAssets(),           0);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).lastRecordedTotalAssets(),  0);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy1).isLossRecognized(),         false);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).strategyManager(),         skyStrategyManager1);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).fundsAsset(),              USDC);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).psm(),                     USDS_LITE_PSM);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).savingsUsds(),             SAVINGS_USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).usds(),                    USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).referralCode(),            7);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).fallbackTout(),            0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).impairedAssets(),          0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).lastRecordedTotalAssets(), 0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy1).isLossRecognized(),        false);
 
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).strategyManager(),          skyStrategyManager2);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).fundsAsset(),               USDC);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).psm(),                      USDS_LITE_PSM);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).savingsUsds(),              SAVINGS_USDS);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).usds(),                     USDS);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).strategyDelegateFeeRate(),  0.001e6);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).strategyProtocolFeeRate(),  0.002e6);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).referralCode(),             7);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).fallbackTout(),             0);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).impairedAssets(),           0);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).lastRecordedTotalAssets(),  0);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy2).isLossRecognized(),         false);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).strategyManager(),         skyStrategyManager2);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).fundsAsset(),              USDC);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).psm(),                     USDS_LITE_PSM);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).savingsUsds(),             SAVINGS_USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).usds(),                    USDS);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).strategyDelegateFeeRate(), 0.001e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).strategyProtocolFeeRate(), 0.002e6);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).referralCode(),            7);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).fallbackTout(),            0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).impairedAssets(),          0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).lastRecordedTotalAssets(), 0);
+        assertEq(ISkyStrategy(skyUnderlyingStrategy2).isLossRecognized(),        false);
     }
 
 }

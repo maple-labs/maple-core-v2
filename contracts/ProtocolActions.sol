@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     IBitcoinStrategy,
     IERC20,
     IERC20Like,
@@ -26,7 +27,6 @@ import {
     IStrategyLike,
     IStrategyManager,
     ISkyStrategy,
-    ITradingStrategy,
     IUSDCLike,
     IUnderlyingStrategyLike,
     IWithdrawalManagerQueue,
@@ -901,9 +901,9 @@ contract ProtocolActions is Runner {
         IStrategyManager(strategyManager_).cancelRedemption(poolManager_, shares_);
     }
 
-    function deployAssets(address strategy_, address trader_, uint256 amount_) internal {
-        vm.prank(trader_);
-        ITradingStrategy(strategy_).deployAssets(amount_, "");
+    function deployAssets(address strategy_, address managedWallet_, uint256 amount_) internal {
+        vm.prank(managedWallet_);
+        IAllocationStrategy(strategy_).deployAssets(amount_, "");
     }
 
     function fundStrategy(address strategy_, uint256 assetsIn_) internal {
@@ -936,12 +936,12 @@ contract ProtocolActions is Runner {
         IUnderlyingStrategyLike(strategy_).impair(amount_);
     }
 
-    function impairTradingStrategy(address strategy_, uint256 amount_) internal {
-        address strategyManager_  = ITradingStrategy(strategy_).strategyManager();
+    function impairAllocationStrategy(address strategy_, uint256 amount_) internal {
+        address strategyManager_  = IAllocationStrategy(strategy_).strategyManager();
         address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
 
         vm.prank(strategyDelegate_);
-        ITradingStrategy(strategy_).impair(amount_);
+        IAllocationStrategy(strategy_).impair(amount_);
     }
 
     function processRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
@@ -953,22 +953,22 @@ contract ProtocolActions is Runner {
 
     // TODO: Add a bool flag that decides if assets will be minted before being returned.
     function returnAssets(address strategy_, address caller_, address deployer_, uint256 amount_) internal {
-        address asset_ = ITradingStrategy(strategy_).fundsAsset();
+        address asset_ = IAllocationStrategy(strategy_).fundsAsset();
 
         erc20_mint(asset_, caller_, amount_);
 
         vm.startPrank(caller_);
         IERC20(asset_).approve(strategy_, amount_);
-        ITradingStrategy(strategy_).returnAssets(amount_, deployer_, "");
+        IAllocationStrategy(strategy_).returnAssets(amount_, deployer_, "");
         vm.stopPrank();
     }
 
     function recognizeLoss(address strategy_, address deployer_, uint256 amount_) internal {
-        address strategyManager_  = ITradingStrategy(strategy_).strategyManager();
+        address strategyManager_  = IAllocationStrategy(strategy_).strategyManager();
         address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
 
         vm.prank(strategyDelegate_);
-        ITradingStrategy(strategy_).recognizeLoss(amount_, deployer_);
+        IAllocationStrategy(strategy_).recognizeLoss(amount_, deployer_);
     }
 
     function requestRedeemFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
@@ -986,19 +986,19 @@ contract ProtocolActions is Runner {
         IUnderlyingStrategyLike(strategy_).removeImpairment(amount_);
     }
 
-    function realizeYield(address strategy_, address trader_, uint256 yieldAssets_, uint32 duration_) internal {
-        address asset_ = ITradingStrategy(strategy_).fundsAsset();
+    function realizeYield(address strategy_, address managedWallet_, uint256 yieldAssets_, uint32 duration_) internal {
+        address asset_ = IAllocationStrategy(strategy_).fundsAsset();
 
-        erc20_mint(asset_, trader_, yieldAssets_);
+        erc20_mint(asset_, managedWallet_, yieldAssets_);
 
-        vm.startPrank(trader_);
+        vm.startPrank(managedWallet_);
         IERC20(asset_).approve(strategy_, yieldAssets_);
-        ITradingStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
+        IAllocationStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
         vm.stopPrank();
     }
 
     function setDeploymentCap(address strategy_, address account_, uint256 cap_) internal {
-        address strategyDelegate_ = ITradingStrategy(strategy_).strategyDelegate();
+        address strategyDelegate_ = IAllocationStrategy(strategy_).strategyDelegate();
 
         address[] memory accounts = new address[](1);
         uint256[] memory caps     = new uint256[](1);
@@ -1007,7 +1007,7 @@ contract ProtocolActions is Runner {
         caps[0]     = cap_;
 
         vm.prank(strategyDelegate_);
-        ITradingStrategy(strategy_).setDeploymentCaps(accounts, caps);
+        IAllocationStrategy(strategy_).setDeploymentCaps(accounts, caps);
     }
 
     function setPermissions(
@@ -1019,7 +1019,7 @@ contract ProtocolActions is Runner {
     )
         internal
     {
-        address strategyDelegate_ = ITradingStrategy(strategy_).strategyDelegate();
+        address strategyDelegate_ = IAllocationStrategy(strategy_).strategyDelegate();
 
         address[] memory accounts        = new address[](1);
         bool[]    memory canDeployAssets = new bool[](1);
@@ -1032,7 +1032,7 @@ contract ProtocolActions is Runner {
         canRealizeYield[0] = canRealizeYield_;
 
         vm.prank(strategyDelegate_);
-        ITradingStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
+        IAllocationStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
     }
 
     function setStrategyDelegateFeeRate(address strategy_, uint32 feeRate_) internal {
@@ -1050,9 +1050,9 @@ contract ProtocolActions is Runner {
         IUnderlyingStrategyLike(strategy_).setStrategyProtocolFeeRate(feeRate_);
     }
 
-    function setTradingAddress(
+    function setManagedWallet(
         address strategy_,
-        address tradingAddress_,
+        address managedWallet_,
         bool    canDeployAssets_,
         bool    canReturnAssets_,
         bool    canRealizeYield_,
@@ -1060,9 +1060,9 @@ contract ProtocolActions is Runner {
     )
         internal
     {
-        address globals_  = ITradingStrategy(strategy_).globals();
+        address globals_  = IAllocationStrategy(strategy_).globals();
         address governor_ = IGlobals(globals_).governor();
-        address admin_    = ITradingStrategy(strategy_).strategyDelegate();
+        address admin_    = IAllocationStrategy(strategy_).strategyDelegate();
 
         address[] memory accounts        = new address[](1);
         bool[]    memory canDeployAssets = new bool[](1);
@@ -1070,20 +1070,20 @@ contract ProtocolActions is Runner {
         bool[]    memory canRealizeYield = new bool[](1);
         uint256[] memory deploymentCaps  = new uint256[](1);
 
-        accounts[0]        = tradingAddress_;
+        accounts[0]        = managedWallet_;
         canDeployAssets[0] = canDeployAssets_;
         canReturnAssets[0] = canReturnAssets_;
         canRealizeYield[0] = canRealizeYield_;
         deploymentCaps[0]  = deploymentCap_;
 
         vm.prank(governor_);
-        IGlobals(globals_).setValidMapleManagedWallet(tradingAddress_, true);
+        IGlobals(globals_).setValidMapleManagedWallet(managedWallet_, true);
 
         vm.startPrank(admin_);
-        ITradingStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
+        IAllocationStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
 
         if (deploymentCap_ != 0) {
-            ITradingStrategy(strategy_).setDeploymentCaps(accounts, deploymentCaps);
+            IAllocationStrategy(strategy_).setDeploymentCaps(accounts, deploymentCaps);
         }
 
         vm.stopPrank();

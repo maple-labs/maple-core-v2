@@ -43,8 +43,8 @@
 [submodule "modules/controller"]
 	path = modules/controller
 	url = git@github.com:maple-labs/maple-controller-private.git
-[submodule "modules/trading-strategy"]
-	path = modules/trading-strategy
+[submodule "modules/allocation-strategy"]
+	path = modules/allocation-strategy
 	url = git@github.com:maple-labs/trading-strategy-private.git
 [submodule "modules/strategy-manager"]
 	path = modules/strategy-manager

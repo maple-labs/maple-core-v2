@@ -2,10 +2,13 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     IMapleProxyFactory,
     IPoolManager,
-    IStrategyManager,
-    ITradingStrategy,
+    IStrategyManager
+} from "../../../contracts/interfaces/Interfaces.sol";
+
+import {
     PoolConfigParams,
     PoolManagerInitParams,
     StrategyDeployParams,
@@ -151,7 +154,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_createInstance_revert_directOpenTermLoanManagerFactoryCall() external {
-        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -160,7 +163,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        vm.prank(tradingStrategyManager_);
+        vm.prank(allocationStrategyManager_);
         vm.expectRevert("LMF:CI:CANNOT_DEPLOY");
         IMapleProxyFactory(openTermLoanManagerFactory).createInstance(abi.encode(makeAddr("poolManager")), "SALT");
     }
@@ -350,7 +353,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_invalidStrategyManager() external {
-        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -362,7 +365,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory, false);
 
-        StrategyManagerParams[] memory managers = createStrategyManagerParams(tradingStrategyManager_, type(uint256).max);
+        StrategyManagerParams[] memory managers = createStrategyManagerParams(allocationStrategyManager_, type(uint256).max);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ASM:INVALID_STRATEGY_MANAGER");
@@ -377,7 +380,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_duplicateStrategyManager() external {
-        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -387,9 +390,9 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
         });
 
         StrategyManagerParams[] memory managers = createStrategyManagerParams(
-            tradingStrategyManager_,
+            allocationStrategyManager_,
             type(uint256).max,
-            tradingStrategyManager_,
+            allocationStrategyManager_,
             type(uint256).max
         );
 
@@ -406,7 +409,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_strategyManagerAssetNotSupported() external {
-        ( address tradingStrategyManager_, address underlyingStrategy ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager_, address underlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -415,12 +418,12 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        assertEq(ITradingStrategy(underlyingStrategy).fundsAsset(), address(fundsAsset));
+        assertEq(IAllocationStrategy(underlyingStrategy).fundsAsset(), address(fundsAsset));
 
         vm.prank(governor);
         globals.setValidPoolAsset(address(collateralAsset), true);
 
-        StrategyManagerParams[] memory managers = createStrategyManagerParams(tradingStrategyManager_, type(uint256).max);
+        StrategyManagerParams[] memory managers = createStrategyManagerParams(allocationStrategyManager_, type(uint256).max);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ASM:ASSET_NOT_SUPPORTED");
@@ -448,8 +451,8 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
                 delegateManagementFeeRate: invalidManagementFee,
                 liquidityCap:              LIQUIDITY_CAP
             }),
-            strategiesParams:         new StrategyDeployParams[](0),
-            strategyManagersParams:   new StrategyManagerParams[](0)
+            strategiesParams:       new StrategyDeployParams[](0),
+            strategyManagersParams: new StrategyManagerParams[](0)
         });
     }
 
@@ -564,7 +567,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_otlmAndModularStrategy() external {
-        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -574,7 +577,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         });
 
         StrategyDeployParams[]  memory strategies = createOtlmStrategyParams(type(uint256).max);
-        StrategyManagerParams[] memory managers   = createStrategyManagerParams(tradingStrategyManager_, type(uint256).max);
+        StrategyManagerParams[] memory managers   = createStrategyManagerParams(allocationStrategyManager_, type(uint256).max);
 
         vm.prank(poolDelegate);
         address poolManager_ = poolDeployer.deployPool({
@@ -602,24 +605,24 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
 
         assertEq(IMapleProxyFactory(openTermLoanManagerFactory).isInstance(otlm), true);
 
-        assertEq(pm.strategyList(1),                        tradingStrategyManager_);
-        assertEq(pm.strategyCapOf(tradingStrategyManager_), type(uint256).max);
+        assertEq(pm.strategyList(1),                           allocationStrategyManager_);
+        assertEq(pm.strategyCapOf(allocationStrategyManager_), type(uint256).max);
 
-        assertEq(pm.isStrategyManager(tradingStrategyManager_), true);
-        assertEq(pm.isStrategy(tradingStrategyManager_),        false);
+        assertEq(pm.isStrategyManager(allocationStrategyManager_), true);
+        assertEq(pm.isStrategy(allocationStrategyManager_),        false);
 
-        address tradingUnderlyingStrategy_ = IStrategyManager(tradingStrategyManager_).underlyingStrategy();
+        address allocationUnderlyingStrategy_ = IStrategyManager(allocationStrategyManager_).underlyingStrategy();
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy_,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy_,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy_,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy_,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -629,7 +632,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_otlmAndMultipleModularStrategies() external {
-        ( address tradingStrategyManager0, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager0, ) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("strategyDelegate0"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -638,7 +641,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        ( address tradingStrategyManager1, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager1, ) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("strategyDelegate1"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -647,14 +650,14 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        assertNotEq(tradingStrategyManager0, tradingStrategyManager1);
+        assertNotEq(allocationStrategyManager0, allocationStrategyManager1);
 
         StrategyDeployParams[] memory strategies = createOtlmStrategyParams(type(uint256).max);
 
         StrategyManagerParams[] memory managers = createStrategyManagerParams(
-            tradingStrategyManager0,
+            allocationStrategyManager0,
             type(uint256).max,
-            tradingStrategyManager1,
+            allocationStrategyManager1,
             type(uint256).max
         );
 
@@ -684,38 +687,38 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
 
         assertEq(IMapleProxyFactory(openTermLoanManagerFactory).isInstance(otlm), true);
 
-        assertEq(pm.strategyList(1), tradingStrategyManager0);
-        assertEq(pm.strategyList(2), tradingStrategyManager1);
+        assertEq(pm.strategyList(1), allocationStrategyManager0);
+        assertEq(pm.strategyList(2), allocationStrategyManager1);
 
-        assertEq(pm.strategyCapOf(tradingStrategyManager0), type(uint256).max);
-        assertEq(pm.strategyCapOf(tradingStrategyManager1), type(uint256).max);
+        assertEq(pm.strategyCapOf(allocationStrategyManager0), type(uint256).max);
+        assertEq(pm.strategyCapOf(allocationStrategyManager1), type(uint256).max);
 
-        assertEq(pm.isStrategyManager(tradingStrategyManager0), true);
-        assertEq(pm.isStrategyManager(tradingStrategyManager1), true);
-        assertEq(pm.isStrategy(tradingStrategyManager0),        false);
-        assertEq(pm.isStrategy(tradingStrategyManager1),        false);
+        assertEq(pm.isStrategyManager(allocationStrategyManager0), true);
+        assertEq(pm.isStrategyManager(allocationStrategyManager1), true);
+        assertEq(pm.isStrategy(allocationStrategyManager0),        false);
+        assertEq(pm.isStrategy(allocationStrategyManager1),        false);
 
-        address tradingUnderlyingStrategy0 = IStrategyManager(tradingStrategyManager1).underlyingStrategy();
-        address tradingUnderlyingStrategy1 = IStrategyManager(tradingStrategyManager0).underlyingStrategy();
+        address allocationUnderlyingStrategy0 = IStrategyManager(allocationStrategyManager1).underlyingStrategy();
+        address allocationUnderlyingStrategy1 = IStrategyManager(allocationStrategyManager0).underlyingStrategy();
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy0,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy0,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy1,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy1,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy0,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy0,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -723,8 +726,8 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             realizedYield:        0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy1,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy1,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -734,7 +737,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_modularStrategyOnly() external {
-        ( address tradingStrategyManager_, ) = _deployAllocationStrategy({
+        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -743,7 +746,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        StrategyManagerParams[] memory managers = createStrategyManagerParams(tradingStrategyManager_, 0);
+        StrategyManagerParams[] memory managers = createStrategyManagerParams(allocationStrategyManager_, 0);
 
         vm.prank(poolDelegate);
         address poolManager_ = poolDeployer.deployPool({
@@ -763,24 +766,24 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyListLength_:        1
         });
 
-        assertEq(pm.strategyList(0),                        tradingStrategyManager_);
-        assertEq(pm.strategyCapOf(tradingStrategyManager_), 0);
+        assertEq(pm.strategyList(0),                           allocationStrategyManager_);
+        assertEq(pm.strategyCapOf(allocationStrategyManager_), 0);
 
-        assertEq(pm.isStrategyManager(tradingStrategyManager_), true);
-        assertEq(pm.isStrategy(tradingStrategyManager_),        false);
+        assertEq(pm.isStrategyManager(allocationStrategyManager_), true);
+        assertEq(pm.isStrategy(allocationStrategyManager_),        false);
 
-        address tradingUnderlyingStrategy_ = IStrategyManager(tradingStrategyManager_).underlyingStrategy();
+        address allocationUnderlyingStrategy_ = IStrategyManager(allocationStrategyManager_).underlyingStrategy();
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy_,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy_,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy_,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy_,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,

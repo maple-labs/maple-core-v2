@@ -199,7 +199,7 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("setStrategyLiquidityCap(uint256)", 0)
     ];
 
-    bytes[] tradingStrategyFunctions = [
+    bytes[] allocationStrategyFunctions = [
         abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
         abi.encodeWithSignature("setImplementation(address)", address(0)),
         abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
@@ -277,16 +277,16 @@ contract PauseTests is TestBaseWithAssertions {
 
         bitcoinStrategy = IBitcoinStrategy(bitcoinStrategy_);
 
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployAllocationStrategy({
-            strategyDelegate_:         strategyDelegate,
-            fundsAsset_:               address(fundsAsset),
+        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
             strategyProtocolFeeRate_: 0,
             strategyLiquidityCap_:    0,
             bootstrapMint_:           0
         });
 
-        addStrategyManagerToPool(address(poolManager), tradingStrategyManager);
+        addStrategyManagerToPool(address(poolManager), allocationStrategyManager);
 
         // Set up all mappings
         functions[poolManagerFactory]             = proxyFactoryFunctions;
@@ -304,8 +304,8 @@ contract PauseTests is TestBaseWithAssertions {
         functions[address(queueWM)]               = withdrawalManagerQueueFunctions;
         functions[address(poolPermissionManager)] = poolPermissionManagerFunctions;
         functions[address(bitcoinStrategy)]       = bitcoinStrategyFunctions;
-        functions[tradingStrategyManager]         = strategyManagerFunctions;
-        functions[tradingUnderlyingStrategy]      = tradingStrategyFunctions;
+        functions[allocationStrategyManager]      = strategyManagerFunctions;
+        functions[allocationUnderlyingStrategy]   = allocationStrategyFunctions;
 
         messages[poolManagerFactory]             = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanFactory]            = "MPF:PROTOCOL_PAUSED";
@@ -322,8 +322,8 @@ contract PauseTests is TestBaseWithAssertions {
         messages[queueWMFactory]                 = "MPF:PROTOCOL_PAUSED";
         messages[address(poolPermissionManager)] = "PPM:PAUSED";
         messages[address(bitcoinStrategy)]       = "MBS:PAUSED";
-        messages[tradingStrategyManager]         = "MSM:PAUSED";
-        messages[tradingUnderlyingStrategy]      = "MTS:PAUSED";
+        messages[allocationStrategyManager]      = "MSM:PAUSED";
+        messages[allocationUnderlyingStrategy]   = "MAS:PAUSED";
 
         // Caller overrides for factories where the implementation expects a specific contract context.
         caller[poolManagerFactory]          = address(poolDeployer);
@@ -366,8 +366,8 @@ contract PauseTests is TestBaseWithAssertions {
             address(compositeAsset),
             address(poolPermissionManager),
             address(bitcoinStrategy),
-            tradingStrategyManager,
-            tradingUnderlyingStrategy
+            allocationStrategyManager,
+            allocationUnderlyingStrategy
         ];
 
         vm.prank(governor);
@@ -396,8 +396,8 @@ contract PauseTests is TestBaseWithAssertions {
             address(queueWM),
             address(poolPermissionManager),
             address(bitcoinStrategy),
-            tradingStrategyManager,
-            tradingUnderlyingStrategy
+            allocationStrategyManager,
+            allocationUnderlyingStrategy
         ];
 
         for (uint256 i = 0; i < contracts.length; i++) {
@@ -422,8 +422,8 @@ contract PauseTests is TestBaseWithAssertions {
             address(queueWM),
             address(poolPermissionManager),
             address(bitcoinStrategy),
-            tradingStrategyManager,
-            tradingUnderlyingStrategy
+            allocationStrategyManager,
+            allocationUnderlyingStrategy
         ];
 
         // Set global pause
@@ -618,7 +618,7 @@ contract PauseTests is TestBaseWithAssertions {
         }
 
         // 0x08c379a0 selector means the return data is a revert with a string.
-        // If its a different selector then its a custom error or panic. 
+        // If its a different selector then its a custom error or panic.
         if (selector != 0x08c379a0) revert("Custom Error. Not Paused");
 
         string memory returnedMessage = abi.decode(slice(returnData, 4, returnData.length - 4), (string));
@@ -637,7 +637,7 @@ contract PauseTests is TestBaseWithAssertions {
         }
 
         // 0x08c379a0 selector means the return data is a revert with a string.
-        // If its a different selector then its a custom error or panic. 
+        // If its a different selector then its a custom error or panic.
         if (selector != 0x08c379a0) return;
 
         string memory returnedMessage = abi.decode(slice(returnData, 4, returnData.length - 4), (string));

@@ -18,7 +18,7 @@ contract AddStrategyManagerTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployAllocationStrategy({
+        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -34,8 +34,8 @@ contract AddStrategyManagerTestBase is TestBaseWithAssertions {
         assertEq(poolManager.isStrategy(strategyManager),        false);
         assertEq(poolManager.isStrategyManager(strategyManager), strategyManagerAdded);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager),  true);
-        assertEq(strategyManagerContract.isAssetSupported(address(fundsAsset)),           true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager), true);
+        assertEq(strategyManagerContract.isAssetSupported(address(fundsAsset)),          true);
 
         assertEq(strategyManagerContract.totalShares(),           0);
         assertEq(strategyManagerContract.assetsUnderManagement(), 0);
@@ -112,27 +112,27 @@ contract AddStrategyManagerTestBase is TestBaseWithAssertions {
     {
         IPoolManager     targetPoolManagerContract  = IPoolManager(targetPoolManager);
         IPoolManager     fundingPoolManagerContract = IPoolManager(fundingPoolManager);
-        IStrategyManager strategyManagerContract    = IStrategyManager(tradingStrategyManager);
+        IStrategyManager strategyManagerContract    = IStrategyManager(allocationStrategyManager);
 
-        assertEq(targetPoolManagerContract.configured(),                              true);
-        assertEq(targetPoolManagerContract.globals(),                                 address(globals));
-        assertEq(targetPoolManagerContract.asset(),                                   address(fundsAsset));
-        assertEq(targetPoolManagerContract.isStrategy(tradingStrategyManager),        false);
-        assertEq(targetPoolManagerContract.isStrategyManager(tradingStrategyManager), strategyManagerAdded);
+        assertEq(targetPoolManagerContract.configured(),                                 true);
+        assertEq(targetPoolManagerContract.globals(),                                    address(globals));
+        assertEq(targetPoolManagerContract.asset(),                                      address(fundsAsset));
+        assertEq(targetPoolManagerContract.isStrategy(allocationStrategyManager),        false);
+        assertEq(targetPoolManagerContract.isStrategyManager(allocationStrategyManager), strategyManagerAdded);
 
         assertEq(targetPoolManagerContract.strategyListLength(), strategyManagerAdded ? 2 : 1);
         assertEq(targetPoolManagerContract.strategyList(0),      existingLegacyStrategy);
 
-        assertEq(fundingPoolManagerContract.isStrategyManager(tradingStrategyManager), true);
+        assertEq(fundingPoolManagerContract.isStrategyManager(allocationStrategyManager), true);
 
         if (strategyManagerAdded) {
-            assertEq(targetPoolManagerContract.strategyList(1), tradingStrategyManager);
+            assertEq(targetPoolManagerContract.strategyList(1), allocationStrategyManager);
         }
 
-        assertEq(IPool(targetPool).totalAssets(),          0);
-        assertEq(IPool(targetPool).totalSupply(),          0);
-        assertEq(targetPoolManagerContract.totalAssets(),  0);
-        assertEq(fundsAsset.balanceOf(targetPool),         0);
+        assertEq(IPool(targetPool).totalAssets(),         0);
+        assertEq(IPool(targetPool).totalSupply(),         0);
+        assertEq(targetPoolManagerContract.totalAssets(), 0);
+        assertEq(fundsAsset.balanceOf(targetPool),        0);
 
         assertEq(IPool(fundingPool).totalAssets(),         fundAssets);
         assertEq(IPool(fundingPool).totalSupply(),         fundAssets);
@@ -159,7 +159,7 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
 
         vm.prank(governor);
         vm.expectRevert("PM:PAUSED");
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
     }
 
     function test_addStrategyManager_poolManagerPaused() external {
@@ -168,13 +168,13 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
 
         vm.prank(governor);
         vm.expectRevert("PM:PAUSED");
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
     }
 
     function test_addStrategyManager_notGovernorAndConfigured() external {
         vm.prank(makeAddr("notGovernor"));
         vm.expectRevert("PM:NOT_GOV_OR_NOT_CONFIGURED");
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
     }
 
     function test_addStrategyManager_alreadyStrategy() external {
@@ -187,11 +187,11 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
 
     function test_addStrategyManager_alreadyStrategyManager() external {
         vm.prank(governor);
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
 
         vm.prank(governor);
         vm.expectRevert("PM:ASM:ALREADY_STRATEGY_MANAGER");
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
     }
 
     function test_addStrategyManager_invalidStrategyManager_zeroAddress() external {
@@ -206,7 +206,7 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
 
         vm.prank(governor);
         vm.expectRevert("PM:ASM:INVALID_STRATEGY_MANAGER");
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
     }
 
     function test_addStrategyManager_invalidStrategyManager_invalidInstance() external {
@@ -244,7 +244,7 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
 
 }
 
-contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
+contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase {
 
     function test_addStrategyManager_success_multipleStrategyManagers() external {
         address existingLegacyStrategy = poolManager.strategyList(0);
@@ -267,7 +267,7 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: false
         });
 
@@ -281,14 +281,14 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
 
         assertEq(poolManager.strategyListLength(), 2);
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
-        assertEq(poolManager.strategyList(1),      tradingStrategyManager);
+        assertEq(poolManager.strategyList(1),      allocationStrategyManager);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: true
         });
 
@@ -306,11 +306,11 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
 
         assertEq(poolManager.strategyListLength(), 3);
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
-        assertEq(poolManager.strategyList(1),      tradingStrategyManager);
+        assertEq(poolManager.strategyList(1),      allocationStrategyManager);
         assertEq(poolManager.strategyList(2),      secondStrategyManager);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: true
         });
 
@@ -327,7 +327,7 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: false
         });
 
@@ -336,14 +336,14 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
 
         assertEq(poolManager.strategyListLength(), 2);
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
-        assertEq(poolManager.strategyList(1),      tradingStrategyManager);
+        assertEq(poolManager.strategyList(1),      allocationStrategyManager);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: true
         });
 
@@ -352,13 +352,13 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        poolManager.removeStrategyManager(tradingStrategyManager);
+        poolManager.removeStrategyManager(allocationStrategyManager);
 
         assertEq(poolManager.strategyListLength(), 1);
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: false
         });
 
@@ -367,14 +367,14 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        poolManager.addStrategyManager(tradingStrategyManager);
+        poolManager.addStrategyManager(allocationStrategyManager);
 
         assertEq(poolManager.strategyListLength(), 2);
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
-        assertEq(poolManager.strategyList(1),      tradingStrategyManager);
+        assertEq(poolManager.strategyList(1),      allocationStrategyManager);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: true
         });
     }
@@ -390,11 +390,11 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
 
         ( address fundingPool, address fundingPoolManager ) = _createPoolSharingStrategy({
             delegateLabel_:   "fundingPoolDelegate",
-            strategyManager_: tradingStrategyManager
+            strategyManager_: allocationStrategyManager
         });
 
         vm.prank(strategyDelegate);
-        IStrategyManager(tradingStrategyManager).setStrategyLiquidityCap(type(uint256).max);
+        IStrategyManager(allocationStrategyManager).setStrategyLiquidityCap(type(uint256).max);
 
         deposit({
             pool_:    fundingPool,
@@ -404,7 +404,7 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
 
         fundStrategyManager({
             poolManager_:     fundingPoolManager,
-            strategyManager_: tradingStrategyManager,
+            strategyManager_: allocationStrategyManager,
             assetsIn_:        fundAssets
         });
 
@@ -413,13 +413,13 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         assertSharedFundedSystemState({
-            targetPool:                targetPool,
-            targetPoolManager:         targetPoolManager,
-            fundingPool:               fundingPool,
-            fundingPoolManager:        fundingPoolManager,
-            existingLegacyStrategy:    existingLegacyStrategy,
-            fundAssets:                fundAssets,
-            strategyManagerAdded:      false
+            targetPool:             targetPool,
+            targetPoolManager:      targetPoolManager,
+            fundingPool:            fundingPool,
+            fundingPoolManager:     fundingPoolManager,
+            existingLegacyStrategy: existingLegacyStrategy,
+            fundAssets:             fundAssets,
+            strategyManagerAdded:   false
         });
 
         /**********************************************************************************************************************************/
@@ -427,16 +427,16 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
-        IPoolManager(targetPoolManager).addStrategyManager(tradingStrategyManager);
+        IPoolManager(targetPoolManager).addStrategyManager(allocationStrategyManager);
 
         assertSharedFundedSystemState({
-            targetPool:                targetPool,
-            targetPoolManager:         targetPoolManager,
-            fundingPool:               fundingPool,
-            fundingPoolManager:        fundingPoolManager,
-            existingLegacyStrategy:    existingLegacyStrategy,
-            fundAssets:                fundAssets,
-            strategyManagerAdded:      true
+            targetPool:             targetPool,
+            targetPoolManager:      targetPoolManager,
+            fundingPool:            fundingPool,
+            fundingPoolManager:     fundingPoolManager,
+            existingLegacyStrategy: existingLegacyStrategy,
+            fundAssets:             fundAssets,
+            strategyManagerAdded:   true
         });
     }
 
@@ -460,12 +460,12 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         /**********************************************************************************************************************************/
 
         assertBootstrapSystemState({
-            strategyManager:           bootstrapStrategyManager,
-            underlyingStrategy:        bootstrapUnderlyingStrategy,
-            strategyDelegate_:         bootstrapStrategyDelegate,
-            existingLegacyStrategy:    existingLegacyStrategy,
-            bootstrapMint:             bootstrapMint,
-            strategyManagerAdded:      false
+            strategyManager:        bootstrapStrategyManager,
+            underlyingStrategy:     bootstrapUnderlyingStrategy,
+            strategyDelegate_:      bootstrapStrategyDelegate,
+            existingLegacyStrategy: existingLegacyStrategy,
+            bootstrapMint:          bootstrapMint,
+            strategyManagerAdded:   false
         });
 
         /**********************************************************************************************************************************/
@@ -476,12 +476,12 @@ contract AddStrategyManagerTradingStrategyTests is AddStrategyManagerTestBase {
         poolManager.addStrategyManager(bootstrapStrategyManager);
 
         assertBootstrapSystemState({
-            strategyManager:           bootstrapStrategyManager,
-            underlyingStrategy:        bootstrapUnderlyingStrategy,
-            strategyDelegate_:         bootstrapStrategyDelegate,
-            existingLegacyStrategy:    existingLegacyStrategy,
-            bootstrapMint:             bootstrapMint,
-            strategyManagerAdded:      true
+            strategyManager:        bootstrapStrategyManager,
+            underlyingStrategy:     bootstrapUnderlyingStrategy,
+            strategyDelegate_:      bootstrapStrategyDelegate,
+            existingLegacyStrategy: existingLegacyStrategy,
+            bootstrapMint:          bootstrapMint,
+            strategyManagerAdded:   true
         });
     }
 
@@ -499,33 +499,33 @@ contract AddStrategyManagerGovernorTimelockTests is AddStrategyManagerTestBase {
         uint256 initialProposalId      = governorTimelock.latestProposalId();
         address existingLegacyStrategy = poolManager.strategyList(0);
 
-        IStrategyManager strategyManagerContract = IStrategyManager(tradingStrategyManager);
+        IStrategyManager strategyManagerContract = IStrategyManager(allocationStrategyManager);
 
         address[] memory targets = new address[](1);
         bytes[]   memory data    = new bytes[](1);
 
         targets[0] = address(poolManager);
-        data[0]    = abi.encodeWithSignature("addStrategyManager(address)", tradingStrategyManager);
+        data[0]    = abi.encodeWithSignature("addStrategyManager(address)", allocationStrategyManager);
 
         /**********************************************************************************************************************************/
         /*** Assert the configured pool manager baseline state                                                                          ***/
         /**********************************************************************************************************************************/
 
-        assertEq(poolManager.configured(),                          true);
-        assertEq(poolManager.globals(),                             address(globals));
-        assertEq(poolManager.pool(),                                address(pool));
-        assertEq(poolManager.asset(),                               address(fundsAsset));
-        assertEq(poolManager.strategyCapOf(tradingStrategyManager), 0);
+        assertEq(poolManager.configured(),                             true);
+        assertEq(poolManager.globals(),                                address(globals));
+        assertEq(poolManager.pool(),                                   address(pool));
+        assertEq(poolManager.asset(),                                  address(fundsAsset));
+        assertEq(poolManager.strategyCapOf(allocationStrategyManager), 0);
 
         assertEq(strategyManagerContract.active(),                               true);
         assertEq(strategyManagerContract.configured(),                           true);
         assertEq(strategyManagerContract.poolManagerCapOf(address(poolManager)), 0);
         assertEq(strategyManagerContract.strategyDelegate(),                     strategyDelegate);
         assertEq(strategyManagerContract.strategyLiquidityCap(),                 0);
-        assertEq(strategyManagerContract.underlyingStrategy(),                   tradingUnderlyingStrategy);
+        assertEq(strategyManagerContract.underlyingStrategy(),                   allocationUnderlyingStrategy);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: false
         });
 
@@ -575,7 +575,7 @@ contract AddStrategyManagerGovernorTimelockTests is AddStrategyManagerTestBase {
         assertEq(governorTimelock.isExecutable(proposalId), false);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: false
         });
 
@@ -597,7 +597,7 @@ contract AddStrategyManagerGovernorTimelockTests is AddStrategyManagerTestBase {
         assertEq(governorTimelock.isExecutable(proposalId), true);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: false
         });
 
@@ -623,27 +623,27 @@ contract AddStrategyManagerGovernorTimelockTests is AddStrategyManagerTestBase {
 
         assertEq(governorTimelock.isExecutable(proposalId), false);
 
-        assertEq(poolManager.configured(),                          true);
-        assertEq(poolManager.globals(),                             address(globals));
-        assertEq(poolManager.pool(),                                address(pool));
-        assertEq(poolManager.asset(),                               address(fundsAsset));
-        assertEq(poolManager.strategyCapOf(tradingStrategyManager), 0);
+        assertEq(poolManager.configured(),                             true);
+        assertEq(poolManager.globals(),                                address(globals));
+        assertEq(poolManager.pool(),                                   address(pool));
+        assertEq(poolManager.asset(),                                  address(fundsAsset));
+        assertEq(poolManager.strategyCapOf(allocationStrategyManager), 0);
 
         assertEq(strategyManagerContract.active(),                               true);
         assertEq(strategyManagerContract.configured(),                           true);
         assertEq(strategyManagerContract.poolManagerCapOf(address(poolManager)), 0);
         assertEq(strategyManagerContract.strategyDelegate(),                     strategyDelegate);
         assertEq(strategyManagerContract.strategyLiquidityCap(),                 0);
-        assertEq(strategyManagerContract.underlyingStrategy(),                   tradingUnderlyingStrategy);
+        assertEq(strategyManagerContract.underlyingStrategy(),                   allocationUnderlyingStrategy);
 
         assertEmptyStrategyManager({
-            strategyManager:      tradingStrategyManager,
+            strategyManager:      allocationStrategyManager,
             strategyManagerAdded: true
         });
 
         assertEq(poolManager.strategyListLength(), 2);
         assertEq(poolManager.strategyList(0),      existingLegacyStrategy);
-        assertEq(poolManager.strategyList(1),      tradingStrategyManager);
+        assertEq(poolManager.strategyList(1),      allocationStrategyManager);
 
         assertPoolState({
             pool:               address(pool),

@@ -2,13 +2,13 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     IMapleProxyFactory,
     IPool,
-    IStrategyManager,
-    ITradingStrategy
+    IStrategyManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TradingStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
+import { AllocationStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -23,16 +23,16 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         uint256 fundAssets     = 1_000e6;
         uint256 expectedShares = fundAssets;
 
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
             yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         /**********************************************************************************************************************************/
         /*** Attacker donates to the predicted underlying strategy address before deployment                                            ***/
@@ -58,14 +58,14 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_),    true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(underlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_),       true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(underlyingStrategy_), true);
 
         assertEq(IStrategyManager(strategyManager_).configured(), true);
         assertEq(IStrategyManager(strategyManager_).active(),     true);
 
-        assertTradingStrategy({
-            tradingStrategy:       underlyingStrategy_,
+        assertAllocationStrategy({
+            allocationStrategy:    underlyingStrategy_,
             assetsUnderManagement: donationAssets,
             availableToWithdraw:   donationAssets,
             totalDeployedAssets:   0,
@@ -97,8 +97,8 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
             availableLiquidity: POOL_LIQUIDITY - fundAssets
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       underlyingStrategy_,
+        assertAllocationStrategy({
+            allocationStrategy:    underlyingStrategy_,
             assetsUnderManagement: donationAssets + fundAssets,
             availableToWithdraw:   donationAssets + fundAssets,
             totalDeployedAssets:   0,
@@ -130,16 +130,16 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         uint256 fundAssets     = (bootstrapMint + donationAssets) / 4;
         uint256 expectedShares = bootstrapMint / 4;
 
-        bytes memory data = abi.encode(TradingStrategyInitializerParams({
+        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
             yieldCap:                type(uint256).max
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, tradingStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         /**********************************************************************************************************************************/
         /*** Attacker donates to the predicted underlying strategy address before deployment                                            ***/
@@ -165,14 +165,14 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_),    true);
-        assertEq(IMapleProxyFactory(tradingStrategyFactory).isInstance(underlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_),       true);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(underlyingStrategy_), true);
 
         assertEq(IStrategyManager(strategyManager_).configured(), true);
         assertEq(IStrategyManager(strategyManager_).active(),     true);
 
-        assertTradingStrategy({
-            tradingStrategy:       underlyingStrategy_,
+        assertAllocationStrategy({
+            allocationStrategy:    underlyingStrategy_,
             assetsUnderManagement: donationAssets + bootstrapMint,
             availableToWithdraw:   donationAssets + bootstrapMint,
             totalDeployedAssets:   0,
@@ -213,8 +213,8 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
             availableLiquidity: POOL_LIQUIDITY - fundAssets
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       underlyingStrategy_,
+        assertAllocationStrategy({
+            allocationStrategy:    underlyingStrategy_,
             assetsUnderManagement: donationAssets + bootstrapMint + fundAssets,
             availableToWithdraw:   donationAssets + bootstrapMint + fundAssets,
             totalDeployedAssets:   0,
@@ -339,10 +339,10 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
         /**********************************************************************************************************************************/
 
         vm.prank(delegateA);
-        ITradingStrategy(noBootstrapStrategy).impair(impairment);
+        IAllocationStrategy(noBootstrapStrategy).impair(impairment);
 
         vm.prank(delegateB);
-        ITradingStrategy(bootstrapStrategy).impair(impairment);
+        IAllocationStrategy(bootstrapStrategy).impair(impairment);
 
         assertStrategyManager({
             strategyManager:       noBootstrapManager,
@@ -530,10 +530,10 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
         /**********************************************************************************************************************************/
 
         vm.prank(delegateA);
-        ITradingStrategy(noBootstrapStrategy).impair(impairment);
+        IAllocationStrategy(noBootstrapStrategy).impair(impairment);
 
         vm.prank(delegateB);
-        ITradingStrategy(bootstrapStrategy).impair(impairment);
+        IAllocationStrategy(bootstrapStrategy).impair(impairment);
 
         assertStrategyManager({
             strategyManager:       noBootstrapManager,

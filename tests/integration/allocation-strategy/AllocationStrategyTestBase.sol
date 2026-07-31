@@ -3,17 +3,17 @@ pragma solidity ^0.8.7;
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
-contract TradingStrategyTestBase is TestBaseWithAssertions {
+contract AllocationStrategyTestBase is TestBaseWithAssertions {
 
     uint256 constant INITIAL_LIQUIDITY = 1_000_000e6;
 
-    address lp     = makeAddr("lp");
-    address trader = makeAddr("trader");
+    address lp            = makeAddr("lp");
+    address managedWallet = makeAddr("managedWallet");
 
     function setUp() public virtual override {
         super.setUp();
 
-        ( tradingStrategyManager, tradingUnderlyingStrategy ) = _deployAllocationStrategy({
+        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -22,11 +22,11 @@ contract TradingStrategyTestBase is TestBaseWithAssertions {
             bootstrapMint_:           0
         });
 
-        addStrategyManagerToPool(address(poolManager), tradingStrategyManager);
+        addStrategyManagerToPool(address(poolManager), allocationStrategyManager);
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  trader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   managedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,

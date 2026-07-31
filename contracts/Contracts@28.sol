@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import { MapleAllocationStrategy as MAS }         from "../modules/allocation-strategy/contracts/MapleAllocationStrategy.sol";
+import { MapleAllocationStrategyFactory as MASF } from "../modules/allocation-strategy/contracts/MapleAllocationStrategyFactory.sol";
+
+import { MapleAllocationStrategyInitializer as MASI }
+    from "../modules/allocation-strategy/contracts/MapleAllocationStrategyInitializer.sol";
+
 import { MapleAaveV3Strategy as MAV3S }             from "../modules/defi-strategies/contracts/aaveV3/MapleAaveV3Strategy.sol";
 import { MapleAaveV3StrategyFactory as MAV3SF }     from "../modules/defi-strategies/contracts/aaveV3/MapleAaveV3StrategyFactory.sol";
 import { MapleAaveV3StrategyInitializer as MAV3SI } from "../modules/defi-strategies/contracts/aaveV3/MapleAaveV3StrategyInitializer.sol";
@@ -21,16 +27,22 @@ import { MapleStrategyManager as MSM }              from "../modules/strategy-ma
 import { MapleStrategyManagerFactory as MSMF }      from "../modules/strategy-manager/contracts/MapleStrategyManagerFactory.sol";
 import { MapleStrategyManagerInitializer as MSMI }  from "../modules/strategy-manager/contracts/MapleStrategyManagerInitializer.sol";
 
-import { MapleTradingStrategy as MTS }             from "../modules/trading-strategy/contracts/MapleTradingStrategy.sol";
-import { MapleTradingStrategyFactory as MTSF }     from "../modules/trading-strategy/contracts/MapleTradingStrategyFactory.sol";
-import { MapleTradingStrategyInitializer as MTSI } from "../modules/trading-strategy/contracts/MapleTradingStrategyInitializer.sol";
-
 import { MapleWithdrawalManager as MWMQ }
     from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
 import { MapleWithdrawalManagerInitializer as MWMQI }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
 import { MapleWithdrawalManagerMigratorV300 as MWMQM }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV300.sol";
+
+contract AllocationStrategy is MAS { }
+
+contract AllocationStrategyFactory is MASF {
+
+    constructor(address globals_) MASF(globals_) { }
+
+}
+
+contract AllocationStrategyInitializer is MASI { }
 
 contract AaveV3Strategy is MAV3S { }
 
@@ -89,16 +101,6 @@ contract StrategyManagerFactory is MSMF {
     constructor(address globals_) MSMF(globals_) { }
 
 }
-
-contract TradingStrategy is MTS { }
-
-contract TradingStrategyFactory is MTSF {
-
-    constructor(address globals_) MTSF(globals_) { }
-
-}
-
-contract TradingStrategyInitializer is MTSI { }
 
 contract SkyStrategy is MSS { }
 

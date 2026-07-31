@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { ITradingStrategy } from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { TradingStrategyTestBase } from "./TradingStrategyTestBase.sol";
+import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
-contract TradingStrategyDeployAssetsFailureTests is TradingStrategyTestBase {
+contract AllocationStrategyDeployAssetsFailureTests is AllocationStrategyTestBase {
 
     uint256 deployAmount     = 400_000e6;
     uint256 initialLiquidity = INITIAL_LIQUIDITY;
@@ -14,62 +14,62 @@ contract TradingStrategyDeployAssetsFailureTests is TradingStrategyTestBase {
         super.setUp();
 
         deposit(lp, initialLiquidity);
-        fundStrategyManager(address(poolManager), tradingStrategyManager, initialLiquidity);
+        fundStrategyManager(address(poolManager), allocationStrategyManager, initialLiquidity);
     }
 
     function test_deployAssets_revert_protocolPaused() external {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(trader);
-        vm.expectRevert("MTS:PAUSED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:PAUSED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 
     function test_deployAssets_revert_contractPaused() external {
         vm.prank(governor);
-        globals.setContractPause(tradingUnderlyingStrategy, true);
+        globals.setContractPause(allocationUnderlyingStrategy, true);
 
-        vm.prank(trader);
-        vm.expectRevert("MTS:PAUSED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:PAUSED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 
-    function test_deployAssets_revert_notTradingAddress() external {
-        address notTrader = makeAddr("notTrader");
+    function test_deployAssets_revert_notManagedWallet() external {
+        address notManagedWallet = makeAddr("notManagedWallet");
 
-        vm.prank(notTrader);
-        vm.expectRevert("MTS:NOT_MAPLE_MANAGED_WALLET");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
+        vm.prank(notManagedWallet);
+        vm.expectRevert("MAS:NOT_MAPLE_MANAGED_WALLET");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 
     function test_deployAssets_revert_notAllowed() external {
-        address restrictedTrader = makeAddr("restrictedTrader");
+        address restrictedManagedWallet = makeAddr("restrictedManagedWallet");
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  restrictedTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   restrictedManagedWallet,
             canDeployAssets_: false,
             canReturnAssets_: true,
             canRealizeYield_: true,
             deploymentCap_:   type(uint256).max
         });
 
-        vm.prank(restrictedTrader);
-        vm.expectRevert("MTS:DA:NOT_ALLOWED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
+        vm.prank(restrictedManagedWallet);
+        vm.expectRevert("MAS:DA:NOT_ALLOWED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 
     function test_deployAssets_revert_zeroAssets() external {
-        vm.prank(trader);
-        vm.expectRevert("MTS:DA:ZERO_ASSETS");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(0, "");
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:DA:ZERO_ASSETS");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(0, "");
     }
 
     function test_deployAssets_revert_insufficientAssets_boundary() external {
-        vm.prank(trader);
-        vm.expectRevert("MTS:DA:INSUFFICIENT_ASSETS");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(initialLiquidity + 1, "");
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:DA:INSUFFICIENT_ASSETS");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(initialLiquidity + 1, "");
     }
 
     function test_deployAssets_revert_insufficientAssets_unvestedYield() external {
@@ -79,79 +79,79 @@ contract TradingStrategyDeployAssetsFailureTests is TradingStrategyTestBase {
         uint256 yieldAssets   = 100_000e6;
         uint256 realizedYield = yieldAssets * elapsedDuration / totalDuration;
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, totalDuration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, totalDuration);
 
         vm.warp(startingTime + elapsedDuration);
-        vm.prank(trader);
-        vm.expectRevert("MTS:DA:INSUFFICIENT_ASSETS");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(initialLiquidity + realizedYield + 1, "");
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:DA:INSUFFICIENT_ASSETS");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(initialLiquidity + realizedYield + 1, "");
     }
 
     function test_deployAssets_revert_capExceeded_zeroCap() external {
-        address zeroCapTrader = makeAddr("zeroCapTrader");
+        address zeroCapManagedWallet = makeAddr("zeroCapManagedWallet");
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  zeroCapTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   zeroCapManagedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
             deploymentCap_:   0
         });
 
-        vm.prank(zeroCapTrader);
-        vm.expectRevert("MTS:DA:CAP_EXCEEDED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(1, "");
+        vm.prank(zeroCapManagedWallet);
+        vm.expectRevert("MAS:DA:CAP_EXCEEDED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(1, "");
     }
 
     function test_deployAssets_revert_capExceeded_boundary() external {
-        address cappedTrader = makeAddr("cappedTrader");
+        address cappedManagedWallet = makeAddr("cappedManagedWallet");
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  cappedTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   cappedManagedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
             deploymentCap_:   deployAmount - 1
         });
 
-        vm.prank(cappedTrader);
-        vm.expectRevert("MTS:DA:CAP_EXCEEDED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
+        vm.prank(cappedManagedWallet);
+        vm.expectRevert("MAS:DA:CAP_EXCEEDED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 
     function test_deployAssets_revert_capExceeded_withPriorDeployment() external {
-        address cappedTrader = makeAddr("cappedTrader");
+        address cappedManagedWallet = makeAddr("cappedManagedWallet");
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  cappedTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   cappedManagedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
             deploymentCap_:   deployAmount
         });
 
-        vm.prank(cappedTrader);
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount - 1, "");
+        vm.prank(cappedManagedWallet);
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount - 1, "");
 
-        vm.prank(cappedTrader);
-        vm.expectRevert("MTS:DA:CAP_EXCEEDED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(2, "");
+        vm.prank(cappedManagedWallet);
+        vm.expectRevert("MAS:DA:CAP_EXCEEDED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(2, "");
     }
 
     function test_deployAssets_revert_transferFailed() external {
-        fundsAsset.__failWhenCalledBy(tradingUnderlyingStrategy);
+        fundsAsset.__failWhenCalledBy(allocationUnderlyingStrategy);
 
-        vm.prank(trader);
-        vm.expectRevert("MTS:DA:TRANSFER_FAILED");
-        ITradingStrategy(tradingUnderlyingStrategy).deployAssets(deployAmount, "");
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:DA:TRANSFER_FAILED");
+        IAllocationStrategy(allocationUnderlyingStrategy).deployAssets(deployAmount, "");
     }
 
 }
 
-contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
+contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBase {
 
     uint256 initialLiquidity = INITIAL_LIQUIDITY;
 
@@ -160,7 +160,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         // Fund pool and strategy.
         deposit(lp, initialLiquidity);
-        fundStrategyManager(address(poolManager), tradingStrategyManager, initialLiquidity);
+        fundStrategyManager(address(poolManager), allocationStrategyManager, initialLiquidity);
 
         // Initial assertions.
         assertPoolState({
@@ -172,7 +172,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -181,7 +181,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -189,16 +189,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: 0,
             yieldStart:           0,
             yieldDeadline:        0,
@@ -206,16 +206,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
     }
 
     function test_deployAssets_success_partialAmount() external {
         uint256 deployAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -226,7 +226,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -235,7 +235,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -243,22 +243,22 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployAmount);
     }
 
     function test_deployAssets_success_fullAvailableAmount() external {
-        deployAssets(tradingUnderlyingStrategy, trader, initialLiquidity);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, initialLiquidity);
 
         assertPoolState({
             pool:               address(pool),
@@ -269,7 +269,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -278,7 +278,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -286,27 +286,27 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   0,
             totalDeployedAssets:   initialLiquidity,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), initialLiquidity);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialLiquidity);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(trader),                    initialLiquidity);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), 0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialLiquidity);
     }
 
     function test_deployAssets_success_exactDeploymentCapBoundary() external {
-        address cappedTrader = makeAddr("cappedTrader");
-        uint256 deployAmount = 400_000e6;
+        address cappedManagedWallet = makeAddr("cappedManagedWallet");
+        uint256 deployAmount        = 400_000e6;
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  cappedTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   cappedManagedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
@@ -317,7 +317,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         /*** Deploy exactly up to the deployment cap                                                                                    ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, cappedTrader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, cappedManagedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -328,7 +328,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -337,7 +337,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -345,18 +345,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount);
     }
 
     function test_deployAssets_success_multipleDeploymentsAccumulate() external {
@@ -367,7 +367,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 firstAmount = 250_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, firstAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, firstAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -378,7 +378,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -387,7 +387,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -395,18 +395,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - firstAmount,
             totalDeployedAssets:   firstAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), firstAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), firstAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Second deployment accumulates on top of the first                                                                  ***/
@@ -414,7 +414,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 secondAmount = 150_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, secondAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, secondAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -425,7 +425,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -434,7 +434,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -442,26 +442,26 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - firstAmount - secondAmount,
             totalDeployedAssets:   firstAmount + secondAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), firstAmount + secondAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), firstAmount + secondAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount - secondAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount + secondAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount - secondAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount + secondAmount);
     }
 
-    function test_deployAssets_success_multipleTradingAddresses() external {
-        address trader2 = makeAddr("trader2");
+    function test_deployAssets_success_multipleManagedWalletAddresses() external {
+        address managedWallet2 = makeAddr("managedWallet2");
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  trader2,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   managedWallet2,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
@@ -469,12 +469,12 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 1: First trading address deploys its share                                                                            ***/
+        /*** Step 1: First wallet address deploys its share                                                                             ***/
         /**********************************************************************************************************************************/
 
         uint256 firstAmount = 300_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, firstAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, firstAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -485,7 +485,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -494,7 +494,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -502,28 +502,28 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - firstAmount,
             totalDeployedAssets:   firstAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader),  firstAmount);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader2), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet),  firstAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet2), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount);
-        assertEq(fundsAsset.balanceOf(trader2),                   0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet2),               0);
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Second trading address deploys independently, accounted for separately from the first                              ***/
+        /*** Step 2: Second wallet address deploys independently, accounted for separately from the first                               ***/
         /**********************************************************************************************************************************/
 
         uint256 secondAmount = 120_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader2, secondAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet2, secondAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -534,7 +534,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -543,7 +543,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -551,29 +551,29 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - firstAmount - secondAmount,
             totalDeployedAssets:   firstAmount + secondAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader),  firstAmount);
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader2), secondAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet),  firstAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet2), secondAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount - secondAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount);
-        assertEq(fundsAsset.balanceOf(trader2),                   secondAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount - secondAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet2),               secondAmount);
     }
 
     function test_deployAssets_success_afterReturnAssetsFreesCap() external {
-        address cappedTrader = makeAddr("cappedTrader");
-        uint256 deployAmount = 400_000e6;
+        address cappedManagedWallet = makeAddr("cappedManagedWallet");
+        uint256 deployAmount        = 400_000e6;
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  cappedTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   cappedManagedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
@@ -584,7 +584,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Deploy up to the full deployment cap                                                                               ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, cappedTrader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, cappedManagedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -595,7 +595,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -604,7 +604,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -612,18 +612,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Return part of the deployed assets, freeing up cap headroom                                                        ***/
@@ -631,7 +631,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 returnAmount = 100_000e6;
 
-        returnAssets(tradingUnderlyingStrategy, cappedTrader, cappedTrader, returnAmount);
+        returnAssets(allocationUnderlyingStrategy, cappedManagedWallet, cappedManagedWallet, returnAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -642,7 +642,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -651,7 +651,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -659,24 +659,24 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount + returnAmount,
             totalDeployedAssets:   deployAmount - returnAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount - returnAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount - returnAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount + returnAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount + returnAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy again, reusing the freed-up cap headroom                                                                    ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, cappedTrader, returnAmount);
+        deployAssets(allocationUnderlyingStrategy, cappedManagedWallet, returnAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -687,7 +687,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -696,7 +696,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -704,27 +704,27 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount + returnAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount + returnAmount);
     }
 
     function test_deployAssets_success_afterLossRecognitionFreesCap() external {
-        address cappedTrader = makeAddr("cappedTrader");
-        uint256 deployAmount = 400_000e6;
+        address cappedManagedWallet = makeAddr("cappedManagedWallet");
+        uint256 deployAmount        = 400_000e6;
 
-        setTradingAddress({
-            strategy_:        tradingUnderlyingStrategy,
-            tradingAddress_:  cappedTrader,
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   cappedManagedWallet,
             canDeployAssets_: true,
             canReturnAssets_: true,
             canRealizeYield_: true,
@@ -735,7 +735,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         /*** Step 1: Deploy up to the full deployment cap                                                                               ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, cappedTrader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, cappedManagedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -746,7 +746,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -755,7 +755,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -763,18 +763,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Recognize a loss on the deployed assets, freeing up cap headroom                                                   ***/
@@ -782,7 +782,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 lossAmount = 100_000e6;
 
-        recognizeLoss(tradingUnderlyingStrategy, cappedTrader, lossAmount);
+        recognizeLoss(allocationUnderlyingStrategy, cappedManagedWallet, lossAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -793,7 +793,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity - lossAmount,
@@ -802,7 +802,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity - lossAmount,
             shares:           initialLiquidity,
@@ -810,24 +810,24 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity - lossAmount,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount - lossAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount - lossAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount - lossAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy again, reusing the freed-up cap headroom                                                                    ***/
         /**********************************************************************************************************************************/
 
-        deployAssets(tradingUnderlyingStrategy, cappedTrader, lossAmount);
+        deployAssets(allocationUnderlyingStrategy, cappedManagedWallet, lossAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -838,7 +838,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity - lossAmount,
@@ -847,7 +847,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity - lossAmount,
             shares:           initialLiquidity,
@@ -855,18 +855,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity - lossAmount,
             availableToWithdraw:   initialLiquidity - deployAmount - lossAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(cappedTrader), deployAmount - lossAmount + lossAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount - lossAmount + lossAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount - lossAmount);
-        assertEq(fundsAsset.balanceOf(cappedTrader),              deployAmount + lossAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount - lossAmount);
+        assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount + lossAmount);
     }
 
     function test_deployAssets_success_scheduledYield() external {
@@ -879,7 +879,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint32 duration = 10 days;
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, duration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, duration);
 
         assertPoolState({
             pool:               address(pool),
@@ -890,7 +890,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -899,7 +899,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -907,16 +907,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -924,10 +924,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Deploy assets                                                                                                      ***/
@@ -935,7 +935,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 deployAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -946,7 +946,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -955,7 +955,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -963,16 +963,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + duration,
@@ -980,10 +980,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployAmount);
     }
 
     function test_deployAssets_success_partiallyRealizedYield() external {
@@ -999,7 +999,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 realizedYield = yieldAssets * elapsedDuration / totalDuration;
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, totalDuration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, totalDuration);
 
         assertPoolState({
             pool:               address(pool),
@@ -1010,7 +1010,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -1019,7 +1019,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -1027,16 +1027,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1044,10 +1044,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Wait for partial accrual                                                                                           ***/
@@ -1064,7 +1064,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity + realizedYield,
@@ -1073,7 +1073,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity + realizedYield,
             shares:           initialLiquidity,
@@ -1081,16 +1081,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + realizedYield,
             availableToWithdraw:   initialLiquidity + realizedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1098,10 +1098,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        realizedYield
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy assets                                                                                                      ***/
@@ -1109,7 +1109,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 deployAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1120,7 +1120,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity + realizedYield,
@@ -1129,7 +1129,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity + realizedYield,
             shares:           initialLiquidity,
@@ -1137,16 +1137,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + realizedYield,
             availableToWithdraw:   initialLiquidity + realizedYield - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1154,10 +1154,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        realizedYield
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployAmount);
     }
 
     function test_deployAssets_success_fullyRealizedYield() external {
@@ -1170,7 +1170,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint32 totalDuration = 10 days;
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, totalDuration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, totalDuration);
 
         assertPoolState({
             pool:               address(pool),
@@ -1181,7 +1181,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -1190,7 +1190,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -1198,16 +1198,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1215,10 +1215,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Wait until full accrual                                                                                            ***/
@@ -1235,7 +1235,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity + yieldAssets,
@@ -1244,7 +1244,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity + yieldAssets,
             shares:           initialLiquidity,
@@ -1252,16 +1252,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + yieldAssets,
             availableToWithdraw:   initialLiquidity + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1269,10 +1269,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        yieldAssets
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy assets                                                                                                      ***/
@@ -1280,7 +1280,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 deployAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1291,7 +1291,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity + yieldAssets,
@@ -1300,7 +1300,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity + yieldAssets,
             shares:           initialLiquidity,
@@ -1308,16 +1308,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + yieldAssets,
             availableToWithdraw:   initialLiquidity + yieldAssets - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1325,10 +1325,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        yieldAssets
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployAmount);
     }
 
     function test_deployAssets_success_pastYieldDeadline() external {
@@ -1342,7 +1342,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         uint32 totalDuration    = 10 days;
         uint32 timePastDeadline = 3 days;
 
-        realizeYield(tradingUnderlyingStrategy, trader, yieldAssets, totalDuration);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, totalDuration);
 
         assertPoolState({
             pool:               address(pool),
@@ -1353,7 +1353,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -1362,7 +1362,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -1370,16 +1370,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1387,10 +1387,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Wait past full accrual                                                                                             ***/
@@ -1407,7 +1407,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity + yieldAssets,
@@ -1416,7 +1416,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity + yieldAssets,
             shares:           initialLiquidity,
@@ -1424,16 +1424,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + yieldAssets,
             availableToWithdraw:   initialLiquidity + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1441,10 +1441,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        yieldAssets
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets);
-        assertEq(fundsAsset.balanceOf(trader),                    0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                0);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy assets                                                                                                      ***/
@@ -1452,7 +1452,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 deployAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1463,7 +1463,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity + yieldAssets,
@@ -1472,7 +1472,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity + yieldAssets,
             shares:           initialLiquidity,
@@ -1480,16 +1480,16 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + yieldAssets,
             availableToWithdraw:   initialLiquidity + yieldAssets - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      0
         });
 
-        assertTradingStrategyYield({
-            tradingStrategy:      tradingUnderlyingStrategy,
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
             scheduledYieldAssets: yieldAssets,
             yieldStart:           startingTime,
             yieldDeadline:        startingTime + totalDuration,
@@ -1497,10 +1497,10 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             realizedYield:        yieldAssets
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity + yieldAssets - deployAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployAmount);
     }
 
     function test_deployAssets_success_impairment() external {
@@ -1511,7 +1511,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 impairAmount = 250_000e6;
 
-        impairTradingStrategy(tradingUnderlyingStrategy, impairAmount);
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1522,7 +1522,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -1531,7 +1531,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -1539,8 +1539,8 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: impairAmount
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
             totalDeployedAssets:   0,
@@ -1553,7 +1553,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 deployAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, deployAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, deployAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1564,7 +1564,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -1573,7 +1573,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -1581,18 +1581,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: impairAmount
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - deployAmount,
             totalDeployedAssets:   deployAmount,
             unrealizedLosses:      impairAmount
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), deployAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), deployAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - deployAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    deployAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                deployAmount);
     }
 
     function test_deployAssets_success_afterLossRecognition() external {
@@ -1603,7 +1603,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 firstAmount = 400_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, firstAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, firstAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1614,7 +1614,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity,
@@ -1623,7 +1623,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity,
             shares:           initialLiquidity,
@@ -1631,18 +1631,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - firstAmount,
             totalDeployedAssets:   firstAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), firstAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), firstAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Recognize a loss on the deployed assets                                                                            ***/
@@ -1650,7 +1650,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 lossAmount = 150_000e6;
 
-        recognizeLoss(tradingUnderlyingStrategy, trader, lossAmount);
+        recognizeLoss(allocationUnderlyingStrategy, managedWallet, lossAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1661,7 +1661,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity - lossAmount,
@@ -1670,7 +1670,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity - lossAmount,
             shares:           initialLiquidity,
@@ -1678,18 +1678,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity - lossAmount,
             availableToWithdraw:   initialLiquidity - firstAmount,
             totalDeployedAssets:   firstAmount - lossAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), firstAmount - lossAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), firstAmount - lossAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Deploy again after the loss has been recognized                                                                    ***/
@@ -1697,7 +1697,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
 
         uint256 secondAmount = 100_000e6;
 
-        deployAssets(tradingUnderlyingStrategy, trader, secondAmount);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, secondAmount);
 
         assertPoolState({
             pool:               address(pool),
@@ -1708,7 +1708,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManager({
-            strategyManager:       tradingStrategyManager,
+            strategyManager:       allocationStrategyManager,
             totalShares:           initialLiquidity,
             totalPendingShares:    0,
             assetsUnderManagement: initialLiquidity - lossAmount,
@@ -1717,7 +1717,7 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  tradingStrategyManager,
+            strategyManager:  allocationStrategyManager,
             poolManager:      address(poolManager),
             assets:           initialLiquidity - lossAmount,
             shares:           initialLiquidity,
@@ -1725,18 +1725,18 @@ contract TradingStrategyDeployAssetsSuccessTests is TradingStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertTradingStrategy({
-            tradingStrategy:       tradingUnderlyingStrategy,
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity - lossAmount,
             availableToWithdraw:   initialLiquidity - firstAmount - secondAmount,
             totalDeployedAssets:   firstAmount - lossAmount + secondAmount,
             unrealizedLosses:      0
         });
 
-        assertEq(ITradingStrategy(tradingUnderlyingStrategy).deployedAssetsOf(trader), firstAmount - lossAmount + secondAmount);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), firstAmount - lossAmount + secondAmount);
 
-        assertEq(fundsAsset.balanceOf(tradingUnderlyingStrategy), initialLiquidity - firstAmount - secondAmount);
-        assertEq(fundsAsset.balanceOf(trader),                    firstAmount + secondAmount);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - firstAmount - secondAmount);
+        assertEq(fundsAsset.balanceOf(managedWallet),                firstAmount + secondAmount);
     }
 
 }

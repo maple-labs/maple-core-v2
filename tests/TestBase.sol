@@ -25,13 +25,13 @@ import {
 } from "../contracts/interfaces/Interfaces.sol";
 
 import {
+    AllocationStrategyInitializerParams,
     AaveV3StrategyInitializerParams,
     PoolConfigParams,
     PoolManagerInitParams,
     StrategyDeployParams,
     StrategyManagerParams,
-    SkyStrategyInitializerParams,
-    TradingStrategyInitializerParams
+    SkyStrategyInitializerParams
 } from "../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
@@ -91,7 +91,7 @@ contract TestBase is ProtocolActions, Utils {
     address skyStrategyFactory;
     address bitcoinStrategyFactory;
     address strategyManagerFactory;
-    address tradingStrategyFactory;
+    address allocationStrategyFactory;
 
     address aaveV3StrategyImplementation;
     address openTermLoanImplementation;
@@ -102,7 +102,7 @@ contract TestBase is ProtocolActions, Utils {
     address skyStrategyImplementation;
     address bitcoinStrategyImplementation;
     address strategyManagerImplementation;
-    address tradingStrategyImplementation;
+    address allocationStrategyImplementation;
 
     address aaveV3StrategyInitializer;
     address openTermLoanInitializer;
@@ -113,15 +113,15 @@ contract TestBase is ProtocolActions, Utils {
     address skyStrategyInitializer;
     address bitcoinStrategyInitializer;
     address strategyManagerInitializer;
-    address tradingStrategyInitializer;
+    address allocationStrategyInitializer;
 
     address aaveV3StrategyManager;
     address skyStrategyManager;
-    address tradingStrategyManager;
+    address allocationStrategyManager;
 
     address aaveV3UnderlyingStrategy;
     address skyUnderlyingStrategy;
-    address tradingUnderlyingStrategy;
+    address allocationUnderlyingStrategy;
 
     address borrowerActions;
     address openTermRefinancer;
@@ -267,9 +267,9 @@ contract TestBase is ProtocolActions, Utils {
     )
         internal returns (address strategyManager_, address underlyingStrategy_)
     {
-        TradingStrategyInitializerParams memory params = TradingStrategyInitializerParams({
+        AllocationStrategyInitializerParams memory params = AllocationStrategyInitializerParams({
             fundsAsset:              fundsAsset_,
-            strategyMetadata:        "Trading Strategy",
+            strategyMetadata:        "Allocation Strategy",
             strategyDelegateFeeRate: strategyDelegateFeeRate_,
             strategyProtocolFeeRate: strategyProtocolFeeRate_,
             yieldCap:                type(uint256).max
@@ -289,7 +289,7 @@ contract TestBase is ProtocolActions, Utils {
 
         ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
             strategyManagerFactory: strategyManagerFactory,
-            strategyFactory:        tradingStrategyFactory,
+            strategyFactory:        allocationStrategyFactory,
             strategyLiquidityCap:   strategyLiquidityCap_,
             strategyDeploymentData: abi.encode(params),
             bootstrapFundingData:   ""
@@ -419,7 +419,7 @@ contract TestBase is ProtocolActions, Utils {
             poolDelegate_:              address(poolDelegate),
             fundsAsset_:                address(compositeAsset),
             strategyFactories_:         strategyFactories_,
-            strategyData_:    additionalCalldata_,
+            strategyData_:              additionalCalldata_,
             name_:                      "Syrup BTC Pool",
             symbol_:                    "syrupBTC",
             liquidityCap_:              type(uint256).max,
@@ -753,18 +753,18 @@ contract TestBase is ProtocolActions, Utils {
         bitcoinStrategyImplementation = deployFromFile("Contracts@25", "BitcoinStrategy");
         bitcoinStrategyInitializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
 
-        aaveV3StrategyFactory         = deployFromFile("Contracts@28", "AaveV3StrategyFactory", abi.encode(address(globals)));
-        skyStrategyFactory            = deployFromFile("Contracts@28", "SkyStrategyFactory", abi.encode(address(globals)));
-        strategyManagerFactory        = deployFromFile("Contracts@28", "StrategyManagerFactory", abi.encode(address(globals)));
-        tradingStrategyFactory        = deployFromFile("Contracts@28", "TradingStrategyFactory", abi.encode(address(globals)));
-        aaveV3StrategyImplementation  = deployFromFile("Contracts@28", "AaveV3Strategy");
-        skyStrategyImplementation     = deployFromFile("Contracts@28", "SkyStrategy");
-        strategyManagerImplementation = deployFromFile("Contracts@28", "StrategyManager");
-        tradingStrategyImplementation = deployFromFile("Contracts@28", "TradingStrategy");
-        aaveV3StrategyInitializer     = deployFromFile("Contracts@28", "AaveV3StrategyInitializer");
-        skyStrategyInitializer        = deployFromFile("Contracts@28", "SkyStrategyInitializer");
-        strategyManagerInitializer    = deployFromFile("Contracts@28", "StrategyManagerInitializer");
-        tradingStrategyInitializer    = deployFromFile("Contracts@28", "TradingStrategyInitializer");
+        aaveV3StrategyFactory            = deployFromFile("Contracts@28", "AaveV3StrategyFactory", abi.encode(address(globals)));
+        skyStrategyFactory               = deployFromFile("Contracts@28", "SkyStrategyFactory", abi.encode(address(globals)));
+        strategyManagerFactory           = deployFromFile("Contracts@28", "StrategyManagerFactory", abi.encode(address(globals)));
+        allocationStrategyFactory        = deployFromFile("Contracts@28", "AllocationStrategyFactory", abi.encode(address(globals)));
+        aaveV3StrategyImplementation     = deployFromFile("Contracts@28", "AaveV3Strategy");
+        skyStrategyImplementation        = deployFromFile("Contracts@28", "SkyStrategy");
+        strategyManagerImplementation    = deployFromFile("Contracts@28", "StrategyManager");
+        allocationStrategyImplementation = deployFromFile("Contracts@28", "AllocationStrategy");
+        aaveV3StrategyInitializer        = deployFromFile("Contracts@28", "AaveV3StrategyInitializer");
+        skyStrategyInitializer           = deployFromFile("Contracts@28", "SkyStrategyInitializer");
+        strategyManagerInitializer       = deployFromFile("Contracts@28", "StrategyManagerInitializer");
+        allocationStrategyInitializer    = deployFromFile("Contracts@28", "AllocationStrategyInitializer");
 
         borrowerActions = deployNTP(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
@@ -794,7 +794,7 @@ contract TestBase is ProtocolActions, Utils {
         globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY",         strategyManagerFactory,         true);
         globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      aaveV3StrategyFactory,          true);
         globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      skyStrategyFactory,             true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      tradingStrategyFactory,         true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      allocationStrategyFactory,      true);
         globals.setValidInstanceOf("COMPOSITE_DEPOSIT_ASSET",          address(depositAsset),          true);
         globals.setValidInstanceOf("COMPOSITE_POOL_ASSET",             compositeTokenProxy,            true);
         globals.setValidInstanceOf("SYRUP_BTC_REDEEMER",               redeemer,                       true);
@@ -802,13 +802,13 @@ contract TestBase is ProtocolActions, Utils {
         globals.setValidInstanceOf("LIQUIDITY_ROUTER",                 address(liquidityRouter),       true);
         globals.setValidInstanceOf("LIQUIDITY_ROUTER_BOT",             liquidityRouterBot,             true);
 
-        globals.setCanDeployFrom(poolManagerFactory,       address(poolDeployer),     true);
-        globals.setCanDeployFrom(queueWMFactory,           address(poolDeployer),     true);
-        globals.setCanDeployFrom(bitcoinStrategyFactory,   address(poolDeployer),     true);
-        globals.setCanDeployFrom(aaveV3StrategyFactory,    address(strategyDeployer), true);
-        globals.setCanDeployFrom(skyStrategyFactory,       address(strategyDeployer), true);
-        globals.setCanDeployFrom(strategyManagerFactory,   address(strategyDeployer), true);
-        globals.setCanDeployFrom(tradingStrategyFactory,   address(strategyDeployer), true);
+        globals.setCanDeployFrom(poolManagerFactory,        address(poolDeployer),     true);
+        globals.setCanDeployFrom(queueWMFactory,            address(poolDeployer),     true);
+        globals.setCanDeployFrom(bitcoinStrategyFactory,    address(poolDeployer),     true);
+        globals.setCanDeployFrom(aaveV3StrategyFactory,     address(strategyDeployer), true);
+        globals.setCanDeployFrom(skyStrategyFactory,        address(strategyDeployer), true);
+        globals.setCanDeployFrom(strategyManagerFactory,    address(strategyDeployer), true);
+        globals.setCanDeployFrom(allocationStrategyFactory, address(strategyDeployer), true);
 
         globals.setValidStrategyDelegate(strategyDelegate, true);
 
@@ -841,8 +841,12 @@ contract TestBase is ProtocolActions, Utils {
         IMapleProxyFactory(strategyManagerFactory).registerImplementation(1, strategyManagerImplementation, strategyManagerInitializer);
         IMapleProxyFactory(strategyManagerFactory).setDefaultVersion(1);
 
-        IMapleProxyFactory(tradingStrategyFactory).registerImplementation(1, tradingStrategyImplementation, tradingStrategyInitializer);
-        IMapleProxyFactory(tradingStrategyFactory).setDefaultVersion(1);
+        IMapleProxyFactory(allocationStrategyFactory).registerImplementation(
+            1,
+            allocationStrategyImplementation,
+            allocationStrategyInitializer
+        );
+        IMapleProxyFactory(allocationStrategyFactory).setDefaultVersion(1);
 
         vm.stopPrank();
 
@@ -869,7 +873,7 @@ contract TestBase is ProtocolActions, Utils {
         poolManager_ = poolDeployer.deployPool({
             poolManagerFactory:       poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams: PoolManagerInitParams({
+            poolManagerInitParams:    PoolManagerInitParams({
                 asset:         fundsAsset_,
                 initialSupply: 0,
                 name:          name_,
@@ -936,7 +940,7 @@ contract TestBase is ProtocolActions, Utils {
         vm.prank(borrower);
         loan = IMapleProxyFactory(openTermLoanFactory).createInstance({
             arguments_: abi.encode(borrower, lender, asset, principal, terms, rates),
-            salt_: "SALT"
+            salt_:      "SALT"
         });
     }
 
