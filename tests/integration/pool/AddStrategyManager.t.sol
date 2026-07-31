@@ -711,7 +711,11 @@ contract AddStrategyManagerForkTestBase is TestBaseWithAssertions {
 
 contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTestBase {
 
-    function setUp() public override {
+    address aaveToken = AAVE_USDC;
+
+    bool useVirtualUnderlyingBalance = true;
+
+    function setUp() public virtual override {
         forkBlock = AAVE_V3_FORK_BLOCK;
 
         _setUpForkedPool();
@@ -720,8 +724,8 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
     function test_addStrategyManager_new_withoutBootstrapMint() external {
         ( address strategyManager, ) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
-            aaveToken_:                   AAVE_USDC,
-            useVirtualUnderlyingBalance_: true,
+            aaveToken_:                   aaveToken,
+            useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
             strategyDelegateFeeRate_:     0,
             strategyProtocolFeeRate_:     0,
             strategyLiquidityCap_:        0,
@@ -795,8 +799,8 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
 
         ( address strategyManager, ) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
-            aaveToken_:                   AAVE_USDC,
-            useVirtualUnderlyingBalance_: true,
+            aaveToken_:                   aaveToken,
+            useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
             strategyDelegateFeeRate_:     0,
             strategyProtocolFeeRate_:     0,
             strategyLiquidityCap_:        0,
@@ -871,8 +875,8 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
     function test_addStrategyManager_withAssetsFromAnotherPool() external {
         ( address strategyManager, ) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
-            aaveToken_:                   AAVE_USDC,
-            useVirtualUnderlyingBalance_: true,
+            aaveToken_:                   aaveToken,
+            useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
             strategyDelegateFeeRate_:     0,
             strategyProtocolFeeRate_:     0,
             strategyLiquidityCap_:        0,
@@ -905,7 +909,7 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
         uint256 assetsUnderManagement = IStrategyManager(strategyManager).assetsUnderManagement();
         uint256 availableToWithdraw   = IStrategyManager(strategyManager).availableToWithdraw();
 
-        // Aave supply rounding leaves assets under management 1 unit shy of the funded assets.
+        // Supply rounding leaves assets under management within 1 unit of the funded assets on both Aave and SparkLend.
         assertApproxEqAbs(assetsUnderManagement, fundAssets, 1);
 
         assertStrategyRegistration({
@@ -957,6 +961,17 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
             totalAssets:      0,
             unrealizedLosses: 0
         });
+    }
+
+}
+
+contract AddStrategyManagerSparkLendStrategyForkTests is AddStrategyManagerAaveV3StrategyForkTests {
+
+    function setUp() public override {
+        aaveToken                   = SPARK_USDC;
+        useVirtualUnderlyingBalance = false;
+
+        super.setUp();
     }
 
 }
