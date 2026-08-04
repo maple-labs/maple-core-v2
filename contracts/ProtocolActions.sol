@@ -626,6 +626,13 @@ contract ProtocolActions is Runner {
         loanManager_.removeLoanImpairment(loan_);
     }
 
+    function removeStrategyManager(address poolManager_, address strategyManager_) internal {
+        address operationalAdmin_ = IGlobals(IPoolManager(poolManager_).globals()).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IPoolManager(poolManager_).removeStrategyManager(strategyManager_);
+    }
+
     function setDelegateManagementFeeRate(address poolManager_, uint256 rate_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -929,10 +936,10 @@ contract ProtocolActions is Runner {
     }
 
     function impairStrategy(address strategy_, uint256 amount_) internal {
-        address globals_  = IUnderlyingStrategyLike(strategy_).globals();
-        address governor_ = IGlobals(globals_).governor();
+        address globals_          = IUnderlyingStrategyLike(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
 
-        vm.prank(governor_);
+        vm.prank(operationalAdmin_);
         IUnderlyingStrategyLike(strategy_).impair(amount_);
     }
 

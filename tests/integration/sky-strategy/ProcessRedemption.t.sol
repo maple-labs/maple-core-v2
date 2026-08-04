@@ -186,7 +186,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
     uint256 impairmentAmount     = 100_000e6;
     uint256 poolLiquidity        = 1_000_000e6;
     uint256 secondPoolFunding    = 400_000e6;
-    uint256 skyAnnualApy         = 0.065e6;  // Sky Savings Rate compounds to exactly 6.5% over a 365-day warp at the fork block.
+    uint256 skyAnnualApy         = 0.036e6;  // Sky Savings Rate compounds to exactly 3.6% over a 365-day warp at the fork block.
 
     function setUp() public virtual override {
         super.setUp();

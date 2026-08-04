@@ -16,6 +16,7 @@ import {
     IPoolManager,
     IStrategyManager,
     ISkyStrategy,
+    IUnderlyingStrategyLike,
     IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
 
@@ -535,6 +536,19 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IBitcoinStrategy(strategy).accruedFees(),           accruedFees);
         assertEq(IBitcoinStrategy(strategy).outstandingAssets(),     assetsUnderManagement + accruedFees - accruedYield);
         assertEq(IBitcoinStrategy(strategy).impairedAssets(),        impairedAssets);
+    }
+
+    function assertUnderlyingStrategy(
+        address strategy,
+        uint256 assetsUnderManagement,
+        uint256 availableToWithdraw,
+        uint256 unrealizedLosses
+    )
+        internal view
+    {
+        assertEq(IUnderlyingStrategyLike(strategy).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(IUnderlyingStrategyLike(strategy).availableToWithdraw(),   availableToWithdraw);
+        assertEq(IUnderlyingStrategyLike(strategy).unrealizedLosses(),      unrealizedLosses);
     }
 
     function assertUserRequests(address poolManager, address owner, uint256[] memory requestIds) internal view {

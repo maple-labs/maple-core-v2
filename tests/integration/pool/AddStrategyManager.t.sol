@@ -351,7 +351,7 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         /*** Remove the strategy manager                                                                                                 ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(operationalAdmin);
         poolManager.removeStrategyManager(allocationStrategyManager);
 
         assertEq(poolManager.strategyListLength(), 1);
@@ -716,7 +716,7 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
     bool useVirtualUnderlyingBalance = true;
 
     function setUp() public virtual override {
-        forkBlock = AAVE_V3_FORK_BLOCK;
+        forkBlock = MAINNET_FORK_BLOCK;
 
         _setUpForkedPool();
     }

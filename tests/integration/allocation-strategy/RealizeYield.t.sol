@@ -628,8 +628,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, initialShares);
         processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, initialShares);
 
-        vm.prank(governor);
-        poolManager.removeStrategyManager(allocationStrategyManager);
+        removeStrategyManager(address(poolManager), allocationStrategyManager);
 
         assertPoolState({
             pool:               address(pool),

@@ -18,7 +18,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
 
     bool useVirtualUnderlyingBalance = true;
 
-    uint256 forkBlock = AAVE_V3_FORK_BLOCK;
+    uint256 forkBlock = MAINNET_FORK_BLOCK;
 
     function setUp() public virtual override {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), forkBlock);

@@ -55,7 +55,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
     uint256 expectedRoundingLoss = 1;
     uint256 fundAmount           = 500_000e6;
     uint256 poolLiquidity        = 1_000_000e6;
-    uint256 skyAnnualApy         = 0.065e6;
+    uint256 skyAnnualApy         = 0.036e6;  // Sky Savings Rate compounds to exactly 3.6% over a 365-day warp at the fork block.
 
     function setUp() public virtual override {
         super.setUp();

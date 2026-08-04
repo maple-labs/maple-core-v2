@@ -165,6 +165,12 @@ interface IAavePoolLike is IAPL {
 
 }
 
+interface IDefiStrategyLike {
+
+    function recognizeLoss() external;
+
+}
+
 interface IERC20Like {
 
     function allowance(address owner, address spender) external view returns (uint256 allowance);
@@ -407,6 +413,10 @@ interface IPSMLike {
 
 interface IUnderlyingStrategyLike {
 
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
+
     function globals() external view returns (address globals);
 
     function impair(uint256 amount) external;
@@ -418,6 +428,10 @@ interface IUnderlyingStrategyLike {
     function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate) external;
 
     function setStrategyProtocolFeeRate(uint32 strategyProtocolFeeRate) external;
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    function withdrawFromUnderlyingStrategy(address destination, uint256 assets, bytes calldata data) external;
 
 }
 
