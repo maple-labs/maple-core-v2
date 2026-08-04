@@ -55,7 +55,6 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
     uint256 expectedRoundingLoss = 1;
     uint256 fundAmount           = 500_000e6;
     uint256 poolLiquidity        = 1_000_000e6;
-    uint256 skyAnnualApy         = 0.036e6;  // Sky Savings Rate compounds to exactly 3.6% over a 365-day warp at the fork block.
 
     function setUp() public virtual override {
         super.setUp();
@@ -207,7 +206,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedYield = fundAmount * skyAnnualApy / HUNDRED_PERCENT;
+        uint256 expectedYield = fundAmount * SKY_ANNUAL_APY / HUNDRED_PERCENT;
         uint256 expectedAum   = fundAmount - expectedRoundingLoss + expectedYield;
 
         assertPoolState({
@@ -282,7 +281,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedYield = fundAmount * skyAnnualApy / HUNDRED_PERCENT;
+        uint256 expectedYield = fundAmount * SKY_ANNUAL_APY / HUNDRED_PERCENT;
         uint256 expectedAum   = fundAmount - expectedRoundingLoss + expectedYield;
 
         assertPoolState({
@@ -541,7 +540,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 grossYield          = fundAmount * skyAnnualApy / HUNDRED_PERCENT;
+        uint256 grossYield          = fundAmount * SKY_ANNUAL_APY / HUNDRED_PERCENT;
         uint256 expectedDelegateFee = grossYield * delegateFeeRate / HUNDRED_PERCENT;
         uint256 expectedProtocolFee = grossYield * protocolFeeRate / HUNDRED_PERCENT;
         uint256 netAum              = fundedAssets + grossYield - expectedDelegateFee - expectedProtocolFee;
@@ -606,7 +605,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
 
         // Apply one year of Sky yield, then discount the USDS position by the PSM exit fee
         // to calculate AUM before strategy fees.
-        uint256 grossAum = fundAmount * (HUNDRED_PERCENT + skyAnnualApy) * 1e18 / (HUNDRED_PERCENT * (1e18 + tout));
+        uint256 grossAum = fundAmount * (HUNDRED_PERCENT + SKY_ANNUAL_APY) * 1e18 / (HUNDRED_PERCENT * (1e18 + tout));
 
         // Strategy fees accrue on the post-tout increase over the strategy's recorded asset baseline.
         uint256 feeBearingYield     = grossAum - fundedAssets;

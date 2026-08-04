@@ -295,8 +295,7 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
 contract SkyStrategyFundTests is SkyStrategyTestBase {
 
     uint256 poolLiquidity        = 1_000e6;
-    uint256 expectedRoundingLoss = 1;        // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
-    uint256 skyAnnualApy         = 0.036e6;  // Sky Savings Rate compounds to exactly 3.6% over a 365-day warp at the fork block.
+    uint256 expectedRoundingLoss = 1;  // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
 
     function setUp() public virtual override {
         super.setUp();
@@ -778,7 +777,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedGrossYield  = fundAmount         * skyAnnualApy    / HUNDRED_PERCENT;
+        uint256 expectedGrossYield  = fundAmount         * SKY_ANNUAL_APY  / HUNDRED_PERCENT;
         uint256 expectedDelegateFee = expectedGrossYield * delegateFeeRate / HUNDRED_PERCENT;
         uint256 expectedProtocolFee = expectedGrossYield * protocolFeeRate / HUNDRED_PERCENT;
         uint256 expectedNetYield    = expectedGrossYield - expectedDelegateFee - expectedProtocolFee;
@@ -966,7 +965,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         vm.warp(block.timestamp + 365 days);
 
         uint256 expectedPositionValue =
-            (firstPoolFunding + secondPoolFunding) * (HUNDRED_PERCENT + skyAnnualApy) / HUNDRED_PERCENT - expectedRoundingLoss;
+            (firstPoolFunding + secondPoolFunding) * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - expectedRoundingLoss;
 
         uint256 expectedFirstPoolYield  = firstPoolShares  * expectedPositionValue / (firstPoolShares + secondPoolShares) - firstPoolShares;
         uint256 expectedSecondPoolYield =
@@ -1148,7 +1147,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedYield = (fundAmount - toutLoss) * skyAnnualApy / HUNDRED_PERCENT;
+        uint256 expectedYield = (fundAmount - toutLoss) * SKY_ANNUAL_APY / HUNDRED_PERCENT;
 
         assertPoolState({
             pool:               address(pool),

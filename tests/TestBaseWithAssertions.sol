@@ -404,6 +404,19 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(ISkyStrategy(strategy).unrealizedLosses(),                 unrealizedLosses);
     }
 
+    function assertSkyStrategyStorage(
+        address strategy,
+        bool    isLossRecognized,
+        uint256 impairedAssets,
+        uint256 lastRecordedTotalAssets
+    )
+        internal view
+    {
+        assertEq(ISkyStrategy(strategy).isLossRecognized(),        isLossRecognized);
+        assertEq(ISkyStrategy(strategy).impairedAssets(),          impairedAssets);
+        assertEq(ISkyStrategy(strategy).lastRecordedTotalAssets(), lastRecordedTotalAssets);
+    }
+
     function assertAllocationStrategy(
         address allocationStrategy,
         uint256 assetsUnderManagement,

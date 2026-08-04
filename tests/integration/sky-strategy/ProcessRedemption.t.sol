@@ -186,7 +186,6 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
     uint256 impairmentAmount     = 100_000e6;
     uint256 poolLiquidity        = 1_000_000e6;
     uint256 secondPoolFunding    = 400_000e6;
-    uint256 skyAnnualApy         = 0.036e6;  // Sky Savings Rate compounds to exactly 3.6% over a 365-day warp at the fork block.
 
     function setUp() public virtual override {
         super.setUp();
@@ -730,7 +729,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 grossAum = fundAmount * (HUNDRED_PERCENT + skyAnnualApy) / HUNDRED_PERCENT - expectedRoundingLoss;
+        uint256 grossAum = fundAmount * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - expectedRoundingLoss;
 
         uint256 expectedDelegateFee = (grossAum - fundedAssets) * delegateFeeRate / HUNDRED_PERCENT;
         uint256 expectedProtocolFee = (grossAum - fundedAssets) * protocolFeeRate / HUNDRED_PERCENT;
@@ -845,7 +844,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedGrossYield = (fundedAssets + expectedRoundingLoss) * skyAnnualApy / HUNDRED_PERCENT;
+        uint256 expectedGrossYield = (fundedAssets + expectedRoundingLoss) * SKY_ANNUAL_APY / HUNDRED_PERCENT;
 
         uint256 expectedDelegateFee = expectedGrossYield * delegateFeeRate / HUNDRED_PERCENT;
         uint256 expectedProtocolFee = expectedGrossYield * protocolFeeRate / HUNDRED_PERCENT;
@@ -957,7 +956,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedGrossYield = (fundedAssets + expectedRoundingLoss) * skyAnnualApy / HUNDRED_PERCENT;
+        uint256 expectedGrossYield = (fundedAssets + expectedRoundingLoss) * SKY_ANNUAL_APY / HUNDRED_PERCENT;
 
         uint256 expectedDelegateFee = expectedGrossYield * delegateFeeRate / HUNDRED_PERCENT;
         uint256 expectedProtocolFee = expectedGrossYield * protocolFeeRate / HUNDRED_PERCENT;
@@ -1068,7 +1067,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 grossAum = fundAmount * (HUNDRED_PERCENT + skyAnnualApy) / HUNDRED_PERCENT - expectedRoundingLoss;
+        uint256 grossAum = fundAmount * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - expectedRoundingLoss;
 
         uint256 expectedGrossYield  = grossAum - fundedAssets;
         uint256 expectedDelegateFee = expectedGrossYield * delegateFeeRate / HUNDRED_PERCENT;
@@ -1926,7 +1925,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         vm.warp(block.timestamp + 365 days);
 
         uint256 grossAum =
-            (firstPoolFunding + secondPoolFunding) * (HUNDRED_PERCENT + skyAnnualApy) / HUNDRED_PERCENT - expectedRoundingLoss;
+            (firstPoolFunding + secondPoolFunding) * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - expectedRoundingLoss;
 
         uint256 firstAssets  = firstShares  * grossAum / (firstShares + secondShares);
         uint256 secondAssets = secondShares * grossAum / (firstShares + secondShares);
