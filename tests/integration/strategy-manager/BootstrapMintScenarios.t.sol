@@ -3,12 +3,15 @@ pragma solidity ^0.8.7;
 
 import {
     IAllocationStrategy,
+    IERC20Like,
+    IERC4626Like,
+    IMockERC20,
     IMapleProxyFactory,
     IPool,
     IStrategyManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { AllocationStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
+import { SkyStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -18,37 +21,64 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
 
     address lp = makeAddr("lp");
 
+    function setUp() public override {
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), MAINNET_FORK_BLOCK);
+
+        start      = block.timestamp;
+        fundsAsset = IMockERC20(USDC);
+
+        _createAccounts();
+        _createGlobals();
+        _configureGlobals();
+        _createFactories();
+        _createPoolWithOTLM(poolDelegate);
+        _configurePool();
+    }
+
+    function _donateSusdsToStrategy(address strategy_, uint256 donationAssets_) internal {
+        // The extra sub-unit of USDS dust absorbs the sUSDS share rounding so the donation lands on exactly donationAssets_.
+        uint256 donationUsds_ = donationAssets_ * 1e12 + 1e12 - 1;
+
+        deal(USDS, address(this), donationUsds_, true);
+        IERC20Like(USDS).approve(SAVINGS_USDS, donationUsds_);
+        IERC4626Like(SAVINGS_USDS).deposit(donationUsds_, strategy_);
+
+        assertGt(IERC20Like(SAVINGS_USDS).balanceOf(strategy_), 0);
+    }
+
     function test_fundStrategyManager_success_noBootstrapMintWithFrontrunDonation() external {
         uint256 donationAssets = 500_000e6;
         uint256 fundAssets     = 1_000e6;
         uint256 expectedShares = fundAssets;
 
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
+        bytes memory data = abi.encode(SkyStrategyInitializerParams({
             fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
+            psm:                     USDS_LITE_PSM,
+            savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
 
         /**********************************************************************************************************************************/
-        /*** Attacker donates to the predicted underlying strategy address before deployment                                            ***/
+        /*** Attacker donates sUSDS to the predicted underlying strategy address before deployment                                      ***/
         /**********************************************************************************************************************************/
 
-        erc20_mint(address(fundsAsset), expectedUnderlyingStrategy, donationAssets);
-
-        assertEq(fundsAsset.balanceOf(expectedUnderlyingStrategy), donationAssets);
+        _donateSusdsToStrategy(expectedUnderlyingStrategy, donationAssets);
 
         /**********************************************************************************************************************************/
         /*** Deployment without bootstrap mint leaves the donation sitting in the strategy against zero shares                          ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) = _deployAllocationStrategy({
+        ( address strategyManager_, address underlyingStrategy_ ) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
+            savingsUsds_:             SAVINGS_USDS,
+            psm_:                     USDS_LITE_PSM,
             strategyDelegateFeeRate_: 0,
             strategyProtocolFeeRate_: 0,
             strategyLiquidityCap_:    0,
@@ -58,18 +88,16 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_),       true);
-        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(underlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_), true);
+        assertEq(IMapleProxyFactory(skyStrategyFactory).isInstance(underlyingStrategy_),  true);
 
         assertEq(IStrategyManager(strategyManager_).configured(), true);
         assertEq(IStrategyManager(strategyManager_).active(),     true);
 
-        assertAllocationStrategy({
-            allocationStrategy:    underlyingStrategy_,
-            assetsUnderManagement: donationAssets,
-            availableToWithdraw:   donationAssets,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      0
+        assertSkyStrategy({
+            strategyManager:  strategyManager_,
+            aum:              donationAssets,
+            unrealizedLosses: 0
         });
 
         assertStrategyManager({
@@ -97,12 +125,10 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
             availableLiquidity: POOL_LIQUIDITY - fundAssets
         });
 
-        assertAllocationStrategy({
-            allocationStrategy:    underlyingStrategy_,
-            assetsUnderManagement: donationAssets + fundAssets,
-            availableToWithdraw:   donationAssets + fundAssets,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      0
+        assertSkyStrategy({
+            strategyManager:  strategyManager_,
+            aum:              donationAssets + fundAssets,
+            unrealizedLosses: 0
         });
 
         assertStrategyManager({
@@ -130,32 +156,37 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         uint256 fundAssets     = (bootstrapMint + donationAssets) / 4;
         uint256 expectedShares = bootstrapMint / 4;
 
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
-        }));
-
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
+            strategyDeployer.getDeploymentAddresses(
+                strategyDelegate,
+                strategyManagerFactory,
+                skyStrategyFactory,
+                abi.encode(SkyStrategyInitializerParams({
+                    fundsAsset:              address(fundsAsset),
+                    psm:                     USDS_LITE_PSM,
+                    savingsUsds:             SAVINGS_USDS,
+                    strategyDelegateFeeRate: 0,
+                    strategyProtocolFeeRate: 0,
+                    referralCode:            0,
+                    strategyMetadata:        ""
+                }))
+            );
 
         /**********************************************************************************************************************************/
-        /*** Attacker donates to the predicted underlying strategy address before deployment                                            ***/
+        /*** Attacker donates sUSDS to the predicted underlying strategy address before deployment                                      ***/
         /**********************************************************************************************************************************/
 
-        erc20_mint(address(fundsAsset), expectedUnderlyingStrategy, donationAssets);
-
-        assertEq(fundsAsset.balanceOf(expectedUnderlyingStrategy), donationAssets);
+        _donateSusdsToStrategy(expectedUnderlyingStrategy, donationAssets);
 
         /**********************************************************************************************************************************/
         /*** Deployment with bootstrap mint completes successfully and the dead shares absorb the donation                              ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) = _deployAllocationStrategy({
+        ( address strategyManager_, address underlyingStrategy_ ) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
+            savingsUsds_:             SAVINGS_USDS,
+            psm_:                     USDS_LITE_PSM,
             strategyDelegateFeeRate_: 0,
             strategyProtocolFeeRate_: 0,
             strategyLiquidityCap_:    0,
@@ -165,18 +196,16 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         assertEq(strategyManager_,    expectedStrategyManager);
         assertEq(underlyingStrategy_, expectedUnderlyingStrategy);
 
-        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_),       true);
-        assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(underlyingStrategy_), true);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(strategyManager_), true);
+        assertEq(IMapleProxyFactory(skyStrategyFactory).isInstance(underlyingStrategy_),  true);
 
         assertEq(IStrategyManager(strategyManager_).configured(), true);
         assertEq(IStrategyManager(strategyManager_).active(),     true);
 
-        assertAllocationStrategy({
-            allocationStrategy:    underlyingStrategy_,
-            assetsUnderManagement: donationAssets + bootstrapMint,
-            availableToWithdraw:   donationAssets + bootstrapMint,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      0
+        assertSkyStrategy({
+            strategyManager:  strategyManager_,
+            aum:              donationAssets + bootstrapMint,
+            unrealizedLosses: 0
         });
 
         assertStrategyManager({
@@ -213,12 +242,10 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
             availableLiquidity: POOL_LIQUIDITY - fundAssets
         });
 
-        assertAllocationStrategy({
-            allocationStrategy:    underlyingStrategy_,
-            assetsUnderManagement: donationAssets + bootstrapMint + fundAssets,
-            availableToWithdraw:   donationAssets + bootstrapMint + fundAssets,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      0
+        assertSkyStrategy({
+            strategyManager:  strategyManager_,
+            aum:              donationAssets + bootstrapMint + fundAssets,
+            unrealizedLosses: 0
         });
 
         assertStrategyManager({

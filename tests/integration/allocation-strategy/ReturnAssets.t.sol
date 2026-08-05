@@ -49,6 +49,7 @@ contract AllocationStrategyReturnAssetsTestBase is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment,
+            recordedAssets:        initialLiquidity - initialDeployment,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      0
         });
@@ -195,6 +196,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment + returnAmount,
+            recordedAssets:        initialLiquidity - initialDeployment + returnAmount,
             totalDeployedAssets:   initialDeployment - returnAmount,
             unrealizedLosses:      0
         });
@@ -243,6 +245,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
+            recordedAssets:        initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -294,6 +297,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment + returnAmount,
+            recordedAssets:        initialLiquidity - initialDeployment + returnAmount,
             totalDeployedAssets:   initialDeployment - returnAmount,
             unrealizedLosses:      0
         });
@@ -339,6 +343,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment,
+            recordedAssets:        initialLiquidity - initialDeployment,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      0
         });
@@ -390,6 +395,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialDeployment,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      0
         });
@@ -436,6 +442,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialDeployment,
             availableToWithdraw:   initialDeployment,
+            recordedAssets:        initialDeployment,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -483,6 +490,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -543,6 +551,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment + returnAmount,
+            recordedAssets:        initialLiquidity - initialDeployment + returnAmount,
             totalDeployedAssets:   initialDeployment - returnAmount,
             unrealizedLosses:      0
         });
@@ -610,6 +619,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
+            recordedAssets:        initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -669,6 +679,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + realizedYield,
             availableToWithdraw:   initialLiquidity - initialDeployment + realizedYield,
+            recordedAssets:        initialLiquidity - initialDeployment + yieldAssets,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      0
         });
@@ -723,6 +734,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + realizedYield,
             availableToWithdraw:   initialLiquidity + realizedYield,
+            recordedAssets:        initialLiquidity + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -796,6 +808,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment,
+            recordedAssets:        initialLiquidity - initialDeployment + netYield,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      0
         });
@@ -852,6 +865,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + realizedYield,
             availableToWithdraw:   initialLiquidity - initialDeployment + realizedYield,
+            recordedAssets:        initialLiquidity - initialDeployment + netYield,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      0
         });
@@ -908,6 +922,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity + realizedYield,
             availableToWithdraw:   initialLiquidity + realizedYield,
+            recordedAssets:        initialLiquidity + netYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -969,6 +984,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment,
+            recordedAssets:        initialLiquidity - initialDeployment,
             totalDeployedAssets:   initialDeployment,
             unrealizedLosses:      impairAmount
         });
@@ -1014,6 +1030,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity,
+            recordedAssets:        initialLiquidity,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairAmount
         });
@@ -1064,6 +1081,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity - lossAmount,
             availableToWithdraw:   initialLiquidity - initialDeployment,
+            recordedAssets:        initialLiquidity - initialDeployment,
             totalDeployedAssets:   initialDeployment - lossAmount,
             unrealizedLosses:      0
         });
@@ -1111,6 +1129,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity - lossAmount,
             availableToWithdraw:   initialLiquidity - lossAmount,
+            recordedAssets:        initialLiquidity - lossAmount,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1161,6 +1180,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment + firstReturn,
+            recordedAssets:        initialLiquidity - initialDeployment + firstReturn,
             totalDeployedAssets:   initialDeployment - firstReturn,
             unrealizedLosses:      0
         });
@@ -1208,6 +1228,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment + firstReturn + secondReturn,
+            recordedAssets:        initialLiquidity - initialDeployment + firstReturn + secondReturn,
             totalDeployedAssets:   initialDeployment - firstReturn - secondReturn,
             unrealizedLosses:      0
         });
@@ -1275,6 +1296,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment - secondDeployment + firstReturn,
+            recordedAssets:        initialLiquidity - initialDeployment - secondDeployment + firstReturn,
             totalDeployedAssets:   initialDeployment + secondDeployment - firstReturn,
             unrealizedLosses:      0
         });
@@ -1324,6 +1346,7 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: initialLiquidity,
             availableToWithdraw:   initialLiquidity - initialDeployment - secondDeployment + firstReturn + secondReturn,
+            recordedAssets:        initialLiquidity - initialDeployment - secondDeployment + firstReturn + secondReturn,
             totalDeployedAssets:   initialDeployment + secondDeployment - firstReturn - secondReturn,
             unrealizedLosses:      0
         });

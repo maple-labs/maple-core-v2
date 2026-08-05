@@ -421,6 +421,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         address allocationStrategy,
         uint256 assetsUnderManagement,
         uint256 availableToWithdraw,
+        uint256 recordedAssets,
         uint256 totalDeployedAssets,
         uint256 unrealizedLosses
     )
@@ -428,6 +429,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     {
         assertEq(IAllocationStrategy(allocationStrategy).assetsUnderManagement(), assetsUnderManagement);
         assertEq(IAllocationStrategy(allocationStrategy).availableToWithdraw(),   availableToWithdraw);
+        assertEq(IAllocationStrategy(allocationStrategy).recordedAssets(),        recordedAssets);
         assertEq(IAllocationStrategy(allocationStrategy).totalDeployedAssets(),   totalDeployedAssets);
         assertEq(IAllocationStrategy(allocationStrategy).unrealizedLosses(),      unrealizedLosses);
     }
@@ -467,6 +469,7 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
             allocationStrategy:    allocationStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });

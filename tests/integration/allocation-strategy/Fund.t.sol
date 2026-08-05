@@ -199,6 +199,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstAssets,
             availableToWithdraw:   firstAssets,
+            recordedAssets:        firstAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -239,6 +240,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -299,6 +301,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstAssets,
             availableToWithdraw:   firstAssets,
+            recordedAssets:        firstAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -340,6 +343,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -390,6 +394,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -430,6 +435,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -470,6 +476,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -510,6 +517,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: secondAssets,
             availableToWithdraw:   secondAssets,
+            recordedAssets:        secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -562,6 +570,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstAssets,
             availableToWithdraw:   firstAssets,
+            recordedAssets:        firstAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -606,6 +615,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstAssets,
             availableToWithdraw:   firstAssets - deployedAssets,
+            recordedAssets:        firstAssets - deployedAssets,
             totalDeployedAssets:   deployedAssets,
             unrealizedLosses:      0
         });
@@ -649,6 +659,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets,
+            recordedAssets:        INITIAL_LIQUIDITY - deployedAssets,
             totalDeployedAssets:   deployedAssets,
             unrealizedLosses:      0
         });
@@ -704,6 +715,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -753,6 +765,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY + unrealizedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -803,6 +816,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets + unrealizedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -857,6 +871,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -908,6 +923,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -958,6 +974,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1022,6 +1039,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1074,6 +1092,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1124,6 +1143,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1173,6 +1193,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1246,6 +1267,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1297,6 +1319,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY + netYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1348,6 +1371,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + netYield,
             availableToWithdraw:   INITIAL_LIQUIDITY + netYield,
+            recordedAssets:        INITIAL_LIQUIDITY + netYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1400,6 +1424,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + netYield + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + netYield + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + netYield + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1462,6 +1487,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1503,6 +1529,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1544,6 +1571,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1601,6 +1629,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployed,
+            recordedAssets:        INITIAL_LIQUIDITY - deployed,
             totalDeployedAssets:   deployed,
             unrealizedLosses:      0
         });
@@ -1645,6 +1674,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - loss,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployed,
+            recordedAssets:        INITIAL_LIQUIDITY - deployed,
             totalDeployedAssets:   deployed - loss,
             unrealizedLosses:      0
         });
@@ -1689,6 +1719,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - loss + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployed + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY - deployed + secondAssets,
             totalDeployedAssets:   deployed - loss,
             unrealizedLosses:      0
         });
@@ -1752,6 +1783,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1813,6 +1845,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1864,6 +1897,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1951,6 +1985,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2011,6 +2046,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + yieldAssets + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + yieldAssets + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });

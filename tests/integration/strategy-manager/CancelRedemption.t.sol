@@ -207,6 +207,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -270,6 +271,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -316,6 +318,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -363,6 +366,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -410,6 +414,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -461,6 +466,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -508,6 +514,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -559,6 +566,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -605,6 +613,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -651,6 +660,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -699,6 +709,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -745,6 +756,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -791,6 +803,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -878,6 +891,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -941,6 +955,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1004,6 +1019,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1067,6 +1083,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1130,6 +1147,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1173,6 +1191,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1219,6 +1238,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1265,6 +1285,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1320,6 +1341,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   INITIAL_LIQUIDITY,
             unrealizedLosses:      0
         });
@@ -1370,6 +1392,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   INITIAL_LIQUIDITY,
             unrealizedLosses:      0
         });
@@ -1420,6 +1443,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   INITIAL_LIQUIDITY,
             unrealizedLosses:      0
         });
@@ -1479,6 +1503,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1525,6 +1550,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
+            recordedAssets:        aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1571,6 +1597,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
+            recordedAssets:        aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1617,6 +1644,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
+            recordedAssets:        aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });

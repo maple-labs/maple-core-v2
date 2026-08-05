@@ -166,6 +166,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -217,6 +218,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -254,6 +256,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -308,6 +311,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -346,6 +350,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -384,6 +389,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -426,6 +432,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -469,6 +476,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -506,6 +514,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -581,6 +590,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -635,6 +645,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -689,6 +700,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -743,6 +755,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -797,6 +810,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + secondAssets,
             availableToWithdraw:   INITIAL_LIQUIDITY + secondAssets,
+            recordedAssets:        INITIAL_LIQUIDITY + secondAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });

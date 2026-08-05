@@ -226,6 +226,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -273,6 +274,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -317,6 +319,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -369,6 +372,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -413,6 +417,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -458,6 +463,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - botProcessAmount,
             availableToWithdraw:   INITIAL_LIQUIDITY - botProcessAmount,
+            recordedAssets:        INITIAL_LIQUIDITY - botProcessAmount,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -513,6 +519,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - totalProcessed,
             availableToWithdraw:   INITIAL_LIQUIDITY - totalProcessed,
+            recordedAssets:        INITIAL_LIQUIDITY - totalProcessed,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -582,6 +589,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
+            recordedAssets:        totalAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -645,6 +653,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
+            recordedAssets:        totalAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -707,6 +716,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets - firstPoolSharesToProcess,
             availableToWithdraw:   totalAssets - firstPoolSharesToProcess,
+            recordedAssets:        totalAssets - firstPoolSharesToProcess,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -769,6 +779,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess,
             availableToWithdraw:   totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess,
+            recordedAssets:        totalAssets - firstPoolSharesToProcess - secondPoolSharesToProcess,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -841,6 +852,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -885,6 +897,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -932,6 +945,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: remainingAssets,
             availableToWithdraw:   remainingAssets,
+            recordedAssets:        remainingAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -984,6 +998,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1028,6 +1043,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1072,6 +1088,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: impairment,
             availableToWithdraw:   impairment,
+            recordedAssets:        impairment,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1123,6 +1140,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   liquidAssets,
+            recordedAssets:        liquidAssets,
             totalDeployedAssets:   deployedAssets,
             unrealizedLosses:      0
         });
@@ -1170,6 +1188,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   liquidAssets,
+            recordedAssets:        liquidAssets,
             totalDeployedAssets:   deployedAssets,
             unrealizedLosses:      0
         });
@@ -1217,6 +1236,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - processAmount,
             availableToWithdraw:   liquidAssets - processAmount,
+            recordedAssets:        liquidAssets - processAmount,
             totalDeployedAssets:   deployedAssets,
             unrealizedLosses:      0
         });
@@ -1271,6 +1291,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets,
+            recordedAssets:        INITIAL_LIQUIDITY - deployedAssets,
             totalDeployedAssets:   deployedAssets,
             unrealizedLosses:      0
         });
@@ -1318,6 +1339,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets + returnedAssets,
+            recordedAssets:        INITIAL_LIQUIDITY - deployedAssets + returnedAssets,
             totalDeployedAssets:   deployedAssets - returnedAssets,
             unrealizedLosses:      0
         });
@@ -1365,6 +1387,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY - request,
             availableToWithdraw:   INITIAL_LIQUIDITY - deployedAssets + returnedAssets - request,
+            recordedAssets:        INITIAL_LIQUIDITY - deployedAssets + returnedAssets - request,
             totalDeployedAssets:   deployedAssets - returnedAssets,
             unrealizedLosses:      0
         });
@@ -1421,6 +1444,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsAfterLoss,
             availableToWithdraw:   assetsAfterLoss,
+            recordedAssets:        assetsAfterLoss,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1466,6 +1490,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsAfterLoss - partialAssets,
             availableToWithdraw:   assetsAfterLoss - partialAssets,
+            recordedAssets:        assetsAfterLoss - partialAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1511,6 +1536,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1589,6 +1615,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
                 allocationStrategy:    allocationUnderlyingStrategy,
                 assetsUnderManagement: totalShares,
                 availableToWithdraw:   totalShares,
+                recordedAssets:        totalShares,
                 totalDeployedAssets:   0,
                 unrealizedLosses:      impairment
             });
@@ -1639,6 +1666,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets - firstAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets - firstAssetsOut,
+            recordedAssets:        firstPoolAssets + secondPoolAssets - firstAssetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1726,6 +1754,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut,
+            recordedAssets:        firstPoolAssets + secondPoolAssets - firstAssetsOut - secondAssetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -1852,6 +1881,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets,
+            recordedAssets:        firstPoolAssets + secondPoolAssets + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1925,6 +1955,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets,
+            recordedAssets:        firstPoolAssets + secondPoolAssets + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -1997,6 +2028,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut,
+            recordedAssets:        firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2071,6 +2103,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut - secondPoolYieldAssetsOut,
             availableToWithdraw:   firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut - secondPoolYieldAssetsOut,
+            recordedAssets:        firstPoolAssets + secondPoolAssets + yieldAssets - firstPoolYieldAssetsOut - secondPoolYieldAssetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2165,6 +2198,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsOut,
             availableToWithdraw:   assetsOut,
+            recordedAssets:        assetsOut + netYield - vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2221,6 +2255,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: assetsOut,
             availableToWithdraw:   assetsOut,
+            recordedAssets:        assetsOut + netYield - vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2277,6 +2312,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        netYield - vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2346,6 +2382,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield,
+            recordedAssets:        INITIAL_LIQUIDITY + vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2400,6 +2437,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield,
+            recordedAssets:        INITIAL_LIQUIDITY + vestedYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2454,6 +2492,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY + vestedYield - assetsOut,
             availableToWithdraw:   INITIAL_LIQUIDITY + vestedYield - assetsOut,
+            recordedAssets:        INITIAL_LIQUIDITY + vestedYield - assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2523,6 +2562,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: firstPoolAssets,
             availableToWithdraw:   firstPoolAssets,
+            recordedAssets:        firstPoolAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -2578,6 +2618,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
+            recordedAssets:        totalAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -2640,6 +2681,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets,
             availableToWithdraw:   totalAssets,
+            recordedAssets:        totalAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -2702,6 +2744,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: totalAssets - assetsOut,
             availableToWithdraw:   totalAssets - assetsOut,
+            recordedAssets:        totalAssets - assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      impairment
         });
@@ -2769,6 +2812,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: INITIAL_LIQUIDITY,
             availableToWithdraw:   INITIAL_LIQUIDITY,
+            recordedAssets:        INITIAL_LIQUIDITY + yieldAssets,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2822,6 +2866,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
+            recordedAssets:        aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2875,6 +2920,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield,
             availableToWithdraw:   aumAfterYield,
+            recordedAssets:        aumAfterYield,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -2928,6 +2974,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
             allocationStrategy:    allocationUnderlyingStrategy,
             assetsUnderManagement: aumAfterYield - assetsOut,
             availableToWithdraw:   aumAfterYield - assetsOut,
+            recordedAssets:        aumAfterYield - assetsOut,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });

@@ -617,6 +617,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             allocationStrategy:    allocationUnderlyingStrategy_,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -705,6 +706,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             allocationStrategy:    allocationUnderlyingStrategy0,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -713,6 +715,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             allocationStrategy:    allocationUnderlyingStrategy1,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
@@ -778,6 +781,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             allocationStrategy:    allocationUnderlyingStrategy_,
             assetsUnderManagement: 0,
             availableToWithdraw:   0,
+            recordedAssets:        0,
             totalDeployedAssets:   0,
             unrealizedLosses:      0
         });
