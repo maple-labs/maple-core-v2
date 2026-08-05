@@ -16,7 +16,7 @@ contract AaveV3StrategyRecognizeLossFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
     }
@@ -25,28 +25,28 @@ contract AaveV3StrategyRecognizeLossFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(aaveV3UnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
     }
 
     function testFork_recognizeLoss_failWhenNotProtocolAdmin() external {
         vm.prank(makeAddr("notProtocolAdmin"));
-        vm.expectRevert("MAV3S:NOT_ADMIN");
+        vm.expectRevert("MAV3S:NOT_AUTHORIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
     }
 
-    function testFork_recognizeLoss_failWhenNotProtocolAdmin_strategyDelegate() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MAV3S:NOT_ADMIN");
+    function testFork_recognizeLoss_failWhenGovernor() external {
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:NOT_AUTHORIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
     }
 
     function testFork_recognizeLoss_failWhenLossAlreadyRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
     }
@@ -125,8 +125,8 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
         });
     }
 
-    function testFork_recognizeLoss_asGovernor() external {
-        vm.prank(governor);
+    function testFork_recognizeLoss_asStrategyDelegate() external {
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
@@ -246,7 +246,7 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
             unrealizedLosses: impairment
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
@@ -336,7 +336,7 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
         assertEq(fundsAsset.balanceOf(strategyDelegate), 0);
         assertEq(fundsAsset.balanceOf(treasury),         0);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
@@ -418,7 +418,7 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
             unrealizedLosses: 0
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
@@ -465,7 +465,7 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
     function testFork_recognizeLoss_donationDoesNotReviveAum() external {
         uint256 donationAssets = 100_000e6;
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
@@ -614,7 +614,7 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
             unrealizedLosses: 0
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
@@ -666,216 +666,6 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
             poolManager:      secondPoolManager,
             assets:           0,
             shares:           secondPoolShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-    }
-
-    function testFork_setStrategyDelegateFeeRate_doesNotUpdateAccountingWhenLossRecognized() external {
-        uint32  newDelegateFeeRate = 0.2e6;  // 20% of accrued yield.
-        uint256 totalShares        = fundAmount - expectedRoundingError;
-
-        vm.prank(governor);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
-
-        vm.warp(block.timestamp + 365 days);
-
-        uint256 aTokenBalance = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-
-        assertGt(aTokenBalance, totalShares);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyDelegateFeeRate(), delegateFeeRate);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyProtocolFeeRate(), protocolFeeRate);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).impairedAssets(),   0);
-
-        assertEq(fundsAsset.balanceOf(aaveV3UnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),         0);
-        assertEq(fundsAsset.balanceOf(treasury),                 0);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     0,
-            aTokenBalance:           aTokenBalance,
-            lastRecordedTotalAssets: 0,
-            unrealizedLosses:        0
-        });
-
-        assertStrategyManager({
-            strategyManager:       aaveV3StrategyManager,
-            totalShares:           totalShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           totalShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-
-        vm.prank(strategyDelegate);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).setStrategyDelegateFeeRate(newDelegateFeeRate);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyDelegateFeeRate(), newDelegateFeeRate);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyProtocolFeeRate(), protocolFeeRate);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).impairedAssets(),   0);
-
-        assertEq(fundsAsset.balanceOf(aaveV3UnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),         0);
-        assertEq(fundsAsset.balanceOf(treasury),                 0);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     0,
-            aTokenBalance:           aTokenBalance,
-            lastRecordedTotalAssets: 0,
-            unrealizedLosses:        0
-        });
-
-        assertStrategyManager({
-            strategyManager:       aaveV3StrategyManager,
-            totalShares:           totalShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           totalShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-    }
-
-    function testFork_setStrategyProtocolFeeRate_doesNotUpdateAccountingWhenLossRecognized() external {
-        uint32  newProtocolFeeRate = 0.2e6;  // 20% of accrued yield.
-        uint256 totalShares        = fundAmount - expectedRoundingError;
-
-        vm.prank(governor);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
-
-        vm.warp(block.timestamp + 365 days);
-
-        uint256 aTokenBalance = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-
-        assertGt(aTokenBalance, totalShares);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyDelegateFeeRate(), delegateFeeRate);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyProtocolFeeRate(), protocolFeeRate);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).impairedAssets(),   0);
-
-        assertEq(fundsAsset.balanceOf(aaveV3UnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),         0);
-        assertEq(fundsAsset.balanceOf(treasury),                 0);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     0,
-            aTokenBalance:           aTokenBalance,
-            lastRecordedTotalAssets: 0,
-            unrealizedLosses:        0
-        });
-
-        assertStrategyManager({
-            strategyManager:       aaveV3StrategyManager,
-            totalShares:           totalShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           totalShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-
-        vm.prank(governor);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).setStrategyProtocolFeeRate(newProtocolFeeRate);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyDelegateFeeRate(), delegateFeeRate);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyProtocolFeeRate(), newProtocolFeeRate);
-
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);
-        assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).impairedAssets(),   0);
-
-        assertEq(fundsAsset.balanceOf(aaveV3UnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),         0);
-        assertEq(fundsAsset.balanceOf(treasury),                 0);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     0,
-            aTokenBalance:           aTokenBalance,
-            lastRecordedTotalAssets: 0,
-            unrealizedLosses:        0
-        });
-
-        assertStrategyManager({
-            strategyManager:       aaveV3StrategyManager,
-            totalShares:           totalShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           totalShares,
             pendingShares:    0,
             unrealizedLosses: 0
         });

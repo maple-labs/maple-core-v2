@@ -517,7 +517,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
 
         // Allocation recognizes a specific deployer's loss, while DeFi strategies recognize the entire position.
         if (allocationLossDeployer == address(0)) {
-            vm.prank(governor);
+            vm.prank(operationalAdmin);
             IDefiStrategyLike(underlyingStrategy).recognizeLoss();
         } else {
             setManagedWallet({

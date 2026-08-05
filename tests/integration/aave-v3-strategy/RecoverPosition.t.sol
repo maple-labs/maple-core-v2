@@ -14,7 +14,7 @@ contract AaveV3StrategyRecoverPositionFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
@@ -23,34 +23,34 @@ contract AaveV3StrategyRecoverPositionFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(aaveV3UnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
 
     function testFork_recoverPosition_failWhenNotProtocolAdmin() external {
         vm.prank(makeAddr("notProtocolAdmin"));
-        vm.expectRevert("MAV3S:NOT_ADMIN");
+        vm.expectRevert("MAV3S:NOT_AUTHORIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
 
-    function testFork_recoverPosition_failWhenNotProtocolAdmin_strategyDelegate() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MAV3S:NOT_ADMIN");
+    function testFork_recoverPosition_failWhenNotProtocolAdmin_governor() external {
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:NOT_AUTHORIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
 
     function testFork_recoverPosition_failWhenLossNotRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:RP:LOSS_NOT_RECOGNIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
 
     function testFork_recoverPosition_failWithZeroBalance() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:RP:ZERO_BALANCE");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
@@ -61,12 +61,12 @@ contract AaveV3StrategyRecoverPositionFailureTests is AaveV3StrategyTestBase {
         deposit(lp, fundAmount);
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         setAaveV3ReservePause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:RP:TRANSFER_FAILED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
     }
@@ -99,8 +99,8 @@ contract AaveV3StrategyRecoverPositionTests is AaveV3StrategyTestBase {
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount);
     }
 
-    function testFork_recoverPosition_asGovernor() external {
-        vm.prank(governor);
+    function testFork_recoverPosition_asStrategyDelegate() external {
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         uint256 treasuryAssetsBefore     = fundsAsset.balanceOf(treasury);
@@ -143,7 +143,7 @@ contract AaveV3StrategyRecoverPositionTests is AaveV3StrategyTestBase {
             unrealizedLosses: 0
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recoverPosition();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).isLossRecognized(), true);

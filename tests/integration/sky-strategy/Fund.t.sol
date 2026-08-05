@@ -47,7 +47,7 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
 
         fundStrategyManager(address(poolManager), skyStrategyManager, assets / 2);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).impair(assets / 4);
 
         vm.prank(liquidityBot);
@@ -67,7 +67,8 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0,
             strategyProtocolFeeRate: 0,
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         });
 
         vm.prank(inactiveDelegate);
@@ -169,7 +170,7 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
     function testFork_fund_failWhenLossRecognized() external {
         deposit(lp, assets);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         vm.prank(strategyDelegate);
@@ -1402,7 +1403,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         /*** Step 2: Impair part of the position — the AUM is unchanged, but the loss is now reported as unrealized                     ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).impair(impairment);
 
         assertPoolState({

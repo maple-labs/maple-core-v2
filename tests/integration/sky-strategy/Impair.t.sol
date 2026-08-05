@@ -13,7 +13,7 @@ contract SkyStrategyImpairFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:PAUSED");
         ISkyStrategy(skyUnderlyingStrategy).impair(impairment);
     }
@@ -22,28 +22,28 @@ contract SkyStrategyImpairFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(skyUnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:PAUSED");
         ISkyStrategy(skyUnderlyingStrategy).impair(impairment);
     }
 
     function testFork_impair_failWhenNotProtocolAdmin() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSS:NOT_ADMIN");
+        vm.prank(governor);
+        vm.expectRevert("MSS:NOT_AUTHORIZED");
         ISkyStrategy(skyUnderlyingStrategy).impair(impairment);
     }
 
     function testFork_impair_failWhenLossRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:LOSS_RECOGNIZED");
         ISkyStrategy(skyUnderlyingStrategy).impair(impairment);
     }
 
     function testFork_impair_failWithZeroAssets() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:I:ZERO");
         ISkyStrategy(skyUnderlyingStrategy).impair(0);
     }
@@ -93,24 +93,24 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
     }
 
     function testFork_impair_accumulatesAcrossAllAdmins() external {
-        uint256 governorImpairment = 100_000e6;
+        uint256 delegateImpairment = 100_000e6;
         uint256 opAdminImpairment  = 150_000e6;
 
-        vm.prank(governor);
-        ISkyStrategy(skyUnderlyingStrategy).impair(governorImpairment);
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).impair(delegateImpairment);
 
         assertPoolState({
             pool:               address(pool),
             totalAssets:        poolLiquidity - expectedRoundingLoss,
             totalSupply:        poolLiquidity,
-            unrealizedLosses:   governorImpairment,
+            unrealizedLosses:   delegateImpairment,
             availableLiquidity: poolLiquidity - fundAmount
         });
 
         assertSkyStrategy({
             strategyManager:  skyStrategyManager,
             aum:              fundAmount - expectedRoundingLoss,
-            unrealizedLosses: governorImpairment
+            unrealizedLosses: delegateImpairment
         });
 
         assertStrategyManager({
@@ -119,7 +119,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
             totalPendingShares:    0,
             assetsUnderManagement: fundAmount - expectedRoundingLoss,
             availableToWithdraw:   fundAmount - expectedRoundingLoss,
-            unrealizedLosses:      governorImpairment
+            unrealizedLosses:      delegateImpairment
         });
 
         assertStrategyManagerPosition({
@@ -128,7 +128,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
             assets:           fundAmount - expectedRoundingLoss,
             shares:           fundAmount - expectedRoundingLoss,
             pendingShares:    0,
-            unrealizedLosses: governorImpairment
+            unrealizedLosses: delegateImpairment
         });
 
         vm.prank(operationalAdmin);
@@ -138,14 +138,14 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
             pool:               address(pool),
             totalAssets:        poolLiquidity - expectedRoundingLoss,
             totalSupply:        poolLiquidity,
-            unrealizedLosses:   governorImpairment + opAdminImpairment,
+            unrealizedLosses:   delegateImpairment + opAdminImpairment,
             availableLiquidity: poolLiquidity - fundAmount
         });
 
         assertSkyStrategy({
             strategyManager:  skyStrategyManager,
             aum:              fundAmount - expectedRoundingLoss,
-            unrealizedLosses: governorImpairment + opAdminImpairment
+            unrealizedLosses: delegateImpairment + opAdminImpairment
         });
 
         assertStrategyManager({
@@ -154,7 +154,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
             totalPendingShares:    0,
             assetsUnderManagement: fundAmount - expectedRoundingLoss,
             availableToWithdraw:   fundAmount - expectedRoundingLoss,
-            unrealizedLosses:      governorImpairment + opAdminImpairment
+            unrealizedLosses:      delegateImpairment + opAdminImpairment
         });
 
         assertStrategyManagerPosition({
@@ -163,7 +163,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
             assets:           fundAmount - expectedRoundingLoss,
             shares:           fundAmount - expectedRoundingLoss,
             pendingShares:    0,
-            unrealizedLosses: governorImpairment + opAdminImpairment
+            unrealizedLosses: delegateImpairment + opAdminImpairment
         });
     }
 

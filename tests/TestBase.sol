@@ -315,7 +315,8 @@ contract TestBase is ProtocolActions, Utils {
             strategyDelegateFeeRate:     strategyDelegateFeeRate_,
             strategyProtocolFeeRate:     strategyProtocolFeeRate_,
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance_
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance_,
+            strategyMetadata:           ""
         });
 
         vm.startPrank(governor);
@@ -361,7 +362,8 @@ contract TestBase is ProtocolActions, Utils {
             savingsUsds:             savingsUsds_,
             strategyDelegateFeeRate: strategyDelegateFeeRate_,
             strategyProtocolFeeRate: strategyProtocolFeeRate_,
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:       ""
         });
 
         vm.startPrank(governor);

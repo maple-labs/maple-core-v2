@@ -16,7 +16,7 @@ contract AaveV3StrategyImpairFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
     }
@@ -25,28 +25,28 @@ contract AaveV3StrategyImpairFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(aaveV3UnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
     }
 
     function testFork_impair_failWhenNotProtocolAdmin() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MAV3S:NOT_ADMIN");
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:NOT_AUTHORIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
     }
 
     function testFork_impair_failWhenLossRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
     }
 
     function testFork_impair_failWithZeroAssets() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:I:ZERO");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(0);
     }
@@ -113,17 +113,17 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
     }
 
     function testFork_impair_accumulatesAcrossAllAdmins() external {
-        uint256 governorImpairment = 100_000e6;
-        uint256 opAdminImpairment  = 150_000e6;
+        uint256 strategyDelegateImpairment = 100_000e6;
+        uint256 opAdminImpairment          = 150_000e6;
 
-        vm.prank(governor);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(governorImpairment);
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(strategyDelegateImpairment);
 
         assertPoolState({
             pool:               address(pool),
             totalAssets:        poolLiquidity - expectedRoundingError,
             totalSupply:        poolLiquidity,
-            unrealizedLosses:   governorImpairment,
+            unrealizedLosses:   strategyDelegateImpairment,
             availableLiquidity: poolLiquidity - fundAmount
         });
 
@@ -132,7 +132,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             aum:                     fundAmount - expectedRoundingError,
             aTokenBalance:           fundAmount - expectedRoundingError,
             lastRecordedTotalAssets: fundAmount - expectedRoundingError,
-            unrealizedLosses:        governorImpairment
+            unrealizedLosses:        strategyDelegateImpairment
         });
 
         assertStrategyManager({
@@ -141,7 +141,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             totalPendingShares:    0,
             assetsUnderManagement: fundAmount - expectedRoundingError,
             availableToWithdraw:   fundAmount - expectedRoundingError,
-            unrealizedLosses:      governorImpairment
+            unrealizedLosses:      strategyDelegateImpairment
         });
 
         assertStrategyManagerPosition({
@@ -150,7 +150,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             assets:           fundAmount - expectedRoundingError,
             shares:           fundAmount - expectedRoundingError,
             pendingShares:    0,
-            unrealizedLosses: governorImpairment
+            unrealizedLosses: strategyDelegateImpairment
         });
 
         vm.prank(operationalAdmin);
@@ -160,7 +160,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             pool:               address(pool),
             totalAssets:        poolLiquidity - expectedRoundingError,
             totalSupply:        poolLiquidity,
-            unrealizedLosses:   governorImpairment + opAdminImpairment,
+            unrealizedLosses:   strategyDelegateImpairment + opAdminImpairment,
             availableLiquidity: poolLiquidity - fundAmount
         });
 
@@ -169,7 +169,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             aum:                     fundAmount - expectedRoundingError,
             aTokenBalance:           fundAmount - expectedRoundingError,
             lastRecordedTotalAssets: fundAmount - expectedRoundingError,
-            unrealizedLosses:        governorImpairment + opAdminImpairment
+            unrealizedLosses:        strategyDelegateImpairment + opAdminImpairment
         });
 
         assertStrategyManager({
@@ -178,7 +178,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             totalPendingShares:    0,
             assetsUnderManagement: fundAmount - expectedRoundingError,
             availableToWithdraw:   fundAmount - expectedRoundingError,
-            unrealizedLosses:      governorImpairment + opAdminImpairment
+            unrealizedLosses:      strategyDelegateImpairment + opAdminImpairment
         });
 
         assertStrategyManagerPosition({
@@ -187,14 +187,14 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             assets:           fundAmount - expectedRoundingError,
             shares:           fundAmount - expectedRoundingError,
             pendingShares:    0,
-            unrealizedLosses: governorImpairment + opAdminImpairment
+            unrealizedLosses: strategyDelegateImpairment + opAdminImpairment
         });
     }
 
     function testFork_impair_clampsToAssetsUnderManagement() external {
         uint256 impairment = fundAmount + 250_000e6;
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({
@@ -275,7 +275,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
     function testFork_impair_unrealizedLossGrowsToImpairmentAsAumIncreases() external {
         uint256 impairment = fundAmount + 100e6;
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({
@@ -423,7 +423,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
         uint256 firstLoss  = divRoundUp(firstShares  * impairment, totalShares);
         uint256 secondLoss = divRoundUp(secondShares * impairment, totalShares);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({
@@ -503,7 +503,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
         assertGt(expectedProtocolFee, 0);
         assertGt(netAum,              impairment);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({
@@ -584,7 +584,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             unrealizedLosses: 0
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({

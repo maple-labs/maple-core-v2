@@ -17,7 +17,7 @@ contract AaveV3StrategyRemoveImpairmentFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(impairment);
     }
@@ -26,28 +26,28 @@ contract AaveV3StrategyRemoveImpairmentFailureTests is AaveV3StrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(aaveV3UnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:PAUSED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(impairment);
     }
 
     function testFork_removeImpairment_failWhenNotProtocolAdmin() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MAV3S:NOT_ADMIN");
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:NOT_AUTHORIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(impairment);
     }
 
     function testFork_removeImpairment_failWhenLossRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(impairment);
     }
 
     function testFork_removeImpairment_failWithZeroAssets() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:RI:ZERO");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(0);
     }
@@ -55,7 +55,7 @@ contract AaveV3StrategyRemoveImpairmentFailureTests is AaveV3StrategyTestBase {
     function testFork_removeImpairment_failWhenExceedingImpairment() external {
         impairStrategy(aaveV3UnderlyingStrategy, impairment);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:RI:EXCEEDS_IMPAIRMENT");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(impairment + 1);
     }
@@ -186,7 +186,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
             unrealizedLosses: operationalRemoval
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).removeImpairment(operationalRemoval);
 
         assertPoolState({

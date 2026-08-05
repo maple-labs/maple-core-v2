@@ -14,7 +14,7 @@ contract SkyStrategyRecoverPositionFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:PAUSED");
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
     }
@@ -23,34 +23,34 @@ contract SkyStrategyRecoverPositionFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(skyUnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:PAUSED");
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
     }
 
     function testFork_recoverPosition_failWhenNotProtocolAdmin() external {
         vm.prank(makeAddr("notProtocolAdmin"));
-        vm.expectRevert("MSS:NOT_ADMIN");
+        vm.expectRevert("MSS:NOT_AUTHORIZED");
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
     }
 
-    function testFork_recoverPosition_failWhenNotProtocolAdmin_strategyDelegate() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSS:NOT_ADMIN");
+    function testFork_recoverPosition_failWhenNotProtocolAdmin_governor() external {
+        vm.prank(governor);
+        vm.expectRevert("MSS:NOT_AUTHORIZED");
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
     }
 
     function testFork_recoverPosition_failWhenLossNotRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:RP:LOSS_NOT_RECOGNIZED");
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
     }
 
     function testFork_recoverPosition_failWithZeroBalance() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:RP:ZERO_BALANCE");
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
     }
@@ -75,8 +75,8 @@ contract SkyStrategyRecoverPositionTests is SkyStrategyTestBase {
         recoveredShares = IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy);
     }
 
-    function testFork_recoverPosition_asGovernor() external {
-        vm.prank(governor);
+    function testFork_recoverPosition_asStrategyDelegate() external {
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         uint256 treasuryAssetsBefore            = fundsAsset.balanceOf(treasury);
@@ -123,7 +123,7 @@ contract SkyStrategyRecoverPositionTests is SkyStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recoverPosition();
 
         assertSkyStrategyStorage({

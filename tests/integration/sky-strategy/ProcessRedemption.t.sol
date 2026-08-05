@@ -106,7 +106,7 @@ contract SkyStrategyProcessRedemptionFailureTests is SkyStrategyTestBase {
         fundStrategyManager(address(poolManager), skyStrategyManager, assets);
         requestRedeemFromStrategyManager(address(poolManager), skyStrategyManager, 1);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).impair(assets);
 
         vm.prank(strategyDelegate);
@@ -119,7 +119,7 @@ contract SkyStrategyProcessRedemptionFailureTests is SkyStrategyTestBase {
         fundStrategyManager(address(poolManager), skyStrategyManager, assets);
         requestRedeemFromStrategyManager(address(poolManager), skyStrategyManager, 1);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         vm.prank(strategyDelegate);
@@ -1178,7 +1178,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
         requestRedeemFromStrategyManager(address(poolManager), skyStrategyManager, shares);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).impair(impairment);
 
         // The redemption receives half of the net exit assets, adjusted for the initial supply rounding.
@@ -1703,7 +1703,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         requestRedeemFromStrategyManager(firstPoolManager,  skyStrategyManager, firstShares / 2);
         requestRedeemFromStrategyManager(secondPoolManager, skyStrategyManager, secondShares / 2);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).impair(impairmentAmount);
 
         assertPoolState({

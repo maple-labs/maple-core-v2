@@ -52,7 +52,7 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, assets / 2);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(assets / 4);
 
         vm.prank(liquidityBot);
@@ -71,7 +71,8 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
             strategyDelegateFeeRate:     0,
             strategyProtocolFeeRate:     0,
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:           ""
         });
 
         vm.prank(inactiveDelegate);
@@ -175,7 +176,7 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
     function testFork_fund_failWhenLossRecognized() external {
         deposit(lp, assets);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         vm.prank(strategyDelegate);
@@ -1235,7 +1236,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         // 750_000e6 available liquidity + 250_000e6 nominal strategy AUM - the protocol-specific rounding adjustment.
         uint256 expectedTotalAssets = 1_000_000e6 - expectedRoundingError;
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).setReferralCode(referralCode);
 
         vm.expectCall(
@@ -1379,7 +1380,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         /*** Step 2: Impair part of the position — the AUM is unchanged, but the loss is now reported as unrealized                     ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({
@@ -1544,7 +1545,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         /*** Step 2: Impair the strategy                                                                                                ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         assertPoolState({

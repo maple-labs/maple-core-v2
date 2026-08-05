@@ -445,7 +445,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         vm.prank(strategyDelegate);
@@ -459,7 +460,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         vm.prank(strategyDelegate);
@@ -473,7 +475,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.5e6,      // 50% Fee
             strategyProtocolFeeRate:     0.5e6 + 1,  // 50.0001% Fee
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         vm.prank(strategyDelegate);
@@ -487,7 +490,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         vm.prank(strategyDelegate);
@@ -506,7 +510,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         vm.prank(strategyDelegate);
@@ -523,7 +528,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -580,7 +586,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -647,7 +654,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -706,7 +714,8 @@ contract AaveV3StrategyDeployTests is TestBase {
             strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
             referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance
+            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+            strategyMetadata:            ""
         }));
 
         ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
@@ -813,7 +822,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -828,7 +838,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             address(0),
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -843,7 +854,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -858,7 +870,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.5e6,      // 50% Fee
             strategyProtocolFeeRate: 0.5e6 + 1,  // 50.0001% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -873,7 +886,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -891,7 +905,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -909,7 +924,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -930,7 +946,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -950,7 +967,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SDAI,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0
+            referralCode:            0,
+            strategyMetadata:        ""
         }));
 
         vm.prank(strategyDelegate);
@@ -970,7 +988,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7
+            referralCode:            7,
+            strategyMetadata:        ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -1029,7 +1048,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7
+            referralCode:            7,
+            strategyMetadata:        ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -1099,7 +1119,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7
+            referralCode:            7,
+            strategyMetadata:        ""
         }));
 
         ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
@@ -1160,7 +1181,8 @@ contract SkyStrategyDeployTests is TestBase {
             savingsUsds:             SAVINGS_USDS,
             strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
             strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7
+            referralCode:            7,
+            strategyMetadata:        ""
         }));
 
         ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =

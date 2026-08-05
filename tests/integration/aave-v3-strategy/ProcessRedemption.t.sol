@@ -113,7 +113,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
 
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, 1);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(fundedAssets - 1);
 
         vm.prank(strategyDelegate);
@@ -126,7 +126,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, assets);
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, 1);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
         vm.prank(strategyDelegate);
@@ -1030,7 +1030,7 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, shares);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
 
         // The redemption receives half of the net exit assets, adjusted for the initial supply rounding.
@@ -1427,7 +1427,7 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         requestRedeemFromStrategyManager(firstPoolManager,  aaveV3StrategyManager, firstShares / 2);
         requestRedeemFromStrategyManager(secondPoolManager, aaveV3StrategyManager, secondShares / 2);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairmentAmount);
 
         expectedFirstAssets           = firstShares;

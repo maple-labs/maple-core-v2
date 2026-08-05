@@ -16,7 +16,7 @@ contract SkyStrategyRecognizeLossFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:PAUSED");
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
     }
@@ -25,28 +25,28 @@ contract SkyStrategyRecognizeLossFailureTests is SkyStrategyTestBase {
         vm.prank(governor);
         globals.setContractPause(skyUnderlyingStrategy, true);
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:PAUSED");
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
     }
 
     function testFork_recognizeLoss_failWhenNotProtocolAdmin() external {
         vm.prank(makeAddr("notProtocolAdmin"));
-        vm.expectRevert("MSS:NOT_ADMIN");
+        vm.expectRevert("MSS:NOT_AUTHORIZED");
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
     }
 
-    function testFork_recognizeLoss_failWhenNotProtocolAdmin_strategyDelegate() external {
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSS:NOT_ADMIN");
+    function testFork_recognizeLoss_failWhenGovernor() external {
+        vm.prank(governor);
+        vm.expectRevert("MSS:NOT_AUTHORIZED");
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
     }
 
     function testFork_recognizeLoss_failWhenLossAlreadyRecognized() external {
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:LOSS_RECOGNIZED");
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
     }
@@ -127,8 +127,8 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         });
     }
 
-    function testFork_recognizeLoss_asGovernor() external {
-        vm.prank(governor);
+    function testFork_recognizeLoss_asStrategyDelegate() external {
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         assertSkyStrategyStorage({
@@ -273,7 +273,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Recognize the loss and clear the impairment                                                                                ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         assertSkyStrategyStorage({
@@ -379,7 +379,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Recognize the loss without collecting the accrued fees                                                                     ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         assertEq(fundsAsset.balanceOf(strategyDelegate), 0);
@@ -481,7 +481,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Recognize the loss                                                                                                         ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         assertSkyStrategyStorage({
@@ -541,7 +541,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Recognize the loss                                                                                                         ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         /**********************************************************************************************************************************/
@@ -584,7 +584,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Recognize the loss                                                                                                         ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         assertSkyStrategyStorage({
@@ -763,7 +763,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Recognize the loss across both pools                                                                                       ***/
         /**********************************************************************************************************************************/
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
         assertPoolState({
@@ -819,242 +819,6 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
             poolManager:      secondPoolManager,
             assets:           0,
             shares:           secondPoolShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-    }
-
-    function testFork_setStrategyDelegateFeeRate_doesNotUpdateAccountingWhenLossRecognized() external {
-        uint32 newDelegateFeeRate = 0.2e6;  // 20% of accrued yield.
-
-        /**********************************************************************************************************************************/
-        /*** Recognize the loss and accrue yield                                                                                        ***/
-        /**********************************************************************************************************************************/
-
-        vm.prank(governor);
-        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
-
-        vm.warp(block.timestamp + 365 days);
-
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyDelegateFeeRate(), delegateFeeRate);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyProtocolFeeRate(), protocolFeeRate);
-
-        assertSkyStrategyStorage({
-            strategy:                skyUnderlyingStrategy,
-            isLossRecognized:        true,
-            impairedAssets:          0,
-            lastRecordedTotalAssets: 0
-        });
-
-        assertEq(fundsAsset.balanceOf(skyUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),      0);
-        assertEq(fundsAsset.balanceOf(treasury),              0);
-
-        assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy),         0);
-        assertEq(IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy), initialSusdsBalance);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertSkyStrategy({
-            strategyManager:  skyStrategyManager,
-            aum:              0,
-            unrealizedLosses: 0
-        });
-
-        assertStrategyManager({
-            strategyManager:       skyStrategyManager,
-            totalShares:           fundedShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  skyStrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           fundedShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-
-        /**********************************************************************************************************************************/
-        /*** Update the delegate fee rate without updating accounting                                                                   ***/
-        /**********************************************************************************************************************************/
-
-        vm.prank(strategyDelegate);
-        ISkyStrategy(skyUnderlyingStrategy).setStrategyDelegateFeeRate(newDelegateFeeRate);
-
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyDelegateFeeRate(), newDelegateFeeRate);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyProtocolFeeRate(), protocolFeeRate);
-
-        assertSkyStrategyStorage({
-            strategy:                skyUnderlyingStrategy,
-            isLossRecognized:        true,
-            impairedAssets:          0,
-            lastRecordedTotalAssets: 0
-        });
-
-        assertEq(fundsAsset.balanceOf(skyUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),      0);
-        assertEq(fundsAsset.balanceOf(treasury),              0);
-
-        assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy),         0);
-        assertEq(IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy), initialSusdsBalance);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertSkyStrategy({
-            strategyManager:  skyStrategyManager,
-            aum:              0,
-            unrealizedLosses: 0
-        });
-
-        assertStrategyManager({
-            strategyManager:       skyStrategyManager,
-            totalShares:           fundedShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  skyStrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           fundedShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-    }
-
-    function testFork_setStrategyProtocolFeeRate_doesNotUpdateAccountingWhenLossRecognized() external {
-        uint32 newProtocolFeeRate = 0.2e6;  // 20% of accrued yield.
-
-        /**********************************************************************************************************************************/
-        /*** Recognize the loss and accrue yield                                                                                        ***/
-        /**********************************************************************************************************************************/
-
-        vm.prank(governor);
-        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
-
-        vm.warp(block.timestamp + 365 days);
-
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyDelegateFeeRate(), delegateFeeRate);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyProtocolFeeRate(), protocolFeeRate);
-
-        assertSkyStrategyStorage({
-            strategy:                skyUnderlyingStrategy,
-            isLossRecognized:        true,
-            impairedAssets:          0,
-            lastRecordedTotalAssets: 0
-        });
-
-        assertEq(fundsAsset.balanceOf(skyUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),      0);
-        assertEq(fundsAsset.balanceOf(treasury),              0);
-
-        assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy),         0);
-        assertEq(IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy), initialSusdsBalance);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertSkyStrategy({
-            strategyManager:  skyStrategyManager,
-            aum:              0,
-            unrealizedLosses: 0
-        });
-
-        assertStrategyManager({
-            strategyManager:       skyStrategyManager,
-            totalShares:           fundedShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  skyStrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           fundedShares,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-
-        /**********************************************************************************************************************************/
-        /*** Update the protocol fee rate without updating accounting                                                                   ***/
-        /**********************************************************************************************************************************/
-
-        vm.prank(governor);
-        ISkyStrategy(skyUnderlyingStrategy).setStrategyProtocolFeeRate(newProtocolFeeRate);
-
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyDelegateFeeRate(), delegateFeeRate);
-        assertEq(ISkyStrategy(skyUnderlyingStrategy).strategyProtocolFeeRate(), newProtocolFeeRate);
-
-        assertSkyStrategyStorage({
-            strategy:                skyUnderlyingStrategy,
-            isLossRecognized:        true,
-            impairedAssets:          0,
-            lastRecordedTotalAssets: 0
-        });
-
-        assertEq(fundsAsset.balanceOf(skyUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),      0);
-        assertEq(fundsAsset.balanceOf(treasury),              0);
-
-        assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy),         0);
-        assertEq(IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy), initialSusdsBalance);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity - fundAmount,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - fundAmount
-        });
-
-        assertSkyStrategy({
-            strategyManager:  skyStrategyManager,
-            aum:              0,
-            unrealizedLosses: 0
-        });
-
-        assertStrategyManager({
-            strategyManager:       skyStrategyManager,
-            totalShares:           fundedShares,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  skyStrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           fundedShares,
             pendingShares:    0,
             unrealizedLosses: 0
         });

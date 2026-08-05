@@ -108,10 +108,10 @@ contract ProtocolActions is Runner {
     }
 
     function setFallbackTout(address strategy_, uint256 fallbackTout_) internal {
-        address globals_  = ISkyStrategy(strategy_).globals();
-        address governor_ = IGlobals(globals_).governor();
+        address globals_          = ISkyStrategy(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
 
-        vm.prank(governor_);
+        vm.prank(operationalAdmin_);
         ISkyStrategy(strategy_).setFallbackTout(fallbackTout_);
     }
 
