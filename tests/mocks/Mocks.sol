@@ -35,6 +35,16 @@ contract ConfigurableMockERC20 is MockERC20 {
 
 }
 
+contract InvalidStrategy { }
+
+contract InvalidStrategyFactory {
+
+    function createInstance(bytes calldata, bytes32) external returns (address strategy_) {
+        strategy_ = address(new InvalidStrategy());
+    }
+
+}
+
 contract MockContractWithFallback {
 
     uint256 public counter;
