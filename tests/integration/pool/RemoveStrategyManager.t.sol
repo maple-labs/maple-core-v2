@@ -2,7 +2,10 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAavePoolLike,
+    IAaveV3Strategy,
     IDefiStrategyLike,
+    IERC4626Like,
     IMockERC20,
     IMapleProxyFactory,
     IPoolManager,
@@ -14,14 +17,18 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 abstract contract RemoveStrategyManagerTestBase is TestBaseWithAssertions {
 
+    address aavePool;
     address allocationLossDeployer;
     address allocationYieldDeployer;
     address bootstrapStrategyManager;
     address liquidityProvider = makeAddr("liquidityProvider");
     address openTermLoanManager;
     address strategyManagerToRemove;
+    address strategyToken;
     address underlyingStrategy;
     address yieldBearingToken;
+
+    bool isSkyStrategy;
 
     uint256 expectedBootstrapAssets;
     uint256 expectedBootstrapShares;
@@ -612,6 +619,203 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
             pool:               address(pool),
             totalAssets:        0,
             totalSupply:        fundShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+    }
+
+    function testFork_removeStrategyManager_success_afterRecognizedLossAndDust() external {
+        uint256 fundAssets = 100_000e6;
+
+        /**********************************************************************************************************************************/
+        /*** Fund the strategy manager and recognize the full underlying strategy loss                                                  ***/
+        /**********************************************************************************************************************************/
+
+        deposit(address(pool), liquidityProvider, fundAssets);
+        fundStrategyManager(address(poolManager), strategyManagerToRemove, fundAssets);
+
+        // Allocation recognizes a specific deployer's loss, while DeFi strategies recognize the entire position.
+        if (allocationLossDeployer == address(0)) {
+            vm.prank(operationalAdmin);
+            IDefiStrategyLike(underlyingStrategy).recognizeLoss();
+        } else {
+            setManagedWallet({
+                strategy_:        underlyingStrategy,
+                managedWallet_:   allocationLossDeployer,
+                canDeployAssets_: true,
+                canReturnAssets_: false,
+                canRealizeYield_: false,
+                deploymentCap_:   fundAssets
+            });
+
+            deployAssets(underlyingStrategy, allocationLossDeployer, fundAssets);
+            recognizeLoss(underlyingStrategy, allocationLossDeployer, fundAssets);
+        }
+
+        if (allocationLossDeployer == address(0)) {
+            assertEq(IDefiStrategyLike(underlyingStrategy).isLossRecognized(), true);
+        }
+
+        assertStrategyManager({
+            strategyManager:       strategyManagerToRemove,
+            totalShares:           expectedFirstPoolShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  strategyManagerToRemove,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           expectedFirstPoolShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertUnderlyingStrategy({
+            strategy:              underlyingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        0,
+            totalSupply:        fundAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        /**********************************************************************************************************************************/
+        /*** Dust the underlying strategy with its strategy token                                                                       ***/
+        /**********************************************************************************************************************************/
+
+        address donor = makeAddr("donor");
+
+        uint256 fundsAssetDust             = 1e6;
+        uint256 strategyTokenBalanceBefore = IMockERC20(strategyToken).balanceOf(underlyingStrategy);
+
+        if (aavePool != address(0)) {
+            deal(address(fundsAsset), donor, fundsAssetDust, true);
+
+            vm.startPrank(donor);
+            fundsAsset.approve(aavePool, fundsAssetDust);
+            IAavePoolLike(aavePool).supply(address(fundsAsset), fundsAssetDust, donor, 0);
+            vm.stopPrank();
+        } else if (isSkyStrategy) {
+            uint256 usdsDust = fundsAssetDust * 1e12;  // Convert USDC precision to USDS precision.
+
+            deal(USDS, donor, usdsDust, true);
+
+            vm.startPrank(donor);
+            IMockERC20(USDS).approve(SAVINGS_USDS, usdsDust);
+            IERC4626Like(SAVINGS_USDS).deposit(usdsDust, donor);
+            vm.stopPrank();
+        } else {
+            deal(strategyToken, donor, fundsAssetDust, true);
+        }
+
+        uint256 strategyTokenDust = IMockERC20(strategyToken).balanceOf(donor);
+
+        assertNotEq(strategyTokenDust, 0);
+        assertEq(IMockERC20(strategyToken).balanceOf(underlyingStrategy), strategyTokenBalanceBefore);
+
+        vm.prank(donor);
+        IMockERC20(strategyToken).transfer(underlyingStrategy, strategyTokenDust);
+
+        // Aave and Spark aToken balance conversions can round by one unit.
+        assertApproxEqAbs(
+            IMockERC20(strategyToken).balanceOf(underlyingStrategy),
+            strategyTokenBalanceBefore + strategyTokenDust,
+            1
+        );
+
+        uint256 strategyTokenBalanceAfter = IMockERC20(strategyToken).balanceOf(underlyingStrategy);
+
+        assertEq(poolManager.isStrategyManager(strategyManagerToRemove), true);
+        assertEq(poolManager.strategyCapOf(strategyManagerToRemove),     type(uint256).max);
+        assertEq(poolManager.strategyListLength(),                       2);
+        assertEq(poolManager.strategyList(0),                            openTermLoanManager);
+        assertEq(poolManager.strategyList(1),                            strategyManagerToRemove);
+
+        assertStrategyManager({
+            strategyManager:       strategyManagerToRemove,
+            totalShares:           expectedFirstPoolShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  strategyManagerToRemove,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           expectedFirstPoolShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertUnderlyingStrategy({
+            strategy:              underlyingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        0,
+            totalSupply:        fundAssets,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        /**********************************************************************************************************************************/
+        /*** Remove the strategy manager without affecting the dust                                                                     ***/
+        /**********************************************************************************************************************************/
+
+        removeStrategyManager(address(poolManager), strategyManagerToRemove);
+
+        assertEq(poolManager.isStrategyManager(strategyManagerToRemove), false);
+        assertEq(poolManager.strategyCapOf(strategyManagerToRemove),     0);
+        assertEq(poolManager.strategyListLength(),                       1);
+        assertEq(poolManager.strategyList(0),                            openTermLoanManager);
+
+        assertEq(IMockERC20(strategyToken).balanceOf(underlyingStrategy), strategyTokenBalanceAfter);
+
+        assertStrategyManager({
+            strategyManager:       strategyManagerToRemove,
+            totalShares:           expectedFirstPoolShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  strategyManagerToRemove,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           expectedFirstPoolShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertUnderlyingStrategy({
+            strategy:              underlyingStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        0,
+            totalSupply:        fundAssets,
             unrealizedLosses:   0,
             availableLiquidity: 0
         });
@@ -1675,6 +1879,7 @@ contract RemoveStrategyManagerAllocationStrategyTests is RemoveStrategyManagerSu
         });
 
         strategyManagerToRemove = allocationStrategyManager;
+        strategyToken           = address(fundsAsset);
         underlyingStrategy      = allocationUnderlyingStrategy;
 
         _setUpStrategyManager();
@@ -1719,7 +1924,9 @@ contract RemoveStrategyManagerAaveV3StrategyForkTests is RemoveStrategyManagerSu
             bootstrapMint_:               10e6
         });
 
+        aavePool                = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
         strategyManagerToRemove = aaveV3StrategyManager;
+        strategyToken           = AAVE_USDC;
         underlyingStrategy      = aaveV3UnderlyingStrategy;
         yieldBearingToken       = AAVE_USDC;
 
@@ -1767,7 +1974,9 @@ contract RemoveStrategyManagerSkyStrategyForkTests is RemoveStrategyManagerSucce
             bootstrapMint_:           10e6
         });
 
+        isSkyStrategy           = true;
         strategyManagerToRemove = skyStrategyManager;
+        strategyToken           = SAVINGS_USDS;
         underlyingStrategy      = skyUnderlyingStrategy;
 
         _setUpStrategyManager();
@@ -1812,7 +2021,9 @@ contract RemoveStrategyManagerSparkLendStrategyForkTests is RemoveStrategyManage
             bootstrapMint_:               10e6
         });
 
+        aavePool                = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
         strategyManagerToRemove = aaveV3StrategyManager;
+        strategyToken           = SPARK_USDC;
         underlyingStrategy      = aaveV3UnderlyingStrategy;
         yieldBearingToken       = SPARK_USDC;
 

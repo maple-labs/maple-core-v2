@@ -167,6 +167,8 @@ interface IAavePoolLike is IAPL {
 
 interface IDefiStrategyLike {
 
+    function isLossRecognized() external view returns (bool isLossRecognized_);
+
     function recognizeLoss() external;
 
 }
