@@ -60,6 +60,71 @@ contract SkyStrategyRecognizeLossFailureTests is SkyStrategyTestBase {
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
     }
 
+    function testFork_setFallbackTout_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).setFallbackTout(1);
+    }
+
+    function testFork_setMetadata_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(governor);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).setMetadata("new metadata");
+    }
+
+    function testFork_setPsm_failWhenLossRecognized() external {
+        address newPsm = makeAddr("newPsm");
+
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).setPsm(newPsm);
+    }
+
+    function testFork_setReferralCode_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).setReferralCode(1);
+    }
+
+    function testFork_setStrategyDelegateFeeRate_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).setStrategyDelegateFeeRate(1);
+    }
+
+    function testFork_setStrategyProtocolFeeRate_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(governor);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).setStrategyProtocolFeeRate(1);
+    }
+
+    function testFork_withdrawFromUnderlyingStrategy_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
+
+        vm.prank(skyStrategyManager);
+        vm.expectRevert("MSS:LOSS_RECOGNIZED");
+        ISkyStrategy(skyUnderlyingStrategy).withdrawFromUnderlyingStrategy(makeAddr("destination"), 1, "");
+    }
+
 }
 
 contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {

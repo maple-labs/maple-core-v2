@@ -60,6 +60,60 @@ contract AaveV3StrategyRecognizeLossFailureTests is AaveV3StrategyTestBase {
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
     }
 
+    function testFork_setMetadata_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
+
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).setMetadata("new metadata");
+    }
+
+    function testFork_setReferralCode_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).setReferralCode(1);
+    }
+
+    function testFork_setStrategyDelegateFeeRate_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).setStrategyDelegateFeeRate(1);
+    }
+
+    function testFork_setStrategyProtocolFeeRate_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
+
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).setStrategyProtocolFeeRate(1);
+    }
+
+    function testFork_setUseVirtualUnderlyingBalance_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
+
+        vm.prank(governor);
+        vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).setUseVirtualUnderlyingBalance(!useVirtualUnderlyingBalance);
+    }
+
+    function testFork_withdrawFromUnderlyingStrategy_failWhenLossRecognized() external {
+        vm.prank(strategyDelegate);
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
+
+        vm.prank(aaveV3StrategyManager);
+        vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
+        IAaveV3Strategy(aaveV3UnderlyingStrategy).withdrawFromUnderlyingStrategy(makeAddr("destination"), 1, "");
+    }
+
 }
 
 contract SparkLendStrategyRecognizeLossFailureTests is AaveV3StrategyRecognizeLossFailureTests {
