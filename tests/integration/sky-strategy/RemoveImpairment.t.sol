@@ -3,6 +3,7 @@ pragma solidity ^0.8.7;
 
 import {
     IERC20Like,
+    IPool,
     IStrategyManager,
     ISkyStrategy
 } from "../../../contracts/interfaces/Interfaces.sol";
@@ -1232,6 +1233,223 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
             shares:           secondFundShares,
             pendingShares:    0,
             unrealizedLosses: remainingImpairment
+        });
+    }
+
+    function testFork_removeImpairment_afterImpairedPoolManagerFullyExits() external {
+        address firstPool        = address(pool);
+        address firstPoolManager = address(poolManager);
+
+        /**********************************************************************************************************************************/
+        /*** Fund a second pool and impair the shared strategy                                                                          ***/
+        /**********************************************************************************************************************************/
+
+        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+
+        deposit(secondPool, lp, poolLiquidity);
+        fundStrategyManager(secondPoolManager, skyStrategyManager, secondFundAmount);
+
+        uint256 totalAssets = strategyAssets + secondFundAmount;
+        uint256 totalShares = strategyShares + secondFundShares;
+
+        uint256 firstUnrealizedLoss  = divRoundUp(strategyShares   * impairment, totalShares);
+        uint256 secondUnrealizedLoss = divRoundUp(secondFundShares * impairment, totalShares);
+
+        impairStrategy(skyUnderlyingStrategy, impairment);
+
+        assertPoolState({
+            pool:               firstPool,
+            totalAssets:        poolLiquidity - expectedRoundingLoss,
+            totalSupply:        poolShares,
+            unrealizedLosses:   firstUnrealizedLoss,
+            availableLiquidity: poolLiquidity - fundAmount
+        });
+
+        assertPoolState({
+            pool:               secondPool,
+            totalAssets:        poolLiquidity,
+            totalSupply:        poolShares,
+            unrealizedLosses:   secondUnrealizedLoss,
+            availableLiquidity: poolLiquidity - secondFundAmount
+        });
+
+        assertSkyStrategyStorage({
+            strategy:                skyUnderlyingStrategy,
+            isLossRecognized:        false,
+            impairedAssets:          impairment,
+            lastRecordedTotalAssets: totalAssets
+        });
+
+        assertSkyStrategy({
+            strategyManager:  skyStrategyManager,
+            aum:              totalAssets,
+            unrealizedLosses: impairment
+        });
+
+        assertStrategyManager({
+            strategyManager:       skyStrategyManager,
+            totalShares:           totalShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: totalAssets,
+            availableToWithdraw:   totalAssets,
+            unrealizedLosses:      impairment
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  skyStrategyManager,
+            poolManager:      firstPoolManager,
+            assets:           strategyAssets,
+            shares:           strategyShares,
+            pendingShares:    0,
+            unrealizedLosses: firstUnrealizedLoss
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  skyStrategyManager,
+            poolManager:      secondPoolManager,
+            assets:           secondFundAmount,
+            shares:           secondFundShares,
+            pendingShares:    0,
+            unrealizedLosses: secondUnrealizedLoss
+        });
+
+        /**********************************************************************************************************************************/
+        /*** Fully exit the first pool manager while the strategy is impaired                                                           ***/
+        /**********************************************************************************************************************************/
+
+        uint256 firstExitAssets = strategyShares * (totalAssets - impairment) / totalShares;
+
+        assertEq(IStrategyManager(skyStrategyManager).convertToExitAssets(strategyShares), firstExitAssets);
+
+        requestRedeemFromStrategyManager(firstPoolManager, skyStrategyManager, strategyShares);
+        processRedemptionFromStrategyManager(firstPoolManager, skyStrategyManager, strategyShares);
+
+        uint256 remainingAssets              = totalAssets - firstExitAssets;
+        uint256 secondPoolImpairedExitAssets = IPool(secondPool).convertToExitAssets(poolShares);
+
+        assertEq(secondPoolImpairedExitAssets, poolLiquidity - secondFundAmount + remainingAssets - impairment);
+
+        assertPoolState({
+            pool:               firstPool,
+            totalAssets:        poolLiquidity - fundAmount + firstExitAssets,
+            totalSupply:        poolShares,
+            unrealizedLosses:   0,
+            availableLiquidity: poolLiquidity - fundAmount + firstExitAssets
+        });
+
+        assertPoolState({
+            pool:               secondPool,
+            totalAssets:        poolLiquidity - secondFundAmount + remainingAssets,
+            totalSupply:        poolShares,
+            unrealizedLosses:   impairment,
+            availableLiquidity: poolLiquidity - secondFundAmount
+        });
+
+        assertSkyStrategyStorage({
+            strategy:                skyUnderlyingStrategy,
+            isLossRecognized:        false,
+            impairedAssets:          impairment,
+            lastRecordedTotalAssets: remainingAssets
+        });
+
+        assertSkyStrategy({
+            strategyManager:  skyStrategyManager,
+            aum:              remainingAssets,
+            unrealizedLosses: impairment
+        });
+
+        assertStrategyManager({
+            strategyManager:       skyStrategyManager,
+            totalShares:           secondFundShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: remainingAssets,
+            availableToWithdraw:   remainingAssets,
+            unrealizedLosses:      impairment
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  skyStrategyManager,
+            poolManager:      firstPoolManager,
+            assets:           0,
+            shares:           0,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  skyStrategyManager,
+            poolManager:      secondPoolManager,
+            assets:           remainingAssets,
+            shares:           secondFundShares,
+            pendingShares:    0,
+            unrealizedLosses: impairment
+        });
+
+        /**********************************************************************************************************************************/
+        /*** Remove the impairment and show that the remaining pool manager receives the full recovery                                  ***/
+        /**********************************************************************************************************************************/
+
+        removeStrategyImpairment(skyUnderlyingStrategy, impairment);
+
+        uint256 secondPoolRestoredExitAssets = IPool(secondPool).convertToExitAssets(poolShares);
+
+        assertEq(secondPoolRestoredExitAssets,                                poolLiquidity - secondFundAmount + remainingAssets);
+        assertEq(secondPoolRestoredExitAssets - secondPoolImpairedExitAssets, impairment);
+
+        assertPoolState({
+            pool:               firstPool,
+            totalAssets:        poolLiquidity - fundAmount + firstExitAssets,
+            totalSupply:        poolShares,
+            unrealizedLosses:   0,
+            availableLiquidity: poolLiquidity - fundAmount + firstExitAssets
+        });
+
+        assertPoolState({
+            pool:               secondPool,
+            totalAssets:        poolLiquidity - secondFundAmount + remainingAssets,
+            totalSupply:        poolShares,
+            unrealizedLosses:   0,
+            availableLiquidity: poolLiquidity - secondFundAmount
+        });
+
+        assertSkyStrategyStorage({
+            strategy:                skyUnderlyingStrategy,
+            isLossRecognized:        false,
+            impairedAssets:          0,
+            lastRecordedTotalAssets: remainingAssets
+        });
+
+        assertSkyStrategy({
+            strategyManager:  skyStrategyManager,
+            aum:              remainingAssets,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       skyStrategyManager,
+            totalShares:           secondFundShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: remainingAssets,
+            availableToWithdraw:   remainingAssets,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  skyStrategyManager,
+            poolManager:      firstPoolManager,
+            assets:           0,
+            shares:           0,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  skyStrategyManager,
+            poolManager:      secondPoolManager,
+            assets:           remainingAssets,
+            shares:           secondFundShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
         });
     }
 
