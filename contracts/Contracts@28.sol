@@ -27,13 +27,6 @@ import { MapleStrategyManager as MSM }              from "../modules/strategy-ma
 import { MapleStrategyManagerFactory as MSMF }      from "../modules/strategy-manager/contracts/MapleStrategyManagerFactory.sol";
 import { MapleStrategyManagerInitializer as MSMI }  from "../modules/strategy-manager/contracts/MapleStrategyManagerInitializer.sol";
 
-import { MapleWithdrawalManager as MWMQ }
-    from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
-import { MapleWithdrawalManagerInitializer as MWMQI }
-    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
-import { MapleWithdrawalManagerMigratorV300 as MWMQM }
-    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV300.sol";
-
 contract AllocationStrategy is MAS { }
 
 contract AllocationStrategyFactory is MASF {
@@ -111,9 +104,3 @@ contract SkyStrategyFactory is MSSF {
 }
 
 contract SkyStrategyInitializer is MSSI { }
-
-contract WithdrawalManagerQueue is MWMQ { }
-
-contract WithdrawalManagerQueueInitializer is MWMQI { }
-
-contract WithdrawalManagerQueueMigrator is MWMQM { }

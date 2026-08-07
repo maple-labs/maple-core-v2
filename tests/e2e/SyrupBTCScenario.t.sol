@@ -868,7 +868,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(requestIds);
+        withdrawalManager.processRedemptions(sharesToRedeem);
 
         assertSyrupBtcSystemState({
             strategyManagerBalance:    amountToDeploy,
@@ -1683,7 +1683,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         requestIds[0]               = 2;
 
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(requestIds);
+        withdrawalManager.processRedemptions(redeemAmount - sharesToRemove);
 
         vm.prank(redeemer);
         bitcoinRouter.processRedemptions(requestIds);
@@ -1770,7 +1770,7 @@ contract SyrupBTCScenarioTests is ProtocolActions, TestBaseWithAssertions {
         assertEq(depositAsset.balanceOf(lp), 0);
 
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(requestIds);
+        withdrawalManager.processRedemptions(redeemAmount1 + redeemAmount2 + redeemAmount3);
 
         uint256[] memory requestsToProcessOnRouter = new uint256[](2);
         requestsToProcessOnRouter[0]               = 1;

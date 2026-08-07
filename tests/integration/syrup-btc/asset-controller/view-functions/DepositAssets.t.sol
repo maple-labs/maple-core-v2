@@ -48,7 +48,7 @@ contract DepositAssetsTests is SyrupBitcoinTestBase {
         requestIds[0]               = requestId;
 
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(requestIds);
+        withdrawalManager.processRedemptions(shares);
 
         vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);

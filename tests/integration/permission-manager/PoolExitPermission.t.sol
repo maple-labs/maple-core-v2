@@ -127,7 +127,7 @@ contract PrivatePermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -438,7 +438,7 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -479,7 +479,7 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -521,7 +521,7 @@ contract FunctionLevelPermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -822,7 +822,7 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -860,7 +860,7 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -899,7 +899,7 @@ contract PoolLevelPermissionTests is PoolExitPermissionTestBase {
 
         assertEq(poolManager.totalAssets(), assets);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);
@@ -975,7 +975,7 @@ contract PublicPermissionTests is PoolExitPermissionTestBase {
 
         vm.warp(start + 2 weeks);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), shares);
 
         vm.prank(lp);
         pool.redeem(shares, lp, lp);

@@ -44,7 +44,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         uint256 sharesReturned = pool.removeShares(1_000e6, lp);
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 1 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
 
         assertEq(sharesReturned,             1_000e6);
         assertEq(pool.balanceOf(lp),         1_000e6);
@@ -74,7 +74,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         uint256 sharesReturned = pool.removeShares(1_000e6, lp);
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 1 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
 
         assertEq(sharesReturned,             1_000e6);
         assertEq(pool.balanceOf(lp),         1_000e6);
@@ -83,6 +83,86 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
         assertEq(queueWM.totalShares(),      0);
 
         assertLastRequestId(address(queueWM), lp, 0);
+    }
+
+    function test_removeShares_partiallyProcessed() external {
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp, shares: 1_000e6 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+
+        assertEq(pool.balanceOf(lp),                0);
+        assertEq(pool.balanceOf(wm),                1_000e6);
+        assertEq(fundsAsset.balanceOf(address(lp)), 0);
+        assertEq(queueWM.totalShares(),             1_000e6);
+
+        assertLastRequestId(address(queueWM), lp, 1);
+
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(500e6);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp, shares: 500e6 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+
+        assertEq(pool.balanceOf(lp),                0);
+        assertEq(pool.balanceOf(wm),                500e6);
+        assertEq(fundsAsset.balanceOf(address(lp)), 1_000e6);
+        assertEq(queueWM.totalShares(),             500e6);
+
+        assertLastRequestId(address(queueWM), lp, 1);
+
+        vm.prank(lp);
+        uint256 sharesReturned = pool.removeShares(500e6, lp);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+
+        assertEq(sharesReturned,                    500e6);
+        assertEq(pool.balanceOf(lp),                500e6);
+        assertEq(pool.balanceOf(wm),                0);
+        assertEq(fundsAsset.balanceOf(address(lp)), 1_000e6);
+        assertEq(queueWM.totalShares(),             0);
+
+        assertLastRequestId(address(queueWM), lp, 0);
+    }
+
+    function test_removeShares_manual_partiallyProcessed() external {
+        deposit(lp2, 4_000e6);  // LP2 will get only 2_000e6 shares due to the exchange rate
+
+        vm.prank(lp2);
+        pool.requestRedeem(2_000e6, lp2);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
+
+        assertEq(pool.balanceOf(lp2),         0);
+        assertEq(pool.balanceOf(wm),          3_000e6);  // 1_000e6 from lp1 and 2_000e6 from lp2
+        assertEq(queueWM.totalShares(),       3_000e6);
+
+        assertLastRequestId(address(queueWM), lp2, 2);
+
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(2_500e6);  // 1000e6 from lp1 and 1_500e6 from lp2
+
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 500e6 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+
+        assertEq(queueWM.manualSharesAvailable(lp2), 1_500e6);
+
+        vm.prank(lp2);
+        vm.expectRevert("WM:RS:INSUFFICIENT_SHARES");
+        pool.removeShares(2_000e6, lp2);
+
+        vm.prank(lp2);
+        uint256 sharesReturned = pool.removeShares(500e6, lp2);
+
+        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+
+        assertEq(sharesReturned,              500e6);
+        assertEq(pool.balanceOf(lp2),         500e6);
+        assertEq(pool.balanceOf(wm),          1_500e6);
+        assertEq(queueWM.totalShares(),       1_500e6);
+
+        assertLastRequestId(address(queueWM), lp2, 0);
     }
 
     function test_removeShares_partial_multipleRequests() external {
@@ -208,7 +288,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: sender,     shares: senderShares });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp),         1_000e6);
         assertEq(pool.balanceOf(wm),         senderShares);
@@ -223,7 +303,7 @@ contract RemoveSharesQueueTests is TestBaseWithAssertions {
 
         assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
         assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 3, lastRequestId: 2 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
 
         assertEq(pool.balanceOf(lp),         1_000e6);
         assertEq(pool.balanceOf(wm),         0);

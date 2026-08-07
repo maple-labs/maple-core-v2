@@ -79,7 +79,7 @@ contract RedeemFuzzTests is FuzzBase {
         assertEq(pool.balanceOf(address(queueWM)), sharesToRedeem);
 
         // Pool delegate processes the request, making the shares available for manual withdrawal.
-        processRedemptionByOwners(address(pool), array(owner));
+        processRedemptions(address(pool), sharesToRedeem);
 
         assertEq(queueWM.manualSharesAvailable(owner), sharesToRedeem);
         assertEq(pool.balanceOf(address(queueWM)),     sharesToRedeem);

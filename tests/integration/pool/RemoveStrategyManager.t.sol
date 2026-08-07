@@ -1376,7 +1376,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
         /**********************************************************************************************************************************/
 
         requestRedeem(address(pool), liquidityProvider, liquidityProviderShares);
-        processRedemptionByOwners(address(pool), array(liquidityProvider));
+        processRedemptions(address(pool), liquidityProviderShares);
 
         assertEq(poolManager.strategyListLength(),        0);
         assertEq(pool.balanceOf(liquidityProvider),       0);

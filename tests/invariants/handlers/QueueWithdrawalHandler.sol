@@ -47,26 +47,14 @@ contract QueueWithdrawalHandler is HandlerBase {
         console.log("qwm.processRedemptions(%s)", seed_);
         numberOfCalls["qwm.processRedemptions"]++;
 
-        uint256[] memory activeRequestIds_ = _activeRequestIds(wm);
+        uint256 sharesToProcess_ = _bound(_randomize(seed_, "shares"), 0, wm.totalShares());
 
-        if (activeRequestIds_.length == 0) return;
-
-        uint256 requestCount_ = _bound(_randomize(seed_, "requestCount_"), 1, activeRequestIds_.length);
-
-        uint256[] memory requestIds_ = randomSubset(seed_, requestCount_, activeRequestIds_);
-        
-        uint256 totalShares_;
-
-        for (uint256 i; i < requestCount_; ++i) {
-            ( , uint256 sharesToProcess_ ) = wm.requests(requestIds_[i]);
-
-            totalShares_ += sharesToProcess_;
-        }
+        if (sharesToProcess_ == 0) return;
 
         // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
         address depositLp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
 
-        uint256 assetsRequired_ = pool.convertToAssets(totalShares_);
+        uint256 assetsRequired_ = pool.previewMint(sharesToProcess_);
 
         vm.startPrank(depositLp_);
         asset.mint(depositLp_, assetsRequired_);
@@ -75,7 +63,26 @@ contract QueueWithdrawalHandler is HandlerBase {
         pool.deposit(assetsRequired_, depositLp_);
         vm.stopPrank();
 
-        processRedemptionByIds(address(pool), requestIds_);
+        vm.prank(pm.poolDelegate());
+        wm.processRedemptions(sharesToProcess_);
+    }
+
+    function processEmptyRedemptions(uint256 seed_) external {
+        console.log("qwm.processEmptyRedemptions(%s)", seed_);
+        numberOfCalls["qwm.processEmptyRedemptions"]++;
+
+        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = wm.queue();
+
+        // TODO: Do we need this line?
+        if (nextRequestId_ >= lastRequestId_) return;
+
+        // TODO: Should this be lastRequestId_ - nextRequestId_ + 1?
+        uint256 numberOfRequests_ = lastRequestId_ - nextRequestId_;
+
+        uint256 numberOfRequestsToProcess_ = _bound(_randomize(seed_, "numberOfRequestsToProcess"), 1, numberOfRequests_);
+
+        vm.prank(pm.poolDelegate());
+        wm.processEmptyRedemptions(numberOfRequestsToProcess_);
     }
 
     function redeem(uint256 seed_) external {

@@ -31,8 +31,14 @@ import { Proxy as P } from "../modules/strategy-manager/modules/maple-proxy-fact
 
 import { SyrupRouter as SR } from "../modules/syrup-utils/contracts/SyrupRouter.sol";
 
+import { MapleWithdrawalManager as MWMQ }
+    from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
 import { MapleWithdrawalManagerFactory as MWMQF }
     from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerFactory.sol";
+import { MapleWithdrawalManagerInitializer as MWMQI }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
+import { MapleWithdrawalManagerMigratorV200 as MWMQM }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerMigratorV200.sol";
 
 import { ConfigurableMockERC20 } from "../tests/mocks/Mocks.sol";
 
@@ -98,8 +104,14 @@ contract SyrupRouter is SR {
 
 }
 
+contract WithdrawalManagerQueue is MWMQ { }
+
 contract WithdrawalManagerQueueFactory is MWMQF {
 
     constructor(address globals_) MWMQF(globals_) { }
 
 }
+
+contract WithdrawalManagerQueueInitializer is MWMQI { }
+
+contract WithdrawalManagerQueueMigrator is MWMQM { }

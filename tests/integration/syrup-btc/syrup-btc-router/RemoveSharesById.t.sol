@@ -97,11 +97,8 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
     }
 
     function test_removeSharesById_revert_invalidRequest_fullyProcessed() external {
-        uint256[] memory firstRequest = new uint256[](1);
-        firstRequest[0]               = requestId1;
-
         vm.prank(poolDelegate);
-        withdrawalManager.processRedemptions(firstRequest);
+        withdrawalManager.processRedemptions(redeemAmount1);
 
         vm.prank(depositor);
         vm.expectRevert("WM:RSBI:INVALID_REQUEST");
@@ -230,7 +227,7 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
 
         assertQueue({
             poolManager: address(poolManager),
-            nextRequestId: requestId2,
+            nextRequestId: requestId1,
             lastRequestId: requestId2
         });
     }
@@ -565,6 +562,318 @@ contract SyrupBitcoinRouterRemoveSharesByIdTests is SyrupBitcoinTestBase {
             poolManager: address(poolManager),
             nextRequestId: requestId1,
             lastRequestId: requestId3_
+        });
+    }
+
+    function test_removeSharesById_revert_noChange_wmRequestPartiallyProcessed() external {
+        uint256 sharesToProcess = 100e8;
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(sharesToProcess);
+
+        vm.prank(depositor);
+        vm.expectRevert("WM:RSBI:NO_CHANGE");
+        bitcoinRouter.removeSharesById(requestId1, 0);
+    }
+
+    function test_removeSharesById_success_completeRemoval_wmRequestPartiallyProcessed() external {
+        uint256[] memory expectedRequestIds = new uint256[](2);
+        expectedRequestIds[0]               = requestId1;
+        expectedRequestIds[1]               = requestId2;
+
+        uint256 depositorSharesBalanceBefore        = pool.balanceOf(depositor);
+        uint256 wmSharesBalanceBefore               = pool.balanceOf(address(withdrawalManager));
+        uint256 poolTotalAssetsBefore               = pool.totalAssets();
+        uint256 poolDepositAssetBalanceBefore       = IERC20(pool.asset()).balanceOf(address(pool));
+        uint256 controllerDepositAssetBalanceBefore = depositAsset.balanceOf(address(assetController));
+
+        assertRequestOnRouter({
+            requestId: requestId1,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount1
+        });
+
+        assertRequestOnRouter({
+            requestId: requestId2,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount2
+        });
+
+        assertRequestOnWm({
+            requestId: requestId1,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount1
+        });
+
+        assertRequestOnWm({
+            requestId: requestId2,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount2
+        });
+
+        assertUsersRequestsOnWm(address(bitcoinRouter), expectedRequestIds);
+
+        assertEq(withdrawalManager.manualSharesAvailable(address(bitcoinRouter)), 0);
+        assertEq(withdrawalManager.userEscrowedShares(address(bitcoinRouter)),    totalRedeemRequested);
+        assertEq(withdrawalManager.totalShares(),                                 totalRedeemRequested);
+
+        assertQueue({
+            poolManager: address(poolManager),
+            nextRequestId: requestId1,
+            lastRequestId: requestId2
+        });
+
+        uint256 sharesToProcess = 100e8;
+        uint256 sharesToRemove  = redeemAmount1 - sharesToProcess;
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(sharesToProcess);
+
+        assertRequestOnRouter({
+            requestId: requestId1,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount1
+        });
+
+        assertRequestOnRouter({
+            requestId: requestId2,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount2
+        });
+
+        assertRequestOnWm({
+            requestId: requestId1,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount1 - sharesToProcess
+        });
+
+        assertRequestOnWm({
+            requestId: requestId2,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount2
+        });
+
+        assertUsersRequestsOnWm(address(bitcoinRouter), expectedRequestIds);
+
+        assertEq(withdrawalManager.manualSharesAvailable(address(bitcoinRouter)), sharesToProcess);
+        assertEq(withdrawalManager.userEscrowedShares(address(bitcoinRouter)),    totalRedeemRequested - sharesToProcess);
+        assertEq(withdrawalManager.totalShares(),                                 totalRedeemRequested);
+
+        assertEq(pool.balanceOf(depositor),                        depositorSharesBalanceBefore);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       wmSharesBalanceBefore);
+        assertEq(pool.totalAssets(),                               poolTotalAssetsBefore);
+        assertEq(IERC20(pool.asset()).balanceOf(address(pool)),    poolDepositAssetBalanceBefore);
+        assertEq(depositAsset.balanceOf(address(assetController)), controllerDepositAssetBalanceBefore);
+
+        assertQueue({
+            poolManager: address(poolManager),
+            nextRequestId: requestId1,
+            lastRequestId: requestId2
+        });
+
+        vm.prank(depositor);
+        uint256 sharesReturned = bitcoinRouter.removeSharesById(requestId1, sharesToRemove);
+
+        assertEq(sharesReturned, sharesToRemove);
+
+        assertRequestOnRouter({
+            requestId: requestId1,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    sharesToProcess
+        });
+
+        assertRequestOnRouter({
+            requestId: requestId2,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount2
+        });
+
+        assertRequestOnWm({
+            requestId: requestId1,
+            owner:     address(0),
+            shares:    0
+        });
+
+        assertRequestOnWm({
+            requestId: requestId2,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount2
+        });
+
+        expectedRequestIds    = new uint256[](1);
+        expectedRequestIds[0] = requestId2;
+
+        assertUsersRequestsOnWm(address(bitcoinRouter), expectedRequestIds);
+
+        assertEq(withdrawalManager.manualSharesAvailable(address(bitcoinRouter)), sharesToProcess);
+        assertEq(withdrawalManager.userEscrowedShares(address(bitcoinRouter)),    totalRedeemRequested - sharesToRemove - sharesToProcess);
+        assertEq(withdrawalManager.totalShares(),                                 totalRedeemRequested - sharesToRemove);
+
+        assertEq(pool.balanceOf(depositor),                        depositorSharesBalanceBefore + sharesToRemove);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       wmSharesBalanceBefore - sharesToRemove);
+        assertEq(pool.totalAssets(),                               poolTotalAssetsBefore);
+        assertEq(IERC20(pool.asset()).balanceOf(address(pool)),    poolDepositAssetBalanceBefore);
+        assertEq(depositAsset.balanceOf(address(assetController)), controllerDepositAssetBalanceBefore);
+
+        assertQueue({
+            poolManager: address(poolManager),
+            nextRequestId: requestId1,
+            lastRequestId: requestId2
+        });
+    }
+
+    function test_removeSharesById_success_decreaseShares_wmRequestPartiallyProcessed() external {
+        uint256[] memory expectedRequestIds = new uint256[](2);
+        expectedRequestIds[0]               = requestId1;
+        expectedRequestIds[1]               = requestId2;
+
+        uint256 depositorSharesBalanceBefore        = pool.balanceOf(depositor);
+        uint256 wmSharesBalanceBefore               = pool.balanceOf(address(withdrawalManager));
+        uint256 poolTotalAssetsBefore               = pool.totalAssets();
+        uint256 poolDepositAssetBalanceBefore       = IERC20(pool.asset()).balanceOf(address(pool));
+        uint256 controllerDepositAssetBalanceBefore = depositAsset.balanceOf(address(assetController));
+
+        assertRequestOnRouter({
+            requestId: requestId1,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount1
+        });
+
+        assertRequestOnRouter({
+            requestId: requestId2,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount2
+        });
+
+        assertRequestOnWm({
+            requestId: requestId1,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount1
+        });
+
+        assertRequestOnWm({
+            requestId: requestId2,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount2
+        });
+
+        assertUsersRequestsOnWm(address(bitcoinRouter), expectedRequestIds);
+
+        assertEq(withdrawalManager.manualSharesAvailable(address(bitcoinRouter)), 0);
+        assertEq(withdrawalManager.userEscrowedShares(address(bitcoinRouter)),    totalRedeemRequested);
+        assertEq(withdrawalManager.totalShares(),                                 totalRedeemRequested);
+
+        assertQueue({
+            poolManager: address(poolManager),
+            nextRequestId: requestId1,
+            lastRequestId: requestId2
+        });
+
+        uint256 sharesToProcess = 100e8;
+        uint256 sharesToRemove  = 200e8;
+
+        vm.prank(poolDelegate);
+        withdrawalManager.processRedemptions(sharesToProcess);
+
+        assertRequestOnRouter({
+            requestId: requestId1,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount1
+        });
+
+        assertRequestOnRouter({
+            requestId: requestId2,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount2
+        });
+
+        assertRequestOnWm({
+            requestId: requestId1,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount1 - sharesToProcess
+        });
+
+        assertRequestOnWm({
+            requestId: requestId2,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount2
+        });
+
+        assertUsersRequestsOnWm(address(bitcoinRouter), expectedRequestIds);
+
+        assertEq(withdrawalManager.manualSharesAvailable(address(bitcoinRouter)), sharesToProcess);
+        assertEq(withdrawalManager.userEscrowedShares(address(bitcoinRouter)),    totalRedeemRequested - sharesToProcess);
+        assertEq(withdrawalManager.totalShares(),                                 totalRedeemRequested);
+
+        assertEq(pool.balanceOf(depositor),                        depositorSharesBalanceBefore);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       wmSharesBalanceBefore);
+        assertEq(pool.totalAssets(),                               poolTotalAssetsBefore);
+        assertEq(IERC20(pool.asset()).balanceOf(address(pool)),    poolDepositAssetBalanceBefore);
+        assertEq(depositAsset.balanceOf(address(assetController)), controllerDepositAssetBalanceBefore);
+
+        assertQueue({
+            poolManager: address(poolManager),
+            nextRequestId: requestId1,
+            lastRequestId: requestId2
+        });
+
+        vm.prank(depositor);
+        uint256 sharesReturned = bitcoinRouter.removeSharesById(requestId1, sharesToRemove);
+
+        assertEq(sharesReturned, sharesToRemove);
+
+        assertRequestOnRouter({
+            requestId: requestId1,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount1 - sharesToRemove
+        });
+
+        assertRequestOnRouter({
+            requestId: requestId2,
+            asset:     address(depositAsset),
+            owner:     depositor,
+            shares:    redeemAmount2
+        });
+
+        assertRequestOnWm({
+            requestId: requestId1,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount1 - sharesToRemove - sharesToProcess
+        });
+
+        assertRequestOnWm({
+            requestId: requestId2,
+            owner:     address(bitcoinRouter),
+            shares:    redeemAmount2
+        });
+
+        assertUsersRequestsOnWm(address(bitcoinRouter), expectedRequestIds);
+
+        assertEq(withdrawalManager.manualSharesAvailable(address(bitcoinRouter)), sharesToProcess);
+        assertEq(withdrawalManager.userEscrowedShares(address(bitcoinRouter)),    totalRedeemRequested - sharesToRemove - sharesToProcess);
+        assertEq(withdrawalManager.totalShares(),                                 totalRedeemRequested - sharesToRemove);
+
+        assertEq(pool.balanceOf(depositor),                        depositorSharesBalanceBefore + sharesToRemove);
+        assertEq(pool.balanceOf(address(withdrawalManager)),       wmSharesBalanceBefore - sharesToRemove);
+        assertEq(pool.totalAssets(),                               poolTotalAssetsBefore);
+        assertEq(IERC20(pool.asset()).balanceOf(address(pool)),    poolDepositAssetBalanceBefore);
+        assertEq(depositAsset.balanceOf(address(assetController)), controllerDepositAssetBalanceBefore);
+
+        assertQueue({
+            poolManager: address(poolManager),
+            nextRequestId: requestId1,
+            lastRequestId: requestId2
         });
     }
 

@@ -329,7 +329,7 @@ contract HasPermissionFuzzTests is TestBase {
         queueWM.setManualWithdrawal(lender, true);
 
         setupRequest(lender, sharesToRedeem);
-        processRedemptionByOwners(address(pool), array(lender));
+        processRedemptions(address(pool), sharesToRedeem);
 
         setupPoolPermissions(permissionLevel, "P:redeem", "P:transfer", poolBitmap);
         setupLenderPermissions(lender, isAllowlisted, lenderBitmap);

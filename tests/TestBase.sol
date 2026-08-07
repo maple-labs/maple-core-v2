@@ -737,12 +737,12 @@ contract TestBase is ProtocolActions, Utils {
         openTermLoanImplementation        = deployFromFile("Contracts@7",  "OpenTermLoan");
         openTermLoanManagerImplementation = deployFromFile("Contracts@7",  "OpenTermLoanManager");
         poolManagerImplementation         = deployFromFile("Contracts@28", "PoolManager");
-        queueWMImplementation             = deployFromFile("Contracts@28", "WithdrawalManagerQueue");
+        queueWMImplementation             = deployFromFile("Contracts@7",  "WithdrawalManagerQueue");
 
         openTermLoanInitializer        = deployFromFile("Contracts@7",  "OpenTermLoanInitializer");
         openTermLoanManagerInitializer = deployFromFile("Contracts@7",  "OpenTermLoanManagerInitializer");
         poolManagerInitializer         = deployFromFile("Contracts@28", "PoolManagerInitializer");
-        queueWMInitializer             = deployFromFile("Contracts@28", "WithdrawalManagerQueueInitializer");
+        queueWMInitializer             = deployFromFile("Contracts@7",  "WithdrawalManagerQueueInitializer");
 
         openTermRefinancer = deployFromFile("Contracts@7", "OpenTermRefinancer");
 

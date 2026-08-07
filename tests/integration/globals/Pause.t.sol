@@ -153,7 +153,8 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
         abi.encodeWithSignature("setManualWithdrawal(address,bool)", address(0), false),
         abi.encodeWithSignature("removeRequest(address,uint256[])", address(0), new uint256[](0)),
-        abi.encodeWithSignature("processRedemptions(uint256[])", new uint256[](0)),
+        abi.encodeWithSignature("processRedemptions(uint256)", 0),
+        abi.encodeWithSignature("processEmptyRedemptions(uint256)", 0),
         abi.encodeWithSignature("removeSharesById(uint256,uint256)", 0, 0)
     ];
 

@@ -66,9 +66,9 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 1: Deploy new version of withdrawal manager queue
 
-        mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@28", "WithdrawalManagerQueue");
-        mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@28", "WithdrawalManagerQueueInitializer");
-        mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@28", "WithdrawalManagerQueueMigrator");
+        mapleWithdrawalManagerV200Implementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
+        mapleWithdrawalManagerV200Initializer    = deployFromFile("Contracts@7", "WithdrawalManagerQueueInitializer");
+        mapleWithdrawalManagerV200Migrator       = deployFromFile("Contracts@7", "WithdrawalManagerQueueMigrator");
 
         // Step 2: Deploy bitcoin strategy factory
 

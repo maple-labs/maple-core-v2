@@ -25,7 +25,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     function test_implementation_updatesAfterUpgrade() external {
         address oldImplementation = queueWM.implementation();
 
-        address newImplementation = deployFromFile("Contracts@28", "WithdrawalManagerQueue");
+        address newImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
 
         uint256 oldVersion = IMapleProxyFactory(queueWMFactory).versionOf(oldImplementation);
         uint256 newVersion = 201;
@@ -65,14 +65,26 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(queueWM.governor(), newGovernor);
     }
 
-    function test_maxRedeem_updatesAfterProcessing() external {
-        assertEq(queueWM.maxRedeem(lp), 0);
+    function test_isInExitWindow() external view {
+        assertTrue(queueWM.isInExitWindow(lp));
+    }
+
+    function test_lockedLiquidity_constantZero() external {
+        assertEq(queueWM.lockedLiquidity(), 0);
+
+        requestRedeem(lp, 50e6);
+        processRedemptions(address(pool), 50e6);
+        assertEq(queueWM.lockedLiquidity(), 0);
+    }
+
+    function test_lockedShares_updatesAfterProcessing() external {
+        assertEq(queueWM.lockedShares(lp), 0);
 
         setManualWithdrawal(address(poolManager), lp, true);
         requestRedeem(lp, 100e6);
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), 100e6);
 
-        assertEq(queueWM.maxRedeem(lp), 100e6);
+        assertEq(queueWM.lockedShares(lp), 100e6);
     }
 
     function test_poolDelegate_updatesAfterTransfer() external {
@@ -100,7 +112,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
 
         setManualWithdrawal(address(poolManager), lp, true);
         requestRedeem(lp, 200e6);
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), 200e6);
 
         ( uint256 rs1, uint256 ra1 ) = queueWM.previewRedeem(lp, 50e6);
         assertEq(rs1, 50e6);
@@ -158,7 +170,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(queueWM.asset(), address(fundsAsset));
 
         requestRedeem(lp, 10e6);
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), 10e6);
 
         assertEq(queueWM.asset(), address(fundsAsset));
     }
@@ -174,83 +186,11 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         assertEq(nextId1, 1);
         assertEq(lastId1, 1);
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), 100e6);
 
         ( uint128 nextId2, uint128 lastId2 ) = queueWM.queue();
         assertEq(nextId2, 2);
         assertEq(lastId2, 1);
-    }
-
-    function test_pendingRequestIds_updatesAfterProcessingWithPagination() external {
-        address lp2 = makeAddr("lp2");
-        address lp3 = makeAddr("lp3");
-
-        deposit(lp2, 2_000e6);
-        deposit(lp3, 3_000e6);
-
-        requestRedeem(lp,  1_000e6);
-        requestRedeem(lp2, 2_000e6);
-        requestRedeem(lp3, 3_000e6);
-
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp,  shares: 1_000e6 });
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
-        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
-
-        // remove the middle request
-        processRedemptionByIds(address(pool), array(2));
-
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp,         shares: 1_000e6 });
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
-        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3,        shares: 3_000e6 });
-
-        (
-            uint256[] memory requestIds,
-            address[] memory owners,
-            uint256[] memory shares
-        ) = queueWM.pendingRequestIds(0, type(uint256).max);
-
-        assertEq(requestIds.length, 2);
-        assertEq(owners.length,     2);
-        assertEq(shares.length,     2);
-
-        assertEq(requestIds[0], 1);
-        assertEq(requestIds[1], 3);
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp,  shares: 1_000e6 });
-        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
-
-        // pagination should give first request
-        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(0, 1);
-
-        assertEq(requestIds.length, 1);
-        assertEq(owners.length,     1);
-        assertEq(shares.length,     1);
-
-        assertEq(requestIds[0], 1);
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp, shares: 1_000e6 });
-
-        // pagination should give second request
-        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(1, 1);
-
-        assertEq(requestIds.length, 1);
-        assertEq(owners.length,     1);
-        assertEq(shares.length,     1);
-
-        assertEq(requestIds[0], 3);
-        assertRequest({ poolManager: address(poolManager), requestId: 3, owner: lp3, shares: 3_000e6 });
-
-        // pagination should return empty arrays when start is out of bounds
-        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(2, 1);
-
-        assertEq(requestIds.length, 0);
-        assertEq(owners.length,     0);
-        assertEq(shares.length,     0);
-
-        // pagination should return empty arrays when limit is zero
-        ( requestIds, owners, shares ) = queueWM.pendingRequestIds(0, 0);
-
-        assertEq(requestIds.length, 0);
-        assertEq(owners.length,     0);
-        assertEq(shares.length,     0);
     }
 
     function test_securityAdmin_updatesAfterChange() external {

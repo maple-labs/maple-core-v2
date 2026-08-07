@@ -147,7 +147,7 @@ contract DeployFailureTests is DeployTestBase {
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0]               = requestId;
 
-        processRedemptionByIds(address(pool), requestIds);
+        processRedemptions(address(pool), depositAmount);
 
         vm.prank(poolDelegate);
         bitcoinRouter.processRedemptions(requestIds);

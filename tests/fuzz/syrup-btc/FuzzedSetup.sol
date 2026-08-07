@@ -170,24 +170,14 @@ contract FuzzedUtils is ProtocolActions {
         }
 
         uint256 maxAvailableLiquidity = idleAssets * poolTotalSupply / totalAssetsWithLosses;
+        uint256 sharesToProcess       = getSomeValue(0, maxAvailableLiquidity);
 
-        ( uint256[] memory requestIds_, , uint256[] memory shares_ ) = 
-            IMapleWithdrawalManager(_withdrawalManager).pendingRequestIds(0, type(uint256).max);
-
-        if (requestIds_.length == 0) {
+        if (sharesToProcess == 0) {
             return;
         }
 
-        uint256 requestIdIndex  = getSomeValue(0, requestIds_.length - 1);
-        uint256 sharesToProcess = shares_[requestIdIndex];
-
-        if (sharesToProcess > maxAvailableLiquidity) return;
-
-        uint256[] memory requestIdsToProcess = new uint256[](1);
-        requestIdsToProcess[0]               = requestIds_[requestIdIndex];
-
         vm.prank(_poolDelegate);
-        IMapleWithdrawalManager(_withdrawalManager).processRedemptions(requestIdsToProcess);
+        IMapleWithdrawalManager(_withdrawalManager).processRedemptions(sharesToProcess);
     }
 
     function bitcoinRouterProcessRedemptions() internal {

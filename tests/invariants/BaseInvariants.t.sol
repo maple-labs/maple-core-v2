@@ -40,7 +40,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant ALLOWED_OTL_AUM_DIFF = 1e6;
     uint256 constant PUBLIC               = 3;
     uint256 constant MAXIMUM_BITMAP       = 2 ** 16 - 1;
-    uint256 constant WMQ_PENDING_PAGE_SIZE = 100;
 
     BitcoinRouterHandler      bitcoinRouterHandler;
     BitcoinStrategyHandler    bitcoinStrategyHandler;
@@ -116,8 +115,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant H: requestId is unique
         * Invariant I: ∀ owner, userEscrowedShares(owner) == ∑requestsByOwner(owner).shares
         * Invariant J: ∑owner.userEscrowedShares + ∑owner.manualSharesAvailable == totalShares
-        * Invariant K: pendingRequestIds is strictly increasing
-        * Invariant L: pendingRequestIds includes all active requests
         * Invariant M: requestsByOwner lists are strictly increasing
         * Invariant N: requestsByOwner lists match active requests exactly
 
@@ -604,8 +601,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assert_wmq_invariant_D(withdrawalManager_);
         assert_wmq_invariant_E(withdrawalManager_);
         assert_wmq_invariant_F(withdrawalManager_);
-        assert_wmq_invariant_K(withdrawalManager_);
-        assert_wmq_invariant_L(withdrawalManager_);
     }
 
     function assert_wmq_invariant_A(address withdrawalManager_, address[] memory lenders_) internal view {
@@ -743,103 +738,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
 
         assertEq(countedShares, wm.totalShares(), "WMQ Invariant J: TOTAL_SHARES_SUM_MISMATCH");
-    }
-
-    function assert_wmq_invariant_K(address withdrawalManager_) internal view {
-        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
-
-        ( , uint256 lastRequestId ) = wm.queue();
-
-        uint256 start;
-        uint256 previousRequestId;
-
-        while (true) {
-            ( uint256[] memory requestIds, , ) = wm.pendingRequestIds(start, WMQ_PENDING_PAGE_SIZE);
-
-            if (requestIds.length == 0) break;
-
-            for (uint256 i; i < requestIds.length; ++i) {
-                uint256 requestId = requestIds[i];
-
-                assertGt(requestId, 0,             "WMQ Invariant K: REQUEST_ID_ZERO");
-                assertLe(requestId, lastRequestId, "WMQ Invariant K: REQUEST_ID_GT_LAST");
-
-                if (start != 0 || i != 0) {
-                    assertGt(requestId, previousRequestId, "WMQ Invariant K: REQUEST_IDS_NOT_INCREASING");
-                }
-
-                previousRequestId = requestId;
-            }
-
-            start += requestIds.length;
-
-            if (requestIds.length < WMQ_PENDING_PAGE_SIZE) break;
-        }
-    }
-
-    function assert_wmq_invariant_L(address withdrawalManager_) internal {
-        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
-
-        ( , uint256 lastRequestId ) = wm.queue();
-
-        uint256 start;
-        uint256 totalPendingRequests;
-
-        while (true) {
-            ( uint256[] memory requestIds, address[] memory owners, uint256[] memory shares ) =
-                wm.pendingRequestIds(start, WMQ_PENDING_PAGE_SIZE);
-
-            assertEq(owners.length, requestIds.length, "WMQ Invariant L: owners LEN_MISMATCH");
-            assertEq(shares.length, requestIds.length, "WMQ Invariant L: shares LEN_MISMATCH");
-
-            if (requestIds.length == 0) break;
-
-            for (uint256 i; i < requestIds.length; ++i) {
-                uint256 requestId = requestIds[i];
-
-                assertGt(requestId, 0,             "WMQ Invariant L: REQUEST_ID_ZERO");
-                assertLe(requestId, lastRequestId, "WMQ Invariant L: REQUEST_ID_GT_LAST");
-
-                assertFalse(existingRequestIds[requestId], "WMQ Invariant L: DUPLICATE_REQUEST_ID");
-
-                existingRequestIds[requestId] = true;
-
-                ( address owner, uint256 requestShares ) = wm.requests(requestId);
-
-                assertTrue(owner != address(0),       "WMQ Invariant L: REQUEST_OWNER_ZERO");
-                assertGt(requestShares, 0,            "WMQ Invariant L: REQUEST_SHARES_ZERO");
-                assertEq(owner,         owners[i],    "WMQ Invariant L: OWNER_MISMATCH");
-                assertEq(requestShares, shares[i],    "WMQ Invariant L: SHARES_MISMATCH");
-
-                ++totalPendingRequests;
-            }
-
-            start += requestIds.length;
-
-            if (requestIds.length < WMQ_PENDING_PAGE_SIZE) break;
-        }
-
-        uint256 activeRequests;
-
-        for (uint256 requestId = 1; requestId <= lastRequestId; ++requestId) {
-            ( address owner, uint256 requestShares ) = wm.requests(requestId);
-
-            if (owner == address(0)) {
-                assertEq(requestShares, 0, "WMQ Invariant L: INACTIVE_REQUEST_SHARES_NONZERO");
-                assertFalse(existingRequestIds[requestId], "WMQ Invariant L: INACTIVE_REQUEST_MARKED");
-            } else {
-                assertGt(requestShares, 0, "WMQ Invariant L: ACTIVE_REQUEST_SHARES_ZERO");
-                assertTrue(existingRequestIds[requestId], "WMQ Invariant L: ACTIVE_REQUEST_NOT_MARKED");
-
-                ++activeRequests;
-            }
-        }
-
-        assertEq(totalPendingRequests, activeRequests, "WMQ Invariant L: ACTIVE_REQUEST_COUNT_MISMATCH");
-
-        for (uint256 requestId = 1; requestId <= lastRequestId; ++requestId) {
-            existingRequestIds[requestId] = false;
-        }
     }
 
     function assert_wmq_invariant_M(address withdrawalManager_, address[] memory lenders_) internal view {

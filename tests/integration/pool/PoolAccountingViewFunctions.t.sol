@@ -262,34 +262,59 @@ contract MaxRedeemWMQueueTests is TestBase {
         requestRedeem(lp2, 1_000e6);
     }
 
-    function test_maxRedeem_beforeRedeem() external view {
-        assertEq(pool.maxRedeem(lp1), 0);
+    function test_maxRedeem_beforeRedeem() external {
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 0);
+    }
+
+    function test_maxRedeem_afterPartialRedeem() external {
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6 / 2);
+
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 1_000e6 / 2);
     }
 
     function test_maxRedeem_afterFullRedeem() external {
-        processRedemptionByIds(address(pool), array(1));
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
 
-        assertEq(pool.maxRedeem(lp1), 1_000e6);
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 1_000e6);
     }
 
     function test_maxRedeem_afterPartialManualRedeem() external {
-        processRedemptionByIds(address(pool), array(1));
-        redeem(address(pool), lp1, 150e6);
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
 
-        assertEq(pool.maxRedeem(lp1), 850e6);
+        redeem(address(pool), lp1, 1_000e6 / 2);
+
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 1_000e6 / 2);
     }
 
     function test_maxRedeem_afterFullManualRedeem() external {
-        processRedemptionByIds(address(pool), array(1));
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(1_000e6);
+
         redeem(address(pool), lp1, 1_000e6);
 
-        assertEq(pool.maxRedeem(lp1), 0);
+        maxShares = pool.maxRedeem(lp1);
+
+        assertEq(maxShares, 0);
     }
 
     function test_maxRedeem_notManual() external {
-        processRedemptionByIds(address(pool), array(1, 2));
+        vm.prank(poolDelegate);
+        queueWM.processRedemptions(2_000e6);
 
-        assertEq(pool.maxRedeem(lp2), 0);
+        maxShares = pool.maxRedeem(lp2);
+
+        assertEq(maxShares, 0);
     }
 
 }
@@ -312,7 +337,7 @@ contract PreviewRedeemWithQueueWMTests is TestBase {
         pool.requestRedeem(shares, lender);
 
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(array(1));
+        queueWM.processRedemptions(shares);
     }
 
     function test_previewRedeem_insufficientShares() external {
@@ -407,7 +432,7 @@ contract AutomatedPreviewRedeemWithQueueWMTests is TestBase {
 
     function testFuzz_previewRedeem_processed(uint256 sharesToRedeem) external {
         vm.prank(poolDelegate);
-        queueWM.processRedemptions(array(1));
+        queueWM.processRedemptions(shares);
 
         vm.prank(lender);
         uint256 assets = pool.previewRedeem(sharesToRedeem);
@@ -484,30 +509,30 @@ contract PreviewWithdrawWithQueueWMTests is TestBase {
     function testFuzz_previewWithdraw(
         address lender,
         bool    isManual,
-        uint256 amountToDeposit,
-        uint256 amountToRequestRedeem,
+        uint256 amountToRequest,
+        uint256 amountToProcess,
         uint256 amountToWithdraw
     )
         external
     {
         vm.assume(lender != address(0));
 
-        amountToDeposit        = bound(amountToDeposit,       0, 1e30);
-        amountToRequestRedeem  = bound(amountToRequestRedeem, 0, amountToDeposit);
+        amountToRequest = bound(amountToRequest, 0, 1e30);
+        amountToProcess = bound(amountToProcess, 0, amountToRequest);
 
         vm.prank(poolDelegate);
         queueWM.setManualWithdrawal(lender, isManual);
 
-        if (amountToDeposit > 0) {
-            deposit(lender, amountToDeposit);
+        if (amountToRequest > 0) {
+            deposit(lender, amountToRequest);
+
+            vm.prank(lender);
+            pool.requestRedeem(amountToRequest, lender);
         }
 
-        if (amountToRequestRedeem > 0) {
-            vm.prank(lender);
-            pool.requestRedeem(amountToRequestRedeem, lender);
-
+        if (amountToProcess > 0) {
             vm.prank(poolDelegate);
-            queueWM.processRedemptions(array(1));
+            queueWM.processRedemptions(amountToProcess);
         }
 
         vm.prank(lender);

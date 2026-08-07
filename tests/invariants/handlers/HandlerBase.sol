@@ -72,8 +72,4 @@ contract HandlerBase is ProtocolActions, Utils, IHandlerEntryPoint {
         return uint256(keccak256(abi.encodePacked(seed, salt)));
     }
 
-    function _activeRequestIds(IWithdrawalManagerQueue withdrawalManager_) internal view returns (uint256[] memory requestIds_) {
-        ( requestIds_, , ) = withdrawalManager_.pendingRequestIds(0, type(uint256).max);
-    }
-
 }

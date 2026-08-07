@@ -61,11 +61,12 @@ contract NonDefaultingInvariants is BaseInvariants {
         transferHandler.setSelectorWeight("transfer(uint256)", 10_000);
 
         queueWithdrawalHandler.setSelectorWeight("processRedemptions(uint256)",      2_700);
+        queueWithdrawalHandler.setSelectorWeight("processEmptyRedemptions(uint256)", 300);
         queueWithdrawalHandler.setSelectorWeight("redeem(uint256)",                  1_000);
         queueWithdrawalHandler.setSelectorWeight("removeRequest(uint256)",           1_000);
         queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",            500);
         queueWithdrawalHandler.setSelectorWeight("removeSharesById(uint256)",        500);
-        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",           3_300);
+        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",           3_000);
         queueWithdrawalHandler.setSelectorWeight("setManualWithdrawal(uint256)",     1_000);
 
         otlHandler.setSelectorWeight("callLoan(uint256)",             1_000);

@@ -145,7 +145,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         deposit(address(pool), lp, principal);
         requestRedeem(address(pool), lp, pool.balanceOf(lp));
 
-        processRedemptionByOwners(address(pool), array(lp));
+        processRedemptions(address(pool), principal);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:ZERO_SUPPLY");

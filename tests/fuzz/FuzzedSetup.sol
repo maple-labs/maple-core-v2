@@ -173,17 +173,12 @@ contract FuzzedUtil is ProtocolActions {
         IPoolManager            poolManager       = IPoolManager(_poolManager);
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
 
-        ( uint256[] memory requestIds, , ) = withdrawalManager.pendingRequestIds(0, type(uint256).max);
+        uint256 totalShares = withdrawalManager.totalShares();
 
-        // Process requests one by one because the queue WM checks liquidity against the
-        // entire batch. A full pending-request batch can revert with WM:PR:LOW_LIQUIDITY
-        // even when each individual request can be processed.
-        for (uint256 i; i < requestIds.length; ++i) {
-            uint256[] memory requestId_ = new uint256[](1);
-            requestId_[0]               = requestIds[i];
-
+        // There's some rounding in the pools that prevent the last hundred or so shares from being redeemed.
+        if (totalShares > 100) {
             vm.prank(poolManager.poolDelegate());
-            withdrawalManager.processRedemptions(requestId_);
+            withdrawalManager.processRedemptions(totalShares - 100);
         }
 
         // Redeem all manually available shares that are currently backed by idle liquidity.

@@ -437,7 +437,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             availableLiquidity: expectedCash
         });
 
-        processRedemptionByOwners(address(pool), array(lp1));
+        processRedemptions(address(pool), lp1Shares);
 
         uint256 lp1Assets = redeem(address(pool), lp1, lp1Shares);
 

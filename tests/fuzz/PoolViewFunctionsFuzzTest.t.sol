@@ -207,15 +207,21 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assets = bound(assets, 1, 1e29);
 
         openPool(address(poolManager));
-        deposit(user, assets);
+
         setManualWithdrawal(address(poolManager), user, true);
+
+        deposit(user, assets);
+
+        assertEq(pool.balanceOf(user), assets);
 
         assertEq(pool.maxRedeem(user), 0);
 
-        requestRedeem(address(pool), user, assets);
-        processRedemptionByOwners(address(pool), array(user));
+        vm.prank(user);
+        pool.requestRedeem(assets, user);  // lock shares
 
-        uint256 shares = queueWM.manualSharesAvailable(user);
+        processRedemptions(address(pool), assets);  // assets <> shares conversion rate 1:1 due to single LP
+
+        uint256 shares = queueWM.lockedShares(user);
 
         assertEq(pool.maxRedeem(user), shares);
 
