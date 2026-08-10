@@ -73,11 +73,9 @@ contract QueueWithdrawalHandler is HandlerBase {
 
         ( uint128 nextRequestId_, uint128 lastRequestId_ ) = wm.queue();
 
-        // TODO: Do we need this line?
-        if (nextRequestId_ >= lastRequestId_) return;
+        if (nextRequestId_ > lastRequestId_) return;
 
-        // TODO: Should this be lastRequestId_ - nextRequestId_ + 1?
-        uint256 numberOfRequests_ = lastRequestId_ - nextRequestId_;
+        uint256 numberOfRequests_ = lastRequestId_ - nextRequestId_ + 1;
 
         uint256 numberOfRequestsToProcess_ = _bound(_randomize(seed_, "numberOfRequestsToProcess"), 1, numberOfRequests_);
 
@@ -100,7 +98,7 @@ contract QueueWithdrawalHandler is HandlerBase {
         // Deposit underlying asset from random LP to ensure enough liquidity to withdraw (as opposed to loan returning funds)
         address depositLp_ = lps[_bound(_randomize(seed_, "depositLp"), 0, lps.length - 1)];
 
-        uint256 assetsRequired_ = pool.convertToExitAssets(sharesToRedeem_);
+        uint256 assetsRequired_ = pool.previewMint(sharesToRedeem_);
 
         vm.startPrank(depositLp_);
         asset.mint(depositLp_, assetsRequired_);

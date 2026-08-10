@@ -108,9 +108,9 @@ contract BitcoinRouterHandler is HandlerBase {
 
         ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
 
-        if (nextRequestId >= lastRequestId) return;
+        if (nextRequestId > lastRequestId) return;
 
-        uint256 numberOfRequests = lastRequestId - nextRequestId;
+        uint256 numberOfRequests = lastRequestId - nextRequestId + 1;
         uint256 numberOfRequestsToProcess = _bound(_randomize(seed, "numberOfRequestsToProcess"), 1, numberOfRequests);
 
         vm.prank(poolDelegate);
