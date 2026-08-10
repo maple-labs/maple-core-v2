@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IAllocationStrategy } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IAllocationStrategy,
+    IPool,
+    IStrategyManager
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -128,8 +132,10 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     address secondPool;
     address secondPoolManager;
 
+    uint256 aumAfterExit;
     uint256 delegateFee;
     uint256 excessImpairment;
+    uint256 exitAssets;
     uint256 finalAum;
     uint256 firstImpairment;
     uint256 firstLoss;
@@ -137,6 +143,10 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     uint256 firstRedeemShares;
     uint256 firstShares;
     uint256 growthImpairment;
+    uint256 initialAssets1;
+    uint256 initialAssets2;
+    uint256 initialShares1;
+    uint256 initialShares2;
     uint256 lossAmount;
     uint256 netYield;
     uint256 protocolFee;
@@ -145,11 +155,14 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     uint256 reducedAum;
     uint256 redemptionImpairment;
     uint256 secondFund;
+    uint256 secondGrossAfterExit;
     uint256 secondImpairment;
     uint256 secondLoss;
+    uint256 secondLossAfterExit;
     uint256 secondRedeemAssets;
     uint256 secondRedeemShares;
     uint256 secondShares;
+    uint256 sharesAfterExit;
     uint256 splitImpairment;
     uint256 topUpFund;
     uint256 totalAssets;
@@ -1470,6 +1483,237 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
             initialAssets - initialDeployment - firstRedeemAssets - secondRedeemAssets
         );
         assertEq(fundsAsset.balanceOf(managedWallet), initialDeployment);
+    }
+
+    function test_impair_success_exitAfterImpairment_remainingPoolGains() external {
+
+        /**********************************************************************************************************************************/
+        /*** Set up a second pool sharing the strategy                                                                                  ***/
+        /**********************************************************************************************************************************/
+
+        firstPool        = address(pool);
+        firstPoolManager = address(poolManager);
+
+        initialAssets1 = initialAssets;
+        initialShares1 = initialShares;
+
+        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+
+        initialAssets2 = 500_000e6;
+        initialShares2 = initialAssets2;
+
+        totalShares = initialShares1 + initialShares2;
+        totalAssets = initialAssets1 + initialAssets2;
+
+        deposit(secondPool, lp, initialAssets2);
+        fundStrategyManager(secondPoolManager, allocationStrategyManager, initialAssets2);
+
+        assertPoolState({
+            pool:               firstPool,
+            totalAssets:        initialAssets1,
+            totalSupply:        initialShares1,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertPoolState({
+            pool:               secondPool,
+            totalAssets:        initialAssets2,
+            totalSupply:        initialShares2,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           totalShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: totalAssets,
+            availableToWithdraw:   totalAssets - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      firstPoolManager,
+            assets:           initialShares1,
+            shares:           initialShares1,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      secondPoolManager,
+            assets:           initialShares2,
+            shares:           initialShares2,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: totalAssets,
+            availableToWithdraw:   totalAssets - initialDeployment,
+            recordedAssets:        totalAssets - initialDeployment,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), 0);
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+
+        /**********************************************************************************************************************************/
+        /*** Impair the position: the loss splits proportionally across both pool managers                                              ***/
+        /**********************************************************************************************************************************/
+
+        splitImpairment = 150_000e6;
+
+        firstLoss  = divRoundUp(initialShares1 * splitImpairment, totalShares);
+        secondLoss = divRoundUp(initialShares2 * splitImpairment, totalShares);
+
+        impairAllocationStrategy(allocationUnderlyingStrategy, splitImpairment);
+
+        assertPoolState({
+            pool:               firstPool,
+            totalAssets:        initialAssets1,
+            totalSupply:        initialShares1,
+            unrealizedLosses:   firstLoss,
+            availableLiquidity: 0
+        });
+
+        assertPoolState({
+            pool:               secondPool,
+            totalAssets:        initialAssets2,
+            totalSupply:        initialShares2,
+            unrealizedLosses:   secondLoss,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           totalShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: totalAssets,
+            availableToWithdraw:   totalAssets - initialDeployment,
+            unrealizedLosses:      splitImpairment
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      firstPoolManager,
+            assets:           initialShares1,
+            shares:           initialShares1,
+            pendingShares:    0,
+            unrealizedLosses: firstLoss
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      secondPoolManager,
+            assets:           initialShares2,
+            shares:           initialShares2,
+            pendingShares:    0,
+            unrealizedLosses: secondLoss
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: totalAssets,
+            availableToWithdraw:   totalAssets - initialDeployment,
+            recordedAssets:        totalAssets - initialDeployment,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      splitImpairment
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), splitImpairment);
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+
+        /**********************************************************************************************************************************/
+        /*** First pool fully exits, taking a haircut at the impaired price; second pool is now the sole remaining shareholder          ***/
+        /**********************************************************************************************************************************/
+
+        exitAssets      = initialShares1 * (totalAssets - splitImpairment) / totalShares;
+        sharesAfterExit = totalShares - initialShares1;
+        aumAfterExit    = totalAssets - exitAssets;
+
+        secondGrossAfterExit = initialShares2 * aumAfterExit / sharesAfterExit;
+        secondLossAfterExit  = divRoundUp(initialShares2 * splitImpairment, sharesAfterExit);
+
+        requestRedeemFromStrategyManager(firstPoolManager, allocationStrategyManager, initialShares1);
+        processRedemptionFromStrategyManager(firstPoolManager, allocationStrategyManager, initialShares1);
+
+        assertPoolState({
+            pool:               firstPool,
+            totalAssets:        exitAssets,
+            totalSupply:        initialShares1,
+            unrealizedLosses:   0,
+            availableLiquidity: exitAssets
+        });
+
+        assertPoolState({
+            pool:               secondPool,
+            totalAssets:        secondGrossAfterExit,
+            totalSupply:        initialShares2,
+            unrealizedLosses:   secondLossAfterExit,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           sharesAfterExit,
+            totalPendingShares:    0,
+            assetsUnderManagement: aumAfterExit,
+            availableToWithdraw:   aumAfterExit - initialDeployment,
+            unrealizedLosses:      splitImpairment
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      firstPoolManager,
+            assets:           0,
+            shares:           0,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      secondPoolManager,
+            assets:           secondGrossAfterExit,
+            shares:           initialShares2,
+            pendingShares:    0,
+            unrealizedLosses: secondLossAfterExit
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: aumAfterExit,
+            availableToWithdraw:   aumAfterExit - initialDeployment,
+            recordedAssets:        aumAfterExit - initialDeployment,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      splitImpairment
+        });
+
+        assertEq(IPool(secondPool).convertToAssets(initialShares2),     initialAssets1 + initialAssets2 - exitAssets);
+        assertEq(IPool(secondPool).convertToExitAssets(initialShares2), initialAssets1 + initialAssets2 - exitAssets - splitImpairment);
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(),                splitImpairment);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
+
+        assertEq(IStrategyManager(allocationStrategyManager).assetsOf(secondPoolManager),     secondGrossAfterExit);
+        assertEq(IStrategyManager(allocationStrategyManager).convertToAssets(initialShares2), secondGrossAfterExit);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), aumAfterExit - initialDeployment);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
     }
 
 }
