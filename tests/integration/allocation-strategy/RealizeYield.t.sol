@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IAllocationStrategy } from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -76,8 +76,6 @@ contract AllocationStrategyRealizeYieldTestBase is AllocationStrategyTestBase {
             yieldLastRealized:    0,
             realizedYield:        0
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -185,12 +183,22 @@ contract AllocationStrategyRealizeYieldFailureTests is AllocationStrategyRealize
 
 contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealizeYieldTestBase {
 
+    uint256 bootstrapAssets;
+    uint256 bootstrapShares;
+    uint256 deadAssets;
+    uint256 deadLoss;
+    uint256 firstPoolHalfway;
+    uint256 halfwayAum;
+    uint256 halfwayYield;
+    uint256 impairment;
+    uint256 poolAssets;
     uint256 poolAssets1;
-    uint256 poolShares1;
-    uint256 strategyShares1;
-
     uint256 poolAssets2;
+    uint256 poolLoss;
+    uint256 poolShares1;
     uint256 poolShares2;
+    uint256 secondPoolHalfway;
+    uint256 strategyShares1;
     uint256 strategyShares2;
 
     function test_realizeYield_success_yieldCap() external {
@@ -254,8 +262,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -317,8 +323,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        netYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -330,7 +334,8 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
 
         vm.warp(startingTime + yieldCooldown);
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).yieldCooldown(), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).yieldLastRealized(), startingTime);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).yieldCooldown(),     0);
 
         realizeYield(allocationUnderlyingStrategy, managedWallet, 0, 0);
 
@@ -380,8 +385,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + yieldCooldown,
             realizedYield:        0
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -441,8 +444,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -501,8 +502,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -557,8 +556,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        netYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -615,8 +612,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        netYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -635,59 +630,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         returnAssets(allocationUnderlyingStrategy, managedWallet, managedWallet, initialDeployment);
         requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, initialShares);
         processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, initialShares);
-
         removeStrategyManager(address(poolManager), allocationStrategyManager);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        initialAssets,
-            totalSupply:        initialShares,
-            unrealizedLosses:   0,
-            availableLiquidity: initialAssets
-        });
-
-        assertStrategyManager({
-            strategyManager:       allocationStrategyManager,
-            totalShares:           0,
-            totalPendingShares:    0,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  allocationStrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           0,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-
-        assertAllocationStrategy({
-            allocationStrategy:    allocationUnderlyingStrategy,
-            assetsUnderManagement: 0,
-            availableToWithdraw:   0,
-            recordedAssets:        0,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      0
-        });
-
-        assertAllocationStrategyYield({
-            allocationStrategy:   allocationUnderlyingStrategy,
-            scheduledYieldAssets: 0,
-            yieldStart:           0,
-            yieldDeadline:        0,
-            yieldLastRealized:    0,
-            realizedYield:        0
-        });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
-
-        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), 0);
-        assertEq(fundsAsset.balanceOf(managedWallet),                0);
-        assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
-        assertEq(fundsAsset.balanceOf(treasury),                     0);
 
         /**********************************************************************************************************************************/
         /*** Deploy a bootstrap-minted strategy in its place and attach the existing pool to it                                         ***/
@@ -695,8 +638,8 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
 
         strategyDelegate = makeAddr("bootstrapDelegate");
 
-        uint256 bootstrapAssets = 10e6;
-        uint256 bootstrapShares = 10e6;
+        bootstrapAssets = 10e6;
+        bootstrapShares = 10e6;
 
         ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
@@ -773,8 +716,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
@@ -839,8 +780,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -855,8 +794,8 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
 
         vm.warp(startingTime + elapsedDuration);
 
-        uint256 poolAssets = initialShares * (bootstrapAssets + initialAssets + realizedYield) / (bootstrapShares + initialShares);
-        uint256 deadAssets = bootstrapShares * (bootstrapAssets + initialAssets + realizedYield) / (bootstrapShares + initialShares);
+        poolAssets = initialShares * (bootstrapAssets + initialAssets + realizedYield) / (bootstrapShares + initialShares);
+        deadAssets = bootstrapShares * (bootstrapAssets + initialAssets + realizedYield) / (bootstrapShares + initialShares);
 
         assertPoolState({
             pool:               address(pool),
@@ -910,8 +849,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -980,8 +917,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        netYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1046,8 +981,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        netYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1105,8 +1038,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        netYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -1172,8 +1103,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1231,8 +1160,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1287,8 +1214,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        unrealizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -1354,8 +1279,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1413,8 +1336,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1469,8 +1390,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        unrealizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -1536,8 +1455,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1595,8 +1512,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1651,8 +1566,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        unrealizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -1718,8 +1631,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1774,8 +1685,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        unrealizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -1841,8 +1750,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -1907,8 +1814,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + extraNetYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee + extraDelegateFee);
@@ -1963,8 +1868,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        combinedScheduledYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + extraNetYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -2030,8 +1933,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2095,8 +1996,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + extraNetYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee + extraDelegateFee);
@@ -2151,8 +2050,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        combinedScheduledYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + extraNetYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -2218,8 +2115,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2279,8 +2174,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield - cancelledAssets);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment + cancelledAssets);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2335,8 +2228,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        remainingYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield - cancelledAssets);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment + cancelledAssets);
@@ -2402,8 +2293,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2460,8 +2349,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + realizedYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment + unrealizedYield);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2516,8 +2403,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        0
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + realizedYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment + unrealizedYield);
@@ -2581,8 +2466,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -2760,8 +2643,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
@@ -2817,8 +2698,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2873,8 +2752,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        netYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -2939,8 +2816,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -2998,8 +2873,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3054,8 +2927,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        netYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -3482,8 +3353,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3544,8 +3413,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + fundAssets);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3600,8 +3467,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        netYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + fundAssets);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -3666,8 +3531,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3730,8 +3593,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield - withdrawableAssets);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3786,8 +3647,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        netYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield - withdrawableAssets);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -3853,8 +3712,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3917,8 +3774,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -3973,8 +3828,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration,
             realizedYield:        unrealizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -4037,8 +3890,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime + elapsedDuration + yieldCooldown,
             realizedYield:        extraNetYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield + extraNetYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -4130,7 +3981,82 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Warp to the halfway point and assert the linearly-vested yield already splits proportionally between both pools            ***/
+        /**********************************************************************************************************************************/
+
+        vm.warp(startingTime + yieldDuration / 2);
+
+        halfwayYield      = netYield * (yieldDuration / 2) / yieldDuration;
+        halfwayAum        = totalAssets + halfwayYield;
+        firstPoolHalfway  = initialShares1 * halfwayAum / totalShares;
+        secondPoolHalfway = initialShares2 * halfwayAum / totalShares;
+
+        assertPoolState({
+            pool:               pool1,
+            totalAssets:        firstPoolHalfway,
+            totalSupply:        initialShares1,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertPoolState({
+            pool:               pool2,
+            totalAssets:        secondPoolHalfway,
+            totalSupply:        initialShares2,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           totalShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: halfwayAum,
+            availableToWithdraw:   halfwayAum - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager1,
+            assets:           firstPoolHalfway,
+            shares:           initialShares1,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager2,
+            assets:           secondPoolHalfway,
+            shares:           initialShares2,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: halfwayAum,
+            availableToWithdraw:   halfwayAum - initialDeployment,
+            recordedAssets:        totalAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        halfwayYield
+        });
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -4208,8 +4134,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        netYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), totalAssets - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -4279,8 +4203,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             yieldLastRealized:    startingTime,
             realizedYield:        realizedYield
         });
-
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolAssets1 - initialDeployment + netYield);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -4361,8 +4283,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        realizedYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolAssets1 - initialDeployment + netYield + poolAssets2);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
@@ -4440,9 +4360,1201 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
             realizedYield:        netYield
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
-
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), aum - initialDeployment);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+    }
+
+    function test_realizeYield_success_notEnoughLiquidity() external {
+
+        /**********************************************************************************************************************************/
+        /*** Schedule yield and warp forwards, leaving the unvested portion of yield depressing available liquidity                     ***/
+        /**********************************************************************************************************************************/
+
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, yieldDuration);
+
+        uint32  elapsedDuration = 20 days;
+        uint256 realizedYield   = netYield * elapsedDuration / yieldDuration;
+
+        vm.warp(startingTime + elapsedDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + realizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets + realizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + realizedYield,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + realizedYield,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + realizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + realizedYield,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYield
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Request the exact number of redeemable shares (the tight upper bound), plus one more share on top                          ***/
+        /**********************************************************************************************************************************/
+
+        // We need the largest `shares` such that processing the redemption does not exceed available liquidity:
+        //     floor(shares * aum / totalShares) <= strategyLiquidity
+        // Using floor(x) <= n <=> x < n + 1 (n integer), then clearing the denominator and tightening the strict inequality
+        //     shares * aum  <  (strategyLiquidity + 1) * totalShares
+        //     shares * aum  <= (strategyLiquidity + 1) * totalShares - 1
+        //     shares        <= ((strategyLiquidity + 1) * totalShares - 1) / aum
+        // Solidity's integer division already floors, giving the largest integer `shares` satisfying the bound.
+        uint256 strategyLiquidity = initialAssets - initialDeployment + realizedYield;
+        uint256 redeemableShares  = ((strategyLiquidity + 1) * initialShares - 1) / (initialAssets + realizedYield);
+
+        requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, redeemableShares + 1);
+
+        /**********************************************************************************************************************************/
+        /*** Processing one more share than redeemable reverts: its exit value exceeds available liquidity by exactly 1 wei             ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:PR:NOT_ENOUGH_LIQUIDITY");
+        IStrategyManager(allocationStrategyManager).processRedemption(address(poolManager), redeemableShares + 1, "");
+
+        /**********************************************************************************************************************************/
+        /*** Processing exactly the redeemable amount succeeds, draining available liquidity to exactly zero                            ***/
+        /**********************************************************************************************************************************/
+
+        uint256 withdrawableAssets = redeemableShares * (initialAssets + realizedYield) / initialShares;
+
+        assertEq(withdrawableAssets, strategyLiquidity);
+
+        processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, redeemableShares);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + realizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: withdrawableAssets
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares - redeemableShares,
+            totalPendingShares:    1,
+            assetsUnderManagement: initialDeployment,
+            availableToWithdraw:   0,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialDeployment,
+            shares:           initialShares - redeemableShares,
+            pendingShares:    1,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialDeployment,
+            availableToWithdraw:   0,
+            recordedAssets:        netYield - realizedYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYield
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), netYield - realizedYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+    }
+
+    function test_realizeYield_success_pendingRedemptionAcrossVesting() external {
+
+        /**********************************************************************************************************************************/
+        /*** Schedule yield and immediately request a redemption, before any of the yield has vested                                    ***/
+        /**********************************************************************************************************************************/
+
+        uint256 redeemShares = 200_000e6;
+
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, yieldDuration);
+        requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, redeemShares);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    redeemShares,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets,
+            shares:           initialShares,
+            pendingShares:    redeemShares,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        0
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Warp forwards so more yield vests while the redemption is still pending                                                    ***/
+        /**********************************************************************************************************************************/
+
+        uint32  elapsedDuration = 10 days;
+        uint256 realizedYield   = netYield * elapsedDuration / yieldDuration;
+
+        vm.warp(startingTime + elapsedDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + realizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    redeemShares,
+            assetsUnderManagement: initialAssets + realizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + realizedYield,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + realizedYield,
+            shares:           initialShares,
+            pendingShares:    redeemShares,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + realizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + realizedYield,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYield
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Process the redemption: the exit price reflects the AUM now, not the (lower) AUM at the time of the original request       ***/
+        /**********************************************************************************************************************************/
+
+        uint256 exitAssetsAtRequestTime = redeemShares * initialAssets / initialShares;
+        uint256 exitAssets              = redeemShares * (initialAssets + realizedYield) / initialShares;
+
+        assertGt(exitAssets, exitAssetsAtRequestTime);
+
+        processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, redeemShares);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + realizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: exitAssets
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares - redeemShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets + realizedYield - exitAssets,
+            availableToWithdraw:   initialAssets - initialDeployment + realizedYield - exitAssets,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + realizedYield - exitAssets,
+            shares:           initialShares - redeemShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + realizedYield - exitAssets,
+            availableToWithdraw:   initialAssets - initialDeployment + realizedYield - exitAssets,
+            recordedAssets:        initialAssets - initialDeployment + netYield - exitAssets,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYield
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield - exitAssets);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+    }
+
+    function test_realizeYield_success_impairmentRemoved() external {
+
+        /**********************************************************************************************************************************/
+        /*** Schedule yield and warp partway through vesting                                                                            ***/
+        /**********************************************************************************************************************************/
+
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, yieldDuration);
+
+        uint32  firstElapsedDuration = 10 days;
+        uint256 firstRealizedYield   = netYield * firstElapsedDuration / yieldDuration;
+
+        vm.warp(startingTime + firstElapsedDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + firstRealizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets + firstRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + firstRealizedYield,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + firstRealizedYield,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + firstRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + firstRealizedYield,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        firstRealizedYield
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Impair part of the strategy mid-vest                                                                                       ***/
+        /**********************************************************************************************************************************/
+
+        uint256 impairedAssets = 120_000e6;
+
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairedAssets);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + firstRealizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   impairedAssets,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets + firstRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + firstRealizedYield,
+            unrealizedLosses:      impairedAssets
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + firstRealizedYield,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: impairedAssets
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + firstRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + firstRealizedYield,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      impairedAssets
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        firstRealizedYield
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairedAssets);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Warp further while impaired: the AUM keeps growing from vesting, unaffected by the still-open impairment                   ***/
+        /**********************************************************************************************************************************/
+
+        uint32  secondElapsedDuration = 20 days;
+        uint256 secondRealizedYield   = netYield * secondElapsedDuration / yieldDuration;
+
+        vm.warp(startingTime + secondElapsedDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + secondRealizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   impairedAssets,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets + secondRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + secondRealizedYield,
+            unrealizedLosses:      impairedAssets
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + secondRealizedYield,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: impairedAssets
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + secondRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + secondRealizedYield,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      impairedAssets
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        secondRealizedYield
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairedAssets);
+
+        /**********************************************************************************************************************************/
+        /*** Remove the impairment while the yield schedule is still live: unrealized losses clear at every level                       ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(strategyDelegate);
+        IAllocationStrategy(allocationUnderlyingStrategy).removeImpairment(impairedAssets);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets + secondRealizedYield,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets + secondRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + secondRealizedYield,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets + secondRealizedYield,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets + secondRealizedYield,
+            availableToWithdraw:   initialAssets - initialDeployment + secondRealizedYield,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        secondRealizedYield
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), 0);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+    }
+
+    function test_realizeYield_success_impairedAboveAum() external {
+
+        /**********************************************************************************************************************************/
+        /*** Impair more than the current AUM, before any yield is scheduled: the reported loss clamps down to the AUM itself           ***/
+        /**********************************************************************************************************************************/
+
+        uint256 impairedAssets = 1_020_000e6;
+
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairedAssets);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets,
+            totalSupply:        initialShares,
+            unrealizedLosses:   initialAssets,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      initialAssets
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: initialAssets
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      initialAssets
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairedAssets);
+
+        /**********************************************************************************************************************************/
+        /*** Schedule yield on top of the clamped impairment                                                                            ***/
+        /**********************************************************************************************************************************/
+
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, yieldDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets,
+            totalSupply:        initialShares,
+            unrealizedLosses:   initialAssets,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      initialAssets
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: initialAssets
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      initialAssets
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        0
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairedAssets);
+
+        /**********************************************************************************************************************************/
+        /*** Warp partway: the AUM grows from vesting, so the clamp tracks it upward while remaining fully clamped                      ***/
+        /**********************************************************************************************************************************/
+
+        uint32  firstElapsedDuration = 10 days;
+        uint256 firstRealizedYield   = netYield * firstElapsedDuration / yieldDuration;
+        uint256 firstAum             = initialAssets + firstRealizedYield;
+
+        vm.warp(startingTime + firstElapsedDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        firstAum,
+            totalSupply:        initialShares,
+            unrealizedLosses:   firstAum,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: firstAum,
+            availableToWithdraw:   firstAum - initialDeployment,
+            unrealizedLosses:      firstAum
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           firstAum,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: firstAum
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: firstAum,
+            availableToWithdraw:   firstAum - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      firstAum
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        firstRealizedYield
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairedAssets);
+
+        /**********************************************************************************************************************************/
+        /*** Warp further: the AUM has now grown past the impairment, so the clamp releases and the raw impairment is reported          ***/
+        /**********************************************************************************************************************************/
+
+        uint32  secondElapsedDuration = 20 days;
+        uint256 secondRealizedYield   = netYield * secondElapsedDuration / yieldDuration;
+        uint256 secondAum             = initialAssets + secondRealizedYield;
+
+        vm.warp(startingTime + secondElapsedDuration);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        secondAum,
+            totalSupply:        initialShares,
+            unrealizedLosses:   impairedAssets,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: secondAum,
+            availableToWithdraw:   secondAum - initialDeployment,
+            unrealizedLosses:      impairedAssets
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           secondAum,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: impairedAssets
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: secondAum,
+            availableToWithdraw:   secondAum - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      impairedAssets
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        secondRealizedYield
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairedAssets);
+    }
+
+    function test_realizeYield_success_impairedWithBootstrapMint() external {
+
+        /**********************************************************************************************************************************/
+        /*** Fully unwind the existing (non-bootstrap) strategy so the pool starts clean                                                ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(managedWallet);
+        fundsAsset.transfer(address(0xdead), initialDeployment);
+
+        returnAssets(allocationUnderlyingStrategy, managedWallet, managedWallet, initialDeployment);
+        requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, initialShares);
+        processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, initialShares);
+        removeStrategyManager(address(poolManager), allocationStrategyManager);
+
+        /**********************************************************************************************************************************/
+        /*** Deploy a bootstrap-minted strategy in its place and attach the existing pool to it                                         ***/
+        /**********************************************************************************************************************************/
+
+        strategyDelegate = makeAddr("bootstrapDelegate");
+        bootstrapAssets  = 10e6;
+        bootstrapShares  = 10e6;
+
+        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: delegateFeeRate,
+            strategyProtocolFeeRate_: protocolFeeRate,
+            strategyLiquidityCap_:    0,
+            bootstrapMint_:           bootstrapAssets
+        });
+
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategy,
+            managedWallet_:   managedWallet,
+            canDeployAssets_: true,
+            canReturnAssets_: true,
+            canRealizeYield_: true,
+            deploymentCap_:   type(uint256).max
+        });
+
+        addStrategyManagerToPool(address(poolManager), allocationStrategyManager);
+        fundStrategyManager(address(poolManager), allocationStrategyManager, initialAssets);
+        deployAssets(allocationUnderlyingStrategy, managedWallet, initialDeployment);
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, yieldDuration);
+
+        /**********************************************************************************************************************************/
+        /*** Warp forwards in time                                                                                                      ***/
+        /**********************************************************************************************************************************/
+
+        uint32  elapsedDuration = 10.5 days;
+        uint256 realizedYield   = netYield * elapsedDuration / yieldDuration;
+
+        vm.warp(startingTime + elapsedDuration);
+
+        poolAssets = initialShares * (bootstrapAssets + initialAssets + realizedYield) / (bootstrapShares + initialShares);
+        deadAssets = bootstrapShares * (bootstrapAssets + initialAssets + realizedYield) / (bootstrapShares + initialShares);
+
+        assertLe(poolAssets + deadAssets, bootstrapAssets + initialAssets + realizedYield);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        poolAssets,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           bootstrapShares + initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: bootstrapAssets + initialAssets + realizedYield,
+            availableToWithdraw:   bootstrapAssets + initialAssets - initialDeployment + realizedYield,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           poolAssets,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(0),
+            assets:           deadAssets,
+            shares:           bootstrapShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: bootstrapAssets + initialAssets + realizedYield,
+            availableToWithdraw:   bootstrapAssets + initialAssets - initialDeployment + realizedYield,
+            recordedAssets:        bootstrapAssets + initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYield
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Impair the strategy mid-vest: the loss splits across both holders of strategy shares, the pool and the dead position       ***/
+        /**********************************************************************************************************************************/
+
+        impairment = 300_000e6;
+
+        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
+
+        poolLoss = divRoundUp(initialShares * impairment, bootstrapShares + initialShares);
+        deadLoss = divRoundUp(bootstrapShares * impairment, bootstrapShares + initialShares);
+
+        assertLe(poolAssets + deadAssets, bootstrapAssets + initialAssets + realizedYield);
+        assertGe(poolLoss + deadLoss,     impairment);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        poolAssets,
+            totalSupply:        initialShares,
+            unrealizedLosses:   poolLoss,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           bootstrapShares + initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: bootstrapAssets + initialAssets + realizedYield,
+            availableToWithdraw:   bootstrapAssets + initialAssets - initialDeployment + realizedYield,
+            unrealizedLosses:      impairment
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           poolAssets,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: poolLoss
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(0),
+            assets:           deadAssets,
+            shares:           bootstrapShares,
+            pendingShares:    0,
+            unrealizedLosses: deadLoss
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: bootstrapAssets + initialAssets + realizedYield,
+            availableToWithdraw:   bootstrapAssets + initialAssets - initialDeployment + realizedYield,
+            recordedAssets:        bootstrapAssets + initialAssets - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      impairment
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYield
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(), impairment);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), bootstrapAssets + initialAssets - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+    }
+
+    function test_realizeYield_success_poolsVestTogether_partial() external {
+
+        /**********************************************************************************************************************************/
+        /*** Schedule yield and warp forwards, before the 2nd pool exists                                                               ***/
+        /**********************************************************************************************************************************/
+
+        address pool1        = address(pool);
+        address poolManager1 = address(poolManager);
+
+        poolAssets1     = initialAssets;
+        poolShares1     = initialShares;
+        strategyShares1 = initialShares;
+
+        realizeYield(allocationUnderlyingStrategy, managedWallet, yieldAssets, yieldDuration);
+
+        uint32  elapsedAtJoin       = 10 days;
+        uint256 realizedYieldAtJoin = netYield * elapsedAtJoin / yieldDuration;
+
+        vm.warp(startingTime + elapsedAtJoin);
+
+        assertPoolState({
+            pool:               pool1,
+            totalAssets:        poolAssets1 + realizedYieldAtJoin,
+            totalSupply:        poolShares1,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           strategyShares1,
+            totalPendingShares:    0,
+            assetsUnderManagement: poolAssets1 + realizedYieldAtJoin,
+            availableToWithdraw:   poolAssets1 - initialDeployment + realizedYieldAtJoin,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager1,
+            assets:           poolAssets1 + realizedYieldAtJoin,
+            shares:           strategyShares1,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: poolAssets1 + realizedYieldAtJoin,
+            availableToWithdraw:   poolAssets1 - initialDeployment + realizedYieldAtJoin,
+            recordedAssets:        poolAssets1 - initialDeployment + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYieldAtJoin
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolAssets1 - initialDeployment + netYield);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Fund a 2nd pool into the same strategy manager mid vesting, minting strategy shares above par                              ***/
+        /**********************************************************************************************************************************/
+
+        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+
+        poolAssets2     = 300_000e6;
+        poolShares2     = poolAssets2;
+        strategyShares2 = poolAssets2 * strategyShares1 / (poolAssets1 + realizedYieldAtJoin);
+
+        deposit(pool2, makeAddr("lp2"), poolAssets2);
+        fundStrategyManager(poolManager2, allocationStrategyManager, poolAssets2);
+
+        assertPoolState({
+            pool:               pool1,
+            totalAssets:        poolAssets1 + realizedYieldAtJoin,
+            totalSupply:        poolShares1,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertPoolState({
+            pool:               pool2,
+            totalAssets:        poolAssets2 - 1,  // Rounding error
+            totalSupply:        poolShares2,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           strategyShares1 + strategyShares2,
+            totalPendingShares:    0,
+            assetsUnderManagement: poolAssets1 + realizedYieldAtJoin + poolAssets2,
+            availableToWithdraw:   poolAssets1 - initialDeployment + realizedYieldAtJoin + poolAssets2,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager1,
+            assets:           poolAssets1 + realizedYieldAtJoin,
+            shares:           strategyShares1,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager2,
+            assets:           poolAssets2 - 1,  // Rounding error
+            shares:           strategyShares2,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: poolAssets1 + realizedYieldAtJoin + poolAssets2,
+            availableToWithdraw:   poolAssets1 - initialDeployment + realizedYieldAtJoin + poolAssets2,
+            recordedAssets:        poolAssets1 - initialDeployment + poolAssets2 + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYieldAtJoin
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolAssets1 - initialDeployment + netYield + poolAssets2);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
+
+        /**********************************************************************************************************************************/
+        /*** Warp to an intermediate point after the 2nd pool joined: both pools already vest together proportionally                   ***/
+        /**********************************************************************************************************************************/
+
+        uint32 elapsedAtMid = 20 days;
+
+        vm.warp(startingTime + elapsedAtMid);
+
+        uint256 realizedYieldAtMid  = netYield * elapsedAtMid / yieldDuration;
+        uint256 totalStrategyShares = strategyShares1 + strategyShares2;
+        uint256 aumAtMid            = poolAssets1 + realizedYieldAtMid + poolAssets2;
+
+        uint256 poolAssets1AtMid = strategyShares1 * aumAtMid / totalStrategyShares;
+        uint256 poolAssets2AtMid = strategyShares2 * aumAtMid / totalStrategyShares;
+
+        assertPoolState({
+            pool:               pool1,
+            totalAssets:        poolAssets1AtMid,
+            totalSupply:        poolShares1,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertPoolState({
+            pool:               pool2,
+            totalAssets:        poolAssets2AtMid,
+            totalSupply:        poolShares2,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           totalStrategyShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: aumAtMid,
+            availableToWithdraw:   aumAtMid - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager1,
+            assets:           poolAssets1AtMid,
+            shares:           strategyShares1,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      poolManager2,
+            assets:           poolAssets2AtMid,
+            shares:           strategyShares2,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: aumAtMid,
+            availableToWithdraw:   aumAtMid - initialDeployment,
+            recordedAssets:        poolAssets1 - initialDeployment + poolAssets2 + netYield,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationUnderlyingStrategy,
+            scheduledYieldAssets: netYield,
+            yieldStart:           startingTime,
+            yieldDeadline:        startingTime + yieldDuration,
+            yieldLastRealized:    startingTime,
+            realizedYield:        realizedYieldAtMid
+        });
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolAssets1 - initialDeployment + netYield + poolAssets2);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
         assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateFee);
         assertEq(fundsAsset.balanceOf(treasury),                     protocolFee);
