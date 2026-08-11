@@ -16,6 +16,9 @@ build:
 test:
 	forge test
 
+gas-benchmarks:
+	FOUNDRY_PROFILE=gas_benchmarks forge test --match-path benchmarks/liquidity-router/ExecuteActionsGas.t.sol
+
 e2e:
 	./test.sh -d tests/e2e -p $(profile)
 

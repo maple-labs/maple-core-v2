@@ -12,6 +12,12 @@ evm_version     = "cancun"                # EVM version for tests
 optimizer      = true  # Enable or disable the solc optimizer
 optimizer_runs = 200   # The number of optimizer runs
 
+[profile.gas_benchmarks]
+test           = 'benchmarks'
+optimizer      = true
+optimizer_runs = 200
+isolate        = true
+
 [fuzz]
 runs = 100
 
