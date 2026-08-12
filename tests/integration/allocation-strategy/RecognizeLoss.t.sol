@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IAllocationStrategy } from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -282,6 +282,395 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+    }
+
+    function test_recognizeLoss_success_partialLossAfterRedemptionRequest() external {
+        uint256 loss                    = 200_000e6;
+        uint256 sharesToRedeem          = 500_000e6;
+        uint256 assetsAfterLoss         = initialAssets - loss;
+        uint256 assetsOut               = 400_000e6;
+        uint256 remainingDeployedAssets = initialDeployment - loss;
+
+        /**********************************************************************************************************************************/
+        /*** Request shares at an exchange rate of one                                                                                  ***/
+        /**********************************************************************************************************************************/
+
+        requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, sharesToRedeem);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialAssets,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    sharesToRedeem,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           initialAssets,
+            shares:           initialShares,
+            pendingShares:    sharesToRedeem,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment,
+            totalDeployedAssets:   initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(allocationStrategyManager),    0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+
+        /**********************************************************************************************************************************/
+        /*** Recognize a partial loss while the redemption is pending                                                                   ***/
+        /**********************************************************************************************************************************/
+
+        recognizeLoss(allocationUnderlyingStrategy, managedWallet, loss);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        assetsAfterLoss,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    sharesToRedeem,
+            assetsUnderManagement: assetsAfterLoss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           assetsAfterLoss,
+            shares:           initialShares,
+            pendingShares:    sharesToRedeem,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: assetsAfterLoss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment,
+            totalDeployedAssets:   remainingDeployedAssets,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(sharesToRedeem), assetsOut);
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(allocationStrategyManager),    0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+
+        /**********************************************************************************************************************************/
+        /*** Process the pending shares at the reduced exchange rate                                                                    ***/
+        /**********************************************************************************************************************************/
+
+        processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, sharesToRedeem);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        assetsAfterLoss,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: assetsOut
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares - sharesToRedeem,
+            totalPendingShares:    0,
+            assetsUnderManagement: assetsAfterLoss - assetsOut,
+            availableToWithdraw:   initialAssets - initialDeployment - assetsOut,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           assetsAfterLoss - assetsOut,
+            shares:           initialShares - sharesToRedeem,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: assetsAfterLoss - assetsOut,
+            availableToWithdraw:   initialAssets - initialDeployment - assetsOut,
+            recordedAssets:        initialAssets - initialDeployment - assetsOut,
+            totalDeployedAssets:   remainingDeployedAssets,
+            unrealizedLosses:      0
+        });
+
+        assertEq(
+            IStrategyManager(allocationStrategyManager).convertToAssets(initialShares - sharesToRedeem),
+            assetsAfterLoss - assetsOut
+        );
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment - assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationStrategyManager),    0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+    }
+
+    function test_recognizeLoss_success_partialLossBeforeRedemptionRequest() external {
+        uint256 loss                    = 200_000e6;
+        uint256 sharesToRedeem          = 500_000e6;
+        uint256 assetsAfterLoss         = initialAssets - loss;
+        uint256 assetsOut               = 400_000e6;
+        uint256 remainingDeployedAssets = initialDeployment - loss;
+
+        /**********************************************************************************************************************************/
+        /*** Recognize a partial loss                                                                                                   ***/
+        /**********************************************************************************************************************************/
+
+        recognizeLoss(allocationUnderlyingStrategy, managedWallet, loss);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        assetsAfterLoss,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    0,
+            assetsUnderManagement: assetsAfterLoss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           assetsAfterLoss,
+            shares:           initialShares,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: assetsAfterLoss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment,
+            totalDeployedAssets:   remainingDeployedAssets,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(sharesToRedeem), assetsOut);
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(allocationStrategyManager),    0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+
+        /**********************************************************************************************************************************/
+        /*** Request shares at the reduced exchange rate                                                                                ***/
+        /**********************************************************************************************************************************/
+
+        requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, sharesToRedeem);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        assetsAfterLoss,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares,
+            totalPendingShares:    sharesToRedeem,
+            assetsUnderManagement: assetsAfterLoss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           assetsAfterLoss,
+            shares:           initialShares,
+            pendingShares:    sharesToRedeem,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: assetsAfterLoss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment,
+            totalDeployedAssets:   remainingDeployedAssets,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(allocationStrategyManager),    0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+
+        /**********************************************************************************************************************************/
+        /*** Process the requested shares at the reduced exchange rate                                                                  ***/
+        /**********************************************************************************************************************************/
+
+        processRedemptionFromStrategyManager(address(poolManager), allocationStrategyManager, sharesToRedeem);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        assetsAfterLoss,
+            totalSupply:        initialShares,
+            unrealizedLosses:   0,
+            availableLiquidity: assetsOut
+        });
+
+        assertStrategyManager({
+            strategyManager:       allocationStrategyManager,
+            totalShares:           initialShares - sharesToRedeem,
+            totalPendingShares:    0,
+            assetsUnderManagement: assetsAfterLoss - assetsOut,
+            availableToWithdraw:   initialAssets - initialDeployment - assetsOut,
+            unrealizedLosses:      0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  allocationStrategyManager,
+            poolManager:      address(poolManager),
+            assets:           assetsAfterLoss - assetsOut,
+            shares:           initialShares - sharesToRedeem,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: assetsAfterLoss - assetsOut,
+            availableToWithdraw:   initialAssets - initialDeployment - assetsOut,
+            recordedAssets:        initialAssets - initialDeployment - assetsOut,
+            totalDeployedAssets:   remainingDeployedAssets,
+            unrealizedLosses:      0
+        });
+
+        assertEq(
+            IStrategyManager(allocationStrategyManager).convertToAssets(initialShares - sharesToRedeem),
+            assetsAfterLoss - assetsOut
+        );
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment - assetsOut);
+        assertEq(fundsAsset.balanceOf(allocationStrategyManager),    0);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+    }
+
+    function test_recognizeLoss_success_partialLossAndReturnAssetsDoNotCreateSkimmableAssets() external {
+        uint256 loss                    = 200_000e6;
+        uint256 remainingDeployedAssets = initialDeployment - loss;
+
+        /**********************************************************************************************************************************/
+        /*** Recognize a partial loss on the deployed assets                                                                            ***/
+        /**********************************************************************************************************************************/
+
+        recognizeLoss(allocationUnderlyingStrategy, managedWallet, loss);
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets - loss,
+            availableToWithdraw:   initialAssets - initialDeployment,
+            recordedAssets:        initialAssets - initialDeployment,
+            totalDeployedAssets:   remainingDeployedAssets,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).unrecordedAssets(),              0);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
+
+        /**********************************************************************************************************************************/
+        /*** Confirm the recognized loss did not create assets that can be skimmed to the strategy delegate                             ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MAS:S:ZERO_ASSETS");
+        IAllocationStrategy(allocationUnderlyingStrategy).skim(strategyDelegate);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
+
+        /**********************************************************************************************************************************/
+        /*** Return the remaining deployed assets through the recorded flow                                                             ***/
+        /**********************************************************************************************************************************/
+
+        returnAssets(allocationUnderlyingStrategy, managedWallet, managedWallet, remainingDeployedAssets);
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: initialAssets - loss,
+            availableToWithdraw:   initialAssets - loss,
+            recordedAssets:        initialAssets - loss,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).unrecordedAssets(),              0);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - loss);
+        assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
+
+        /**********************************************************************************************************************************/
+        /*** Confirm the returned assets are recorded and cannot be skimmed to the strategy delegate                                    ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MAS:S:ZERO_ASSETS");
+        IAllocationStrategy(allocationUnderlyingStrategy).skim(strategyDelegate);
+
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - loss);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),             0);
     }
 
     function test_recognizeLoss_success_totalLoss() external {
