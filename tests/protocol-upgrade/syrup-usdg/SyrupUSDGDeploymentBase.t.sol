@@ -25,8 +25,6 @@ import { UpgradeAddressRegistry } from "../UpgradeAddressRegistry.sol";
 
 contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
-    address constant USDG = 0xe343167631d89B6Ffc58B88d6b7fB0228795491D;
-
     uint256 constant INITIAL_DEPOSIT = 10e6;
     uint256 constant BOOTSTRAP_MINT  = 0;
     uint256 constant INITIAL_SUPPLY  = 0;

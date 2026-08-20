@@ -47,6 +47,7 @@ contract ProtocolActions is Runner {
     address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     address WETH      = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address USDC      = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address USDG      = address(0xe343167631d89B6Ffc58B88d6b7fB0228795491D);
     address USDT      = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     address USDC_BASE = address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
 
@@ -54,11 +55,13 @@ contract ProtocolActions is Runner {
     address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
     address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
     address USDC_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
+    address USDG_SOURCE      = address(0xcC282E2004428939ee5149A9e7872F0B4d5d5ec7);
     address USDT_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
 
     address AAVE_USDC    = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
+    address AAVE_USDG    = address(0x7c0477d085ECb607CF8429f3eC91Ae5E1e460F4F);
     address SPARK_USDC   = address(0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815);
     address SAVINGS_USDS = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
     address USDS         = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
@@ -90,6 +93,7 @@ contract ProtocolActions is Runner {
         else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
         else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
         else if (asset_ == USDS)      erc20_transfer(USDS,      USDS_SOURCE,      account_, amount_);
+        else if (asset_ == USDG)      erc20_transfer(USDG,      USDG_SOURCE,      account_, amount_);
         else if (asset_ == USDC)      mintUSDC(account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
     }

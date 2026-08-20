@@ -13,7 +13,6 @@ import { SyrupBitcoinRouterInitializer as SBRI } from "../modules/controller/con
 import { NonTransparentProxyInitializable as NTPI } from "../modules/controller/contracts/NonTransparentProxyInitializable.sol";
 
 import { GovernorTimelock as GT } from "../modules/globals/contracts/GovernorTimelock.sol";
-import { MapleGlobals as MG }     from "../modules/globals/contracts/MapleGlobals.sol";
 
 import { MapleBitcoinStrategy as MBTCS } from "../modules/strategies/contracts/MapleBitcoinStrategy.sol";
 
@@ -42,8 +41,6 @@ contract BorrowerActions is MapleBorrowerActions { }
 contract CompositeToken is CT { }
 
 contract CompositeTokenInitializer is CTI { }
-
-contract Globals is MG { }
 
 contract MapleRouter is MR {}
 

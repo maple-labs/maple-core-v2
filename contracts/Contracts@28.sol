@@ -15,6 +15,8 @@ import { MapleSkyStrategy as MSS }             from "../modules/defi-strategies/
 import { MapleSkyStrategyFactory as MSSF }     from "../modules/defi-strategies/contracts/sky/MapleSkyStrategyFactory.sol";
 import { MapleSkyStrategyInitializer as MSSI } from "../modules/defi-strategies/contracts/sky/MapleSkyStrategyInitializer.sol";
 
+import { MapleGlobals as MG } from "../modules/globals/contracts/MapleGlobals.sol";
+
 import { MaplePool as MP }                      from "../modules/pool/contracts/MaplePool.sol";
 import { MaplePoolDeployer as MPD }             from "../modules/pool/contracts/MaplePoolDeployer.sol";
 import { MaplePoolManager as MPM }              from "../modules/pool/contracts/MaplePoolManager.sol";
@@ -46,6 +48,8 @@ contract AaveV3StrategyFactory is MAV3SF {
 }
 
 contract AaveV3StrategyInitializer is MAV3SI { }
+
+contract Globals is MG { }
 
 contract Pool is MP {
 

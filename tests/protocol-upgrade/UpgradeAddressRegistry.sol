@@ -3,7 +3,9 @@ pragma solidity ^0.8.7;
 
 import { MapleAddressRegistryETH as AddressRegistry } from "../../modules/address-registry/contracts/MapleAddressRegistryETH.sol";
 
-contract UpgradeAddressRegistry is AddressRegistry {
+import { StdCheats } from "../../modules/forge-std/src/StdCheats.sol";
+
+contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
 
     /**************************************************************************************************************************************/
     /*** GovernorTimelock Procedure Addresses                                                                                           ***/
@@ -145,14 +147,6 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address mapleCoreStrategyFactory;
 
     /**************************************************************************************************************************************/
-    /*** Pool Manager Deployment Addresses                                                                                              ***/
-    /**************************************************************************************************************************************/
-
-    address poolManagerV500Implementation;
-    address poolManagerV500Initializer;
-    address poolManagerV500Migrator;
-
-    /**************************************************************************************************************************************/
     /*** Health Checker Addresses                                                                                                       ***/
     /**************************************************************************************************************************************/
 
@@ -169,5 +163,75 @@ contract UpgradeAddressRegistry is AddressRegistry {
     address syrupUSDGWithdrawalManagerQueue = 0xAf63C06970086d535F338565D77c5fA3bDC5fD79;
     address syrupUSDGPoolDelegateCover      = 0xFdc1b5A10f4da87b459dfc3bF1313b33a2F6bfA9;
     address syrupUSDGSyrupRouter            = 0x191ac16255f49F7C6cB2e3b2502064A805943849;
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Deployed Contracts                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    address allocationStrategyFactory;
+    address allocationStrategyV100Implementation;
+    address allocationStrategyV100Initializer;
+    address globalsV500Implementation;
+    address liquidityRouterV100;
+    address modularAaveStrategyFactory;
+    address modularAaveStrategyV100Implementation;
+    address modularAaveStrategyV100Initializer;
+    address modularSkyStrategyFactory;
+    address modularSkyStrategyV100Implementation;
+    address modularSkyStrategyV100Initializer;
+    address poolDeployerV500;
+    address poolManagerV500Implementation;
+    address poolManagerV500Initializer;
+    address poolManagerV500Migrator;
+    address strategyDeployerV100;
+    address strategyManagerFactory;
+    address strategyManagerV100Implementation;
+    address strategyManagerV100Initializer;
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Strategy Delegates                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace these with real addresses when they are known.
+    address aaveStrategyUSDCDelegate  = makeAddr("aaveStrategyUSDCDelegate");
+    address aaveStrategyUSDTDelegate  = makeAddr("aaveStrategyUSDTDelegate");
+    address aaveStrategyUSDGDelegate  = makeAddr("aaveStrategyUSDGDelegate");
+    address skyStrategyUSDCDelegate   = makeAddr("skyStrategyUSDCDelegate");
+    address lpDexUSDCDelegate         = makeAddr("lpDexUSDCDelegate");
+    address crossPoolUSDCDelegate     = makeAddr("crossPoolUSDCDelegate");
+    address tBillsUSDCDelegate        = makeAddr("tBillsUSDCDelegate");
+    address pyusdUSDCDelegate         = makeAddr("pyusdUSDCDelegate");
+    address spreadsUSDTDelegate       = makeAddr("spreadsUSDTDelegate");
+    address lpDexUSDTDelegate         = makeAddr("lpDexUSDTDelegate");
+    address crossPoolUSDTDelegate     = makeAddr("crossPoolUSDTDelegate");
+    address tBillsUSDTDelegate        = makeAddr("tBillsUSDTDelegate");
+    address pyusdUSDTDelegate         = makeAddr("pyusdUSDTDelegate");
+    address lpDexUSDGDelegate         = makeAddr("lpDexUSDGDelegate");
+    address crossPoolUSDGDelegate     = makeAddr("crossPoolUSDGDelegate");
+    address tBillsUSDGDelegate        = makeAddr("tBillsUSDGDelegate");
+    address pyusdUSDGDelegate         = makeAddr("pyusdUSDGDelegate");
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Deployed Strategies                                                                                          ***/
+    /**************************************************************************************************************************************/
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Managed Wallets                                                                                              ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace these with real addresses when they are known.
+    address lpDexUSDCManagedWallet     = makeAddr("lpDexUSDCManagedWallet");
+    address crossPoolUSDCManagedWallet = makeAddr("crossPoolUSDCManagedWallet");
+    address tBillsUSDCManagedWallet    = makeAddr("tBillsUSDCManagedWallet");
+    address pyusdUSDCManagedWallet     = makeAddr("pyusdUSDCManagedWallet");
+    address spreadsUSDTManagedWallet   = makeAddr("spreadsUSDTManagedWallet");
+    address lpDexUSDTManagedWallet     = makeAddr("lpDexUSDTManagedWallet");
+    address crossPoolUSDTManagedWallet = makeAddr("crossPoolUSDTManagedWallet");
+    address tBillsUSDTManagedWallet    = makeAddr("tBillsUSDTManagedWallet");
+    address pyusdUSDTManagedWallet     = makeAddr("pyusdUSDTManagedWallet");
+    address lpDexUSDGManagedWallet     = makeAddr("lpDexUSDGManagedWallet");
+    address crossPoolUSDGManagedWallet = makeAddr("crossPoolUSDGManagedWallet");
+    address tBillsUSDGManagedWallet    = makeAddr("tBillsUSDGManagedWallet");
+    address pyusdUSDGManagedWallet     = makeAddr("pyusdUSDGManagedWallet");
 
 }

@@ -1149,10 +1149,10 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         vm.prank(strategyDelegate);
         IAllocationStrategy(allocationUnderlyingStrategy).removeImpairment(impairment);
 
-        address firstPool        = address(pool);
-        address firstPoolManager = address(poolManager);
+        firstPool        = address(pool);
+        firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         firstAssets  = 1_000_000e6;
         secondAssets = 450_000e6;
