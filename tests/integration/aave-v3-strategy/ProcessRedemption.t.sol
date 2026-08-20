@@ -2,9 +2,6 @@
 pragma solidity ^0.8.7;
 
 import {
-    IAavePoolAddressesProviderLike,
-    IAavePoolConfiguratorLike,
-    IAavePoolLike,
     IAaveV3Strategy,
     IERC20,
     IPoolManager,
@@ -146,10 +143,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
     }
 
     function testFork_processRedemption_failWhenAaveLiquidityIsBorrowed() external {
-        address borrower = makeAddr("borrower");
-
-        uint256 collateralAssets = 1_000_000e18;
-        uint256 shares           = 2;
+        uint256 shares = 2;
 
         deposit(lp, assets);
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, assets);
@@ -158,31 +152,8 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
         // Make sure 2 shares will convert to 2 units of asset.
         assertEq(IStrategyManager(aaveV3StrategyManager).convertToAssets(shares), 2);
 
-        address aavePool = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
-
-        // Aave tracks liquidity virtually, while Spark uses the USDC balance held by its aToken.
-        uint256 aaveLiquidity = useVirtualUnderlyingBalance
-            ? IAavePoolLike(aavePool).getVirtualUnderlyingBalance(address(fundsAsset))
-            : fundsAsset.balanceOf(aaveToken);
-
         // Borrow all but one asset unit of the available protocol liquidity.
-        uint256 borrowAmount = aaveLiquidity - 1;
-
-        IAavePoolAddressesProviderLike addressesProvider =
-            IAavePoolAddressesProviderLike(IAavePoolLike(aavePool).ADDRESSES_PROVIDER());
-        IAavePoolConfiguratorLike poolConfigurator = IAavePoolConfiguratorLike(addressesProvider.getPoolConfigurator());
-
-        // Remove the WETH supply cap so the borrower can post enough collateral for the liquidity-draining borrow.
-        vm.prank(addressesProvider.getACLAdmin());
-        poolConfigurator.setSupplyCap(WETH, 0);
-
-        deal(WETH, borrower, collateralAssets);
-
-        vm.startPrank(borrower);
-        IERC20(WETH).approve(aavePool, collateralAssets);
-        IAavePoolLike(aavePool).supply(WETH, collateralAssets, borrower, 0);
-        IAavePoolLike(aavePool).borrow(address(fundsAsset), borrowAmount, 2, 0, borrower);
-        vm.stopPrank();
+        borrowOnAave();
 
         // The redemption requires two asset units, but only one remains available to withdraw.
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).availableToWithdraw(), 1);
@@ -193,11 +164,9 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
     }
 
     function testFork_processRedemption_useVirtualUnderlyingBalance_donation() external {
-        address borrower = makeAddr("borrower");
-        address donor    = makeAddr("donor");
+        address donor = makeAddr("donor");
 
-        uint256 collateralAssets = 1_000_000e18;
-        uint256 shares           = 2;
+        uint256 shares = 2;
 
         deposit(lp, assets);
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, assets);
@@ -205,26 +174,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
 
         assertEq(IStrategyManager(aaveV3StrategyManager).convertToAssets(shares), 2);
 
-        address aavePool = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
-
-        uint256 aaveLiquidity = useVirtualUnderlyingBalance
-            ? IAavePoolLike(aavePool).getVirtualUnderlyingBalance(address(fundsAsset))
-            : fundsAsset.balanceOf(aaveToken);
-
-        IAavePoolAddressesProviderLike addressesProvider =
-            IAavePoolAddressesProviderLike(IAavePoolLike(aavePool).ADDRESSES_PROVIDER());
-        IAavePoolConfiguratorLike poolConfigurator = IAavePoolConfiguratorLike(addressesProvider.getPoolConfigurator());
-
-        vm.prank(addressesProvider.getACLAdmin());
-        poolConfigurator.setSupplyCap(WETH, 0);
-
-        deal(WETH, borrower, collateralAssets);
-
-        vm.startPrank(borrower);
-        IERC20(WETH).approve(aavePool, collateralAssets);
-        IAavePoolLike(aavePool).supply(WETH, collateralAssets, borrower, 0);
-        IAavePoolLike(aavePool).borrow(address(fundsAsset), aaveLiquidity - 1, 2, 0, borrower);
-        vm.stopPrank();
+        borrowOnAave();
 
         assertEq(IAaveV3Strategy(aaveV3UnderlyingStrategy).availableToWithdraw(), 1);
 

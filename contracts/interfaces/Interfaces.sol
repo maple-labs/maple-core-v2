@@ -163,6 +163,13 @@ interface IAavePoolLike is IAPL {
         address onBehalfOf_
     ) external;
 
+    function repay(
+        address asset_,
+        uint256 amount_,
+        uint256 interestRateMode_,
+        address onBehalfOf_
+    ) external returns (uint256 repaidAssets_);
+
 }
 
 interface IDefiStrategyLike {

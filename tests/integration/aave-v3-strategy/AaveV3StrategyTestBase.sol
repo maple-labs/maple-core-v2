@@ -6,6 +6,7 @@ import {
     IAavePoolConfiguratorLike,
     IAavePoolLike,
     IAaveV3Strategy,
+    IERC20,
     IMockERC20
 } from "../../../contracts/interfaces/Interfaces.sol";
 
@@ -44,6 +45,34 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         });
 
         addStrategyManagerToPool(address(poolManager), aaveV3StrategyManager);
+    }
+
+    function borrowOnAave() internal returns (address aavePool, address borrower, uint256 borrowAmount) {
+        aavePool = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
+        borrower = makeAddr("borrower");
+
+        // Aave tracks liquidity virtually, while Spark uses the USDC balance held by its aToken.
+        uint256 aaveLiquidity = useVirtualUnderlyingBalance
+            ? IAavePoolLike(aavePool).getVirtualUnderlyingBalance(address(fundsAsset))
+            : fundsAsset.balanceOf(aaveToken);
+        uint256 collateralAssets = 1_000_000e18;
+
+        borrowAmount = aaveLiquidity - 1;
+
+        IAavePoolAddressesProviderLike addressesProvider = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool).ADDRESSES_PROVIDER());
+        IAavePoolConfiguratorLike poolConfigurator       = IAavePoolConfiguratorLike(addressesProvider.getPoolConfigurator());
+
+        // Remove the WETH supply cap so the borrower can post enough collateral to drain lending-market liquidity.
+        vm.prank(addressesProvider.getACLAdmin());
+        poolConfigurator.setSupplyCap(WETH, 0);
+
+        deal(WETH, borrower, collateralAssets);
+
+        vm.startPrank(borrower);
+        IERC20(WETH).approve(aavePool, collateralAssets);
+        IAavePoolLike(aavePool).supply(WETH, collateralAssets, borrower, 0);
+        IAavePoolLike(aavePool).borrow(address(fundsAsset), borrowAmount, 2, 0, borrower);
+        vm.stopPrank();
     }
 
     function setAaveV3ReserveFreeze(bool freeze_) internal {
