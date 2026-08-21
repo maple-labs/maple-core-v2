@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import { IAssetControllerOracle } from "../../contracts/interfaces/Interfaces.sol";
+import { IAssetControllerOracle } from "../../../../contracts/interfaces/Interfaces.sol";
 
-import { TestBase } from "../TestBase.sol";
+import { TestBase } from "../../../TestBase.sol";
 
 contract AssetControllerOracleConvertFuzzTest is TestBase {
 

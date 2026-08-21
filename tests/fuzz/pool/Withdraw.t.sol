@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { FuzzBase } from "./FuzzBase.sol";
+import { FuzzBase } from "../FuzzBase.sol";
 
 contract WithdrawFuzzTests is FuzzBase {
 

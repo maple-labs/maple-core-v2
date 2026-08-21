@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { FuzzBase } from "./FuzzBase.sol";
+import { FuzzBase } from "../FuzzBase.sol";
 
-contract MintFuzzTests is FuzzBase {
+contract DepositFuzzTests is FuzzBase {
 
     // Avoid stack too deep in tests
     uint256 convertedAssets;
@@ -11,18 +11,17 @@ contract MintFuzzTests is FuzzBase {
     uint256 convertedExitAssets;
     uint256 convertedExitShares;
 
-    function testDeepFuzz_mint_all(
+    function testDeepFuzz_deposit_all(
         address depositor,
         address receiver,
         uint256 totalSupply,
         uint256 totalAssets,
         uint256 unrealizedLosses,
         uint256 depositorAssets,
-        uint256 sharesToMint,
+        uint256 assetsToDeposit,
         uint256 receiverShares,
         uint256 cash
     ) external {
-
         if (depositor == address(0)) depositor = address(1);
         if (receiver  == address(0)) receiver  = address(1);
 
@@ -33,37 +32,28 @@ contract MintFuzzTests is FuzzBase {
         totalAssets      = bound(totalAssets,      0, 1e30);
         unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
         depositorAssets  = bound(depositorAssets,  0, 1e30);
+        assetsToDeposit  = bound(assetsToDeposit,  0, depositorAssets);
         receiverShares   = bound(receiverShares,   0, totalSupply);
-        cash             = bound(cash,             0, totalAssets);
+        cash             = bound(receiverShares,   0, totalAssets);
 
         mintShares(receiver, receiverShares, totalSupply);
         mintAssets(depositor, depositorAssets);
         setupPool(totalAssets, unrealizedLosses, cash);
 
-        uint256 maxShares = totalAssets == 0 ? depositorAssets : depositorAssets * totalSupply / totalAssets;
-
-        sharesToMint = bound(sharesToMint, 0, maxShares);
-
-        uint256 assetsToDeposit = totalSupply == 0 ? sharesToMint : divRoundUp(sharesToMint * totalAssets, totalSupply);
-
         vm.startPrank(depositor);
         fundsAsset.approve(address(pool), assetsToDeposit);
 
-        if (sharesToMint == 0) {
-            vm.expectRevert("P:M:ZERO_SHARES");
-            pool.mint(sharesToMint, receiver);
-            return;
-        }
-
-        if (pool.previewMint(sharesToMint) == 0) {
-            vm.expectRevert("P:M:ZERO_ASSETS");
-            pool.mint(sharesToMint, receiver);
-            return;
-        }
-
         if (totalSupply != 0 && totalAssets == 0) {
             vm.expectRevert(divisionError);
-            pool.mint(sharesToMint, receiver);  // Use assets since conversion fails
+            pool.deposit(assetsToDeposit, receiver);
+            return;
+        }
+
+        uint256 expectedShares = totalSupply == 0 ? assetsToDeposit : assetsToDeposit * totalSupply / totalAssets;
+
+        if (expectedShares == 0) {
+            vm.expectRevert("P:M:ZERO_SHARES");
+            pool.deposit(assetsToDeposit, receiver);
             return;
         }
 
@@ -75,13 +65,13 @@ contract MintFuzzTests is FuzzBase {
         assertEq(fundsAsset.balanceOf(depositor),     depositorAssets);
         assertEq(fundsAsset.balanceOf(address(pool)), cash);
 
-        uint256 depositedAssets = pool.mint(sharesToMint, receiver);
+        uint256 mintedShares = pool.deposit(assetsToDeposit, receiver);
 
         assertEq(fundsAsset.allowance(depositor, address(pool)), 0);
 
-        assertEq(depositedAssets,                     assetsToDeposit);
-        assertEq(pool.balanceOf(receiver),            receiverShares  + sharesToMint);
-        assertEq(pool.totalSupply(),                  totalSupply     + sharesToMint);
+        assertEq(mintedShares,                        expectedShares);
+        assertEq(pool.balanceOf(receiver),            receiverShares  + mintedShares);
+        assertEq(pool.totalSupply(),                  totalSupply     + mintedShares);
         assertEq(pool.totalAssets(),                  totalAssets     + assetsToDeposit);
         assertEq(fundsAsset.balanceOf(depositor),     depositorAssets - assetsToDeposit);
         assertEq(fundsAsset.balanceOf(address(pool)), cash            + assetsToDeposit);

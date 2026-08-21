@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedSetup }     from "./FuzzedSetup.sol";
-import { StorageSnapshot } from "./StorageSnapshot.sol";
+import { FuzzedSetup }     from "../FuzzedSetup.sol";
+import { StorageSnapshot } from "../StorageSnapshot.sol";
 
-contract OpenTermLoanFuzz is FuzzedSetup, StorageSnapshot {
+contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
 
     uint256 constant ACTION_COUNT   = 10;
     uint256 constant OTL_LOAN_COUNT = 5;
