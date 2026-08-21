@@ -98,6 +98,15 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     scripts/AssetControllerDeployment.s.sol:AssetControllerDeployment
 
+# For ModularReleaseDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --unlocked \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     scripts/ModularReleaseDeployment.s.sol:ModularReleaseDeployment
+
 # For Production
 
 # For Healthchecker
@@ -224,3 +233,13 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --gas-estimate-multiplier 150 \
 #     scripts/AssetControllerDeployment.s.sol:AssetControllerDeployment
 
+# For ModularReleaseDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 21 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     scripts/ModularReleaseDeployment.s.sol:ModularReleaseDeployment
