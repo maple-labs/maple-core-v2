@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IOpenTermLoan,
+    IOpenTermLoanManager,
+    IPool,
+    IPoolManager
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetup }     from "../FuzzedSetup.sol";
 import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
 
-    uint256 constant ACTION_COUNT   = 10;
+    uint256 constant ACTION_COUNT   = 20;
     uint256 constant OTL_LOAN_COUNT = 5;
 
     IOpenTermLoan        loan;
@@ -19,19 +24,18 @@ contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
     OpenTermPaymentStorage     paymentStorage;
     PoolManagerStorage         poolManagerStorage;
 
-    function setUp() public override {
-        super.setUp();
-
-        loanManager = IOpenTermLoanManager(_openTermLoanManager);
-    }
-
-    function testFuzz_call_otl(uint256 seed) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed);
+    function testFuzz_call_otl(uint256 seed_) external {
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
 
         // Do nothing if no loan is available.
         if (address(loan) == address(0)) return;
+
+        // Assertions are performed against the pool that funded the loan.
+        loanManager = IOpenTermLoanManager(loan.lender());
+        poolManager = IPoolManager(loanManager.poolManager());
+        pool        = IPool(poolManager.pool());
 
         // Cache the state.
         uint256 borrowerBalance = fundsAsset.balanceOf(loan.borrower());
@@ -46,7 +50,7 @@ contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
 
         // Perform the action.
         address poolDelegate    = poolManager.poolDelegate();
-        uint256 calledPrincipal = bound(seed, 1, loan.principal());
+        uint256 calledPrincipal = bound(seed_, 1, loan.principal());
 
         vm.prank(poolDelegate);
         loanManager.callPrincipal(address(loan), calledPrincipal);
@@ -100,13 +104,18 @@ contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
         });
     }
 
-    function testFuzz_removeCall_otl(uint256 seed) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed);
+    function testFuzz_removeCall_otl(uint256 seed_) external {
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan = IOpenTermLoan(getSomeCalledOpenTermLoan());
 
         // Do nothing if no called loans exist.
         if (address(loan) == address(0)) return;
+
+        // Assertions are performed against the pool that funded the loan.
+        loanManager = IOpenTermLoanManager(loan.lender());
+        poolManager = IPoolManager(loanManager.poolManager());
+        pool        = IPool(poolManager.pool());
 
         // Cache the state.
         uint256 borrowerBalance = fundsAsset.balanceOf(loan.borrower());

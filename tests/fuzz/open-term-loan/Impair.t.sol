@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
+import {
+    IOpenTermLoan,
+    IOpenTermLoanManager,
+    IPool,
+    IPoolManager
+} from "../../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetup }     from "../FuzzedSetup.sol";
 import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
 
-    uint256 constant ACTION_COUNT   = 10;
+    uint256 constant ACTION_COUNT   = 20;
     uint256 constant OTL_LOAN_COUNT = 5;
 
     uint256 borrowerBalance;
@@ -25,19 +30,18 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
     OpenTermPaymentStorage        paymentStorage;
     PoolManagerStorage            poolManagerStorage;
 
-    function setUp() public override {
-        super.setUp();
-
-        loanManager = IOpenTermLoanManager(_openTermLoanManager);
-    }
-
-    function testFuzz_impair_otl(uint256 seed) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed);
+    function testFuzz_impair_otl(uint256 seed_) external {
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
 
         // Do nothing if no loan is available.
         if (address(loan) == address(0)) return;
+
+        // Assertions are performed against the pool that funded the loan.
+        loanManager = IOpenTermLoanManager(loan.lender());
+        poolManager = IPoolManager(loanManager.poolManager());
+        pool        = IPool(poolManager.pool());
 
         // Cache the token balances.
         borrowerBalance = fundsAsset.balanceOf(loan.borrower());
@@ -53,7 +57,7 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
         poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
         // Decide if the delegate or governor will perform the impairment.
-        address caller = seed % 2 == 0 ? poolManager.poolDelegate() : globals.governor();
+        address caller = seed_ % 2 == 0 ? poolManager.poolDelegate() : globals.governor();
 
         // Perform the action.
         vm.prank(caller);
@@ -148,13 +152,18 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
         }
     }
 
-    function testFuzz_removeImpairment_otl(uint256 seed) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed);
+    function testFuzz_removeImpairment_otl(uint256 seed_) external {
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
         loan = IOpenTermLoan(getSomeImpairedOpenTermLoan());
 
         // Do nothing if no loan is available.
         if (address(loan) == address(0)) return;
+
+        // Assertions are performed against the pool that funded the loan.
+        loanManager = IOpenTermLoanManager(loan.lender());
+        poolManager = IPoolManager(loanManager.poolManager());
+        pool        = IPool(poolManager.pool());
 
         // Cache the state.
         borrowerBalance = fundsAsset.balanceOf(loan.borrower());

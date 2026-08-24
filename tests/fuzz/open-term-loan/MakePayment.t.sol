@@ -4,7 +4,9 @@ pragma solidity ^0.8.7;
 import {
     IOpenTermLoan,
     IOpenTermLoanManager,
-    IOpenTermLoanManagerStructs
+    IOpenTermLoanManagerStructs,
+    IPool,
+    IPoolManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetup }     from "../FuzzedSetup.sol";
@@ -41,8 +43,16 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
     function testFuzz_otlFuzzedSetup_makePayment(uint256 seed_) external {
         fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
 
-        loan        = IOpenTermLoan(getSomeActiveOpenTermLoan());
+        loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
+
+        // Do nothing if no loan is available.
+        if (address(loan) == address(0)) return;
+
         loanManager = IOpenTermLoanManager(loan.lender());
+
+        // Assertions are performed against the pool that funded the loan.
+        poolManager = IPoolManager(loanManager.poolManager());
+        pool        = IPool(poolManager.pool());
 
         // Save to storage before change
         loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
