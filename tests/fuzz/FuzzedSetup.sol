@@ -10,6 +10,7 @@ import {
     IPool,
     IPoolManager,
     IStrategyManager,
+    IUnderlyingStrategyLike,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
@@ -19,8 +20,6 @@ import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 enum LoanAction {
     Call,
-    Close,
-    Fund,
     Impair,
     Payment,
     RemoveCall,
@@ -39,9 +38,19 @@ enum AllocationStrategyAction {
     None
 }
 
+// Shared by the Aave and Sky strategies, which expose the same set of managed functions.
+enum DefiStrategyAction {
+    Fund,
+    RequestRedeem,
+    ProcessRedemption,
+    CancelRedemption,
+    Impair,
+    RemoveImpairment,
+    None
+}
+
 // TODO: Bootstrap mint is not set when deploying allocation strategy. Consider changing that when fuzz for allocation are being written.
 // TODO: Here we don't fuzz new LP deposits, consider changing that.
-// TODO: We don't have fees (protocol or delegate), consider changing that it introduce complexity.
 abstract contract FuzzedUtil is TestBaseWithAssertions {
 
     /**************************************************************************************************************************************/
@@ -50,7 +59,6 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
     uint256 constant CALL_FACTOR              = 75;
     uint256 constant DEFAULT_FACTOR           = 33;
-    uint256 constant FUND_FACTOR              = 100;
     uint256 constant IMPAIR_FACTOR            = 75;
     uint256 constant PAYMENT_FACTOR           = 100;
     uint256 constant REMOVE_CALL_FACTOR       = 100;
@@ -68,6 +76,33 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     uint256 constant RETURN_ASSETS_FACTOR              = 75;
 
     /**************************************************************************************************************************************/
+    /*** Defi strategy factors                                                                                                          ***/
+    /**************************************************************************************************************************************/
+
+    uint256 constant DEFI_CANCEL_REDEMPTION_FACTOR  = 50;
+    uint256 constant DEFI_FUND_FACTOR               = 125;
+    uint256 constant DEFI_IMPAIR_FACTOR             = 50;
+    uint256 constant DEFI_PROCESS_REDEMPTION_FACTOR = 100;
+    uint256 constant DEFI_REMOVE_IMPAIRMENT_FACTOR  = 75;
+    uint256 constant DEFI_REQUEST_REDEEM_FACTOR     = 100;
+
+    /**************************************************************************************************************************************/
+    /*** Strategy fee rates                                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    uint32 constant STRATEGY_DELEGATE_FEE_RATE = 0.1e6;   // 10% of accrued yield.
+    uint32 constant STRATEGY_PROTOCOL_FEE_RATE = 0.05e6;  // 5% of accrued yield.
+
+    /**************************************************************************************************************************************/
+    /*** Open term loan fee rates                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    // The delegate service fee rate is fuzzed per loan when the loan is created.
+    uint256 constant DELEGATE_MANAGEMENT_FEE_RATE = 0.1e6;   // 10% of accrued interest.
+    uint256 constant PLATFORM_MANAGEMENT_FEE_RATE = 0.05e6;  // 5% of accrued interest.
+    uint256 constant PLATFORM_SERVICE_FEE_RATE    = 0.02e6;  // 2% of principal, pro rated over the payment interval.
+
+    /**************************************************************************************************************************************/
     /*** Local addresses that will be used in the setup                                                                                 ***/
     /**************************************************************************************************************************************/
 
@@ -78,13 +113,20 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
     address openTermLoanManagerPool1;
     address openTermLoanManagerPool2;
+
     address allocationStrategyManagerShared;
     address allocationUnderlyingStrategyShared;
+    address aaveStrategyManagerShared;            // Used only on fork fuzz tests. Otherwise address(0)
+    address aaveUnderlyingStrategyShared;         // Used only on fork fuzz tests. Otherwise address(0)
+    address skyStrategyManagerShared;             // Used only on fork fuzz tests. Otherwise address(0)
+    address skyUnderlyingStrategyShared;          // Used only on fork fuzz tests. Otherwise address(0)
 
     address managedWalletShared;
 
     uint256 expectedLoanCount;
     uint256 seed;
+
+    uint256 lpDeposit = 100_000_000e6;
 
     address[] lps;
     address[] loans;
@@ -92,7 +134,9 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     function fuzzedSetup(
         uint256 openTermLoans,
         uint256 loanActionCount,
-        uint256 strategyActionCount,
+        uint256 allocationActionCount,
+        uint256 aaveActionCount,
+        uint256 skyActionCount,
         uint256 seed_
     )
         internal
@@ -147,10 +191,32 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         /*** Perform random actions on the allocation strategy                                                                          ***/
         /**********************************************************************************************************************************/
 
-        for (uint256 i; i < strategyActionCount; ++i) {
+        for (uint256 i; i < allocationActionCount; ++i) {
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
 
             performSomeAllocationStrategyAction();
+        }
+
+        /**********************************************************************************************************************************/
+        /*** Perform random actions on the aave strategy                                                                                ***/
+        /**********************************************************************************************************************************/
+
+        for (uint256 i; i < aaveActionCount; ++i) {
+            vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
+
+            performSomeDefiStrategyAction(poolManager1, aaveStrategyManagerShared);
+            performSomeDefiStrategyAction(poolManager2, aaveStrategyManagerShared);
+        }
+
+        /**********************************************************************************************************************************/
+        /*** Perform random actions on the sky strategy                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        for (uint256 i; i < skyActionCount; ++i) {
+            vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
+
+            performSomeDefiStrategyAction(poolManager1, skyStrategyManagerShared);
+            performSomeDefiStrategyAction(poolManager2, skyStrategyManagerShared);
         }
     }
 
@@ -244,6 +310,64 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
             recognizeLoss(allocationUnderlyingStrategyShared, managedWalletShared, assets);
             console.log("Loss recognized:", assets);
+        }
+    }
+
+    function performSomeDefiStrategyAction(address poolManager_, address strategyManager_) internal {
+        IStrategyManager        strategyManager    = IStrategyManager(strategyManager_);
+        IUnderlyingStrategyLike underlyingStrategy = IUnderlyingStrategyLike(strategyManager.underlyingStrategy());
+
+        DefiStrategyAction action = getSomeDefiStrategyAction(poolManager_, strategyManager_);
+
+        if (action == DefiStrategyAction.Fund) {
+            uint256 minAssets = getMinimumFundableAssets(strategyManager_);
+            uint256 assets    = getSomeValue(minAssets, fundsAsset.balanceOf(IPoolManager(poolManager_).pool()));
+
+            fundStrategyManager(poolManager_, strategyManager_, assets);
+            console.log("Defi strategy funded:", assets);
+        }
+
+        if (action == DefiStrategyAction.RequestRedeem) {
+            uint256 requestableShares = strategyManager.sharesOf(poolManager_) - strategyManager.pendingSharesOf(poolManager_);
+
+            uint256 shares = getSomeValue(1, requestableShares);
+
+            requestRedeemFromStrategyManager(poolManager_, strategyManager_, shares);
+            console.log("Defi strategy redemption requested:", shares);
+        }
+
+        if (action == DefiStrategyAction.ProcessRedemption) {
+            uint256 minShares = strategyManager.convertToExitShares(1);
+
+            if (strategyManager.convertToExitAssets(minShares) == 0) ++minShares;
+
+            uint256 shares = getSomeValue(minShares, getMaximumProcessableShares(poolManager_, strategyManager_));
+
+            processRedemptionFromStrategyManager(poolManager_, strategyManager_, shares);
+            console.log("Defi strategy redemption processed:", shares);
+        }
+
+        if (action == DefiStrategyAction.CancelRedemption) {
+            uint256 shares = getSomeValue(1, IStrategyManager(strategyManager_).pendingSharesOf(poolManager_));
+
+            cancelRedemptionFromStrategyManager(poolManager_, strategyManager_, shares);
+            console.log("Defi strategy redemption cancelled:", shares);
+        }
+
+        if (action == DefiStrategyAction.Impair) {
+            // Over impairment is allowed. 2xAUM is set to be upper limit so we are giving equal chance to partial and full impairment.
+            // If we would allow impairments up to uint256.max partial impairment scenarios would be very rare.
+            uint256 assets = getSomeValue(1, underlyingStrategy.assetsUnderManagement() * 2 - underlyingStrategy.impairedAssets());
+
+            impairStrategy(address(underlyingStrategy), assets);
+            console.log("Defi strategy impaired:", assets);
+        }
+
+        if (action == DefiStrategyAction.RemoveImpairment) {
+            uint256 assets = getSomeValue(1, underlyingStrategy.impairedAssets());
+
+            removeStrategyImpairment(address(underlyingStrategy), assets);
+            console.log("Defi strategy impairment removed:", assets);
         }
     }
 
@@ -343,58 +467,47 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     /*** Functions for retrieving random loan and strategy actions                                                                      ***/
     /**************************************************************************************************************************************/
 
-    function getSomeOpenTermAction(address loan) internal returns (LoanAction action) {
-        // Always enable payments, calls, impairments to be performed.
-        uint256 total = PAYMENT_FACTOR + CALL_FACTOR;
-
+    function getSomeOpenTermAction(address loan) internal returns (LoanAction) {
         bool isCalled    = IOpenTermLoan(loan).isCalled();
         bool isImpaired  = IOpenTermLoan(loan).isImpaired();
         bool isInDefault = IOpenTermLoan(loan).isInDefault();
 
+        uint256[] memory factors = new uint256[](6);
+
+        // Payments and calls can always be performed.
+        factors[uint256(LoanAction.Payment)] = PAYMENT_FACTOR;
+        factors[uint256(LoanAction.Call)]    = CALL_FACTOR;
+
+        uint256 sumOfFactors = PAYMENT_FACTOR + CALL_FACTOR;
+
         // If the loan is called also enable call removal.
         if (isCalled) {
-            total += REMOVE_CALL_FACTOR;
+            factors[uint256(LoanAction.RemoveCall)] = REMOVE_CALL_FACTOR;
+            sumOfFactors += REMOVE_CALL_FACTOR;
         }
 
-        // If the loan is impaired enabled impairment removal, otherwise enable impairments.
+        // If the loan is impaired enable impairment removal, otherwise enable impairments.
         if (isImpaired) {
-            total += REMOVE_IMPAIRMENT_FACTOR;
+            factors[uint256(LoanAction.RemoveImpairment)] = REMOVE_IMPAIRMENT_FACTOR;
+            sumOfFactors += REMOVE_IMPAIRMENT_FACTOR;
         } else {
-            total += IMPAIR_FACTOR;
+            factors[uint256(LoanAction.Impair)] = IMPAIR_FACTOR;
+            sumOfFactors += IMPAIR_FACTOR;
         }
 
         // If the loan is past the default date also enable default triggering.
         if (isInDefault) {
-            total += DEFAULT_FACTOR;
+            factors[uint256(LoanAction.TriggerDefault)] = DEFAULT_FACTOR;
+            sumOfFactors += DEFAULT_FACTOR;
         }
 
-        uint256 draw = getSomeValue(0, total - 1);
+        uint256 draw = getSomeValue(0, sumOfFactors - 1);
 
-        if (draw < PAYMENT_FACTOR) return LoanAction.Payment;
+        for (uint256 i; i < factors.length; ++i) {
+            if (draw < factors[i]) return LoanAction(i);
 
-        draw -= PAYMENT_FACTOR;
-
-        if (draw < CALL_FACTOR) return LoanAction.Call;
-
-        draw -= CALL_FACTOR;
-
-        if (isCalled) {
-            if (draw < REMOVE_CALL_FACTOR) return LoanAction.RemoveCall;
-
-            draw -= REMOVE_CALL_FACTOR;
+            draw -= factors[i];
         }
-
-        if (isImpaired) {
-            if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
-
-            draw -= REMOVE_IMPAIRMENT_FACTOR;
-        } else {
-            if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
-
-            draw -= IMPAIR_FACTOR;
-        }
-
-        return LoanAction.TriggerDefault;
     }
 
     function getSomeAllocationStrategyAction() internal returns (AllocationStrategyAction) {
@@ -451,6 +564,84 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
             draw -= factors[i];
         }
+    }
+
+    function getSomeDefiStrategyAction(address poolManager_, address strategyManager_) internal returns (DefiStrategyAction) {
+        IStrategyManager        strategyManager = IStrategyManager(strategyManager_);
+        IUnderlyingStrategyLike strategy        = IUnderlyingStrategyLike(strategyManager.underlyingStrategy());
+
+        uint256 impairedAssets = strategy.impairedAssets();
+
+        bool canFund              = fundsAsset.balanceOf(IPoolManager(poolManager_).pool()) >= getMinimumFundableAssets(strategyManager_);
+        bool canImpair            = impairedAssets < strategy.assetsUnderManagement();
+        bool canRemoveImpairment  = impairedAssets > 0;
+        bool canRequestRedeem     = strategyManager.sharesOf(poolManager_) > strategyManager.pendingSharesOf(poolManager_);
+        bool canCancelRedemption  = strategyManager.pendingSharesOf(poolManager_) > 0;
+        bool canProcessRedemption = strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses() &&
+                                    strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, strategyManager_)) > 0;
+
+        uint256[] memory factors = new uint256[](6);
+
+        uint256 sumOfFactors;
+
+        if (canFund) {
+            factors[uint256(DefiStrategyAction.Fund)] = DEFI_FUND_FACTOR;
+            sumOfFactors += DEFI_FUND_FACTOR;
+        }
+
+        if (canRequestRedeem) {
+            factors[uint256(DefiStrategyAction.RequestRedeem)] = DEFI_REQUEST_REDEEM_FACTOR;
+            sumOfFactors += DEFI_REQUEST_REDEEM_FACTOR;
+        }
+
+        if (canProcessRedemption) {
+            factors[uint256(DefiStrategyAction.ProcessRedemption)] = DEFI_PROCESS_REDEMPTION_FACTOR;
+            sumOfFactors += DEFI_PROCESS_REDEMPTION_FACTOR;
+        }
+
+        if (canCancelRedemption) {
+            factors[uint256(DefiStrategyAction.CancelRedemption)] = DEFI_CANCEL_REDEMPTION_FACTOR;
+            sumOfFactors += DEFI_CANCEL_REDEMPTION_FACTOR;
+        }
+
+        if (canImpair) {
+            factors[uint256(DefiStrategyAction.Impair)] = DEFI_IMPAIR_FACTOR;
+            sumOfFactors += DEFI_IMPAIR_FACTOR;
+        }
+
+        if (canRemoveImpairment) {
+            factors[uint256(DefiStrategyAction.RemoveImpairment)] = DEFI_REMOVE_IMPAIRMENT_FACTOR;
+            sumOfFactors += DEFI_REMOVE_IMPAIRMENT_FACTOR;
+        }
+
+        // No action can be performed when the pool holds no liquidity and the strategy holds no position.
+        if (sumOfFactors == 0) return DefiStrategyAction.None;
+
+        uint256 draw = getSomeValue(0, sumOfFactors - 1);
+
+        for (uint256 i; i < factors.length; ++i) {
+            if (draw < factors[i]) return DefiStrategyAction(i);
+
+            draw -= factors[i];
+        }
+
+        return DefiStrategyAction.None;
+    }
+
+    // Pending shares capped by the liquidity the underlying strategy can release.
+    function getMaximumProcessableShares(address poolManager_, address strategyManager_) internal view returns (uint256 maxShares_) {
+        IStrategyManager strategyManager = IStrategyManager(strategyManager_);
+
+        uint256 pendingShares      = strategyManager.pendingSharesOf(poolManager_);
+        uint256 withdrawableShares = strategyManager.convertToExitShares(strategyManager.availableToWithdraw());
+
+        maxShares_ = withdrawableShares < pendingShares ? withdrawableShares : pendingShares;
+    }
+
+    // Funding less than the value of a single share mints nothing, which the strategy manager rejects. The extra unit covers
+    // both the rounding down in the conversion and the assets the underlying strategy can lose while depositing.
+    function getMinimumFundableAssets(address strategyManager_) internal view returns (uint256 minAssets_) {
+        minAssets_ = IStrategyManager(strategyManager_).convertToAssets(1) + 2;
     }
 
     function getSomeValue(uint256 min_, uint256 max_) internal returns (uint256 value_) {
@@ -630,8 +821,8 @@ contract FuzzedSetup is FuzzedUtil {
         ( allocationStrategyManagerShared, allocationUnderlyingStrategyShared ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
-            strategyDelegateFeeRate_: 0,
-            strategyProtocolFeeRate_: 0,
+            strategyDelegateFeeRate_: STRATEGY_DELEGATE_FEE_RATE,
+            strategyProtocolFeeRate_: STRATEGY_PROTOCOL_FEE_RATE,
             strategyLiquidityCap_:    type(uint256).max,
             bootstrapMint_:           0
         });
@@ -662,6 +853,20 @@ contract FuzzedSetup is FuzzedUtil {
         openTermLoanManagerPool2 = IPoolManager(poolManager2).strategyList(0);
 
         /**********************************************************************************************************************************/
+        /*** Set the open term loan fees for both pools                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.startPrank(governor);
+        globals.setPlatformManagementFeeRate(poolManager1, PLATFORM_MANAGEMENT_FEE_RATE);
+        globals.setPlatformManagementFeeRate(poolManager2, PLATFORM_MANAGEMENT_FEE_RATE);
+        globals.setPlatformServiceFeeRate(poolManager1, PLATFORM_SERVICE_FEE_RATE);
+        globals.setPlatformServiceFeeRate(poolManager2, PLATFORM_SERVICE_FEE_RATE);
+        vm.stopPrank();
+
+        setDelegateManagementFeeRate(poolManager1, DELEGATE_MANAGEMENT_FEE_RATE);
+        setDelegateManagementFeeRate(poolManager2, DELEGATE_MANAGEMENT_FEE_RATE);
+
+        /**********************************************************************************************************************************/
         /*** Create LPs and fund both pools with liquidity from the LPs                                                                  ***/
         /**********************************************************************************************************************************/
 
@@ -672,8 +877,8 @@ contract FuzzedSetup is FuzzedUtil {
         lps.push(makeAddr("lp5"));
 
         for (uint256 i; i < lps.length; ++i) {
-            deposit(pool1, lps[i], 100_000_000e6);
-            deposit(pool2, lps[i], 100_000_000e6);
+            deposit(pool1, lps[i], lpDeposit);
+            deposit(pool2, lps[i], lpDeposit);
         }
     }
 

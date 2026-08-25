@@ -18,7 +18,7 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
     }
 
     function testFuzz_fuzzedSetup_closePool_withQueueWM(uint256 seed_) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, ACTION_COUNT, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, ACTION_COUNT, 0, 0, seed_);
 
         uint256 lastDomainStartOTLM = payOffLoansAndRedeemAllLps(pool1);
 

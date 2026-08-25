@@ -693,7 +693,7 @@ contract TestBase is ProtocolActions, Utils {
         governor = address(governorTimelock);
     }
 
-    function _createAssets() internal {
+    function _createAssets() internal virtual {
         collateralAsset = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapper Ether",   "WETH", 18)));
         fundsAsset      = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("USD Coin",        "USDC", 6)));
         depositAsset    = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapped Bitcoin", "WBTC", 8)));

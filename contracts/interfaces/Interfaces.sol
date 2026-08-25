@@ -430,6 +430,8 @@ interface IUnderlyingStrategyLike {
 
     function impair(uint256 amount) external;
 
+    function impairedAssets() external view returns (uint256 impairedAssets);
+
     function removeImpairment(uint256 amount) external;
 
     function strategyDelegate() external view returns (address strategyDelegate);

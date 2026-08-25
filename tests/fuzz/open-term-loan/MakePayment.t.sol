@@ -41,7 +41,7 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
     PoolManagerStorage         poolManagerStorage;
 
     function testFuzz_otlFuzzedSetup_makePayment(uint256 seed_) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
 
         loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
 
@@ -92,8 +92,12 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
 
         IOpenTermLoanManagerStructs.Payment memory loanInfo = IOpenTermLoanManagerStructs(loan.lender()).paymentFor(address(loan));
 
-        uint256 managementFeeRate = loanInfo.delegateManagementFeeRate + loanInfo.platformManagementFeeRate;
-        uint256 netInterest       = (interest_ + lateInterest_) - ((interest_ + lateInterest_) * managementFeeRate / 1e6);
+        uint256 totalInterest = interest_ + lateInterest_;
+
+        uint256 delegateManagementFee = totalInterest * loanInfo.delegateManagementFeeRate / 1e6;
+        uint256 platformManagementFee = totalInterest * loanInfo.platformManagementFeeRate / 1e6;
+
+        uint256 netInterest = totalInterest - delegateManagementFee - platformManagementFee;
 
         if (dateImpaired > 0) {
             uint256 accruedUpToImpairment =
@@ -122,7 +126,9 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
                 diff:               3
             });
         } else {
-            uint256 netOnTimeInterest = interest_ - (interest_ * (managementFeeRate)) / 1e6;
+            uint256 netOnTimeInterest = interest_
+                - (interest_ * loanInfo.delegateManagementFeeRate / 1e6)
+                - (interest_ * loanInfo.platformManagementFeeRate / 1e6);
 
             uint256 accountedInterest = _subtractWithDiff(
                 loanManagerStorage.previousAccountedInterest + loanManagerStorage.previousAccruedInterest,
@@ -151,12 +157,9 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
             });
         }
 
-        uint256 delegateManagementFee = interest_ * loanInfo.platformManagementFeeRate / 1e6;
-        uint256 treasuryManagementFee = interest_ * loanInfo.delegateManagementFeeRate / 1e6;
-
         assertEq(fundsAsset.balanceOf(loan.borrower()),                     borrowerBalance - totalPayment);
         assertEq(fundsAsset.balanceOf(address(pool)),                       poolBalance + netInterest + principal_);
-        assertEq(fundsAsset.balanceOf(address(treasury)),                   treasuryBalance + treasuryManagementFee + platformServiceFee_);
+        assertEq(fundsAsset.balanceOf(address(treasury)),                   treasuryBalance + platformManagementFee + platformServiceFee_);
         assertEq(fundsAsset.balanceOf(address(poolManager.poolDelegate())), pdBalance + delegateManagementFee + delegateServiceFee_);
     }
 

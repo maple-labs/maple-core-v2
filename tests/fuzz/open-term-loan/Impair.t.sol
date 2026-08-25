@@ -31,7 +31,7 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
     PoolManagerStorage            poolManagerStorage;
 
     function testFuzz_impair_otl(uint256 seed_) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
 
         loan = IOpenTermLoan(getSomeActiveOpenTermLoan());
 
@@ -153,7 +153,7 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
     }
 
     function testFuzz_removeImpairment_otl(uint256 seed_) external {
-        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, seed_);
+        fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
 
         loan = IOpenTermLoan(getSomeImpairedOpenTermLoan());
 
