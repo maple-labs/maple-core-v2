@@ -95,26 +95,26 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     /**************************************************************************************************************************************/
 
     function deployContracts() internal {
-        globalsV500Implementation             = deployFromFile("Contracts@28", "Globals");
-        poolManagerV500Implementation         = deployFromFile("Contracts@28", "PoolManager");
-        poolManagerV500Initializer            = deployFromFile("Contracts@28", "PoolManagerInitializer");
-        poolManagerV500Migrator               = deployFromFile("Contracts@28", "PoolManagerMigrator");
-        strategyManagerV100Implementation     = deployFromFile("Contracts@28", "StrategyManager");
-        strategyManagerV100Initializer        = deployFromFile("Contracts@28", "StrategyManagerInitializer");
-        modularAaveStrategyV100Implementation = deployFromFile("Contracts@28", "AaveV3Strategy");
-        modularAaveStrategyV100Initializer    = deployFromFile("Contracts@28", "AaveV3StrategyInitializer");
-        modularSkyStrategyV100Implementation  = deployFromFile("Contracts@28", "SkyStrategy");
-        modularSkyStrategyV100Initializer     = deployFromFile("Contracts@28", "SkyStrategyInitializer");
-        allocationStrategyV100Implementation  = deployFromFile("Contracts@28", "AllocationStrategy");
-        allocationStrategyV100Initializer     = deployFromFile("Contracts@28", "AllocationStrategyInitializer");
+        globalsV500Implementation             = deployFromFile("Contracts@34", "Globals");
+        poolManagerV500Implementation         = deployFromFile("Contracts@34", "PoolManager");
+        poolManagerV500Initializer            = deployFromFile("Contracts@34", "PoolManagerInitializer");
+        poolManagerV500Migrator               = deployFromFile("Contracts@34", "PoolManagerMigrator");
+        strategyManagerV100Implementation     = deployFromFile("Contracts@34", "StrategyManager");
+        strategyManagerV100Initializer        = deployFromFile("Contracts@34", "StrategyManagerInitializer");
+        modularAaveStrategyV100Implementation = deployFromFile("Contracts@34", "AaveV3Strategy");
+        modularAaveStrategyV100Initializer    = deployFromFile("Contracts@34", "AaveV3StrategyInitializer");
+        modularSkyStrategyV100Implementation  = deployFromFile("Contracts@34", "SkyStrategy");
+        modularSkyStrategyV100Initializer     = deployFromFile("Contracts@34", "SkyStrategyInitializer");
+        allocationStrategyV100Implementation  = deployFromFile("Contracts@34", "AllocationStrategy");
+        allocationStrategyV100Initializer     = deployFromFile("Contracts@34", "AllocationStrategyInitializer");
 
-        poolDeployerV500           = deployFromFile("Contracts@28", "PoolDeployer",              abi.encode(globals));
-        strategyDeployerV100       = deployFromFile("Contracts@28", "StrategyDeployer",          abi.encode(globals));
-        strategyManagerFactory     = deployFromFile("Contracts@28", "StrategyManagerFactory",    abi.encode(globals));
-        modularAaveStrategyFactory = deployFromFile("Contracts@28", "AaveV3StrategyFactory",     abi.encode(globals));
-        modularSkyStrategyFactory  = deployFromFile("Contracts@28", "SkyStrategyFactory",        abi.encode(globals));
-        allocationStrategyFactory  = deployFromFile("Contracts@28", "AllocationStrategyFactory", abi.encode(globals));
-        liquidityRouterV100        = deployFromFile("Contracts@28", "LiquidityRouter",           abi.encode(globals));
+        poolDeployerV500           = deployFromFile("Contracts@34", "PoolDeployer",              abi.encode(globals));
+        strategyDeployerV100       = deployFromFile("Contracts@34", "StrategyDeployer",          abi.encode(globals));
+        strategyManagerFactory     = deployFromFile("Contracts@34", "StrategyManagerFactory",    abi.encode(globals));
+        modularAaveStrategyFactory = deployFromFile("Contracts@34", "AaveV3StrategyFactory",     abi.encode(globals));
+        modularSkyStrategyFactory  = deployFromFile("Contracts@34", "SkyStrategyFactory",        abi.encode(globals));
+        allocationStrategyFactory  = deployFromFile("Contracts@34", "AllocationStrategyFactory", abi.encode(globals));
+        liquidityRouterV100        = deployFromFile("Contracts@34", "LiquidityRouter",           abi.encode(globals));
     }
 
     /**************************************************************************************************************************************/

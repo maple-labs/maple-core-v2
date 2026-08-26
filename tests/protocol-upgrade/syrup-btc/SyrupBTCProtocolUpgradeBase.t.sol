@@ -48,7 +48,7 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
     function upgradeProtocol() internal {
         // Step -2: Deploy new pool deployer
 
-        address poolDeployer = deployFromFile("Contracts@28", "PoolDeployer", abi.encode(globals));
+        address poolDeployer = deployFromFile("Contracts@34", "PoolDeployer", abi.encode(globals));
 
         // Step -1: Whitelist the new pool deployer.
 
@@ -60,9 +60,9 @@ contract SyrupBTCProtocolUpgradeBase is Runner, UpgradeAddressRegistry {
 
         // Step 0: Deploy new version of pool manager
 
-        poolManagerV500Implementation = deployFromFile("Contracts@28", "PoolManager");
-        poolManagerV500Initializer    = deployFromFile("Contracts@28", "PoolManagerInitializer");
-        poolManagerV500Migrator       = deployFromFile("Contracts@28", "PoolManagerMigrator");
+        poolManagerV500Implementation = deployFromFile("Contracts@34", "PoolManager");
+        poolManagerV500Initializer    = deployFromFile("Contracts@34", "PoolManagerInitializer");
+        poolManagerV500Migrator       = deployFromFile("Contracts@34", "PoolManagerMigrator");
 
         // Step 1: Deploy new version of withdrawal manager queue
 

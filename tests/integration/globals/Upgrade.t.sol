@@ -12,7 +12,7 @@ import { TestBase } from "../../TestBase.sol";
 
 contract GlobalsUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts@28","Globals");
+    address newImplementation = deployFromFile("Contracts@34", "Globals");
 
     function test_upgradeGlobals_notAdmin() external {
         INonTransparentProxy proxy = INonTransparentProxy(address(globals));
@@ -39,7 +39,7 @@ contract GlobalsUpgradeTests is TestBase {
 
 contract PoolManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts@28","PoolManager");
+    address newImplementation = deployFromFile("Contracts@34", "PoolManager");
 
     bytes upgradeCallData = new bytes(0);
 

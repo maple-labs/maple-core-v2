@@ -63,10 +63,10 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
     function setupPool() internal {
         // Step -2: Deploy the modular pool deployer and the new pool manager version
 
-        address poolDeployer = deployFromFile("Contracts@28", "PoolDeployer", abi.encode(globals));
+        address poolDeployer = deployFromFile("Contracts@34", "PoolDeployer", abi.encode(globals));
 
-        poolManagerV500Implementation = deployFromFile("Contracts@28", "PoolManager");
-        poolManagerV500Initializer    = deployFromFile("Contracts@28", "PoolManagerInitializer");
+        poolManagerV500Implementation = deployFromFile("Contracts@34", "PoolManager");
+        poolManagerV500Initializer    = deployFromFile("Contracts@34", "PoolManagerInitializer");
 
         // Step -1: Whitelist the modular pool deployer, register the modular pool manager and register the
         //          open-term loan manager factory as a valid strategy factory.

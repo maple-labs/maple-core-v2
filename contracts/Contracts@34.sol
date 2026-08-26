@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.34;
 
 import { MapleAllocationStrategy as MAS }         from "../modules/allocation-strategy/contracts/MapleAllocationStrategy.sol";
 import { MapleAllocationStrategyFactory as MASF } from "../modules/allocation-strategy/contracts/MapleAllocationStrategyFactory.sol";

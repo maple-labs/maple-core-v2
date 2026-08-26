@@ -662,7 +662,7 @@ contract TestBase is ProtocolActions, Utils {
     function _createGlobals() internal {
         globals          = IGlobals(deployNTP(governor, deploy("MapleGlobals")));
         poolDeployer     = IPoolDeployer(deploy("MaplePoolDeployer", abi.encode(address(globals))));
-        strategyDeployer = IStrategyDeployer(deployFromFile("Contracts@28", "StrategyDeployer", abi.encode(address(globals))));
+        strategyDeployer = IStrategyDeployer(deployFromFile("Contracts@34", "StrategyDeployer", abi.encode(address(globals))));
     }
 
     // Deploys a governor timelock and reassigns the globals governor to it. Only for use in the setup of tests
@@ -736,12 +736,12 @@ contract TestBase is ProtocolActions, Utils {
 
         openTermLoanImplementation        = deployFromFile("Contracts@7",  "OpenTermLoan");
         openTermLoanManagerImplementation = deployFromFile("Contracts@7",  "OpenTermLoanManager");
-        poolManagerImplementation         = deployFromFile("Contracts@28", "PoolManager");
+        poolManagerImplementation         = deployFromFile("Contracts@34", "PoolManager");
         queueWMImplementation             = deployFromFile("Contracts@7",  "WithdrawalManagerQueue");
 
         openTermLoanInitializer        = deployFromFile("Contracts@7",  "OpenTermLoanInitializer");
         openTermLoanManagerInitializer = deployFromFile("Contracts@7",  "OpenTermLoanManagerInitializer");
-        poolManagerInitializer         = deployFromFile("Contracts@28", "PoolManagerInitializer");
+        poolManagerInitializer         = deployFromFile("Contracts@34", "PoolManagerInitializer");
         queueWMInitializer             = deployFromFile("Contracts@7",  "WithdrawalManagerQueueInitializer");
 
         openTermRefinancer = deployFromFile("Contracts@7", "OpenTermRefinancer");
@@ -755,23 +755,23 @@ contract TestBase is ProtocolActions, Utils {
         bitcoinStrategyImplementation = deployFromFile("Contracts@25", "BitcoinStrategy");
         bitcoinStrategyInitializer    = deployFromFile("Contracts@25", "BitcoinStrategyInitializer");
 
-        aaveV3StrategyFactory            = deployFromFile("Contracts@28", "AaveV3StrategyFactory", abi.encode(address(globals)));
-        skyStrategyFactory               = deployFromFile("Contracts@28", "SkyStrategyFactory", abi.encode(address(globals)));
-        strategyManagerFactory           = deployFromFile("Contracts@28", "StrategyManagerFactory", abi.encode(address(globals)));
-        allocationStrategyFactory        = deployFromFile("Contracts@28", "AllocationStrategyFactory", abi.encode(address(globals)));
-        aaveV3StrategyImplementation     = deployFromFile("Contracts@28", "AaveV3Strategy");
-        skyStrategyImplementation        = deployFromFile("Contracts@28", "SkyStrategy");
-        strategyManagerImplementation    = deployFromFile("Contracts@28", "StrategyManager");
-        allocationStrategyImplementation = deployFromFile("Contracts@28", "AllocationStrategy");
-        aaveV3StrategyInitializer        = deployFromFile("Contracts@28", "AaveV3StrategyInitializer");
-        skyStrategyInitializer           = deployFromFile("Contracts@28", "SkyStrategyInitializer");
-        strategyManagerInitializer       = deployFromFile("Contracts@28", "StrategyManagerInitializer");
-        allocationStrategyInitializer    = deployFromFile("Contracts@28", "AllocationStrategyInitializer");
+        aaveV3StrategyFactory            = deployFromFile("Contracts@34", "AaveV3StrategyFactory", abi.encode(address(globals)));
+        skyStrategyFactory               = deployFromFile("Contracts@34", "SkyStrategyFactory", abi.encode(address(globals)));
+        strategyManagerFactory           = deployFromFile("Contracts@34", "StrategyManagerFactory", abi.encode(address(globals)));
+        allocationStrategyFactory        = deployFromFile("Contracts@34", "AllocationStrategyFactory", abi.encode(address(globals)));
+        aaveV3StrategyImplementation     = deployFromFile("Contracts@34", "AaveV3Strategy");
+        skyStrategyImplementation        = deployFromFile("Contracts@34", "SkyStrategy");
+        strategyManagerImplementation    = deployFromFile("Contracts@34", "StrategyManager");
+        allocationStrategyImplementation = deployFromFile("Contracts@34", "AllocationStrategy");
+        aaveV3StrategyInitializer        = deployFromFile("Contracts@34", "AaveV3StrategyInitializer");
+        skyStrategyInitializer           = deployFromFile("Contracts@34", "SkyStrategyInitializer");
+        strategyManagerInitializer       = deployFromFile("Contracts@34", "StrategyManagerInitializer");
+        allocationStrategyInitializer    = deployFromFile("Contracts@34", "AllocationStrategyInitializer");
 
         borrowerActions = deployNTP(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
         liquidityRouter = IMapleLiquidityRouter(
-            deployFromFile("Contracts@28", "LiquidityRouter", abi.encode(address(globals)))
+            deployFromFile("Contracts@34", "LiquidityRouter", abi.encode(address(globals)))
         );
 
         vm.startPrank(governor);

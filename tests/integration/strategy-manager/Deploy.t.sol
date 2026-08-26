@@ -77,7 +77,7 @@ contract StrategyDeployerRevertTests is TestBase {
     }
 
     function test_deploy_revert_strategyManagerFactoryWithoutDefaultVersion() external {
-        address freshFactory = deployFromFile("Contracts@28", "StrategyManagerFactory", abi.encode(address(globals)));
+        address freshFactory = deployFromFile("Contracts@34", "StrategyManagerFactory", abi.encode(address(globals)));
 
         vm.startPrank(governor);
         globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY", freshFactory, true);

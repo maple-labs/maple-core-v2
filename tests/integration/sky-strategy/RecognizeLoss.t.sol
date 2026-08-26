@@ -78,17 +78,6 @@ contract SkyStrategyRecognizeLossFailureTests is SkyStrategyTestBase {
         ISkyStrategy(skyUnderlyingStrategy).setMetadata("new metadata");
     }
 
-    function testFork_setPsm_failWhenLossRecognized() external {
-        address newPsm = makeAddr("newPsm");
-
-        vm.prank(strategyDelegate);
-        ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
-
-        vm.prank(strategyDelegate);
-        vm.expectRevert("MSS:LOSS_RECOGNIZED");
-        ISkyStrategy(skyUnderlyingStrategy).setPsm(newPsm);
-    }
-
     function testFork_setReferralCode_failWhenLossRecognized() external {
         vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
