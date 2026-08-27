@@ -73,7 +73,7 @@ contract SkyStrategyRecognizeLossFailureTests is SkyStrategyTestBase {
         vm.prank(strategyDelegate);
         ISkyStrategy(skyUnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSS:LOSS_RECOGNIZED");
         ISkyStrategy(skyUnderlyingStrategy).setMetadata("new metadata");
     }

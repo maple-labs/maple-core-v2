@@ -64,7 +64,7 @@ contract AaveV3StrategyRecognizeLossFailureTests is AaveV3StrategyTestBase {
         vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).recognizeLoss();
 
-        vm.prank(governor);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MAV3S:LOSS_RECOGNIZED");
         IAaveV3Strategy(aaveV3UnderlyingStrategy).setMetadata("new metadata");
     }
