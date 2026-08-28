@@ -2,12 +2,14 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAaveV3Strategy,
     IERC20,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IOpenTermLoanManagerStructs,
     IPool,
-    IPoolManager
+    IPoolManager,
+    IStrategyManager
 } from "../../contracts/interfaces/Interfaces.sol";
 
 contract StorageSnapshot {
@@ -63,6 +65,78 @@ contract StorageSnapshot {
         uint256 previousTotalSupply;
         uint256 previousUnrealizedLosses;
         uint256 previousFundsAssetBalance;
+    }
+
+    struct AaveStrategyStorage {
+        bool    previousIsLossRecognized;
+        uint16  previousReferralCode;
+        uint32  previousStrategyDelegateFeeRate;
+        uint32  previousStrategyProtocolFeeRate;
+        uint256 previousATokenBalance;
+        uint256 previousAssetsUnderManagement;
+        uint256 previousAvailableToWithdraw;
+        uint256 previousImpairedAssets;
+        uint256 previousLastRecordedTotalAssets;
+        uint256 previousUnrealizedLosses;
+    }
+
+    struct StrategyManagerStorage {
+        uint256 previousAvailableToWithdraw;
+        uint256 previousTotalAssets;
+        uint256 previousTotalPendingShares;
+        uint256 previousTotalShares;
+        uint256 previousUnrealizedLosses;
+    }
+
+    struct StrategyManagerPositionStorage {
+        uint256 previousAssets;
+        uint256 previousPendingShares;
+        uint256 previousShares;
+        uint256 previousUnrealizedLosses;
+    }
+
+    struct FeeAccrualStorage {
+        uint256 previousDelegateBalance;
+        uint256 previousTreasuryBalance;
+    }
+
+    function _snapshotAaveStrategy(address strategy) internal view returns (AaveStrategyStorage memory strategyStorage) {
+        strategyStorage.previousIsLossRecognized        = IAaveV3Strategy(strategy).isLossRecognized();
+        strategyStorage.previousReferralCode            = IAaveV3Strategy(strategy).referralCode();
+        strategyStorage.previousStrategyDelegateFeeRate = IAaveV3Strategy(strategy).strategyDelegateFeeRate();
+        strategyStorage.previousStrategyProtocolFeeRate = IAaveV3Strategy(strategy).strategyProtocolFeeRate();
+        strategyStorage.previousATokenBalance           = IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy);
+        strategyStorage.previousAssetsUnderManagement   = IAaveV3Strategy(strategy).assetsUnderManagement();
+        strategyStorage.previousAvailableToWithdraw     = IAaveV3Strategy(strategy).availableToWithdraw();
+        strategyStorage.previousImpairedAssets          = IAaveV3Strategy(strategy).impairedAssets();
+        strategyStorage.previousLastRecordedTotalAssets = IAaveV3Strategy(strategy).lastRecordedTotalAssets();
+        strategyStorage.previousUnrealizedLosses        = IAaveV3Strategy(strategy).unrealizedLosses();
+    }
+
+    function _snapshotStrategyManager(address strategyManager)
+        internal view returns (StrategyManagerStorage memory strategyManagerStorage)
+    {
+        strategyManagerStorage.previousAvailableToWithdraw = IStrategyManager(strategyManager).availableToWithdraw();
+        strategyManagerStorage.previousTotalAssets         = IStrategyManager(strategyManager).assetsUnderManagement();
+        strategyManagerStorage.previousTotalPendingShares  = IStrategyManager(strategyManager).totalPendingShares();
+        strategyManagerStorage.previousTotalShares         = IStrategyManager(strategyManager).totalShares();
+        strategyManagerStorage.previousUnrealizedLosses    = IStrategyManager(strategyManager).unrealizedLosses();
+    }
+
+    function _snapshotStrategyManagerPosition(address strategyManager, address poolManager)
+        internal view returns (StrategyManagerPositionStorage memory positionStorage)
+    {
+        positionStorage.previousAssets           = IStrategyManager(strategyManager).assetsOf(poolManager);
+        positionStorage.previousPendingShares    = IStrategyManager(strategyManager).pendingSharesOf(poolManager);
+        positionStorage.previousShares           = IStrategyManager(strategyManager).sharesOf(poolManager);
+        positionStorage.previousUnrealizedLosses = IStrategyManager(strategyManager).unrealizedLossesOf(poolManager);
+    }
+
+    function _snapshotFeeAccrual(address strategy) internal view returns (FeeAccrualStorage memory feeAccrualStorage) {
+        address fundsAsset = IAaveV3Strategy(strategy).fundsAsset();
+
+        feeAccrualStorage.previousDelegateBalance = IERC20(fundsAsset).balanceOf(IAaveV3Strategy(strategy).strategyDelegate());
+        feeAccrualStorage.previousTreasuryBalance = IERC20(fundsAsset).balanceOf(IAaveV3Strategy(strategy).mapleTreasury());
     }
 
     function _snapshotOpenTermLoan(address loan) internal view returns (OpenTermLoanStorage memory loanStorage) {

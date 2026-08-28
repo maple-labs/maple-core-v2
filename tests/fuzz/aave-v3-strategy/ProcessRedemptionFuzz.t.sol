@@ -1,338 +1,164 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
+import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
-abstract contract AaveV3StrategyProcessRedemptionFuzzTestBase is AaveV3StrategyTestBase {
+contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
 
-    event RedemptionProcessed(address indexed poolManager, uint256 sharesProcessed, uint256 assetsWithdrawn);
+    AaveStrategyStorage            strategyStorage;
+    FeeAccrualStorage              feeAccrualStorage;
+    PoolManagerStorage             poolManagerStorage;
+    StrategyManagerStorage         strategyManagerStorage;
+    StrategyManagerPositionStorage positionStorage;
 
-    // Balance snapshots stored to avoid stack-too-deep errors.
-    uint256 delegateBalanceBefore;
-    uint256 poolBalanceBefore;
-    uint256 treasuryBalanceBefore;
+    function testFuzzFork_aave_processRedemption(uint256 seed_) external {
 
-    function setUp() public virtual override {
-        super.setUp();
+        /**********************************************************************************************************************************/
+        /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
+        /**********************************************************************************************************************************/
 
-        vm.prank(strategyDelegate);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).setStrategyDelegateFeeRate(0.1e6);   // 10% of accrued yield.
+        fuzzAaveSetup(seed_);
 
-        vm.prank(governor);
-        IAaveV3Strategy(aaveV3UnderlyingStrategy).setStrategyProtocolFeeRate(0.05e6);  // 5% of accrued yield.
-    }
+        /**********************************************************************************************************************************/
+        /*** Queue a redemption if nothing is pending, funding the strategy first if the pool holds no shares at all                    ***/
+        /**********************************************************************************************************************************/
 
-    function testFuzz_processRedemption_partial(uint256 fundAmount_, uint256 shares_, uint256 duration_) external {
-        fundAmount_ = bound(fundAmount_, 1e6, 1_000_000e6);
-        duration_   = bound(duration_, 1 days, 365 days);
+        if (aaveStrategyManager.pendingSharesOf(address(poolManager)) == 0) {
+            if (aaveStrategyManager.sharesOf(address(poolManager)) == 0) {
+                uint256 minFundAmount = getMinimumFundableAssets(address(aaveStrategyManager));
 
-        uint256 poolShares_ = deposit(lp, fundAmount_);
+                if (fundsAsset.balanceOf(address(pool)) < minFundAmount) deposit(address(pool), lps[0], lpDeposit);
 
-        fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount_);
-
-        uint256 fundedAssets_ = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-        uint256 totalShares_  = IStrategyManager(aaveV3StrategyManager).sharesOf(address(poolManager));
-
-        shares_ = bound(shares_, 1, totalShares_ - 1);
+                fundStrategyManager(
+                    address(poolManager),
+                    address(aaveStrategyManager),
+                    getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
+                );
 
-        requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, shares_);
+                vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
+            }
 
-        vm.warp(block.timestamp + duration_);
+            requestRedeemFromStrategyManager(
+                address(poolManager),
+                address(aaveStrategyManager),
+                getSomeValue(1, aaveStrategyManager.sharesOf(address(poolManager)))
+            );
+        }
 
-        uint256 grossAssets_  = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-        uint256 accruedYield_ = grossAssets_ - fundedAssets_;
+        /**********************************************************************************************************************************/
+        /*** Generate share amount, giving back enough impairment for those shares to be worth at least a single asset                  ***/
+        /**********************************************************************************************************************************/
 
-        uint256 expectedDelegateFee_ =
-            accruedYield_ * IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyDelegateFeeRate() / HUNDRED_PERCENT;
-        uint256 expectedProtocolFee_ =
-            accruedYield_ * IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyProtocolFeeRate() / HUNDRED_PERCENT;
+        uint256 sharesToProcess = getSomeValue(1, aaveStrategyManager.pendingSharesOf(address(poolManager)));
 
-        uint256 netAssets_      = grossAssets_ - expectedDelegateFee_ - expectedProtocolFee_;
-        uint256 expectedAssets_ = shares_ * netAssets_ / totalShares_;
+        if (aaveStrategyManager.convertToExitAssets(sharesToProcess) == 0 && aaveStrategy.impairedAssets() > 0) {
+            uint256 impairedAssets = aaveStrategy.impairedAssets();
+            uint256 minValueNeeded = mulDivUp(aaveStrategyManager.totalShares(), 1, sharesToProcess);
+            uint256 totalAssets    = aaveStrategyManager.assetsUnderManagement();
 
-        assertGt(netAssets_, fundedAssets_);
+            uint256 maxImpairment  = totalAssets > minValueNeeded ? totalAssets - minValueNeeded : 0;
+            uint256 minimumRemoval = impairedAssets > maxImpairment ? impairedAssets - maxImpairment : 1;
 
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        netAssets_,
-            totalSupply:        poolShares_,
-            unrealizedLosses:   0,
-            availableLiquidity: 0
-        });
+            removeStrategyImpairment(address(aaveStrategy), getSomeValue(minimumRemoval, impairedAssets));
+        }
 
-        // Cannot use assertAaveV3Strategy because the aToken balance includes uncollected fees while AUM is net of fees.
+        /**********************************************************************************************************************************/
+        /*** Take a snapshot of the pool, the Aave strategy, the pool's position on the strategy manager and balances before processing ***/
+        /**********************************************************************************************************************************/
 
-        assertStrategyManagerShares({
-            strategyManager:    aaveV3StrategyManager,
-            totalShares:        totalShares_,
-            totalPendingShares: shares_
-        });
+        poolManagerStorage     = _snapshotPoolManager(address(poolManager));
+        strategyStorage        = _snapshotAaveStrategy(address(aaveStrategy));
+        strategyManagerStorage = _snapshotStrategyManager(address(aaveStrategyManager));
+        positionStorage        = _snapshotStrategyManagerPosition(address(aaveStrategyManager), address(poolManager));
+        feeAccrualStorage      = _snapshotFeeAccrual(address(aaveStrategy));
 
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           netAssets_,
-            shares:           totalShares_,
-            pendingShares:    shares_,
-            unrealizedLosses: 0
-        });
+        ( uint256 expectedDelegateFee, uint256 expectedProtocolFee ) =
+            expectedFees(strategyStorage.previousATokenBalance, strategyStorage.previousLastRecordedTotalAssets);
 
-        delegateBalanceBefore = fundsAsset.balanceOf(strategyDelegate);
-        treasuryBalanceBefore = fundsAsset.balanceOf(treasury);
-        poolBalanceBefore     = fundsAsset.balanceOf(address(pool));
+        uint256 expectedAssetsToReceive = mulDivDown(
+            sharesToProcess,
+            strategyManagerStorage.previousTotalAssets - strategyManagerStorage.previousUnrealizedLosses,
+            strategyManagerStorage.previousTotalShares
+        );
 
-        vm.expectEmit(aaveV3StrategyManager);
-        emit RedemptionProcessed(address(poolManager), shares_, expectedAssets_);
+        /**********************************************************************************************************************************/
+        /*** Process the redemption                                                                                                     ***/
+        /**********************************************************************************************************************************/
 
-        processRedemptionFromStrategyManager(address(poolManager), aaveV3StrategyManager, shares_);
+        processRedemptionFromStrategyManager(address(poolManager), address(aaveStrategyManager), sharesToProcess);
 
-        assertEq(fundsAsset.balanceOf(strategyDelegate) - delegateBalanceBefore, expectedDelegateFee_);
-        assertEq(fundsAsset.balanceOf(treasury) - treasuryBalanceBefore,         expectedProtocolFee_);
-        assertEq(fundsAsset.balanceOf(address(pool)) - poolBalanceBefore,        expectedAssets_);
+        /**********************************************************************************************************************************/
+        /*** Fees accrued before the redemption are settled and the exit assets are transferred straight to the pool                    ***/
+        /**********************************************************************************************************************************/
 
-        uint256 remainingAssets_ = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-        uint256 remainingShares_ = totalShares_ - shares_;
+        assertEq(fundsAsset.balanceOf(aaveStrategyDelegate), feeAccrualStorage.previousDelegateBalance    + expectedDelegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),             feeAccrualStorage.previousTreasuryBalance    + expectedProtocolFee);
+        assertEq(fundsAsset.balanceOf(address(pool)),        poolManagerStorage.previousFundsAssetBalance + expectedAssetsToReceive);
 
-        assertGt(remainingAssets_, 0);
+        /**********************************************************************************************************************************/
+        /*** The assets under management shrink by exactly what was released, up to Aave's scaled balance rounding                      ***/
+        /*** Every value below is derived from this balance, which makes all of the remaining assertions exact                          ***/
+        /**********************************************************************************************************************************/
 
-        // Aave and Spark aToken scaled-balance conversions can leave up to two base units of rounding after withdrawal.
-        assertApproxEqAbs(netAssets_ - expectedAssets_, remainingAssets_, 2);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        expectedAssets_ + remainingAssets_,
-            totalSupply:        poolShares_,
-            unrealizedLosses:   0,
-            availableLiquidity: expectedAssets_
-        });
-
-        assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     remainingAssets_,
-            aTokenBalance:           remainingAssets_,
-            lastRecordedTotalAssets: remainingAssets_,
-            unrealizedLosses:        0
-        });
-
-        assertStrategyManagerShares({
-            strategyManager:    aaveV3StrategyManager,
-            totalShares:        remainingShares_,
-            totalPendingShares: 0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           remainingAssets_,
-            shares:           remainingShares_,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-    }
-
-    function testFuzz_processRedemption_full(uint256 fundAmount_, uint256 duration_) external {
-        fundAmount_ = bound(fundAmount_, 1e6, 1_000_000e6);
-        duration_   = bound(duration_, 1 days, 365 days);
-
-        uint256 poolShares_ = deposit(lp, fundAmount_);
-
-        fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount_);
-
-        uint256 fundedAssets_ = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-        uint256 totalShares_  = IStrategyManager(aaveV3StrategyManager).sharesOf(address(poolManager));
-
-        requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, totalShares_);
-
-        vm.warp(block.timestamp + duration_);
-
-        uint256 grossAssets_  = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-        uint256 accruedYield_ = grossAssets_ - fundedAssets_;
-
-        uint256 expectedDelegateFee_ =
-            accruedYield_ * IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyDelegateFeeRate() / HUNDRED_PERCENT;
-        uint256 expectedProtocolFee_ =
-            accruedYield_ * IAaveV3Strategy(aaveV3UnderlyingStrategy).strategyProtocolFeeRate() / HUNDRED_PERCENT;
-
-        uint256 netAssets_      = grossAssets_ - expectedDelegateFee_ - expectedProtocolFee_;
-        uint256 expectedAssets_ = netAssets_;
-
-        assertGt(netAssets_, fundedAssets_);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        netAssets_,
-            totalSupply:        poolShares_,
-            unrealizedLosses:   0,
-            availableLiquidity: 0
-        });
-
-        // Cannot use assertAaveV3Strategy because the aToken balance includes uncollected fees while AUM is net of fees.
-
-        assertStrategyManagerShares({
-            strategyManager:    aaveV3StrategyManager,
-            totalShares:        totalShares_,
-            totalPendingShares: totalShares_
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           netAssets_,
-            shares:           totalShares_,
-            pendingShares:    totalShares_,
-            unrealizedLosses: 0
-        });
-
-        delegateBalanceBefore = fundsAsset.balanceOf(strategyDelegate);
-        treasuryBalanceBefore = fundsAsset.balanceOf(treasury);
-        poolBalanceBefore     = fundsAsset.balanceOf(address(pool));
-
-        vm.expectEmit(aaveV3StrategyManager);
-        emit RedemptionProcessed(address(poolManager), totalShares_, expectedAssets_);
-
-        processRedemptionFromStrategyManager(address(poolManager), aaveV3StrategyManager, totalShares_);
-
-        assertEq(fundsAsset.balanceOf(strategyDelegate) - delegateBalanceBefore, expectedDelegateFee_);
-        assertEq(fundsAsset.balanceOf(treasury) - treasuryBalanceBefore,         expectedProtocolFee_);
-        assertEq(fundsAsset.balanceOf(address(pool)) - poolBalanceBefore,        expectedAssets_);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        expectedAssets_,
-            totalSupply:        poolShares_,
-            unrealizedLosses:   0,
-            availableLiquidity: expectedAssets_
-        });
-
-        assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     0,
-            aTokenBalance:           0,
-            lastRecordedTotalAssets: 0,
-            unrealizedLosses:        0
-        });
-
-        assertStrategyManagerShares({
-            strategyManager:    aaveV3StrategyManager,
-            totalShares:        0,
-            totalPendingShares: 0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  aaveV3StrategyManager,
-            poolManager:      address(poolManager),
-            assets:           0,
-            shares:           0,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-    }
-
-}
-
-contract AaveV3StrategyProcessRedemptionFuzzTestsBlock_25_123_119 is AaveV3StrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_123_119;
-        super.setUp();
-    }
-
-}
-
-contract AaveV3StrategyProcessRedemptionFuzzTestsBlock_25_223_119 is AaveV3StrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_223_119;
-        super.setUp();
-    }
-
-}
-
-contract AaveV3StrategyProcessRedemptionFuzzTestsBlock_25_323_119 is AaveV3StrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_323_119;
-        super.setUp();
-    }
-
-}
-
-contract AaveV3StrategyProcessRedemptionFuzzTestsBlock_25_423_119 is AaveV3StrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_423_119;
-        super.setUp();
-    }
-
-}
-
-contract AaveV3StrategyProcessRedemptionFuzzTestsBlock_25_523_119 is AaveV3StrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_523_119;
-        super.setUp();
-    }
-
-}
-
-abstract contract SparkLendStrategyProcessRedemptionFuzzTestBase is AaveV3StrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public virtual override {
-        aaveToken                   = SPARK_USDC;
-        useVirtualUnderlyingBalance = false;
-
-        super.setUp();
-    }
-
-}
-
-contract SparkLendStrategyProcessRedemptionFuzzTestsBlock_25_123_119 is SparkLendStrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_123_119;
-        super.setUp();
-    }
-
-}
-
-contract SparkLendStrategyProcessRedemptionFuzzTestsBlock_25_223_119 is SparkLendStrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_223_119;
-        super.setUp();
-    }
-
-}
-
-contract SparkLendStrategyProcessRedemptionFuzzTestsBlock_25_323_119 is SparkLendStrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_323_119;
-        super.setUp();
-    }
-
-}
-
-contract SparkLendStrategyProcessRedemptionFuzzTestsBlock_25_423_119 is SparkLendStrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_423_119;
-        super.setUp();
-    }
-
-}
-
-contract SparkLendStrategyProcessRedemptionFuzzTestsBlock_25_523_119 is SparkLendStrategyProcessRedemptionFuzzTestBase {
-
-    function setUp() public override {
-        forkBlock = 25_523_119;
-        super.setUp();
+        uint256 aTokenBalanceAfter       = IERC20(aaveStrategy.aaveToken()).balanceOf(address(aaveStrategy));
+        uint256 expectedUnrealizedLosses = min(strategyStorage.previousImpairedAssets, aTokenBalanceAfter);
+
+        assertApproxEqAbs(aTokenBalanceAfter, strategyStorage.previousAssetsUnderManagement - expectedAssetsToReceive, AAVE_ROUNDING_ERROR);
+
+        assertEq(aaveStrategy.impairedAssets(),          strategyStorage.previousImpairedAssets);
+        assertEq(aaveStrategy.isLossRecognized(),        false);
+        assertEq(aaveStrategy.strategyDelegateFeeRate(), strategyStorage.previousStrategyDelegateFeeRate);
+        assertEq(aaveStrategy.strategyProtocolFeeRate(), strategyStorage.previousStrategyProtocolFeeRate);
+
+        assertEq(aaveStrategy.assetsUnderManagement(),   aTokenBalanceAfter);
+        assertEq(aaveStrategy.lastRecordedTotalAssets(), aTokenBalanceAfter);
+        assertEq(aaveStrategy.unrealizedLosses(),        expectedUnrealizedLosses);
+
+        /**********************************************************************************************************************************/
+        /*** Assert new state                                                                                                           ***/
+        /**********************************************************************************************************************************/
+
+        assertEq(aaveStrategyManager.totalShares(),           strategyManagerStorage.previousTotalShares - sharesToProcess);
+        assertEq(aaveStrategyManager.totalPendingShares(),    strategyManagerStorage.previousTotalPendingShares - sharesToProcess);
+        assertEq(aaveStrategyManager.assetsUnderManagement(), aTokenBalanceAfter);
+        assertEq(aaveStrategyManager.availableToWithdraw(),   aTokenBalanceAfter);
+        assertEq(aaveStrategyManager.unrealizedLosses(),      expectedUnrealizedLosses);
+
+        uint256 expectedAssetsOf = mulDivDown(
+            aTokenBalanceAfter,
+            positionStorage.previousShares - sharesToProcess,
+            strategyManagerStorage.previousTotalShares - sharesToProcess
+        );
+
+        uint256 expectedUnrealizedLossesOf = mulDivUp(
+            expectedUnrealizedLosses,
+            positionStorage.previousShares - sharesToProcess,
+            strategyManagerStorage.previousTotalShares - sharesToProcess
+        );
+
+        uint256 unrealizedLossesDecrease = positionStorage.previousUnrealizedLosses - expectedUnrealizedLossesOf;
+
+        assertEq(aaveStrategyManager.assetsOf(address(poolManager)),           expectedAssetsOf);
+        assertEq(aaveStrategyManager.unrealizedLossesOf(address(poolManager)), expectedUnrealizedLossesOf);
+        assertEq(aaveStrategyManager.sharesOf(address(poolManager)),           positionStorage.previousShares - sharesToProcess);
+        assertEq(aaveStrategyManager.pendingSharesOf(address(poolManager)),    positionStorage.previousPendingShares - sharesToProcess);
+
+        assertEq(
+            pool.totalAssets(),
+            poolManagerStorage.previousTotalAssets + expectedAssetsToReceive + expectedAssetsOf - positionStorage.previousAssets
+        );
+
+        assertEq(pool.totalSupply(),      poolManagerStorage.previousTotalSupply);
+        assertEq(pool.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - unrealizedLossesDecrease);
+
+        assertEq(
+            poolManager.totalAssets(),
+            poolManagerStorage.previousTotalAssets + expectedAssetsToReceive + expectedAssetsOf - positionStorage.previousAssets
+        );
+
+        assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - unrealizedLossesDecrease);
     }
 
 }

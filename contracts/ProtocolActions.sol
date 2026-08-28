@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import {
     IAllocationStrategy,
     IBitcoinStrategy,
+    IDefiStrategyLike,
     IERC20,
     IERC20Like,
     IExemptionsManagerLike,
@@ -957,6 +958,14 @@ contract ProtocolActions is Runner {
         IERC20(asset_).approve(strategy_, amount_);
         IAllocationStrategy(strategy_).returnAssets(amount_, deployer_, "");
         vm.stopPrank();
+    }
+
+    function recognizeStrategyLoss(address strategy_) internal {
+        address globals_          = IUnderlyingStrategyLike(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IDefiStrategyLike(strategy_).recognizeLoss();
     }
 
     function recognizeLoss(address strategy_, address deployer_, uint256 amount_) internal {
