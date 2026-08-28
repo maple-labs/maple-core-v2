@@ -418,6 +418,8 @@ interface IPSMLike {
 
     function tout() external view returns (uint256 tout_);
 
+    function to18ConversionFactor() external view returns (uint256 to18ConversionFactor_);
+
 }
 
 interface IUnderlyingStrategyLike {
@@ -435,6 +437,10 @@ interface IUnderlyingStrategyLike {
     function removeImpairment(uint256 amount) external;
 
     function strategyDelegate() external view returns (address strategyDelegate);
+
+    function strategyDelegateFeeRate() external view returns (uint32 strategyDelegateFeeRate);
+
+    function strategyProtocolFeeRate() external view returns (uint32 strategyProtocolFeeRate);
 
     function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate) external;
 

@@ -4,12 +4,15 @@ pragma solidity ^0.8.7;
 import {
     IAaveV3Strategy,
     IERC20,
+    IERC4626Like,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IOpenTermLoanManagerStructs,
     IPool,
+    IPSMLike,
     IPoolManager,
-    IStrategyManager
+    IStrategyManager,
+    ISkyStrategy
 } from "../../contracts/interfaces/Interfaces.sol";
 
 contract StorageSnapshot {
@@ -80,6 +83,16 @@ contract StorageSnapshot {
         uint256 previousUnrealizedLosses;
     }
 
+    struct SkyStrategyStorage {
+        uint32  previousStrategyDelegateFeeRate;
+        uint32  previousStrategyProtocolFeeRate;
+        uint256 previousSavingsUsdsBalance;
+        uint256 previousCurrentTotalAssets;
+        uint256 previousAssetsUnderManagement;
+        uint256 previousImpairedAssets;
+        uint256 previousLastRecordedTotalAssets;
+    }
+
     struct StrategyManagerStorage {
         uint256 previousAvailableToWithdraw;
         uint256 previousTotalAssets;
@@ -111,6 +124,35 @@ contract StorageSnapshot {
         strategyStorage.previousImpairedAssets          = IAaveV3Strategy(strategy).impairedAssets();
         strategyStorage.previousLastRecordedTotalAssets = IAaveV3Strategy(strategy).lastRecordedTotalAssets();
         strategyStorage.previousUnrealizedLosses        = IAaveV3Strategy(strategy).unrealizedLosses();
+    }
+
+    function _snapshotSkyStrategy(address strategy) internal view returns (SkyStrategyStorage memory strategyStorage) {
+        strategyStorage.previousStrategyDelegateFeeRate = ISkyStrategy(strategy).strategyDelegateFeeRate();
+        strategyStorage.previousStrategyProtocolFeeRate = ISkyStrategy(strategy).strategyProtocolFeeRate();
+        strategyStorage.previousSavingsUsdsBalance      = IERC20(ISkyStrategy(strategy).savingsUsds()).balanceOf(strategy);
+        strategyStorage.previousCurrentTotalAssets      = _skyCurrentTotalAssets(strategy);
+        strategyStorage.previousAssetsUnderManagement   = ISkyStrategy(strategy).assetsUnderManagement();
+        strategyStorage.previousImpairedAssets          = ISkyStrategy(strategy).impairedAssets();
+        strategyStorage.previousLastRecordedTotalAssets = ISkyStrategy(strategy).lastRecordedTotalAssets();
+    }
+
+    function _skyCurrentTotalAssets(address strategy) internal view returns (uint256 currentTotalAssets) {
+        address psm         = ISkyStrategy(strategy).psm();
+        address savingsUsds = ISkyStrategy(strategy).savingsUsds();
+
+        uint256 usds = IERC4626Like(savingsUsds).previewRedeem(IERC20(savingsUsds).balanceOf(strategy));
+        uint256 tout = IPSMLike(psm).tout();
+
+        if (tout == type(uint256).max) tout = ISkyStrategy(strategy).fallbackTout();
+
+        currentTotalAssets = usds * 1e18 / (IPSMLike(psm).to18ConversionFactor() * (1e18 + tout));
+    }
+
+    function _snapshotFeeAccrualSky(address strategy) internal view returns (FeeAccrualStorage memory feeAccrualStorage) {
+        address fundsAsset = ISkyStrategy(strategy).fundsAsset();
+
+        feeAccrualStorage.previousDelegateBalance = IERC20(fundsAsset).balanceOf(ISkyStrategy(strategy).strategyDelegate());
+        feeAccrualStorage.previousTreasuryBalance = IERC20(fundsAsset).balanceOf(ISkyStrategy(strategy).mapleTreasury());
     }
 
     function _snapshotStrategyManager(address strategyManager)

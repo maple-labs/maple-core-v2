@@ -75,7 +75,7 @@ contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
         feeAccrualStorage      = _snapshotFeeAccrual(address(aaveStrategy));
 
         ( uint256 expectedDelegateFee, uint256 expectedProtocolFee ) =
-            expectedFees(strategyStorage.previousATokenBalance, strategyStorage.previousLastRecordedTotalAssets);
+            expectedFees(address(aaveStrategy), strategyStorage.previousATokenBalance, strategyStorage.previousLastRecordedTotalAssets);
 
         uint256 expectedAssetsToReceive = mulDivDown(
             sharesToProcess,
