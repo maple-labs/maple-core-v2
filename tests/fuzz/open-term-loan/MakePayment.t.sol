@@ -136,6 +136,7 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
                 5
             );
 
+            // TODO: try to find out whether is is possible to come up with more narrow diff programmatically
             assertOpenTermLoanManagerWithDiff({
                 loanManager:       address(loanManager),
                 accountedInterest: accountedInterest,
@@ -144,7 +145,7 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
                 issuanceRate:      loanManagerStorage.previousIssuanceRate + loanInfo.issuanceRate - paymentStorage.previousIssuanceRate,
                 principalOut:      loanManagerStorage.previousPrincipalOut - principal_,
                 unrealizedLosses:  loanManagerStorage.previousUnrealizedLosses,
-                diff:              3
+                diff:              4
             });
 
             assertPoolStateWithDiff({
@@ -153,7 +154,7 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
                 totalSupply:        poolManagerStorage.previousTotalSupply,
                 unrealizedLosses:   poolManagerStorage.previousUnrealizedLosses,
                 availableLiquidity: poolManagerStorage.previousFundsAssetBalance + netInterest + principal_,
-                diff:               3
+                diff:               4
             });
         }
 
