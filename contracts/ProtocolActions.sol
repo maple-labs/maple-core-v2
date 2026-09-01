@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import {
     IAllocationStrategy,
-    IBitcoinStrategy,
     IDefiStrategyLike,
     IERC20,
     IERC20Like,
@@ -24,14 +23,12 @@ import {
     IPoolPermissionManagerInitializer,
     IProxiedLike,
     IPSMLike,
-    ISyrupBitcoinRouter,
     IStrategyLike,
     IStrategyManager,
     ISkyStrategy,
     IUSDCLike,
     IUnderlyingStrategyLike,
-    IWithdrawalManagerQueue,
-    Permit
+    IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
 
 import { Runner, ERC20Helper, console } from "./Runner.sol";
@@ -45,7 +42,6 @@ contract ProtocolActions is Runner {
     bytes32 constant EMPTY_METADATA = "";
 
     address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     address WETH      = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address USDC      = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     address USDG      = address(0xe343167631d89B6Ffc58B88d6b7fB0228795491D);
@@ -53,7 +49,6 @@ contract ProtocolActions is Runner {
     address USDC_BASE = address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
 
     address MPL_SOURCE       = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
     address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
     address USDC_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
     address USDG_SOURCE      = address(0xcC282E2004428939ee5149A9e7872F0B4d5d5ec7);
@@ -89,7 +84,6 @@ contract ProtocolActions is Runner {
 
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
         if      (asset_ == MPL)       erc20_transfer(MPL,       MPL_SOURCE,       account_, amount_);
-        else if (asset_ == WBTC)      erc20_transfer(WBTC,      WBTC_SOURCE,      account_, amount_);
         else if (asset_ == WETH)      erc20_transfer(WETH,      WETH_SOURCE,      account_, amount_);
         else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
         else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
@@ -306,21 +300,6 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
-    function depositInSyrupBtc(
-        address user_,
-        address router_,
-        address depositAsset_,
-        uint256 amount_
-    )
-        internal returns (uint256 shares_)
-    {
-        erc20_mint(depositAsset_, user_, amount_);
-        erc20_approve(depositAsset_, user_, router_, amount_);
-
-        vm.prank(user_);
-        shares_ = ISyrupBitcoinRouter(router_).deposit(depositAsset_, amount_, "", Permit(false, 0, 0, 0, 0));
-    }
-
     function depositWithPermit(address pool_, uint256 privateKey_, uint256 assets, uint256 deadline_) internal returns (uint256 shares_) {
         address account_ = vm.addr(privateKey_);
         address asset_   = IPool(pool_).asset();
@@ -433,25 +412,6 @@ contract ProtocolActions is Runner {
 
         vm.prank(ccipReceiver_);
         IMapleCCIPReceiverLike(ccipReceiver_).processMessage(message);
-    }
-
-    function requestRedeemFromSyrupBtc(
-        address user_,
-        address router_,
-        address assetToReceive_,
-        uint256 sharesToRedeem_
-    )
-        internal returns (uint256 requestId_)
-    {
-        erc20_approve(ISyrupBitcoinRouter(router_).pool(), user_, router_, sharesToRedeem_);
-
-        vm.prank(user_);
-        ( , requestId_ ) = ISyrupBitcoinRouter(router_).requestRedeem(
-            assetToReceive_,
-            sharesToRedeem_,
-            EMPTY_METADATA,
-            Permit(false, 0, 0, 0, 0)
-        );
     }
 
     /**************************************************************************************************************************************/
@@ -677,35 +637,6 @@ contract ProtocolActions is Runner {
 
         vm.prank(caller_);
         poolManager_.triggerDefault(loan_);
-    }
-
-    function reconcile_syrupBTC(
-        address strategy_,
-        address strategyManager_,
-        address asset_,
-        uint256 amount_
-    ) internal {
-        uint256 managerBalance_ = IERC20(asset_).balanceOf(strategyManager_);
-
-        if (managerBalance_ < amount_) {
-            erc20_mint(asset_, strategyManager_, amount_ - managerBalance_);
-        }
-
-        erc20_approve(asset_, strategyManager_, strategy_, amount_);
-
-        vm.prank(strategyManager_);
-        IBitcoinStrategy(strategy_).reconcile(asset_, amount_);
-    }
-
-    function scheduleYield_syrupBTC(
-        address strategy_,
-        address strategyManager_,
-        address /* asset_ */,
-        uint256 yieldAmount_,
-        uint32  deadline_
-    ) internal {
-        vm.prank(strategyManager_);
-        IBitcoinStrategy(strategy_).schedule(yieldAmount_, deadline_);
     }
 
     /**************************************************************************************************************************************/

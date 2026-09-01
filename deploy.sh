@@ -6,15 +6,6 @@ echo Using profile: $FOUNDRY_PROFILE
 
 # For Testing
 
-# For Core strategy And Router Deployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/CoreStrategyAndRouterDeployment.s.sol:CoreStrategyAndRouterDeployment
-
 # For Refinance Upgrades Deployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
@@ -52,51 +43,6 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --slow \
 #     --sender $ETH_SENDER \
 #     scripts/WithdrawalManagerDeployment.s.sol:WithdrawalManagerDeployment
-
-# For BitcoinStrategyDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/BitcoinStrategyDeployment.s.sol:BitcoinStrategyDeployment
-
-# For CompositeTokenDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/CompositeTokenDeployment.s.sol:CompositeTokenDeployment
-
-# For AssetControllerOracleDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/AssetControllerOracleDeployment.s.sol:AssetControllerOracleDeployment
-
-# For SyrupBitcoinRouterDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/SyrupBitcoinRouterDeployment.s.sol:SyrupBitcoinRouterDeployment
-
-# For AssetControllerDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --unlocked \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     scripts/AssetControllerDeployment.s.sol:AssetControllerDeployment
 
 # For ModularReleaseDeployment
 # forge script \
@@ -121,18 +67,6 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --broadcast \
 #     scripts/DeployHealthChecker.s.sol:DeployHealthChecker
 
-# For Core strategy And Router Deployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 15 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     --broadcast \
-#     scripts/CoreStrategyAndRouterDeployment.s.sol:CoreStrategyAndRouterDeployment
-
 # For Refinance Upgrades Deployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
@@ -177,61 +111,6 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     scripts/WithdrawalManagerDeployment.s.sol:WithdrawalManagerDeployment
-
-# For BitcoinStrategyDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/BitcoinStrategyDeployment.s.sol:BitcoinStrategyDeployment
-
-# For CompositeTokenDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/CompositeTokenDeployment.s.sol:CompositeTokenDeployment
-
-# For AssetControllerOracleDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/AssetControllerOracleDeployment.s.sol:AssetControllerOracleDeployment
-
-# For SyrupBitcoinRouterDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/SyrupBitcoinRouterDeployment.s.sol:SyrupBitcoinRouterDeployment
-
-# For AssetControllerDeployment
-# forge script \
-#     --rpc-url $ETH_RPC_URL \
-#     -vvvv \
-#     --mnemonic-indexes 20 \
-#     --ledger \
-#     --slow \
-#     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     scripts/AssetControllerDeployment.s.sol:AssetControllerDeployment
 
 # For ModularReleaseDeployment
 # forge script \

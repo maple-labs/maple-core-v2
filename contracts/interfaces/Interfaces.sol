@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IAssetController as IAC }             from "../../modules/controller/contracts/interfaces/IAssetController.sol";
-import { IAssetControllerOracle as IACO }      from "../../modules/controller/contracts/interfaces/IAssetControllerOracle.sol";
-import { ICompositeToken as ICT }              from "../../modules/controller/contracts/interfaces/ICompositeToken.sol";
-import { ISyrupBitcoinRouter as ISBR, Permit } from "../../modules/controller/contracts/interfaces/ISyrupBitcoinRouter.sol";
-
 import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 
 import { IMapleProxied } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
@@ -49,9 +44,6 @@ import { IMapleWithdrawalManager as IMWMC }
 import { IMapleWithdrawalManager as IMWMQ }
     from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
 
-import { IMapleStrategy }        from "../../modules/strategies/contracts/interfaces/IMapleStrategy.sol";
-import { IMapleFeeStrategy }     from "../../modules/strategies/contracts/interfaces/IMapleFeeStrategy.sol";
-import { IMapleBitcoinStrategy } from "../../modules/strategies/contracts/interfaces/bitcoinStrategy/IMapleBitcoinStrategy.sol";
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
 
 import {
@@ -83,15 +75,7 @@ interface IAllocationStrategy is IMAS { }
 
 interface IAaveV3Strategy is IMAV3S { }
 
-interface IAssetController is IAC { }
-
-interface IAssetControllerOracle is IACO { }
-
 interface IBorrowerActions is IMapleBorrowerActions { }
-
-interface IBitcoinStrategy is IMapleBitcoinStrategy { }
-
-interface ICompositeToken is ICT { }
 
 interface IGlobals is IMG { }
 
@@ -115,13 +99,9 @@ interface IPoolPermissionManager is IMPPM { }
 
 interface IPoolPermissionManagerInitializer is IMPPMI { }
 
-interface IStrategy is IMapleStrategy, IMapleFeeStrategy { }
-
 interface IStrategyDeployer is IMSD { }
 
 interface IStrategyManager is IMSM { }
-
-interface ISyrupBitcoinRouter is ISBR { }
 
 interface ISyrupRouter is ISR { }
 
@@ -467,7 +447,11 @@ interface IWithdrawalManagerQueueV200Like {
 
 }
 
-interface IStrategyLike is IStrategy {
+interface IStrategyLike {
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
 
     function fundsAsset() external view returns (address fundsAsset);
 

@@ -1,7 +1,0 @@
-Timestamp,Action Type,Parameters,System AUM,Strategy AUM,Strategy Outstanding,Realized Fees,Accrued Yield,Accrued Fees
-1758206028,createPool,"{'name': 'test_pool_1', 'asset': 'synthBTC', 'strategyFeeRate_A': 1000}",0,0,0,0,0,0
-1758220878,deposit,"{'name': 'lender1', 'assets': 10000000000}",10000000000,0,0,0,0,0
-1758221396,deploy,"{'name': 'strategyA', 'assets': 10000000000}",10000000000,10000000000,10000000000,0,0,0
-1758221612,schedule,"{'name': 'strategyA', 'yield': '200000000', 'deadline': 2592000}",10000000000,10000000000,10000000000,0,0,0
-1758980798,reconcile,"{'name': 'strategyA', 'assets': 5000000000}",10058520588,5058520588,5058520588,58579,0,0
-1759585598,passTime,{'seconds': '604800'},10105140588,5105140588,5058520588,58579,46666667,46667

@@ -62,7 +62,6 @@ Specific tests can be run using `forge test` conventions, specified in more deta
 | Command | Description |
 |---|---|
 | `make scenario-v2` | Run the v2 scenarios found in `./scenarios/v2/data/csv/` |
-| `make scenario-v3` | Run the v3 scenarios found in `./scenarios/v3/data/csv/` |
 
 ### Contract Verification Script
 

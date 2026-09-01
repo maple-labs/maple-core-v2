@@ -6,7 +6,6 @@ import { console, Runner } from "../contracts/Runner.sol";
 import { LPHealthChecker }            from "./health-checkers/LPHealthChecker.sol";
 import { OpenTermLoanHealthChecker }  from "./health-checkers/OpenTermLoanHealthChecker.sol";
 import { ProtocolHealthChecker }      from "./health-checkers/ProtocolHealthChecker.sol";
-import { SyrupBTCHealthChecker }      from "./health-checkers/SyrupBTCHealthChecker.sol";
 
 contract HealthCheckerAssertions is Runner {
 
@@ -89,45 +88,6 @@ contract HealthCheckerAssertions is Runner {
 
         assertTrue(results.withdrawalManagerQueueInvariantC, "WithdrawalManagerQueueInvariantC");
         assertTrue(results.withdrawalManagerQueueInvariantG, "WithdrawalManagerQueueInvariantG");
-        assertTrue(results.withdrawalManagerQueueInvariantH, "WithdrawalManagerQueueInvariantH");
-    }
-
-    function assertSyrupBTCInvariants(
-        address healthChecker_,
-        address bitcoinRouter_,
-        address[] memory depositAssets_
-    )
-        internal view
-    {
-        SyrupBTCHealthChecker.Invariants memory results;
-
-        results = SyrupBTCHealthChecker(healthChecker_).checkInvariants(bitcoinRouter_, depositAssets_);
-
-        assertTrue(results.syrupBTCInvariantA, "SyrupBTCInvariantA");
-        assertTrue(results.syrupBTCInvariantB, "SyrupBTCInvariantB");
-        assertTrue(results.syrupBTCInvariantC, "SyrupBTCInvariantC");
-        assertTrue(results.syrupBTCInvariantD, "SyrupBTCInvariantD");
-        assertTrue(results.syrupBTCInvariantE, "SyrupBTCInvariantE");
-        assertTrue(results.syrupBTCInvariantF, "SyrupBTCInvariantF");
-        assertTrue(results.syrupBTCInvariantG, "SyrupBTCInvariantG");
-
-        assertTrue(results.poolInvariantA, "PoolInvariantA");
-        assertTrue(results.poolInvariantD, "PoolInvariantD");
-        assertTrue(results.poolInvariantE, "PoolInvariantE");
-        assertTrue(results.poolInvariantI, "PoolInvariantI");
-        assertTrue(results.poolInvariantJ, "PoolInvariantJ");
-        assertTrue(results.poolInvariantK, "PoolInvariantK");
-
-        assertTrue(results.poolManagerInvariantA, "PoolManagerInvariantA");
-        assertTrue(results.poolManagerInvariantB, "PoolManagerInvariantB");
-
-        assertTrue(results.poolPermissionManagerInvariantA, "PoolPermissionManagerInvariantA");
-
-        assertTrue(results.withdrawalManagerQueueInvariantA, "WithdrawalManagerQueueInvariantA");
-        assertTrue(results.withdrawalManagerQueueInvariantB, "WithdrawalManagerQueueInvariantB");
-        assertTrue(results.withdrawalManagerQueueInvariantD, "WithdrawalManagerQueueInvariantD");
-        assertTrue(results.withdrawalManagerQueueInvariantE, "WithdrawalManagerQueueInvariantE");
-        assertTrue(results.withdrawalManagerQueueInvariantF, "WithdrawalManagerQueueInvariantF");
         assertTrue(results.withdrawalManagerQueueInvariantH, "WithdrawalManagerQueueInvariantH");
     }
 

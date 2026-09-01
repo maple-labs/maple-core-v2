@@ -2,12 +2,10 @@
 pragma solidity ^0.8.7;
 
 import {
-    IBitcoinStrategy,
     IPool,
     IPoolManager,
     IProxyFactoryLike,
-    IWithdrawalManagerQueue,
-    Permit
+    IWithdrawalManagerQueue
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
@@ -25,44 +23,6 @@ contract PauseTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
     /*** Functions Mappings (Need to be continuously updated with new functions)                                                        ***/
     /**************************************************************************************************************************************/
-
-    bytes[] assetControllerFunctions = [
-        // onlyRouter functions
-        abi.encodeWithSignature("wrap(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("unwrap(address,uint256)", address(0), 0),
-        // onlyStrategy functions
-        abi.encodeWithSignature("deploy(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("reconcile(address,uint256)", address(0), 0)
-    ];
-
-    bytes[] compositeTokenFunctions = [
-        abi.encodeWithSignature("burn(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("mint(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("transfer(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("transferFrom(address,address,uint256)", address(0), address(0), 0)
-    ];
-
-    // Bitcoin Router functions (all have whenNotPaused)
-    bytes[] bitcoinRouterFunctions = [
-        abi.encodeWithSignature("removeRequests(address,uint256[])", address(0), new uint256[](0)),
-        abi.encodeWithSignature("setAssetController(address,address)", address(0), address(0)),
-        abi.encodeWithSignature("setFees(address,uint256,uint256)", address(0), 0, 0),
-        abi.encodeWithSelector(
-            bytes4(keccak256("deposit(address,uint256,bytes32,(bool,uint256,uint8,bytes32,bytes32))")),
-            address(0),
-            uint256(0),
-            bytes32(0),
-            _makeEmptyPermit()
-        ),
-        abi.encodeWithSelector(
-            bytes4(keccak256("requestRedeem(address,uint256,bytes32,(bool,uint256,uint8,bytes32,bytes32))")),
-            address(0),
-            uint256(0),
-            bytes32(0),
-            _makeEmptyPermit()
-        ),
-        abi.encodeWithSignature("removeSharesById(uint256,uint256)", 0, 0)
-    ];
 
     bytes[] openTermLoanFunctions = [
         abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
@@ -173,16 +133,6 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("setPoolPermissionLevel(address,uint256)", address(0), 0)
     ];
 
-    bytes[] bitcoinStrategyFunctions = [
-        abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
-        abi.encodeWithSignature("setImplementation(address)", address(0)),
-        abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
-        abi.encodeWithSignature("deploy(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("reconcile(address,uint256)", address(0), 0),
-        abi.encodeWithSignature("schedule(uint256,uint32)", 0, 0),
-        abi.encodeWithSignature("setPermissions(address[],bool[],bool[],bool[])", new address[](0), new bool[](0), new bool[](0), new bool[](0))
-    ];
-
     bytes[] strategyManagerFunctions = [
         abi.encodeWithSignature("migrate(address,bytes)", address(0), new bytes(0)),
         abi.encodeWithSignature("setImplementation(address)", address(0)),
@@ -248,35 +198,10 @@ contract PauseTests is TestBaseWithAssertions {
 
         ( address pwqPool, address pwqPoolManager, address pwqWithdrawalManager ) = _createPoolWithOTLM(pausePoolDelegate);
 
-        address[] memory strategiesFactories_ = new address[](1);
-        bytes[]   memory strategiesData_      = new bytes[](1);
-
-        strategiesFactories_[0] = bitcoinStrategyFactory;
-        strategiesData_[0]      = abi.encode("");
-
-        address btcPoolDelegate = makeAddr("btcPoolDelegate");
-        vm.prank(governor);
-        globals.setValidPoolDelegate(btcPoolDelegate, true);
-
-        ( , address btcPoolManager, ) = _createPoolWithMultipleStrategies(
-            btcPoolDelegate,
-            address(compositeAsset),
-            "Syrup BTC Pool",
-            strategiesFactories_,
-            strategiesData_
-        );
-
-        // Restore the "pool with queue" as the active pool (the btc pool above is referenced via its locals only).
+        // Use the "pool with queue" as the active pool.
         poolManager = IPoolManager(pwqPoolManager);
         pool        = IPool(pwqPool);
         queueWM     = IWithdrawalManagerQueue(pwqWithdrawalManager);
-
-        address bitcoinStrategy_ = IPoolManager(btcPoolManager).strategyList(0);
-
-        vm.prank(governor);
-        globals.setValidInstanceOf("BITCOIN_STRATEGY", bitcoinStrategy_, true);
-
-        bitcoinStrategy = IBitcoinStrategy(bitcoinStrategy_);
 
         ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
@@ -294,35 +219,25 @@ contract PauseTests is TestBaseWithAssertions {
         functions[openTermLoanFactory]            = proxyFactoryFunctions;
         functions[openTermLoanManagerFactory]     = proxyFactoryFunctions;
         functions[queueWMFactory]                 = proxyFactoryFunctions;
-        functions[bitcoinStrategyFactory]         = proxyFactoryFunctions;
-        functions[address(assetController)]       = assetControllerFunctions;
-        functions[address(bitcoinRouter)]         = bitcoinRouterFunctions;
-        functions[address(compositeAsset)]        = compositeTokenFunctions;
         functions[openTermLoan]                   = openTermLoanFunctions;
         functions[openTermLoanManager]            = openTermLoanManagerFunctions;
         functions[address(pool)]                  = poolFunctions;
         functions[address(poolManager)]           = poolManagerFunctions;
         functions[address(queueWM)]               = withdrawalManagerQueueFunctions;
         functions[address(poolPermissionManager)] = poolPermissionManagerFunctions;
-        functions[address(bitcoinStrategy)]       = bitcoinStrategyFunctions;
         functions[allocationStrategyManager]      = strategyManagerFunctions;
         functions[allocationUnderlyingStrategy]   = allocationStrategyFunctions;
 
         messages[poolManagerFactory]             = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanFactory]            = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoanManagerFactory]     = "MPF:PROTOCOL_PAUSED";
-        messages[bitcoinStrategyFactory]         = "MPF:PROTOCOL_PAUSED";
         messages[openTermLoan]                   = "ML:PAUSED";
         messages[openTermLoanManager]            = "LM:PAUSED";
         messages[address(pool)]                  = "PM:CC:PAUSED";
         messages[address(poolManager)]           = "PM:PAUSED";
         messages[address(queueWM)]               = "WM:PAUSED";
-        messages[address(assetController)]       = "AC:PAUSED";
-        messages[address(bitcoinRouter)]         = "SBR:PAUSED";
-        messages[address(compositeAsset)]        = "CT:PAUSED";
         messages[queueWMFactory]                 = "MPF:PROTOCOL_PAUSED";
         messages[address(poolPermissionManager)] = "PPM:PAUSED";
-        messages[address(bitcoinStrategy)]       = "MBS:PAUSED";
         messages[allocationStrategyManager]      = "MSM:PAUSED";
         messages[allocationUnderlyingStrategy]   = "MAS:PAUSED";
 
@@ -331,23 +246,17 @@ contract PauseTests is TestBaseWithAssertions {
         caller[openTermLoanManagerFactory]  = address(poolManager);
         caller[openTermLoanFactory]         = address(borrower);
         caller[queueWMFactory]              = address(poolDeployer);
-        caller[bitcoinStrategyFactory]      = btcPoolManager;
-
-        functionCallerOverride[address(assetController)][bytes4(keccak256("deploy(address,uint256)"))]    = address(bitcoinStrategy);
-        functionCallerOverride[address(assetController)][bytes4(keccak256("reconcile(address,uint256)"))] = address(bitcoinStrategy);
 
         bytes4 upgradeSelector = bytes4(keccak256("upgradeInstance(uint256,bytes)"));
         functionCallerOverride[poolManagerFactory][upgradeSelector]          = address(poolManager);
         functionCallerOverride[openTermLoanFactory][upgradeSelector]         = address(openTermLoan);
         functionCallerOverride[openTermLoanManagerFactory][upgradeSelector]  = address(openTermLoanManager);
         functionCallerOverride[queueWMFactory][upgradeSelector]              = address(queueWM);
-        functionCallerOverride[bitcoinStrategyFactory][upgradeSelector]      = address(bitcoinStrategy);
 
         // Ensure factory ACL checks pass before pause checks in tests.
         vm.startPrank(governor);
         globals.setCanDeployFrom(openTermLoanFactory,         borrower,             true);
         globals.setCanDeployFrom(openTermLoanManagerFactory,  address(poolManager), true);
-        globals.setCanDeployFrom(bitcoinStrategyFactory,      btcPoolManager,       true);
         vm.stopPrank();
     }
 
@@ -357,16 +266,13 @@ contract PauseTests is TestBaseWithAssertions {
             address(poolManagerFactory),
             address(openTermLoanFactory),
             address(openTermLoanManagerFactory),
-            address(bitcoinStrategyFactory),
             address(openTermLoan),
             address(openTermLoanManager),
             address(pool),
             address(poolManager),
             address(queueWMFactory),
             address(queueWM),
-            address(compositeAsset),
             address(poolPermissionManager),
-            address(bitcoinStrategy),
             allocationStrategyManager,
             allocationUnderlyingStrategy
         ];
@@ -393,10 +299,8 @@ contract PauseTests is TestBaseWithAssertions {
             address(openTermLoan),
             address(openTermLoanManager),
             address(poolManager),
-            address(compositeAsset),
             address(queueWM),
             address(poolPermissionManager),
-            address(bitcoinStrategy),
             allocationStrategyManager,
             allocationUnderlyingStrategy
         ];
@@ -419,10 +323,8 @@ contract PauseTests is TestBaseWithAssertions {
             address(openTermLoan),
             address(openTermLoanManager),
             address(poolManager),
-            address(compositeAsset),
             address(queueWM),
             address(poolPermissionManager),
-            address(bitcoinStrategy),
             allocationStrategyManager,
             allocationUnderlyingStrategy
         ];
@@ -575,10 +477,6 @@ contract PauseTests is TestBaseWithAssertions {
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
-
-    function _makeEmptyPermit() internal pure returns (Permit memory permit_) {
-        permit_ = Permit({ enabled: false, deadline: 0, v: 0, r: bytes32(0), s: bytes32(0) });
-    }
 
     function _assertAllPaused(address contract_, bytes[] memory calldataArray_, string memory message_) internal {
         for (uint256 i = 0; i < calldataArray_.length; i++) {

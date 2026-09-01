@@ -5,8 +5,6 @@ import { console2 as console } from "../../modules/forge-std/src/console2.sol";
 import { StdInvariant        } from "../../modules/forge-std/src/Test.sol";
 
 import {
-    IAssetController,
-    IBitcoinStrategy,
     IERC20,
     IERC20Like,
     IERC4626Like,
@@ -16,14 +14,11 @@ import {
     IPoolManager,
     IPoolPermissionManager,
     IStrategyLike,
-    ISyrupBitcoinRouter,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { BitcoinRouterHandler }      from "./handlers/BitcoinRouterHandler.sol";
-import { BitcoinStrategyHandler }    from "./handlers/BitcoinStrategyHandler.sol";
 import { DepositHandler }            from "./handlers/DepositHandler.sol";
 import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
 import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
@@ -41,8 +36,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant PUBLIC               = 3;
     uint256 constant MAXIMUM_BITMAP       = 2 ** 16 - 1;
 
-    BitcoinRouterHandler      bitcoinRouterHandler;
-    BitcoinStrategyHandler    bitcoinStrategyHandler;
     DepositHandler            depositHandler;
     OpenTermLoanHandler       otlHandler;
     PermissionHandler         permissionHandler;
@@ -117,15 +110,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         * Invariant J: ∑owner.userEscrowedShares + ∑owner.manualSharesAvailable == totalShares
         * Invariant M: requestsByOwner lists are strictly increasing
         * Invariant N: requestsByOwner lists match active requests exactly
-
-     * Syrup BTC
-        * Invariant A: depositAssets(wBTC) == poolAssets(wBTC)
-        * Invariant B: balanceOf(pool) == poolAssets(wBTC)
-        * Invariant C: totalSupply == balanceOf(pool)
-        * Invariant D: balanceOf(wm) == Σrequest.shares
-        * Invariant E: Σrouter.request.shares == Σwm.request.shares + manualShares(router)
-        * Invariant F: (remainingYield > 0) == (remainingDuration > 0)
-        * Invariant G: accruedFees() <= accruedYield()
 
     /**************************************************************************************************************************************/
     /*** Pool Invariants                                                                                                                ***/
@@ -825,91 +809,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         for (uint256 requestId = 1; requestId <= lastRequestId; ++requestId) {
             existingRequestIds[requestId] = false;
         }
-    }
-
-    /**************************************************************************************************************************************/
-    /*** Syrup BTC Invariants                                                                                                           ***/
-    /**************************************************************************************************************************************/
-
-    function assert_syrupBTC_invariants() internal view {
-        uint256[] memory wmShares = bitcoinRouterHandler.wmShares();
-        uint256 routerShares      = bitcoinRouterHandler.routerShares();
-
-        assert_syrupBTC_invariant_A(address(depositAsset), address(assetController));
-        assert_syrupBTC_invariant_B(address(depositAsset), address(pool), address(assetController));
-        assert_syrupBTC_invariant_C(address(pool));
-        assert_syrupBTC_invariant_D(address(pool), routerShares);
-        assert_syrupBTC_invariant_E(address(bitcoinRouter), routerShares, wmShares);
-
-        for (uint i; i < poolManager.strategyListLength(); i++) {
-            address strategy = address(bitcoinStrategyHandler.strategies(i));
-
-            assert_syrupBTC_invariant_F(strategy);
-            assert_syrupBTC_invariant_G(strategy);
-        }
-    }
-
-    function assert_syrupBTC_invariant_A(address asset, address controller) internal view {
-        uint256 depositAssets = IAssetController(controller).depositAssets(asset);
-        uint256 poolAssets    = IAssetController(controller).poolAssets(asset);
-
-        assertEq(depositAssets, poolAssets, "Syrup BTC Invariant A");
-    }
-
-    function assert_syrupBTC_invariant_B(address depositAsset, address pool, address controller) internal view {
-        address poolAsset      = IPool(pool).asset();
-        uint256 poolBalance    = IERC20(poolAsset).balanceOf(pool);
-        uint256 poolAccounting = IAssetController(controller).poolAssets(depositAsset);
-
-        assertEq(poolBalance, poolAccounting, "Syrup BTC Invariant B");
-    }
-
-    function assert_syrupBTC_invariant_C(address pool) internal view {
-        address poolAsset   = IPool(pool).asset();
-        uint256 poolBalance = IERC20(poolAsset).balanceOf(pool);
-        uint256 totalSupply = IERC20(poolAsset).totalSupply();
-
-        assertEq(poolBalance, totalSupply, "Syrup BTC Invariant C");
-    }
-
-    function assert_syrupBTC_invariant_D(address pool, uint256 routerShares) internal view {
-        address pm = IPool(pool).manager();
-        address wm = IPoolManager(pm).withdrawalManager();
-
-        uint256 wmBalance = IERC20(pool).balanceOf(wm);
-
-        // NOTE: Assumes shares are always locked, and never directly transferred to the WM.
-        assertEq(wmBalance, routerShares, "Syrup BTC Invariant D");
-    }
-
-    function assert_syrupBTC_invariant_E(address router, uint256 routerShares, uint256[] memory wmShares) internal view {
-        address pm = ISyrupBitcoinRouter(router).poolManager();
-        address wm = IPoolManager(pm).withdrawalManager();
-
-        // NOTE: Also takes into account shares that have been processed but not redeemed.
-        uint256 wmAccounting = IWithdrawalManagerQueue(wm).manualSharesAvailable(router);
-
-        for (uint i; i < wmShares.length; i++) {
-            wmAccounting += wmShares[i];
-        }
-
-        assertEq(routerShares, wmAccounting, "Syrup BTC Invariant E");
-    }
-
-    function assert_syrupBTC_invariant_F(address strategy) internal view {
-        ( uint256 remainingYield, , uint32 remainingDuration ) = IBitcoinStrategy(strategy).schedules(0);
-
-        bool nothingScheduled = remainingYield == 0 && remainingDuration == 0;
-        bool yieldScheduled   = remainingYield > 0 && remainingDuration > 0;
-
-        assertEq(nothingScheduled || yieldScheduled, true, "Syrup BTC Invariant F");
-    }
-
-    function assert_syrupBTC_invariant_G(address strategy) internal view {
-        uint256 accruedFees  = IBitcoinStrategy(strategy).accruedFees();
-        uint256 accruedYield = IBitcoinStrategy(strategy).accruedYield();
-
-        assertLe(accruedFees, accruedYield, "Syrup BTC Invariant G");
     }
 
     /**************************************************************************************************************************************/

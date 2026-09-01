@@ -28,9 +28,6 @@ fuzz:
 integration:
 	./test.sh -d tests/integration -p $(profile)
 
-strategies:
-	./test.sh -d tests/integration/strategies -p $(profile)
-
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
@@ -39,9 +36,6 @@ protocol-upgrade:
 
 scenario-v2:
 	VERSION=v2 ./scenarios.sh
-
-scenario-v3:
-	VERSION=v3 ./scenarios.sh
 
 deploy:
 	./deploy.sh

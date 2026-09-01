@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import {
     IAllocationStrategy,
     IAaveV3Strategy,
-    IBitcoinStrategy,
     IERC20,
     IGovernorTimelock,
     ILoanLike,
@@ -28,27 +27,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     /**************************************************************************************************************************************/
     /*** State Assertion Functions                                                                                                      ***/
     /**************************************************************************************************************************************/
-
-    function assertAccounting(
-        uint256 outstandingAssets,
-        uint256 realizedFees,
-        uint256 accruedYield,
-        uint256 accruedFees,
-        uint256 assetsUnderManagement
-    )
-        internal view
-    {
-        assertEq(bitcoinStrategy.outstandingAssets(),     outstandingAssets);
-        assertEq(bitcoinStrategy.realizedFees(),          realizedFees);
-        assertEq(bitcoinStrategy.accruedYield(),          accruedYield);
-        assertEq(bitcoinStrategy.accruedFees(),           accruedFees);
-        assertEq(bitcoinStrategy.assetsUnderManagement(), assetsUnderManagement);
-    }
-
-    function assertImpairment(uint256 impairedAssets, uint256 unrealizedLosses) internal view {
-        assertEq(bitcoinStrategy.impairedAssets(),   impairedAssets);
-        assertEq(bitcoinStrategy.unrealizedLosses(), unrealizedLosses);
-    }
 
     function assertDeployedPool(
         address poolManager_,
@@ -242,21 +220,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IWithdrawalManagerQueue(withdrawalManager_).requestIds(user_), requestId_);
     }
 
-    function assertPermissions(
-        address account,
-        bool    canDeploy,
-        bool    canReconcile,
-        bool    canSchedule
-    )
-        internal view
-    {
-        ( bool canDeploy_, bool canReconcile_, bool canSchedule_ ) = bitcoinStrategy.permissions(account);
-
-        assertEq(canDeploy_,    canDeploy);
-        assertEq(canReconcile_, canReconcile);
-        assertEq(canSchedule_,  canSchedule);
-    }
-
     function assertPoolState(
         address pool,
         uint256 totalAssets,
@@ -330,52 +293,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     {
         // This function does the same as assertRequest but is named differently in order to make reading of some tests more intuitive.
         assertRequest(address(poolManager), requestId, owner, shares);
-    }
-
-    function assertRequestOnRouter(
-        uint256 requestId,
-        address asset,
-        address owner,
-        uint256 shares
-    )
-        internal view
-    {
-        ( address asset_, address owner_, uint256 shares_ ) = bitcoinRouter.redeemRequests(requestId);
-        assertEq(asset_,  asset);
-        assertEq(owner_,  owner);
-        assertEq(shares_, shares);
-    }
-
-    function assertSchedule(
-        uint256 remainingYield,
-        uint32  remainingDuration,
-        uint32  lastUpdated,
-        uint256 yieldRate
-    )
-        internal view
-    {
-        ( uint256 remainingYield_, uint32 lastUpdated_, uint32 remainingDuration_ ) = bitcoinStrategy.schedules(0);
-
-        uint256 yieldRate_ = bitcoinStrategy.yieldRate();
-
-        assertEq(remainingYield_,    remainingYield);
-        assertEq(remainingDuration_, remainingDuration);
-        assertEq(lastUpdated_,       lastUpdated);
-        assertEq(yieldRate_,         yieldRate);
-    }
-
-    function assertSyrupBtcSystemState(
-        uint256 strategyManagerBalance,
-        uint256 assetControllerBalance,
-        uint256 poolTotalAssets,
-        uint256 poolCompositeTokenBalance
-    )
-        internal view
-    {
-        assertEq(depositAsset.balanceOf(strategyManager),      strategyManagerBalance);
-        assertEq(depositAsset.balanceOf(assetControllerProxy), assetControllerBalance);
-        assertEq(compositeAsset.balanceOf(address(pool)),      poolCompositeTokenBalance);
-        assertEq(pool.totalAssets(),                           poolTotalAssets);
     }
 
     function assertAaveV3Strategy(
@@ -536,22 +453,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IStrategyManager(strategyManager).sharesOf(poolManager),           shares);
         assertEq(IStrategyManager(strategyManager).pendingSharesOf(poolManager),    pendingShares);
         assertEq(IStrategyManager(strategyManager).unrealizedLossesOf(poolManager), unrealizedLosses);
-    }
-
-    function assertBitcoinStrategyState(
-        address strategy,
-        uint256 assetsUnderManagement,
-        uint256 accruedYield,
-        uint256 accruedFees,
-        uint256 impairedAssets
-    )
-        internal view
-    {
-        assertEq(IBitcoinStrategy(strategy).assetsUnderManagement(), assetsUnderManagement);
-        assertEq(IBitcoinStrategy(strategy).accruedYield(),          accruedYield);
-        assertEq(IBitcoinStrategy(strategy).accruedFees(),           accruedFees);
-        assertEq(IBitcoinStrategy(strategy).outstandingAssets(),     assetsUnderManagement + accruedFees - accruedYield);
-        assertEq(IBitcoinStrategy(strategy).impairedAssets(),        impairedAssets);
     }
 
     function assertUnderlyingStrategy(
