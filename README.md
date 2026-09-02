@@ -10,58 +10,139 @@
 
 ## Overview
 
-This repository brings together the core smart contracts of the Maple V2 protocol as dependencies in order to perform integration tests and simulations.
+This repository brings together the core smart contracts of the Maple V2 protocol as submodules in
+order to test and deploy them as a single system. It contains:
+
+| Path | Contents |
+|---|---|
+| `modules/`     | The protocol contracts, pinned as git submodules. |
+| `tests/`       | Integration, end-to-end, fuzz, invariant and protocol-upgrade test suites. |
+| `scenarios/`   | CSV-driven pool lifecycle scenarios, converted to Solidity and run as tests. |
+| `scripts/`     | Foundry deployment scripts (releases, governor timelock, withdrawal manager, health checkers). |
+| `benchmarks/`  | Gas benchmarks. |
+| `contracts/`   | Test-side helpers — versioned contract sets (`Contracts@N.sol`), protocol actions, interfaces. |
+| `audits/`      | Audit reports, by engagement date. |
+
+The protocol is deployed on multiple chains; RPC endpoints for mainnet, Base, Plasma, Mantle, Ink
+and Monad are configured in `foundry.toml` under `[rpc_endpoints]`.
 
 ## Submodules
 
-Submodules imported:
-- [`maple-labs/contract-test-utils` (for testing)](https://github.com/maple-labs/contract-test-utils)
-- [`maple-labs/erc20`](https://github.com/maple-labs/erc20)
-- [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2)
-- [`maple-labs/liquidations`](https://github.com/maple-labs/liquidations)
-- [`maple-labs/loan`](https://github.com/maple-labs/loan)
-- [`maple-labs/pool-v2`](https://github.com/maple-labs/pool-v2)
-- [`maple-labs/withdrawal-manager`](https://github.com/maple-labs/withdrawal-manager)
+The modules pinned here are the **private** repositories. Note that several submodule directory
+names differ from their repository names.
+
+| Directory | Repository |
+|---|---|
+| **Core** | |
+| `modules/globals`                     | [`maple-labs/globals-v2-private`](https://github.com/maple-labs/globals-v2-private) |
+| `modules/pool`                        | [`maple-labs/pool-v2-private`](https://github.com/maple-labs/pool-v2-private) |
+| `modules/pool-permission-manager`     | [`maple-labs/pool-permission-manager-private`](https://github.com/maple-labs/pool-permission-manager-private) |
+| **Loans** | |
+| `modules/open-term-loan`              | [`maple-labs/open-term-loan-private`](https://github.com/maple-labs/open-term-loan-private) |
+| `modules/open-term-loan-manager`      | [`maple-labs/open-term-loan-manager-private`](https://github.com/maple-labs/open-term-loan-manager-private) |
+| **Withdrawals** | |
+| `modules/withdrawal-manager-cyclical` | [`maple-labs/withdrawal-manager-cyclical-private`](https://github.com/maple-labs/withdrawal-manager-cyclical-private) |
+| `modules/withdrawal-manager-queue`    | [`maple-labs/withdrawal-manager-queue-private`](https://github.com/maple-labs/withdrawal-manager-queue-private) |
+| **Strategies** | |
+| `modules/strategy-manager`            | [`maple-labs/strategy-manager-private`](https://github.com/maple-labs/strategy-manager-private) |
+| `modules/defi-strategies`             | [`maple-labs/defi-strategies-private`](https://github.com/maple-labs/defi-strategies-private) |
+| `modules/allocation-strategy`         | [`maple-labs/allocation-strategy-private`](https://github.com/maple-labs/allocation-strategy-private) |
+| **Peripheral** | |
+| `modules/syrup-utils`                 | [`maple-labs/syrup-utils-private`](https://github.com/maple-labs/syrup-utils-private) |
+| `modules/address-registry`            | [`maple-labs/address-registry`](https://github.com/maple-labs/address-registry) |
+| `modules/erc20`                       | [`maple-labs/erc20`](https://github.com/maple-labs/erc20) |
+| `modules/erc20-helper`                | [`maple-labs/erc20-helper`](https://github.com/maple-labs/erc20-helper) |
+| `modules/forge-std`                   | [`foundry-rs/forge-std`](https://github.com/foundry-rs/forge-std) |
 
 Versions of dependencies can be checked with `git submodule status`.
 
 ## Setup
 
-This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
+This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation
+instructions [here](https://github.com/foundry-rs/foundry#installation).
+
+Most submodules are private, so cloning requires SSH access to the `maple-labs` module
+repositories. CI pulls them with per-module deploy keys — see `setup-ci.sh`.
 
 ```sh
 git clone git@github.com:maple-labs/maple-core-v2-private.git
 cd maple-core-v2-private
-forge install
+make install          # git submodule update --init --recursive
+cp .env.example .env  # populate ETH_RPC_URL and ALCHEMY_API_KEY
+make build
 ```
 
+`ETH_RPC_URL` and `ALCHEMY_API_KEY` are needed by the suites that fork mainnet or an L2 — see
+[Test Commands](#test-commands).
+
+For generating contract interface docs from natspec, see
+[`NATSPEC_DOC_GENERATION.md`](NATSPEC_DOC_GENERATION.md). Note that the module paths in that file
+are out of date.
+
 ## Commands
-To make it easier to perform some tasks within the repo, a few commands are available through a makefile:
+
+To make it easier to perform some tasks within the repo, a few commands are available through a
+makefile:
 
 ### Build Commands
 
 | Command | Action |
 |---|---|
-| `make build`       | Compile all contracts in the repo, including submodules. |
-| `make clean`       | Delete cached files. |
+| `make install`        | Initialize and update all submodules recursively. |
+| `make update`         | Update submodules to their latest remote commits (`forge update`). |
+| `make build`          | Compile all contracts in the repo, including submodules, with the `production` profile. |
+| `make clean`          | Delete cached files. |
+| `make slither-files`  | Generate the flattened files used for Slither analysis. |
 
 ### Test Commands
 
+| Command | Description | Needs RPC |
+|---|---|---|
+| `make test`             | Run every test in `tests/`. | yes |
+| `make integration`      | Run the integration tests in `tests/integration/`. | yes |
+| `make protocol-upgrade` | Run the protocol upgrade tests in `tests/protocol-upgrade/`. | yes |
+| `make e2e`              | Run the end-to-end tests in `tests/e2e/`. | some |
+| `make fuzz`             | Run the fuzz tests in `tests/fuzz/`. | some |
+| `make invariant`        | Run the invariant tests in `tests/invariants/`. | no |
+| `make gas-benchmarks`   | Run the gas benchmarks in `benchmarks/`. | no |
+| `make scenario-v2`      | Run the v2 scenarios found in `scenarios/v2/data/csv/`. | no |
+
+Suites marked "needs RPC" fork mainnet or an L2 and require `ETH_RPC_URL` and `ALCHEMY_API_KEY` to
+be set. Within the fuzz suite, only the fork-based setup (`tests/fuzz/FuzzedSetupFork.sol`) forks.
+
+Specific tests can be run using `forge test` conventions, specified in more detail in the Foundry
+[Book](https://www.getfoundry.sh/reference/forge/test#forge-test).
+
+#### Profiles
+
+The test targets accept a `profile` variable, which sets `FOUNDRY_PROFILE` for the run:
+
+```sh
+make fuzz profile=deep
+make integration profile=production
+```
+
+| Profile | Effect |
+|---|---|
+| `default`        | Optimizer off. Fuzz: 100 runs. Invariants: 10 runs × depth 100. |
+| `production`     | Optimizer on, 200 runs. |
+| `deep`           | Optimizer on. Fuzz: 1,000 runs. Invariants: 10 runs × depth 250. |
+| `super_deep`     | Optimizer on. Fuzz: 10,000 runs. Invariants: 200 runs × depth 250. |
+| `gas_benchmarks` | Optimizer on, isolated execution, test directory `benchmarks/`. |
+| `scenarios`      | Test directory `scenarios/`, with filesystem read permissions. |
+
+CI (`.github/workflows/ci.yaml`) uses `default` / `deep` on pull requests and `production` /
+`super_deep` on pushes to `main`.
+
+### Deployment Commands
+
 | Command | Description |
 |---|---|
-| `make test`        | Run all tests located in `contracts/tests/`. |
-| `make e2e`         | Run all end-to-end tests. |
-| `make fuzz`        | Run all fuzz tests. |
-| `make integration` | Run all integration tests (Must have `ETH_RPC_URL` configured to mainnet). |
-| `make invariant`   | Run the invariant tests. |
-
-Specific tests can be run using `forge test` conventions, specified in more detail in the Foundry [Book](https://book.getfoundry.sh/reference/forge/forge-test#test-options).
-
-### Scenario Commands
-
-| Command | Description |
-|---|---|
-| `make scenario-v2` | Run the v2 scenarios found in `./scenarios/v2/data/csv/` |
+| `make deploy`                 | Run `deploy.sh`. Every script in it is commented out by default — uncomment the one to run and add `--broadcast` when sending. |
+| `make validate step=<Step>`   | Run the `Validate<Step>` script against `ETH_RPC_URL`. |
+| `make validateLocal step=<Step>` | Run the `Validate<Step>` script against a local node on `localhost:8545`. |
+| `make doLocal step=<Step>`    | Run and broadcast the `Do<Step>` script against a local node, with unlocked accounts. |
+| `make deal to=<address>`      | Fund an address with 10,000 ETH on a local Anvil node. |
 
 ### Contract Verification Script
 
@@ -69,40 +150,37 @@ Specific tests can be run using `forge test` conventions, specified in more deta
 $ ./verify.sh -i "NETWORK_NAME" -k "ETHERSCAN_API_KEY" -a "CONTRACT_ADDRESS" -c "RELATIVE_PATH_TO_CONTRACT_FILE:CONTRACT_NAME" -s "CONSTRUCTOR_SIGNATURE" -g "CONSTRUCTOR_ARGUMENTS_SPACE_DELIMITED"
 ```
 
-```shell
-$ ./verify.sh -i "goerli" -k "ETHERSCAN_API_KEY_HERE" -a "0xA756055900D13d62350a882334e5BD196987adcb" -c "./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory" -s "constructor(address)" -g "0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6"
-Profile: production
-Compiler: v0.8.7+commit.e28d00a7
-Address: 0xA756055900D13d62350a882334e5BD196987adcb
-Path To Contract: ./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory
-Optimzations: 200
-Chain: goerli
-constructorSignature: constructor(address)
-constructorArguments: 0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6
-Start verifying contract `0xa756055900d13d62350a882334e5bd196987adcb` deployed on goerli
+For example:
 
-Submitting verification for [modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory] "0xA756055900D13d62350a882334e5BD196987adcb".
-Submitted contract for verification:
-	Response: `OK`
-	GUID: `mkes8fusv3yzajjwd11nzrifefwwh4pam1br739rlfxn7y4igt`
-	URL:
-        https://goerli.etherscan.io/address/0xa756055900d13d62350a882334e5bd196987adcb
-Contract verification status:
-Response: `NOTOK`
-Details: `Pending in queue`
-Contract verification status:
-Response: `OK`
-Details: `Pass - Verified`
-Contract successfully verified
+```shell
+$ ./verify.sh -i "mainnet" -k "$ETHERSCAN_API_KEY" -a "0xA756055900D13d62350a882334e5BD196987adcb" -c "./modules/open-term-loan-manager/contracts/MapleLoanManagerFactory.sol:MapleLoanManagerFactory" -s "constructor(address)" -g "0x421c8914B602C4a6A6aec7b4c5F90B9FF5Ef90c6"
 ```
 
 ## Audit Reports
 
-| Auditor | Report Link |
-|---|---|
-| Trail of Bits | [`2022-08-24 - Trail of Bits Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10246688/Maple.Finance.v2.-.Final.Report.-.Fixed.-.2022.pdf) |
-| Spearbit | [`2022-10-17 - Spearbit Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10223545/Maple.Finance.v2.-.Spearbit.pdf) |
-| Three Sigma | [`2022-10-24 - Three Sigma Report`](https://docs.google.com/viewer?url=https://github.com/maple-labs/maple-v2-audits/files/10223541/three-sigma_maple-finance_code-audit_v1.1.1.pdf) |
+All reports are in [`audits/`](audits), organised by engagement date. Reports scoped to a single
+component rather than the whole protocol are marked as such.
+
+| Date | Auditor | Report |
+|---|---|---|
+| 2025-11 | Sherlock      | [Sherlock - November 2025 (Withdrawal Manager)](audits/2025-november/Sherlock-Maple-Finance-WM-Nov-2025.pdf) |
+| 2025-11 | Spearbit      | [Spearbit - November 2025 (Withdrawal Manager)](audits/2025-november/Spearbit-Maple-Finance-WM-Nov-2025.pdf) |
+| 2025-09 | 0xMacro       | [0xMacro - September 2025 (Governor Timelock)](audits/2025-sept-governor-timelock/0xMacro-Maple-Finance-timelock-Sept-2025.pdf) |
+| 2025-09 | Sherlock      | [Sherlock - September 2025 (Governor Timelock)](audits/2025-sept-governor-timelock/Sherlock-Maple-Finance-timelock-Sept-2025.pdf) |
+| 2025-06 | 0xMacro       | [0xMacro - June 2025](audits/2025-june/0xMacro-Maple-Finance-June2025.pdf) |
+| 2025-06 | Sherlock      | [Sherlock - June 2025](audits/2025-june/Sherlock-Maple-Finance-June-2025.pdf) |
+| 2024-12 | 0xMacro       | [0xMacro - December 2024](audits/2024-december/0xMacro-Maple-Finance-Dec-2024.pdf) |
+| 2024-12 | Three Sigma   | [Three Sigma - December 2024](audits/2024-december/Three-Sigma-Maple-Finance-Dec-2024.pdf) |
+| 2024-08 | 0xMacro       | [0xMacro - August 2024](audits/2024-august/0xMacro-Maple-Finance-Aug-2024.pdf) |
+| 2024-08 | Three Sigma   | [Three Sigma - August 2024](audits/2024-august/Three-Sigma-Maple-Finance-Aug-2024.pdf) |
+| 2024-08 | Three Sigma   | [Three Sigma - August 2024 (Syrup)](audits/2024-august/Three-Sigma-Maple-Finance-Aug-2024-Syrup.pdf) |
+| 2023-12 | 0xMacro       | [0xMacro - December 2023](audits/2023-december/0xMacro-Maple-Finance-Dec-2023.pdf) |
+| 2023-12 | Three Sigma   | [Three Sigma - December 2023](audits/2023-december/Three-Sigma-Maple-Finance-Dec-2023.pdf) |
+| 2023-06 | Cantina       | [Cantina - June 2023](audits/2023-june/cantina-maple.pdf) |
+| 2023-06 | Three Sigma   | [Three Sigma - June 2023](audits/2023-june/Three-Sigma-Maple-Finance-Jun-2023.pdf) |
+| 2022-12 | Trail of Bits | [Trail of Bits - December 2022](audits/2022-december/TrailOfBits-Maple.pdf) |
+| 2022-12 | Spearbit      | [Spearbit - December 2022](audits/2022-december/Spearbit-maple.pdf) |
+| 2022-12 | Three Sigma   | [Three Sigma - December 2022](audits/2022-december/Three-Sigma-Maple-Finance-Dec-2022.pdf) |
 
 ## Bug Bounty
 

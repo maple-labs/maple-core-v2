@@ -37,7 +37,7 @@ contract TestBase is ProtocolActions, Utils {
     uint256 constant MAINNET_FORK_BLOCK = 25_523_119;
     uint256 constant SKY_ANNUAL_APY     = 0.036e6;  // 3.6% over 365 days at MAINNET_FORK_BLOCK.
 
-    uint256 constant MAX_TOKEN_AMOUNT         = 1e29;
+    uint256 constant MAX_TOKEN_AMOUNT = 1e29;
 
     uint256 constant ONE_DAY   = 1 days;
     uint256 constant ONE_MONTH = ONE_YEAR / 12;

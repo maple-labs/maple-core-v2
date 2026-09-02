@@ -19,11 +19,11 @@ import {
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { DepositHandler }            from "./handlers/DepositHandler.sol";
-import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
-import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
-import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
-import { TransferHandler }           from "./handlers/TransferHandler.sol";
+import { DepositHandler }         from "./handlers/DepositHandler.sol";
+import { OpenTermLoanHandler }    from "./handlers/OpenTermLoanHandler.sol";
+import { PermissionHandler }      from "./handlers/PermissionHandler.sol";
+import { QueueWithdrawalHandler } from "./handlers/QueueWithdrawalHandler.sol";
+import { TransferHandler }        from "./handlers/TransferHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 

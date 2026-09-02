@@ -31,7 +31,7 @@ git submodule update --init --recursive modules/withdrawal-manager-queue
 echo "$SSH_KEY_SYRUP_UTILS" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/syrup-utils
 
-echo "$SSH_KEY_TRADING_STRATEGY" > $HOME/.ssh/id_rsa
+echo "$SSH_KEY_ALLOCATION_STRATEGY" > $HOME/.ssh/id_rsa
 git submodule update --init --recursive modules/allocation-strategy
 
 echo "$SSH_KEY_STRATEGY_MANAGER" > $HOME/.ssh/id_rsa
