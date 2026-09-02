@@ -103,6 +103,27 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         IStrategyManager(skyStrategyManager).fundStrategyManager(nonInstancePoolManager, assets, "");
     }
 
+    function testFork_fund_failWithInvalidUnderlyingStrategyFactory() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY", skyStrategyFactory, false);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), assets, "");
+    }
+
+    function testFork_fund_failWithNonInstanceUnderlyingStrategy() external {
+        vm.mockCall(
+            skyStrategyFactory,
+            abi.encodeWithSignature("isInstance(address)", skyUnderlyingStrategy),
+            abi.encode(false)
+        );
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), assets, "");
+    }
+
     function testFork_fund_failWhenRequestFundsPaused() external {
         deposit(lp, assets);
 

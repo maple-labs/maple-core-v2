@@ -96,6 +96,27 @@ contract AllocationStrategyFundFailureTests is AllocationStrategyTestBase {
         IStrategyManager(allocationStrategyManager).fundStrategyManager(fakePoolManager, INITIAL_LIQUIDITY, "");
     }
 
+    function test_fundUnderlyingStrategy_revert_invalidUnderlyingStrategyFactory() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY", allocationStrategyFactory, false);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        IStrategyManager(allocationStrategyManager).fundStrategyManager(address(poolManager), INITIAL_LIQUIDITY, "");
+    }
+
+    function test_fundUnderlyingStrategy_revert_nonInstanceUnderlyingStrategy() external {
+        vm.mockCall(
+            allocationStrategyFactory,
+            abi.encodeWithSignature("isInstance(address)", allocationUnderlyingStrategy),
+            abi.encode(false)
+        );
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        IStrategyManager(allocationStrategyManager).fundStrategyManager(address(poolManager), INITIAL_LIQUIDITY, "");
+    }
+
     function test_fundUnderlyingStrategy_revert_exceedingPoolStrategyCap() external {
         uint256 cap = 500_000e6;
 

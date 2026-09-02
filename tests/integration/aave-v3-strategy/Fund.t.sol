@@ -109,6 +109,27 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
         IStrategyManager(aaveV3StrategyManager).fundStrategyManager(nonInstancePoolManager, assets, "");
     }
 
+    function testFork_fund_failWithInvalidUnderlyingStrategyFactory() external {
+        vm.prank(governor);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY", aaveV3StrategyFactory, false);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        IStrategyManager(aaveV3StrategyManager).fundStrategyManager(address(poolManager), assets, "");
+    }
+
+    function testFork_fund_failWithNonInstanceUnderlyingStrategy() external {
+        vm.mockCall(
+            aaveV3StrategyFactory,
+            abi.encodeWithSignature("isInstance(address)", aaveV3UnderlyingStrategy),
+            abi.encode(false)
+        );
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        IStrategyManager(aaveV3StrategyManager).fundStrategyManager(address(poolManager), assets, "");
+    }
+
     function testFork_fund_failWhenRequestFundsPaused() external {
         deposit(lp, assets);
 
