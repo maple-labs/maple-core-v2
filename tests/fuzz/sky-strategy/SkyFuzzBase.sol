@@ -8,10 +8,10 @@ import {
     ISkyStrategy
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedSetupFork } from "../FuzzedSetupFork.sol";
-import { StorageSnapshot } from "../StorageSnapshot.sol";
+import { FuzzedSetupUpgradeFork } from "../FuzzedSetupUpgradeFork.sol";
+import { StorageSnapshot }        from "../StorageSnapshot.sol";
 
-contract SkyFuzzBase is FuzzedSetupFork, StorageSnapshot {
+contract SkyFuzzBase is FuzzedSetupUpgradeFork, StorageSnapshot {
 
     uint256 constant OTL_LOAN_COUNT          = 5;
     uint256 constant LOAN_ACTION_COUNT       = 20;

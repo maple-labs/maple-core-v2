@@ -5,7 +5,7 @@ import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyFuzzBase } from "./SkyFuzzBase.sol";
 
-contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
+abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
 
     SkyStrategyStorage             strategyStorage;
     FeeAccrualStorage              feeAccrualStorage;
@@ -165,6 +165,22 @@ contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
         );
 
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - unrealizedLossesDecrease);
+    }
+
+}
+
+contract SkyProcessRedemptionForkFuzzTests is SkyProcessRedemptionFuzzTests {
+
+    function setUp() public override {
+        _setupForkEnvironment();
+    }
+
+}
+
+contract SkyProcessRedemptionUpgradeForkFuzzTests is SkyProcessRedemptionFuzzTests {
+
+    function setUp() public override {
+        _setupUpgradeForkEnvironment();
     }
 
 }

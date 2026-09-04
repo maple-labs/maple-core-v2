@@ -3,6 +3,7 @@ pragma solidity ^0.8.7;
 
 import {
     IAaveV3Strategy,
+    IAllocationStrategy,
     IERC20,
     IERC4626Like,
     IOpenTermLoan,
@@ -83,6 +84,17 @@ contract StorageSnapshot {
         uint256 previousUnrealizedLosses;
     }
 
+    struct AllocationStrategyStorage {
+        uint32  previousStrategyDelegateFeeRate;
+        uint32  previousStrategyProtocolFeeRate;
+        uint256 previousAssetsUnderManagement;
+        uint256 previousAvailableToWithdraw;
+        uint256 previousFundsAssetBalance;
+        uint256 previousImpairedAssets;
+        uint256 previousRecordedAssets;
+        uint256 previousTotalDeployedAssets;
+    }
+
     struct SkyStrategyStorage {
         uint32  previousStrategyDelegateFeeRate;
         uint32  previousStrategyProtocolFeeRate;
@@ -124,6 +136,19 @@ contract StorageSnapshot {
         strategyStorage.previousImpairedAssets          = IAaveV3Strategy(strategy).impairedAssets();
         strategyStorage.previousLastRecordedTotalAssets = IAaveV3Strategy(strategy).lastRecordedTotalAssets();
         strategyStorage.previousUnrealizedLosses        = IAaveV3Strategy(strategy).unrealizedLosses();
+    }
+
+    function _snapshotAllocationStrategy(address strategy)
+        internal view returns (AllocationStrategyStorage memory strategyStorage)
+    {
+        strategyStorage.previousStrategyDelegateFeeRate = IAllocationStrategy(strategy).strategyDelegateFeeRate();
+        strategyStorage.previousStrategyProtocolFeeRate = IAllocationStrategy(strategy).strategyProtocolFeeRate();
+        strategyStorage.previousAssetsUnderManagement   = IAllocationStrategy(strategy).assetsUnderManagement();
+        strategyStorage.previousAvailableToWithdraw     = IAllocationStrategy(strategy).availableToWithdraw();
+        strategyStorage.previousFundsAssetBalance       = IERC20(IAllocationStrategy(strategy).fundsAsset()).balanceOf(strategy);
+        strategyStorage.previousImpairedAssets          = IAllocationStrategy(strategy).impairedAssets();
+        strategyStorage.previousRecordedAssets          = IAllocationStrategy(strategy).recordedAssets();
+        strategyStorage.previousTotalDeployedAssets     = IAllocationStrategy(strategy).totalDeployedAssets();
     }
 
     function _snapshotSkyStrategy(address strategy) internal view returns (SkyStrategyStorage memory strategyStorage) {

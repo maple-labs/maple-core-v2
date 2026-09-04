@@ -5,7 +5,7 @@ import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
-contract FundFuzzTests is AaveV3FuzzBase {
+abstract contract FundFuzzTests is AaveV3FuzzBase {
 
     AaveStrategyStorage            strategyStorage;
     FeeAccrualStorage              feeAccrualStorage;
@@ -145,6 +145,22 @@ contract FundFuzzTests is AaveV3FuzzBase {
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses + expectedUnrealizedLossesGain);
 
         assertEq(fundsAsset.balanceOf(address(pool)), poolManagerStorage.previousFundsAssetBalance - fundAmount);
+    }
+
+}
+
+contract FundForkFuzzTests is FundFuzzTests {
+
+    function setUp() public override {
+        _setupForkEnvironment();
+    }
+
+}
+
+contract FundUpgradeForkFuzzTests is FundFuzzTests {
+
+    function setUp() public override {
+        _setupUpgradeForkEnvironment();
     }
 
 }

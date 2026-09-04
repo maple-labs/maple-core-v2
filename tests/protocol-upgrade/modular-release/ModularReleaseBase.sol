@@ -69,18 +69,21 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
 
     uint256 startingTime;
 
-    address[] poolManagers;
+    address[] public poolManagers;
 
     StrategySpecification[] specs;
 
-    mapping(string => address) strategyManagers;
-    mapping(string => address) managedWallets;
+    mapping(string => address) public strategyManagers;
+    mapping(string => address) public managedWallets;
 
     /**************************************************************************************************************************************/
     /*** Upgrade Function                                                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function upgradeProtocol(bool attachAaveAndSkyStrategies) internal {
+    function upgradeProtocol(bool attachAaveAndSkyStrategies) public {
+        // The timelock warps are measured from here, so callers that run the upgrade from a separate instance still line up.
+        startingTime = block.timestamp;
+
         deployContracts();
         configureGlobals();
         upgradeGlobalsAndSetupFactories();

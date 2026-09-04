@@ -5,7 +5,7 @@ import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
-contract RecognizeLossFuzzTests is AaveV3FuzzBase {
+abstract contract RecognizeLossFuzzTests is AaveV3FuzzBase {
 
     AaveStrategyStorage            strategyStorage;
     FeeAccrualStorage              feeAccrualStorage;
@@ -95,6 +95,22 @@ contract RecognizeLossFuzzTests is AaveV3FuzzBase {
 
         assertEq(poolManager.totalAssets(),      poolManagerStorage.previousTotalAssets - positionStorage.previousAssets);
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - positionStorage.previousUnrealizedLosses);
+    }
+
+}
+
+contract RecognizeLossForkFuzzTests is RecognizeLossFuzzTests {
+
+    function setUp() public override {
+        _setupForkEnvironment();
+    }
+
+}
+
+contract RecognizeLossUpgradeForkFuzzTests is RecognizeLossFuzzTests {
+
+    function setUp() public override {
+        _setupUpgradeForkEnvironment();
     }
 
 }

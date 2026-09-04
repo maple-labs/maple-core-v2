@@ -5,7 +5,7 @@ import { IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
-contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
+abstract contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
 
     AaveStrategyStorage            strategyStorage;
     FeeAccrualStorage              feeAccrualStorage;
@@ -159,6 +159,22 @@ contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
         );
 
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - unrealizedLossesDecrease);
+    }
+
+}
+
+contract ProcessRedemptionForkFuzzTests is ProcessRedemptionFuzzTests {
+
+    function setUp() public override {
+        _setupForkEnvironment();
+    }
+
+}
+
+contract ProcessRedemptionUpgradeForkFuzzTests is ProcessRedemptionFuzzTests {
+
+    function setUp() public override {
+        _setupUpgradeForkEnvironment();
     }
 
 }

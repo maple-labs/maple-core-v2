@@ -129,25 +129,25 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     /*** Modular Release - Deployed Contracts                                                                                           ***/
     /**************************************************************************************************************************************/
 
-    address allocationStrategyFactory;
-    address allocationStrategyV100Implementation;
-    address allocationStrategyV100Initializer;
-    address globalsV500Implementation;
-    address liquidityRouterV100;
-    address modularAaveStrategyFactory;
-    address modularAaveStrategyV100Implementation;
-    address modularAaveStrategyV100Initializer;
-    address modularSkyStrategyFactory;
-    address modularSkyStrategyV100Implementation;
-    address modularSkyStrategyV100Initializer;
-    address poolDeployerV500;
-    address poolManagerV500Implementation;
-    address poolManagerV500Initializer;
-    address poolManagerV500Migrator;
-    address strategyDeployerV100;
-    address strategyManagerFactory;
-    address strategyManagerV100Implementation;
-    address strategyManagerV100Initializer;
+    address public allocationStrategyFactory;
+    address public allocationStrategyV100Implementation;
+    address public allocationStrategyV100Initializer;
+    address public globalsV500Implementation;
+    address public liquidityRouterV100;
+    address public modularAaveStrategyFactory;
+    address public modularAaveStrategyV100Implementation;
+    address public modularAaveStrategyV100Initializer;
+    address public modularSkyStrategyFactory;
+    address public modularSkyStrategyV100Implementation;
+    address public modularSkyStrategyV100Initializer;
+    address public poolDeployerV500;
+    address public poolManagerV500Implementation;
+    address public poolManagerV500Initializer;
+    address public poolManagerV500Migrator;
+    address public strategyDeployerV100;
+    address public strategyManagerFactory;
+    address public strategyManagerV100Implementation;
+    address public strategyManagerV100Initializer;
 
     /**************************************************************************************************************************************/
     /*** Modular Release - Strategy Delegates                                                                                           ***/

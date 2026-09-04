@@ -29,11 +29,15 @@ enum LoanAction {
 
 // TODO: Add more strategy managed functions as we develop fuzz tests
 enum AllocationStrategyAction {
+    CancelRedemption,
     DeployAssets,
+    Fund,
     Impair,
+    ProcessRedemption,
     ReturnAssets,
     RemoveImpairment,
     RecognizeLoss,
+    RequestRedeem,
     RealizeYield,
     None
 }
@@ -74,6 +78,11 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     uint256 constant RECOGNIZE_LOSS_FACTOR             = 33;
     uint256 constant REMOVE_STRATEGY_IMPAIRMENT_FACTOR = 75;
     uint256 constant RETURN_ASSETS_FACTOR              = 75;
+
+    uint256 constant ALLOCATION_CANCEL_REDEMPTION_FACTOR  = 50;
+    uint256 constant ALLOCATION_FUND_FACTOR               = 125;
+    uint256 constant ALLOCATION_PROCESS_REDEMPTION_FACTOR = 100;
+    uint256 constant ALLOCATION_REQUEST_REDEEM_FACTOR     = 100;
 
     /**************************************************************************************************************************************/
     /*** Defi strategy factors                                                                                                          ***/
@@ -194,7 +203,8 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         for (uint256 i; i < allocationActionCount; ++i) {
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
 
-            performSomeAllocationStrategyAction();
+            performSomeAllocationStrategyAction(poolManager1);
+            performSomeAllocationStrategyAction(poolManager2);
         }
 
         /**********************************************************************************************************************************/
@@ -260,8 +270,8 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         }
     }
 
-    function performSomeAllocationStrategyAction() internal {
-        AllocationStrategyAction action = getSomeAllocationStrategyAction();
+    function performSomeAllocationStrategyAction(address poolManager_) internal {
+        AllocationStrategyAction action = getSomeAllocationStrategyAction(poolManager_);
 
         if (action == AllocationStrategyAction.DeployAssets) {
             uint256 assets = getSomeValue(1, IAllocationStrategy(allocationUnderlyingStrategyShared).availableToWithdraw());
@@ -310,6 +320,43 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
             recognizeLoss(allocationUnderlyingStrategyShared, managedWalletShared, assets);
             console.log("Loss recognized:", assets);
+        }
+
+        if (action == AllocationStrategyAction.Fund) {
+            uint256 minAssets = getMinimumFundableAssets(allocationStrategyManagerShared);
+            uint256 assets    = getSomeValue(minAssets, fundsAsset.balanceOf(IPoolManager(poolManager_).pool()));
+
+            fundStrategyManager(poolManager_, allocationStrategyManagerShared, assets);
+            console.log("Allocation strategy funded:", assets);
+        }
+
+        if (action == AllocationStrategyAction.RequestRedeem) {
+            IStrategyManager strategyManager = IStrategyManager(allocationStrategyManagerShared);
+
+            uint256 shares = getSomeValue(1, strategyManager.sharesOf(poolManager_) - strategyManager.pendingSharesOf(poolManager_));
+
+            requestRedeemFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+            console.log("Allocation strategy redemption requested:", shares);
+        }
+
+        if (action == AllocationStrategyAction.ProcessRedemption) {
+            IStrategyManager strategyManager = IStrategyManager(allocationStrategyManagerShared);
+
+            uint256 minShares = strategyManager.convertToExitShares(1);
+
+            if (strategyManager.convertToExitAssets(minShares) == 0) ++minShares;
+
+            uint256 shares = getSomeValue(minShares, getMaximumProcessableShares(poolManager_, allocationStrategyManagerShared));
+
+            processRedemptionFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+            console.log("Allocation strategy redemption processed:", shares);
+        }
+
+        if (action == AllocationStrategyAction.CancelRedemption) {
+            uint256 shares = getSomeValue(1, IStrategyManager(allocationStrategyManagerShared).pendingSharesOf(poolManager_));
+
+            cancelRedemptionFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+            console.log("Allocation strategy redemption cancelled:", shares);
         }
     }
 
@@ -510,48 +557,65 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         }
     }
 
-    function getSomeAllocationStrategyAction() internal returns (AllocationStrategyAction) {
-        IAllocationStrategy strategy = IAllocationStrategy(allocationUnderlyingStrategyShared);
+    function getSomeAllocationStrategyAction(address poolManager_) internal returns (AllocationStrategyAction) {
+        IAllocationStrategy strategy        = IAllocationStrategy(allocationUnderlyingStrategyShared);
+        IStrategyManager    strategyManager = IStrategyManager(allocationStrategyManagerShared);
 
         uint256 sumOfFactors;
 
-        bool canDeployAssets             = strategy.availableToWithdraw() > 0;
-        bool canImpairStrategy           = strategy.impairedAssets() < strategy.assetsUnderManagement();
-        bool canReturnAssets             = strategy.deployedAssetsOf(managedWalletShared) > 0;
-        bool canRecognizeLoss            = strategy.deployedAssetsOf(managedWalletShared) > 0;
-        bool canRemoveStrategyImpairment = strategy.impairedAssets() > 0;
-        bool canRealizeYield             = strategy.yieldCooldown() == 0;
+        uint256[] memory factors = new uint256[](10);
 
-        uint256[] memory factors = new uint256[](6);
-
-        if (canDeployAssets) {
+        if (strategy.availableToWithdraw() > 0) {
             factors[uint256(AllocationStrategyAction.DeployAssets)] = DEPLOY_ASSETS_FACTOR;
             sumOfFactors += DEPLOY_ASSETS_FACTOR;
         }
 
-        if (canImpairStrategy) {
+        if (strategy.impairedAssets() < strategy.assetsUnderManagement()) {
             factors[uint256(AllocationStrategyAction.Impair)] = IMPAIR_STRATEGY_FACTOR;
             sumOfFactors += IMPAIR_STRATEGY_FACTOR;
         }
 
-        if (canReturnAssets) {
+        if (strategy.deployedAssetsOf(managedWalletShared) > 0) {
             factors[uint256(AllocationStrategyAction.ReturnAssets)] = RETURN_ASSETS_FACTOR;
             sumOfFactors += RETURN_ASSETS_FACTOR;
         }
 
-        if (canRemoveStrategyImpairment) {
+        if (strategy.impairedAssets() > 0) {
             factors[uint256(AllocationStrategyAction.RemoveImpairment)] = REMOVE_STRATEGY_IMPAIRMENT_FACTOR;
             sumOfFactors += REMOVE_STRATEGY_IMPAIRMENT_FACTOR;
         }
 
-        if (canRecognizeLoss) {
+        if (strategy.deployedAssetsOf(managedWalletShared) > 0) {
             factors[uint256(AllocationStrategyAction.RecognizeLoss)] = RECOGNIZE_LOSS_FACTOR;
             sumOfFactors += RECOGNIZE_LOSS_FACTOR;
         }
 
-        if (canRealizeYield) {
+        if (strategy.yieldCooldown() == 0) {
             factors[uint256(AllocationStrategyAction.RealizeYield)] = REALIZE_YIELD_FACTOR;
             sumOfFactors += REALIZE_YIELD_FACTOR;
+        }
+
+        if (fundsAsset.balanceOf(IPoolManager(poolManager_).pool()) >= getMinimumFundableAssets(address(strategyManager))) {
+            factors[uint256(AllocationStrategyAction.Fund)] = ALLOCATION_FUND_FACTOR;
+            sumOfFactors += ALLOCATION_FUND_FACTOR;
+        }
+
+        if (strategyManager.sharesOf(poolManager_) > strategyManager.pendingSharesOf(poolManager_)) {
+            factors[uint256(AllocationStrategyAction.RequestRedeem)] = ALLOCATION_REQUEST_REDEEM_FACTOR;
+            sumOfFactors += ALLOCATION_REQUEST_REDEEM_FACTOR;
+        }
+
+        if (
+            strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses() &&
+            strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, address(strategyManager))) > 0
+        ) {
+            factors[uint256(AllocationStrategyAction.ProcessRedemption)] = ALLOCATION_PROCESS_REDEMPTION_FACTOR;
+            sumOfFactors += ALLOCATION_PROCESS_REDEMPTION_FACTOR;
+        }
+
+        if (strategyManager.pendingSharesOf(poolManager_) > 0) {
+            factors[uint256(AllocationStrategyAction.CancelRedemption)] = ALLOCATION_CANCEL_REDEMPTION_FACTOR;
+            sumOfFactors += ALLOCATION_CANCEL_REDEMPTION_FACTOR;
         }
 
         // No action can be performed when the strategy holds no assets and has no impairment to remove.
@@ -681,7 +745,13 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
             removeStrategyImpairment(allocationUnderlyingStrategyShared, getSomeValue(1, strategy.impairedAssets()));
         }
 
-        requestRedeemFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+        // Part of the position can already be queued, and only the rest of it can be requested.
+        uint256 pendingShares = strategyManager.pendingSharesOf(poolManager_);
+
+        if (shares > pendingShares) {
+            requestRedeemFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares - pendingShares);
+        }
+
         processRedemptionFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
     }
 
@@ -729,10 +799,22 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
         uint256 totalShares = withdrawalManager.totalShares();
 
-        // There's some rounding in the pools that prevent the last hundred or so shares from being redeemed.
-        if (totalShares > 100) {
-            vm.prank(poolManager.poolDelegate());
-            withdrawalManager.processRedemptions(totalShares - 100);
+        // `processRedemptions` reverts unless passed exactly what current liquidity supports, so mirror its own
+        // liquidity check here first rather than guessing a share count that leaves enough of a buffer.
+        if (totalShares > 0) {
+            uint256 totalSupply_           = IPool(pool_).totalSupply();
+            uint256 totalAssetsWithLosses_ = poolManager.totalAssets() - poolManager.unrealizedLosses();
+            uint256 availableLiquidity_    = fundsAsset.balanceOf(pool_);
+            uint256 requiredLiquidity_     = totalAssetsWithLosses_ * totalShares / totalSupply_;
+
+            uint256 redeemableShares = availableLiquidity_ < requiredLiquidity_
+                ? totalShares * availableLiquidity_ / requiredLiquidity_
+                : totalShares;
+
+            if (redeemableShares > 0) {
+                vm.prank(poolManager.poolDelegate());
+                withdrawalManager.processRedemptions(redeemableShares);
+            }
         }
 
         // Redeem all manually available shares that are currently backed by idle liquidity.
@@ -880,6 +962,57 @@ contract FuzzedSetup is FuzzedUtil {
             deposit(pool1, lps[i], lpDeposit);
             deposit(pool2, lps[i], lpDeposit);
         }
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Shared Strategy Fuzz Helpers                                                                                                   ***/
+    /**************************************************************************************************************************************/
+
+    function expectedFees(address strategy, uint256 grossAssets, uint256 lastRecordedTotalAssets)
+        internal view returns (uint256 delegateFee, uint256 protocolFee)
+    {
+        if (grossAssets <= lastRecordedTotalAssets) return (0, 0);
+
+        uint256 yieldAccrued = grossAssets - lastRecordedTotalAssets;
+
+        delegateFee = mulDivDown(yieldAccrued, IUnderlyingStrategyLike(strategy).strategyDelegateFeeRate(), HUNDRED_PERCENT);
+        protocolFee = mulDivDown(yieldAccrued, IUnderlyingStrategyLike(strategy).strategyProtocolFeeRate(), HUNDRED_PERCENT);
+    }
+
+    // Maximum drift, in assets, between `assetsOf` read back after an action and `previousAssets + assetsMoved`.
+    //
+    // `MapleStrategyManager` divides three times between the two, and the truncations do not cancel:
+    //   1. `_convertToAssets` for `assetsOf` at the snapshot  - truncates under one asset
+    //   2. `_convertToShares` when minting                    - truncates under one SHARE
+    //   3. `_convertToAssets` for `assetsOf` on the read back - truncates under one asset
+    //
+    // 2 dominates, because a truncated share is worth `totalAssets / totalShares` assets rather than one.
+    //
+    // Example: 100 shares over 500 assets, so a share is worth 5 assets. A pool holding 30 shares funds 7 assets.
+    //   1. assetsOf = floor(30 * 500 / 100) = 150
+    //   2. minted   = floor(7 * 100 / 500)  = floor(1.4)    = 1 share, discarding 0.4 shares worth 2 assets
+    //   3. assetsOf = floor(31 * 507 / 101) = floor(155.61) = 155
+    //
+    //   expected = 150 + 7 = 157
+    //   actual             = 155
+    //   drift              =   2
+    //
+    // Worst case is a share lost to 2 plus an asset to 3, so the bound is one share price plus one. 1 works the other way,
+    // lowering the expected value, so the drift is one directional: `assetsOf` is never above what the test expects.
+    function maxShareConversionError(uint256 totalAssets, uint256 totalShares) internal pure returns (uint256 maxError) {
+        maxError = mulDivDown(totalAssets, 1, totalShares) + 1;
+    }
+
+    function mulDivDown(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
+        result = denominator == 0 ? 0 : x * y / denominator;
+    }
+
+    function mulDivUp(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
+        result = denominator == 0 ? 0 : (x * y + denominator - 1) / denominator;
+    }
+
+    function min(uint256 x, uint256 y) internal pure returns (uint256 minimum) {
+        minimum = x < y ? x : y;
     }
 
 }
