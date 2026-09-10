@@ -119,19 +119,19 @@ abstract contract RemoveStrategyManagerFailureTestBase is RemoveStrategyManagerT
     }
 
     function testFork_removeStrategyManager_revert_notOperationalAdmin() external {
-        vm.expectRevert("PM:RSM:NOT_OPERATIONAL_ADMIN");
+        vm.expectRevert("PM:NOT_OPERATIONAL_ADMIN");
         poolManager.removeStrategyManager(strategyManagerToRemove);
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:RSM:NOT_OPERATIONAL_ADMIN");
+        vm.expectRevert("PM:NOT_OPERATIONAL_ADMIN");
         poolManager.removeStrategyManager(strategyManagerToRemove);
 
         vm.prank(governor);
-        vm.expectRevert("PM:RSM:NOT_OPERATIONAL_ADMIN");
+        vm.expectRevert("PM:NOT_OPERATIONAL_ADMIN");
         poolManager.removeStrategyManager(strategyManagerToRemove);
 
         vm.prank(securityAdmin);
-        vm.expectRevert("PM:RSM:NOT_OPERATIONAL_ADMIN");
+        vm.expectRevert("PM:NOT_OPERATIONAL_ADMIN");
         poolManager.removeStrategyManager(strategyManagerToRemove);
     }
 

@@ -93,7 +93,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
 
         address newPD = makeAddr("newPD");
 
-        vm.prank(initialPD);
+        vm.prank(operationalAdmin);
         poolManager.setPendingPoolDelegate(newPD);
 
         vm.prank(governor);

@@ -89,7 +89,7 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
         globals.setValidStrategyDelegate(newStrategyDelegate, true);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
+        vm.prank(operationalAdmin);
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         assertEq(poolManager.poolDelegate(),        poolDelegate);
@@ -197,7 +197,7 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
         /**********************************************************************************************************************************/
 
         vm.prank(poolDelegate);
-        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
+        vm.expectRevert("PM:NOT_OPERATIONAL_ADMIN");
         poolManager.setPendingPoolDelegate(poolDelegate);
 
         vm.prank(poolDelegate);
@@ -304,7 +304,7 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
         globals.setValidStrategyDelegate(newStrategyDelegate, true);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
+        vm.prank(operationalAdmin);
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(newPoolDelegate);
@@ -412,7 +412,7 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
         globals.setValidStrategyDelegate(newStrategyDelegate, true);
         vm.stopPrank();
 
-        vm.prank(poolDelegate);
+        vm.prank(operationalAdmin);
         poolManager.setPendingPoolDelegate(newPoolDelegate);
 
         vm.prank(newPoolDelegate);

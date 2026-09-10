@@ -54,163 +54,45 @@ contract PoolManagerUpgradeTests is TestBase {
         vm.stopPrank();
     }
 
-    function test_upgradePoolManager_noTimelock() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
-
-        vm.startPrank(poolDelegate);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
+    function test_upgradePoolManager_notSecurityAdmin() external {
+        vm.expectRevert("PM:U:NO_AUTH");
         poolManager.upgrade(2, upgradeCallData);
 
-        globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Wait for delay duration.
-        vm.warp(start + 1 weeks);
-
-        poolManager.upgrade(2, upgradeCallData);
-    }
-
-    function test_upgradePoolManager_delayNotPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
-
-        vm.startPrank(poolDelegate);
-
-        globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Warp to right before clearing delay.
-        vm.warp(start + 1 weeks - 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
+        vm.prank(poolDelegate);
+        vm.expectRevert("PM:U:NO_AUTH");
         poolManager.upgrade(2, upgradeCallData);
 
-        vm.warp(start + 1 weeks);
+        vm.prank(governor);
+        vm.expectRevert("PM:U:NO_AUTH");
+        poolManager.upgrade(2, upgradeCallData);
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("PM:U:NO_AUTH");
         poolManager.upgrade(2, upgradeCallData);
     }
 
-    function test_upgradePoolManager_durationPassed() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
-
-        vm.startPrank(poolDelegate);
-
-        globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Warp to right after duration end.
-        vm.warp(start + 1 weeks + 2 days + 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        vm.warp(start + 1 weeks + 2 days);
-        poolManager.upgrade(2, upgradeCallData);
-    }
-
-    function test_upgradePoolManager_timelockExtended() external {
+    function test_upgradePoolManager_scheduledCallDoesNotAuthorizePoolDelegate() external {
         bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
         globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
 
-        // Warp to beginning of timelock duration.
         vm.warp(start + 1 weeks);
-
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Should be valid before we change the timelock settings.
-        assertTrue(isValid);
-
-        vm.prank(governor);
-        globals.setTimelockWindow(address(poolManager), "PM:UPGRADE", 2 weeks, 1 weeks);
-
-        isValid = globals.isValidScheduledCall(poolDelegate, address(poolManager), "PM:UPGRADE", scheduleArgs);
-        assertTrue(!isValid);
-
-        vm.startPrank(poolDelegate);
-
-        // With timelock change, upgrade should now revert.
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Warp to right before duration begin
-        vm.warp(start + 2 weeks - 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Warp to past duration.
-        vm.warp(start + 2 weeks + 1 weeks + 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Warp to right at duration end.
-        vm.warp(start + 2 weeks + 1 weeks);
-
-        poolManager.upgrade(2, upgradeCallData);
-    }
-
-    function test_upgradePoolManager_timelockShortened() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
 
         vm.prank(poolDelegate);
-        globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Warp to beginning of timelock duration.
-        vm.warp(start + 1 weeks);
-
-        bool isValid = globals.isValidScheduledCall(poolDelegate, address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Should be valid before we change the timelock settings.
-        assertTrue(isValid);
-
-        vm.prank(governor);
-        globals.setTimelockWindow(address(poolManager), "PM:UPGRADE", 2 days, 1 days);
-
-        isValid = globals.isValidScheduledCall(poolDelegate, address(poolManager), "PM:UPGRADE", scheduleArgs);
-        assertTrue(!isValid);
-
-        vm.startPrank(poolDelegate);
-
-        // With timelock change, we should be past the duration.
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Warp to right before duration begin
-        vm.warp(start + 2 days - 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Warp to past duration.
-        vm.warp(start + 2 days + 1 days + 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Warp to right at duration end.
-        vm.warp(start + 2 days + 1 days);
-
+        vm.expectRevert("PM:U:NO_AUTH");
         poolManager.upgrade(2, upgradeCallData);
     }
 
-    function test_upgradePoolManager_securityAdmin_noTimelockNeeded() external {
-        bytes memory scheduleArgs = abi.encodeWithSelector(IProxiedLike.upgrade.selector, uint256(2), upgradeCallData);
-
-        vm.startPrank(poolDelegate);
-
-        globals.scheduleCall(address(poolManager), "PM:UPGRADE", scheduleArgs);
-
-        // Warp to right before clearing delay.
-        vm.warp(start + 1 weeks - 1);
-
-        vm.expectRevert("PM:U:INVALID_SCHED_CALL");
-        poolManager.upgrade(2, upgradeCallData);
-
-        // Call upgrade using governor instead, unaffected by pool delegate's scheduled timelock.
-        vm.stopPrank();
+    function test_upgradePoolManager_asSecurityAdmin() external {
+        assertTrue(IProxiedLike(address(poolManager)).implementation() != newImplementation);
 
         vm.prank(securityAdmin);
         poolManager.upgrade(2, upgradeCallData);
+
+        assertEq(IProxiedLike(address(poolManager)).implementation(), newImplementation);
     }
+
 }
 
 contract LoanManagerUpgradeTests is TestBase {
