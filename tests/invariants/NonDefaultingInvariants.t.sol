@@ -96,11 +96,13 @@ contract NonDefaultingInvariants is BaseInvariants {
     }
 
     function statefulFuzz_nonDefaultingInvariants() external {
-        assert_pool_invariants_all();
-        assert_pool_manager_invariants();
+        assert_pool_invariants_all(address(pool));
+        assert_pool_manager_invariants(address(poolManager));
 
-        assert_otl_invariants();
-        assert_otlm_invariants_A_B_C_D_E_F_G_H_I_J_L_M();
+        address[] memory loans = _getActiveLoans();
+
+        assert_otl_invariants(loans);
+        assert_otlm_invariants_A_B_C_D_E_F_G_H_I_J_K_L_M(address(otlHandler.loanManager()), loans);
 
         assert_wm_queue_invariants(address(queueWM), lps);
     }

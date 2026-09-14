@@ -51,7 +51,7 @@ contract PermissionInvariants is BaseInvariants {
     }
 
     function statefulFuzz_permissionManager_invariants() external view {
-        assert_ppm_invariants();
+        assert_ppm_invariants(address(poolPermissionManager));
     }
 
 }

@@ -119,11 +119,13 @@ contract DefaultingInvariants is BaseInvariants {
     ***************************************************************************************************************************************/
 
     function statefulFuzz_defaultingInvariants() external {
-        assert_pool_invariants_A_B_D_E_G_I_J_K();
-        assert_pool_manager_invariants();
+        assert_pool_invariants_A_B_D_E_G_I_J_K(address(pool));
+        assert_pool_manager_invariants(address(poolManager));
 
-        assert_otl_invariants();
-        assert_otlm_invariants_B_C_F_H_I_J_L_M();
+        address[] memory loans = _getActiveLoans();
+
+        assert_otl_invariants(loans);
+        assert_otlm_invariants_B_C_F_H_I_J_K_L_M(address(otlHandler.loanManager()), loans);
 
         assert_wm_queue_invariants(address(queueWM), lps);
     }
