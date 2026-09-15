@@ -168,7 +168,7 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         actions[0].amount     = redemptionShares;
 
         vm.prank(liquidityRouterBot);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         liquidityRouter.executeActions(actions, block.timestamp);
 
         vm.prank(liquidityBot);

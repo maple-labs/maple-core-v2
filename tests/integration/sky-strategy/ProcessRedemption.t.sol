@@ -38,7 +38,7 @@ contract SkyStrategyProcessRedemptionFailureTests is SkyStrategyTestBase {
 
     function testFork_processRedemption_failWhenNotOperator() external {
         vm.prank(makeAddr("notOperator"));
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(skyStrategyManager).processRedemption(address(poolManager), 1, "");
     }
 
@@ -49,7 +49,7 @@ contract SkyStrategyProcessRedemptionFailureTests is SkyStrategyTestBase {
         impairStrategy(skyUnderlyingStrategy, 1);
 
         vm.prank(liquidityBot);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(skyStrategyManager).processRedemption(address(poolManager), 1, "");
     }
 
@@ -60,7 +60,7 @@ contract SkyStrategyProcessRedemptionFailureTests is SkyStrategyTestBase {
         impairStrategy(skyUnderlyingStrategy, 1);
 
         vm.prank(address(liquidityRouter));
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(skyStrategyManager).processRedemption(address(poolManager), 1, "");
     }
 

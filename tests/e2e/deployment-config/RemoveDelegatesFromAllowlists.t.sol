@@ -209,7 +209,7 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
         IStrategyManager(allocationStrategyManager).setPoolManagerCap(address(poolManager), 0);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(allocationStrategyManager).processRedemption(address(poolManager), redemptionShares, "");
 
         /**********************************************************************************************************************************/

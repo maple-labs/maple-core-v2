@@ -127,3 +127,21 @@ contract FakePoolManager {
     }
 
 }
+
+contract MockMultisig {
+
+    function execute(address[] calldata targets_, bytes[] calldata calls_) external {
+        require(targets_.length == calls_.length, "MM:E:LENGTH_MISMATCH");
+
+        for (uint256 i; i < targets_.length; ++i) {
+            ( bool success_, bytes memory returnData_ ) = targets_[i].call(calls_[i]);
+
+            if (!success_) {
+                assembly {
+                    revert(add(32, returnData_), mload(returnData_))
+                }
+            }
+        }
+    }
+
+}

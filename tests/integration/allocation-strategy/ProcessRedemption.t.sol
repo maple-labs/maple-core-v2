@@ -42,13 +42,13 @@ contract AllocationStrategyProcessRedemptionFailureTests is AllocationStrategyPr
     }
 
     function test_processRedemption_revert_notOperator() external {
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(strategyManager).processRedemption(address(poolManager), INITIAL_LIQUIDITY, "");
     }
 
     function test_processRedemption_revert_poolDelegate() external {
         vm.prank(poolDelegate);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(strategyManager).processRedemption(address(poolManager), INITIAL_LIQUIDITY, "");
     }
 
@@ -61,7 +61,7 @@ contract AllocationStrategyProcessRedemptionFailureTests is AllocationStrategyPr
         impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
         vm.prank(liquidityBot);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(strategyManager).processRedemption(address(poolManager), INITIAL_LIQUIDITY, "");
     }
 
@@ -84,7 +84,7 @@ contract AllocationStrategyProcessRedemptionFailureTests is AllocationStrategyPr
         });
 
         vm.prank(liquidityRouterBot);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         liquidityRouter.executeActions(actions, block.timestamp);
     }
 

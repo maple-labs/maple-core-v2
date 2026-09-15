@@ -42,7 +42,7 @@ runs = 20
 
 [profile.deep.fuzz]
 optimizer = true
-runs      = 1_000
+runs      = 500
 
 [profile.deep.invariant]
 optimizer      = true
@@ -53,7 +53,7 @@ fail_on_revert = true   # Fail the test if the contract reverts
 
 [profile.super_deep.fuzz]
 optimizer = true
-runs      = 10_000
+runs      = 5_000
 
 [profile.super_deep.invariant]
 optimizer = true

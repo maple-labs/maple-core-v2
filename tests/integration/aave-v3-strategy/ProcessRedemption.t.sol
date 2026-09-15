@@ -37,7 +37,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
 
     function testFork_processRedemption_failWhenNotOperator() external {
         vm.prank(makeAddr("notOperator"));
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(aaveV3StrategyManager).processRedemption(address(poolManager), 1, "");
     }
 
@@ -48,7 +48,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
         impairStrategy(aaveV3UnderlyingStrategy, 1);
 
         vm.prank(liquidityBot);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(aaveV3StrategyManager).processRedemption(address(poolManager), 1, "");
     }
 
@@ -59,7 +59,7 @@ contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
         impairStrategy(aaveV3UnderlyingStrategy, 1);
 
         vm.prank(liquidityRouterBot);
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_OA");
         IStrategyManager(aaveV3StrategyManager).processRedemption(address(poolManager), 1, "");
     }
 

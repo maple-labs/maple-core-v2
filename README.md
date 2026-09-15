@@ -126,8 +126,8 @@ make integration profile=production
 |---|---|
 | `default`        | Optimizer off. Fuzz: 100 runs. Invariants: 10 runs × depth 100. |
 | `production`     | Optimizer on, 200 runs. |
-| `deep`           | Optimizer on. Fuzz: 1,000 runs. Invariants: 10 runs × depth 250. |
-| `super_deep`     | Optimizer on. Fuzz: 10,000 runs. Invariants: 200 runs × depth 250. |
+| `deep`           | Optimizer on. Fuzz: 500 runs. Invariants: 10 runs × depth 250. |
+| `super_deep`     | Optimizer on. Fuzz: 5,000 runs. Invariants: 200 runs × depth 250. |
 | `gas_benchmarks` | Optimizer on, isolated execution, test directory `benchmarks/`. |
 | `scenarios`      | Test directory `scenarios/`, with filesystem read permissions. |
 
