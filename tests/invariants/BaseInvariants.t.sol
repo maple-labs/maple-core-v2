@@ -1284,18 +1284,23 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_allocationStrategy_invariants(
         address strategy_,
-        address[] memory wallets_,
         uint256 fundings_,
         uint256 yield_,
         uint256 withdrawals_,
         uint256 fees_,
-        uint256 losses_
+        uint256 losses_,
+        AllocationStrategyHandler.ManagedWalletInfo[] memory walletInfo_
     )
         internal view
     {
         assert_allocationStrategy_invariant_A(strategy_, fundings_, yield_, withdrawals_, fees_, losses_);
         assert_allocationStrategy_invariant_B(strategy_);
-        assert_allocationStrategy_invariant_C(strategy_, wallets_);
+        assert_allocationStrategy_invariant_C(strategy_, walletInfo_);
+
+        for (uint256 i; i < walletInfo_.length; ++i) {
+            assert_allocationStrategy_invariant_D(strategy_, walletInfo_[i]);
+        }
+
         assert_allocationStrategy_invariant_E(strategy_);
         assert_allocationStrategy_invariant_F(strategy_);
         assert_allocationStrategy_invariant_G(strategy_);
@@ -1331,11 +1336,16 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         );
     }
 
-    function assert_allocationStrategy_invariant_C(address strategy_, address[] memory wallets_) internal view {
+    function assert_allocationStrategy_invariant_C(
+        address strategy_,
+        AllocationStrategyHandler.ManagedWalletInfo[] memory walletInfo_
+    )
+        internal view
+    {
         uint256 sumDeployed;
 
-        for (uint256 i; i < wallets_.length; ++i) {
-            sumDeployed += IAllocationStrategy(strategy_).deployedAssetsOf(wallets_[i]);
+        for (uint256 i; i < walletInfo_.length; ++i) {
+            sumDeployed += IAllocationStrategy(strategy_).deployedAssetsOf(walletInfo_[i].wallet);
         }
 
         assertEq(IAllocationStrategy(strategy_).totalDeployedAssets(), sumDeployed, "Allocation Invariant C");
@@ -1343,16 +1353,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_allocationStrategy_invariant_D(
         address strategy_,
-        address wallet_,
-        uint256 deployed_,
-        uint256 returned_,
-        uint256 lost_
+        AllocationStrategyHandler.ManagedWalletInfo memory walletInfo_
     )
         internal view
     {
-        uint256 expectedDeployedAssets = deployed_ - returned_ - lost_;
+        uint256 expectedDeployedAssets = walletInfo_.deployed - walletInfo_.returned - walletInfo_.lost;
 
-        assertEq(IAllocationStrategy(strategy_).deployedAssetsOf(wallet_), expectedDeployedAssets, "Allocation Invariant D");
+        assertEq(IAllocationStrategy(strategy_).deployedAssetsOf(walletInfo_.wallet), expectedDeployedAssets, "Allocation Invariant D");
     }
 
     function assert_allocationStrategy_invariant_E(address strategy_) internal view {

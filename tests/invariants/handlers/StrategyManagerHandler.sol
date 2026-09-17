@@ -63,6 +63,11 @@ contract StrategyManagerHandler is HandlerBase {
 
         uint256 assets_ = _bound(_randomize(seed_, "assets"), 1, maxAssets_);
 
+        if (IStrategyManager(strategyManager_).convertToShares(assets_) == 0) {
+            _recordSkip();
+            return;
+        }
+
         _syncYieldAndFees(strategyManager_);
 
         fundStrategyManager(poolManager_, strategyManager_, assets_);

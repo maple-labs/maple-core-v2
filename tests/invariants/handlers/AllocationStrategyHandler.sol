@@ -10,6 +10,17 @@ import { HandlerBase } from "./HandlerBase.sol";
 contract AllocationStrategyHandler is HandlerBase {
 
     /**************************************************************************************************************************************/
+    /*** Structs                                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    struct ManagedWalletInfo {
+        address wallet;
+        uint256 deployed;
+        uint256 returned;
+        uint256 lost;
+    }
+
+    /**************************************************************************************************************************************/
     /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
@@ -188,8 +199,20 @@ contract AllocationStrategyHandler is HandlerBase {
     /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    // NOTE: Does nothing since yield and fees are already accounted for.
-    function _syncYieldAndFees() public {}
+    function getManagedWalletInfo() external view returns (ManagedWalletInfo[] memory walletInfo_) {
+        walletInfo_ = new ManagedWalletInfo[](managedWallets.length);
+
+        for (uint256 i; i < managedWallets.length; i++) {
+            address managedWallet_ = managedWallets[i];
+
+            walletInfo_[i] = ManagedWalletInfo({
+                wallet:   managedWallet_,
+                deployed: totalDeployedOf[managedWallet_],
+                returned: totalReturnedOf[managedWallet_],
+                lost:     totalLostOf[managedWallet_]
+            });
+        }
+    }
 
     function _selectManagedWallet(uint256 seed_) internal view returns (address managedWallet_) {
         managedWallet_ = managedWallets[_bound(seed_, 0, managedWallets.length - 1)];
@@ -211,5 +234,8 @@ contract AllocationStrategyHandler is HandlerBase {
         managedWallet_  = candidates_[_bound(seed_, 0, count_ - 1)];
         deployedAssets_ = underlyingStrategy.deployedAssetsOf(managedWallet_);
     }
+
+    // NOTE: Does nothing since yield and fees are already accounted for.
+    function _syncYieldAndFees() public {}
 
 }
