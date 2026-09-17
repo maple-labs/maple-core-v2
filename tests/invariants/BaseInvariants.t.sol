@@ -24,16 +24,20 @@ import {
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { DepositHandler }         from "./handlers/DepositHandler.sol";
-import { OpenTermLoanHandler }    from "./handlers/OpenTermLoanHandler.sol";
-import { PermissionHandler }      from "./handlers/PermissionHandler.sol";
-import { QueueWithdrawalHandler } from "./handlers/QueueWithdrawalHandler.sol";
-import { TransferHandler }        from "./handlers/TransferHandler.sol";
+import { AaveV3StrategyHandler }     from "./handlers/AaveV3StrategyHandler.sol";
+import { AllocationStrategyHandler } from "./handlers/AllocationStrategyHandler.sol";
+import { DepositHandler }            from "./handlers/DepositHandler.sol";
+import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
+import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
+import { SkyStrategyHandler }        from "./handlers/SkyStrategyHandler.sol";
+import { StrategyManagerHandler }    from "./handlers/StrategyManagerHandler.sol";
+import { TransferHandler }           from "./handlers/TransferHandler.sol";
+import { WithdrawalHandler }         from "./handlers/WithdrawalHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     /**************************************************************************************************************************************/
-    /*** State Variables                                                                                                                ***/
+    /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
     // NOTE: OTLM invariant K accumulates ~1 wei of rounding per interest-accounting event (fund/payment/refinance/impair).
@@ -43,11 +47,19 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant PUBLIC               = 3;
     uint256 constant MAXIMUM_BITMAP       = 2 ** 16 - 1;
 
-    DepositHandler         depositHandler;
-    OpenTermLoanHandler    otlHandler;
-    PermissionHandler      permissionHandler;
-    QueueWithdrawalHandler queueWithdrawalHandler;
-    TransferHandler        transferHandler;
+    /**************************************************************************************************************************************/
+    /*** State Variables                                                                                                                ***/
+    /**************************************************************************************************************************************/
+
+    AaveV3StrategyHandler     aaveV3StrategyHandler;
+    AllocationStrategyHandler allocationStrategyHandler;
+    DepositHandler            depositHandler;
+    OpenTermLoanHandler       otlHandler;
+    PermissionHandler         permissionHandler;
+    SkyStrategyHandler        skyStrategyHandler;
+    StrategyManagerHandler    strategyManagerHandler;
+    TransferHandler           transferHandler;
+    WithdrawalHandler         withdrawalHandler;
 
     address[] lps;
 
@@ -188,8 +200,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         address withdrawalManager = IPoolManager(IPool(pool_).manager()).withdrawalManager();
 
-        uint256 sumBalanceOf;
-        uint256 sumBalanceOfAssets;
+        uint256 sumBalanceOf       = IPool(pool_).balanceOf(address(0));
+        uint256 sumBalanceOfAssets = IPool(pool_).balanceOfAssets(address(0));
 
         for (uint256 i; i < lps.length; ++i) {
             sumBalanceOfAssets += IPool(pool_).balanceOfAssets(lps[i]);
@@ -220,7 +232,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_pool_invariant_B(address pool_, uint256 sumBalanceOfAssets) internal view {
         assertGe(IPool(pool_).totalAssets(), sumBalanceOfAssets, "Pool Invariant B1");
 
-        assertApproxEqAbs(IPool(pool_).totalAssets(), sumBalanceOfAssets, lps.length, "Pool Invariant B2");
+        assertApproxEqAbs(IPool(pool_).totalAssets(), sumBalanceOfAssets, lps.length + 1, "Pool Invariant B2");
     }
 
     function assert_pool_invariant_C(address pool_) internal view {
@@ -968,7 +980,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_strategyManager_invariant_C(address strategyManager_, address[] memory poolManagers_) internal view {
-        uint256 sumShares;
+        uint256 sumShares = IStrategyManager(strategyManager_).sharesOf(address(0));
 
         for (uint256 i; i < poolManagers_.length; ++i) {
             sumShares += IStrategyManager(strategyManager_).sharesOf(poolManagers_[i]);
@@ -1026,7 +1038,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_strategyManager_invariant_I(address strategyManager_, address[] memory poolManagers_) internal view {
-        uint256 sumUnrealizedLossesOf;
+        uint256 sumUnrealizedLossesOf = IStrategyManager(strategyManager_).unrealizedLossesOf(address(0));
 
         for (uint256 i; i < poolManagers_.length; ++i) {
             sumUnrealizedLossesOf += IStrategyManager(strategyManager_).unrealizedLossesOf(poolManagers_[i]);

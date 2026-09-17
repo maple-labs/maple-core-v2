@@ -107,8 +107,12 @@ contract TestBase is ProtocolActions, Utils {
     uint32  startingTime;
     uint256 start;
 
-    address[] strategyFactories;
+    address[] managedWallets;
+    address[] pools;
     address[] poolManagers;
+    address[] strategyFactories;
+    address[] strategyManagers;
+    address[] withdrawalManagers;
 
     bytes32[] functionIds;
 
@@ -187,10 +191,12 @@ contract TestBase is ProtocolActions, Utils {
             delegateManagementFeeRate_: 0
         }));
 
-        poolManagers.push(address(poolManager));
-
-        queueWM = IWithdrawalManagerQueue(poolManager.withdrawalManager());
         pool    = IPool(poolManager.pool());
+        queueWM = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+
+        pools.push(address(pool));
+        poolManagers.push(address(poolManager));
+        withdrawalManagers.push(address(queueWM));
 
         pool_ = address(pool);
         pm_   = address(poolManager);
@@ -264,6 +270,23 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);
+
+        strategyManagers.push(strategyManager_);
+    }
+
+    function _setManagedWallet(
+        address strategy_,
+        address managedWallet_,
+        bool    canDeployAssets_,
+        bool    canReturnAssets_,
+        bool    canRealizeYield_,
+        uint256 deploymentCap_
+    )
+        internal
+    {
+        setManagedWallet(strategy_, managedWallet_, canDeployAssets_, canReturnAssets_, canRealizeYield_, deploymentCap_);
+
+        managedWallets.push(managedWallet_);
     }
 
     function _deployAaveV3Strategy(
@@ -309,6 +332,8 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);
+
+        strategyManagers.push(strategyManager_);
     }
 
     function _deploySkyStrategy(
@@ -357,6 +382,8 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(governor);
         globals.activateStrategyManager(strategyManager_);
+
+        strategyManagers.push(strategyManager_);
     }
 
     /**************************************************************************************************************************************/

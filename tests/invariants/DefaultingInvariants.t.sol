@@ -3,18 +3,18 @@ pragma solidity ^0.8.7;
 
 import { console } from "../../contracts/Runner.sol";
 
-import { DepositHandler }            from "./handlers/DepositHandler.sol";
-import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
-import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
-import { TransferHandler }           from "./handlers/TransferHandler.sol";
-import { QueueWithdrawalHandler }    from "./handlers/QueueWithdrawalHandler.sol";
+import { DepositHandler }      from "./handlers/DepositHandler.sol";
+import { DistributionHandler } from "./handlers/DistributionHandler.sol";
+import { OpenTermLoanHandler } from "./handlers/OpenTermLoanHandler.sol";
+import { TransferHandler }     from "./handlers/TransferHandler.sol";
+import { WithdrawalHandler }   from "./handlers/WithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
 contract DefaultingInvariants is BaseInvariants {
 
     /**************************************************************************************************************************************/
-    /*** State Variables                                                                                                                ***/
+    /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
     uint256 constant NUM_BORROWERS = 5;
@@ -44,11 +44,12 @@ contract DefaultingInvariants is BaseInvariants {
             platformManagementFeeRate:  0.08e6
         });
 
-        depositHandler         = new DepositHandler(address(pool), lps);
-        transferHandler        = new TransferHandler(address(pool), lps);
-        queueWithdrawalHandler = new QueueWithdrawalHandler(address(pool), lps);
+        depositHandler    = new DepositHandler("depositHandler", pools, lps);
+        transferHandler   = new TransferHandler("transferHandler", pools, lps);
+        withdrawalHandler = new WithdrawalHandler("withdrawalHandler", pools, lps);
 
         otlHandler = new OpenTermLoanHandler({
+            handlerName_:       "otlHandler",
             loanFactory_:       address(openTermLoanFactory),
             liquidatorFactory_: address(liquidatorFactory),
             poolManager_:       address(poolManager),
@@ -57,33 +58,33 @@ contract DefaultingInvariants is BaseInvariants {
             maxLoans_:          NUM_OT_LOANS
         });
 
-        depositHandler.setSelectorWeight("deposit(uint256)", 7_500);
-        depositHandler.setSelectorWeight("mint(uint256)",    2_500);
+        depositHandler.addAction("deposit(uint256)", 7_500);
+        depositHandler.addAction("mint(uint256)",    2_500);
 
-        transferHandler.setSelectorWeight("transfer(uint256)", 10_000);
+        transferHandler.addAction("transfer(uint256)", 10_000);
 
-        queueWithdrawalHandler.setSelectorWeight("processRedemptions(uint256)",      2_700);
-        queueWithdrawalHandler.setSelectorWeight("processEmptyRedemptions(uint256)", 300);
-        queueWithdrawalHandler.setSelectorWeight("redeem(uint256)",                  1_000);
-        queueWithdrawalHandler.setSelectorWeight("removeRequest(uint256)",           1_000);
-        queueWithdrawalHandler.setSelectorWeight("removeShares(uint256)",            500);
-        queueWithdrawalHandler.setSelectorWeight("removeSharesById(uint256)",        500);
-        queueWithdrawalHandler.setSelectorWeight("requestRedeem(uint256)",           3_000);
-        queueWithdrawalHandler.setSelectorWeight("setManualWithdrawal(uint256)",     1_000);
+        withdrawalHandler.addAction("processRedemptions(uint256)",      2_700);
+        withdrawalHandler.addAction("processEmptyRedemptions(uint256)", 300);
+        withdrawalHandler.addAction("redeem(uint256)",                  1_000);
+        withdrawalHandler.addAction("removeRequest(uint256)",           1_000);
+        withdrawalHandler.addAction("removeShares(uint256)",            500);
+        withdrawalHandler.addAction("removeSharesById(uint256)",        500);
+        withdrawalHandler.addAction("requestRedeem(uint256)",           3_000);
+        withdrawalHandler.addAction("setManualWithdrawal(uint256)",     1_000);
 
-        otlHandler.setSelectorWeight("callLoan(uint256)",             1_000);
-        otlHandler.setSelectorWeight("fundLoan(uint256)",             1_000);
-        otlHandler.setSelectorWeight("impairLoan(uint256)",           1_000);
-        otlHandler.setSelectorWeight("makePayment(uint256)",          2_500);
-        otlHandler.setSelectorWeight("refinance(uint256)",            1_000);
-        otlHandler.setSelectorWeight("removeLoanCall(uint256)",       1_000);
-        otlHandler.setSelectorWeight("removeLoanImpairment(uint256)", 1_000);
-        otlHandler.setSelectorWeight("triggerDefault(uint256)",       1_500);
+        otlHandler.addAction("callLoan(uint256)",             1_000);
+        otlHandler.addAction("fundLoan(uint256)",             1_000);
+        otlHandler.addAction("impairLoan(uint256)",           1_000);
+        otlHandler.addAction("makePayment(uint256)",          2_500);
+        otlHandler.addAction("refinance(uint256)",            1_000);
+        otlHandler.addAction("removeLoanCall(uint256)",       1_000);
+        otlHandler.addAction("removeLoanImpairment(uint256)", 1_000);
+        otlHandler.addAction("triggerDefault(uint256)",       1_500);
 
         address[] memory targetContracts = new address[](4);
         targetContracts[0] = address(transferHandler);
         targetContracts[1] = address(depositHandler);
-        targetContracts[2] = address(queueWithdrawalHandler);
+        targetContracts[2] = address(withdrawalHandler);
         targetContracts[3] = address(otlHandler);
 
         uint256[] memory weightsDistributorHandler = new uint256[](4);

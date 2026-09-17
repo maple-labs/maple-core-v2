@@ -414,6 +414,8 @@ interface IUnderlyingStrategyLike {
 
     function impairedAssets() external view returns (uint256 impairedAssets);
 
+    function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
+
     function removeImpairment(uint256 amount) external;
 
     function strategyDelegate() external view returns (address strategyDelegate);
@@ -529,5 +531,11 @@ interface IMockERC20 is IERC20 {
 
     // NOTE: Implemented by `ConfigurableMockERC20`, might not be available for all instances.
     function __failWhenCalledBy(address caller_) external;
+
+}
+
+interface IStrategyHandler {
+
+    function _syncYieldAndFees() external;
 
 }

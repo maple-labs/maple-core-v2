@@ -8,6 +8,10 @@ import { BaseInvariants } from "./BaseInvariants.t.sol";
 
 contract PermissionInvariants is BaseInvariants {
 
+    /**************************************************************************************************************************************/
+    /*** Constants                                                                                                                      ***/
+    /**************************************************************************************************************************************/
+
     uint256 constant NUM_LPS = 100;
 
     /**************************************************************************************************************************************/
@@ -33,11 +37,18 @@ contract PermissionInvariants is BaseInvariants {
         functionIds.push("P:requestRedeem");
         functionIds.push("P:requestWithdraw");
 
-        permissionHandler = new PermissionHandler(address(poolPermissionManager), address(globals), lps, poolManagers, functionIds);
+        permissionHandler = new PermissionHandler({
+            handlerName_:           "permissionHandler",
+            poolPermissionManager_: address(poolPermissionManager),
+            globals_:               address(globals),
+            lenders_:               lps,
+            poolManagers_:          poolManagers,
+            functionIds_:           functionIds
+        });
 
-        permissionHandler.setSelectorWeight("setPoolPermissionLevel(uint256)", 1_000);
-        permissionHandler.setSelectorWeight("setLenderBitmaps(uint256)",       7_000);
-        permissionHandler.setSelectorWeight("setPoolBitmaps(uint256)",         2_000);
+        permissionHandler.addAction("setPoolPermissionLevel(uint256)", 1_000);
+        permissionHandler.addAction("setLenderBitmaps(uint256)",       7_000);
+        permissionHandler.addAction("setPoolBitmaps(uint256)",         2_000);
 
         address[] memory targetContracts = new address[](1);
         targetContracts[0] = address(permissionHandler);

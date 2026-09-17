@@ -3,16 +3,22 @@ pragma solidity ^0.8.7;
 
 import { IGlobals, IPoolPermissionManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console } from "../../../contracts/Runner.sol";
-
 import { HandlerBase } from "./HandlerBase.sol";
 
 contract PermissionHandler is HandlerBase {
+
+    /**************************************************************************************************************************************/
+    /*** Constants                                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     uint256 constant MAX_BITMAP = 1e4;
     uint256 constant MIN_DEPTH  = 20;
     uint256 constant POOL_LEVEL = 2;
     uint256 constant PUBLIC     = 3;
+
+    /**************************************************************************************************************************************/
+    /*** State Variables                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
     address governor;
 
@@ -23,13 +29,19 @@ contract PermissionHandler is HandlerBase {
 
     IPoolPermissionManager public ppm;
 
+    /**************************************************************************************************************************************/
+    /*** Constructor                                                                                                                    ***/
+    /**************************************************************************************************************************************/
+
     constructor(
+        string    memory handlerName_,
         address   poolPermissionManager_,
         address   globals_,
         address[] memory lenders_,
         address[] memory poolManagers_,
         bytes32[] memory functionIds_
     )
+        HandlerBase(handlerName_)
     {
         ppm      = IPoolPermissionManager(poolPermissionManager_);
         governor = IGlobals(globals_).governor();
@@ -44,56 +56,50 @@ contract PermissionHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function setLenderBitmaps(uint256 seed_) public {
-        console.log("setLenderBitmaps(%s)", seed_);
-        numberOfCalls["setLenderBitmaps"]++;
-
-        uint256[] memory bitmaps = selectBitmaps(seed_, lenders.length);
+        uint256[] memory bitmaps = _selectBitmaps(seed_, lenders.length);
 
         vm.prank(governor);
         ppm.setLenderBitmaps(lenders, bitmaps);
     }
 
     function setPoolBitmaps(uint256 seed_) public {
-        console.log("setPoolBitmaps(%s)", seed_);
-        numberOfCalls["setPoolBitmaps"]++;
-
-        address poolManager      = selectPoolManager(seed_);
-        uint256[] memory bitmaps = selectBitmaps(seed_, functionIds.length);
+        address poolManager      = _selectPoolManager(seed_);
+        uint256[] memory bitmaps = _selectBitmaps(seed_, functionIds.length);
 
         vm.prank(governor);
         ppm.setPoolBitmaps(poolManager, functionIds, bitmaps);
     }
 
     function setPoolPermissionLevel(uint256 seed_) public {
-        console.log("setPoolPermissionLevel(%s)", seed_);
-        numberOfCalls["setPoolPermissionLevel"]++;
+        address poolManager     = _selectPoolManager(seed_);
+        uint256 permissionLevel = _selectPermissionLevel(seed_, numberOfCalls[_actionName()]);
 
-        address poolManager     = selectPoolManager(seed_);
-        uint256 permissionLevel = selectPermissionLevel(seed_);
-
-        if (ppm.permissionLevels(poolManager) == PUBLIC) return;
+        if (ppm.permissionLevels(poolManager) == PUBLIC) {
+            _recordSkip();
+            return;
+        }
 
         vm.prank(governor);
         ppm.setPoolPermissionLevel(poolManager, permissionLevel);
     }
 
     /**************************************************************************************************************************************/
-    /*** Utility Functions                                                                                                              ***/
+    /*** Helpers                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function selectPoolManager(uint256 seed_) internal view returns (address poolManager_) {
+    function _selectPoolManager(uint256 seed_) internal view returns (address poolManager_) {
         uint256 index = _bound(seed_, 0, poolManagers.length - 1);
 
         poolManager_ = poolManagers[index];
     }
 
-    function selectPermissionLevel(uint256 seed_) internal view returns (uint256 permissionLevel_) {
-        uint256 maxPermissionLevel = numberOfCalls["setPoolPermissionLevel"] > 20 ? PUBLIC : POOL_LEVEL;
+    function _selectPermissionLevel(uint256 seed_, uint256 numberOfCalls_) internal pure returns (uint256 permissionLevel_) {
+        uint256 maxPermissionLevel = numberOfCalls_ > 20 ? PUBLIC : POOL_LEVEL;
 
         permissionLevel_ = _bound(seed_, 0, maxPermissionLevel);
     }
 
-    function selectBitmaps(uint256 seed_, uint256 size_) internal pure returns (uint256[] memory bitmaps) {
+    function _selectBitmaps(uint256 seed_, uint256 size_) internal pure returns (uint256[] memory bitmaps) {
         bitmaps = new uint256[](size_);
 
         for (uint256 i; i < size_; i++) {

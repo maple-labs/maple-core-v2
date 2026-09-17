@@ -829,6 +829,13 @@ contract ProtocolActions is Runner {
         IStrategyManager(strategyManager_).cancelRedemption(poolManager_, shares_);
     }
 
+    function cancelYield(address strategy_, uint256 amount_, address recipient_) internal {
+        address strategyDelegate_ = IAllocationStrategy(strategy_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IAllocationStrategy(strategy_).cancelYield(amount_, recipient_);
+    }
+
     function deployAssets(address strategy_, address managedWallet_, uint256 amount_) internal {
         vm.prank(managedWallet_);
         IAllocationStrategy(strategy_).deployAssets(amount_, "");

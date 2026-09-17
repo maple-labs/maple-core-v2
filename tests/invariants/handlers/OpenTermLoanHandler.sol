@@ -13,8 +13,6 @@ import {
     IWithdrawalManagerQueue as IWithdrawalManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { console } from "../../../contracts/Runner.sol";
-
 import { HandlerBase } from "./HandlerBase.sol";
 
 contract OpenTermLoanHandler is HandlerBase {
@@ -50,6 +48,7 @@ contract OpenTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(
+        string  memory handlerName_,
         address loanFactory_,
         address liquidatorFactory_,
         address poolManager_,
@@ -57,6 +56,7 @@ contract OpenTermLoanHandler is HandlerBase {
         uint256 maxBorrowers_,
         uint256 maxLoans_
     )
+        HandlerBase(handlerName_)
     {
         loanFactory       = IMapleProxyFactory(loanFactory_);
         liquidatorFactory = IMapleProxyFactory(liquidatorFactory_);
@@ -83,13 +83,12 @@ contract OpenTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function callLoan(uint256 seed_) external {
-        console.log("otlHandler.callLoan(%s)", seed_);
-
-        numberOfCalls["callLoan"]++;
-
         address loan_ = _selectActiveLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         uint256 principal_ = _bound(_hash(seed_, ""), 1, IOpenTermLoan(loan_).principal());
 
@@ -97,28 +96,33 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function fundLoan(uint256 seed_) public {
-        console.log("otlHandler.fundLoan(%s)", seed_);
-
-        numberOfCalls["fundLoan"]++;
-
         address loan_ = _createLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         fundLoan(loan_);
     }
 
     function impairLoan(uint256 seed_) external {
-        console.log("otlHandler.impairLoan(%s)", seed_);
-
-        numberOfCalls["impairLoan"]++;
-
         address loan_ = _selectActiveLoan(seed_);
 
-        if (loan_ == address(0)) return;
-        if (isDefaulted[loan_])  return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
-        if (unrealizedLossesByLoan[loan_] != 0) return;
+        if (isDefaulted[loan_]) {
+            _recordSkip();
+            return;
+        }
+
+        if (unrealizedLossesByLoan[loan_] != 0) {
+            _recordSkip();
+            return;
+        }
 
         uint256 principal_   = IOpenTermLoan(loan_).principal();
         uint256 netInterest_ = _getLoanInterest(loan_);
@@ -132,13 +136,12 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function makePayment(uint256 seed_) public {
-        console.log("otlHandler.makePayment(%s)", seed_);
-
-        numberOfCalls["makePayment"]++;
-
         address loan_ = _selectActiveLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         makePayment(loan_);
 
@@ -147,13 +150,12 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function refinance(uint256 seed_) public {
-        console.log("otlHandler.refinance(%s)", seed_);
-
-        numberOfCalls["refinance"]++;
-
         address loan_ = _selectActiveLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         ( bytes[] memory calls_, int256 principalDelta_ ) = _generateRefinanceCalls(_hash(seed_, "refinance"), loan_);
 
@@ -195,25 +197,23 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function removeLoanCall(uint256 seed_) external {
-        console.log("otlHandler.removeLoanCall(%s)", seed_);
-
-        numberOfCalls["removeLoanCall"]++;
-
         address loan_ = _selectCalledLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         removeLoanCall(loan_);
     }
 
     function removeLoanImpairment(uint256 seed_) external {
-        console.log("otlHandler.removeLoanImpairment(%s)", seed_);
-
-        numberOfCalls["removeLoanImpairment"]++;
-
         address loan_ = _selectImpairedLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         removeLoanImpairment(loan_, globals.governor());
 
@@ -222,13 +222,12 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function triggerDefault(uint256 seed_) external {
-        console.log("otlHandler.triggerDefault(%s)", seed_);
-
-        numberOfCalls["triggerDefault"]++;
-
         address loan_ = _selectOverdueLoan(seed_);
 
-        if (loan_ == address(0)) return;
+        if (loan_ == address(0)) {
+            _recordSkip();
+            return;
+        }
 
         address caller_ = _selectCaller(seed_);
 

@@ -1,28 +1,34 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { console } from "../../../contracts/Runner.sol";
-
 import { Test } from "../../../modules/forge-std/src/Test.sol";
 
 import { IHandlerEntryPoint } from "../../../contracts/interfaces/Interfaces.sol";
 
 contract DistributionHandler is Test {
 
+    /**************************************************************************************************************************************/
+    /*** Constants                                                                                                                      ***/
+    /**************************************************************************************************************************************/
+
     uint256 constant internal WEIGHTS_RANGE    = 100;
     uint256 constant internal MAX_TIME_TO_PASS = 10 days;
 
-    uint256 public numOfCallsTotal;
+    /**************************************************************************************************************************************/
+    /*** State Variables                                                                                                                ***/
+    /**************************************************************************************************************************************/
 
-    address[] public targetContracts;
+    address[] public contracts;
 
     uint256[] public weights;
 
-    mapping(address => uint256) public numOfCalls;
+    /**************************************************************************************************************************************/
+    /*** Constructor                                                                                                                    ***/
+    /**************************************************************************************************************************************/
 
-    constructor(address[] memory targetContracts_, uint256[] memory weights_) {
-        // NOTE: Order of arrays must match
-        require(targetContracts_.length == weights_.length, "DH:INVALID_LENGTHS");
+    // NOTE: Order of arrays must match.
+    constructor(address[] memory contracts_, uint256[] memory weights_) {
+        require(contracts_.length == weights_.length, "DH:INVALID_LENGTHS");
 
         uint256 weightsTotal;
 
@@ -32,17 +38,19 @@ contract DistributionHandler is Test {
 
         require(weightsTotal == WEIGHTS_RANGE, "DH:INVALID_WEIGHTS");
 
-        targetContracts = targetContracts_;
-        weights         = weights_;
+        contracts = contracts_;
+        weights   = weights_;
     }
 
-    function distributorEntryPoint(uint256 seed_) external {
-        numOfCallsTotal++;
+    /**************************************************************************************************************************************/
+    /*** Entry Point                                                                                                                    ***/
+    /**************************************************************************************************************************************/
 
+    function distributorEntryPoint(uint256 seed_) external {
         uint256 range_;
         uint256 value_ = uint256(keccak256(abi.encodePacked(seed_))) % WEIGHTS_RANGE + 1;
 
-        for (uint256 i = 0; i < targetContracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             range_ += weights[i];
 
             if (value_ <= range_ && weights[i] != 0) {
@@ -51,8 +59,7 @@ contract DistributionHandler is Test {
 
                 vm.warp(currentTimestamp_ + timeToPass_);
 
-                numOfCalls[targetContracts[i]]++;
-                IHandlerEntryPoint(targetContracts[i]).entryPoint(seed_);
+                IHandlerEntryPoint(contracts[i]).entryPoint(seed_);
                 break;
             }
         }
