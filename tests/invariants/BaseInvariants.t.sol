@@ -46,11 +46,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     //       This bound assumes `invariant.depth` stays capped at 250 in foundry.toml; raising it may require revisiting this.
     uint256 constant ALLOWED_OTLM_DIFF = 5_000;
 
-    // NOTE: Aave's scaled-balance rounding can move aToken.balanceOf() by a few wei per each supply/withdraw call.
-    uint256 constant AAVE_ROUNDING_TOLERANCE = 100;
-
     uint256 constant MAXIMUM_BITMAP          = 2 ** 16 - 1;
     uint256 constant PUBLIC_PERMISSION_LEVEL = 3;
+
+    // NOTE: Aave's scaled-balance rounding can move aToken.balanceOf() by a few wei per each supply/withdraw call.
+    uint256 constant AAVE_ROUNDING_TOLERANCE = 100;
 
     // NOTE: Sky's PSM/savingsUsds conversions can move assetsUnderManagement() by a few wei per each supply/withdraw call.
     uint256 constant SKY_ROUNDING_TOLERANCE = 100;

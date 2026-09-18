@@ -12,7 +12,7 @@ contract DistributionHandler is Test {
     /**************************************************************************************************************************************/
 
     uint256 constant internal WEIGHTS_RANGE    = 100;
-    uint256 constant internal MAX_TIME_TO_PASS = 10 days;
+    uint256 constant internal MAX_TIME_TO_PASS = 2 days;
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/

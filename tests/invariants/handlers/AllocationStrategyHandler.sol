@@ -26,7 +26,10 @@ contract AllocationStrategyHandler is HandlerBase {
 
     uint256 constant MAX_DEPLOYMENT_AMOUNT = 1_000_000e6;
     uint256 constant MAX_YIELD_AMOUNT      = 1_000_000e6;
-    uint32  constant MAX_YIELD_DURATION    = 30 days;
+    uint256 constant MIN_YIELD_AMOUNT      = 1;
+
+    uint32 constant MAX_YIELD_DURATION = 30 days;
+    uint32 constant MIN_YIELD_DURATION = 1 days;
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -48,7 +51,13 @@ contract AllocationStrategyHandler is HandlerBase {
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(string memory handlerName_, address underlyingStrategy_, address[] memory managedWallets_) HandlerBase(handlerName_) {
+    constructor(
+        string    memory handlerName_,
+        address   underlyingStrategy_,
+        address[] memory managedWallets_
+    )
+        HandlerBase(handlerName_)
+    {
         underlyingStrategy = IAllocationStrategy(underlyingStrategy_);
         managedWallets     = managedWallets_;
     }
@@ -96,8 +105,8 @@ contract AllocationStrategyHandler is HandlerBase {
 
         address managedWallet_ = _selectManagedWallet(seed_);
 
-        uint256 yield_    = _bound(_randomize(seed_, "yield"),    0, MAX_YIELD_AMOUNT);
-        uint256 duration_ = _bound(_randomize(seed_, "duration"), 0, MAX_YIELD_DURATION);
+        uint256 yield_    = _bound(_randomize(seed_, "yield"),    MIN_YIELD_AMOUNT,   MAX_YIELD_AMOUNT);
+        uint256 duration_ = _bound(_randomize(seed_, "duration"), MIN_YIELD_DURATION, MAX_YIELD_DURATION);
 
         uint256 delegateFee_ = yield_ * underlyingStrategy.strategyDelegateFeeRate() / 1e6;
         uint256 protocolFee_ = yield_ * underlyingStrategy.strategyProtocolFeeRate() / 1e6;
