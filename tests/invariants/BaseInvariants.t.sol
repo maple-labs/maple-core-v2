@@ -52,6 +52,9 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     uint256 constant MAXIMUM_BITMAP          = 2 ** 16 - 1;
     uint256 constant PUBLIC_PERMISSION_LEVEL = 3;
 
+    // NOTE: Sky's PSM/savingsUsds conversions can move assetsUnderManagement() by a few wei per each supply/withdraw call.
+    uint256 constant SKY_ROUNDING_TOLERANCE = 100;
+
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
@@ -1197,6 +1200,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assert_skyStrategy_invariant_A(strategy_, fundings_, yield_, withdrawals_, fees_);
         assert_skyStrategy_invariant_B(strategy_);
         assert_skyStrategy_invariant_C(strategy_);
+        assert_skyStrategy_invariant_D(strategy_, ISkyStrategy(strategy_).assetsUnderManagement());
         assert_skyStrategy_invariant_E(strategy_);
         assert_skyStrategy_invariant_F(strategy_);
         assert_skyStrategy_invariant_G(strategy_);
@@ -1221,7 +1225,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 pendingAum  = pendingYield - pendingFee;
         uint256 expectedAum = recordedAum + pendingAum;
 
-        assertEq(ISkyStrategy(strategy_).assetsUnderManagement(), expectedAum, "Sky Invariant A");
+        assertApproxEqAbs(
+            ISkyStrategy(strategy_).assetsUnderManagement(),
+            expectedAum,
+            SKY_ROUNDING_TOLERANCE,
+            "Sky Invariant A"
+        );
     }
 
     // NOTE: Should not be used on mainnet as it's vulnerable to griefing by donation attacks.
