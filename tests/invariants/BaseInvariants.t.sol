@@ -40,12 +40,17 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
+    uint256 constant ALLOWED_OTL_AUM_DIFF = 1e6;
+
     // NOTE: OTLM invariant K accumulates ~1 wei of rounding per interest-accounting event (fund/payment/refinance/impair).
     //       This bound assumes `invariant.depth` stays capped at 250 in foundry.toml; raising it may require revisiting this.
-    uint256 constant ALLOWED_DIFF         = 5000;
-    uint256 constant ALLOWED_OTL_AUM_DIFF = 1e6;
-    uint256 constant PUBLIC               = 3;
-    uint256 constant MAXIMUM_BITMAP       = 2 ** 16 - 1;
+    uint256 constant ALLOWED_OTLM_DIFF = 5_000;
+
+    // NOTE: Aave's scaled-balance rounding can move aToken.balanceOf() by a few wei per each supply/withdraw call.
+    uint256 constant AAVE_ROUNDING_TOLERANCE = 100;
+
+    uint256 constant MAXIMUM_BITMAP          = 2 ** 16 - 1;
+    uint256 constant PUBLIC_PERMISSION_LEVEL = 3;
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -535,7 +540,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             if (startDate != 0) return;
         }
 
-        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans() + ALLOWED_DIFF, "OTLM Invariant B");
+        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans(), "OTLM Invariant B");
     }
 
     function assert_otlm_invariant_C(address openTermLoanManager_, address[] memory loans_) internal view {
@@ -636,7 +641,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 b = unrealizedLosses + outstandingValue;
         uint256 diff = a > b ? a - b : b - a;
 
-        assertApproxEqAbs(diff, 0, ALLOWED_DIFF, "OTLM Invariant K");
+        assertApproxEqAbs(diff, 0, ALLOWED_OTLM_DIFF, "OTLM Invariant K");
     }
 
     function assert_otlm_invariant_L(address loanManager_) internal view {
@@ -691,7 +696,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
 
         for (uint256 i; i < poolManagers_.length; i++) {
-            assertEq(ppm.permissionLevels(poolManagers_[i]), PUBLIC, "PPM Invariant D");
+            assertEq(ppm.permissionLevels(poolManagers_[i]), PUBLIC_PERMISSION_LEVEL, "PPM Invariant D");
         }
     }
 
@@ -1053,15 +1058,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_aaveV3Strategy_invariants(
         address strategy_,
-        uint256 fundings_,
-        uint256 yield_,
-        uint256 withdrawals_,
-        uint256 fees_
+        uint256 totalFundings_,
+        uint256 totalYield_,
+        uint256 totalWithdrawals_,
+        uint256 totalFees_
     )
         internal view
     {
-        assert_aaveV3Strategy_invariant_A(strategy_, fundings_, yield_, withdrawals_, fees_);
-        assert_aaveV3Strategy_invariant_B(strategy_, fundings_, withdrawals_, fees_);
+        assert_aaveV3Strategy_invariant_A(strategy_, totalFundings_, totalYield_, totalWithdrawals_, totalFees_);
+        assert_aaveV3Strategy_invariant_B(strategy_, totalFundings_, totalWithdrawals_, totalFees_);
         assert_aaveV3Strategy_invariant_C(strategy_);
         assert_aaveV3Strategy_invariant_D(strategy_);
         assert_aaveV3Strategy_invariant_E(strategy_);
@@ -1074,10 +1079,10 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_aaveV3Strategy_invariant_A(
         address strategy_,
-        uint256 fundings_,
-        uint256 yield_,
-        uint256 withdrawals_,
-        uint256 fees_
+        uint256 totalFundings_,
+        uint256 totalYield_,
+        uint256 totalWithdrawals_,
+        uint256 totalFees_
     )
         internal view
     {
@@ -1085,26 +1090,31 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         ( uint256 pendingYield, uint256 pendingFee ) = _pendingAaveAccrual(strategy_);
 
-        uint256 recordedAum = fundings_ + yield_ - withdrawals_ - fees_;
+        uint256 recordedAum = totalFundings_ + totalYield_ - totalWithdrawals_ - totalFees_;
         uint256 pendingAum  = pendingYield - pendingFee;
         uint256 expectedAum = recordedAum + pendingAum;
 
-        assertEq(IAaveV3Strategy(strategy_).assetsUnderManagement(), expectedAum, "AaveV3 Invariant A");
+        assertApproxEqAbs(
+            IAaveV3Strategy(strategy_).assetsUnderManagement(),
+            expectedAum,
+            AAVE_ROUNDING_TOLERANCE,
+            "AaveV3 Invariant A"
+        );
     }
 
     function assert_aaveV3Strategy_invariant_B(
         address strategy_,
-        uint256 fundings_,
-        uint256 withdrawals_,
-        uint256 fees_
+        uint256 totalFundings_,
+        uint256 totalWithdrawals_,
+        uint256 totalFees_
     )
         internal view
     {
         address aaveToken     = IAaveV3Strategy(strategy_).aaveToken();
         uint256 aTokenBalance = IERC20(aaveToken).balanceOf(strategy_);
 
-        uint256 netOutflows   = withdrawals_ + fees_;
-        uint256 expectedFloor = netOutflows < fundings_ ? fundings_ - netOutflows : 0;
+        uint256 netOutflows   = totalWithdrawals_ + totalFees_ + AAVE_ROUNDING_TOLERANCE;
+        uint256 expectedFloor = netOutflows < totalFundings_ ? totalFundings_ - netOutflows : 0;
 
         assertGe(aTokenBalance, expectedFloor, "AaveV3 Invariant B");
     }
