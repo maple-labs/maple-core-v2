@@ -12,7 +12,16 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
     address exitingLp   = makeAddr("exitingLp");
     address remainingLp = makeAddr("remainingLp");
 
+    uint256 exitingLpDeposit   = 800_000e6;
+    uint256 remainingLpDeposit = 200_000e6;
+    uint256 poolLiquidity      = exitingLpDeposit + remainingLpDeposit;  // 1_000_000e6
+    uint256 impairment         = 200_000e6;
+
     function setUp() public override {
+        /**********************************************************************************************************************************/
+        /*** Setup pool                                                                                                                 ***/
+        /**********************************************************************************************************************************/
+
         startingTime = uint32(block.timestamp);
 
         _setUpClosedPool();
@@ -36,63 +45,17 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         strategyManager = allocationStrategyManager;
 
         addStrategyManagerToPool(address(poolManager), strategyManager);
-    }
-
-    function test_processRedemption_operationalAdminExitsImpairedLpWithCancellationPaused() external {
-        uint256 exitingLpDeposit   = 800_000e6;
-        uint256 remainingLpDeposit = 200_000e6;
-        uint256 poolLiquidity      = exitingLpDeposit + remainingLpDeposit;  // 1_000_000e6
 
         /**********************************************************************************************************************************/
-        /*** Seed the pool and deploy all of its liquidity into the strategy manager                                                    ***/
+        /*** Mint LP tokens, fund, impair and request redeem on a pool and assert state                                                 ***/
         /**********************************************************************************************************************************/
 
         mint(address(pool), exitingLp,   exitingLpDeposit);
         mint(address(pool), remainingLp, remainingLpDeposit);
 
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity
-        });
-
         fundStrategyManager(address(poolManager), strategyManager, poolLiquidity);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: 0
-        });
-
-        assertStrategyManager({
-            strategyManager:       strategyManager,
-            totalShares:           poolLiquidity,
-            totalPendingShares:    0,
-            assetsUnderManagement: poolLiquidity,
-            availableToWithdraw:   poolLiquidity,
-            unrealizedLosses:      0
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  strategyManager,
-            poolManager:      address(poolManager),
-            assets:           poolLiquidity,
-            shares:           poolLiquidity,
-            pendingShares:    0,
-            unrealizedLosses: 0
-        });
-
-        /**********************************************************************************************************************************/
-        /*** Impair the strategy and queue both the pool and the strategy manager withdrawals                                           ***/
-        /**********************************************************************************************************************************/
-
-        uint256 impairment = 200_000e6;
-
         impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
+        requestRedeem(address(pool), exitingLp, exitingLpDeposit);
 
         assertPoolState({
             pool:               address(pool),
@@ -111,6 +74,15 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             unrealizedLosses:      impairment
         });
 
+        assertStrategyManager({
+            strategyManager:       strategyManager,
+            totalShares:           poolLiquidity,
+            totalPendingShares:    0,
+            assetsUnderManagement: poolLiquidity,
+            availableToWithdraw:   poolLiquidity,
+            unrealizedLosses:      impairment
+        });
+
         assertStrategyManagerPosition({
             strategyManager:  strategyManager,
             poolManager:      address(poolManager),
@@ -120,13 +92,21 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             unrealizedLosses: impairment
         });
 
-        requestRedeem(address(pool), exitingLp, exitingLpDeposit);
-
         assertRequestOnWm({ requestId: 1, owner: exitingLp, shares: exitingLpDeposit });
         assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
 
         assertEq(pool.balanceOf(exitingLp),        0);
+        assertEq(pool.balanceOf(remainingLp),      remainingLpDeposit);
         assertEq(pool.balanceOf(address(queueWM)), exitingLpDeposit);
+
+        assertEq(fundsAsset.balanceOf(address(pool)),                0);
+        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolLiquidity);
+    }
+
+    function test_processRedemption_operationalAdminExitsImpairedLpWithCancellationPaused() external {
+        /**********************************************************************************************************************************/
+        /*** Queue the strategy manager redemption                                                                                      ***/
+        /**********************************************************************************************************************************/
 
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, poolLiquidity);
 
@@ -155,20 +135,27 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         /*** Ops admin pauses cancellation of LP withdrawals on the pool permission manager                                             ***/
         /**********************************************************************************************************************************/
 
-        bytes32[] memory functionIds = new bytes32[](1);
-        uint256[] memory bitmaps     = new uint256[](1);
+        bytes32[] memory functionIds = new bytes32[](2);
+        uint256[] memory bitmaps     = new uint256[](2);
 
         functionIds[0] = "P:removeShares";
+        functionIds[1] = "P:transfer";
         bitmaps[0]     = 1;
+        bitmaps[1]     = 1;
 
         vm.prank(operationalAdmin);
         poolPermissionManager.setPoolBitmaps(address(poolManager), functionIds, bitmaps);
 
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 1);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     1);
 
         vm.prank(exitingLp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.removeShares(exitingLpDeposit, exitingLp);
+
+        vm.prank(exitingLp);
+        vm.expectRevert("WM:RS:TRANSFER_FAIL");
+        queueWM.removeSharesById(1, exitingLpDeposit);
 
         assertRequestOnWm({ requestId: 1, owner: exitingLp, shares: exitingLpDeposit });
 
@@ -248,11 +235,13 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         /**********************************************************************************************************************************/
 
         bitmaps[0] = 0;
+        bitmaps[1] = 0;
 
         vm.prank(operationalAdmin);
         poolPermissionManager.setPoolBitmaps(address(poolManager), functionIds, bitmaps);
 
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     0);
 
         /**********************************************************************************************************************************/
         /*** A remaining LP can queue and cancel a withdrawal again                                                                     ***/
@@ -275,55 +264,20 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(address(queueWM)), 0);
     }
 
-    function test_processRedemption_cancellingAfterStrategyWithdrawalMakesTheImpairmentUnrecoverable() external {
-        uint256 exitingLpDeposit   = 800_000e6;
-        uint256 remainingLpDeposit = 200_000e6;
-        uint256 poolLiquidity      = exitingLpDeposit + remainingLpDeposit;  // 1_000_000e6
-
+    function test_processRedemption_operationalAdminBatchesPermissionChangesAroundImpairedExit() external {
         /**********************************************************************************************************************************/
-        /*** Seed the pool and deploy all of its liquidity into the strategy manager                                                    ***/
+        /*** The strategy delegate queues the strategy manager redemption                                                               ***/
         /**********************************************************************************************************************************/
 
-        mint(address(pool), exitingLp,   exitingLpDeposit);
-        mint(address(pool), remainingLp, remainingLpDeposit);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity
-        });
-
-        assertEq(pool.balanceOf(exitingLp),   exitingLpDeposit);
-        assertEq(pool.balanceOf(remainingLp), remainingLpDeposit);
-
-        fundStrategyManager(address(poolManager), strategyManager, poolLiquidity);
-
-        assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: 0
-        });
-
-        assertAllocationStrategy({
-            allocationStrategy:    allocationUnderlyingStrategy,
-            assetsUnderManagement: poolLiquidity,
-            availableToWithdraw:   poolLiquidity,
-            recordedAssets:        poolLiquidity,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      0
-        });
+        requestRedeemFromStrategyManager(address(poolManager), strategyManager, poolLiquidity);
 
         assertStrategyManager({
             strategyManager:       strategyManager,
             totalShares:           poolLiquidity,
-            totalPendingShares:    0,
+            totalPendingShares:    poolLiquidity,
             assetsUnderManagement: poolLiquidity,
             availableToWithdraw:   poolLiquidity,
-            unrealizedLosses:      0
+            unrealizedLosses:      impairment
         });
 
         assertStrategyManagerPosition({
@@ -331,63 +285,149 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             poolManager:      address(poolManager),
             assets:           poolLiquidity,
             shares:           poolLiquidity,
+            pendingShares:    poolLiquidity,
+            unrealizedLosses: impairment
+        });
+
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 0);
+
+        /**********************************************************************************************************************************/
+        /*** One atomic batch pauses the exits, drains the strategy, processes the queue and restores the exits                         ***/
+        /**********************************************************************************************************************************/
+
+        uint256 netAssets  = poolLiquidity - impairment;                    // 800_000e6
+        uint256 exitAssets = exitingLpDeposit * netAssets / poolLiquidity;  // 640_000e6
+
+        bytes32[] memory functionIds   = new bytes32[](2);
+        uint256[] memory pausedBitmaps = new uint256[](2);
+        uint256[] memory openBitmaps   = new uint256[](2);
+
+        functionIds[0]   = "P:transfer";
+        functionIds[1]   = "P:removeShares";
+        pausedBitmaps[0] = 1;
+        pausedBitmaps[1] = 1;
+
+        address[] memory targets = new address[](4);
+        bytes[]   memory calls   = new bytes[](4);
+
+        targets[0] = address(poolPermissionManager);
+        targets[1] = strategyManager;
+        targets[2] = address(queueWM);
+        targets[3] = address(poolPermissionManager);
+
+        calls[0] = abi.encodeWithSelector(
+            poolPermissionManager.setPoolBitmaps.selector,
+            address(poolManager),
+            functionIds,
+            pausedBitmaps
+        );
+
+        calls[1] = abi.encodeWithSelector(
+            IStrategyManager(strategyManager).processRedemption.selector,
+            address(poolManager),
+            poolLiquidity,
+            ""
+        );
+
+        calls[2] = abi.encodeWithSelector(
+            IWithdrawalManagerQueue(address(queueWM)).processRedemptions.selector,
+            exitingLpDeposit
+        );
+
+        calls[3] = abi.encodeWithSelector(
+            poolPermissionManager.setPoolBitmaps.selector,
+            address(poolManager),
+            functionIds,
+            openBitmaps
+        );
+
+        MockMultisig(operationalAdmin).execute(targets, calls);
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationUnderlyingStrategy,
+            assetsUnderManagement: impairment,
+            availableToWithdraw:   impairment,
+            recordedAssets:        impairment,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      impairment
+        });
+
+        assertStrategyManager({
+            strategyManager:       strategyManager,
+            totalShares:           0,
+            totalPendingShares:    0,
+            assetsUnderManagement: impairment,
+            availableToWithdraw:   impairment,
+            unrealizedLosses:      impairment
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  strategyManager,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           0,
             pendingShares:    0,
             unrealizedLosses: 0
         });
 
-        assertEq(fundsAsset.balanceOf(address(pool)),                0);
-        assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), poolLiquidity);
-
-        /**********************************************************************************************************************************/
-        /*** Impair the strategy and queue both the pool and the strategy manager withdrawals                                           ***/
-        /**********************************************************************************************************************************/
-
-        uint256 impairment = 200_000e6;
-
-        impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
-
         assertPoolState({
             pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   impairment,
-            availableLiquidity: 0
+            totalAssets:        netAssets - exitAssets,
+            totalSupply:        remainingLpDeposit,
+            unrealizedLosses:   0,
+            availableLiquidity: netAssets - exitAssets
         });
 
-        assertAllocationStrategy({
-            allocationStrategy:    allocationUnderlyingStrategy,
-            assetsUnderManagement: poolLiquidity,
-            availableToWithdraw:   poolLiquidity,
-            recordedAssets:        poolLiquidity,
-            totalDeployedAssets:   0,
-            unrealizedLosses:      impairment
-        });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 1 });
 
-        assertStrategyManager({
-            strategyManager:       strategyManager,
-            totalShares:           poolLiquidity,
-            totalPendingShares:    0,
-            assetsUnderManagement: poolLiquidity,
-            availableToWithdraw:   poolLiquidity,
-            unrealizedLosses:      impairment
-        });
-
-        assertStrategyManagerPosition({
-            strategyManager:  strategyManager,
-            poolManager:      address(poolManager),
-            assets:           poolLiquidity,
-            shares:           poolLiquidity,
-            pendingShares:    0,
-            unrealizedLosses: impairment
-        });
-
-        requestRedeem(address(pool), exitingLp, exitingLpDeposit);
-
-        assertRequestOnWm({ requestId: 1, owner: exitingLp, shares: exitingLpDeposit });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
-
+        assertEq(fundsAsset.balanceOf(exitingLp),  exitAssets);
         assertEq(pool.balanceOf(exitingLp),        0);
-        assertEq(pool.balanceOf(address(queueWM)), exitingLpDeposit);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
+
+        assertEq(pool.balanceOf(remainingLp),                  remainingLpDeposit);
+        assertEq(pool.convertToExitAssets(remainingLpDeposit), netAssets - exitAssets);  // 160_000e6
+
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 0);
+
+        /**********************************************************************************************************************************/
+        /*** A remaining LP can transfer, queue and cancel a withdrawal after the batch                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(remainingLp);
+        pool.transfer(exitingLp, remainingLpDeposit);
+
+        assertEq(pool.balanceOf(remainingLp), 0);
+        assertEq(pool.balanceOf(exitingLp),   remainingLpDeposit);
+
+        vm.prank(exitingLp);
+        pool.transfer(remainingLp, remainingLpDeposit);
+
+        assertEq(pool.balanceOf(remainingLp), remainingLpDeposit);
+        assertEq(pool.balanceOf(exitingLp),   0);
+
+        requestRedeem(address(pool), remainingLp, remainingLpDeposit);
+
+        assertRequestOnWm({ requestId: 2, owner: remainingLp, shares: remainingLpDeposit });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+
+        assertEq(pool.balanceOf(remainingLp),      0);
+        assertEq(pool.balanceOf(address(queueWM)), remainingLpDeposit);
+
+        removeShares(address(pool), remainingLp, remainingLpDeposit);
+
+        assertRequestOnWm({ requestId: 2, owner: address(0), shares: 0 });
+        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+
+        assertEq(pool.balanceOf(remainingLp),      remainingLpDeposit);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
+    }
+
+    function test_processRedemption_cancellingAfterStrategyWithdrawalMakesTheImpairmentUnrecoverable() external {
+        /**********************************************************************************************************************************/
+        /*** Queue the strategy manager redemption                                                                                      ***/
+        /**********************************************************************************************************************************/
 
         requestRedeemFromStrategyManager(address(poolManager), strategyManager, poolLiquidity);
 
