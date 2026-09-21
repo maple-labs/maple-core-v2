@@ -12,7 +12,12 @@ contract RemoveSharesByIdQueueFailureTests is TestBaseWithAssertions {
     address wm;
 
     function setUp() public override {
-        super.setUp();
+        startingTime = uint32(block.timestamp);
+
+        // NOTE: A public pool can never be restricted again, so the pool is left permissioned with empty bitmaps, which allows everyone.
+        _setUpClosedPool();
+
+        setPoolPermissionLevel(address(poolManager), 1);  // FUNCTION_LEVEL
 
         lp = makeAddr("lp");
         wm = address(queueWM);
@@ -21,6 +26,9 @@ contract RemoveSharesByIdQueueFailureTests is TestBaseWithAssertions {
 
         vm.prank(lp);
         pool.requestRedeem(1_000e6, lp);
+
+        // NOTE: The deposit helper allowlists the lender, which would bypass every bitmap check.
+        setLenderAllowlist(address(poolManager), lp, false);
 
         assertRequest({
             poolManager: address(poolManager),
@@ -112,6 +120,67 @@ contract RemoveSharesByIdQueueFailureTests is TestBaseWithAssertions {
         vm.prank(lp);
         vm.expectRevert("WM:RSBI:INSUFFICIENT_SHARES");
         queueWM.removeSharesById(1, 2);
+    }
+
+    function test_removeSharesById_failIfNotAllowed_functionLevel() external {
+        setPoolPermissionLevel(address(poolManager), 1);  // FUNCTION_LEVEL
+        setPoolBitmap(address(poolManager), "WM:removeSharesById", createBitmap([2]));
+
+        vm.prank(lp);
+        vm.expectRevert("WM:RSBI:NOT_ALLOWED");
+        queueWM.removeSharesById(1, 1_000e6);
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([1]));
+
+        vm.prank(lp);
+        vm.expectRevert("WM:RSBI:NOT_ALLOWED");
+        queueWM.removeSharesById(1, 1_000e6);
+
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp,
+            shares:      1_000e6
+        });
+
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp, createBitmap([2, 3]));
+
+        vm.prank(lp);
+        queueWM.removeSharesById(1, 1_000e6);
+
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
+    }
+
+    function test_removeSharesById_failIfNotAllowed_privatePool() external {
+        setPoolPermissionLevel(address(poolManager), 0);  // PRIVATE
+
+        vm.prank(lp);
+        vm.expectRevert("WM:RSBI:NOT_ALLOWED");
+        queueWM.removeSharesById(1, 1_000e6);
+
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp,
+            shares:      1_000e6
+        });
+
+        setLenderAllowlist(address(poolManager), lp, true);
+
+        vm.prank(lp);
+        queueWM.removeSharesById(1, 1_000e6);
+
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
     }
 
     function test_removeSharesById_failIfTransferFail() external {

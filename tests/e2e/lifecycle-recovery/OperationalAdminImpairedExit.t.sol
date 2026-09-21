@@ -139,22 +139,22 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         uint256[] memory bitmaps     = new uint256[](2);
 
         functionIds[0] = "P:removeShares";
-        functionIds[1] = "P:transfer";
+        functionIds[1] = "WM:removeSharesById";
         bitmaps[0]     = 1;
         bitmaps[1]     = 1;
 
         vm.prank(operationalAdmin);
         poolPermissionManager.setPoolBitmaps(address(poolManager), functionIds, bitmaps);
 
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 1);
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     1);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"),      1);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "WM:removeSharesById"), 1);
 
         vm.prank(exitingLp);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
         pool.removeShares(exitingLpDeposit, exitingLp);
 
         vm.prank(exitingLp);
-        vm.expectRevert("WM:RS:TRANSFER_FAIL");
+        vm.expectRevert("WM:RSBI:NOT_ALLOWED");
         queueWM.removeSharesById(1, exitingLpDeposit);
 
         assertRequestOnWm({ requestId: 1, owner: exitingLp, shares: exitingLpDeposit });
@@ -240,8 +240,8 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         vm.prank(operationalAdmin);
         poolPermissionManager.setPoolBitmaps(address(poolManager), functionIds, bitmaps);
 
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 0);
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"),      0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "WM:removeSharesById"), 0);
 
         /**********************************************************************************************************************************/
         /*** A remaining LP can queue and cancel a withdrawal again                                                                     ***/
@@ -289,8 +289,8 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             unrealizedLosses: impairment
         });
 
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     0);
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "WM:removeSharesById"), 0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"),      0);
 
         /**********************************************************************************************************************************/
         /*** One atomic batch pauses the exits, drains the strategy, processes the queue and restores the exits                         ***/
@@ -303,7 +303,7 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         uint256[] memory pausedBitmaps = new uint256[](2);
         uint256[] memory openBitmaps   = new uint256[](2);
 
-        functionIds[0]   = "P:transfer";
+        functionIds[0]   = "WM:removeSharesById";
         functionIds[1]   = "P:removeShares";
         pausedBitmaps[0] = 1;
         pausedBitmaps[1] = 1;
@@ -388,24 +388,12 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(remainingLp),                  remainingLpDeposit);
         assertEq(pool.convertToExitAssets(remainingLpDeposit), netAssets - exitAssets);  // 160_000e6
 
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:transfer"),     0);
-        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"), 0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "WM:removeSharesById"), 0);
+        assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"),      0);
 
         /**********************************************************************************************************************************/
-        /*** A remaining LP can transfer, queue and cancel a withdrawal after the batch                                                 ***/
+        /*** A remaining LP can queue and cancel a withdrawal by request identifier after the batch                                     ***/
         /**********************************************************************************************************************************/
-
-        vm.prank(remainingLp);
-        pool.transfer(exitingLp, remainingLpDeposit);
-
-        assertEq(pool.balanceOf(remainingLp), 0);
-        assertEq(pool.balanceOf(exitingLp),   remainingLpDeposit);
-
-        vm.prank(exitingLp);
-        pool.transfer(remainingLp, remainingLpDeposit);
-
-        assertEq(pool.balanceOf(remainingLp), remainingLpDeposit);
-        assertEq(pool.balanceOf(exitingLp),   0);
 
         requestRedeem(address(pool), remainingLp, remainingLpDeposit);
 
@@ -415,7 +403,8 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         assertEq(pool.balanceOf(remainingLp),      0);
         assertEq(pool.balanceOf(address(queueWM)), remainingLpDeposit);
 
-        removeShares(address(pool), remainingLp, remainingLpDeposit);
+        vm.prank(remainingLp);
+        queueWM.removeSharesById(2, remainingLpDeposit);
 
         assertRequestOnWm({ requestId: 2, owner: address(0), shares: 0 });
         assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
