@@ -148,6 +148,8 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address public strategyManagerFactory;
     address public strategyManagerV100Implementation;
     address public strategyManagerV100Initializer;
+    address public withdrawalManagerQueueV201Implementation;
+    address public withdrawalManagerQueueV201Initializer;
 
     /**************************************************************************************************************************************/
     /*** Modular Release - Strategy Delegates                                                                                           ***/

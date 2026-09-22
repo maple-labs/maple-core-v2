@@ -9,7 +9,8 @@ import {
     IPoolManager,
     IStrategyDeployer,
     IStrategyLike,
-    IStrategyManager
+    IStrategyManager,
+    IWithdrawalManagerQueue
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import {
@@ -98,18 +99,20 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     /**************************************************************************************************************************************/
 
     function deployContracts() internal {
-        globalsV500Implementation             = deployFromFile("Contracts@34", "Globals");
-        poolManagerV500Implementation         = deployFromFile("Contracts@34", "PoolManager");
-        poolManagerV500Initializer            = deployFromFile("Contracts@34", "PoolManagerInitializer");
-        poolManagerV500Migrator               = deployFromFile("Contracts@34", "PoolManagerMigrator");
-        strategyManagerV100Implementation     = deployFromFile("Contracts@34", "StrategyManager");
-        strategyManagerV100Initializer        = deployFromFile("Contracts@34", "StrategyManagerInitializer");
-        modularAaveStrategyV100Implementation = deployFromFile("Contracts@34", "AaveV3Strategy");
-        modularAaveStrategyV100Initializer    = deployFromFile("Contracts@34", "AaveV3StrategyInitializer");
-        modularSkyStrategyV100Implementation  = deployFromFile("Contracts@34", "SkyStrategy");
-        modularSkyStrategyV100Initializer     = deployFromFile("Contracts@34", "SkyStrategyInitializer");
-        allocationStrategyV100Implementation  = deployFromFile("Contracts@34", "AllocationStrategy");
-        allocationStrategyV100Initializer     = deployFromFile("Contracts@34", "AllocationStrategyInitializer");
+        globalsV500Implementation                = deployFromFile("Contracts@34", "Globals");
+        poolManagerV500Implementation            = deployFromFile("Contracts@34", "PoolManager");
+        poolManagerV500Initializer               = deployFromFile("Contracts@34", "PoolManagerInitializer");
+        poolManagerV500Migrator                  = deployFromFile("Contracts@34", "PoolManagerMigrator");
+        withdrawalManagerQueueV201Implementation = deployFromFile("Contracts@34", "WithdrawalManagerQueue");
+        withdrawalManagerQueueV201Initializer    = deployFromFile("Contracts@34", "WithdrawalManagerQueueInitializer");
+        strategyManagerV100Implementation        = deployFromFile("Contracts@34", "StrategyManager");
+        strategyManagerV100Initializer           = deployFromFile("Contracts@34", "StrategyManagerInitializer");
+        modularAaveStrategyV100Implementation    = deployFromFile("Contracts@34", "AaveV3Strategy");
+        modularAaveStrategyV100Initializer       = deployFromFile("Contracts@34", "AaveV3StrategyInitializer");
+        modularSkyStrategyV100Implementation     = deployFromFile("Contracts@34", "SkyStrategy");
+        modularSkyStrategyV100Initializer        = deployFromFile("Contracts@34", "SkyStrategyInitializer");
+        allocationStrategyV100Implementation     = deployFromFile("Contracts@34", "AllocationStrategy");
+        allocationStrategyV100Initializer        = deployFromFile("Contracts@34", "AllocationStrategyInitializer");
 
         poolDeployerV500           = deployFromFile("Contracts@34", "PoolDeployer",              abi.encode(globals));
         strategyDeployerV100       = deployFromFile("Contracts@34", "StrategyDeployer",          abi.encode(globals));
@@ -155,7 +158,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     /**************************************************************************************************************************************/
 
     function upgradeGlobalsAndSetupFactories() internal {
-        Proposal[] memory proposals = new Proposal[](12);
+        Proposal[] memory proposals = new Proposal[](15);
 
         // Globals
         proposals[0] = Proposal(globals, abi.encodeWithSignature("setImplementation(address)", globalsV500Implementation));
@@ -229,6 +232,25 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         );
 
         proposals[11] = Proposal(allocationStrategyFactory, abi.encodeWithSignature("setDefaultVersion(uint256)", 100));
+
+        // Withdrawal Manager Queue Factory
+        proposals[12] = Proposal(
+            withdrawalManagerQueueFactory,
+            abi.encodeWithSignature(
+                "registerImplementation(uint256,address,address)",
+                201,
+                withdrawalManagerQueueV201Implementation,
+                withdrawalManagerQueueV201Initializer
+            )
+        );
+
+        proposals[13] = Proposal(withdrawalManagerQueueFactory, abi.encodeWithSignature("setDefaultVersion(uint256)", 201));
+
+        // NOTE: The v2.0.1 upgrade only changes the implementation, no storage migration is needed.
+        proposals[14] = Proposal(
+            withdrawalManagerQueueFactory,
+            abi.encodeWithSignature("enableUpgradePath(uint256,uint256,address)", 200, 201, address(0))
+        );
 
         /**********************************************************************************************************************************/
         /*** Step 3.1 - Schedule Proposals                                                                                              ***/
@@ -534,7 +556,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         /**********************************************************************************************************************************/
-        /*** Step 5.2 - Perform Upgrades                                                                                                ***/
+        /*** Step 5.2 - Upgrade pool managers                                                                                           ***/
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < poolManagers.length; i++) {
@@ -548,6 +570,22 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
             assertApproxEqAbs(IPoolManager(poolManagers[i]).totalAssets(), totalAssets, 2 * MAX_STRATEGY_DUST);
 
             assertEq(IPoolManager(poolManagers[i]).unrealizedLosses(), unrealizedLosses);
+        }
+
+        /**********************************************************************************************************************************/
+        /*** Step 5.3 - Upgrade Withdrawal Managers                                                                                     ***/
+        /**********************************************************************************************************************************/
+
+        for (uint256 i; i < poolManagers.length; i++) {
+            IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(IPoolManager(poolManagers[i]).withdrawalManager());
+
+            uint256 totalShares = withdrawalManager.totalShares();
+
+            vm.prank(securityAdmin);
+            withdrawalManager.upgrade(201, "");
+
+            assertEq(withdrawalManager.implementation(), withdrawalManagerQueueV201Implementation);
+            assertEq(withdrawalManager.totalShares(),    totalShares);
         }
     }
 

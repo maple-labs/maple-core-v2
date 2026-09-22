@@ -31,6 +31,10 @@ import { MapleAllocationStrategyInitializer } from "../modules/allocation-strate
 
 import { MapleLiquidityRouter } from "../modules/strategy-manager/contracts/MapleLiquidityRouter.sol";
 
+import { MapleWithdrawalManager }            from "../modules/withdrawal-manager-queue/contracts/MapleWithdrawalManager.sol";
+import { MapleWithdrawalManagerInitializer }
+    from "../modules/withdrawal-manager-queue/contracts/proxy/MapleWithdrawalManagerInitializer.sol";
+
 contract ModularReleaseDeployment is Script, MapleAddressRegistryETH {
 
     function run() public {
@@ -65,7 +69,15 @@ contract ModularReleaseDeployment is Script, MapleAddressRegistryETH {
         console.log("PoolManager migrator deployed at:             ", poolManagerV500Migrator);
         console.log("-----------------------------------------------------------------------------------------");
 
-        // 4. Strategy manager contracts
+        // 4. Withdrawal manager queue contracts
+        address withdrawalManagerQueueV201Implementation = address(new MapleWithdrawalManager());
+        address withdrawalManagerQueueV201Initializer    = address(new MapleWithdrawalManagerInitializer());
+
+        console.log("WithdrawalManager implementation deployed at:  ", withdrawalManagerQueueV201Implementation);
+        console.log("WithdrawalManager initializer deployed at:     ", withdrawalManagerQueueV201Initializer);
+        console.log("-----------------------------------------------------------------------------------------");
+
+        // 5. Strategy manager contracts
         address strategyManagerFactory            = address(new MapleStrategyManagerFactory(globals));
         address strategyManagerV100Implementation = address(new MapleStrategyManager());
         address strategyManagerV100Initializer    = address(new MapleStrategyManagerInitializer());
@@ -75,7 +87,7 @@ contract ModularReleaseDeployment is Script, MapleAddressRegistryETH {
         console.log("StrategyManager initializer deployed at:      ", strategyManagerV100Initializer);
         console.log("-----------------------------------------------------------------------------------------");
 
-        // 5. Aave V3 strategy contracts
+        // 6. Aave V3 strategy contracts
         address modularAaveStrategyFactory            = address(new MapleAaveV3StrategyFactory(globals));
         address modularAaveStrategyV100Implementation = address(new MapleAaveV3Strategy());
         address modularAaveStrategyV100Initializer    = address(new MapleAaveV3StrategyInitializer());
@@ -85,7 +97,7 @@ contract ModularReleaseDeployment is Script, MapleAddressRegistryETH {
         console.log("AaveV3Strategy initializer deployed at:       ", modularAaveStrategyV100Initializer);
         console.log("-----------------------------------------------------------------------------------------");
 
-        // 6. Sky strategy contracts
+        // 7. Sky strategy contracts
         address modularSkyStrategyFactory            = address(new MapleSkyStrategyFactory(globals));
         address modularSkyStrategyV100Implementation = address(new MapleSkyStrategy());
         address modularSkyStrategyV100Initializer    = address(new MapleSkyStrategyInitializer());
@@ -95,7 +107,7 @@ contract ModularReleaseDeployment is Script, MapleAddressRegistryETH {
         console.log("SkyStrategy initializer deployed at:          ", modularSkyStrategyV100Initializer);
         console.log("-----------------------------------------------------------------------------------------");
 
-        // 7. Allocation strategy contracts
+        // 8. Allocation strategy contracts
         address allocationStrategyFactory            = address(new MapleAllocationStrategyFactory(globals));
         address allocationStrategyV100Implementation = address(new MapleAllocationStrategy());
         address allocationStrategyV100Initializer    = address(new MapleAllocationStrategyInitializer());
@@ -105,7 +117,7 @@ contract ModularReleaseDeployment is Script, MapleAddressRegistryETH {
         console.log("AllocationStrategy initializer deployed at:   ", allocationStrategyV100Initializer);
         console.log("-----------------------------------------------------------------------------------------");
 
-        // 8. LiquidityRouter
+        // 9. LiquidityRouter
         address liquidityRouterV100 = address(new MapleLiquidityRouter(globals));
 
         console.log("LiquidityRouter deployed at:                  ", liquidityRouterV100);

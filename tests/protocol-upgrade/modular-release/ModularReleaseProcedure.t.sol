@@ -10,7 +10,8 @@ import {
     IPool,
     IPoolManager,
     ISkyStrategy,
-    IStrategyManager
+    IStrategyManager,
+    IWithdrawalManagerQueue
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ModularReleaseBase } from "./ModularReleaseBase.sol";
@@ -94,6 +95,10 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assertEq(IMapleProxyFactory(allocationStrategyFactory).implementationOf(100), allocationStrategyV100Implementation);
         assertEq(IMapleProxyFactory(allocationStrategyFactory).defaultVersion(), 100);
 
+        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).implementationOf(201), withdrawalManagerQueueV201Implementation);
+        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).defaultVersion(), 201);
+        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).upgradeEnabledForPath(200, 201), true);
+
         /**********************************************************************************************************************************/
         /*** Pool Managers                                                                                                              ***/
         /**********************************************************************************************************************************/
@@ -141,6 +146,17 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["Sky Strategy USDC"]),  true);
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["TBills USDC"]),        true);
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["PYUSD USDC"]),         true);
+
+        /**********************************************************************************************************************************/
+        /*** Withdrawal Managers                                                                                                        ***/
+        /**********************************************************************************************************************************/
+
+        for (uint256 i; i < poolManagers.length; i++) {
+            address withdrawalManager = IPoolManager(poolManagers[i]).withdrawalManager();
+
+            assertEq(IWithdrawalManagerQueue(withdrawalManager).factory(),        withdrawalManagerQueueFactory);
+            assertEq(IWithdrawalManagerQueue(withdrawalManager).implementation(), withdrawalManagerQueueV201Implementation);
+        }
 
         /**********************************************************************************************************************************/
         /*** Strategy Managers                                                                                                          ***/

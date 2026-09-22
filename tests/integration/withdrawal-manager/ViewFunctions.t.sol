@@ -25,7 +25,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     function test_implementation_updatesAfterUpgrade() external {
         address oldImplementation = queueWM.implementation();
 
-        address newImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
+        address newImplementation = deployFromFile("Contracts@34", "WithdrawalManagerQueue");
 
         uint256 oldVersion = IMapleProxyFactory(queueWMFactory).versionOf(oldImplementation);
         uint256 newVersion = 201;

@@ -278,7 +278,7 @@ contract LoanManagerUpgradeTests is TestBase {
 
 contract WithdrawalManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts@7", "WithdrawalManagerQueue");
+    address newImplementation = deployFromFile("Contracts@34", "WithdrawalManagerQueue");
 
     bytes upgradeCallData = new bytes(0);
 
