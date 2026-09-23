@@ -32,7 +32,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
     function test_executeProposals_revert_notExecutable() public {
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(queueWM);
@@ -43,7 +43,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         data[0] = abi.encodeWithSelector(functionToCall1, securityAdmin);
         data[1] = abi.encodeWithSelector(functionToCall2, securityAdmin, true);
 
-        ( uint32 delay, uint32 executionWindow ) = timelock.defaultTimelockParameters();
+        (uint32 delay, uint32 executionWindow) = timelock.defaultTimelockParameters();
 
         uint32 functionSpecificDelay           = 2 * delay;
         uint32 functionSpecificExecutionWindow = 2 * executionWindow;
@@ -87,7 +87,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         assertEq(timelock.latestProposalId(), 1);
 
         address[] memory targets = new address[](1);
-        bytes[] memory data      = new bytes[](1);
+        bytes[] memory   data    = new bytes[](1);
 
         targets[0] = address(collateralAsset);
         data[0]    = abi.encodeWithSelector(collateralAsset.mint.selector, address(timelock), 100e18);
@@ -97,7 +97,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
         assertNotEmptyProposal(address(timelock), 2);
 
-        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+        (uint32 delay,) = timelock.defaultTimelockParameters();
 
         vm.warp(startTimestamp + delay);
 
@@ -118,7 +118,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
     function test_executeProposals_revert_invalidData() public {
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(collateralAsset);
@@ -129,7 +129,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         data[0] = abi.encodeWithSelector(functionToCall1, securityAdmin);
         data[1] = abi.encodeWithSelector(functionToCall2, governor, 100e18);
 
-        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+        (uint32 delay,) = timelock.defaultTimelockParameters();
 
         assertEq(timelock.latestProposalId(), 1);
 
@@ -166,7 +166,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         uint256[] memory proposalIds = new uint256[](1);
         proposalIds[0]               = nextProposalId;
 
-        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+        (uint32 delay,) = timelock.defaultTimelockParameters();
 
         vm.warp(startTimestamp + delay);
         vm.expectRevert("GT:EP:CALL_FAILED");
@@ -175,7 +175,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
     function test_executeProposals_executionFailed_notPendingAdmin() public {
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(queueWM);
@@ -191,7 +191,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         vm.prank(proposer);
         timelock.scheduleProposals(targets, data);
 
-        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+        (uint32 delay,) = timelock.defaultTimelockParameters();
 
         vm.warp(block.timestamp + delay);
 
@@ -221,7 +221,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
         uint256[] memory proposalIds = new uint256[](1);
         proposalIds[0]               = nextProposalId;
 
-        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+        (uint32 delay,) = timelock.defaultTimelockParameters();
 
         assertEq(contractWithFallback.counter(), 0);
 
@@ -233,7 +233,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
     function test_executeProposals_success() public {
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(collateralAsset);
@@ -254,7 +254,7 @@ contract ExecuteProposalsTests is GovernorTimelockTestBase {
 
         assertEq(timelock.latestProposalId(), 3);
 
-        ( uint32 delay, ) = timelock.defaultTimelockParameters();
+        (uint32 delay,) = timelock.defaultTimelockParameters();
 
         vm.warp(block.timestamp + delay);
 

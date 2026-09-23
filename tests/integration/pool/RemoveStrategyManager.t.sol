@@ -706,7 +706,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
             IAavePoolLike(aavePool).supply(address(fundsAsset), fundsAssetDust, donor, 0);
             vm.stopPrank();
         } else if (isSkyStrategy) {
-            uint256 usdsDust = fundsAssetDust * 1e12;  // Convert USDC precision to USDS precision.
+            uint256 usdsDust = fundsAssetDust * 1e12; // Convert USDC precision to USDS precision.
 
             deal(USDS, donor, usdsDust, true);
 
@@ -727,11 +727,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
         IMockERC20(strategyToken).transfer(underlyingStrategy, strategyTokenDust);
 
         // Aave and Spark aToken balance conversions can round by one unit.
-        assertApproxEqAbs(
-            IMockERC20(strategyToken).balanceOf(underlyingStrategy),
-            strategyTokenBalanceBefore + strategyTokenDust,
-            1
-        );
+        assertApproxEqAbs(IMockERC20(strategyToken).balanceOf(underlyingStrategy), strategyTokenBalanceBefore + strategyTokenDust, 1);
 
         uint256 strategyTokenBalanceAfter = IMockERC20(strategyToken).balanceOf(underlyingStrategy);
 
@@ -822,8 +818,8 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
     }
 
     function testFork_removeStrategyManager_success_afterYieldAndFeesAndFullRedemption() external {
-        uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-        uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+        uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         uint256 accruedYield;
         uint256 fundAssets = 100_000e6;
@@ -871,7 +867,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
             accruedYield = grossAssets - assetsBeforeYield;
         } else {
             // Sky strategy.
-            uint256 annualYieldRate = 0.036e6;  // 3.6% annual yield at the fork block.
+            uint256 annualYieldRate = 0.036e6; // 3.6% annual yield at the fork block.
 
             accruedYield = fundAssets * annualYieldRate / HUNDRED_PERCENT;
             grossAssets  = expectedFirstPoolAssets + accruedYield;
@@ -1079,14 +1075,14 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
         /*** Create two pools and fund the shared strategy manager                                                                      ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManagerToRemove);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManagerToRemove);
 
         address secondOpenTermLoanManager = IPoolManager(secondPoolManager).strategyList(0);
 
-        deposit(firstPool,  liquidityProvider,                   firstFund);
+        deposit(firstPool, liquidityProvider, firstFund);
         deposit(secondPool, makeAddr("secondLiquidityProvider"), secondFund);
 
-        fundStrategyManager(firstPoolManager,  strategyManagerToRemove, firstFund);
+        fundStrategyManager(firstPoolManager, strategyManagerToRemove, firstFund);
         fundStrategyManager(secondPoolManager, strategyManagerToRemove, secondFund);
 
         impairStrategy(underlyingStrategy, unrealizedLoss);
@@ -1096,11 +1092,8 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
         /**********************************************************************************************************************************/
 
         vm.prank(strategyManagerToRemove);
-        IUnderlyingStrategyLike(underlyingStrategy).withdrawFromUnderlyingStrategy(
-            makeAddr("lossReceiver"),
-            expectedStrategyManagerAssets - unrealizedLoss,
-            ""
-        );
+        IUnderlyingStrategyLike(underlyingStrategy)
+            .withdrawFromUnderlyingStrategy(makeAddr("lossReceiver"), expectedStrategyManagerAssets - unrealizedLoss, "");
 
         assertEq(IPoolManager(firstPoolManager).isStrategyManager(strategyManagerToRemove), true);
         assertEq(IPoolManager(firstPoolManager).strategyCapOf(strategyManagerToRemove),     type(uint256).max);
@@ -1236,7 +1229,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
         address emptyPoolDelegate = makeAddr("emptyPoolDelegate");
 
         address[] memory strategyFactories = new address[](0);
-        bytes[]   memory strategyData      = new bytes[](0);
+        bytes[] memory   strategyData      = new bytes[](0);
 
         uint256 bootstrapAssets         = 10e6;
         uint256 bootstrapShares         = 10e6;
@@ -1585,7 +1578,7 @@ abstract contract RemoveStrategyManagerSuccessTestBase is RemoveStrategyManagerT
         /*** Create and fund a second pool sharing the strategy manager                                                                 ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManagerToRemove);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManagerToRemove);
 
         address secondOpenTermLoanManager = IPoolManager(secondPoolManager).strategyList(0);
 
@@ -1747,7 +1740,7 @@ contract RemoveStrategyManagerAllocationStrategyFailureTests is RemoveStrategyMa
 
         super.setUp();
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -1771,7 +1764,7 @@ contract RemoveStrategyManagerAaveV3StrategyFailureTests is RemoveStrategyManage
 
         super.setUp();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -1796,7 +1789,7 @@ contract RemoveStrategyManagerSkyStrategyFailureTests is RemoveStrategyManagerFa
 
         super.setUp();
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -1822,7 +1815,7 @@ contract RemoveStrategyManagerSparkLendStrategyFailureTests is RemoveStrategyMan
 
         super.setUp();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   SPARK_USDC,
             useVirtualUnderlyingBalance_: false,
@@ -1860,7 +1853,7 @@ contract RemoveStrategyManagerAllocationStrategyTests is RemoveStrategyManagerSu
 
         super.setUp();
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -1869,7 +1862,7 @@ contract RemoveStrategyManagerAllocationStrategyTests is RemoveStrategyManagerSu
             bootstrapMint_:           0
         });
 
-        ( bootstrapStrategyManager, ) = _deployAllocationStrategy({
+        (bootstrapStrategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("bootstrapStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -1890,13 +1883,13 @@ contract RemoveStrategyManagerAllocationStrategyTests is RemoveStrategyManagerSu
 contract RemoveStrategyManagerAaveV3StrategyForkTests is RemoveStrategyManagerSuccessTestBase {
 
     function setUp() public override {
-        expectedBootstrapAssets                 = 10e6      - 1;
-        expectedBootstrapShares                 = 10e6      - 1;
+        expectedBootstrapAssets                 = 10e6 - 1;
+        expectedBootstrapShares                 = 10e6 - 1;
         expectedFirstPoolAssets                 = 100_000e6 - 1;
         expectedFirstPoolShares                 = 100_000e6 - 1;
-        expectedPartialImpairmentPoolAssets     = 90_000e6  - 1;
-        expectedPartialImpairmentStrategyAssets = 10_000e6  - 1;
-        expectedPartialImpairmentStrategyLosses = 10_000e6  - 1;
+        expectedPartialImpairmentPoolAssets     = 90_000e6 - 1;
+        expectedPartialImpairmentStrategyAssets = 10_000e6 - 1;
+        expectedPartialImpairmentStrategyLosses = 10_000e6 - 1;
         expectedSecondPoolAssets                = 200_000e6 - 1;
         expectedSecondPoolShares                = 200_000e6 - 1;
         expectedStrategyManagerAssets           = 300_000e6 - 2;
@@ -1904,7 +1897,7 @@ contract RemoveStrategyManagerAaveV3StrategyForkTests is RemoveStrategyManagerSu
 
         super.setUp();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -1914,7 +1907,7 @@ contract RemoveStrategyManagerAaveV3StrategyForkTests is RemoveStrategyManagerSu
             bootstrapMint_:               0
         });
 
-        ( bootstrapStrategyManager, ) = _deployAaveV3Strategy({
+        (bootstrapStrategyManager,) = _deployAaveV3Strategy({
             strategyDelegate_:            makeAddr("bootstrapStrategyDelegate"),
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -1938,11 +1931,11 @@ contract RemoveStrategyManagerAaveV3StrategyForkTests is RemoveStrategyManagerSu
 contract RemoveStrategyManagerSkyStrategyForkTests is RemoveStrategyManagerSuccessTestBase {
 
     function setUp() public override {
-        expectedBootstrapAssets                 = 10e6      - 1;
-        expectedBootstrapShares                 = 10e6      - 1;
+        expectedBootstrapAssets                 = 10e6 - 1;
+        expectedBootstrapShares                 = 10e6 - 1;
         expectedFirstPoolAssets                 = 100_000e6 - 1;
         expectedFirstPoolShares                 = 100_000e6 - 1;
-        expectedPartialImpairmentPoolAssets     = 90_000e6  - 1;
+        expectedPartialImpairmentPoolAssets     = 90_000e6 - 1;
         expectedPartialImpairmentStrategyAssets = 10_000e6;
         expectedPartialImpairmentStrategyLosses = 10_000e6;
         expectedSecondPoolAssets                = 200_000e6;
@@ -1952,7 +1945,7 @@ contract RemoveStrategyManagerSkyStrategyForkTests is RemoveStrategyManagerSucce
 
         super.setUp();
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -1963,7 +1956,7 @@ contract RemoveStrategyManagerSkyStrategyForkTests is RemoveStrategyManagerSucce
             bootstrapMint_:           0
         });
 
-        ( bootstrapStrategyManager, ) = _deploySkyStrategy({
+        (bootstrapStrategyManager,) = _deploySkyStrategy({
             strategyDelegate_:        makeAddr("bootstrapStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -1991,9 +1984,9 @@ contract RemoveStrategyManagerSparkLendStrategyForkTests is RemoveStrategyManage
         expectedBootstrapShares                 = 10e6;
         expectedFirstPoolAssets                 = 100_000e6 + 1;
         expectedFirstPoolShares                 = 100_000e6 + 1;
-        expectedPartialImpairmentPoolAssets     = 90_000e6  + 1;
-        expectedPartialImpairmentStrategyAssets = 10_000e6  - 1;
-        expectedPartialImpairmentStrategyLosses = 10_000e6  - 1;
+        expectedPartialImpairmentPoolAssets     = 90_000e6 + 1;
+        expectedPartialImpairmentStrategyAssets = 10_000e6 - 1;
+        expectedPartialImpairmentStrategyLosses = 10_000e6 - 1;
         expectedSecondPoolAssets                = 200_000e6;
         expectedSecondPoolShares                = 200_000e6 - 1;
         expectedStrategyManagerAssets           = 300_000e6;
@@ -2001,7 +1994,7 @@ contract RemoveStrategyManagerSparkLendStrategyForkTests is RemoveStrategyManage
 
         super.setUp();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   SPARK_USDC,
             useVirtualUnderlyingBalance_: false,
@@ -2011,7 +2004,7 @@ contract RemoveStrategyManagerSparkLendStrategyForkTests is RemoveStrategyManage
             bootstrapMint_:               0
         });
 
-        ( bootstrapStrategyManager, ) = _deployAaveV3Strategy({
+        (bootstrapStrategyManager,) = _deployAaveV3Strategy({
             strategyDelegate_:            makeAddr("bootstrapStrategyDelegate"),
             aaveToken_:                   SPARK_USDC,
             useVirtualUnderlyingBalance_: false,

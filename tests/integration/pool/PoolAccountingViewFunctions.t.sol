@@ -26,15 +26,15 @@ contract BalanceOfAssetsTests is TestBase {
         assertEq(pool.balanceOfAssets(lp1), 1_000e6);
         assertEq(pool.balanceOfAssets(lp2), 3_000e6);
 
-        fundsAsset.mint(address(pool), 4_000e6);  // Double totalAssets
+        fundsAsset.mint(address(pool), 4_000e6); // Double totalAssets
 
         assertEq(pool.balanceOfAssets(lp1), 2_000e6);
         assertEq(pool.balanceOfAssets(lp2), 6_000e6);
     }
 
     function testDeepFuzz_balanceOfAssets(uint256 depositAmount1, uint256 depositAmount2, uint256 additionalAmount) external {
-        depositAmount1   = bound(depositAmount1,   1, 1e29);
-        depositAmount2   = bound(depositAmount2,   1, 1e29);
+        depositAmount1   = bound(depositAmount1, 1, 1e29);
+        depositAmount2   = bound(depositAmount2, 1, 1e29);
         additionalAmount = bound(additionalAmount, 1, 1e29);
 
         uint256 totalDeposits = depositAmount1 + depositAmount2;
@@ -105,7 +105,7 @@ contract MaxDepositTests is TestBase {
 
     function testDeepFuzz_maxDeposit_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
         liquidityCap = bound(liquidityCap, 1, 1e29);
-        totalAssets  = bound(totalAssets,  1, 1e29);
+        totalAssets  = bound(totalAssets, 1, 1e29);
 
         uint256 availableDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
 
@@ -171,7 +171,7 @@ contract MaxMintTests is TestBase {
 
     function testDeepFuzz_maxMint_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
         liquidityCap = bound(liquidityCap, 1, 1e29);
-        totalAssets  = bound(totalAssets,  1, 1e29);
+        totalAssets  = bound(totalAssets, 1, 1e29);
 
         uint256 availableDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
 
@@ -199,15 +199,15 @@ contract MaxMintTests is TestBase {
         assertEq(pool.maxMint(lp1), 9_000e6);
         assertEq(pool.maxMint(lp2), 9_000e6);
 
-        fundsAsset.mint(address(pool), 1_000e6);  // Double totalAssets.
+        fundsAsset.mint(address(pool), 1_000e6); // Double totalAssets.
 
-        assertEq(pool.maxMint(lp1), 4_000e6);  // totalAssets = 2000, 8000 of room at 2:1
+        assertEq(pool.maxMint(lp1), 4_000e6); // totalAssets = 2000, 8000 of room at 2:1
         assertEq(pool.maxMint(lp2), 4_000e6);
     }
 
     function testDeepFuzz_maxMint_exchangeRateGtOne(uint256 liquidityCap, uint256 depositAmount, uint256 transferAmount) external {
-        liquidityCap   = bound(liquidityCap,   1, 1e29);
-        depositAmount  = bound(depositAmount,  1, liquidityCap);
+        liquidityCap   = bound(liquidityCap, 1, 1e29);
+        depositAmount  = bound(depositAmount, 1, liquidityCap);
         transferAmount = bound(transferAmount, 1, 1e29);
 
         vm.prank(poolDelegate);
@@ -508,7 +508,7 @@ contract PreviewWithdrawWithQueueWMTests is TestBase {
 
     function testFuzz_previewWithdraw(
         address lender,
-        bool    isManual,
+        bool isManual,
         uint256 amountToRequest,
         uint256 amountToProcess,
         uint256 amountToWithdraw
@@ -587,9 +587,9 @@ contract ConvertToAssetsTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
-        assertEq(pool.convertToAssets(1),       0);      // Rounds down as expected
+        assertEq(pool.convertToAssets(1),       0); // Rounds down as expected
         assertEq(pool.convertToAssets(2),       1);
         assertEq(pool.convertToAssets(1_000e6), 500e6);
     }
@@ -640,7 +640,7 @@ contract ConvertToSharesTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
         assertEq(pool.convertToShares(1),       2);
         assertEq(pool.convertToShares(2),       4);
@@ -693,7 +693,7 @@ contract PreviewDepositTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
         assertEq(pool.previewDeposit(1),       2);
         assertEq(pool.previewDeposit(2),       4);
@@ -746,9 +746,9 @@ contract PreviewMintTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
-        assertEq(pool.previewMint(1),       1);  // Rounds up the asset token amount
+        assertEq(pool.previewMint(1),       1); // Rounds up the asset token amount
         assertEq(pool.previewMint(2),       1);
         assertEq(pool.previewMint(1_000e6), 500e6);
     }
@@ -768,12 +768,12 @@ contract TotalAssetsTests is TestBase {
         lp1      = makeAddr("lp1");
 
         setupFees({
-            delegateOriginationFee:     0,
-            delegateServiceFee:         0,
-            delegateManagementFeeRate:  0.02e6,
+            delegateOriginationFee: 0,
+            delegateServiceFee: 0,
+            delegateManagementFeeRate: 0.02e6,
             platformOriginationFeeRate: 0,
-            platformServiceFeeRate:     0.031536e6,  // 1000e6 platform service fee after 1m seconds on 1M principal
-            platformManagementFeeRate:  0.08e6
+            platformServiceFeeRate: 0.031536e6, // 1000e6 platform service fee after 1m seconds on 1M principal
+            platformManagementFeeRate: 0.08e6
         });
     }
 
@@ -801,7 +801,7 @@ contract TotalAssetsTests is TestBase {
 
         fundLoan(loan);
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 0);  // All liquidity funded the loan
+        assertEq(fundsAsset.balanceOf(address(pool)), 0); // All liquidity funded the loan
         assertEq(pool.totalAssets(),                  1_500_000e6);
     }
 
@@ -850,7 +850,7 @@ contract TotalAssetsTests is TestBase {
 
         // OT loans don't amortize: principalOut stays 1M, cash gains the 900e6 net interest
         assertEq(pool.totalAssets(),                  1_500_000e6 + 900e6);
-        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6   + 900e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 900e6);
     }
 
 }

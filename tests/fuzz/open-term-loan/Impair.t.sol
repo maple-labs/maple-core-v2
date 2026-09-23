@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IPool,
-    IPoolManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager, IPool, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedSetup }     from "../FuzzedSetup.sol";
+import { FuzzedSetup } from "../FuzzedSetup.sol";
 import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
@@ -21,14 +16,14 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
     uint256 poolBalance;
     uint256 treasuryBalance;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     OpenTermLoanImpairmentStorage impairmentStorage;
-    OpenTermLoanManagerStorage    loanManagerStorage;
-    OpenTermLoanStorage           loanStorage;
-    OpenTermPaymentStorage        paymentStorage;
-    PoolManagerStorage            poolManagerStorage;
+    OpenTermLoanManagerStorage loanManagerStorage;
+    OpenTermLoanStorage loanStorage;
+    OpenTermPaymentStorage paymentStorage;
+    PoolManagerStorage poolManagerStorage;
 
     function testFuzz_impair_otl(uint256 seed_) external {
         fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
@@ -118,7 +113,6 @@ contract ImpairFuzzTests is FuzzedSetup, StorageSnapshot {
                 diff:               3
             });
         }
-
         // If the loan was already impaired.
         else {
             assertImpairment({

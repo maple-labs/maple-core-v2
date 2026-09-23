@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IERC20Like,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyStrategyTestBase } from "./SkyStrategyTestBase.sol";
 
@@ -62,7 +59,7 @@ contract SkyStrategyRecoverPositionTests is SkyStrategyTestBase {
     uint256 fundAmount     = 500_000e6;
     uint256 poolLiquidity  = 1_000_000e6;
     uint256 poolShares     = 1_000_000e6;
-    uint256 strategyShares = 500_000e6 - 1;  // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 strategyShares = 500_000e6 - 1; // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
 
     uint256 recoveredShares;
 

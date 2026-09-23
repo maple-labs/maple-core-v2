@@ -5,13 +5,12 @@ import { AllocationFuzzBase } from "./AllocationFuzzBase.sol";
 
 contract AllocationProcessRedemptionFuzzTests is AllocationFuzzBase {
 
-    AllocationStrategyStorage      strategyStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    AllocationStrategyStorage strategyStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzz_allocation_processRedemption(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across the loans and the allocation strategy, then choose the pool to test against           ***/
         /**********************************************************************************************************************************/
@@ -29,16 +28,12 @@ contract AllocationProcessRedemptionFuzzTests is AllocationFuzzBase {
                 if (fundsAsset.balanceOf(address(pool)) < minFundAmount) deposit(address(pool), lps[0], lpDeposit);
 
                 fundStrategyManager(
-                    address(poolManager),
-                    address(allocationManager),
-                    getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
+                    address(poolManager), address(allocationManager), getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
                 );
             }
 
             requestRedeemFromStrategyManager(
-                address(poolManager),
-                address(allocationManager),
-                getSomeValue(1, allocationManager.sharesOf(address(poolManager)))
+                address(poolManager), address(allocationManager), getSomeValue(1, allocationManager.sharesOf(address(poolManager)))
             );
         }
 
@@ -106,7 +101,7 @@ contract AllocationProcessRedemptionFuzzTests is AllocationFuzzBase {
             allocationStrategy:    address(allocationStrategy),
             assetsUnderManagement: expectedAssetsUnderManagement,
             availableToWithdraw:   strategyStorage.previousAvailableToWithdraw - expectedAssetsToReceive,
-            recordedAssets:        strategyStorage.previousRecordedAssets      - expectedAssetsToReceive,
+            recordedAssets:        strategyStorage.previousRecordedAssets - expectedAssetsToReceive,
             totalDeployedAssets:   strategyStorage.previousTotalDeployedAssets,
             unrealizedLosses:      expectedUnrealizedLosses
         });
@@ -119,7 +114,7 @@ contract AllocationProcessRedemptionFuzzTests is AllocationFuzzBase {
         /*** Assert new state                                                                                                          ***/
         /**********************************************************************************************************************************/
 
-        assertEq(allocationManager.totalShares(),           strategyManagerStorage.previousTotalShares        - sharesToProcess);
+        assertEq(allocationManager.totalShares(),           strategyManagerStorage.previousTotalShares - sharesToProcess);
         assertEq(allocationManager.totalPendingShares(),    strategyManagerStorage.previousTotalPendingShares - sharesToProcess);
         assertEq(allocationManager.assetsUnderManagement(), expectedAssetsUnderManagement);
         assertEq(allocationManager.unrealizedLosses(),      expectedUnrealizedLosses);
@@ -138,7 +133,7 @@ contract AllocationProcessRedemptionFuzzTests is AllocationFuzzBase {
 
         assertEq(allocationManager.assetsOf(address(poolManager)),           expectedAssetsOf);
         assertEq(allocationManager.unrealizedLossesOf(address(poolManager)), expectedUnrealizedLossesOf);
-        assertEq(allocationManager.sharesOf(address(poolManager)),           positionStorage.previousShares        - sharesToProcess);
+        assertEq(allocationManager.sharesOf(address(poolManager)),           positionStorage.previousShares - sharesToProcess);
         assertEq(allocationManager.pendingSharesOf(address(poolManager)),    positionStorage.previousPendingShares - sharesToProcess);
 
         assertEq(

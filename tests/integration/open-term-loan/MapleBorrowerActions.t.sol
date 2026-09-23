@@ -26,7 +26,7 @@ contract MapleBorrowerActionsTests is TestBase {
             lender:    poolManager.strategyList(0),
             asset:     address(fundsAsset),
             principal: 2_500_000e6,
-            terms:     [uint32(5 days), uint32(3 days),  uint32(30 days)],
+            terms:     [uint32(5 days), uint32(3 days), uint32(30 days)],
             rates:     [uint64(0.01e6), uint64(0.08e6), uint64(0.05e6), uint64(0.02e6)]
         });
     }

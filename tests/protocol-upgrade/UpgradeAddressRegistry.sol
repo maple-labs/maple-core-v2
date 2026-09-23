@@ -111,8 +111,8 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     /*** Health Checker Addresses                                                                                                       ***/
     /**************************************************************************************************************************************/
 
-    address updatedProtocolHealthChecker      = 0xfb8F87D716ac3fC54f33664F51E3961bc2DD3EDb;
-    address updatedOpenTermLoanHealthChecker  = 0xa2e3c1e3e2b8E2B8B5e3FF1d4c3b2A1f4e5d6C7d;
+    address updatedProtocolHealthChecker     = 0xfb8F87D716ac3fC54f33664F51E3961bc2DD3EDb;
+    address updatedOpenTermLoanHealthChecker = 0xa2e3c1e3e2b8E2B8B5e3FF1d4c3b2A1f4e5d6C7d;
 
     /**************************************************************************************************************************************/
     /*** syrupUSDG Addresses                                                                                                            ***/
@@ -156,23 +156,23 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     /**************************************************************************************************************************************/
 
     // TODO: Replace these with real addresses when they are known.
-    address aaveStrategyUSDCDelegate  = makeAddr("aaveStrategyUSDCDelegate");
-    address aaveStrategyUSDTDelegate  = makeAddr("aaveStrategyUSDTDelegate");
-    address aaveStrategyUSDGDelegate  = makeAddr("aaveStrategyUSDGDelegate");
-    address skyStrategyUSDCDelegate   = makeAddr("skyStrategyUSDCDelegate");
-    address lpDexUSDCDelegate         = makeAddr("lpDexUSDCDelegate");
-    address crossPoolUSDCDelegate     = makeAddr("crossPoolUSDCDelegate");
-    address tBillsUSDCDelegate        = makeAddr("tBillsUSDCDelegate");
-    address pyusdUSDCDelegate         = makeAddr("pyusdUSDCDelegate");
-    address spreadsUSDTDelegate       = makeAddr("spreadsUSDTDelegate");
-    address lpDexUSDTDelegate         = makeAddr("lpDexUSDTDelegate");
-    address crossPoolUSDTDelegate     = makeAddr("crossPoolUSDTDelegate");
-    address tBillsUSDTDelegate        = makeAddr("tBillsUSDTDelegate");
-    address pyusdUSDTDelegate         = makeAddr("pyusdUSDTDelegate");
-    address lpDexUSDGDelegate         = makeAddr("lpDexUSDGDelegate");
-    address crossPoolUSDGDelegate     = makeAddr("crossPoolUSDGDelegate");
-    address tBillsUSDGDelegate        = makeAddr("tBillsUSDGDelegate");
-    address pyusdUSDGDelegate         = makeAddr("pyusdUSDGDelegate");
+    address aaveStrategyUSDCDelegate = makeAddr("aaveStrategyUSDCDelegate");
+    address aaveStrategyUSDTDelegate = makeAddr("aaveStrategyUSDTDelegate");
+    address aaveStrategyUSDGDelegate = makeAddr("aaveStrategyUSDGDelegate");
+    address skyStrategyUSDCDelegate  = makeAddr("skyStrategyUSDCDelegate");
+    address lpDexUSDCDelegate        = makeAddr("lpDexUSDCDelegate");
+    address crossPoolUSDCDelegate    = makeAddr("crossPoolUSDCDelegate");
+    address tBillsUSDCDelegate       = makeAddr("tBillsUSDCDelegate");
+    address pyusdUSDCDelegate        = makeAddr("pyusdUSDCDelegate");
+    address spreadsUSDTDelegate      = makeAddr("spreadsUSDTDelegate");
+    address lpDexUSDTDelegate        = makeAddr("lpDexUSDTDelegate");
+    address crossPoolUSDTDelegate    = makeAddr("crossPoolUSDTDelegate");
+    address tBillsUSDTDelegate       = makeAddr("tBillsUSDTDelegate");
+    address pyusdUSDTDelegate        = makeAddr("pyusdUSDTDelegate");
+    address lpDexUSDGDelegate        = makeAddr("lpDexUSDGDelegate");
+    address crossPoolUSDGDelegate    = makeAddr("crossPoolUSDGDelegate");
+    address tBillsUSDGDelegate       = makeAddr("tBillsUSDGDelegate");
+    address pyusdUSDGDelegate        = makeAddr("pyusdUSDGDelegate");
 
     /**************************************************************************************************************************************/
     /*** Modular Release - Deployed Strategies                                                                                          ***/

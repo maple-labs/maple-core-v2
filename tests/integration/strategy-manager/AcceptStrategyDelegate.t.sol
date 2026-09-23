@@ -7,13 +7,13 @@ import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
 contract StrategyManagerAcceptStrategyDelegateFailureTests is TestBaseWithAssertions {
 
-    address newStrategyDelegate  = makeAddr("newStrategyDelegate");
-    address unauthorizedCaller   = makeAddr("unauthorizedCaller");
+    address newStrategyDelegate = makeAddr("newStrategyDelegate");
+    address unauthorizedCaller  = makeAddr("unauthorizedCaller");
 
     function setUp() public override {
         super.setUp();
 
-        ( strategyManager, ) = _deployAllocationStrategy({
+        (strategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -73,7 +73,7 @@ contract StrategyManagerAcceptStrategyDelegateSuccessTests is TestBaseWithAssert
     function setUp() public override {
         super.setUp();
 
-        ( strategyManager, ) = _deployAllocationStrategy({
+        (strategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,

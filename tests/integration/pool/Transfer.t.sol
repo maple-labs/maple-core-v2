@@ -14,7 +14,6 @@ contract TransferTests is TestBase {
         // as tests need to validate that only valid lenders are allowed to transfer Pool tokens.
     }
 
-
     function test_transfer_protocolPaused() external {
         openPool(address(poolManager));
 
@@ -154,7 +153,7 @@ contract TransferTests is TestBase {
         address recipient = makeAddr("recipient");
 
         vm.prank(recipient);
-        vm.expectRevert(arithmeticError);  // ERC20: subtraction underflow in _decreaseAllowance
+        vm.expectRevert(arithmeticError); // ERC20: subtraction underflow in _decreaseAllowance
         pool.transferFrom(lp, recipient, lpShares);
     }
 
@@ -168,7 +167,7 @@ contract TransferTests is TestBase {
         pool.approve(recipient, lpShares - 1);
 
         vm.prank(recipient);
-        vm.expectRevert(arithmeticError);  // ERC20: subtraction underflow in _decreaseAllowance
+        vm.expectRevert(arithmeticError); // ERC20: subtraction underflow in _decreaseAllowance
         pool.transferFrom(lp, recipient, lpShares);
     }
 

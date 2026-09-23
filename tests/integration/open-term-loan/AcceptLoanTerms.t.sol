@@ -45,7 +45,6 @@ contract AcceptLoanTermsOTLTests is AcceptLoanTermsTestBase {
             [gracePeriod, noticePeriod, paymentInterval],
             [0.031536e6, interestRate, 0, 0.15768e6]
         );
-
     }
 
     function test_acceptLoanTerms_OTL_failIfPaused() external {

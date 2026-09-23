@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    Action,
-    ActionType,
-    IPool,
-    IStrategyManager,
-    IAllocationStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { Action, ActionType, IPool, IStrategyManager, IAllocationStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -255,7 +249,6 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
     }
 
     function test_processRedemption_success_fullRedemption() external {
-
         /**********************************************************************************************************************************/
         /*** Request all shares                                                                                                         ***/
         /**********************************************************************************************************************************/
@@ -357,7 +350,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         /*** Assert the operator roles are configured                                                                                   ***/
         /**********************************************************************************************************************************/
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    liquidityBot),             true);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT", liquidityBot),                true);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", address(liquidityRouter)), true);
 
         assertPoolState({
@@ -564,7 +557,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         /*** Create and fund a second pool                                                                                              ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
 
         deposit(secondPool, makeAddr("lp2"), secondPoolAssets);
         fundStrategyManager(secondPoolManager, strategyManager, secondPoolAssets);
@@ -1582,7 +1575,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         /*** Fund a second pool manager, impair the strategy, and request shares                                                        ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
 
         deposit(secondPool, makeAddr("lp2"), secondPoolAssets);
         fundStrategyManager(secondPoolManager, strategyManager, secondPoolAssets);
@@ -1592,7 +1585,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
 
         {
             uint256 totalShares = firstPoolAssets + secondPoolAssets;
-            uint256 firstLoss   = divRoundUp(firstPoolAssets  * impairment, totalShares);
+            uint256 firstLoss   = divRoundUp(firstPoolAssets * impairment, totalShares);
             uint256 secondLoss  = divRoundUp(secondPoolAssets * impairment, totalShares);
 
             assertPoolState({
@@ -1653,8 +1646,8 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets);
         assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
-        uint256 firstAssetsOut = firstPoolSharesToProcess * (firstPoolAssets + secondPoolAssets - impairment) /
-            (firstPoolAssets + secondPoolAssets);
+        uint256 firstAssetsOut =
+            firstPoolSharesToProcess * (firstPoolAssets + secondPoolAssets - impairment) / (firstPoolAssets + secondPoolAssets);
 
         /**********************************************************************************************************************************/
         /*** Process shares for the first pool manager                                                                                  ***/
@@ -1738,8 +1731,8 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstPoolAssets + secondPoolAssets - firstAssetsOut);
         assertEq(fundsAsset.balanceOf(strategyManager),              0);
 
-        uint256 secondAssetsOut = secondPoolSharesToProcess * (firstPoolAssets + secondPoolAssets - firstAssetsOut - impairment) /
-            (firstPoolAssets + secondPoolAssets - firstPoolSharesToProcess);
+        uint256 secondAssetsOut = secondPoolSharesToProcess * (firstPoolAssets + secondPoolAssets - firstAssetsOut - impairment)
+            / (firstPoolAssets + secondPoolAssets - firstPoolSharesToProcess);
 
         /**********************************************************************************************************************************/
         /*** Process shares for the second pool manager                                                                                 ***/
@@ -1853,7 +1846,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         /*** Fund a second pool manager and realize yield                                                                               ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
 
         deposit(secondPool, makeAddr("lp2"), secondPoolAssets);
         fundStrategyManager(secondPoolManager, strategyManager, secondPoolAssets);
@@ -2163,8 +2156,8 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         uint256 yieldAssets = 200_000e6;
         uint32  duration    = 10 days;
 
-        uint32 delegateFeeRate = 0.1e6;   // 10% delegate fee
-        uint32 protocolFeeRate = 0.05e6;  // 5% protocol fee
+        uint32 delegateFeeRate = 0.1e6; // 10% delegate fee
+        uint32 protocolFeeRate = 0.05e6; // 5% protocol fee
 
         uint256 delegateFee = 20_000e6;
         uint256 protocolFee = 10_000e6;
@@ -2541,7 +2534,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
 
         uint256 totalAssets = firstPoolAssets + secondPoolAssets;
         uint256 assetsOut   = secondPoolAssets * (totalAssets - impairment) / totalAssets;
-        uint256 firstLoss   = divRoundUp(firstPoolAssets  * impairment, totalAssets);
+        uint256 firstLoss   = divRoundUp(firstPoolAssets * impairment, totalAssets);
         uint256 secondLoss  = divRoundUp(secondPoolAssets * impairment, totalAssets);
 
         /**********************************************************************************************************************************/
@@ -2593,7 +2586,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         /*** Fund the impaired strategy from a second pool manager                                                                      ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
 
         deposit(secondPool, makeAddr("lp2"), secondPoolAssets);
         fundStrategyManager(secondPoolManager, strategyManager, secondPoolAssets);
@@ -2792,7 +2785,7 @@ contract AllocationStrategyProcessRedemptionSuccessTests is AllocationStrategyPr
         uint256 aumAfterYield = INITIAL_LIQUIDITY + yieldAssets;
 
         // Partial shares convert to assets with round-down division.
-        uint256 assetsOut     = processAmount * aumAfterYield / INITIAL_LIQUIDITY;
+        uint256 assetsOut = processAmount * aumAfterYield / INITIAL_LIQUIDITY;
 
         /**********************************************************************************************************************************/
         /*** Add yield that remains unrealized                                                                                          ***/

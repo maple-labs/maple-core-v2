@@ -35,37 +35,31 @@ contract ProposeRoleUpdatesTests is GovernorTimelockTestBase {
 
         bytes32[] memory roles       = new bytes32[](2);
         address[] memory accounts    = new address[](2);
-        bool[]    memory shouldGrant = new bool[](2);
+        bool[] memory    shouldGrant = new bool[](2);
 
         roles[0] = timelock.PROPOSER_ROLE();
         roles[1] = timelock.EXECUTOR_ROLE();
 
         address newProposer = makeAddr("newProposer");
-        accounts[0] = newProposer;
-        accounts[1] = executor;
+        accounts[0]         = newProposer;
+        accounts[1]         = executor;
 
         shouldGrant[0] = true;
         shouldGrant[1] = false;
 
         assertEq(timelock.hasRole(newProposer, timelock.PROPOSER_ROLE()), false);
-        assertEq(timelock.hasRole(executor,    timelock.EXECUTOR_ROLE()), true);
+        assertEq(timelock.hasRole(executor, timelock.EXECUTOR_ROLE()),    true);
 
         assertEmptyProposal(address(timelock), 2);
         assertEmptyProposal(address(timelock), 3);
 
-        ( uint32 delay, uint32 executionWindow ) = timelock.defaultTimelockParameters();
+        (uint32 delay, uint32 executionWindow) = timelock.defaultTimelockParameters();
 
         bytes32 expectedProposalHash1 = keccak256(
-            abi.encode(
-                address(timelock),
-                abi.encodeWithSelector(timelock.updateRole.selector, roles[0], accounts[0], shouldGrant[0])
-            )
+            abi.encode(address(timelock), abi.encodeWithSelector(timelock.updateRole.selector, roles[0], accounts[0], shouldGrant[0]))
         );
         bytes32 expectedProposalHash2 = keccak256(
-            abi.encode(
-                address(timelock),
-                abi.encodeWithSelector(timelock.updateRole.selector, roles[1], accounts[1], shouldGrant[1])
-            )
+            abi.encode(address(timelock), abi.encodeWithSelector(timelock.updateRole.selector, roles[1], accounts[1], shouldGrant[1]))
         );
 
         uint32 currentTimestamp           = uint32(block.timestamp);

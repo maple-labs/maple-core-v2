@@ -31,16 +31,12 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
             address proxyFactory = proxyFactories[i];
 
             _executeThroughTimelock(
-                proxyFactory,
-                IMapleProxyFactory.enableUpgradePath.selector,
-                abi.encode(fromVersion, toVersion, address(0))
+                proxyFactory, IMapleProxyFactory.enableUpgradePath.selector, abi.encode(fromVersion, toVersion, address(0))
             );
 
             assertEq(IMapleProxyFactory(proxyFactory).upgradeEnabledForPath(fromVersion, toVersion), true);
 
-            _executeThroughTimelock(
-                proxyFactory, IMapleProxyFactory.disableUpgradePath.selector, abi.encode(fromVersion, toVersion)
-            );
+            _executeThroughTimelock(proxyFactory, IMapleProxyFactory.disableUpgradePath.selector, abi.encode(fromVersion, toVersion));
 
             assertEq(IMapleProxyFactory(proxyFactory).upgradeEnabledForPath(fromVersion, toVersion), false);
         }
@@ -56,15 +52,12 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
             assertEq(IMapleProxyFactory(proxyFactory).upgradeEnabledForPath(fromVersion, toVersion), false);
 
             _executeThroughTimelock(
-                proxyFactory,
-                IMapleProxyFactory.enableUpgradePath.selector,
-                abi.encode(fromVersion, toVersion, address(0))
+                proxyFactory, IMapleProxyFactory.enableUpgradePath.selector, abi.encode(fromVersion, toVersion, address(0))
             );
 
             assertEq(IMapleProxyFactory(proxyFactory).upgradeEnabledForPath(fromVersion, toVersion), true);
         }
     }
-
 
     function testFork_registerImplementation() public {
         // Implementation can be any contract it is important to have size > 0
@@ -78,9 +71,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
             assertEq(IMapleProxyFactory(proxyFactory).implementationOf(version),    address(0));
 
             _executeThroughTimelock(
-                proxyFactory,
-                IMapleProxyFactory.registerImplementation.selector,
-                abi.encode(version, newImplementation, address(0))
+                proxyFactory, IMapleProxyFactory.registerImplementation.selector, abi.encode(version, newImplementation, address(0))
             );
 
             assertEq(IMapleProxyFactory(proxyFactory).versionOf(newImplementation), version);
@@ -97,9 +88,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
             address proxyFactory = proxyFactories[i];
 
             _executeThroughTimelock(
-                proxyFactory,
-                IMapleProxyFactory.registerImplementation.selector,
-                abi.encode(version, newImplementation, address(0))
+                proxyFactory, IMapleProxyFactory.registerImplementation.selector, abi.encode(version, newImplementation, address(0))
             );
 
             assertNotEq(IMapleProxyFactory(proxyFactory).defaultVersion(), version);
@@ -112,7 +101,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
 
     function testFork_setGlobals() public {
         address newGlobalsGovernor = makeAddr("newGlobalsGovernor");
-        address newGlobals = address(new MockGlobals(newGlobalsGovernor));
+        address newGlobals         = address(new MockGlobals(newGlobalsGovernor));
 
         for (uint256 i = 0; i < proxyFactories.length; i++) {
             address proxyFactory = proxyFactories[i];
@@ -121,7 +110,7 @@ contract MapleProxyFactoryFunctionsUpgradeTests is GovernorTimelockUpgradeTestsB
 
             assertEq(globals_, address(globals));
 
-            assertNotEq(globals_,                           newGlobals);
+            assertNotEq(globals_, newGlobals);
             assertNotEq(IMapleGlobals(globals_).governor(), newGlobalsGovernor);
 
             _executeThroughTimelock(proxyFactory, IMapleProxyFactory.setGlobals.selector, abi.encode(newGlobals));

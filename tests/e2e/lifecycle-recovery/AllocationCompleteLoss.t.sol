@@ -12,8 +12,8 @@ contract AllocationStrategyCompleteLossTests is AllocationStrategyTestBase {
     uint256 strategyFunding = 400_000e6;
 
     function test_recognizeLoss_completeLossMakesStrategyManagerUnusable() external {
-        uint256 remainingPoolLiquidity = poolLiquidity - strategyFunding;  // 600_000e6
-        uint256 strategyShares         = strategyFunding;                  // 400_000e6
+        uint256 remainingPoolLiquidity = poolLiquidity - strategyFunding; // 600_000e6
+        uint256 strategyShares         = strategyFunding; // 400_000e6
 
         /**********************************************************************************************************************************/
         /*** Fully fund the Allocation strategy deployment while retaining liquidity in the Pool                                        ***/

@@ -11,7 +11,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
     uint256 lastRequestId;
     uint256 totalShares;
 
-    mapping(address => bool)    lpManuals;
+    mapping(address => bool) lpManuals;
     mapping(address => uint256) lpShares;
     mapping(uint256 => address) lpRequests;
 
@@ -21,9 +21,9 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
 
     function testFuzz_processExit(
         address[10] memory lps,
-        bool[10]    memory isManual,
+        bool[10] memory isManual,
         uint256[10] memory shares,
-        uint256            sharesToProcess
+        uint256 sharesToProcess
     )
         external
     {
@@ -31,7 +31,7 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
             if (lps[i] == address(0)) continue;
             if (lps[i] == address(pool)) continue;
 
-            ( uint256[] memory requestIds, ) = queueWM.requestsByOwner(lps[i]);
+            (uint256[] memory requestIds,) = queueWM.requestsByOwner(lps[i]);
 
             if (requestIds.length > 0) continue;
 
@@ -48,14 +48,18 @@ contract ProcessExitFuzzTests is TestBaseWithAssertions {
             requestRedeem(lps[i], sharesToRequest);
         }
 
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: lastRequestId });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: lastRequestId
+        });
         assertEq(queueWM.totalShares(), totalShares);
 
         sharesToProcess = bound(sharesToProcess, MIN_SHARES, totalShares);
 
         processRedemptions(address(pool), sharesToProcess);
 
-        ( uint256 nextRequestId_, uint256 lastRequestId_ ) = queueWM.queue();
+        (uint256 nextRequestId_, uint256 lastRequestId_) = queueWM.queue();
 
         uint256 sharesProcessed;
 

@@ -7,14 +7,13 @@ import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
 abstract contract RecognizeLossFuzzTests is AaveV3FuzzBase {
 
-    AaveStrategyStorage            strategyStorage;
-    FeeAccrualStorage              feeAccrualStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    AaveStrategyStorage strategyStorage;
+    FeeAccrualStorage feeAccrualStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzzFork_aave_recognizeLoss(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
         /**********************************************************************************************************************************/
@@ -31,9 +30,7 @@ abstract contract RecognizeLossFuzzTests is AaveV3FuzzBase {
             if (fundsAsset.balanceOf(address(pool)) < minFundAmount) deposit(address(pool), lps[0], lpDeposit);
 
             fundStrategyManager(
-                address(poolManager),
-                address(aaveStrategyManager),
-                getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
+                address(poolManager), address(aaveStrategyManager), getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
             );
 
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));

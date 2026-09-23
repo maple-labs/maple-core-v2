@@ -51,17 +51,19 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         uint256 fundAssets     = 1_000e6;
         uint256 expectedShares = fundAssets;
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0,
+                strategyProtocolFeeRate: 0,
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
 
         /**********************************************************************************************************************************/
@@ -74,7 +76,7 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         /*** Deployment without bootstrap mint leaves the donation sitting in the strategy against zero shares                          ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) = _deploySkyStrategy({
+        (address strategyManager_, address underlyingStrategy_) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -156,21 +158,22 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         uint256 fundAssets     = (bootstrapMint + donationAssets) / 4;
         uint256 expectedShares = bootstrapMint / 4;
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
-            strategyDeployer.getDeploymentAddresses(
-                strategyDelegate,
-                strategyManagerFactory,
-                skyStrategyFactory,
-                abi.encode(SkyStrategyInitializerParams({
-                    fundsAsset:              address(fundsAsset),
-                    psm:                     USDS_LITE_PSM,
-                    savingsUsds:             SAVINGS_USDS,
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) = strategyDeployer.getDeploymentAddresses(
+            strategyDelegate,
+            strategyManagerFactory,
+            skyStrategyFactory,
+            abi.encode(
+                SkyStrategyInitializerParams({
+                    fundsAsset: address(fundsAsset),
+                    psm: USDS_LITE_PSM,
+                    savingsUsds: SAVINGS_USDS,
                     strategyDelegateFeeRate: 0,
                     strategyProtocolFeeRate: 0,
-                    referralCode:            0,
-                    strategyMetadata:        ""
-                }))
-            );
+                    referralCode: 0,
+                    strategyMetadata: ""
+                })
+            )
+        );
 
         /**********************************************************************************************************************************/
         /*** Attacker donates sUSDS to the predicted underlying strategy address before deployment                                      ***/
@@ -182,7 +185,7 @@ contract StrategyManagerBootstrapMintDeploymentTests is TestBaseWithAssertions {
         /*** Deployment with bootstrap mint completes successfully and the dead shares absorb the donation                              ***/
         /**********************************************************************************************************************************/
 
-        ( address strategyManager_, address underlyingStrategy_ ) = _deploySkyStrategy({
+        (address strategyManager_, address underlyingStrategy_) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -304,7 +307,7 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
     function setUp() public override {
         super.setUp();
 
-        ( noBootstrapManager, noBootstrapStrategy ) = _deployAllocationStrategy({
+        (noBootstrapManager, noBootstrapStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        delegateA,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -313,7 +316,7 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
             bootstrapMint_:           0
         });
 
-        ( bootstrapManager, bootstrapStrategy ) = _deployAllocationStrategy({
+        (bootstrapManager, bootstrapStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        delegateB,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -322,8 +325,8 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
             bootstrapMint_:           bootstrapMint
         });
 
-        ( poolA, poolManagerA ) = _createPoolSharingStrategy("poolDelegateA", noBootstrapManager);
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolDelegateB", bootstrapManager);
+        (poolA, poolManagerA) = _createPoolSharingStrategy("poolDelegateA", noBootstrapManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolDelegateB", bootstrapManager);
 
         openPool(poolManagerA);
         openPool(poolManagerB);
@@ -338,11 +341,10 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
         deposit(poolB, lpB, depositAmount);
 
         fundStrategyManager(poolManagerA, noBootstrapManager, depositAmount);
-        fundStrategyManager(poolManagerB, bootstrapManager,   depositAmount);
+        fundStrategyManager(poolManagerB, bootstrapManager, depositAmount);
     }
 
     function test_redemptionInflation_bootstrapMintPreventsFundingDoS() external {
-
         assertStrategyManager({
             strategyManager:       noBootstrapManager,
             totalShares:           depositAmount,
@@ -394,10 +396,10 @@ contract StrategyManagerBootstrapMintRedemptionInflationTests is TestBaseWithAss
         /**********************************************************************************************************************************/
 
         requestRedeemFromStrategyManager(poolManagerA, noBootstrapManager, depositAmount - 1);
-        requestRedeemFromStrategyManager(poolManagerB, bootstrapManager,   depositAmount);
+        requestRedeemFromStrategyManager(poolManagerB, bootstrapManager, depositAmount);
 
         processRedemptionFromStrategyManager(poolManagerA, noBootstrapManager, depositAmount - 1);
-        processRedemptionFromStrategyManager(poolManagerB, bootstrapManager,   depositAmount);
+        processRedemptionFromStrategyManager(poolManagerB, bootstrapManager, depositAmount);
 
         uint256 bootstrapStrInitialFunding     = depositAmount + bootstrapMint;
         uint256 bootstrapStrExpectedReceived   = depositAmount * (bootstrapStrInitialFunding - impairment) / bootstrapStrInitialFunding;
@@ -472,7 +474,7 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
     function setUp() public override {
         super.setUp();
 
-        ( noBootstrapManager, noBootstrapStrategy ) = _deployAllocationStrategy({
+        (noBootstrapManager, noBootstrapStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        delegateA,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -481,7 +483,7 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
             bootstrapMint_:           0
         });
 
-        ( bootstrapManager, bootstrapStrategy ) = _deployAllocationStrategy({
+        (bootstrapManager, bootstrapStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        delegateB,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -490,11 +492,11 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
             bootstrapMint_:           bootstrapMint
         });
 
-        ( attackerPool, attackerPoolManager ) = _createPoolSharingStrategy("attackerDelegate", noBootstrapManager);
-        ( victimPool,   victimPoolManager )   = _createPoolSharingStrategy("victimDelegate",   bootstrapManager);
+        (attackerPool, attackerPoolManager) = _createPoolSharingStrategy("attackerDelegate", noBootstrapManager);
+        (victimPool, victimPoolManager)     = _createPoolSharingStrategy("victimDelegate", bootstrapManager);
 
         addStrategyManagerToPool(attackerPoolManager, bootstrapManager);
-        addStrategyManagerToPool(victimPoolManager,   noBootstrapManager);
+        addStrategyManagerToPool(victimPoolManager, noBootstrapManager);
 
         openPool(attackerPoolManager);
         openPool(victimPoolManager);
@@ -502,11 +504,10 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
         deposit(attackerPool, attackerLp, 2 * attackerDeposit);
 
         fundStrategyManager(attackerPoolManager, noBootstrapManager, attackerDeposit);
-        fundStrategyManager(attackerPoolManager, bootstrapManager,   attackerDeposit);
+        fundStrategyManager(attackerPoolManager, bootstrapManager, attackerDeposit);
     }
 
     function test_redemptionInflation_underpricedMint() external {
-
         assertStrategyManager({
             strategyManager:       noBootstrapManager,
             totalShares:           attackerDeposit,
@@ -612,7 +613,7 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
         /**********************************************************************************************************************************/
 
         requestRedeemFromStrategyManager(attackerPoolManager, noBootstrapManager, attackerDeposit - 1);
-        requestRedeemFromStrategyManager(attackerPoolManager, bootstrapManager,   attackerDeposit);
+        requestRedeemFromStrategyManager(attackerPoolManager, bootstrapManager, attackerDeposit);
 
         assertStrategyManager({
             strategyManager:       noBootstrapManager,
@@ -664,7 +665,7 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
         /**********************************************************************************************************************************/
 
         processRedemptionFromStrategyManager(attackerPoolManager, noBootstrapManager, attackerDeposit - 1);
-        processRedemptionFromStrategyManager(attackerPoolManager, bootstrapManager,   attackerDeposit);
+        processRedemptionFromStrategyManager(attackerPoolManager, bootstrapManager, attackerDeposit);
 
         uint256 expectedAssetsOut = attackerDeposit * (attackerDeposit + bootstrapMint - impairment) / (attackerDeposit + bootstrapMint);
 
@@ -723,7 +724,7 @@ contract StrategyManagerBootstrapMintUnderpricedMintTests is TestBaseWithAsserti
 
         deposit(victimPool, victimLp, 2 * victimDeposit);
         fundStrategyManager(victimPoolManager, noBootstrapManager, victimDeposit);
-        fundStrategyManager(victimPoolManager, bootstrapManager,   victimDeposit);
+        fundStrategyManager(victimPoolManager, bootstrapManager, victimDeposit);
 
         assertStrategyManager({
             strategyManager:       noBootstrapManager,

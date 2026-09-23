@@ -16,7 +16,7 @@ contract PoolManagerGetterTests is TestBase {
         address account = makeAddr("account");
 
         // Any address and any destination will do - function just returns values and contract address
-        ( uint256 returnedShares, address destination ) = poolManager.getEscrowParams(account, amount);
+        (uint256 returnedShares, address destination) = poolManager.getEscrowParams(account, amount);
 
         assertEq(returnedShares, amount);
         assertEq(destination,    address(poolManager));

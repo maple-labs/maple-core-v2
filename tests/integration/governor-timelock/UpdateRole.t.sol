@@ -13,7 +13,7 @@ contract UpdateRoleTests is GovernorTimelockTestBase {
     function test_updateRole_success_revokeRole() public {
         bytes32[] memory roles       = new bytes32[](1);
         address[] memory accounts    = new address[](1);
-        bool[]    memory shouldGrant = new bool[](1);
+        bool[] memory    shouldGrant = new bool[](1);
 
         roles[0]       = timelock.PROPOSER_ROLE();
         accounts[0]    = proposer;
@@ -25,11 +25,11 @@ contract UpdateRoleTests is GovernorTimelockTestBase {
         vm.prank(roleAdmin);
         timelock.proposeRoleUpdates(roles, accounts, shouldGrant);
 
-        ( , , , uint32 delayedUntil, ) = timelock.proposals(2);
+        (,,, uint32 delayedUntil,) = timelock.proposals(2);
 
         uint256[] memory proposalIds = new uint256[](1);
         address[] memory targets     = new address[](1);
-        bytes[]   memory data        = new bytes[](1);
+        bytes[] memory   data        = new bytes[](1);
 
         proposalIds[0] = 2;
         targets[0]     = address(timelock);
@@ -45,7 +45,7 @@ contract UpdateRoleTests is GovernorTimelockTestBase {
     function test_updateRole_success_grantRole() public {
         bytes32[] memory roles       = new bytes32[](1);
         address[] memory accounts    = new address[](1);
-        bool[]    memory shouldGrant = new bool[](1);
+        bool[] memory    shouldGrant = new bool[](1);
 
         roles[0]       = timelock.PROPOSER_ROLE();
         accounts[0]    = securityAdmin;
@@ -57,11 +57,11 @@ contract UpdateRoleTests is GovernorTimelockTestBase {
         vm.prank(roleAdmin);
         timelock.proposeRoleUpdates(roles, accounts, shouldGrant);
 
-        ( , , , uint32 delayedUntil, ) = timelock.proposals(2);
+        (,,, uint32 delayedUntil,) = timelock.proposals(2);
 
         uint256[] memory proposalIds = new uint256[](1);
         address[] memory targets     = new address[](1);
-        bytes[]   memory datas       = new bytes[](1);
+        bytes[] memory   datas       = new bytes[](1);
 
         proposalIds[0] = 2;
         targets[0]     = address(timelock);

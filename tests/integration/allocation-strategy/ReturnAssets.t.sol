@@ -157,7 +157,6 @@ contract AllocationStrategyReturnAssetsFailureTests is AllocationStrategyReturnA
 contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnAssetsTestBase {
 
     function test_returnAssets_success_partialAmount() external {
-
         /**********************************************************************************************************************************/
         /*** Return a portion of the deployed assets                                                                                    ***/
         /**********************************************************************************************************************************/
@@ -208,7 +207,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_fullAmount() external {
-
         /**********************************************************************************************************************************/
         /*** Return all of the deployed assets                                                                                          ***/
         /**********************************************************************************************************************************/
@@ -257,7 +255,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_freesDeploymentCapForRedeploy() external {
-
         /**********************************************************************************************************************************/
         /*** Return part of the deployed assets, freeing up cap headroom                                                                ***/
         /**********************************************************************************************************************************/
@@ -355,7 +352,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_freesLiquidityForWithdrawal() external {
-
         /**********************************************************************************************************************************/
         /*** Request and process redemption of the assets that were never deployed                                                      ***/
         /**********************************************************************************************************************************/
@@ -503,7 +499,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_onBehalfOfDifferentCaller() external {
-
         /**********************************************************************************************************************************/
         /*** Return assets on behalf of another wallet address                                                                          ***/
         /**********************************************************************************************************************************/
@@ -565,7 +560,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_afterOnBehalfOfPermissionRevoked() external {
-
         /**********************************************************************************************************************************/
         /*** Return the assets with another wallet address                                                                              ***/
         /**********************************************************************************************************************************/
@@ -633,7 +627,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_withYield() external {
-
         /**********************************************************************************************************************************/
         /*** Warp some time during the vesting period                                                                                   ***/
         /**********************************************************************************************************************************/
@@ -755,22 +748,21 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_withYieldAndFees() external {
-
         /**********************************************************************************************************************************/
         /*** Set the strategy fee rates and realize yield, paying the delegate and protocol fees upfront                                ***/
         /**********************************************************************************************************************************/
 
-        uint32 delegateFeeRate = 0.1e6;   // 10% of yield
-        uint32 protocolFeeRate = 0.05e6;  // 5% of yield
+        uint32 delegateFeeRate = 0.1e6; // 10% of yield
+        uint32 protocolFeeRate = 0.05e6; // 5% of yield
 
         uint256 yieldAssets = 200_000e6;
 
         uint32 totalDuration   = 10 days;
         uint32 elapsedDuration = 6 days;
 
-        uint256 delegateFee = 20_000e6;   // 200_000e6 * 0.1e6  / 1e6
-        uint256 protocolFee = 10_000e6;   // 200_000e6 * 0.05e6 / 1e6
-        uint256 netYield    = 170_000e6;  // 200_000e6 - 20_000e6 - 10_000e6
+        uint256 delegateFee = 20_000e6; // 200_000e6 * 0.1e6  / 1e6
+        uint256 protocolFee = 10_000e6; // 200_000e6 * 0.05e6 / 1e6
+        uint256 netYield    = 170_000e6; // 200_000e6 - 20_000e6 - 10_000e6
 
         uint256 realizedYield = netYield * elapsedDuration / totalDuration;
 
@@ -945,7 +937,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_withImpairment() external {
-
         /**********************************************************************************************************************************/
         /*** Impair the strategy                                                                                                        ***/
         /**********************************************************************************************************************************/
@@ -1042,7 +1033,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_afterLossRecognition() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize a loss on part of the deployed assets                                                                            ***/
         /**********************************************************************************************************************************/
@@ -1141,7 +1131,6 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
     }
 
     function test_returnAssets_success_multipleReturnsAccumulate() external {
-
         /**********************************************************************************************************************************/
         /*** First partial return                                                                                                       ***/
         /**********************************************************************************************************************************/
@@ -1233,14 +1222,16 @@ contract AllocationStrategyReturnAssetsSuccessTests is AllocationStrategyReturnA
             unrealizedLosses:      0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment - firstReturn - secondReturn);
+        assertEq(
+            IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet),
+            initialDeployment - firstReturn - secondReturn
+        );
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - initialDeployment + firstReturn + secondReturn);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
     }
 
     function test_returnAssets_success_multipleManagedWalletAddresses() external {
-
         /**********************************************************************************************************************************/
         /*** Deploy assets from another wallet address                                                                                  ***/
         /**********************************************************************************************************************************/

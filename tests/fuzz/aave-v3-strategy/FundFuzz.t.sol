@@ -7,14 +7,13 @@ import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
 abstract contract FundFuzzTests is AaveV3FuzzBase {
 
-    AaveStrategyStorage            strategyStorage;
-    FeeAccrualStorage              feeAccrualStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    AaveStrategyStorage strategyStorage;
+    FeeAccrualStorage feeAccrualStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzzFork_aave_fund(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
         /**********************************************************************************************************************************/
@@ -41,7 +40,7 @@ abstract contract FundFuzzTests is AaveV3FuzzBase {
         positionStorage        = _snapshotStrategyManagerPosition(address(aaveStrategyManager), address(poolManager));
         feeAccrualStorage      = _snapshotFeeAccrual(address(aaveStrategy));
 
-        ( uint256 expectedDelegateFee, uint256 expectedProtocolFee ) =
+        (uint256 expectedDelegateFee, uint256 expectedProtocolFee) =
             expectedFees(address(aaveStrategy), strategyStorage.previousATokenBalance, strategyStorage.previousLastRecordedTotalAssets);
 
         /**********************************************************************************************************************************/
@@ -87,14 +86,10 @@ abstract contract FundFuzzTests is AaveV3FuzzBase {
         /*** Assert new state                                                                                                           ***/
         /**********************************************************************************************************************************/
 
-        uint256 sharesMinted   = aaveStrategyManager.totalShares() - strategyManagerStorage.previousTotalShares;
+        uint256 sharesMinted = aaveStrategyManager.totalShares() - strategyManagerStorage.previousTotalShares;
         uint256 expectedShares = strategyManagerStorage.previousTotalShares == 0
             ? fundAmount
-            : mulDivDown(
-                fundAmount,
-                strategyManagerStorage.previousTotalShares,
-                strategyManagerStorage.previousTotalAssets
-            );
+            : mulDivDown(fundAmount, strategyManagerStorage.previousTotalShares, strategyManagerStorage.previousTotalAssets);
 
         assertApproxEqAbs(sharesMinted, expectedShares, AAVE_ROUNDING_ERROR);
 
@@ -110,15 +105,11 @@ abstract contract FundFuzzTests is AaveV3FuzzBase {
             strategyManagerStorage.previousTotalShares + sharesMinted
         );
 
-        uint256 shareConversionError = maxShareConversionError(
-            strategyManagerStorage.previousTotalAssets,
-            strategyManagerStorage.previousTotalShares
-        );
+        uint256 shareConversionError =
+            maxShareConversionError(strategyManagerStorage.previousTotalAssets, strategyManagerStorage.previousTotalShares);
 
         assertApproxEqAbs(
-            aaveStrategyManager.assetsOf(address(poolManager)),
-            positionStorage.previousAssets + netDeposit,
-            shareConversionError
+            aaveStrategyManager.assetsOf(address(poolManager)), positionStorage.previousAssets + netDeposit, shareConversionError
         );
 
         assertEq(aaveStrategyManager.unrealizedLossesOf(address(poolManager)), expectedUnrealizedLossesOf);
@@ -127,19 +118,13 @@ abstract contract FundFuzzTests is AaveV3FuzzBase {
 
         uint256 expectedUnrealizedLossesGain = expectedUnrealizedLossesOf - positionStorage.previousUnrealizedLosses;
 
-        assertApproxEqAbs(
-            pool.totalAssets(),
-            poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit),
-            shareConversionError
-        );
+        assertApproxEqAbs(pool.totalAssets(), poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit), shareConversionError);
 
         assertEq(pool.totalSupply(),      poolManagerStorage.previousTotalSupply);
         assertEq(pool.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses + expectedUnrealizedLossesGain);
 
         assertApproxEqAbs(
-            poolManager.totalAssets(),
-            poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit),
-            shareConversionError
+            poolManager.totalAssets(), poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit), shareConversionError
         );
 
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses + expectedUnrealizedLossesGain);

@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAaveV3Strategy, IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "./AaveV3StrategyTestBase.sol";
 
@@ -109,7 +106,6 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             pendingShares:    0,
             unrealizedLosses: 0
         });
-
     }
 
     function testFork_impair_accumulatesAcrossAllAdmins() external {
@@ -360,7 +356,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondFund);
@@ -420,7 +416,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
             unrealizedLosses: 0
         });
 
-        uint256 firstLoss  = divRoundUp(firstShares  * impairment, totalShares);
+        uint256 firstLoss  = divRoundUp(firstShares * impairment, totalShares);
         uint256 secondLoss = divRoundUp(secondShares * impairment, totalShares);
 
         vm.prank(strategyDelegate);
@@ -479,8 +475,8 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
     }
 
     function testFork_impair_withFeesAndYield() external {
-        uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-        uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+        uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         uint256 fundedAssets = fundAmount - expectedRoundingError;
         uint256 impairment   = 100_000e6;
@@ -498,10 +494,10 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
         uint256 expectedProtocolFee = (grossAum - fundedAssets) * protocolFeeRate / HUNDRED_PERCENT;
         uint256 netAum              = grossAum - expectedDelegateFee - expectedProtocolFee;
 
-        assertGt(grossAum,            fundedAssets);
+        assertGt(grossAum, fundedAssets);
         assertGt(expectedDelegateFee, 0);
         assertGt(expectedProtocolFee, 0);
-        assertGt(netAum,              impairment);
+        assertGt(netAum, impairment);
 
         vm.prank(strategyDelegate);
         IAaveV3Strategy(aaveV3UnderlyingStrategy).impair(impairment);
@@ -551,7 +547,7 @@ contract AaveV3StrategyImpairTests is AaveV3StrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondFund);

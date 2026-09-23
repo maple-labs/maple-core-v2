@@ -178,10 +178,10 @@ contract SkyStrategyProcessRedemptionFailureTests is SkyStrategyTestBase {
 
 contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
-    uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-    uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+    uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
-    uint256 expectedRoundingLoss = 1;  // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 expectedRoundingLoss = 1; // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
     uint256 firstPoolFunding     = 300_000e6;
     uint256 impairmentAmount     = 100_000e6;
     uint256 poolLiquidity        = 1_000_000e6;
@@ -522,10 +522,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy), 0);
 
         // Decimal conversion can leave sub-USDC sUSDS dust.
-        assertLt(
-            IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)),
-            1e12
-        );
+        assertLt(IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)), 1e12);
     }
 
     function testFork_processRedemption_multipleSequentialRedemptions() external {
@@ -700,10 +697,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy), 0);
 
         // Decimal conversion can leave sub-USDC sUSDS dust.
-        assertLt(
-            IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)),
-            1e12
-        );
+        assertLt(IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)), 1e12);
     }
 
     function testFork_processRedemption_accruesFeesAndUsesPostYieldSharePrice() external {
@@ -820,7 +814,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
     function testFork_processRedemption_withFeesYieldAndPsmExitFee() external {
         uint256 fundAmount = 505_000e6;
-        uint256 tout       = 0.01e18;  // 1% PSM exit fee.
+        uint256 tout       = 0.01e18; // 1% PSM exit fee.
 
         /**********************************************************************************************************************************/
         /*** Set fees, enable the PSM exit fee and fund the strategy                                                                    ***/
@@ -932,7 +926,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
     function testFork_processRedemption_withFeesYieldPsmExitFeeAndImpairment() external {
         uint256 fundAmount = 505_000e6;
-        uint256 tout       = 0.01e18;  // 1% PSM exit fee.
+        uint256 tout       = 0.01e18; // 1% PSM exit fee.
 
         /**********************************************************************************************************************************/
         /*** Set fees, enable the PSM exit fee and fund the strategy                                                                    ***/
@@ -1156,10 +1150,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy), 0);
 
         // Decimal conversion can leave sub-USDC sUSDS dust.
-        assertLt(
-            IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)),
-            1e12
-        );
+        assertLt(IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)), 1e12);
     }
 
     function testFork_processRedemption_impairedStrategyUsesNetExitAssets() external {
@@ -1564,15 +1555,12 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy), 0);
 
         // Decimal conversion can leave sub-USDC sUSDS dust.
-        assertLt(
-            IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)),
-            1e12
-        );
+        assertLt(IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)), 1e12);
     }
 
     function testFork_processRedemption_partialWithPsmExitFee() external {
         uint256 fundAmount = 500_000e6;
-        uint256 tout       = 0.01e18;  // 1% PSM exit fee.
+        uint256 tout       = 0.01e18; // 1% PSM exit fee.
 
         setSkyTout(tout);
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
@@ -1623,7 +1611,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
     function testFork_processRedemption_fullWithPsmExitFee() external {
         uint256 fundAmount = 500_000e6;
-        uint256 tout       = 0.01e18;  // 1% PSM exit fee.
+        uint256 tout       = 0.01e18; // 1% PSM exit fee.
 
         setSkyTout(tout);
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
@@ -1670,10 +1658,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy), 0);
 
         // Decimal conversion can leave sub-USDC sUSDS dust.
-        assertLt(
-            IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)),
-            1e12
-        );
+        assertLt(IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)), 1e12);
     }
 
     function testFork_processRedemption_multiplePoolManagersWithImpairment() external {
@@ -1681,13 +1666,13 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         /*** Fund two pool-manager positions, impair the shared strategy and request partial redemptions                                ***/
         /**********************************************************************************************************************************/
 
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  skyStrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", skyStrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
-        deposit(IPoolManager(firstPoolManager).pool(),  lp, poolLiquidity);
+        deposit(IPoolManager(firstPoolManager).pool(), lp, poolLiquidity);
         deposit(IPoolManager(secondPoolManager).pool(), lp, poolLiquidity);
 
-        fundStrategyManager(firstPoolManager,  skyStrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, skyStrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondPoolFunding);
 
         uint256 expectedTotalShares = firstPoolFunding + secondPoolFunding - expectedRoundingLoss;
@@ -1700,7 +1685,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         uint256 expectedSecondAssets           = secondShares;
         uint256 expectedSecondUnrealizedLosses = divRoundUp(secondShares * impairmentAmount, expectedTotalShares);
 
-        requestRedeemFromStrategyManager(firstPoolManager,  skyStrategyManager, firstShares / 2);
+        requestRedeemFromStrategyManager(firstPoolManager, skyStrategyManager, firstShares / 2);
         requestRedeemFromStrategyManager(secondPoolManager, skyStrategyManager, secondShares / 2);
 
         vm.prank(strategyDelegate);
@@ -1770,7 +1755,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
 
         uint256 firstExitAssets = exitAssets;
 
-        expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
+        expectedFirstAssets           = firstShares * totalAum / expectedTotalShares;
         expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
@@ -1838,7 +1823,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         totalAum            -= exitAssets;
         expectedTotalShares -= sharesToProcess;
 
-        expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
+        expectedFirstAssets           = firstShares * totalAum / expectedTotalShares;
         expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
@@ -1899,23 +1884,23 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         /*** Deploy two pools that share the same strategy manager and deposit liquidity into both                                      ***/
         /**********************************************************************************************************************************/
 
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  skyStrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", skyStrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
-        deposit(IPoolManager(firstPoolManager).pool(),  lp, poolLiquidity);
+        deposit(IPoolManager(firstPoolManager).pool(), lp, poolLiquidity);
         deposit(IPoolManager(secondPoolManager).pool(), lp, poolLiquidity);
 
         /**********************************************************************************************************************************/
         /*** Fund the strategy from both pools and request redemption of all shares                                                     ***/
         /**********************************************************************************************************************************/
 
-        fundStrategyManager(firstPoolManager,  skyStrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, skyStrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondPoolFunding);
 
         uint256 firstShares  = firstPoolFunding - expectedRoundingLoss;
         uint256 secondShares = secondPoolFunding;
 
-        requestRedeemFromStrategyManager(firstPoolManager,  skyStrategyManager, firstShares);
+        requestRedeemFromStrategyManager(firstPoolManager, skyStrategyManager, firstShares);
         requestRedeemFromStrategyManager(secondPoolManager, skyStrategyManager, secondShares);
 
         /**********************************************************************************************************************************/
@@ -1927,10 +1912,10 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         uint256 grossAum =
             (firstPoolFunding + secondPoolFunding) * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - expectedRoundingLoss;
 
-        uint256 firstAssets  = firstShares  * grossAum / (firstShares + secondShares);
+        uint256 firstAssets  = firstShares * grossAum / (firstShares + secondShares);
         uint256 secondAssets = secondShares * grossAum / (firstShares + secondShares);
 
-        assertGt(firstAssets,  firstShares);
+        assertGt(firstAssets, firstShares);
         assertGt(secondAssets, secondShares);
 
         assertPoolState({
@@ -2098,10 +2083,7 @@ contract SkyStrategyProcessRedemptionTests is SkyStrategyTestBase {
         assertEq(IERC20Like(USDS).balanceOf(skyUnderlyingStrategy), 0);
 
         // Decimal conversion can leave sub-USDC sUSDS dust.
-        assertLt(
-            IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)),
-            1e12
-        );
+        assertLt(IERC4626Like(SAVINGS_USDS).previewRedeem(IERC4626Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy)), 1e12);
     }
 
 }

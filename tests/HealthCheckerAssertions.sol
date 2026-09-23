@@ -3,9 +3,9 @@ pragma solidity ^0.8.7;
 
 import { console, Runner } from "../contracts/Runner.sol";
 
-import { LPHealthChecker }            from "./health-checkers/LPHealthChecker.sol";
-import { OpenTermLoanHealthChecker }  from "./health-checkers/OpenTermLoanHealthChecker.sol";
-import { ProtocolHealthChecker }      from "./health-checkers/ProtocolHealthChecker.sol";
+import { LPHealthChecker } from "./health-checkers/LPHealthChecker.sol";
+import { OpenTermLoanHealthChecker } from "./health-checkers/OpenTermLoanHealthChecker.sol";
+import { ProtocolHealthChecker } from "./health-checkers/ProtocolHealthChecker.sol";
 
 contract HealthCheckerAssertions is Runner {
 

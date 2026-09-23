@@ -9,7 +9,7 @@ import {
     IPoolManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedSetup }     from "../FuzzedSetup.sol";
+import { FuzzedSetup } from "../FuzzedSetup.sol";
 import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
@@ -34,14 +34,14 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
     uint256 platformServiceFee_;
 
     // The fuzzed setup should set this at the end.
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     // Saving snapshots to storage to avoid stack too deep errors.
     OpenTermLoanManagerStorage loanManagerStorage;
-    OpenTermLoanStorage        loanStorage;
-    OpenTermPaymentStorage     paymentStorage;
-    PoolManagerStorage         poolManagerStorage;
+    OpenTermLoanStorage loanStorage;
+    OpenTermPaymentStorage paymentStorage;
+    PoolManagerStorage poolManagerStorage;
 
     function testFuzz_otlFuzzedSetup_triggerDefault(uint256 seed_) external {
         fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
@@ -57,10 +57,10 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
         poolManager = IPoolManager(loanManager.poolManager());
         pool        = IPool(poolManager.pool());
 
-        if (loan.dateFunded() == 0) return;  // Loan not funded or repossessed in which case we can't trigger default
+        if (loan.dateFunded() == 0) return; // Loan not funded or repossessed in which case we can't trigger default
 
         // No assumption on what block.timestamp is after fuzz setup
-        if (block.timestamp <= loan.defaultDate()) vm.warp(loan.defaultDate() + 1);  // Warp to default date
+        if (block.timestamp <= loan.defaultDate()) vm.warp(loan.defaultDate() + 1); // Warp to default date
 
         // Save to storage before change
         loanManagerStorage = _snapshotOpenTermLoanManager(address(loanManager));
@@ -68,15 +68,13 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
         paymentStorage     = _snapshotOpenTermPayment(address(loan));
         poolManagerStorage = _snapshotPoolManager(address(poolManager));
 
-        ( uint256 impairDate , ) = IOpenTermLoanManager(loan.lender()).impairmentFor(address(loan));
+        (uint256 impairDate,) = IOpenTermLoanManager(loan.lender()).impairmentFor(address(loan));
 
         bool isImpaired = impairDate > 0;
 
-        (
-            ,  // Unused
+        (, // Unused
             interest_,
-            lateInterest_,
-            ,  // Unused
+            lateInterest_,, // Unused
             platformServiceFee_
         ) = loan.getPaymentBreakdown(isImpaired ? impairDate : block.timestamp);
 
@@ -107,7 +105,7 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
         uint256 netInterest = interest_ - (interest_ * (loanInfo.delegateManagementFeeRate + loanInfo.platformManagementFeeRate)) / 1e6;
 
         // If loan contains funds these get repossessed
-        ( toBorrower, toTreasury, toPool ) = _calculateLiquidationDistribution(
+        (toBorrower, toTreasury, toPool) = _calculateLiquidationDistribution(
             loanStorage.previousPrincipal,
             interest_ + lateInterest_,
             platformServiceFee_,
@@ -117,45 +115,34 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
         );
 
         assertOpenTermLoanManagerWithDiff({
-            loanManager:       address(loanManager),
+            loanManager: address(loanManager),
             accountedInterest: _subtractWithDiff(
-                                   loanManagerStorage.previousAccountedInterest + loanManagerStorage.previousAccruedInterest,
-                                   netInterest,
-                                   3
-                               ),
-            accruedInterest:   0,
-            domainStart:       block.timestamp,
-            issuanceRate:      isImpaired  // If a loan has previously been impaired, the issuance rate should not change
-                                    ? loanManagerStorage.previousIssuanceRate
-                                    : loanManagerStorage.previousIssuanceRate - paymentStorage.previousIssuanceRate,
-            principalOut:      loanManagerStorage.previousPrincipalOut - loanStorage.previousPrincipal,
-            unrealizedLosses:  isImpaired  // To account for multiple loans being impaired in the system including the main loan
-                                    ? _subtractWithDiff(
-                                          loanManagerStorage.previousUnrealizedLosses,
-                                          loanStorage.previousPrincipal + netInterest,
-                                          3
-                                      )
-                                    : loanManagerStorage.previousUnrealizedLosses,
-            diff:               3
+                loanManagerStorage.previousAccountedInterest + loanManagerStorage.previousAccruedInterest, netInterest, 3
+            ),
+            accruedInterest: 0,
+            domainStart: block.timestamp,
+            issuanceRate: // If a loan has previously been impaired, the issuance rate should not change
+            isImpaired
+                ? loanManagerStorage.previousIssuanceRate
+                : loanManagerStorage.previousIssuanceRate - paymentStorage.previousIssuanceRate,
+            principalOut: loanManagerStorage.previousPrincipalOut - loanStorage.previousPrincipal,
+            unrealizedLosses: // To account for multiple loans being impaired in the system including the main loan
+            isImpaired
+                ? _subtractWithDiff(loanManagerStorage.previousUnrealizedLosses, loanStorage.previousPrincipal + netInterest, 3)
+                : loanManagerStorage.previousUnrealizedLosses,
+            diff: 3
         });
 
         assertPoolStateWithDiff({
-            pool:               address(pool),
-            totalAssets:        _subtractWithDiff(
-                                    poolManagerStorage.previousTotalAssets + toPool,
-                                    loanStorage.previousPrincipal + netInterest,
-                                    3
-                                ),
-            totalSupply:        poolManagerStorage.previousTotalSupply,
-            unrealizedLosses:   isImpaired  // To account for multiple loans being impaired in the system including the main loan
-                                    ? _subtractWithDiff(
-                                          poolManagerStorage.previousUnrealizedLosses,
-                                          loanStorage.previousPrincipal + netInterest,
-                                          3
-                                      )
-                                    : poolManagerStorage.previousUnrealizedLosses,
+            pool: address(pool),
+            totalAssets: _subtractWithDiff(poolManagerStorage.previousTotalAssets + toPool, loanStorage.previousPrincipal + netInterest, 3),
+            totalSupply: poolManagerStorage.previousTotalSupply,
+            unrealizedLosses: // To account for multiple loans being impaired in the system including the main loan
+            isImpaired
+                ? _subtractWithDiff(poolManagerStorage.previousUnrealizedLosses, loanStorage.previousPrincipal + netInterest, 3)
+                : poolManagerStorage.previousUnrealizedLosses,
             availableLiquidity: poolManagerStorage.previousFundsAssetBalance + toPool,
-            diff:               3
+            diff: 3
         });
 
         assertEq(fundsAsset.balanceOf(loan.borrower()),                     borrowerBalance + toBorrower);
@@ -172,7 +159,9 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
         uint256 platformManagementFeeRate,
         uint256 delegateManagementFeeRate
     )
-        internal pure returns (uint256 toBorrower_, uint256 toTreasury_, uint256 toPool_)
+        internal
+        pure
+        returns (uint256 toBorrower_, uint256 toTreasury_, uint256 toPool_)
     {
         uint256 delegateManagementFee_ = _getRatedAmount(interest, delegateManagementFeeRate);
         uint256 platformManagementFee_ = _getRatedAmount(interest, platformManagementFeeRate);
@@ -180,7 +169,7 @@ contract TriggerDefaultFuzzTests is FuzzedSetup, StorageSnapshot {
         uint256 netInterest_ = interest - (platformManagementFee_ + delegateManagementFee_);
         uint256 platformFee_ = platformServiceFee + platformManagementFee_;
 
-        toTreasury_ = _min(recoveredFunds,               platformFee_);
+        toTreasury_ = _min(recoveredFunds, platformFee_);
         toPool_     = _min(recoveredFunds - toTreasury_, principal + netInterest_);
 
         toBorrower_ = recoveredFunds - toTreasury_ - toPool_;

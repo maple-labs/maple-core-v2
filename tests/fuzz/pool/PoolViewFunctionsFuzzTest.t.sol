@@ -38,7 +38,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_getTotalAssetsFromPM(uint256 principalOut_, uint256 accountedInterest_) external {
-        principalOut_      = bound(principalOut_,      1, 1e29);
+        principalOut_      = bound(principalOut_, 1, 1e29);
         accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
@@ -70,9 +70,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        sharesAmount_      = bound(sharesAmount_,      0, 1e29);
-        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
-        principalOut_      = bound(principalOut_,      1, 1e29);
+        sharesAmount_      = bound(sharesAmount_, 0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_, 1, 1e29);
+        principalOut_      = bound(principalOut_, 1, 1e29);
         accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
@@ -104,9 +104,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        assetAmount_       = bound(assetAmount_,       0, 1e29);
-        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
-        principalOut_      = bound(principalOut_,      1, 1e29);
+        assetAmount_       = bound(assetAmount_, 0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_, 1, 1e29);
+        principalOut_      = bound(principalOut_, 1, 1e29);
         accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
@@ -132,11 +132,11 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        assetAmount_       = bound(assetAmount_,       0, 1e29);
-        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
-        principalOut_      = bound(principalOut_,      1, 1e29);
+        assetAmount_       = bound(assetAmount_, 0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_, 1, 1e29);
+        principalOut_      = bound(principalOut_, 1, 1e29);
         accountedInterest_ = bound(accountedInterest_, 1, 1e29);
-        unrealizedLosses_  = bound(unrealizedLosses_,  1, amountToDeposit_);
+        unrealizedLosses_  = bound(unrealizedLosses_, 1, amountToDeposit_);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);
         loanManagerHarness.__setAccountedInterest(accountedInterest_);
@@ -154,7 +154,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_maxDeposit(uint256 totalAssets, uint256 liquidityCap) external {
-        totalAssets  = bound(totalAssets,  1, MAX_TOTAL_ASSET);
+        totalAssets  = bound(totalAssets, 1, MAX_TOTAL_ASSET);
         liquidityCap = bound(liquidityCap, 1, MAX_LIQUIDITY_CAP);
 
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
@@ -163,11 +163,11 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         vm.prank(poolDelegate);
         poolManager.setLiquidityCap(liquidityCap);
 
-        assertEq(pool.maxDeposit(user), 0);  // without permission
+        assertEq(pool.maxDeposit(user), 0); // without permission
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, user, BITMAP);
 
-        assertEq(pool.maxDeposit(user), liquidityCap);  // with permission
+        assertEq(pool.maxDeposit(user), liquidityCap); // with permission
 
         fundsAsset.mint(address(pool), totalAssets);
 
@@ -179,20 +179,20 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_maxMint(uint256 totalAssets, uint256 liquidityCap) external {
-        totalAssets  = bound(totalAssets,  1, MAX_TOTAL_ASSET);
+        totalAssets  = bound(totalAssets, 1, MAX_TOTAL_ASSET);
         liquidityCap = bound(liquidityCap, 1, MAX_LIQUIDITY_CAP);
 
         setPoolPermissionLevel(address(poolManager), FUNCTION_LEVEL);
         setPoolBitmap(address(poolManager), "P:mint", BITMAP);
 
-        assertEq(pool.maxMint(user), 0);  // without permission
+        assertEq(pool.maxMint(user), 0); // without permission
 
         vm.prank(poolDelegate);
         poolManager.setLiquidityCap(liquidityCap);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, user, BITMAP);
 
-        assertEq(pool.maxMint(user), liquidityCap);  // with permission
+        assertEq(pool.maxMint(user), liquidityCap); // with permission
 
         fundsAsset.mint(address(pool), totalAssets);
 
@@ -217,9 +217,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
         assertEq(pool.maxRedeem(user), 0);
 
         vm.prank(user);
-        pool.requestRedeem(assets, user);  // lock shares
+        pool.requestRedeem(assets, user); // lock shares
 
-        processRedemptions(address(pool), assets);  // assets <> shares conversion rate 1:1 due to single LP
+        processRedemptions(address(pool), assets); // assets <> shares conversion rate 1:1 due to single LP
 
         uint256 shares = queueWM.lockedShares(user);
 
@@ -255,7 +255,7 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     }
 
     function testFuzz_previewDeposit_whenTotalSupplyExists(uint256 assetAmount_, uint256 amountToDeposit_) external {
-        assetAmount_     = bound(assetAmount_,     0, 1e29);
+        assetAmount_     = bound(assetAmount_, 0, 1e29);
         amountToDeposit_ = bound(amountToDeposit_, 1, 1e29);
 
         deposit(address(pool), user, amountToDeposit_);
@@ -284,9 +284,9 @@ contract PoolViewFunctionsFuzzTests is TestBase {
     )
         external
     {
-        sharesAmount_      = bound(sharesAmount_,      0, 1e29);
-        amountToDeposit_   = bound(amountToDeposit_,   1, 1e29);
-        principalOut_      = bound(principalOut_,      1, 1e29);
+        sharesAmount_      = bound(sharesAmount_, 0, 1e29);
+        amountToDeposit_   = bound(amountToDeposit_, 1, 1e29);
+        principalOut_      = bound(principalOut_, 1, 1e29);
         accountedInterest_ = bound(accountedInterest_, 1, 1e29);
 
         loanManagerHarness.__setPrincipalOut(principalOut_);

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 import { OpenTermLoanManagerHarness } from "./utils/OpenTermLoanManagerHarness.sol";
-import { TestBase }                   from "../TestBase.sol";
+import { TestBase } from "../TestBase.sol";
 
 contract FuzzBase is TestBase {
 

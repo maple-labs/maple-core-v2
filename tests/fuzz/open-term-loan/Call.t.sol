@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IPool,
-    IPoolManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager, IPool, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedSetup }     from "../FuzzedSetup.sol";
+import { FuzzedSetup } from "../FuzzedSetup.sol";
 import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
@@ -16,13 +11,13 @@ contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
     uint256 constant ACTION_COUNT   = 20;
     uint256 constant OTL_LOAN_COUNT = 5;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     OpenTermLoanManagerStorage loanManagerStorage;
-    OpenTermLoanStorage        loanStorage;
-    OpenTermPaymentStorage     paymentStorage;
-    PoolManagerStorage         poolManagerStorage;
+    OpenTermLoanStorage loanStorage;
+    OpenTermPaymentStorage paymentStorage;
+    PoolManagerStorage poolManagerStorage;
 
     function testFuzz_call_otl(uint256 seed_) external {
         fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
@@ -55,7 +50,7 @@ contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
         vm.prank(poolDelegate);
         loanManager.callPrincipal(address(loan), calledPrincipal);
 
-        ( uint256 principal, , , , ) = loan.getPaymentBreakdown(block.timestamp + loan.gracePeriod());
+        (uint256 principal,,,,) = loan.getPaymentBreakdown(block.timestamp + loan.gracePeriod());
 
         // Perform the assertions.
         assertEq(loan.dateCalled(),      block.timestamp);
@@ -132,7 +127,7 @@ contract CallFuzzTests is FuzzedSetup, StorageSnapshot {
         vm.prank(poolManager.poolDelegate());
         loanManager.removeCall(address(loan));
 
-        ( uint256 principal, , , , ) = loan.getPaymentBreakdown(block.timestamp + loan.gracePeriod());
+        (uint256 principal,,,,) = loan.getPaymentBreakdown(block.timestamp + loan.gracePeriod());
 
         // Perform the assertions.
         assertEq(loan.dateCalled(),      0);

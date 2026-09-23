@@ -35,20 +35,20 @@ contract OpenTermLoanHandler is HandlerBase {
     mapping(address => bool) public isDefaulted;
     mapping(uint256 => bool) public refinanceCallUsed;
 
-    IGlobals             public globals;
-    IMapleProxyFactory   public liquidatorFactory;
-    IMapleProxyFactory   public loanFactory;
-    IMockERC20           public asset;
+    IGlobals public globals;
+    IMapleProxyFactory public liquidatorFactory;
+    IMapleProxyFactory public loanFactory;
+    IMockERC20 public asset;
     IOpenTermLoanManager public loanManager;
-    IPool                public pool;
-    IPoolManager         public poolManager;
+    IPool public pool;
+    IPoolManager public poolManager;
 
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
     constructor(
-        string  memory handlerName_,
+        string memory handlerName_,
         address loanFactory_,
         address liquidatorFactory_,
         address poolManager_,
@@ -157,15 +157,10 @@ contract OpenTermLoanHandler is HandlerBase {
             return;
         }
 
-        ( bytes[] memory calls_, int256 principalDelta_ ) = _generateRefinanceCalls(_hash(seed_, "refinance"), loan_);
+        (bytes[] memory calls_, int256 principalDelta_) = _generateRefinanceCalls(_hash(seed_, "refinance"), loan_);
 
-        (
-            ,
-            uint256 interest_,
-            uint256 lateInterest_,
-            uint256 delegateServiceFee_,
-            uint256 platformServiceFee_
-        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
+        (, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_) =
+            IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         uint256 amountToReturn_ = interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
 
@@ -173,7 +168,6 @@ contract OpenTermLoanHandler is HandlerBase {
         if (principalDelta_ < 0) {
             amountToReturn_ += uint256(principalDelta_ * -1);
         }
-
         // If principal is increased the borrower deducts fees/interest from the increased amount.
         // This can result in all fees/interest being covered by the increased principal.
         else if (principalDelta_ > 0) {
@@ -247,24 +241,18 @@ contract OpenTermLoanHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function _getLoanInterest(address loan_) internal view returns (uint256 netInterest_) {
-        ( uint256 principal_, , , , ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
+        (uint256 principal_,,,,) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         // Override principal to get the original principal.
         principal_ = IOpenTermLoan(loan_).principal();
 
-        (
-            uint256 platformManagementFeeRate_,
-            uint256 delegateManagementFeeRate_,
-            ,
-        ) = IOpenTermLoanManager(IOpenTermLoan(loan_).lender()).paymentFor(loan_);
+        (uint256 platformManagementFeeRate_, uint256 delegateManagementFeeRate_,,) =
+            IOpenTermLoanManager(IOpenTermLoan(loan_).lender()).paymentFor(loan_);
 
-        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0
-            ? IOpenTermLoan(loan_).datePaid()
-            : IOpenTermLoan(loan_).dateFunded();
+        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0 ? IOpenTermLoan(loan_).datePaid() : IOpenTermLoan(loan_).dateFunded();
 
         uint256 grossInterest_ =
-            IOpenTermLoan(loan_).principal() *  IOpenTermLoan(loan_).interestRate() * (block.timestamp - startTime_)
-            / (365 days * 1e6);
+            IOpenTermLoan(loan_).principal() * IOpenTermLoan(loan_).interestRate() * (block.timestamp - startTime_) / (365 days * 1e6);
 
         netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
     }
@@ -301,17 +289,9 @@ contract OpenTermLoanHandler is HandlerBase {
         // Do nothing if there are no assets available for utilization.
         if (principal_ == 0) return address(0);
 
-        ( uint256[3] memory terms_, uint256[4] memory rates_ ) = _getLoanParams(seed_);
+        (uint256[3] memory terms_, uint256[4] memory rates_) = _getLoanParams(seed_);
 
-        loan_ = createOpenTermLoan(
-            address(loanFactory),
-            borrower_,
-            address(loanManager),
-            address(asset),
-            principal_,
-            terms_,
-            rates_
-        );
+        loan_ = createOpenTermLoan(address(loanFactory), borrower_, address(loanManager), address(asset), principal_, terms_, rates_);
 
         loans.push(loan_);
         numLoans++;
@@ -326,43 +306,40 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function _getLoanParams(uint256 seed_) internal pure returns (uint256[3] memory terms_, uint256[4] memory rates_) {
-        uint256 noticePeriod_    = _bound(_hash(seed_, "noticePeriod"),    1,       30 days);
-        uint256 gracePeriod_     = _bound(_hash(seed_, "gracePeriod"),     0,       30 days);
+        uint256 noticePeriod_    = _bound(_hash(seed_, "noticePeriod"), 1, 30 days);
+        uint256 gracePeriod_     = _bound(_hash(seed_, "gracePeriod"), 0, 30 days);
         uint256 paymentInterval_ = _bound(_hash(seed_, "paymentInterval"), 1 hours, 30 days);
 
         uint256 delegateServiceFeeRate_ = _bound(_hash(seed_, "delegateService"), 0, 0.1e6);
-        uint256 interestRate_           = _bound(_hash(seed_, "interestRate"),    1, 0.2e6);
-        uint256 lateFeeRate_            = _bound(_hash(seed_, "lateFeeRate"),     0, 0.1e6);
-        uint256 lateInterestPremium_    = _bound(_hash(seed_, "lateInterest"),    0, 0.1e6);
+        uint256 interestRate_           = _bound(_hash(seed_, "interestRate"), 1, 0.2e6);
+        uint256 lateFeeRate_            = _bound(_hash(seed_, "lateFeeRate"), 0, 0.1e6);
+        uint256 lateInterestPremium_    = _bound(_hash(seed_, "lateInterest"), 0, 0.1e6);
 
         terms_ = [gracePeriod_, noticePeriod_, paymentInterval_];
         rates_ = [delegateServiceFeeRate_, interestRate_, lateFeeRate_, lateInterestPremium_];
     }
 
-    function _generateRefinanceCalls(
-        uint256 seed_,
-        address loan_
-    ) internal returns (bytes[] memory data_, int256 principalDelta_) {
+    function _generateRefinanceCalls(uint256 seed_, address loan_) internal returns (bytes[] memory data_, int256 principalDelta_) {
         // Get how many calls will be done
         uint256 numberOfCalls = _hash(seed_, "numberOfCalls") % 9 + 1; // 9 functions on refi contract (1 - 9)
 
         // Generate completely new loan parameters
-        ( uint256[3] memory terms_, uint256[4] memory rates_ ) = _getLoanParams(seed_);
+        (uint256[3] memory terms_, uint256[4] memory rates_) = _getLoanParams(seed_);
 
         uint256 principalIncrease = _getPrincipalIncrease(seed_);
-        uint256 principalDecrease =  _bound(_hash(seed_, "decrease"), 0, IOpenTermLoan(loan_).principal() - 1);
+        uint256 principalDecrease = _bound(_hash(seed_, "decrease"), 0, IOpenTermLoan(loan_).principal() - 1);
 
         bytes[] memory calls = new bytes[](9);
 
         // Create an array of arguments, even if not all will be used
-        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",         principalDecrease);
-        calls[1] = abi.encodeWithSignature("increasePrincipal(uint256)",         principalIncrease);
-        calls[2] = abi.encodeWithSignature("setGracePeriod(uint32)",             terms_[0]);
-        calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)",            terms_[1]);
-        calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)",         terms_[2]);
-        calls[5] = abi.encodeWithSignature("setDelegateServiceFeeRate(uint64)",  rates_[0]);
-        calls[6] = abi.encodeWithSignature("setInterestRate(uint64)",            rates_[1]);
-        calls[7] = abi.encodeWithSignature("setLateFeeRate(uint64)",             rates_[2]);
+        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)", principalDecrease);
+        calls[1] = abi.encodeWithSignature("increasePrincipal(uint256)", principalIncrease);
+        calls[2] = abi.encodeWithSignature("setGracePeriod(uint32)", terms_[0]);
+        calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)", terms_[1]);
+        calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)", terms_[2]);
+        calls[5] = abi.encodeWithSignature("setDelegateServiceFeeRate(uint64)", rates_[0]);
+        calls[6] = abi.encodeWithSignature("setInterestRate(uint64)", rates_[1]);
+        calls[7] = abi.encodeWithSignature("setLateFeeRate(uint64)", rates_[2]);
         calls[8] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", rates_[3]);
 
         data_ = new bytes[](numberOfCalls);
@@ -382,7 +359,7 @@ contract OpenTermLoanHandler is HandlerBase {
             if (index == 0 && !refinanceCallUsed[0]) principalDecreased += principalDecrease;
             if (index == 1 && !refinanceCallUsed[1]) principalIncreased += principalIncrease;
 
-            data_[i] = calls[index];
+            data_[i]                 = calls[index];
             refinanceCallUsed[index] = true;
         }
 
@@ -403,7 +380,9 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function _selectActiveLoan(uint256 seed_) internal view returns (address loan_) {
-        address[] memory activeLoans_ = _activeLoans({ onlyOverdue_: false });
+        address[] memory activeLoans_ = _activeLoans({
+            onlyOverdue_: false
+        });
 
         if (activeLoans_.length == 0) return address(0);
 
@@ -455,7 +434,9 @@ contract OpenTermLoanHandler is HandlerBase {
     }
 
     function _selectOverdueLoan(uint256 seed_) internal view returns (address loan_) {
-        address[] memory overdueLoans_ = _activeLoans({ onlyOverdue_: true });
+        address[] memory overdueLoans_ = _activeLoans({
+            onlyOverdue_: true
+        });
 
         if (overdueLoans_.length == 0) return address(0);
 

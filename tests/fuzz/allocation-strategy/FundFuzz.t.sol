@@ -5,13 +5,12 @@ import { AllocationFuzzBase } from "./AllocationFuzzBase.sol";
 
 contract AllocationFundFuzzTests is AllocationFuzzBase {
 
-    AllocationStrategyStorage      strategyStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    AllocationStrategyStorage strategyStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzz_allocation_fund(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across the loans and the allocation strategy, then choose the pool to test against          ***/
         /**********************************************************************************************************************************/
@@ -50,9 +49,9 @@ contract AllocationFundFuzzTests is AllocationFuzzBase {
         /*** No fees are charged on funding, so delegate and treasury balances remain unchanged                                         ***/
         /**********************************************************************************************************************************/
 
-        assertEq(fundsAsset.balanceOf(strategyDelegate),             delegateBalanceBefore);
-        assertEq(fundsAsset.balanceOf(treasury),                     treasuryBalanceBefore);
-        assertEq(fundsAsset.balanceOf(address(allocationStrategy)),  strategyStorage.previousFundsAssetBalance + fundAmount);
+        assertEq(fundsAsset.balanceOf(strategyDelegate),            delegateBalanceBefore);
+        assertEq(fundsAsset.balanceOf(treasury),                    treasuryBalanceBefore);
+        assertEq(fundsAsset.balanceOf(address(allocationStrategy)), strategyStorage.previousFundsAssetBalance + fundAmount);
 
         uint256 expectedAssetsUnderManagement = strategyStorage.previousAssetsUnderManagement + fundAmount;
 
@@ -60,7 +59,7 @@ contract AllocationFundFuzzTests is AllocationFuzzBase {
             allocationStrategy:    address(allocationStrategy),
             assetsUnderManagement: expectedAssetsUnderManagement,
             availableToWithdraw:   strategyStorage.previousAvailableToWithdraw + fundAmount,
-            recordedAssets:        strategyStorage.previousRecordedAssets      + fundAmount,
+            recordedAssets:        strategyStorage.previousRecordedAssets + fundAmount,
             totalDeployedAssets:   strategyStorage.previousTotalDeployedAssets,
             unrealizedLosses:      min(strategyStorage.previousImpairedAssets, expectedAssetsUnderManagement)
         });
@@ -77,11 +76,7 @@ contract AllocationFundFuzzTests is AllocationFuzzBase {
 
         uint256 expectedShares = strategyManagerStorage.previousTotalShares == 0
             ? fundAmount
-            : mulDivDown(
-                fundAmount,
-                strategyManagerStorage.previousTotalShares,
-                strategyManagerStorage.previousTotalAssets
-            );
+            : mulDivDown(fundAmount, strategyManagerStorage.previousTotalShares, strategyManagerStorage.previousTotalAssets);
 
         assertEq(sharesMinted, expectedShares);
 
@@ -110,8 +105,7 @@ contract AllocationFundFuzzTests is AllocationFuzzBase {
         assertEq(allocationManager.pendingSharesOf(address(poolManager)),    positionStorage.previousPendingShares);
 
         assertEq(
-            pool.totalAssets(),
-            poolManagerStorage.previousTotalAssets + expectedAssetsOf - positionStorage.previousAssets - fundAmount
+            pool.totalAssets(), poolManagerStorage.previousTotalAssets + expectedAssetsOf - positionStorage.previousAssets - fundAmount
         );
 
         assertEq(pool.totalSupply(), poolManagerStorage.previousTotalSupply);

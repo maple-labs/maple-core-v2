@@ -3,13 +3,13 @@ pragma solidity ^0.8.7;
 
 import { IMockERC20, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { AaveV3StrategyHandler }     from "./handlers/AaveV3StrategyHandler.sol";
+import { AaveV3StrategyHandler } from "./handlers/AaveV3StrategyHandler.sol";
 import { AllocationStrategyHandler } from "./handlers/AllocationStrategyHandler.sol";
-import { DepositHandler }            from "./handlers/DepositHandler.sol";
-import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
-import { SkyStrategyHandler }        from "./handlers/SkyStrategyHandler.sol";
-import { StrategyManagerHandler }    from "./handlers/StrategyManagerHandler.sol";
-import { WithdrawalHandler }         from "./handlers/WithdrawalHandler.sol";
+import { DepositHandler } from "./handlers/DepositHandler.sol";
+import { DistributionHandler } from "./handlers/DistributionHandler.sol";
+import { SkyStrategyHandler } from "./handlers/SkyStrategyHandler.sol";
+import { StrategyManagerHandler } from "./handlers/StrategyManagerHandler.sol";
+import { WithdrawalHandler } from "./handlers/WithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -50,7 +50,7 @@ contract ModularStrategiesInvariants is BaseInvariants {
     }
 
     function _setupAllocationStrategy() internal {
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("allocationStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -61,7 +61,7 @@ contract ModularStrategiesInvariants is BaseInvariants {
     }
 
     function _setupAaveV3Strategy() internal {
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            makeAddr("aaveV3StrategyDelegate"),
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -73,7 +73,7 @@ contract ModularStrategiesInvariants is BaseInvariants {
     }
 
     function _setupSkyStrategy() internal {
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        makeAddr("skyStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -107,7 +107,7 @@ contract ModularStrategiesInvariants is BaseInvariants {
             vm.prank(governor);
             globals.setValidPoolDelegate(poolDelegate_, true);
 
-            ( , address poolManager_, ) = _createPoolWithMultipleStrategies({
+            (, address poolManager_,) = _createPoolWithMultipleStrategies({
                 poolDelegate_:      poolDelegate_,
                 fundsAsset_:        address(fundsAsset),
                 name_:              string(abi.encodePacked("Pool ", vm.toString(i))),
@@ -160,10 +160,11 @@ contract ModularStrategiesInvariants is BaseInvariants {
             managedWallets_:     managedWallets
         });
 
-        aaveV3StrategyHandler = new AaveV3StrategyHandler({
-            handlerName_:        "aaveV3StrategyHandler",
-            underlyingStrategy_: aaveV3UnderlyingStrategy
-        });
+        aaveV3StrategyHandler =
+            new AaveV3StrategyHandler({
+                handlerName_:        "aaveV3StrategyHandler",
+                underlyingStrategy_: aaveV3UnderlyingStrategy
+            });
 
         skyStrategyHandler = new SkyStrategyHandler({
             handlerName_:        "skyStrategyHandler",
@@ -186,36 +187,36 @@ contract ModularStrategiesInvariants is BaseInvariants {
 
     function _setupHandlers() internal {
         depositHandler.addAction("deposit(uint256)", 7_500);
-        depositHandler.addAction("mint(uint256)",    2_500);
+        depositHandler.addAction("mint(uint256)", 2_500);
 
-        withdrawalHandler.addAction("requestRedeem(uint256)",      5_000);
-        withdrawalHandler.addAction("removeShares(uint256)",       1_000);
-        withdrawalHandler.addAction("removeSharesById(uint256)",   500);
+        withdrawalHandler.addAction("requestRedeem(uint256)", 5_000);
+        withdrawalHandler.addAction("removeShares(uint256)", 1_000);
+        withdrawalHandler.addAction("removeSharesById(uint256)", 500);
         withdrawalHandler.addAction("processRedemptions(uint256)", 3_000);
-        withdrawalHandler.addAction("removeRequest(uint256)",      500);
+        withdrawalHandler.addAction("removeRequest(uint256)", 500);
 
         strategyManagerHandler.addAction("fundStrategyManager(uint256)", 5_000);
-        strategyManagerHandler.addAction("requestRedeem(uint256)",       3_000);
-        strategyManagerHandler.addAction("cancelRedemption(uint256)",    500);
-        strategyManagerHandler.addAction("processRedemption(uint256)",   1_500);
+        strategyManagerHandler.addAction("requestRedeem(uint256)", 3_000);
+        strategyManagerHandler.addAction("cancelRedemption(uint256)", 500);
+        strategyManagerHandler.addAction("processRedemption(uint256)", 1_500);
 
-        allocationStrategyHandler.addAction("deployAssets(uint256)",               2_000);
-        allocationStrategyHandler.addAction("returnAssets(uint256)",               1_000);
-        allocationStrategyHandler.addAction("realizeYield(uint256)",               3_500);
-        allocationStrategyHandler.addAction("cancelYield(uint256)",                500);
-        allocationStrategyHandler.addAction("recognizeLoss(uint256)",              500);
-        allocationStrategyHandler.addAction("impair(uint256)",                     1_000);
-        allocationStrategyHandler.addAction("removeImpairment(uint256)",           500);
+        allocationStrategyHandler.addAction("deployAssets(uint256)", 2_000);
+        allocationStrategyHandler.addAction("returnAssets(uint256)", 1_000);
+        allocationStrategyHandler.addAction("realizeYield(uint256)", 3_500);
+        allocationStrategyHandler.addAction("cancelYield(uint256)", 500);
+        allocationStrategyHandler.addAction("recognizeLoss(uint256)", 500);
+        allocationStrategyHandler.addAction("impair(uint256)", 1_000);
+        allocationStrategyHandler.addAction("removeImpairment(uint256)", 500);
         allocationStrategyHandler.addAction("setStrategyDelegateFeeRate(uint256)", 500);
         allocationStrategyHandler.addAction("setStrategyProtocolFeeRate(uint256)", 500);
 
-        aaveV3StrategyHandler.addAction("impair(uint256)",                     3_500);
-        aaveV3StrategyHandler.addAction("removeImpairment(uint256)",           2_500);
+        aaveV3StrategyHandler.addAction("impair(uint256)", 3_500);
+        aaveV3StrategyHandler.addAction("removeImpairment(uint256)", 2_500);
         aaveV3StrategyHandler.addAction("setStrategyDelegateFeeRate(uint256)", 2_000);
         aaveV3StrategyHandler.addAction("setStrategyProtocolFeeRate(uint256)", 2_000);
 
-        skyStrategyHandler.addAction("impair(uint256)",                     3_500);
-        skyStrategyHandler.addAction("removeImpairment(uint256)",           2_500);
+        skyStrategyHandler.addAction("impair(uint256)", 3_500);
+        skyStrategyHandler.addAction("removeImpairment(uint256)", 2_500);
         skyStrategyHandler.addAction("setStrategyDelegateFeeRate(uint256)", 2_000);
         skyStrategyHandler.addAction("setStrategyProtocolFeeRate(uint256)", 2_000);
     }

@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAllocationStrategy,
-    IMockERC20,
-    IPool,
-    IPoolManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IMockERC20, IPool, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -24,18 +19,18 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
     address poolManagerA;
     address poolManagerB;
 
-    uint256 aaveFunding         = 300_000e6;
-    uint256 aaveRounding        = 2;  // Aave funding through this exact Pool topology rounds down two asset units at this fork block.
-    uint256 allocationDeploy    = 800_000e6;
-    uint256 allocationFundingA  = 600_000e6;
-    uint256 allocationFundingB  = 400_000e6;
-    uint256 allocationReturn    = 300_000e6;
-    uint256 allocationYield     = 100_000e6;
-    uint256 impairmentAmount    = 200_000e6;
-    uint256 poolADeposit        = 1_200_000e6;
-    uint256 poolBDeposit        = 400_000e6;
-    uint256 skyFunding          = 300_000e6;
-    uint256 skyRounding         = 1;  // Sky loses one funds-asset unit in the USDC-to-sUSDS conversion at this fork block.
+    uint256 aaveFunding        = 300_000e6;
+    uint256 aaveRounding       = 2; // Aave funding through this exact Pool topology rounds down two asset units at this fork block.
+    uint256 allocationDeploy   = 800_000e6;
+    uint256 allocationFundingA = 600_000e6;
+    uint256 allocationFundingB = 400_000e6;
+    uint256 allocationReturn   = 300_000e6;
+    uint256 allocationYield    = 100_000e6;
+    uint256 impairmentAmount   = 200_000e6;
+    uint256 poolADeposit       = 1_200_000e6;
+    uint256 poolBDeposit       = 400_000e6;
+    uint256 skyFunding         = 300_000e6;
+    uint256 skyRounding        = 1; // Sky loses one funds-asset unit in the USDC-to-sUSDS conversion at this fork block.
 
     uint256 aaveAssets;
     uint256 aaveShares;
@@ -70,7 +65,7 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         _configureGlobals();
         _createFactories();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            aaveStrategyDelegate,
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -80,7 +75,7 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
             bootstrapMint_:               0
         });
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        skyStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -91,7 +86,7 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
             bootstrapMint_:           0
         });
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        allocationStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -112,7 +107,7 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(makeAddr("poolADelegate"), true);
 
-        ( poolA, poolManagerA, ) = _createPoolWithMultipleStrategies({
+        (poolA, poolManagerA,) = _createPoolWithMultipleStrategies({
             poolDelegate_:      makeAddr("poolADelegate"),
             fundsAsset_:        address(fundsAsset),
             name_:              "Pool A",
@@ -130,7 +125,7 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(makeAddr("poolBDelegate"), true);
 
-        ( poolB, poolManagerB, ) = _createPoolWithMultipleStrategies({
+        (poolB, poolManagerB,) = _createPoolWithMultipleStrategies({
             poolDelegate_:      makeAddr("poolBDelegate"),
             fundsAsset_:        address(fundsAsset),
             name_:              "Pool B",
@@ -167,16 +162,16 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         deposit(poolA, poolALp, poolADeposit);
         deposit(poolB, poolBLp, poolBDeposit);
 
-        aaveAssets            = aaveFunding - aaveRounding;                  // 300_000e6 - 2
-        aaveShares            = aaveAssets;                                  // 300_000e6 - 2
-        skyAssets             = skyFunding - skyRounding;                    // 300_000e6 - 1
-        skyShares             = skyAssets;                                   // 300_000e6 - 1
-        allocationAssetsA     = allocationFundingA;                          // 600_000e6
-        allocationAssetsB     = allocationFundingB;                          // 400_000e6
-        allocationSharesA     = allocationFundingA;                          // 600_000e6
-        allocationSharesB     = allocationFundingB;                          // 400_000e6
-        allocationTotalShares = allocationSharesA + allocationSharesB;       // 1_000_000e6
-        initialPoolAAssets    = aaveAssets + skyAssets + allocationAssetsA;  // 1_200_000e6 - 3
+        aaveAssets            = aaveFunding - aaveRounding; // 300_000e6 - 2
+        aaveShares            = aaveAssets; // 300_000e6 - 2
+        skyAssets             = skyFunding - skyRounding; // 300_000e6 - 1
+        skyShares             = skyAssets; // 300_000e6 - 1
+        allocationAssetsA     = allocationFundingA; // 600_000e6
+        allocationAssetsB     = allocationFundingB; // 400_000e6
+        allocationSharesA     = allocationFundingA; // 600_000e6
+        allocationSharesB     = allocationFundingB; // 400_000e6
+        allocationTotalShares = allocationSharesA + allocationSharesB; // 1_000_000e6
+        initialPoolAAssets    = aaveAssets + skyAssets + allocationAssetsA; // 1_200_000e6 - 3
 
         fundStrategyManager(poolManagerA, aaveV3StrategyManager, aaveFunding);
         fundStrategyManager(poolManagerA, skyStrategyManager, skyFunding);
@@ -358,7 +353,7 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         /*** Return part of the deployment without changing either Pool's ownership                                                     ***/
         /**********************************************************************************************************************************/
 
-        deployedAssetsAfterReturn = allocationDeploy - allocationReturn;  // 500_000e6
+        deployedAssetsAfterReturn = allocationDeploy - allocationReturn; // 500_000e6
 
         returnAssets(allocationUnderlyingStrategy, managedWallet, managedWallet, allocationReturn);
 
@@ -423,10 +418,10 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         /*** Realize instant yield and prove that both Pools receive it pro rata                                                        ***/
         /**********************************************************************************************************************************/
 
-        allocationAssetsAfterYield = allocationTotalShares + allocationYield;                                 // 1_100_000e6
-        allocationAssetsA          = allocationSharesA * allocationAssetsAfterYield / allocationTotalShares;  // 660_000e6
-        allocationAssetsB          = allocationSharesB * allocationAssetsAfterYield / allocationTotalShares;  // 440_000e6
-        poolAAssetsAfterYield      = aaveAssets + skyAssets + allocationAssetsA;                              // 1_260_000e6 - 3
+        allocationAssetsAfterYield = allocationTotalShares + allocationYield; // 1_100_000e6
+        allocationAssetsA          = allocationSharesA * allocationAssetsAfterYield / allocationTotalShares; // 660_000e6
+        allocationAssetsB          = allocationSharesB * allocationAssetsAfterYield / allocationTotalShares; // 440_000e6
+        poolAAssetsAfterYield      = aaveAssets + skyAssets + allocationAssetsA; // 1_260_000e6 - 3
 
         realizeYield(allocationUnderlyingStrategy, managedWallet, allocationYield, 0);
 
@@ -500,10 +495,10 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         /*** Impair the shared Allocation strategy and split the loss according to Pool ownership                                       ***/
         /**********************************************************************************************************************************/
 
-        allocationLossA      = divRoundUp(allocationSharesA * impairmentAmount, allocationTotalShares);  // 120_000e6
-        allocationLossB      = divRoundUp(allocationSharesB * impairmentAmount, allocationTotalShares);  // 80_000e6
-        allocationNetAssetsA = allocationAssetsA - allocationLossA;                                      // 540_000e6
-        allocationNetAssetsB = allocationAssetsB - allocationLossB;                                      // 360_000e6
+        allocationLossA      = divRoundUp(allocationSharesA * impairmentAmount, allocationTotalShares); // 120_000e6
+        allocationLossB      = divRoundUp(allocationSharesB * impairmentAmount, allocationTotalShares); // 80_000e6
+        allocationNetAssetsA = allocationAssetsA - allocationLossA; // 540_000e6
+        allocationNetAssetsB = allocationAssetsB - allocationLossB; // 360_000e6
 
         impairAllocationStrategy(allocationUnderlyingStrategy, impairmentAmount);
 
@@ -734,10 +729,10 @@ contract SharedAllocationStrategyTests is TestBaseWithAssertions {
         /*** Fully exit Pool A's impaired Allocation position while preserving Pool B's shares and net exit value                       ***/
         /**********************************************************************************************************************************/
 
-        allocationExitAssetsA    = allocationNetAssetsA;                                // 540_000e6
-        finalAllocationAssetsB   = allocationAssetsAfterYield - allocationExitAssetsA;  // 560_000e6
-        finalAllocationLiquidity = finalAllocationAssetsB - deployedAssetsAfterReturn;  // 60_000e6
-        finalPoolALiquidity      = aaveAssets + skyAssets + allocationExitAssetsA;      // 1_140_000e6 - 3
+        allocationExitAssetsA    = allocationNetAssetsA; // 540_000e6
+        finalAllocationAssetsB   = allocationAssetsAfterYield - allocationExitAssetsA; // 560_000e6
+        finalAllocationLiquidity = finalAllocationAssetsB - deployedAssetsAfterReturn; // 60_000e6
+        finalPoolALiquidity      = aaveAssets + skyAssets + allocationExitAssetsA; // 1_140_000e6 - 3
 
         requestRedeemFromStrategyManager(poolManagerA, allocationStrategyManager, allocationSharesA);
 

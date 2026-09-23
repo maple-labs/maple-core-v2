@@ -3,11 +3,7 @@ pragma solidity ^0.8.7;
 
 import { console, Test } from "../../../../../contracts/Runner.sol";
 
-import {
-    IGlobals,
-    IGovernorTimelock,
-    ISyrupUSDCrossChainLike
-} from "../../../../../contracts/interfaces/Interfaces.sol";
+import { IGlobals, IGovernorTimelock, ISyrupUSDCrossChainLike } from "../../../../../contracts/interfaces/Interfaces.sol";
 
 import { UpgradeAddressRegistry } from "../../../UpgradeAddressRegistry.sol";
 
@@ -23,6 +19,7 @@ contract TimelockValidationScriptBase is UpgradeAddressRegistry, Test {
     function _proposalHash(address target, bytes memory calldata_) internal pure returns (bytes32) {
         return keccak256(abi.encode(target, calldata_));
     }
+
 }
 
 contract ValidateTimelockDeploymentPlasma is TimelockValidationScriptBase {
@@ -41,17 +38,17 @@ contract ValidateTimelockDeploymentPlasma is TimelockValidationScriptBase {
 
         assertEq(tl.latestProposalId(), 0);
 
-        ( uint256 delay, uint256 window ) = tl.defaultTimelockParameters();
+        (uint256 delay, uint256 window) = tl.defaultTimelockParameters();
 
         assertEq(delay,  1 days);
         assertEq(window, 1 days);
 
-        assertEq(tl.hasRole(proposerPlasma,  proposerRole),  true, "Governor is not a proposer!");
-        assertEq(tl.hasRole(executorPlasma,  executorRole),  true, "Operational admin is not an executor!");
+        assertEq(tl.hasRole(proposerPlasma, proposerRole),   true, "Governor is not a proposer!");
+        assertEq(tl.hasRole(executorPlasma, executorRole),   true, "Operational admin is not an executor!");
         assertEq(tl.hasRole(cancellerPlasma, cancellerRole), true, "Security admin is not a canceller!");
-        assertEq(tl.hasRole(proposerPlasma,  roleAdminRole), true, "Governor is not a role admin!");
+        assertEq(tl.hasRole(proposerPlasma, roleAdminRole),  true, "Governor is not a role admin!");
 
-        assertEq(tl.hasRole(backupExecutorPlasma,  executorRole),  false, "Backup executor is already set!");
+        assertEq(tl.hasRole(backupExecutorPlasma, executorRole),   false, "Backup executor is already set!");
         assertEq(tl.hasRole(backupRoleAdminPlasma, roleAdminRole), false, "Backup role admin is already set!");
     }
 
@@ -59,32 +56,20 @@ contract ValidateTimelockDeploymentPlasma is TimelockValidationScriptBase {
 
 contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
 
-    bytes32 proposalHash_1 = _proposalHash(
-        timelock,
-        abi.encodeWithSignature("updateRole(bytes32,address,bool)", roleAdminRole, backupRoleAdminPlasma, true)
-    );
+    bytes32 proposalHash_1 =
+        _proposalHash(timelock, abi.encodeWithSignature("updateRole(bytes32,address,bool)", roleAdminRole, backupRoleAdminPlasma, true));
 
-    bytes32 proposalHash_2 = _proposalHash(
-        timelock,
-        abi.encodeWithSignature("updateRole(bytes32,address,bool)", executorRole, backupExecutorPlasma, true)
-    );
+    bytes32 proposalHash_2 =
+        _proposalHash(timelock, abi.encodeWithSignature("updateRole(bytes32,address,bool)", executorRole, backupExecutorPlasma, true));
 
-    bytes32 proposalHash_3 = _proposalHash(
-        timelock,
-        abi.encodeWithSignature("setDefaultTimelockParameters(uint32,uint32)", 3 days, 2 days)
-    );
+    bytes32 proposalHash_3 =
+        _proposalHash(timelock, abi.encodeWithSignature("setDefaultTimelockParameters(uint32,uint32)", 3 days, 2 days));
 
     // TODO: Replace with the timestamp of the proposal transaction.
     uint32 proposalTimestamp = uint32(0);
 
     function run() external view {
-        (
-            bytes32 proposalHash,
-            bool    isUnschedulable,
-            uint32  scheduledAt,
-            uint32  delayedUntil,
-            uint32  validUntil
-        ) = tl.proposals(1);
+        (bytes32 proposalHash, bool isUnschedulable, uint32 scheduledAt, uint32 delayedUntil, uint32 validUntil) = tl.proposals(1);
 
         assertEq(proposalHash,    proposalHash_1,             "Invalid proposal hash! (id: 1)");
         assertEq(isUnschedulable, false,                      "Proposal is unschedulable! (id: 1)");
@@ -92,13 +77,7 @@ contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
         assertEq(delayedUntil,    proposalTimestamp + 1 days, "Execution window starting date is invalid! (id: 1)");
         assertEq(validUntil,      proposalTimestamp + 2 days, "Execution window ending date is invalid! (id: 1)");
 
-        (
-            proposalHash,
-            isUnschedulable,
-            scheduledAt,
-            delayedUntil,
-            validUntil
-        ) = tl.proposals(2);
+        (proposalHash, isUnschedulable, scheduledAt, delayedUntil, validUntil) = tl.proposals(2);
 
         assertEq(proposalHash,    proposalHash_2,             "Invalid proposal hash! (id: 2)");
         assertEq(isUnschedulable, false,                      "Proposal is unschedulable! (id: 2)");
@@ -106,13 +85,7 @@ contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
         assertEq(delayedUntil,    proposalTimestamp + 1 days, "Execution window starting date is invalid! (id: 2)");
         assertEq(validUntil,      proposalTimestamp + 2 days, "Execution window ending date is invalid! (id: 2)");
 
-        (
-            proposalHash,
-            isUnschedulable,
-            scheduledAt,
-            delayedUntil,
-            validUntil
-        ) = tl.proposals(3);
+        (proposalHash, isUnschedulable, scheduledAt, delayedUntil, validUntil) = tl.proposals(3);
 
         assertEq(proposalHash,    proposalHash_3,             "Invalid proposal hash! (id: 3)");
         assertEq(isUnschedulable, true,                       "Proposal is unschedulable! (id: 3)");
@@ -128,10 +101,10 @@ contract ValidateConfigurationSchedulingPlasma is TimelockValidationScriptBase {
 contract ValidateConfigurationExecutionPlasma is TimelockValidationScriptBase {
 
     function run() external view {
-        assertEq(tl.hasRole(backupExecutorPlasma,  executorRole),  true, "Backup executor is not configured!");
+        assertEq(tl.hasRole(backupExecutorPlasma, executorRole),   true, "Backup executor is not configured!");
         assertEq(tl.hasRole(backupRoleAdminPlasma, roleAdminRole), true, "Backup role admin is not configured!");
 
-        ( uint256 delay, uint256 window ) = tl.defaultTimelockParameters();
+        (uint256 delay, uint256 window) = tl.defaultTimelockParameters();
 
         assertEq(delay,  3 days);
         assertEq(window, 2 days);
@@ -143,18 +116,13 @@ contract ValidateSyrupUSDTTokenAdminPlasma is TimelockValidationScriptBase {
 
     function run() external view {
         assertEq(
-            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
-                ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
-                timelockPlasma
-            ),
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(), timelockPlasma),
             true
         );
 
         assertEq(
-            ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(
-                ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(),
-                syrupUSDTDefaultAdmin
-            ),
+            ISyrupUSDCrossChainLike(syrupUSDTPlasma)
+                .hasRole(ISyrupUSDCrossChainLike(syrupUSDTPlasma).DEFAULT_ADMIN_ROLE(), syrupUSDTDefaultAdmin),
             false
         );
     }

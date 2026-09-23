@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAaveV3Strategy, IERC20, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "./AaveV3StrategyTestBase.sol";
 
@@ -88,7 +84,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
     uint256 impairmentRemoval = 100_000e6;
     uint256 poolLiquidity     = 1_000_000e6;
     uint256 strategyAssets;
-    uint256 secondFundAmount  = 450_000e6;
+    uint256 secondFundAmount = 450_000e6;
     uint256 strategyShares;
 
     function setUp() public virtual override {
@@ -102,12 +98,12 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
         expectedSecondPoolAssets = secondFundAmount;
         expectedSecondPoolShares = secondFundAmount;
 
-        strategyAssets = fundAmount - expectedRoundingError;  // 500k - 1 on Aave, 500k on SparkLend.
+        strategyAssets = fundAmount - expectedRoundingError; // 500k - 1 on Aave, 500k on SparkLend.
         strategyShares = strategyAssets;
     }
 
     function testFork_removeImpairment_acrossAllAdmins() external {
-        uint256 operationalRemoval = impairment - impairmentRemoval;  // 150k.
+        uint256 operationalRemoval = impairment - impairmentRemoval; // 150k.
 
         impairStrategy(aaveV3UnderlyingStrategy, impairment);
 
@@ -228,7 +224,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
     function testFork_removeImpairment_restoresStrategyManagerExitAssets() external {
         uint256 expectedInitialExitAssets  = strategyAssets;
-        uint256 expectedImpairedExitAssets = strategyAssets - impairment;  // 250k - 1 on Aave, 250k on SparkLend.
+        uint256 expectedImpairedExitAssets = strategyAssets - impairment; // 250k - 1 on Aave, 250k on SparkLend.
 
         uint256 initialExitAssets = IStrategyManager(aaveV3StrategyManager).convertToExitAssets(strategyShares);
 
@@ -335,7 +331,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
         uint256 expectedImpairedExitAssets = redemptionShares * (strategyAssets - impairment) / strategyAssets;
 
-        assertEq(impairedExitAssets, expectedImpairedExitAssets);  // 50k - 1 on Aave, 50k on SparkLend.
+        assertEq(impairedExitAssets, expectedImpairedExitAssets); // 50k - 1 on Aave, 50k on SparkLend.
 
         assertPoolState({
             pool:               address(pool),
@@ -425,9 +421,9 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
     }
 
     function testFork_removeImpairment_aboveAndBelowAumClamp() external {
-        uint256 removalBelowClamp = impairmentRemoval;                  // 100k.
-        uint256 storedImpairment  = fundAmount + impairment;            // 750k.
-        uint256 removalAboveClamp = storedImpairment - strategyAssets;  // 250k + 1 on Aave, 250k on SparkLend.
+        uint256 removalBelowClamp = impairmentRemoval; // 100k.
+        uint256 storedImpairment  = fundAmount + impairment; // 750k.
+        uint256 removalAboveClamp = storedImpairment - strategyAssets; // 250k + 1 on Aave, 250k on SparkLend.
 
         impairStrategy(aaveV3UnderlyingStrategy, storedImpairment);
 
@@ -548,20 +544,20 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondFundAmount);
 
         uint256 firstAssets  = strategyAssets;
-        uint256 secondAssets = secondFundAmount - expectedRoundingError;  // 450k - 1 on Aave, 450k on SparkLend.
-        uint256 totalAssets  = firstAssets + secondAssets;                // 950k - 2 on Aave, 950k on SparkLend.
+        uint256 secondAssets = secondFundAmount - expectedRoundingError; // 450k - 1 on Aave, 450k on SparkLend.
+        uint256 totalAssets  = firstAssets + secondAssets; // 950k - 2 on Aave, 950k on SparkLend.
 
         uint256 firstShares  = firstAssets;
         uint256 secondShares = secondAssets;
         uint256 totalShares  = firstShares + secondShares;
 
-        uint256 firstLoss  = divRoundUp(firstShares  * impairment, totalShares);
+        uint256 firstLoss  = divRoundUp(firstShares * impairment, totalShares);
         uint256 secondLoss = divRoundUp(secondShares * impairment, totalShares);
 
         impairStrategy(aaveV3UnderlyingStrategy, impairment);
@@ -621,9 +617,9 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
         removeStrategyImpairment(aaveV3UnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
-        firstLoss  = divRoundUp(firstShares  * remainingImpairment, totalShares);
+        firstLoss  = divRoundUp(firstShares * remainingImpairment, totalShares);
         secondLoss = divRoundUp(secondShares * remainingImpairment, totalShares);
 
         assertPoolState({
@@ -681,8 +677,8 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
     }
 
     function testFork_removeImpairment_doesNotCollectAccruedFees() external {
-        uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-        uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+        uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         setStrategyDelegateFeeRate(aaveV3UnderlyingStrategy, delegateFeeRate);
         setStrategyProtocolFeeRate(aaveV3UnderlyingStrategy, protocolFeeRate);
@@ -695,10 +691,10 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
         uint256 expectedProtocolFee = (grossAum - fundedAssets) * protocolFeeRate / HUNDRED_PERCENT;
         uint256 netAum              = grossAum - expectedDelegateFee - expectedProtocolFee;
 
-        assertGt(grossAum,            fundedAssets);
+        assertGt(grossAum, fundedAssets);
         assertGt(expectedDelegateFee, 0);
         assertGt(expectedProtocolFee, 0);
-        assertGt(netAum,              impairment);
+        assertGt(netAum, impairment);
 
         impairStrategy(aaveV3UnderlyingStrategy, impairment);
 
@@ -743,7 +739,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
         removeStrategyImpairment(aaveV3UnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
         assertPoolState({
             pool:               address(pool),
@@ -789,7 +785,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondFundAmount);
@@ -857,7 +853,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
         removeStrategyImpairment(aaveV3UnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
         assertPoolState({
             pool:               firstPool,
@@ -914,7 +910,7 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
     }
 
     function testFork_removeImpairment_withFullyExitedPoolManagerAndBootstrapMint() external {
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            makeAddr("bootstrapStrategyDelegate"),
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -926,8 +922,8 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
         assertEq(IStrategyManager(aaveV3StrategyManager).sharesOf(address(0)), expectedBootstrapShares);
 
-        ( address firstPool, address firstPoolManager ) = _createPoolSharingStrategy("bootstrapPoolDelegate", aaveV3StrategyManager);
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (address firstPool, address firstPoolManager)   = _createPoolSharingStrategy("bootstrapPoolDelegate", aaveV3StrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         deposit(firstPool, lp, poolLiquidity);
         deposit(secondPool, lp, poolLiquidity);
@@ -936,11 +932,11 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
         requestRedeemFromStrategyManager(firstPoolManager, aaveV3StrategyManager, strategyShares);
         processRedemptionFromStrategyManager(firstPoolManager, aaveV3StrategyManager, strategyShares);
 
-        uint256 firstPoolAssets = poolLiquidity - expectedRoundingError;                     // 1m - 1 on Aave, 1m on SparkLend.
-        uint256 positionValue   = bootstrapMint + secondFundAmount - expectedRoundingError;  // 550k - 1 on Aave, 550k on SparkLend.
-        uint256 totalShares     = expectedBootstrapShares + expectedSecondPoolShares;        // 550k - 1 on Aave, 550k on SparkLend.
+        uint256 firstPoolAssets = poolLiquidity - expectedRoundingError; // 1m - 1 on Aave, 1m on SparkLend.
+        uint256 positionValue   = bootstrapMint + secondFundAmount - expectedRoundingError; // 550k - 1 on Aave, 550k on SparkLend.
+        uint256 totalShares     = expectedBootstrapShares + expectedSecondPoolShares; // 550k - 1 on Aave, 550k on SparkLend.
 
-        uint256 bootstrapImpairment  = divRoundUp(expectedBootstrapShares  * impairment, totalShares);
+        uint256 bootstrapImpairment  = divRoundUp(expectedBootstrapShares * impairment, totalShares);
         uint256 secondPoolImpairment = divRoundUp(expectedSecondPoolShares * impairment, totalShares);
 
         impairStrategy(aaveV3UnderlyingStrategy, impairment);
@@ -1009,8 +1005,8 @@ contract AaveV3StrategyRemoveImpairmentTests is AaveV3StrategyTestBase {
 
         removeStrategyImpairment(aaveV3UnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment           = impairment - impairmentRemoval;  // 150k.
-        uint256 bootstrapRemainingImpairment  = divRoundUp(expectedBootstrapShares  * remainingImpairment, totalShares);
+        uint256 remainingImpairment           = impairment - impairmentRemoval; // 150k.
+        uint256 bootstrapRemainingImpairment  = divRoundUp(expectedBootstrapShares * remainingImpairment, totalShares);
         uint256 secondPoolRemainingImpairment = divRoundUp(expectedSecondPoolShares * remainingImpairment, totalShares);
 
         assertPoolState({
@@ -1087,10 +1083,10 @@ contract SparkLendStrategyRemoveImpairmentTests is AaveV3StrategyRemoveImpairmen
 
         super.setUp();
 
-        expectedBootstrapAssets     = bootstrapMint + 1;
-        expectedBootstrapShares     = expectedBootstrapAssets;
-        expectedSecondPoolAssets    = secondFundAmount - 1;
-        expectedSecondPoolShares    = expectedSecondPoolAssets;
+        expectedBootstrapAssets  = bootstrapMint + 1;
+        expectedBootstrapShares  = expectedBootstrapAssets;
+        expectedSecondPoolAssets = secondFundAmount - 1;
+        expectedSecondPoolShares = expectedSecondPoolAssets;
     }
 
 }

@@ -31,24 +31,24 @@ contract RedeemFuzzTests is FuzzBase {
         receiverAssets   = amounts[5];
         availableAssets  = amounts[6];
 
-        if (owner    == address(0)) owner    = address(1);
-        if (caller   == address(0)) caller   = address(1);
+        if (owner == address(0)) owner = address(1);
+        if (caller == address(0)) caller = address(1);
         if (receiver == address(0)) receiver = address(1);
 
-        vm.assume(owner    != address(pool));
-        vm.assume(caller   != address(pool));
+        vm.assume(owner != address(pool));
+        vm.assume(caller != address(pool));
         vm.assume(receiver != address(pool));
         vm.assume(receiver != address(this));
-        vm.assume(owner    != address(queueWM));
-        vm.assume(caller   != address(queueWM));
+        vm.assume(owner != address(queueWM));
+        vm.assume(caller != address(queueWM));
         vm.assume(receiver != address(queueWM));
 
-        totalSupply      = bound(totalSupply,      1, 1e30);
-        totalAssets      = bound(totalAssets,      0, 1e30);
+        totalSupply      = bound(totalSupply, 1, 1e30);
+        totalAssets      = bound(totalAssets, 0, 1e30);
         unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
-        ownerShares      = bound(ownerShares,      1, totalSupply);
-        sharesToRedeem   = bound(sharesToRedeem,   1, ownerShares);
-        receiverAssets   = bound(receiverAssets,   0, 1e30);
+        ownerShares      = bound(ownerShares, 1, totalSupply);
+        sharesToRedeem   = bound(sharesToRedeem, 1, ownerShares);
+        receiverAssets   = bound(receiverAssets, 0, 1e30);
 
         uint256 assetsToWithdraw = sharesToRedeem * (totalAssets - unrealizedLosses) / totalSupply;
 

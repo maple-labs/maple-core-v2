@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IERC20,
-    IPoolPermissionManager,
-    ISyrupRouter
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20, IPoolPermissionManager, ISyrupRouter } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
 
 import { MapleAddressRegistryETH } from "../../../modules/address-registry/contracts/MapleAddressRegistryETH.sol";
-import { Vm }                      from "../../../modules/forge-std/src/Vm.sol";
-import { SyrupRouter }             from "../../../modules/syrup-utils/contracts/SyrupRouter.sol";
+import { Vm } from "../../../modules/forge-std/src/Vm.sol";
+import { SyrupRouter } from "../../../modules/syrup-utils/contracts/SyrupRouter.sol";
 
 contract SyrupRouterForkTests is ProtocolActions, MapleAddressRegistryETH {
 
@@ -73,7 +69,7 @@ contract SyrupRouterForkTests is ProtocolActions, MapleAddressRegistryETH {
 
     function testFork_router_depositWithPermit() external {
         // Get the signature.
-        ( uint8 v, bytes32 r, bytes32 s ) = vm.sign(lp, _getDigest(usdc, lp.addr, router, assets, block.timestamp));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(lp, _getDigest(usdc, lp.addr, router, assets, block.timestamp));
 
         // Perform the deposit.
         vm.prank(lp.addr);

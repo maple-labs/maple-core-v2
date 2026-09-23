@@ -18,7 +18,7 @@ contract AddStrategyManagerTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -50,9 +50,10 @@ contract AddStrategyManagerTestBase is TestBaseWithAssertions {
         address strategyDelegate_,
         address existingLegacyStrategy,
         uint256 bootstrapMint,
-        bool    strategyManagerAdded
+        bool strategyManagerAdded
     )
-        internal view
+        internal
+        view
     {
         IStrategyManager strategyManagerContract = IStrategyManager(strategyManager);
 
@@ -106,9 +107,10 @@ contract AddStrategyManagerTestBase is TestBaseWithAssertions {
         address fundingPoolManager,
         address existingLegacyStrategy,
         uint256 fundAssets,
-        bool    strategyManagerAdded
+        bool strategyManagerAdded
     )
-        internal view
+        internal
+        view
     {
         IPoolManager     targetPoolManagerContract  = IPoolManager(targetPoolManager);
         IPoolManager     fundingPoolManagerContract = IPoolManager(fundingPoolManager);
@@ -219,7 +221,7 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
 
     function test_addStrategyManager_assetNotSupported() external {
         address otherDelegate = makeAddr("otherStrategyDelegate");
-        address otherAsset    = deployMock({
+        address otherAsset = deployMock({
             mockName: "ConfigurableMockERC20",
             data:     abi.encode("Dai", "DAI", 18)
         });
@@ -228,7 +230,7 @@ contract AddStrategyManagerRevertTests is AddStrategyManagerTestBase {
         globals.setValidPoolAsset(otherAsset, true);
 
         // Strategy manager backed by an asset that does not match the pool's asset.
-        ( address otherAssetStrategyManager, ) = _deployAllocationStrategy({
+        (address otherAssetStrategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        otherDelegate,
             fundsAsset_:              otherAsset,
             strategyDelegateFeeRate_: 0,
@@ -250,7 +252,7 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         address existingLegacyStrategy = poolManager.strategyList(0);
         address secondStrategyDelegate = makeAddr("secondStrategyDelegate");
 
-        ( address secondStrategyManager, ) = _deployAllocationStrategy({
+        (address secondStrategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        secondStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -332,7 +334,8 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         });
 
         /**********************************************************************************************************************************/
-        /*** Add the strategy manager                                                                                                    ***/
+        /*** Add the strategy manager
+        ***/
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
@@ -348,7 +351,8 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         });
 
         /**********************************************************************************************************************************/
-        /*** Remove the strategy manager                                                                                                 ***/
+        /*** Remove the strategy manager
+        ***/
         /**********************************************************************************************************************************/
 
         vm.prank(operationalAdmin);
@@ -363,7 +367,8 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         });
 
         /**********************************************************************************************************************************/
-        /*** Re-add the strategy manager                                                                                                 ***/
+        /*** Re-add the strategy manager
+        ***/
         /**********************************************************************************************************************************/
 
         vm.prank(governor);
@@ -388,10 +393,11 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         address existingLegacyStrategy = IPoolManager(targetPoolManager).strategyList(0);
         address liquidityProvider      = makeAddr("liquidityProvider");
 
-        ( address fundingPool, address fundingPoolManager ) = _createPoolSharingStrategy({
-            delegateLabel_:   "fundingPoolDelegate",
-            strategyManager_: allocationStrategyManager
-        });
+        (address fundingPool, address fundingPoolManager) =
+            _createPoolSharingStrategy({
+                delegateLabel_:   "fundingPoolDelegate",
+                strategyManager_: allocationStrategyManager
+            });
 
         vm.prank(strategyDelegate);
         IStrategyManager(allocationStrategyManager).setStrategyLiquidityCap(type(uint256).max);
@@ -446,7 +452,7 @@ contract AddStrategyManagerAllocationStrategyTests is AddStrategyManagerTestBase
         address bootstrapStrategyDelegate = makeAddr("bootstrapStrategyDelegate");
         address existingLegacyStrategy    = poolManager.strategyList(0);
 
-        ( address bootstrapStrategyManager, address bootstrapUnderlyingStrategy ) = _deployAllocationStrategy({
+        (address bootstrapStrategyManager, address bootstrapUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        bootstrapStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -502,7 +508,7 @@ contract AddStrategyManagerGovernorTimelockTests is AddStrategyManagerTestBase {
         IStrategyManager strategyManagerContract = IStrategyManager(allocationStrategyManager);
 
         address[] memory targets = new address[](1);
-        bytes[]   memory data    = new bytes[](1);
+        bytes[] memory   data    = new bytes[](1);
 
         targets[0] = address(poolManager);
         data[0]    = abi.encodeWithSignature("addStrategyManager(address)", allocationStrategyManager);
@@ -546,7 +552,7 @@ contract AddStrategyManagerGovernorTimelockTests is AddStrategyManagerTestBase {
 
         uint32 scheduledAt = uint32(block.timestamp);
 
-        ( uint32 delay, uint32 executionWindow ) = governorTimelock.defaultTimelockParameters();
+        (uint32 delay, uint32 executionWindow) = governorTimelock.defaultTimelockParameters();
 
         uint256 proposalId = scheduleProposal({
             timelock_: address(governorTimelock),
@@ -680,7 +686,7 @@ contract AddStrategyManagerForkTestBase is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(fundingPoolDelegate, true);
 
-        ( fundingPool, fundingPoolManager, ) = _createPoolWithOTLM(fundingPoolDelegate);
+        (fundingPool, fundingPoolManager,) = _createPoolWithOTLM(fundingPoolDelegate);
 
         activatePool(fundingPoolManager, HUNDRED_PERCENT);
 
@@ -690,11 +696,12 @@ contract AddStrategyManagerForkTestBase is TestBaseWithAssertions {
 
     function assertStrategyRegistration(
         IPoolManager targetPoolManager_,
-        address      strategyManager_,
-        address      existingLegacyStrategy_,
-        bool         strategyManagerAdded_
+        address strategyManager_,
+        address existingLegacyStrategy_,
+        bool strategyManagerAdded_
     )
-        internal view
+        internal
+        view
     {
         assertEq(targetPoolManager_.isStrategy(strategyManager_),        false);
         assertEq(targetPoolManager_.isStrategyManager(strategyManager_), strategyManagerAdded_);
@@ -722,7 +729,7 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
     }
 
     function test_addStrategyManager_new_withoutBootstrapMint() external {
-        ( address strategyManager, ) = _deployAaveV3Strategy({
+        (address strategyManager,) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -797,7 +804,7 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
     function test_addStrategyManager_new_withBootstrapMint() external {
         uint256 bootstrapMint = 10e6;
 
-        ( address strategyManager, ) = _deployAaveV3Strategy({
+        (address strategyManager,) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -873,7 +880,7 @@ contract AddStrategyManagerAaveV3StrategyForkTests is AddStrategyManagerForkTest
     }
 
     function test_addStrategyManager_withAssetsFromAnotherPool() external {
-        ( address strategyManager, ) = _deployAaveV3Strategy({
+        (address strategyManager,) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -986,7 +993,7 @@ contract AddStrategyManagerSkyStrategyForkTests is AddStrategyManagerForkTestBas
     }
 
     function test_addStrategyManager_new_withoutBootstrapMint() external {
-        ( address strategyManager, ) = _deploySkyStrategy({
+        (address strategyManager,) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -1062,7 +1069,7 @@ contract AddStrategyManagerSkyStrategyForkTests is AddStrategyManagerForkTestBas
     function test_addStrategyManager_new_withBootstrapMint() external {
         uint256 bootstrapMint = 10e6;
 
-        ( address strategyManager, ) = _deploySkyStrategy({
+        (address strategyManager,) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -1140,7 +1147,7 @@ contract AddStrategyManagerSkyStrategyForkTests is AddStrategyManagerForkTestBas
     }
 
     function test_addStrategyManager_withAssetsFromAnotherPool() external {
-        ( address strategyManager, ) = _deploySkyStrategy({
+        (address strategyManager,) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,

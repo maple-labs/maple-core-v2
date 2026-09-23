@@ -20,14 +20,14 @@ contract RemoveCallTestsBase is TestBaseWithAssertions {
     uint256 constant platformServiceFeeRate    = 0.04e6;
     uint256 constant principal                 = 1_500_000e6;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public virtual override {
         super.setUp();
 
         vm.startPrank(governor);
-        globals.setPlatformServiceFeeRate(address(poolManager)   , platformServiceFeeRate);
+        globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
@@ -37,15 +37,17 @@ contract RemoveCallTestsBase is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
+            )
+        );
 
         fundLoan(address(loan));
     }
@@ -95,7 +97,7 @@ contract RemoveCallTests is RemoveCallTestsBase {
     function setUp() public virtual override {
         super.setUp();
 
-        callTimestamp  = start + paymentInterval / 2;
+        callTimestamp = start + paymentInterval / 2;
 
         vm.warp(callTimestamp);
 
@@ -222,10 +224,10 @@ contract RemoveCallTests is RemoveCallTestsBase {
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 
         assertPoolState({
-            pool:               address(pool),
-            totalSupply:        1_500_000e6,  // Same as initial deposit
-            totalAssets:        principal + accruedInterest,
-            unrealizedLosses:   principal + accruedInterest,
+            pool: address(pool),
+            totalSupply: 1_500_000e6, // Same as initial deposit
+            totalAssets: principal + accruedInterest,
+            unrealizedLosses: principal + accruedInterest,
             availableLiquidity: 0
         });
 
@@ -272,10 +274,10 @@ contract RemoveCallTests is RemoveCallTestsBase {
         removeLoanCall(address(loan));
 
         assertPoolState({
-            pool:               address(pool),
-            totalSupply:        1_500_000e6,  // Same as initial deposit
-            totalAssets:        principal + accruedInterest,
-            unrealizedLosses:   principal + accruedInterest,
+            pool: address(pool),
+            totalSupply: 1_500_000e6, // Same as initial deposit
+            totalAssets: principal + accruedInterest,
+            unrealizedLosses: principal + accruedInterest,
             availableLiquidity: 0
         });
 

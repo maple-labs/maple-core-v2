@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAllocationStrategy,
-    IPool,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IPool, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -18,7 +14,7 @@ contract StrategyManagerRequestRedeemTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -284,7 +280,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         address newLiquidityBot = makeAddr("newLiquidityBot");
         address liquidityRouter = makeAddr("liquidityRouter");
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    newLiquidityBot), false);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT", newLiquidityBot),    false);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", liquidityRouter), false);
 
         /**********************************************************************************************************************************/
@@ -292,11 +288,11 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         /**********************************************************************************************************************************/
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT",    newLiquidityBot, true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT", newLiquidityBot, true);
         globals.setValidInstanceOf("LIQUIDITY_ROUTER", liquidityRouter, true);
         vm.stopPrank();
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    newLiquidityBot), true);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT", newLiquidityBot),    true);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", liquidityRouter), true);
 
         assertPoolState({
@@ -546,7 +542,7 @@ contract StrategyManagerRequestRedeemSuccessTests is StrategyManagerRequestRedee
         /*** Step 1: Create a second pool                                                                                               ***/
         /**********************************************************************************************************************************/
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("poolDelegate2", strategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("poolDelegate2", strategyManager);
 
         openPool(poolManager2);
 

@@ -24,15 +24,15 @@ import {
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
-import { AaveV3StrategyHandler }     from "./handlers/AaveV3StrategyHandler.sol";
+import { AaveV3StrategyHandler } from "./handlers/AaveV3StrategyHandler.sol";
 import { AllocationStrategyHandler } from "./handlers/AllocationStrategyHandler.sol";
-import { DepositHandler }            from "./handlers/DepositHandler.sol";
-import { OpenTermLoanHandler }       from "./handlers/OpenTermLoanHandler.sol";
-import { PermissionHandler }         from "./handlers/PermissionHandler.sol";
-import { SkyStrategyHandler }        from "./handlers/SkyStrategyHandler.sol";
-import { StrategyManagerHandler }    from "./handlers/StrategyManagerHandler.sol";
-import { TransferHandler }           from "./handlers/TransferHandler.sol";
-import { WithdrawalHandler }         from "./handlers/WithdrawalHandler.sol";
+import { DepositHandler } from "./handlers/DepositHandler.sol";
+import { OpenTermLoanHandler } from "./handlers/OpenTermLoanHandler.sol";
+import { PermissionHandler } from "./handlers/PermissionHandler.sol";
+import { SkyStrategyHandler } from "./handlers/SkyStrategyHandler.sol";
+import { StrategyManagerHandler } from "./handlers/StrategyManagerHandler.sol";
+import { TransferHandler } from "./handlers/TransferHandler.sol";
+import { WithdrawalHandler } from "./handlers/WithdrawalHandler.sol";
 
 contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
@@ -59,15 +59,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    AaveV3StrategyHandler     aaveV3StrategyHandler;
+    AaveV3StrategyHandler aaveV3StrategyHandler;
     AllocationStrategyHandler allocationStrategyHandler;
-    DepositHandler            depositHandler;
-    OpenTermLoanHandler       otlHandler;
-    PermissionHandler         permissionHandler;
-    SkyStrategyHandler        skyStrategyHandler;
-    StrategyManagerHandler    strategyManagerHandler;
-    TransferHandler           transferHandler;
-    WithdrawalHandler         withdrawalHandler;
+    DepositHandler depositHandler;
+    OpenTermLoanHandler otlHandler;
+    PermissionHandler permissionHandler;
+    SkyStrategyHandler skyStrategyHandler;
+    StrategyManagerHandler strategyManagerHandler;
+    TransferHandler transferHandler;
+    WithdrawalHandler withdrawalHandler;
 
     address[] lps;
 
@@ -340,12 +340,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_poolManager_invariant_C(address poolManager_) internal view {
-        try IPoolManager(poolManager_).totalAssets() returns (uint256) {}
+        try IPoolManager(poolManager_).totalAssets() returns (uint256) { }
         catch {
             assertTrue(false, "PoolManager Invariant C: totalAssets reverted");
         }
 
-        try IPoolManager(poolManager_).unrealizedLosses() returns (uint256) {}
+        try IPoolManager(poolManager_).unrealizedLosses() returns (uint256) { }
         catch {
             assertTrue(false, "PoolManager Invariant C: unrealizedLosses reverted");
         }
@@ -440,18 +440,17 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         }
     }
 
-    function assert_otl_invariant_F (address loan_) internal view {
+    function assert_otl_invariant_F(address loan_) internal view {
         IOpenTermLoan loan = IOpenTermLoan(loan_);
 
         assertLe(loan.calledPrincipal(), loan.principal(), "OTL Invariant F");
     }
 
-    function assert_otl_invariant_G (address loan_) internal view {
+    function assert_otl_invariant_G(address loan_) internal view {
         IOpenTermLoan loan = IOpenTermLoan(loan_);
 
         assertTrue(
-            loan.dateCalled() == 0 && loan.calledPrincipal() == 0 ||
-            loan.dateCalled() != 0 && loan.calledPrincipal() != 0,
+            loan.dateCalled() == 0 && loan.calledPrincipal() == 0 || loan.dateCalled() != 0 && loan.calledPrincipal() != 0,
             "OTL Invariant G"
         );
     }
@@ -463,13 +462,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_otl_invariant_I(address loan_) internal view {
-        (
-            uint256 principal,
-            uint256 interest,
-            uint256 lateInterest,
-            uint256 delegateServiceFee,
-            uint256 platformServiceFee
-        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
+        (uint256 principal, uint256 interest, uint256 lateInterest, uint256 delegateServiceFee, uint256 platformServiceFee) =
+            IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         (
             uint256 expectedPrincipal,
@@ -527,7 +521,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         assertApproxEqAbs(
             assetsUnderManagement,
             expectedAssetsUnderManagement,
-            ALLOWED_OTL_AUM_DIFF,  // As the number can be unbounded but we realistically expect it to not go over $1
+            ALLOWED_OTL_AUM_DIFF, // As the number can be unbounded but we realistically expect it to not go over $1
             "OTLM Invariant A"
         );
     }
@@ -538,7 +532,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 assetsUnderManagement = openTermLoanManager.assetsUnderManagement();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , uint40 startDate, ) = openTermLoanManager.paymentFor(loans_[i]);
+            (,, uint40 startDate,) = openTermLoanManager.paymentFor(loans_[i]);
 
             if (startDate != 0) return;
         }
@@ -564,8 +558,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 expectedIssuanceRate;
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(loans_[i]);
-            expectedIssuanceRate += issuanceRate_;
+            (,,, uint168 issuanceRate_) = openTermLoanManager.paymentFor(loans_[i]);
+            expectedIssuanceRate       += issuanceRate_;
         }
 
         assertEq(issuanceRate, expectedIssuanceRate, "OTLM Invariant D");
@@ -586,7 +580,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 unrealizedLosses = openTermLoanManager.unrealizedLosses();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(loans_[i]);
+            (uint40 impairmentDate,) = openTermLoanManager.impairmentFor(loans_[i]);
 
             if (impairmentDate != 0) return;
         }
@@ -603,18 +597,14 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_otlm_invariant_H(address loan_, address openTermLoanManager_) internal view {
         IOpenTermLoan loan = IOpenTermLoan(loan_);
 
-        ( , , uint40 paymentStartDate, ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
+        (,, uint40 paymentStartDate,) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
 
-        assertTrue(
-            paymentStartDate == loan.dateFunded() ||
-            paymentStartDate == loan.datePaid(),
-            "OTLM Invariant H"
-        );
+        assertTrue(paymentStartDate == loan.dateFunded() || paymentStartDate == loan.datePaid(), "OTLM Invariant H");
     }
 
     function assert_otlm_invariant_I(address loan_, address openTermLoanManager_) internal view {
-        ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan_);
-        uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan_);
+        (,,, uint168 issuanceRate)   = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan_);
+        uint256 expectedIssuanceRate = _getExpectedIssuanceRate(loan_);
 
         assertEq(issuanceRate, expectedIssuanceRate, "OTLM Invariant I");
     }
@@ -622,8 +612,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_otlm_invariant_J(address loan_, address openTermLoanManager_) internal view {
         IOpenTermLoanManager openTermLoanManager = IOpenTermLoanManager(openTermLoanManager_);
 
-        ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(loan_);
-        ( , , uint40 startDate, )  = openTermLoanManager.paymentFor(loan_);
+        (uint40 impairmentDate,) = openTermLoanManager.impairmentFor(loan_);
+        (,, uint40 startDate,)   = openTermLoanManager.paymentFor(loan_);
 
         if (impairmentDate != 0) {
             assertGe(impairmentDate, startDate, "OTLM Invariant J");
@@ -640,8 +630,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             outstandingValue += _getOutstandingValue(loans_[i]);
         }
 
-        uint256 a = assetsUnderManagement;
-        uint256 b = unrealizedLosses + outstandingValue;
+        uint256 a    = assetsUnderManagement;
+        uint256 b    = unrealizedLosses + outstandingValue;
         uint256 diff = a > b ? a - b : b - a;
 
         assertApproxEqAbs(diff, 0, ALLOWED_OTLM_DIFF, "OTLM Invariant K");
@@ -681,7 +671,6 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         IPoolPermissionManager ppm = IPoolPermissionManager(poolPermissionManager_);
 
         for (uint256 i; i < functionIds_.length; ++i) {
-
             assertLe(ppm.poolBitmaps(poolManager_, functionIds_[i]), MAXIMUM_BITMAP, "PPM Invariant B");
         }
     }
@@ -726,13 +715,13 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_A(address withdrawalManager_, address[] memory lenders_) internal view {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( uint256 nextRequestId, uint256 lastRequestId ) = wm.queue();
+        (uint256 nextRequestId, uint256 lastRequestId) = wm.queue();
 
         uint256 countedShares;
         uint256 totalShares = wm.totalShares();
 
         for (uint256 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
-            ( , uint256 shares ) = wm.requests(requestId);
+            (, uint256 shares) = wm.requests(requestId);
 
             countedShares += shares;
         }
@@ -749,8 +738,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_wmq_invariant_B(address withdrawalManager_) internal view {
-        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
-        IPool pool                 = IPool(wm.pool());
+        IWithdrawalManagerQueue wm   = IWithdrawalManagerQueue(withdrawalManager_);
+        IPool                   pool = IPool(wm.pool());
 
         uint256 balance     = pool.balanceOf(withdrawalManager_);
         uint256 totalShares = wm.totalShares();
@@ -766,7 +755,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
             if (requestId == 0) continue;
 
-            ( address owner, uint256 shares ) = wm.requests(requestId);
+            (address owner, uint256 shares) = wm.requests(requestId);
 
             assertTrue(shares > 0 && owner == lenders_[i], "WMQ Invariant C");
         }
@@ -775,7 +764,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_D(address withdrawalManager_) internal view {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( uint256 nextRequestId, uint256 lastRequestId ) = wm.queue();
+        (uint256 nextRequestId, uint256 lastRequestId) = wm.queue();
 
         assertLe(nextRequestId, lastRequestId + 1, "WMQ Invariant D");
     }
@@ -783,7 +772,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_E(address withdrawalManager_) internal view {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( uint256 nextRequestId, ) = wm.queue();
+        (uint256 nextRequestId,) = wm.queue();
 
         assertTrue(nextRequestId != 0, "WMQ Invariant E");
     }
@@ -791,7 +780,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_F(address withdrawalManager_) internal view {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( address owner, uint256 shares ) = wm.requests(0);
+        (address owner, uint256 shares) = wm.requests(0);
 
         assertEq(owner,  address(0), "WMQ Invariant F");
         assertEq(shares, uint256(0), "WMQ Invariant F");
@@ -800,7 +789,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_G(address withdrawalManager_, address[] memory lenders_) internal view {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( , uint256 lastRequestId ) = wm.queue();
+        (, uint256 lastRequestId) = wm.queue();
 
         for (uint256 i; i < lenders_.length; i++) {
             uint256 requestId = wm.requestIds(lenders_[i]);
@@ -834,7 +823,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         for (uint256 i; i < lenders_.length; i++) {
             address owner = lenders_[i];
 
-            ( , uint256[] memory shares ) = wm.requestsByOwner(owner);
+            (, uint256[] memory shares) = wm.requestsByOwner(owner);
 
             uint256 ownerEscrowedShares;
 
@@ -863,15 +852,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_M(address withdrawalManager_, address[] memory lenders_) internal view {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( , uint256 lastRequestId ) = wm.queue();
+        (, uint256 lastRequestId) = wm.queue();
 
         for (uint256 i; i < lenders_.length; ++i) {
-            ( uint256[] memory requestIds, ) = wm.requestsByOwner(lenders_[i]);
+            (uint256[] memory requestIds,) = wm.requestsByOwner(lenders_[i]);
 
             for (uint256 j; j < requestIds.length; ++j) {
                 uint256 requestId = requestIds[j];
 
-                assertGt(requestId, 0,             "WMQ Invariant M: REQUEST_ID_ZERO");
+                assertGt(requestId, 0, "WMQ Invariant M: REQUEST_ID_ZERO");
                 assertLe(requestId, lastRequestId, "WMQ Invariant M: REQUEST_ID_GT_LAST");
 
                 if (j != 0) {
@@ -885,14 +874,14 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_wmq_invariant_N(address withdrawalManager_, address[] memory lenders_) internal {
         IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( , uint256 lastRequestId ) = wm.queue();
+        (, uint256 lastRequestId) = wm.queue();
 
         uint256 totalOwnerRequests;
 
         for (uint256 i; i < lenders_.length; ++i) {
             address owner = lenders_[i];
 
-            ( uint256[] memory requestIds, uint256[] memory shares ) = wm.requestsByOwner(owner);
+            (uint256[] memory requestIds, uint256[] memory shares) = wm.requestsByOwner(owner);
 
             uint256 latestRequestId;
 
@@ -900,23 +889,23 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
                 latestRequestId = requestIds[requestIds.length - 1];
             }
 
-            assertEq(wm.requestIds(owner), latestRequestId, "WMQ Invariant N: LATEST_REQUEST_ID_MISMATCH");
-            assertEq(shares.length, requestIds.length,     "WMQ Invariant N: shares LEN_MISMATCH");
+            assertEq(wm.requestIds(owner), latestRequestId,   "WMQ Invariant N: LATEST_REQUEST_ID_MISMATCH");
+            assertEq(shares.length,        requestIds.length, "WMQ Invariant N: shares LEN_MISMATCH");
 
             for (uint256 j; j < requestIds.length; ++j) {
                 uint256 requestId = requestIds[j];
 
-                assertGt(requestId, 0,             "WMQ Invariant N: REQUEST_ID_ZERO");
+                assertGt(requestId, 0, "WMQ Invariant N: REQUEST_ID_ZERO");
                 assertLe(requestId, lastRequestId, "WMQ Invariant N: REQUEST_ID_GT_LAST");
 
                 assertFalse(existingRequestIds[requestId], "WMQ Invariant N: DUPLICATE_REQUEST_ID");
 
                 existingRequestIds[requestId] = true;
 
-                ( address requestOwner, uint256 requestShares ) = wm.requests(requestId);
+                (address requestOwner, uint256 requestShares) = wm.requests(requestId);
 
-                assertEq(requestOwner,  owner,     "WMQ Invariant N: OWNER_MISMATCH");
-                assertGt(requestShares, 0,         "WMQ Invariant N: REQUEST_SHARES_ZERO");
+                assertEq(requestOwner, owner, "WMQ Invariant N: OWNER_MISMATCH");
+                assertGt(requestShares, 0, "WMQ Invariant N: REQUEST_SHARES_ZERO");
                 assertEq(requestShares, shares[j], "WMQ Invariant N: SHARES_MISMATCH");
 
                 ++totalOwnerRequests;
@@ -927,7 +916,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
         // Every active request in the mapping must be represented in exactly one owner list.
         for (uint256 requestId = 1; requestId <= lastRequestId; ++requestId) {
-            ( address owner, uint256 requestShares ) = wm.requests(requestId);
+            (address owner, uint256 requestShares) = wm.requests(requestId);
 
             if (owner == address(0)) {
                 assertEq(requestShares, 0, "WMQ Invariant N: INACTIVE_REQUEST_SHARES_NONZERO");
@@ -1019,9 +1008,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_strategyManager_invariant_F(address strategyManager_) internal view {
         assertGe(
-            IStrategyManager(strategyManager_).totalShares(),
-            IStrategyManager(strategyManager_).sharesOf(address(0)),
-            "SM Invariant F"
+            IStrategyManager(strategyManager_).totalShares(), IStrategyManager(strategyManager_).sharesOf(address(0)), "SM Invariant F"
         );
     }
 
@@ -1066,7 +1053,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 totalWithdrawals_,
         uint256 totalFees_
     )
-        internal view
+        internal
+        view
     {
         assert_aaveV3Strategy_invariant_A(strategy_, totalFundings_, totalYield_, totalWithdrawals_, totalFees_);
         assert_aaveV3Strategy_invariant_B(strategy_, totalFundings_, totalWithdrawals_, totalFees_);
@@ -1087,22 +1075,18 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 totalWithdrawals_,
         uint256 totalFees_
     )
-        internal view
+        internal
+        view
     {
         if (IAaveV3Strategy(strategy_).isLossRecognized()) return;
 
-        ( uint256 pendingYield, uint256 pendingFee ) = _pendingAaveAccrual(strategy_);
+        (uint256 pendingYield, uint256 pendingFee) = _pendingAaveAccrual(strategy_);
 
         uint256 recordedAum = totalFundings_ + totalYield_ - totalWithdrawals_ - totalFees_;
         uint256 pendingAum  = pendingYield - pendingFee;
         uint256 expectedAum = recordedAum + pendingAum;
 
-        assertApproxEqAbs(
-            IAaveV3Strategy(strategy_).assetsUnderManagement(),
-            expectedAum,
-            AAVE_ROUNDING_TOLERANCE,
-            "AaveV3 Invariant A"
-        );
+        assertApproxEqAbs(IAaveV3Strategy(strategy_).assetsUnderManagement(), expectedAum, AAVE_ROUNDING_TOLERANCE, "AaveV3 Invariant A");
     }
 
     function assert_aaveV3Strategy_invariant_B(
@@ -1111,7 +1095,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 totalWithdrawals_,
         uint256 totalFees_
     )
-        internal view
+        internal
+        view
     {
         address aaveToken     = IAaveV3Strategy(strategy_).aaveToken();
         uint256 aTokenBalance = IERC20(aaveToken).balanceOf(strategy_);
@@ -1143,18 +1128,12 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_aaveV3Strategy_invariant_F(address strategy_) internal view {
         assertGe(
-            IAaveV3Strategy(strategy_).assetsUnderManagement(),
-            IAaveV3Strategy(strategy_).lastRecordedTotalAssets(),
-            "AaveV3 Invariant F"
+            IAaveV3Strategy(strategy_).assetsUnderManagement(), IAaveV3Strategy(strategy_).lastRecordedTotalAssets(), "AaveV3 Invariant F"
         );
     }
 
     function assert_aaveV3Strategy_invariant_G(address strategy_) internal view {
-        assertLe(
-            IAaveV3Strategy(strategy_).availableToWithdraw(),
-            IAaveV3Strategy(strategy_).assetsUnderManagement(),
-            "AaveV3 Invariant G"
-        );
+        assertLe(IAaveV3Strategy(strategy_).availableToWithdraw(), IAaveV3Strategy(strategy_).assetsUnderManagement(), "AaveV3 Invariant G");
     }
 
     function assert_aaveV3Strategy_invariant_H(address strategy_) internal view {
@@ -1170,11 +1149,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_aaveV3Strategy_invariant_I(address strategy_) internal view {
-        assertLe(
-            IAaveV3Strategy(strategy_).unrealizedLosses(),
-            IAaveV3Strategy(strategy_).assetsUnderManagement(),
-            "AaveV3 Invariant I"
-        );
+        assertLe(IAaveV3Strategy(strategy_).unrealizedLosses(), IAaveV3Strategy(strategy_).assetsUnderManagement(), "AaveV3 Invariant I");
     }
 
     function assert_aaveV3Strategy_invariant_J(address strategy_) internal view {
@@ -1195,7 +1170,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 withdrawals_,
         uint256 fees_
     )
-        internal view
+        internal
+        view
     {
         assert_skyStrategy_invariant_A(strategy_, fundings_, yield_, withdrawals_, fees_);
         assert_skyStrategy_invariant_B(strategy_);
@@ -1215,22 +1191,18 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 withdrawals_,
         uint256 fees_
     )
-        internal view
+        internal
+        view
     {
         if (ISkyStrategy(strategy_).isLossRecognized()) return;
 
-        ( uint256 pendingYield, uint256 pendingFee ) = _pendingSkyAccrual(strategy_);
+        (uint256 pendingYield, uint256 pendingFee) = _pendingSkyAccrual(strategy_);
 
         uint256 recordedAum = fundings_ + yield_ - withdrawals_ - fees_;
         uint256 pendingAum  = pendingYield - pendingFee;
         uint256 expectedAum = recordedAum + pendingAum;
 
-        assertApproxEqAbs(
-            ISkyStrategy(strategy_).assetsUnderManagement(),
-            expectedAum,
-            SKY_ROUNDING_TOLERANCE,
-            "Sky Invariant A"
-        );
+        assertApproxEqAbs(ISkyStrategy(strategy_).assetsUnderManagement(), expectedAum, SKY_ROUNDING_TOLERANCE, "Sky Invariant A");
     }
 
     // NOTE: Should not be used on mainnet as it's vulnerable to griefing by donation attacks.
@@ -1258,19 +1230,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_skyStrategy_invariant_E(address strategy_) internal view {
-        assertGe(
-            ISkyStrategy(strategy_).assetsUnderManagement(),
-            ISkyStrategy(strategy_).lastRecordedTotalAssets(),
-            "Sky Invariant E"
-        );
+        assertGe(ISkyStrategy(strategy_).assetsUnderManagement(), ISkyStrategy(strategy_).lastRecordedTotalAssets(), "Sky Invariant E");
     }
 
     function assert_skyStrategy_invariant_F(address strategy_) internal view {
-        assertLe(
-            ISkyStrategy(strategy_).availableToWithdraw(),
-            ISkyStrategy(strategy_).assetsUnderManagement(),
-            "Sky Invariant F"
-        );
+        assertLe(ISkyStrategy(strategy_).availableToWithdraw(), ISkyStrategy(strategy_).assetsUnderManagement(), "Sky Invariant F");
     }
 
     function assert_skyStrategy_invariant_G(address strategy_) internal view {
@@ -1283,11 +1247,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function assert_skyStrategy_invariant_H(address strategy_) internal view {
-        assertLe(
-            ISkyStrategy(strategy_).unrealizedLosses(),
-            ISkyStrategy(strategy_).assetsUnderManagement(),
-            "Sky Invariant H"
-        );
+        assertLe(ISkyStrategy(strategy_).unrealizedLosses(), ISkyStrategy(strategy_).assetsUnderManagement(), "Sky Invariant H");
     }
 
     function assert_skyStrategy_invariant_I(address strategy_) internal view {
@@ -1310,7 +1270,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 losses_,
         AllocationStrategyHandler.ManagedWalletInfo[] memory walletInfo_
     )
-        internal view
+        internal
+        view
     {
         assert_allocationStrategy_invariant_A(strategy_, fundings_, yield_, withdrawals_, fees_, losses_);
         assert_allocationStrategy_invariant_B(strategy_);
@@ -1336,7 +1297,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 fees_,
         uint256 losses_
     )
-        internal view
+        internal
+        view
     {
         uint256 recordedAum     = fundings_ + yield_ - withdrawals_ - fees_ - losses_;
         uint256 unrealizedYield = IAllocationStrategy(strategy_).unrealizedYield();
@@ -1348,18 +1310,15 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     function assert_allocationStrategy_invariant_B(address strategy_) internal view {
         address fundsAsset = IAllocationStrategy(strategy_).fundsAsset();
 
-        assertGe(
-            IERC20(fundsAsset).balanceOf(strategy_),
-            IAllocationStrategy(strategy_).recordedAssets(),
-            "Allocation Invariant B"
-        );
+        assertGe(IERC20(fundsAsset).balanceOf(strategy_), IAllocationStrategy(strategy_).recordedAssets(), "Allocation Invariant B");
     }
 
     function assert_allocationStrategy_invariant_C(
         address strategy_,
         AllocationStrategyHandler.ManagedWalletInfo[] memory walletInfo_
     )
-        internal view
+        internal
+        view
     {
         uint256 sumDeployed;
 
@@ -1374,7 +1333,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         address strategy_,
         AllocationStrategyHandler.ManagedWalletInfo memory walletInfo_
     )
-        internal view
+        internal
+        view
     {
         uint256 expectedDeployedAssets = walletInfo_.deployed - walletInfo_.returned - walletInfo_.lost;
 
@@ -1399,9 +1359,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
 
     function assert_allocationStrategy_invariant_G(address strategy_) internal view {
         assertLe(
-            IAllocationStrategy(strategy_).unrealizedYield(),
-            IAllocationStrategy(strategy_).recordedAssets(),
-            "Allocation Invariant G"
+            IAllocationStrategy(strategy_).unrealizedYield(), IAllocationStrategy(strategy_).recordedAssets(), "Allocation Invariant G"
         );
     }
 
@@ -1418,8 +1376,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint32 yieldDeadline     = IAllocationStrategy(strategy_).yieldDeadline();
         uint32 yieldLastRealized = IAllocationStrategy(strategy_).yieldLastRealized();
 
-        assertLe(yieldLastRealized, yieldStart,    "Allocation Invariant I1");
-        assertLe(yieldStart,        yieldDeadline, "Allocation Invariant I2");
+        assertLe(yieldLastRealized, yieldStart, "Allocation Invariant I1");
+        assertLe(yieldStart, yieldDeadline, "Allocation Invariant I2");
     }
 
     function assert_allocationStrategy_invariant_J(address strategy_) internal view {
@@ -1462,16 +1420,11 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function _getExpectedIssuanceRate(address loan) internal view returns (uint256 expectedIssuanceRate) {
-        (
-            uint24 platformManagementFeeRate,
-            uint24 delegateManagementFeeRate,
-            ,
-        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
+        (uint24 platformManagementFeeRate, uint24 delegateManagementFeeRate,,) =
+            IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
 
-        uint256 grossInterest  = _getProRatedAmount(
-            IOpenTermLoan(loan).principal(),
-            IOpenTermLoan(loan).interestRate(),
-            IOpenTermLoan(loan).paymentInterval()
+        uint256 grossInterest = _getProRatedAmount(
+            IOpenTermLoan(loan).principal(), IOpenTermLoan(loan).interestRate(), IOpenTermLoan(loan).paymentInterval()
         );
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
@@ -1480,20 +1433,19 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function _getExpectedNetInterest(address loan) internal view returns (uint256 netInterest) {
-        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+        (, uint256 grossInterest,,,) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
 
-        (
-            uint24 platformManagementFeeRate,
-            uint24 delegateManagementFeeRate,
-            ,
-        ) = IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
+        (uint24 platformManagementFeeRate, uint24 delegateManagementFeeRate,,) =
+            IOpenTermLoanManager(otlHandler.loanManager()).paymentFor(loan);
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
         netInterest = grossInterest - managementFees;
     }
 
-    function _getExpectedPaymentBreakdown(address loan) internal view
+    function _getExpectedPaymentBreakdown(address loan)
+        internal
+        view
         returns (
             uint256 expectedPrincipal,
             uint256 expectedInterest,
@@ -1505,9 +1457,8 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
         uint256 startTime = IOpenTermLoan(loan).datePaid() == 0 ? IOpenTermLoan(loan).dateFunded() : IOpenTermLoan(loan).datePaid();
         uint256 interval  = block.timestamp - startTime;
 
-        uint256 lateInterval = block.timestamp > IOpenTermLoan(loan).paymentDueDate()
-            ? block.timestamp - IOpenTermLoan(loan).paymentDueDate()
-            : 0;
+        uint256 lateInterval =
+            block.timestamp > IOpenTermLoan(loan).paymentDueDate() ? block.timestamp - IOpenTermLoan(loan).paymentDueDate() : 0;
 
         uint256 principal = IOpenTermLoan(loan).principal();
 
@@ -1524,27 +1475,18 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
     }
 
     function _getOutstandingValue(address loan_) internal view returns (uint256 outstandingValue_) {
-        if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
+        if (IOpenTermLoan(loan_).dateFunded() == 0) return 0;
         if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
-        if (otlHandler.isDefaulted(loan_))            return 0;
+        if (otlHandler.isDefaulted(loan_)) return 0;
 
         address loanManager_ = address(otlHandler.loanManager());
 
-        (
-            uint256 platformManagementFeeRate_,
-            uint256 delegateManagementFeeRate_,
-            ,
-        ) = IOpenTermLoanManager(loanManager_).paymentFor(loan_);
+        (uint256 platformManagementFeeRate_, uint256 delegateManagementFeeRate_,,) = IOpenTermLoanManager(loanManager_).paymentFor(loan_);
 
-        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0
-            ? IOpenTermLoan(loan_).datePaid()
-            : IOpenTermLoan(loan_).dateFunded();
+        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0 ? IOpenTermLoan(loan_).datePaid() : IOpenTermLoan(loan_).dateFunded();
 
-        uint256 grossInterest_ = _getProRatedAmount(
-            IOpenTermLoan(loan_).principal(),
-            IOpenTermLoan(loan_).interestRate(),
-            block.timestamp - startTime_
-        );
+        uint256 grossInterest_ =
+            _getProRatedAmount(IOpenTermLoan(loan_).principal(), IOpenTermLoan(loan_).interestRate(), block.timestamp - startTime_);
 
         uint256 netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
 

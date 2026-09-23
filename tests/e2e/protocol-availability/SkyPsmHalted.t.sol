@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IERC20Like,
-    IPSMLike,
-    IStrategyManager,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, IPSMLike, IStrategyManager, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyStrategyTestBase } from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
 
 contract SkyPsmHaltedTests is SkyStrategyTestBase {
 
-    uint256 fallbackTout       = 0.01e18;          // 1% fallback PSM exit fee.
-    uint256 fundAmount         = 515_100e6 + 1;    // +1 offsets sUSDS rounding under both fallback valuations.
-    uint256 lpWithdrawalShares = 100_000e6 + 1;    // +1 offsets Pool share-price rounding.
-    uint256 newFallbackTout    = 0.02e18;          // 2% fallback PSM exit fee.
-    uint256 poolLiquidity      = 1_000_000e6 + 1;  // +1 keeps remaining Pool cash and shares round.
-    uint256 roundingLoss       = 1;                // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 fallbackTout       = 0.01e18; // 1% fallback PSM exit fee.
+    uint256 fundAmount         = 515_100e6 + 1; // +1 offsets sUSDS rounding under both fallback valuations.
+    uint256 lpWithdrawalShares = 100_000e6 + 1; // +1 offsets Pool share-price rounding.
+    uint256 newFallbackTout    = 0.02e18; // 2% fallback PSM exit fee.
+    uint256 poolLiquidity      = 1_000_000e6 + 1; // +1 keeps remaining Pool cash and shares round.
+    uint256 roundingLoss       = 1; // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
 
     function setUp() public override {
         super.setUp();
@@ -31,10 +26,10 @@ contract SkyPsmHaltedTests is SkyStrategyTestBase {
         /*** Fund Sky and set the fallback exit fee while the live PSM exit fee remains active                                          ***/
         /**********************************************************************************************************************************/
 
-        uint256 fundedAum    = fundAmount - roundingLoss;   // 515_100e6.
-        uint256 fundedShares = fundAmount - roundingLoss;   // 515_100e6.
-        uint256 poolCash     = poolLiquidity - fundAmount;  // 484_900e6.
-        uint256 poolShares   = poolLiquidity;               // 1_000_000e6 + 1.
+        uint256 fundedAum    = fundAmount - roundingLoss; // 515_100e6.
+        uint256 fundedShares = fundAmount - roundingLoss; // 515_100e6.
+        uint256 poolCash     = poolLiquidity - fundAmount; // 484_900e6.
+        uint256 poolShares   = poolLiquidity; // 1_000_000e6 + 1.
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
 
@@ -100,7 +95,7 @@ contract SkyPsmHaltedTests is SkyStrategyTestBase {
         /*** Halt the PSM and value Sky with the fallback while making the strategy unavailable for withdrawal                          ***/
         /**********************************************************************************************************************************/
 
-        uint256 haltedAum = fundAmount * 1e18 / (1e18 + fallbackTout);  // 510_000e6.
+        uint256 haltedAum = fundAmount * 1e18 / (1e18 + fallbackTout); // 510_000e6.
 
         setSkyTout(type(uint256).max);
 
@@ -157,7 +152,7 @@ contract SkyPsmHaltedTests is SkyStrategyTestBase {
         /*** Change the fallback exit fee and update accounting without moving assets                                                   ***/
         /**********************************************************************************************************************************/
 
-        uint256 updatedHaltedAum = fundAmount * 1e18 / (1e18 + newFallbackTout);  // 505_000e6.
+        uint256 updatedHaltedAum = fundAmount * 1e18 / (1e18 + newFallbackTout); // 505_000e6.
 
         setFallbackTout(skyUnderlyingStrategy, newFallbackTout);
 
@@ -214,9 +209,9 @@ contract SkyPsmHaltedTests is SkyStrategyTestBase {
         /*** Withdraw an LP using Pool cash while the halted Sky position remains unavailable                                           ***/
         /**********************************************************************************************************************************/
 
-        uint256 lpWithdrawalAssets  = lpWithdrawalShares * (poolCash + updatedHaltedAum) / poolShares;  // 98_990e6.
-        uint256 remainingPoolCash   = poolCash - lpWithdrawalAssets;                                    // 385_910e6.
-        uint256 remainingPoolShares = poolShares - lpWithdrawalShares;                                  // 900_000e6.
+        uint256 lpWithdrawalAssets  = lpWithdrawalShares * (poolCash + updatedHaltedAum) / poolShares; // 98_990e6.
+        uint256 remainingPoolCash   = poolCash - lpWithdrawalAssets; // 385_910e6.
+        uint256 remainingPoolShares = poolShares - lpWithdrawalShares; // 900_000e6.
 
         assertEq(pool.balanceOf(lp),               poolShares);
         assertEq(pool.balanceOf(address(queueWM)), 0);

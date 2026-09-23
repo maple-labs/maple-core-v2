@@ -85,7 +85,7 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         _proposeRoleUpdate(roleAdmin2, IGovernorTimelock(timelock).ROLE_ADMIN(), roleAdmin, false);
         _executeRoleUpdate(expectedProposalId2, IGovernorTimelock(timelock).ROLE_ADMIN(), roleAdmin, false);
 
-        assertEq(IGovernorTimelock(timelock).hasRole(roleAdmin,  IGovernorTimelock(timelock).ROLE_ADMIN()), false);
+        assertEq(IGovernorTimelock(timelock).hasRole(roleAdmin, IGovernorTimelock(timelock).ROLE_ADMIN()),  false);
         assertEq(IGovernorTimelock(timelock).hasRole(roleAdmin2, IGovernorTimelock(timelock).ROLE_ADMIN()), true);
     }
 
@@ -106,10 +106,10 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
     function testFork_unscheduleProposals_cancellerUnschedulesMaliciousProposal() public {
         uint256 timelockBalance = IERC20(usdc).balanceOf(address(timelock));
 
-        bytes4 functionToExecute = IERC20.transfer.selector;
-        bytes memory parameters  = abi.encode(makeAddr("malicious"), timelockBalance);
+        bytes4       functionToExecute = IERC20.transfer.selector;
+        bytes memory parameters        = abi.encode(makeAddr("malicious"), timelockBalance);
 
-        ( uint256 proposalId, ) = _scheduleProposal(address(timelock), functionToExecute, parameters);
+        (uint256 proposalId,) = _scheduleProposal(address(timelock), functionToExecute, parameters);
 
         uint256[] memory proposalsToCancel = new uint256[](1);
         proposalsToCancel[0]               = proposalId;
@@ -143,14 +143,14 @@ contract GovernorTimelockScenariosUpgradeTests is GovernorTimelockUpgradeTestsBa
         bytes4 functionToExecute1 = IMapleProxyFactory.registerImplementation.selector;
         bytes4 functionToExecute2 = IMapleProxyFactory.enableUpgradePath.selector;
 
-        bytes memory parameters1 = abi.encode(version,        newImplementation, address(0));
-        bytes memory parameters2 = abi.encode(currentVersion, version,           address(0));
+        bytes memory parameters1 = abi.encode(version, newImplementation, address(0));
+        bytes memory parameters2 = abi.encode(currentVersion, version, address(0));
 
         _scheduleProposal(address(withdrawalManagerQueueFactory), functionToExecute1, parameters1);
         _scheduleProposal(address(withdrawalManagerQueueFactory), functionToExecute2, parameters2);
 
         uint32 scheduledAt = uint32(block.timestamp);
-        ( uint32 delay, )  = IGovernorTimelock(timelock).defaultTimelockParameters();
+        (uint32 delay,)    = IGovernorTimelock(timelock).defaultTimelockParameters();
 
         vm.warp(scheduledAt + delay);
         _executeProposal(expectedProposalId1, address(withdrawalManagerQueueFactory), functionToExecute1, parameters1);

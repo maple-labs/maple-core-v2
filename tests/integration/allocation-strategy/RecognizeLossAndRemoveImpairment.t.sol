@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAllocationStrategy,
-    IPool,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IPool, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -79,9 +75,8 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentFailureTests is Alloc
     function test_recognizeLossAndRemoveImpairment_revert_exceedsDeployed() external {
         vm.prank(strategyDelegate);
         vm.expectRevert("MAS:RL:EXCEEDS_DEPLOYED");
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            initialDeployment + 1, assetsUnimpaired, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy)
+            .recognizeLossAndRemoveImpairment(initialDeployment + 1, assetsUnimpaired, managedWallet);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_deployerNeverDeployed() external {
@@ -117,9 +112,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentFailureTests is Alloc
     function test_recognizeLossAndRemoveImpairment_revert_exceedsImpairment_maxConvention() external {
         vm.prank(strategyDelegate);
         vm.expectRevert("MAS:RI:EXCEEDS_IMPAIRMENT");
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            assetsLost, type(uint256).max, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(assetsLost, type(uint256).max, managedWallet);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_exceedsImpairment_afterFullRemoval() external {
@@ -432,7 +425,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_equalAmountsAcrossAdmins() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize a partial loss and remove an equal impairment amount via the strategy delegate                                   ***/
         /**********************************************************************************************************************************/
@@ -548,7 +540,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_lossExceedsRemoval() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize a loss larger than the impairment removal                                                                        ***/
         /**********************************************************************************************************************************/
@@ -610,7 +601,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_removalExceedsLoss() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize a loss smaller than the impairment removal                                                                       ***/
         /**********************************************************************************************************************************/
@@ -672,13 +662,12 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_withScheduledYield() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp partway through it                                                                                 ***/
         /**********************************************************************************************************************************/
 
-        delegateFeeRate = 0.02e6;  // 2%
-        protocolFeeRate = 0.03e6;  // 3%
+        delegateFeeRate = 0.02e6; // 2%
+        protocolFeeRate = 0.03e6; // 3%
         yieldAssets     = 50_000e6;
         yieldDuration   = 31 days;
 
@@ -706,9 +695,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         totalAssets         = initialAssets + realizedYield - lossAmount;
 
         vm.prank(strategyDelegate);
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            lossAmount, impairmentRemoval, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(lossAmount, impairmentRemoval, managedWallet);
 
         assertPoolState({
             pool:               address(pool),
@@ -767,7 +754,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_donationDoesNotInflateAum() external {
-
         /**********************************************************************************************************************************/
         /*** An external actor donates raw assets directly to the strategy, bypassing deployAssets()/returnAssets()                     ***/
         /**********************************************************************************************************************************/
@@ -802,9 +788,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         totalAssets         = initialAssets - lossAmount;
 
         vm.prank(strategyDelegate);
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            lossAmount, impairmentRemoval, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(lossAmount, impairmentRemoval, managedWallet);
 
         assertPoolState({
             pool:               address(pool),
@@ -855,7 +839,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_totalAmounts() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize the entire deployed position as lost and remove the entire impairment                                            ***/
         /**********************************************************************************************************************************/
@@ -910,7 +893,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_clampsRemainingImpairmentToReducedAum() external {
-
         /**********************************************************************************************************************************/
         /*** Impair for the full AUM                                                                                                    ***/
         /**********************************************************************************************************************************/
@@ -974,9 +956,8 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         uint256 storedImpairment  = initialAssets - impairmentRemoval;
 
         vm.prank(strategyDelegate);
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            initialDeployment, impairmentRemoval, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy)
+            .recognizeLossAndRemoveImpairment(initialDeployment, impairmentRemoval, managedWallet);
 
         assertPoolState({
             pool:               address(pool),
@@ -1027,7 +1008,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_aumGrowthReleasesClamp() external {
-
         /**********************************************************************************************************************************/
         /*** Impair beyond the AUM so unrealized losses clamp to the AUM                                                                ***/
         /**********************************************************************************************************************************/
@@ -1064,9 +1044,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         /**********************************************************************************************************************************/
 
         vm.prank(strategyDelegate);
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            lossAmount, impairmentRemoval, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(lossAmount, impairmentRemoval, managedWallet);
 
         uint256 finalAum        = aumAfterYield - lossAmount;
         uint256 finalImpairment = storedImpairment - impairmentRemoval;
@@ -1128,7 +1106,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_multipleDeployersIndependent() external {
-
         /**********************************************************************************************************************************/
         /*** Onboard a second managed wallet and deploy assets to it                                                                    ***/
         /**********************************************************************************************************************************/
@@ -1159,9 +1136,8 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         splitAmount               = 150_000e6;
 
         vm.prank(strategyDelegate);
-        IAllocationStrategy(allocationUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            splitAmount, deployerImpairmentRemoval, managedWallet
-        );
+        IAllocationStrategy(allocationUnderlyingStrategy)
+            .recognizeLossAndRemoveImpairment(splitAmount, deployerImpairmentRemoval, managedWallet);
 
         assertPoolState({
             pool:               address(pool),
@@ -1217,12 +1193,11 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_afterPermissionsRevoked() external {
-
         /**********************************************************************************************************************************/
         /*** Revoke the managed wallet's permissions entirely, e.g. after it is found to be compromised                                 ***/
         /**********************************************************************************************************************************/
 
-        ( bool canDeployAssets_, bool canReturnAssets_, bool canRealizeYield_ ) =
+        (bool canDeployAssets_, bool canReturnAssets_, bool canRealizeYield_) =
             IAllocationStrategy(allocationUnderlyingStrategy).permissions(managedWallet);
 
         assertTrue(canDeployAssets_);
@@ -1230,16 +1205,16 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         assertTrue(canRealizeYield_);
 
         address[] memory accounts        = new address[](1);
-        bool[]    memory canDeployAssets = new bool[](1);
-        bool[]    memory canReturnAssets = new bool[](1);
-        bool[]    memory canRealizeYield = new bool[](1);
+        bool[] memory    canDeployAssets = new bool[](1);
+        bool[] memory    canReturnAssets = new bool[](1);
+        bool[] memory    canRealizeYield = new bool[](1);
 
         accounts[0] = managedWallet;
 
         vm.prank(strategyDelegate);
         IAllocationStrategy(allocationUnderlyingStrategy).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
 
-        ( canDeployAssets_, canReturnAssets_, canRealizeYield_ ) =
+        (canDeployAssets_, canReturnAssets_, canRealizeYield_) =
             IAllocationStrategy(allocationUnderlyingStrategy).permissions(managedWallet);
 
         assertFalse(canDeployAssets_);
@@ -1307,7 +1282,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_splitsAcrossPoolManagers() external {
-
         /**********************************************************************************************************************************/
         /*** Set up a second pool sharing the strategy                                                                                  ***/
         /**********************************************************************************************************************************/
@@ -1316,7 +1290,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         firstPoolManager = address(poolManager);
         firstShares      = initialShares;
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         secondFund   = 500_000e6;
         secondShares = secondFund;
@@ -1336,10 +1310,10 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         remainingImpairment = impairment - splitAmount;
         totalAssets         = initialAssets + secondFund - splitAmount;
 
-        firstAssets  = firstShares  * totalAssets / totalShares;
+        firstAssets  = firstShares * totalAssets / totalShares;
         secondAssets = secondShares * totalAssets / totalShares;
 
-        firstUnrealizedLoss  = divRoundUp(firstShares  * remainingImpairment, totalShares);
+        firstUnrealizedLoss  = divRoundUp(firstShares * remainingImpairment, totalShares);
         secondUnrealizedLoss = divRoundUp(secondShares * remainingImpairment, totalShares);
 
         vm.prank(strategyDelegate);
@@ -1411,7 +1385,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_withBootstrapMint() external {
-
         /**********************************************************************************************************************************/
         /*** Deploy a fresh allocation strategy funded with a bootstrap mint and attach a pool                                          ***/
         /**********************************************************************************************************************************/
@@ -1419,7 +1392,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         bootstrapStrategyDelegate = makeAddr("bootstrapStrategyDelegate");
         bootstrapMint             = 10e6;
 
-        ( bootstrapStrategyManager, bootstrapUnderlyingStrategy ) = _deployAllocationStrategy({
+        (bootstrapStrategyManager, bootstrapUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        bootstrapStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -1428,7 +1401,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
             bootstrapMint_:           bootstrapMint
         });
 
-        ( bootstrapPool, bootstrapPoolManager ) = _createPoolSharingStrategy("bootstrapPoolDelegate", bootstrapStrategyManager);
+        (bootstrapPool, bootstrapPoolManager) = _createPoolSharingStrategy("bootstrapPoolDelegate", bootstrapStrategyManager);
 
         bootstrapManagedWallet = makeAddr("bootstrapManagedWallet");
 
@@ -1475,15 +1448,14 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         bootstrapTotalShares         = bootstrapMint + bootstrapPoolShares;
 
         bootstrapPoolGrossAssets = bootstrapPoolShares * bootstrapTotalAssets / bootstrapTotalShares;
-        bootstrapPositionAssets  = bootstrapMint       * bootstrapTotalAssets / bootstrapTotalShares;
+        bootstrapPositionAssets  = bootstrapMint * bootstrapTotalAssets / bootstrapTotalShares;
 
         bootstrapPoolUnrealizedLoss     = divRoundUp(bootstrapPoolShares * bootstrapRemainingImpairment, bootstrapTotalShares);
-        bootstrapPositionUnrealizedLoss = divRoundUp(bootstrapMint       * bootstrapRemainingImpairment, bootstrapTotalShares);
+        bootstrapPositionUnrealizedLoss = divRoundUp(bootstrapMint * bootstrapRemainingImpairment, bootstrapTotalShares);
 
         vm.prank(bootstrapStrategyDelegate);
-        IAllocationStrategy(bootstrapUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            bootstrapLossAmount, bootstrapImpairmentRemoval, bootstrapManagedWallet
-        );
+        IAllocationStrategy(bootstrapUnderlyingStrategy)
+            .recognizeLossAndRemoveImpairment(bootstrapLossAmount, bootstrapImpairmentRemoval, bootstrapManagedWallet);
 
         assertPoolState({
             pool:               bootstrapPool,
@@ -1547,7 +1519,6 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
     }
 
     function test_recognizeLossAndRemoveImpairment_success_bootstrapMint_afterPoolExit() external {
-
         /**********************************************************************************************************************************/
         /*** Deploy a fresh allocation strategy funded with a bootstrap mint and attach two pools                                       ***/
         /**********************************************************************************************************************************/
@@ -1556,7 +1527,7 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         bootstrapManagedWallet    = makeAddr("bootstrapManagedWallet");
         bootstrapMint             = 10e6;
 
-        ( bootstrapStrategyManager, bootstrapUnderlyingStrategy ) = _deployAllocationStrategy({
+        (bootstrapStrategyManager, bootstrapUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        bootstrapStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -1565,8 +1536,8 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
             bootstrapMint_:           bootstrapMint
         });
 
-        ( firstPool,  firstPoolManager )  = _createPoolSharingStrategy("bootstrapFirstPoolDelegate",  bootstrapStrategyManager);
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("bootstrapSecondPoolDelegate", bootstrapStrategyManager);
+        (firstPool, firstPoolManager)   = _createPoolSharingStrategy("bootstrapFirstPoolDelegate", bootstrapStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("bootstrapSecondPoolDelegate", bootstrapStrategyManager);
 
         setManagedWallet({
             strategy_:        bootstrapUnderlyingStrategy,
@@ -1587,10 +1558,10 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         bootstrapPoolShares = bootstrapPoolAssets;
         secondShares        = secondFund;
 
-        deposit(firstPool,  lp, bootstrapPoolAssets);
+        deposit(firstPool, lp, bootstrapPoolAssets);
         deposit(secondPool, lp, secondFund);
 
-        fundStrategyManager(firstPoolManager,  bootstrapStrategyManager, bootstrapPoolAssets);
+        fundStrategyManager(firstPoolManager, bootstrapStrategyManager, bootstrapPoolAssets);
         fundStrategyManager(secondPoolManager, bootstrapStrategyManager, secondFund);
 
         bootstrapDeployment = 400_000e6;
@@ -1627,13 +1598,12 @@ contract AllocationStrategyRecognizeLossAndRemoveImpairmentSuccessTests is Alloc
         bootstrapImpairmentRemoval = bootstrapImpairment;
 
         vm.prank(bootstrapStrategyDelegate);
-        IAllocationStrategy(bootstrapUnderlyingStrategy).recognizeLossAndRemoveImpairment(
-            bootstrapLossAmount, bootstrapImpairmentRemoval, bootstrapManagedWallet
-        );
+        IAllocationStrategy(bootstrapUnderlyingStrategy)
+            .recognizeLossAndRemoveImpairment(bootstrapLossAmount, bootstrapImpairmentRemoval, bootstrapManagedWallet);
 
-        bootstrapTotalAssets    -= bootstrapLossAmount;
-        secondAssets             = secondShares  * bootstrapTotalAssets / bootstrapTotalShares;
-        bootstrapPositionAssets  = bootstrapMint * bootstrapTotalAssets / bootstrapTotalShares;
+        bootstrapTotalAssets   -= bootstrapLossAmount;
+        secondAssets            = secondShares * bootstrapTotalAssets / bootstrapTotalShares;
+        bootstrapPositionAssets = bootstrapMint * bootstrapTotalAssets / bootstrapTotalShares;
 
         assertPoolState({
             pool:               firstPool,

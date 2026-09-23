@@ -7,14 +7,13 @@ import { SkyFuzzBase } from "./SkyFuzzBase.sol";
 
 abstract contract SkyFundFuzzTests is SkyFuzzBase {
 
-    SkyStrategyStorage             strategyStorage;
-    FeeAccrualStorage              feeAccrualStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    SkyStrategyStorage strategyStorage;
+    FeeAccrualStorage feeAccrualStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzzFork_sky_fund(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
         /**********************************************************************************************************************************/
@@ -41,7 +40,7 @@ abstract contract SkyFundFuzzTests is SkyFuzzBase {
         positionStorage        = _snapshotStrategyManagerPosition(address(skyManager), address(poolManager));
         feeAccrualStorage      = _snapshotFeeAccrualSky(address(skyStrategy));
 
-        ( uint256 expectedDelegateFee, uint256 expectedProtocolFee ) =
+        (uint256 expectedDelegateFee, uint256 expectedProtocolFee) =
             expectedFees(address(skyStrategy), strategyStorage.previousCurrentTotalAssets, strategyStorage.previousLastRecordedTotalAssets);
 
         /**********************************************************************************************************************************/
@@ -67,7 +66,7 @@ abstract contract SkyFundFuzzTests is SkyFuzzBase {
         uint256 expectedUnrealizedLosses   = min(strategyStorage.previousImpairedAssets, assetsUnderManagementAfter);
 
         // Here we are validating both just to fullfil assertions because we are not going to assert AUM after.
-        assertApproxEqAbs(netDeposit,                 fundAmount,                                                 SKY_ROUNDING_ERROR);
+        assertApproxEqAbs(netDeposit, fundAmount, SKY_ROUNDING_ERROR);
         assertApproxEqAbs(assetsUnderManagementAfter, strategyStorage.previousAssetsUnderManagement + fundAmount, SKY_ROUNDING_ERROR);
 
         assertEq(skyStrategy.impairedAssets(),          strategyStorage.previousImpairedAssets);
@@ -82,20 +81,16 @@ abstract contract SkyFundFuzzTests is SkyFuzzBase {
         /*** Assert new state                                                                                                          ***/
         /**********************************************************************************************************************************/
 
-        uint256 sharesMinted   = skyManager.totalShares() - strategyManagerStorage.previousTotalShares;
+        uint256 sharesMinted = skyManager.totalShares() - strategyManagerStorage.previousTotalShares;
         uint256 expectedShares = strategyManagerStorage.previousTotalShares == 0
             ? fundAmount
-            : mulDivDown(
-                fundAmount,
-                strategyManagerStorage.previousTotalShares,
-                strategyManagerStorage.previousTotalAssets
-            );
+            : mulDivDown(fundAmount, strategyManagerStorage.previousTotalShares, strategyManagerStorage.previousTotalAssets);
 
         assertApproxEqAbs(sharesMinted, expectedShares, SKY_ROUNDING_ERROR);
 
-        assertEq(skyManager.totalShares(),           strategyManagerStorage.previousTotalShares + sharesMinted);
-        assertEq(skyManager.totalPendingShares(),    strategyManagerStorage.previousTotalPendingShares);
-        assertEq(skyManager.unrealizedLosses(),      expectedUnrealizedLosses);
+        assertEq(skyManager.totalShares(),        strategyManagerStorage.previousTotalShares + sharesMinted);
+        assertEq(skyManager.totalPendingShares(), strategyManagerStorage.previousTotalPendingShares);
+        assertEq(skyManager.unrealizedLosses(),   expectedUnrealizedLosses);
 
         uint256 expectedUnrealizedLossesOf = mulDivUp(
             positionStorage.previousShares + sharesMinted,
@@ -103,16 +98,10 @@ abstract contract SkyFundFuzzTests is SkyFuzzBase {
             strategyManagerStorage.previousTotalShares + sharesMinted
         );
 
-        uint256 shareConversionError = maxShareConversionError(
-            strategyManagerStorage.previousTotalAssets,
-            strategyManagerStorage.previousTotalShares
-        );
+        uint256 shareConversionError =
+            maxShareConversionError(strategyManagerStorage.previousTotalAssets, strategyManagerStorage.previousTotalShares);
 
-        assertApproxEqAbs(
-            skyManager.assetsOf(address(poolManager)),
-            positionStorage.previousAssets + netDeposit,
-            shareConversionError
-        );
+        assertApproxEqAbs(skyManager.assetsOf(address(poolManager)), positionStorage.previousAssets + netDeposit, shareConversionError);
 
         assertEq(skyManager.unrealizedLossesOf(address(poolManager)), expectedUnrealizedLossesOf);
         assertEq(skyManager.sharesOf(address(poolManager)),           positionStorage.previousShares + sharesMinted);
@@ -120,19 +109,13 @@ abstract contract SkyFundFuzzTests is SkyFuzzBase {
 
         uint256 expectedUnrealizedLossesGain = expectedUnrealizedLossesOf - positionStorage.previousUnrealizedLosses;
 
-        assertApproxEqAbs(
-            pool.totalAssets(),
-            poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit),
-            shareConversionError
-        );
+        assertApproxEqAbs(pool.totalAssets(), poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit), shareConversionError);
 
         assertEq(pool.totalSupply(),      poolManagerStorage.previousTotalSupply);
         assertEq(pool.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses + expectedUnrealizedLossesGain);
 
         assertApproxEqAbs(
-            poolManager.totalAssets(),
-            poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit),
-            shareConversionError
+            poolManager.totalAssets(), poolManagerStorage.previousTotalAssets - (fundAmount - netDeposit), shareConversionError
         );
 
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses + expectedUnrealizedLossesGain);

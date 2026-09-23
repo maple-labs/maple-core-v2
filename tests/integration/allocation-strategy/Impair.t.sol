@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAllocationStrategy,
-    IPool,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IPool, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -175,7 +171,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     uint32 yieldDuration;
 
     function test_impair_success_accumulatesAcrossAdmins() external {
-
         /**********************************************************************************************************************************/
         /*** Impair via the strategy delegate                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -280,7 +275,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_clampsToAssetsUnderManagement() external {
-
         /**********************************************************************************************************************************/
         /*** Impair for more than the AUM: the unrealized loss clamps to the AUM                                                        ***/
         /**********************************************************************************************************************************/
@@ -333,7 +327,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_unrealizedLossesGrowsAsAumIncreases() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield, then impair for slightly more than the current AUM                                                         ***/
         /**********************************************************************************************************************************/
@@ -518,7 +511,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_splitsAcrossPoolManagers() external {
-
         /**********************************************************************************************************************************/
         /*** Set up a second pool sharing the strategy                                                                                  ***/
         /**********************************************************************************************************************************/
@@ -527,7 +519,7 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
         firstPoolManager = address(poolManager);
         firstShares      = initialShares;
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         secondFund   = 450_000e6;
         secondShares = secondFund;
@@ -602,7 +594,7 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
 
         splitImpairment = 100_000e6;
 
-        firstLoss  = divRoundUp(firstShares * splitImpairment,  totalShares);
+        firstLoss  = divRoundUp(firstShares * splitImpairment, totalShares);
         secondLoss = divRoundUp(secondShares * splitImpairment, totalShares);
 
         impairAllocationStrategy(allocationUnderlyingStrategy, splitImpairment);
@@ -668,13 +660,12 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_doesNotAffectYieldSchedule() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp partway through it                                                                                 ***/
         /**********************************************************************************************************************************/
 
-        delegateFeeRate = 0.02e6;  // 2%
-        protocolFeeRate = 0.03e6;  // 3%
+        delegateFeeRate = 0.02e6; // 2%
+        protocolFeeRate = 0.03e6; // 3%
         yieldAssets     = 50_000e6;
         yieldDuration   = 31 days;
 
@@ -867,7 +858,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_afterLossRecognized() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize a loss on the deployed assets                                                                                    ***/
         /**********************************************************************************************************************************/
@@ -971,7 +961,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_noFurtherEffectOnceClampedAtAum() external {
-
         /**********************************************************************************************************************************/
         /*** Impair up to the full AUM                                                                                                  ***/
         /**********************************************************************************************************************************/
@@ -1070,7 +1059,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_whenNothingDeployed() external {
-
         /**********************************************************************************************************************************/
         /*** Return the deployed capital so nothing remains deployed                                                                    ***/
         /**********************************************************************************************************************************/
@@ -1169,7 +1157,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_fundingNotDiscountedByExistingImpairment() external {
-
         /**********************************************************************************************************************************/
         /*** Deposit fresh liquidity into the pool before impairing, so there is cash on hand to fund with afterward                    ***/
         /**********************************************************************************************************************************/
@@ -1320,7 +1307,6 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
     }
 
     function test_impair_success_redemptionDiscountedAfterImpairment() external {
-
         /**********************************************************************************************************************************/
         /*** Redeem shares before any impairment exists: the exit value is 1:1 with the shares burned                                   ***/
         /**********************************************************************************************************************************/
@@ -1479,14 +1465,12 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
         assertEq(
-            fundsAsset.balanceOf(allocationUnderlyingStrategy),
-            initialAssets - initialDeployment - firstRedeemAssets - secondRedeemAssets
+            fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment - firstRedeemAssets - secondRedeemAssets
         );
         assertEq(fundsAsset.balanceOf(managedWallet), initialDeployment);
     }
 
     function test_impair_success_exitAfterImpairment_remainingPoolGains() external {
-
         /**********************************************************************************************************************************/
         /*** Set up a second pool sharing the strategy                                                                                  ***/
         /**********************************************************************************************************************************/
@@ -1497,7 +1481,7 @@ contract AllocationStrategyImpairSuccessTests is AllocationStrategyImpairTestBas
         initialAssets1 = initialAssets;
         initialShares1 = initialShares;
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         initialAssets2 = 500_000e6;
         initialShares2 = initialAssets2;

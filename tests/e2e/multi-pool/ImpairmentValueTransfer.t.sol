@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20,
-    IPool
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAaveV3Strategy, IERC20, IPool } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
 
@@ -21,7 +17,7 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
     uint256 impairmentAmount = 200_000e6;
     uint256 poolAFunding     = 600_000e6;
     uint256 poolBFunding     = 400_000e6;
-    uint256 rounding         = 1;  // One funds-asset base unit.
+    uint256 rounding         = 1; // One funds-asset base unit.
 
     uint256 firstPoolAExitAssets;
     uint256 firstPoolBExitValue;
@@ -60,7 +56,7 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         poolA        = address(pool);
         poolManagerA = address(poolManager);
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
 
         openPool(poolManagerA);
         openPool(poolManagerB);
@@ -69,12 +65,12 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         deposit(poolB, poolBLp, poolBFunding);
 
         // Pool A loses two rounding units on the initial supply.
-        initialPoolAShares = poolAFunding - 2 * rounding;                                            // 600_000e6 - 2
-        initialPoolBShares = poolBFunding;                                                           // 400_000e6
-        initialTotalShares = initialPoolAShares + initialPoolBShares;                                // 1_000_000e6 - 2
-        initialStrategyAum = initialTotalShares;                                                     // 1_000_000e6 - 2
-        initialPoolALoss   = divRoundUp(initialPoolAShares * impairmentAmount, initialTotalShares);  // 120_000e6
-        initialPoolBLoss   = divRoundUp(initialPoolBShares * impairmentAmount, initialTotalShares);  // 80_000e6 + 1
+        initialPoolAShares = poolAFunding - 2 * rounding; // 600_000e6 - 2
+        initialPoolBShares = poolBFunding; // 400_000e6
+        initialTotalShares = initialPoolAShares + initialPoolBShares; // 1_000_000e6 - 2
+        initialStrategyAum = initialTotalShares; // 1_000_000e6 - 2
+        initialPoolALoss   = divRoundUp(initialPoolAShares * impairmentAmount, initialTotalShares); // 120_000e6
+        initialPoolBLoss   = divRoundUp(initialPoolBShares * impairmentAmount, initialTotalShares); // 80_000e6 + 1
 
         fundStrategyManager(poolManagerA, aaveV3StrategyManager, poolAFunding);
         fundStrategyManager(poolManagerB, aaveV3StrategyManager, poolBFunding);
@@ -141,9 +137,9 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         /*** Fully exit Pool A while impaired and leave Pool B as the sole remaining shareholder                                        ***/
         /**********************************************************************************************************************************/
 
-        firstPoolAExitAssets = initialPoolAShares * (initialStrategyAum - impairmentAmount) / initialTotalShares;  // 480_000e6 - 2
-        firstRemainingAum    = initialStrategyAum - firstPoolAExitAssets - rounding;                               // 520_000e6 - 1
-        firstPoolBExitValue  = firstRemainingAum - impairmentAmount;                                               // 320_000e6 - 1
+        firstPoolAExitAssets = initialPoolAShares * (initialStrategyAum - impairmentAmount) / initialTotalShares; // 480_000e6 - 2
+        firstRemainingAum    = initialStrategyAum - firstPoolAExitAssets - rounding; // 520_000e6 - 1
+        firstPoolBExitValue  = firstRemainingAum - impairmentAmount; // 320_000e6 - 1
 
         requestRedeemFromStrategyManager(poolManagerA, aaveV3StrategyManager, initialPoolAShares);
         processRedemptionFromStrategyManager(poolManagerA, aaveV3StrategyManager, initialPoolAShares);
@@ -274,13 +270,13 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         /*** Re-fund Pool A at Pool B's recovered share price and impair both positions again                                          ***/
         /**********************************************************************************************************************************/
 
-        secondStrategyAum = firstRemainingAum + firstPoolAExitAssets;                              // 1_000_000e6 - 3
-        secondPoolAShares = firstPoolAExitAssets * initialPoolBShares / firstRemainingAum;         // 369_230e6 + 769_229
-        secondTotalShares = initialPoolBShares + secondPoolAShares;                                // 769_230e6 + 769_229
-        secondPoolAAssets = secondPoolAShares * secondStrategyAum / secondTotalShares;             // 480_000e6 - 3
-        secondPoolBAssets = initialPoolBShares * secondStrategyAum / secondTotalShares;            // 520_000e6 - 1
-        secondPoolALoss   = divRoundUp(secondPoolAShares * impairmentAmount, secondTotalShares);   // 96_000e6
-        secondPoolBLoss   = divRoundUp(initialPoolBShares * impairmentAmount, secondTotalShares);  // 104_000e6 + 1
+        secondStrategyAum = firstRemainingAum + firstPoolAExitAssets; // 1_000_000e6 - 3
+        secondPoolAShares = firstPoolAExitAssets * initialPoolBShares / firstRemainingAum; // 369_230e6 + 769_229
+        secondTotalShares = initialPoolBShares + secondPoolAShares; // 769_230e6 + 769_229
+        secondPoolAAssets = secondPoolAShares * secondStrategyAum / secondTotalShares; // 480_000e6 - 3
+        secondPoolBAssets = initialPoolBShares * secondStrategyAum / secondTotalShares; // 520_000e6 - 1
+        secondPoolALoss   = divRoundUp(secondPoolAShares * impairmentAmount, secondTotalShares); // 96_000e6
+        secondPoolBLoss   = divRoundUp(initialPoolBShares * impairmentAmount, secondTotalShares); // 104_000e6 + 1
 
         fundStrategyManager(poolManagerA, aaveV3StrategyManager, firstPoolAExitAssets);
         impairStrategy(aaveV3UnderlyingStrategy, impairmentAmount);
@@ -347,9 +343,9 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         /*** Exit Pool A a second time and compound the transfer into Pool B                                                            ***/
         /**********************************************************************************************************************************/
 
-        secondPoolAExitAssets = secondPoolAShares * (secondStrategyAum - impairmentAmount) / secondTotalShares;  // 384_000e6 - 3
-        secondRemainingAum    = secondStrategyAum - secondPoolAExitAssets;                                       // 616_000e6
-        secondPoolBExitValue  = secondRemainingAum - impairmentAmount;                                           // 416_000e6
+        secondPoolAExitAssets = secondPoolAShares * (secondStrategyAum - impairmentAmount) / secondTotalShares; // 384_000e6 - 3
+        secondRemainingAum    = secondStrategyAum - secondPoolAExitAssets; // 616_000e6
+        secondPoolBExitValue  = secondRemainingAum - impairmentAmount; // 416_000e6
 
         requestRedeemFromStrategyManager(poolManagerA, aaveV3StrategyManager, secondPoolAShares);
         processRedemptionFromStrategyManager(poolManagerA, aaveV3StrategyManager, secondPoolAShares);
@@ -477,7 +473,7 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         });
 
         assertGt(poolAFunding - secondPoolAExitAssets, impairmentAmount);
-        assertGt(secondRemainingAum - poolBFunding,    impairmentAmount);
+        assertGt(secondRemainingAum - poolBFunding, impairmentAmount);
 
         assertEq(secondPoolAExitAssets + secondRemainingAum, secondStrategyAum);
 
@@ -485,13 +481,13 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         /*** Re-fund Pool A again, then reverse the exit order to direct the next recovery back into Pool A                             ***/
         /**********************************************************************************************************************************/
 
-        thirdStrategyAum = secondRemainingAum + secondPoolAExitAssets - rounding;                         // 1_000_000e6 - 4
-        thirdPoolAShares = (secondPoolAExitAssets - rounding) * initialPoolBShares / secondRemainingAum;  // 249_350e6 + 649_348
-        thirdTotalShares = initialPoolBShares + thirdPoolAShares;                                         // 649_350e6 + 649_348
-        thirdPoolAAssets = thirdPoolAShares * thirdStrategyAum / thirdTotalShares;                        // 384_000e6 - 5
-        thirdPoolBAssets = initialPoolBShares * thirdStrategyAum / thirdTotalShares;                      // 616_000e6
-        thirdPoolALoss   = divRoundUp(thirdPoolAShares * impairmentAmount, thirdTotalShares);             // 76_800e6
-        thirdPoolBLoss   = divRoundUp(initialPoolBShares * impairmentAmount, thirdTotalShares);           // 123_200e6 + 1
+        thirdStrategyAum = secondRemainingAum + secondPoolAExitAssets - rounding; // 1_000_000e6 - 4
+        thirdPoolAShares = (secondPoolAExitAssets - rounding) * initialPoolBShares / secondRemainingAum; // 249_350e6 + 649_348
+        thirdTotalShares = initialPoolBShares + thirdPoolAShares; // 649_350e6 + 649_348
+        thirdPoolAAssets = thirdPoolAShares * thirdStrategyAum / thirdTotalShares; // 384_000e6 - 5
+        thirdPoolBAssets = initialPoolBShares * thirdStrategyAum / thirdTotalShares; // 616_000e6
+        thirdPoolALoss   = divRoundUp(thirdPoolAShares * impairmentAmount, thirdTotalShares); // 76_800e6
+        thirdPoolBLoss   = divRoundUp(initialPoolBShares * impairmentAmount, thirdTotalShares); // 123_200e6 + 1
 
         fundStrategyManager(poolManagerA, aaveV3StrategyManager, secondPoolAExitAssets);
         impairStrategy(aaveV3UnderlyingStrategy, impairmentAmount);
@@ -558,8 +554,8 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         /*** Exit Pool B and remove the impairment so only Pool A receives the reversed recovery                                        ***/
         /**********************************************************************************************************************************/
 
-        thirdPoolBExitAssets = initialPoolBShares * (thirdStrategyAum - impairmentAmount) / thirdTotalShares;  // 492_800e6 - 1
-        thirdRemainingAum    = thirdStrategyAum - thirdPoolBExitAssets - rounding;                             // 507_200e6 - 4
+        thirdPoolBExitAssets = initialPoolBShares * (thirdStrategyAum - impairmentAmount) / thirdTotalShares; // 492_800e6 - 1
+        thirdRemainingAum    = thirdStrategyAum - thirdPoolBExitAssets - rounding; // 507_200e6 - 4
 
         requestRedeemFromStrategyManager(poolManagerB, aaveV3StrategyManager, initialPoolBShares);
         processRedemptionFromStrategyManager(poolManagerB, aaveV3StrategyManager, initialPoolBShares);
@@ -769,10 +765,10 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         assertEq(fundsAsset.balanceOf(poolALp), thirdRemainingAum);
         assertEq(fundsAsset.balanceOf(poolBLp), thirdPoolBExitAssets);
 
-        uint256 totalRoundingLoss = 5 * rounding;  // Three supply units and two withdrawal units.
+        uint256 totalRoundingLoss = 5 * rounding; // Three supply units and two withdrawal units.
 
-        uint256 poolAValueTransferred = poolAFunding - thirdRemainingAum;     // 92_800e6 + 4
-        uint256 poolBValueReceived    = thirdPoolBExitAssets - poolBFunding;  // 92_800e6 - 1
+        uint256 poolAValueTransferred = poolAFunding - thirdRemainingAum; // 92_800e6 + 4
+        uint256 poolBValueReceived    = thirdPoolBExitAssets - poolBFunding; // 92_800e6 - 1
 
         // All funded principal is returned except for the units lost to rounding.
         assertEq(thirdRemainingAum + thirdPoolBExitAssets, poolAFunding + poolBFunding - totalRoundingLoss);
@@ -780,7 +776,7 @@ contract ImpairmentValueTransferTests is AaveV3StrategyTestBase {
         // Pool A funds Pool B's gain, with the remainder lost to rounding.
         assertEq(poolAValueTransferred, poolBValueReceived + totalRoundingLoss);
 
-        assertGt(thirdRemainingAum,    secondPoolAExitAssets);
+        assertGt(thirdRemainingAum, secondPoolAExitAssets);
         assertLt(thirdPoolBExitAssets, secondRemainingAum);
     }
 

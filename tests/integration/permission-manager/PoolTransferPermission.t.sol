@@ -32,7 +32,7 @@ contract PoolTransferPermissionTestBase is TestBase {
         setLenderAllowlist(address(poolManager), from, false);
     }
 
-    modifier withAssertions {
+    modifier withAssertions() {
         assertEq(pool.balanceOf(from), shares);
         assertEq(pool.balanceOf(to),   0);
 
@@ -98,7 +98,7 @@ contract FunctionLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transfer(to, shares);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(from);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -133,7 +133,7 @@ contract FunctionLevelPermissionTests is PoolTransferPermissionTestBase {
         setPoolBitmap(address(poolManager), "P:transfer", createBitmap([2]));
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(from);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -153,7 +153,7 @@ contract FunctionLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transferFrom(from, to, shares);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(caller);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -188,7 +188,7 @@ contract FunctionLevelPermissionTests is PoolTransferPermissionTestBase {
         setPoolBitmap(address(poolManager), "P:transferFrom", createBitmap([2]));
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(caller);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -218,7 +218,7 @@ contract PoolLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transfer(to, shares);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(from);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -253,7 +253,7 @@ contract PoolLevelPermissionTests is PoolTransferPermissionTestBase {
         setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(from);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -273,7 +273,7 @@ contract PoolLevelPermissionTests is PoolTransferPermissionTestBase {
         pool.transferFrom(from, to, shares);
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(caller);
         vm.expectRevert("PM:CC:NOT_ALLOWED");
@@ -308,7 +308,7 @@ contract PoolLevelPermissionTests is PoolTransferPermissionTestBase {
         setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, from, createBitmap([1]));
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to,   createBitmap([3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, to, createBitmap([3]));
 
         vm.prank(caller);
         vm.expectRevert("PM:CC:NOT_ALLOWED");

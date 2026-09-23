@@ -34,9 +34,9 @@ contract PermissionHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(
-        string    memory handlerName_,
-        address   poolPermissionManager_,
-        address   globals_,
+        string memory handlerName_,
+        address poolPermissionManager_,
+        address globals_,
         address[] memory lenders_,
         address[] memory poolManagers_,
         bytes32[] memory functionIds_
@@ -63,8 +63,8 @@ contract PermissionHandler is HandlerBase {
     }
 
     function setPoolBitmaps(uint256 seed_) public {
-        address poolManager      = _selectPoolManager(seed_);
-        uint256[] memory bitmaps = _selectBitmaps(seed_, functionIds.length);
+        address          poolManager = _selectPoolManager(seed_);
+        uint256[] memory bitmaps     = _selectBitmaps(seed_, functionIds.length);
 
         vm.prank(governor);
         ppm.setPoolBitmaps(poolManager, functionIds, bitmaps);

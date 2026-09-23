@@ -18,13 +18,7 @@ contract TransferHandler is HandlerBase {
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(
-        string    memory handlerName_,
-        address[] memory pools_,
-        address[] memory lps_
-    )
-        HandlerBase(handlerName_)
-    {
+    constructor(string memory handlerName_, address[] memory pools_, address[] memory lps_) HandlerBase(handlerName_) {
         pools = pools_;
         lps   = lps_;
     }

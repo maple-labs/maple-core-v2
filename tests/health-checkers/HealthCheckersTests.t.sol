@@ -7,9 +7,9 @@ import { IGlobals, IPoolManager, IStrategyLike } from "../../contracts/interface
 
 // import { ProtocolUpgradeBase } from "../protocol-upgrade/ProtocolUpgradeBase.sol";
 
-import { LPHealthChecker }           from "./LPHealthChecker.sol";
+import { LPHealthChecker } from "./LPHealthChecker.sol";
 import { OpenTermLoanHealthChecker } from "./OpenTermLoanHealthChecker.sol";
-import { ProtocolHealthChecker }     from "./ProtocolHealthChecker.sol";
+import { ProtocolHealthChecker } from "./ProtocolHealthChecker.sol";
 
 // TODO: Update once protocol upgrade tests are being done.
 // contract HealthCheckerMainnetTests is ProtocolUpgradeBase, ProtocolActions {
@@ -102,9 +102,11 @@ import { ProtocolHealthChecker }     from "./ProtocolHealthChecker.sol";
 //         checkInvariants();
 //     }
 
-//     /**************************************************************************************************************************************/
-//     /*** Internal Functions                                                                                                             ***/
-//     /**************************************************************************************************************************************/
+//
+// /**************************************************************************************************************************************/
+// /*** Internal Functions                                                                                                             ***/
+//
+// /**************************************************************************************************************************************/
 
 //     function checkInvariants() internal {
 //         checkLPInvariants(syrupUSDCPoolManager,           syrupUsdcLps);

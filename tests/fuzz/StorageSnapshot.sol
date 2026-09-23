@@ -19,7 +19,7 @@ import {
 contract StorageSnapshot {
 
     struct OpenTermLoanManagerStorage {
-        uint40  previousDomainStart;
+        uint40 previousDomainStart;
         uint112 previousAccountedInterest;
         uint256 previousAccruedInterest;
         uint128 previousPrincipalOut;
@@ -34,32 +34,32 @@ contract StorageSnapshot {
         address previousPendingBorrower;
         address previousPendingLender;
         bytes32 previousRefinanceCommitment;
-        uint32  previousGracePeriod;
-        uint32  previousNoticePeriod;
-        uint32  previousPaymentInterval;
-        uint40  previousDateCalled;
-        uint40  previousDateFunded;
-        uint40  previousDateImpaired;
-        uint40  previousDatePaid;
+        uint32 previousGracePeriod;
+        uint32 previousNoticePeriod;
+        uint32 previousPaymentInterval;
+        uint40 previousDateCalled;
+        uint40 previousDateFunded;
+        uint40 previousDateImpaired;
+        uint40 previousDatePaid;
         uint256 previousCalledPrincipal;
         uint256 previousPrincipal;
-        uint64  previousDelegateServiceFeeRate;
-        uint64  previousInterestRate;
-        uint64  previousLateFeeRate;
-        uint64  previousLateInterestPremiumRate;
-        uint64  previousPlatformServiceFeeRate;
+        uint64 previousDelegateServiceFeeRate;
+        uint64 previousInterestRate;
+        uint64 previousLateFeeRate;
+        uint64 previousLateInterestPremiumRate;
+        uint64 previousPlatformServiceFeeRate;
         uint256 previousFundsAssetBalance;
     }
 
     struct OpenTermLoanImpairmentStorage {
         uint40 previousDateImpaired;
-        bool   previousImpairedByGovernor;
+        bool previousImpairedByGovernor;
     }
 
     struct OpenTermPaymentStorage {
-        uint24  previousPlatformManagementFeeRate;
-        uint24  previousDelegateManagementFeeRate;
-        uint40  previousStartDate;
+        uint24 previousPlatformManagementFeeRate;
+        uint24 previousDelegateManagementFeeRate;
+        uint40 previousStartDate;
         uint168 previousIssuanceRate;
     }
 
@@ -72,10 +72,10 @@ contract StorageSnapshot {
     }
 
     struct AaveStrategyStorage {
-        bool    previousIsLossRecognized;
-        uint16  previousReferralCode;
-        uint32  previousStrategyDelegateFeeRate;
-        uint32  previousStrategyProtocolFeeRate;
+        bool previousIsLossRecognized;
+        uint16 previousReferralCode;
+        uint32 previousStrategyDelegateFeeRate;
+        uint32 previousStrategyProtocolFeeRate;
         uint256 previousATokenBalance;
         uint256 previousAssetsUnderManagement;
         uint256 previousAvailableToWithdraw;
@@ -85,8 +85,8 @@ contract StorageSnapshot {
     }
 
     struct AllocationStrategyStorage {
-        uint32  previousStrategyDelegateFeeRate;
-        uint32  previousStrategyProtocolFeeRate;
+        uint32 previousStrategyDelegateFeeRate;
+        uint32 previousStrategyProtocolFeeRate;
         uint256 previousAssetsUnderManagement;
         uint256 previousAvailableToWithdraw;
         uint256 previousFundsAssetBalance;
@@ -96,8 +96,8 @@ contract StorageSnapshot {
     }
 
     struct SkyStrategyStorage {
-        uint32  previousStrategyDelegateFeeRate;
-        uint32  previousStrategyProtocolFeeRate;
+        uint32 previousStrategyDelegateFeeRate;
+        uint32 previousStrategyProtocolFeeRate;
         uint256 previousSavingsUsdsBalance;
         uint256 previousCurrentTotalAssets;
         uint256 previousAssetsUnderManagement;
@@ -138,9 +138,7 @@ contract StorageSnapshot {
         strategyStorage.previousUnrealizedLosses        = IAaveV3Strategy(strategy).unrealizedLosses();
     }
 
-    function _snapshotAllocationStrategy(address strategy)
-        internal view returns (AllocationStrategyStorage memory strategyStorage)
-    {
+    function _snapshotAllocationStrategy(address strategy) internal view returns (AllocationStrategyStorage memory strategyStorage) {
         strategyStorage.previousStrategyDelegateFeeRate = IAllocationStrategy(strategy).strategyDelegateFeeRate();
         strategyStorage.previousStrategyProtocolFeeRate = IAllocationStrategy(strategy).strategyProtocolFeeRate();
         strategyStorage.previousAssetsUnderManagement   = IAllocationStrategy(strategy).assetsUnderManagement();
@@ -181,7 +179,9 @@ contract StorageSnapshot {
     }
 
     function _snapshotStrategyManager(address strategyManager)
-        internal view returns (StrategyManagerStorage memory strategyManagerStorage)
+        internal
+        view
+        returns (StrategyManagerStorage memory strategyManagerStorage)
     {
         strategyManagerStorage.previousAvailableToWithdraw = IStrategyManager(strategyManager).availableToWithdraw();
         strategyManagerStorage.previousTotalAssets         = IStrategyManager(strategyManager).assetsUnderManagement();
@@ -190,8 +190,13 @@ contract StorageSnapshot {
         strategyManagerStorage.previousUnrealizedLosses    = IStrategyManager(strategyManager).unrealizedLosses();
     }
 
-    function _snapshotStrategyManagerPosition(address strategyManager, address poolManager)
-        internal view returns (StrategyManagerPositionStorage memory positionStorage)
+    function _snapshotStrategyManagerPosition(
+        address strategyManager,
+        address poolManager
+    )
+        internal
+        view
+        returns (StrategyManagerPositionStorage memory positionStorage)
     {
         positionStorage.previousAssets           = IStrategyManager(strategyManager).assetsOf(poolManager);
         positionStorage.previousPendingShares    = IStrategyManager(strategyManager).pendingSharesOf(poolManager);
@@ -207,24 +212,24 @@ contract StorageSnapshot {
     }
 
     function _snapshotOpenTermLoan(address loan) internal view returns (OpenTermLoanStorage memory loanStorage) {
-        loanStorage.previousFundsAsset               = IOpenTermLoan(loan).fundsAsset();
-        loanStorage.previousBorrower                 = IOpenTermLoan(loan).borrower();
-        loanStorage.previousLender                   = IOpenTermLoan(loan).lender();
-        loanStorage.previousRefinanceCommitment      = IOpenTermLoan(loan).refinanceCommitment();
-        loanStorage.previousGracePeriod              = IOpenTermLoan(loan).gracePeriod();
-        loanStorage.previousNoticePeriod             = IOpenTermLoan(loan).noticePeriod();
-        loanStorage.previousPaymentInterval          = IOpenTermLoan(loan).paymentInterval();
-        loanStorage.previousDateCalled               = IOpenTermLoan(loan).dateCalled();
-        loanStorage.previousDateFunded               = IOpenTermLoan(loan).dateFunded();
-        loanStorage.previousDateImpaired             = IOpenTermLoan(loan).dateImpaired();
-        loanStorage.previousDatePaid                 = IOpenTermLoan(loan).datePaid();
-        loanStorage.previousCalledPrincipal          = IOpenTermLoan(loan).calledPrincipal();
-        loanStorage.previousPrincipal                = IOpenTermLoan(loan).principal();
-        loanStorage.previousDelegateServiceFeeRate   = IOpenTermLoan(loan).delegateServiceFeeRate();
-        loanStorage.previousInterestRate             = IOpenTermLoan(loan).interestRate();
-        loanStorage.previousLateFeeRate              = IOpenTermLoan(loan).lateFeeRate();
-        loanStorage.previousLateInterestPremiumRate  = IOpenTermLoan(loan).lateInterestPremiumRate();
-        loanStorage.previousPlatformServiceFeeRate   = IOpenTermLoan(loan).platformServiceFeeRate();
+        loanStorage.previousFundsAsset              = IOpenTermLoan(loan).fundsAsset();
+        loanStorage.previousBorrower                = IOpenTermLoan(loan).borrower();
+        loanStorage.previousLender                  = IOpenTermLoan(loan).lender();
+        loanStorage.previousRefinanceCommitment     = IOpenTermLoan(loan).refinanceCommitment();
+        loanStorage.previousGracePeriod             = IOpenTermLoan(loan).gracePeriod();
+        loanStorage.previousNoticePeriod            = IOpenTermLoan(loan).noticePeriod();
+        loanStorage.previousPaymentInterval         = IOpenTermLoan(loan).paymentInterval();
+        loanStorage.previousDateCalled              = IOpenTermLoan(loan).dateCalled();
+        loanStorage.previousDateFunded              = IOpenTermLoan(loan).dateFunded();
+        loanStorage.previousDateImpaired            = IOpenTermLoan(loan).dateImpaired();
+        loanStorage.previousDatePaid                = IOpenTermLoan(loan).datePaid();
+        loanStorage.previousCalledPrincipal         = IOpenTermLoan(loan).calledPrincipal();
+        loanStorage.previousPrincipal               = IOpenTermLoan(loan).principal();
+        loanStorage.previousDelegateServiceFeeRate  = IOpenTermLoan(loan).delegateServiceFeeRate();
+        loanStorage.previousInterestRate            = IOpenTermLoan(loan).interestRate();
+        loanStorage.previousLateFeeRate             = IOpenTermLoan(loan).lateFeeRate();
+        loanStorage.previousLateInterestPremiumRate = IOpenTermLoan(loan).lateInterestPremiumRate();
+        loanStorage.previousPlatformServiceFeeRate  = IOpenTermLoan(loan).platformServiceFeeRate();
 
         loanStorage.previousFundsAssetBalance = IERC20(IOpenTermLoan(loan).fundsAsset()).balanceOf(loan);
     }
@@ -232,14 +237,16 @@ contract StorageSnapshot {
     function _snapshotOpenTermImpairment(address loan) internal view returns (OpenTermLoanImpairmentStorage memory impairmentStorage) {
         IOpenTermLoanManager loanManager = IOpenTermLoanManager(IOpenTermLoan(loan).lender());
 
-        ( uint40 dateImpaired, bool impairedByGovernor ) = loanManager.impairmentFor(loan);
+        (uint40 dateImpaired, bool impairedByGovernor) = loanManager.impairmentFor(loan);
 
         impairmentStorage.previousDateImpaired       = dateImpaired;
         impairmentStorage.previousImpairedByGovernor = impairedByGovernor;
     }
 
     function _snapshotOpenTermLoanManager(address loanManager)
-        internal view returns(OpenTermLoanManagerStorage memory loanManagerStorage)
+        internal
+        view
+        returns (OpenTermLoanManagerStorage memory loanManagerStorage)
     {
         loanManagerStorage.previousDomainStart       = IOpenTermLoanManager(loanManager).domainStart();
         loanManagerStorage.previousAccountedInterest = IOpenTermLoanManager(loanManager).accountedInterest();
@@ -261,10 +268,10 @@ contract StorageSnapshot {
     function _snapshotPoolManager(address poolManager) internal view returns (PoolManagerStorage memory poolManagerStorage) {
         IPool pool = IPool(IPoolManager(poolManager).pool());
 
-        poolManagerStorage.previousTotalSupply        = pool.totalSupply();
-        poolManagerStorage.previousTotalAssets        = IPoolManager(poolManager).totalAssets();
-        poolManagerStorage.previousUnrealizedLosses   = IPoolManager(poolManager).unrealizedLosses();
-        poolManagerStorage.previousFundsAssetBalance  = IERC20(pool.asset()).balanceOf(address(pool));
+        poolManagerStorage.previousTotalSupply       = pool.totalSupply();
+        poolManagerStorage.previousTotalAssets       = IPoolManager(poolManager).totalAssets();
+        poolManagerStorage.previousUnrealizedLosses  = IPoolManager(poolManager).unrealizedLosses();
+        poolManagerStorage.previousFundsAssetBalance = IERC20(pool.asset()).balanceOf(address(pool));
     }
 
 }

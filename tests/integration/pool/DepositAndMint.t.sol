@@ -367,11 +367,7 @@ contract DepositWithPermitFailureTests is EnterBase {
 
         allowLender(address(poolManager), lp);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity - 1, deadline, lpSk);
+        (uint8 v, bytes32 r, bytes32 s) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), liquidity - 1, deadline, lpSk);
 
         vm.expectRevert("ERC20:P:INVALID_SIGNATURE");
         vm.prank(lp);
@@ -466,7 +462,7 @@ contract MintTest is EnterBase {
         address lp2 = makeAddr("lp2");
 
         // Pre mint 2 assertions
-        assertEq(pool.balanceOf(lp2), 0);
+        assertEq(pool.balanceOf(lp2),                      0);
         assertEq(fundsAsset.balanceOf(lp2),                0);
         assertEq(fundsAsset.allowance(lp2, address(pool)), 0);
 
@@ -761,11 +757,7 @@ contract MintWithPermitFailureTests is EnterBase {
         uint256 shares = pool.previewDeposit(liquidity);
         uint256 assets = pool.previewMint(shares);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), assets - 1, deadline, lpSk);
+        (uint8 v, bytes32 r, bytes32 s) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), assets - 1, deadline, lpSk);
 
         vm.expectRevert("P:MWP:INSUFFICIENT_PERMIT");
         vm.prank(lp);

@@ -15,7 +15,7 @@ contract SyrupUSDCRoleManagingTests is GovernorTimelockUpgradeTestsBaseBase {
         address newSyrupUSDCBurner = makeAddr("newSyrupUSDCBurner");
 
         address[] memory targets = new address[](4);
-        bytes[]   memory data    = new bytes[](4);
+        bytes[] memory   data    = new bytes[](4);
 
         targets[0] = address(syrupUSDCBase);
         targets[1] = address(syrupUSDCBase);
@@ -49,21 +49,11 @@ contract SyrupUSDCRoleManagingTests is GovernorTimelockUpgradeTestsBaseBase {
         vm.prank(proposerBase);
         IGovernorTimelock(timelockBase).scheduleProposals(targets, data);
 
-        (
-            ,
-            ,
-            ,
-            uint256 delayedUntil
-            ,
-        ) = IGovernorTimelock(timelockBase).proposals(IGovernorTimelock(timelockBase).latestProposalId());
+        (,,, uint256 delayedUntil,) = IGovernorTimelock(timelockBase).proposals(IGovernorTimelock(timelockBase).latestProposalId());
 
-        assertTrue(
-            ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), syrupUSDCMinter)
-        );
+        assertTrue(ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), syrupUSDCMinter));
 
-        assertTrue(
-            ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).BURNER_ROLE(), syrupUSDCBurner)
-        );
+        assertTrue(ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).BURNER_ROLE(), syrupUSDCBurner));
 
         assertFalse(
             ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), newSyrupUSDCMinter)
@@ -84,21 +74,13 @@ contract SyrupUSDCRoleManagingTests is GovernorTimelockUpgradeTestsBaseBase {
         vm.prank(executorBase);
         IGovernorTimelock(timelockBase).executeProposals(proposalsToExecute, targets, data);
 
-        assertFalse(
-            ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), syrupUSDCMinter)
-        );
+        assertFalse(ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), syrupUSDCMinter));
 
-        assertFalse(
-            ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).BURNER_ROLE(), syrupUSDCBurner)
-        );
+        assertFalse(ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).BURNER_ROLE(), syrupUSDCBurner));
 
-        assertTrue(
-            ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), newSyrupUSDCMinter)
-        );
+        assertTrue(ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).MINTER_ROLE(), newSyrupUSDCMinter));
 
-        assertTrue(
-            ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).BURNER_ROLE(), newSyrupUSDCBurner)
-        );
+        assertTrue(ISyrupUSDCrossChainLike(syrupUSDCBase).hasRole(ISyrupUSDCrossChainLike(syrupUSDCBase).BURNER_ROLE(), newSyrupUSDCBurner));
     }
 
 }

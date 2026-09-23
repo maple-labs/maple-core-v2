@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "../../integration/allocation-strategy/AllocationStrategyTestBase.sol";
 
@@ -356,45 +352,53 @@ contract ChangeCapsWhileFundsDeployedTests is AllocationStrategyTestBase {
     function test_changePoolManagerCap_whileOpenTermLoanFundsDeployed() external {
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        firstLoan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            firstBorrower,
-            address(loanManager),
-            address(fundsAsset),
-            firstPrincipal,
-            [uint256(5 days), uint256(5 days), uint256(30 days)],
-            [uint256(0), uint256(0), uint256(0), uint256(0)]
-        ));
+        firstLoan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                firstBorrower,
+                address(loanManager),
+                address(fundsAsset),
+                firstPrincipal,
+                [uint256(5 days), uint256(5 days), uint256(30 days)],
+                [uint256(0), uint256(0), uint256(0), uint256(0)]
+            )
+        );
 
-        secondLoan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            secondBorrower,
-            address(loanManager),
-            address(fundsAsset),
-            secondPrincipal,
-            [uint256(5 days), uint256(5 days), uint256(30 days)],
-            [uint256(0), uint256(0), uint256(0), uint256(0)]
-        ));
+        secondLoan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                secondBorrower,
+                address(loanManager),
+                address(fundsAsset),
+                secondPrincipal,
+                [uint256(5 days), uint256(5 days), uint256(30 days)],
+                [uint256(0), uint256(0), uint256(0), uint256(0)]
+            )
+        );
 
-        thirdLoan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            thirdBorrower,
-            address(loanManager),
-            address(fundsAsset),
-            thirdPrincipal,
-            [uint256(5 days), uint256(5 days), uint256(30 days)],
-            [uint256(0), uint256(0), uint256(0), uint256(0)]
-        ));
+        thirdLoan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                thirdBorrower,
+                address(loanManager),
+                address(fundsAsset),
+                thirdPrincipal,
+                [uint256(5 days), uint256(5 days), uint256(30 days)],
+                [uint256(0), uint256(0), uint256(0), uint256(0)]
+            )
+        );
 
-        fourthLoan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            fourthBorrower,
-            address(loanManager),
-            address(fundsAsset),
-            fourthPrincipal,
-            [uint256(5 days), uint256(5 days), uint256(30 days)],
-            [uint256(0), uint256(0), uint256(0), uint256(0)]
-        ));
+        fourthLoan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                fourthBorrower,
+                address(loanManager),
+                address(fundsAsset),
+                fourthPrincipal,
+                [uint256(5 days), uint256(5 days), uint256(30 days)],
+                [uint256(0), uint256(0), uint256(0), uint256(0)]
+            )
+        );
 
         vm.prank(firstBorrower);
         firstLoan.acceptLoanTerms();

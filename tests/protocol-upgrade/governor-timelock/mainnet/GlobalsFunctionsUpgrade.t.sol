@@ -14,11 +14,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).pendingGovernor(), address(0));
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setPendingGovernor.selector,
-            abi.encode(newPendingGovernor)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setPendingGovernor.selector, abi.encode(newPendingGovernor));
 
         assertEq(IMapleGlobals(globals).pendingGovernor(), newPendingGovernor);
 
@@ -37,19 +33,13 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         MockPoolManager poolManager = new MockPoolManager(address(factory), poolDelegate);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidInstanceOf.selector,
-            abi.encode(bytes32("POOL_MANAGER_FACTORY"), address(factory), true)
+            globals, IMapleGlobals.setValidInstanceOf.selector, abi.encode(bytes32("POOL_MANAGER_FACTORY"), address(factory), true)
         );
 
         assertEq(IMapleGlobals(globals).ownedPoolManager(poolDelegate), address(0));
         assertEq(poolManager.active(),                                  false);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.activatePoolManager.selector,
-            abi.encode(address(poolManager))
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.activatePoolManager.selector, abi.encode(address(poolManager)));
 
         assertEq(IMapleGlobals(globals).ownedPoolManager(poolDelegate), address(poolManager));
         assertEq(poolManager.active(),                                  true);
@@ -70,18 +60,16 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         uint128 newDefaultDelay    = 3;
         uint128 newDefaultDuration = 8;
 
-        ( uint128 delay, uint128 duration ) = IMapleGlobals(globals).defaultTimelockParameters();
+        (uint128 delay, uint128 duration) = IMapleGlobals(globals).defaultTimelockParameters();
 
         assertEq(delay,    1 weeks);
         assertEq(duration, 2 days);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setDefaultTimelockParameters.selector,
-            abi.encode(newDefaultDelay, newDefaultDuration)
+            globals, IMapleGlobals.setDefaultTimelockParameters.selector, abi.encode(newDefaultDelay, newDefaultDuration)
         );
 
-        ( delay, duration ) = IMapleGlobals(globals).defaultTimelockParameters();
+        (delay, duration) = IMapleGlobals(globals).defaultTimelockParameters();
 
         assertEq(delay,    newDefaultDelay);
         assertEq(duration, newDefaultDuration);
@@ -102,11 +90,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertNotEq(IMapleGlobals(globals).migrationAdmin(), newMigrationAdmin);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setMigrationAdmin.selector,
-            abi.encode(newMigrationAdmin)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setMigrationAdmin.selector, abi.encode(newMigrationAdmin));
 
         assertEq(IMapleGlobals(globals).migrationAdmin(), newMigrationAdmin);
     }
@@ -116,11 +100,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).operationalAdmin(), operationalAdmin);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setOperationalAdmin.selector,
-            abi.encode(newOperationalAdmin)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setOperationalAdmin.selector, abi.encode(newOperationalAdmin));
 
         assertEq(IMapleGlobals(globals).operationalAdmin(), newOperationalAdmin);
     }
@@ -130,18 +110,14 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         address newOracle   = makeAddr("newOracle");
         uint96  newMaxDelay = 100;
 
-        ( address oracle, uint96 maxDelay ) = IMapleGlobals(globals).priceOracleOf(asset);
+        (address oracle, uint96 maxDelay) = IMapleGlobals(globals).priceOracleOf(asset);
 
         assertEq(oracle,   address(0));
         assertEq(maxDelay, 0);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setPriceOracle.selector,
-            abi.encode(asset, newOracle, newMaxDelay)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setPriceOracle.selector, abi.encode(asset, newOracle, newMaxDelay));
 
-        ( oracle, maxDelay ) = IMapleGlobals(globals).priceOracleOf(asset);
+        (oracle, maxDelay) = IMapleGlobals(globals).priceOracleOf(asset);
 
         assertEq(oracle,   newOracle);
         assertEq(maxDelay, newMaxDelay);
@@ -150,7 +126,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
     function testFork_setSecurityAdmin() public {
         address newSecurityAdmin = makeAddr("newSecurityAdmin");
 
-        assertEq(IMapleGlobals(globals).securityAdmin(),    securityAdmin);
+        assertEq(IMapleGlobals(globals).securityAdmin(), securityAdmin);
 
         _executeThroughTimelock(globals, IMapleGlobals.setSecurityAdmin.selector, abi.encode(newSecurityAdmin));
 
@@ -163,21 +139,13 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isContractPaused(contractAddress), !contractPaused);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setContractPause.selector,
-            abi.encode(contractAddress, contractPaused)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setContractPause.selector, abi.encode(contractAddress, contractPaused));
 
         assertEq(IMapleGlobals(globals).isContractPaused(contractAddress), contractPaused);
 
         contractPaused = false;
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setContractPause.selector,
-            abi.encode(contractAddress, contractPaused)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setContractPause.selector, abi.encode(contractAddress, contractPaused));
 
         assertEq(IMapleGlobals(globals).isContractPaused(contractAddress), contractPaused);
     }
@@ -189,21 +157,13 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isFunctionUnpaused(contractAddress, sig), !functionUnpaused);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setFunctionUnpause.selector,
-            abi.encode(contractAddress, sig, functionUnpaused)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setFunctionUnpause.selector, abi.encode(contractAddress, sig, functionUnpaused));
 
         assertEq(IMapleGlobals(globals).isFunctionUnpaused(contractAddress, sig), functionUnpaused);
 
         functionUnpaused = false;
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setFunctionUnpause.selector,
-            abi.encode(contractAddress, sig, functionUnpaused)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setFunctionUnpause.selector, abi.encode(contractAddress, sig, functionUnpaused));
 
         assertEq(IMapleGlobals(globals).isFunctionUnpaused(contractAddress, sig), functionUnpaused);
     }
@@ -231,21 +191,13 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).canDeployFrom(factory, account), !canDeployFrom);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setCanDeployFrom.selector,
-            abi.encode(factory, account, canDeployFrom)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setCanDeployFrom.selector, abi.encode(factory, account, canDeployFrom));
 
         assertEq(IMapleGlobals(globals).canDeployFrom(factory, account), canDeployFrom);
 
         canDeployFrom = false;
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setCanDeployFrom.selector,
-            abi.encode(factory, account, canDeployFrom)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setCanDeployFrom.selector, abi.encode(factory, account, canDeployFrom));
 
         assertEq(IMapleGlobals(globals).canDeployFrom(factory, account), canDeployFrom);
     }
@@ -256,21 +208,13 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isBorrower(borrower), !isValid);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidBorrower.selector,
-            abi.encode(borrower, isValid)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidBorrower.selector, abi.encode(borrower, isValid));
 
         assertEq(IMapleGlobals(globals).isBorrower(borrower), isValid);
 
         isValid = false;
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidBorrower.selector,
-            abi.encode(borrower, isValid)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidBorrower.selector, abi.encode(borrower, isValid));
 
         assertEq(IMapleGlobals(globals).isBorrower(borrower), isValid);
     }
@@ -281,21 +225,13 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isCollateralAsset(collateralAsset), !isValid);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidCollateralAsset.selector,
-            abi.encode(collateralAsset, isValid)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidCollateralAsset.selector, abi.encode(collateralAsset, isValid));
 
         assertEq(IMapleGlobals(globals).isCollateralAsset(collateralAsset), isValid);
 
         isValid = false;
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidCollateralAsset.selector,
-            abi.encode(collateralAsset, isValid)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidCollateralAsset.selector, abi.encode(collateralAsset, isValid));
 
         assertEq(IMapleGlobals(globals).isCollateralAsset(collateralAsset), isValid);
     }
@@ -306,19 +242,11 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isInstanceOf(instanceKey, instance), false);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidInstanceOf.selector,
-            abi.encode(instanceKey, instance, true)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidInstanceOf.selector, abi.encode(instanceKey, instance, true));
 
         assertEq(IMapleGlobals(globals).isInstanceOf(instanceKey, instance), true);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidInstanceOf.selector,
-            abi.encode(instanceKey, instance, false)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidInstanceOf.selector, abi.encode(instanceKey, instance, false));
 
         assertEq(IMapleGlobals(globals).isInstanceOf(instanceKey, instance), false);
     }
@@ -328,19 +256,11 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isPoolAsset(newPoolAsset), false);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidPoolAsset.selector,
-            abi.encode(newPoolAsset, true)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidPoolAsset.selector, abi.encode(newPoolAsset, true));
 
         assertEq(IMapleGlobals(globals).isPoolAsset(newPoolAsset), true);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidPoolAsset.selector,
-            abi.encode(newPoolAsset, false)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidPoolAsset.selector, abi.encode(newPoolAsset, false));
 
         assertEq(IMapleGlobals(globals).isPoolAsset(newPoolAsset), false);
     }
@@ -350,19 +270,11 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).isPoolDelegate(account), false);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidPoolDelegate.selector,
-            abi.encode(account, true)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidPoolDelegate.selector, abi.encode(account, true));
 
         assertEq(IMapleGlobals(globals).isPoolDelegate(account), true);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setValidPoolDelegate.selector,
-            abi.encode(account, false)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setValidPoolDelegate.selector, abi.encode(account, false));
 
         assertEq(IMapleGlobals(globals).isPoolDelegate(account), false);
     }
@@ -373,11 +285,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).manualOverridePrice(asset), 0);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setManualOverridePrice.selector,
-            abi.encode(asset, price)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setManualOverridePrice.selector, abi.encode(asset, price));
 
         assertEq(IMapleGlobals(globals).manualOverridePrice(asset), price);
     }
@@ -389,9 +297,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         assertEq(IMapleGlobals(globals).maxCoverLiquidationPercent(poolManager), 0);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setMaxCoverLiquidationPercent.selector,
-            abi.encode(poolManager, maxCoverLiquidationPercent)
+            globals, IMapleGlobals.setMaxCoverLiquidationPercent.selector, abi.encode(poolManager, maxCoverLiquidationPercent)
         );
 
         assertEq(IMapleGlobals(globals).maxCoverLiquidationPercent(poolManager), maxCoverLiquidationPercent);
@@ -403,11 +309,7 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
 
         assertEq(IMapleGlobals(globals).minCoverAmount(poolManager), 0);
 
-        _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setMinCoverAmount.selector,
-            abi.encode(poolManager, minCoverAmount)
-        );
+        _executeThroughTimelock(globals, IMapleGlobals.setMinCoverAmount.selector, abi.encode(poolManager, minCoverAmount));
 
         assertEq(IMapleGlobals(globals).minCoverAmount(poolManager), minCoverAmount);
     }
@@ -416,13 +318,11 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         address poolManager                  = makeAddr("poolManager");
         uint256 newPlatformManagementFeeRate = 100;
 
-        assertEq(IMapleGlobals(globals).platformManagementFeeRate(poolManager),    0);
+        assertEq(IMapleGlobals(globals).platformManagementFeeRate(poolManager), 0);
         assertNotEq(IMapleGlobals(globals).platformManagementFeeRate(poolManager), newPlatformManagementFeeRate);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setPlatformManagementFeeRate.selector,
-            abi.encode(poolManager, newPlatformManagementFeeRate)
+            globals, IMapleGlobals.setPlatformManagementFeeRate.selector, abi.encode(poolManager, newPlatformManagementFeeRate)
         );
 
         assertEq(IMapleGlobals(globals).platformManagementFeeRate(poolManager), newPlatformManagementFeeRate);
@@ -432,13 +332,11 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         address poolManager                   = makeAddr("poolManager");
         uint256 newPlatformOriginationFeeRate = 100;
 
-        assertEq(IMapleGlobals(globals).platformOriginationFeeRate(poolManager),    0);
+        assertEq(IMapleGlobals(globals).platformOriginationFeeRate(poolManager), 0);
         assertNotEq(IMapleGlobals(globals).platformOriginationFeeRate(poolManager), newPlatformOriginationFeeRate);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setPlatformOriginationFeeRate.selector,
-            abi.encode(poolManager, newPlatformOriginationFeeRate)
+            globals, IMapleGlobals.setPlatformOriginationFeeRate.selector, abi.encode(poolManager, newPlatformOriginationFeeRate)
         );
 
         assertEq(IMapleGlobals(globals).platformOriginationFeeRate(poolManager), newPlatformOriginationFeeRate);
@@ -448,13 +346,11 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         address poolManager               = makeAddr("poolManager");
         uint256 newPlatformServiceFeeRate = 100;
 
-        assertEq(IMapleGlobals(globals).platformServiceFeeRate(poolManager),    0);
+        assertEq(IMapleGlobals(globals).platformServiceFeeRate(poolManager), 0);
         assertNotEq(IMapleGlobals(globals).platformServiceFeeRate(poolManager), newPlatformServiceFeeRate);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setPlatformServiceFeeRate.selector,
-            abi.encode(poolManager, newPlatformServiceFeeRate)
+            globals, IMapleGlobals.setPlatformServiceFeeRate.selector, abi.encode(poolManager, newPlatformServiceFeeRate)
         );
 
         assertEq(IMapleGlobals(globals).platformServiceFeeRate(poolManager), newPlatformServiceFeeRate);
@@ -466,28 +362,26 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         uint128 newDelay        = 100;
         uint128 newDuration     = 200;
 
-        ( uint128 delay, uint128 duration ) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionId);
+        (uint128 delay, uint128 duration) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionId);
 
         assertEq(delay,    0);
         assertEq(duration, 0);
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setTimelockWindow.selector,
-            abi.encode(contractAddress, functionId, newDelay, newDuration)
+            globals, IMapleGlobals.setTimelockWindow.selector, abi.encode(contractAddress, functionId, newDelay, newDuration)
         );
 
-        ( delay, duration ) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionId);
+        (delay, duration) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionId);
 
         assertEq(delay,    newDelay);
         assertEq(duration, newDuration);
     }
 
     function testFork_setTimelockWindows() public {
-        address contractAddress      = makeAddr("contract");
-        bytes32[] memory functionIds = new bytes32[](2);
-        uint128[] memory delays      = new uint128[](2);
-        uint128[] memory durations   = new uint128[](2);
+        address          contractAddress = makeAddr("contract");
+        bytes32[] memory functionIds     = new bytes32[](2);
+        uint128[] memory delays          = new uint128[](2);
+        uint128[] memory durations       = new uint128[](2);
 
         functionIds[0] = keccak256("functionId0");
         functionIds[1] = keccak256("functionId1");
@@ -499,20 +393,18 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         durations[1] = 400;
 
         for (uint256 i = 0; i < functionIds.length; i++) {
-            ( uint128 delay, uint128 duration ) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionIds[i]);
+            (uint128 delay, uint128 duration) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionIds[i]);
 
-            assertNotEq(delay,    delays[i]);
+            assertNotEq(delay, delays[i]);
             assertNotEq(duration, durations[i]);
         }
 
         _executeThroughTimelock(
-            globals,
-            IMapleGlobals.setTimelockWindows.selector,
-            abi.encode(contractAddress, functionIds, delays, durations)
+            globals, IMapleGlobals.setTimelockWindows.selector, abi.encode(contractAddress, functionIds, delays, durations)
         );
 
         for (uint256 i = 0; i < functionIds.length; i++) {
-            ( uint128 delay, uint128 duration ) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionIds[i]);
+            (uint128 delay, uint128 duration) = IMapleGlobals(globals).timelockParametersOf(contractAddress, functionIds[i]);
 
             assertEq(delay,    delays[i]);
             assertEq(duration, durations[i]);
@@ -520,18 +412,14 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
     }
 
     function testFork_unscheduleCall() public {
-        address contractAddress = makeAddr("randomContract");
-        bytes32 functionId      = keccak256("functionId");
-        bytes memory data       = abi.encode("");
+        address      contractAddress = makeAddr("randomContract");
+        bytes32      functionId      = keccak256("functionId");
+        bytes memory data            = abi.encode("");
 
         vm.prank(securityAdmin);
-        IMapleGlobals(globals).scheduleCall(
-            contractAddress,
-            functionId,
-            data
-        );
+        IMapleGlobals(globals).scheduleCall(contractAddress, functionId, data);
 
-        ( uint256 callTimestamp, bytes32 callDataHash ) = IMapleGlobals(globals).scheduledCalls(securityAdmin, contractAddress, functionId);
+        (uint256 callTimestamp, bytes32 callDataHash) = IMapleGlobals(globals).scheduledCalls(securityAdmin, contractAddress, functionId);
 
         assertEq(callTimestamp, block.timestamp);
         assertEq(callDataHash,  keccak256(abi.encode(data)));
@@ -539,13 +427,9 @@ contract MapleGlobalsFunctionsUpgradeTests is GovernorTimelockUpgradeTestsBase {
         // Manual calculation needed as unscheduleCall is overloaded on globals
         bytes4 selector = bytes4(keccak256("unscheduleCall(address,address,bytes32,bytes)"));
 
-        _executeThroughTimelock(
-            globals,
-            selector,
-            abi.encode(securityAdmin, contractAddress, functionId, data)
-        );
+        _executeThroughTimelock(globals, selector, abi.encode(securityAdmin, contractAddress, functionId, data));
 
-        ( callTimestamp, callDataHash ) = IMapleGlobals(globals).scheduledCalls(securityAdmin, contractAddress, functionId);
+        (callTimestamp, callDataHash) = IMapleGlobals(globals).scheduledCalls(securityAdmin, contractAddress, functionId);
 
         assertEq(callTimestamp, 0);
         assertEq(callDataHash,  0);

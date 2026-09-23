@@ -62,18 +62,9 @@ contract ValidateUSDGWhitelistProposalScheduling is SyrupUSDGValidationScriptBas
     function run() external view {
         uint256 proposalId = tl.latestProposalId();
 
-        bytes32 expectedHash = _proposalHash(
-            globals,
-            abi.encodeWithSignature("setValidPoolAsset(address,bool)", USDG, true)
-        );
+        bytes32 expectedHash = _proposalHash(globals, abi.encodeWithSignature("setValidPoolAsset(address,bool)", USDG, true));
 
-        (
-            bytes32 proposalHash,
-            bool    isUnschedulable,
-            uint32  scheduledAt,
-            uint32  delayedUntil,
-            uint32  validUntil
-        ) = tl.proposals(proposalId);
+        (bytes32 proposalHash, bool isUnschedulable, uint32 scheduledAt, uint32 delayedUntil, uint32 validUntil) = tl.proposals(proposalId);
 
         assertEq(proposalHash,    expectedHash,               "Invalid proposal hash!");
         assertEq(isUnschedulable, true,                       "Proposal is not unschedulable!");
@@ -95,7 +86,7 @@ contract ValidateUSDGWhitelistProposalExecution is SyrupUSDGValidationScriptBase
 contract ValidateUSDGPoolDelegate is SyrupUSDGValidationScriptBase {
 
     function run() external view {
-        ( address ownedPoolManager, bool isPoolDelegate ) = IGlobals(globals).poolDelegates(POOL_DELEGATE);
+        (address ownedPoolManager, bool isPoolDelegate) = IGlobals(globals).poolDelegates(POOL_DELEGATE);
 
         assertEq(isPoolDelegate,   true,       "Pool delegate is not registered!");
         assertEq(ownedPoolManager, address(0), "Pool delegate already owns a pool manager!");
@@ -167,7 +158,7 @@ contract ValidateUSDGPoolActivation is SyrupUSDGValidationScriptBase {
 
         assertEq(IPoolManager(syrupUSDGPoolManager).active(), true, "PM is not active!");
 
-        ( address ownedPoolManager, ) = IGlobals(globals).poolDelegates(POOL_DELEGATE);
+        (address ownedPoolManager,) = IGlobals(globals).poolDelegates(POOL_DELEGATE);
 
         assertEq(ownedPoolManager, syrupUSDGPoolManager, "PD does not own the PM!");
 
@@ -177,16 +168,10 @@ contract ValidateUSDGPoolActivation is SyrupUSDGValidationScriptBase {
             "Invalid origination fee rate!"
         );
 
-        assertEq(
-            IGlobals(globals).platformServiceFeeRate(syrupUSDGPoolManager),
-            PLATFORM_SERVICE_FEE_RATE,
-            "Invalid service fee rate!"
-        );
+        assertEq(IGlobals(globals).platformServiceFeeRate(syrupUSDGPoolManager), PLATFORM_SERVICE_FEE_RATE, "Invalid service fee rate!");
 
         assertEq(
-            IGlobals(globals).platformManagementFeeRate(syrupUSDGPoolManager),
-            PLATFORM_MANAGEMENT_FEE_RATE,
-            "Invalid management fee rate!"
+            IGlobals(globals).platformManagementFeeRate(syrupUSDGPoolManager), PLATFORM_MANAGEMENT_FEE_RATE, "Invalid management fee rate!"
         );
 
         assertEq(ppm.permissionLevels(syrupUSDGPoolManager), PERMISSION_LEVEL, "Invalid permission level!");

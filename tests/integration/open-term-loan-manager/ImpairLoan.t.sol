@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -19,20 +16,20 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
 
     uint256 constant principal = 2_500_000e6;
 
-    uint256 constant interestRate        = 0.115e6;  // 11.5%
-    uint256 constant lateFeeRate         = 0.02e6;   // 2%
-    uint256 constant lateInterestPremium = 0.045e6;  // 4.5%
+    uint256 constant interestRate        = 0.115e6; // 11.5%
+    uint256 constant lateFeeRate         = 0.02e6; // 2%
+    uint256 constant lateInterestPremium = 0.045e6; // 4.5%
 
-    uint256 constant delegateServiceFeeRate    = 0.03e6;  // 3%
-    uint256 constant delegateManagementFeeRate = 0.02e6;   // 2%
-    uint256 constant platformServiceFeeRate    = 0.043e6;  // 4.3%
-    uint256 constant platformManagementFeeRate = 0.057e6;  // 5.7%
+    uint256 constant delegateServiceFeeRate    = 0.03e6; // 3%
+    uint256 constant delegateManagementFeeRate = 0.02e6; // 2%
+    uint256 constant platformServiceFeeRate    = 0.043e6; // 4.3%
+    uint256 constant platformManagementFeeRate = 0.057e6; // 5.7%
 
     uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
     uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
@@ -46,15 +43,17 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(lateFeeRate), uint256(lateInterestPremium)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(lateFeeRate), uint256(lateInterestPremium)]
+            )
+        );
 
         deposit(address(pool), lp, principal);
         fundLoan(address(loan));
@@ -94,7 +93,7 @@ contract OpenTermLoanManagerImpairTests is TestBaseWithAssertions {
             address(borrower),
             address(loanManager),
             address(fundsAsset),
-            principal + 1,  // Different salt
+            principal + 1, // Different salt
             [uint32(gracePeriod), uint32(noticePeriod), uint32(paymentInterval)],
             [uint64(delegateServiceFeeRate), uint64(interestRate), uint64(lateFeeRate), uint64(lateInterestPremium)]
         );
@@ -269,20 +268,20 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
 
     uint256 constant principal = 2_500_000e6;
 
-    uint256 constant interestRate        = 0.115e6;  // 11.5%
-    uint256 constant lateFeeRate         = 0.02e6;   // 2%
-    uint256 constant lateInterestPremium = 0.045e6;  // 4.5%
+    uint256 constant interestRate        = 0.115e6; // 11.5%
+    uint256 constant lateFeeRate         = 0.02e6; // 2%
+    uint256 constant lateInterestPremium = 0.045e6; // 4.5%
 
-    uint256 constant delegateServiceFeeRate    = 0.03e6;   // 3%
-    uint256 constant delegateManagementFeeRate = 0.02e6;   // 2%
-    uint256 constant platformServiceFeeRate    = 0.043e6;  // 4.3%
-    uint256 constant platformManagementFeeRate = 0.057e6;  // 5.7%
+    uint256 constant delegateServiceFeeRate    = 0.03e6; // 3%
+    uint256 constant delegateManagementFeeRate = 0.02e6; // 2%
+    uint256 constant platformServiceFeeRate    = 0.043e6; // 4.3%
+    uint256 constant platformManagementFeeRate = 0.057e6; // 5.7%
 
     uint256 constant interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
     uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
@@ -296,15 +295,17 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(lateFeeRate), uint256(lateInterestPremium)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(lateFeeRate), uint256(lateInterestPremium)]
+            )
+        );
 
         deposit(address(pool), lp, principal);
         fundLoan(address(loan));
@@ -389,13 +390,13 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         vm.warp(start + paymentInterval * 2 / 3);
 
         assertOpenTermLoanManager({
-            loanManager:       address(loanManager),
-            domainStart:       start + paymentInterval / 3,
-            issuanceRate:      0,
+            loanManager: address(loanManager),
+            domainStart: start + paymentInterval / 3,
+            issuanceRate: 0,
             accountedInterest: issuanceRate * paymentInterval / 3 / 1e27,
-            accruedInterest:   0,  // No interest accrued because of IR == 0
-            principalOut:      principal,
-            unrealizedLosses:  principal + issuanceRate * paymentInterval / 3 / 1e27
+            accruedInterest: 0, // No interest accrued because of IR == 0
+            principalOut: principal,
+            unrealizedLosses: principal + issuanceRate * paymentInterval / 3 / 1e27
         });
 
         assertImpairment({
@@ -424,13 +425,13 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         loanManager.removeLoanImpairment(address(loan));
 
         assertOpenTermLoanManager({
-            loanManager:       address(loanManager),
-            domainStart:       start + paymentInterval * 2 / 3,
-            issuanceRate:      issuanceRate,
-            accountedInterest: issuanceRate * paymentInterval * 2 / 3 / 1e27 - 1,  // -1 due to rounding error.
-            accruedInterest:   0,
-            principalOut:      principal,
-            unrealizedLosses:  0
+            loanManager: address(loanManager),
+            domainStart: start + paymentInterval * 2 / 3,
+            issuanceRate: issuanceRate,
+            accountedInterest: issuanceRate * paymentInterval * 2 / 3 / 1e27 - 1, // -1 due to rounding error.
+            accruedInterest: 0,
+            principalOut: principal,
+            unrealizedLosses: 0
         });
 
         assertImpairment({
@@ -464,13 +465,13 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         vm.warp(start + paymentInterval * 4 / 3);
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start + paymentInterval * 2 / 3,
-            issuanceRate:          0,
-            accountedInterest:     issuanceRate * paymentInterval * 2 / 3 / 1e27,
-            accruedInterest:       0,  // No interest accrued because of IR == 0
-            principalOut:          principal,
-            unrealizedLosses:      principal + issuanceRate * paymentInterval * 2 / 3 / 1e27
+            loanManager: address(loanManager),
+            domainStart: start + paymentInterval * 2 / 3,
+            issuanceRate: 0,
+            accountedInterest: issuanceRate * paymentInterval * 2 / 3 / 1e27,
+            accruedInterest: 0, // No interest accrued because of IR == 0
+            principalOut: principal,
+            unrealizedLosses: principal + issuanceRate * paymentInterval * 2 / 3 / 1e27
         });
 
         assertImpairment({
@@ -499,13 +500,13 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         loanManager.removeLoanImpairment(address(loan));
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start + paymentInterval * 4 / 3,
-            issuanceRate:          issuanceRate,
-            accountedInterest:     issuanceRate * paymentInterval * 4 / 3 / 1e27,
-            accruedInterest:       0,
-            principalOut:          principal,
-            unrealizedLosses:      0
+            loanManager:       address(loanManager),
+            domainStart:       start + paymentInterval * 4 / 3,
+            issuanceRate:      issuanceRate,
+            accountedInterest: issuanceRate * paymentInterval * 4 / 3 / 1e27,
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  0
         });
 
         assertImpairment({
@@ -539,13 +540,13 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         vm.warp(start + paymentInterval * 5 / 3);
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start + paymentInterval * 4 / 3,
-            issuanceRate:          0,
-            accountedInterest:     issuanceRate * paymentInterval * 4 / 3 / 1e27,
-            accruedInterest:       0,  // No interest accrued because of IR == 0
-            principalOut:          principal,
-            unrealizedLosses:      principal + issuanceRate * paymentInterval * 4 / 3 / 1e27
+            loanManager: address(loanManager),
+            domainStart: start + paymentInterval * 4 / 3,
+            issuanceRate: 0,
+            accountedInterest: issuanceRate * paymentInterval * 4 / 3 / 1e27,
+            accruedInterest: 0, // No interest accrued because of IR == 0
+            principalOut: principal,
+            unrealizedLosses: principal + issuanceRate * paymentInterval * 4 / 3 / 1e27
         });
 
         assertImpairment({
@@ -574,13 +575,13 @@ contract OpenTermLoanManagerRemoveImpairmentTests is TestBaseWithAssertions {
         loanManager.removeLoanImpairment(address(loan));
 
         assertOpenTermLoanManager({
-            loanManager:           address(loanManager),
-            domainStart:           start + paymentInterval * 5 / 3,
-            issuanceRate:          issuanceRate,
-            accountedInterest:     issuanceRate * paymentInterval * 5 / 3 / 1e27 - 1,  // -1 due to rounding error.
-            accruedInterest:       0,
-            principalOut:          principal,
-            unrealizedLosses:      0
+            loanManager: address(loanManager),
+            domainStart: start + paymentInterval * 5 / 3,
+            issuanceRate: issuanceRate,
+            accountedInterest: issuanceRate * paymentInterval * 5 / 3 / 1e27 - 1, // -1 due to rounding error.
+            accruedInterest: 0,
+            principalOut: principal,
+            unrealizedLosses: 0
         });
 
         assertImpairment({

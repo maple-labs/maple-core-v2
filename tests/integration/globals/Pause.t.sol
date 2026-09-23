@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IPool,
-    IPoolManager,
-    IProxyFactoryLike,
-    IWithdrawalManagerQueue
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IPool, IPoolManager, IProxyFactoryLike, IWithdrawalManagerQueue } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -52,7 +47,7 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("upgrade(uint256,bytes)", 0, new bytes(0)),
         abi.encodeWithSignature("proposeNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
         abi.encodeWithSignature("rejectNewTerms(address,address,uint256,bytes[])", address(0), address(0), 0, new bytes[](0)),
-        abi.encodeWithSignature("claim(int256,uint256,uint256,uint256,uint40)", int(0), 0, 0, 0, 0),
+        abi.encodeWithSignature("claim(int256,uint256,uint256,uint256,uint40)", int256(0), 0, 0, 0, 0),
         abi.encodeWithSignature("callPrincipal(address,uint256)", address(0), 0),
         abi.encodeWithSignature("removeCall(address)", address(0)),
         abi.encodeWithSignature("impairLoan(address)", address(0)),
@@ -63,8 +58,12 @@ contract PauseTests is TestBaseWithAssertions {
 
     bytes[] poolFunctions = [
         abi.encodeWithSignature("deposit(uint256,address)", 0, address(0)),
-        abi.encodeWithSignature("depositWithPermit(uint256,address,uint256,uint8,bytes32,bytes32)", 0, address(0), 0, 0, bytes32(0), bytes32(0)),
-        abi.encodeWithSignature("mintWithPermit(uint256,address,uint256,uint256,uint8,bytes32,bytes32)", 0, address(0), 0, 0, 0, bytes32(0), bytes32(0)),
+        abi.encodeWithSignature(
+            "depositWithPermit(uint256,address,uint256,uint8,bytes32,bytes32)", 0, address(0), 0, 0, bytes32(0), bytes32(0)
+        ),
+        abi.encodeWithSignature(
+            "mintWithPermit(uint256,address,uint256,uint256,uint8,bytes32,bytes32)", 0, address(0), 0, 0, 0, bytes32(0), bytes32(0)
+        ),
         abi.encodeWithSignature("mint(uint256,address)", 0, address(0)),
         abi.encodeWithSignature("redeem(uint256,address,address)", 0, address(0), address(0)),
         abi.encodeWithSignature("withdraw(uint256,address,address)", 0, address(0), address(0)),
@@ -101,8 +100,8 @@ contract PauseTests is TestBaseWithAssertions {
     ];
 
     bytes[] proxyFactoryFunctions = [
-        abi.encodeWithSignature("createInstance(bytes,bytes32)",  new bytes(0), ""),
-        abi.encodeWithSignature("upgradeInstance(uint256,bytes)", 0 , new bytes(0))
+        abi.encodeWithSignature("createInstance(bytes,bytes32)", new bytes(0), ""),
+        abi.encodeWithSignature("upgradeInstance(uint256,bytes)", 0, new bytes(0))
     ];
 
     // Withdrawal Manager functions
@@ -121,13 +120,7 @@ contract PauseTests is TestBaseWithAssertions {
     bytes[] poolPermissionManagerFunctions = [
         abi.encodeWithSignature("setLenderBitmaps(address[],uint256[])", new address[](0), new uint256[](0)),
         abi.encodeWithSignature("setPermissionAdmin(address,bool)", address(0), false),
-        abi.encodeWithSignature(
-            "configurePool(address,uint256,bytes32[],uint256[])",
-            address(0),
-            0,
-            new bytes32[](0),
-            new uint256[](0)
-        ),
+        abi.encodeWithSignature("configurePool(address,uint256,bytes32[],uint256[])", address(0), 0, new bytes32[](0), new uint256[](0)),
         abi.encodeWithSignature("setLenderAllowlist(address,address[],bool[])", address(0), new address[](0), new bool[](0)),
         abi.encodeWithSignature("setPoolBitmaps(address,bytes32[],uint256[])", address(0), new bytes32[](0), new uint256[](0)),
         abi.encodeWithSignature("setPoolPermissionLevel(address,uint256)", address(0), 0)
@@ -163,7 +156,9 @@ contract PauseTests is TestBaseWithAssertions {
         abi.encodeWithSignature("recognizeLoss(uint256,address)", 0, address(0)),
         abi.encodeWithSignature("setDeploymentCaps(address[],uint256[])", new address[](0), new uint256[](0)),
         abi.encodeWithSignature("setMetadata(string)", ""),
-        abi.encodeWithSignature("setPermissions(address[],bool[],bool[],bool[])", new address[](0), new bool[](0), new bool[](0), new bool[](0)),
+        abi.encodeWithSignature(
+            "setPermissions(address[],bool[],bool[],bool[])", new address[](0), new bool[](0), new bool[](0), new bool[](0)
+        ),
         abi.encodeWithSignature("setStrategyDelegateFeeRate(uint32)", 0),
         abi.encodeWithSignature("setStrategyProtocolFeeRate(uint32)", 0),
         abi.encodeWithSignature("fundUnderlyingStrategy(uint256,bytes)", 0, new bytes(0)),
@@ -173,7 +168,7 @@ contract PauseTests is TestBaseWithAssertions {
     address[] contracts;
 
     mapping(address => bytes[]) functions;
-    mapping(address => string)  messages;
+    mapping(address => string) messages;
     mapping(address => address) caller;
     // Optional per-function caller override (e.g., functions with different ACL on same contract)
     mapping(address => mapping(bytes4 => address)) functionCallerOverride;
@@ -196,14 +191,14 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(address(pausePoolDelegate), true);
 
-        ( address pwqPool, address pwqPoolManager, address pwqWithdrawalManager ) = _createPoolWithOTLM(pausePoolDelegate);
+        (address pwqPool, address pwqPoolManager, address pwqWithdrawalManager) = _createPoolWithOTLM(pausePoolDelegate);
 
         // Use the "pool with queue" as the active pool.
         poolManager = IPoolManager(pwqPoolManager);
         pool        = IPool(pwqPool);
         queueWM     = IWithdrawalManagerQueue(pwqWithdrawalManager);
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -215,48 +210,48 @@ contract PauseTests is TestBaseWithAssertions {
         addStrategyManagerToPool(address(poolManager), allocationStrategyManager);
 
         // Set up all mappings
-        functions[poolManagerFactory]             = proxyFactoryFunctions;
-        functions[openTermLoanFactory]            = proxyFactoryFunctions;
-        functions[openTermLoanManagerFactory]     = proxyFactoryFunctions;
-        functions[queueWMFactory]                 = proxyFactoryFunctions;
-        functions[openTermLoan]                   = openTermLoanFunctions;
-        functions[openTermLoanManager]            = openTermLoanManagerFunctions;
-        functions[address(pool)]                  = poolFunctions;
-        functions[address(poolManager)]           = poolManagerFunctions;
-        functions[address(queueWM)]               = withdrawalManagerQueueFunctions;
+        functions[poolManagerFactory]         = proxyFactoryFunctions;
+        functions[openTermLoanFactory]        = proxyFactoryFunctions;
+        functions[openTermLoanManagerFactory] = proxyFactoryFunctions;
+        functions[queueWMFactory]             = proxyFactoryFunctions;
+        functions[openTermLoan]               = openTermLoanFunctions;
+        functions[openTermLoanManager]        = openTermLoanManagerFunctions;
+        functions[address(pool)] = poolFunctions;
+        functions[address(poolManager)] = poolManagerFunctions;
+        functions[address(queueWM)] = withdrawalManagerQueueFunctions;
         functions[address(poolPermissionManager)] = poolPermissionManagerFunctions;
-        functions[allocationStrategyManager]      = strategyManagerFunctions;
-        functions[allocationUnderlyingStrategy]   = allocationStrategyFunctions;
+        functions[allocationStrategyManager]    = strategyManagerFunctions;
+        functions[allocationUnderlyingStrategy] = allocationStrategyFunctions;
 
-        messages[poolManagerFactory]             = "MPF:PROTOCOL_PAUSED";
-        messages[openTermLoanFactory]            = "MPF:PROTOCOL_PAUSED";
-        messages[openTermLoanManagerFactory]     = "MPF:PROTOCOL_PAUSED";
-        messages[openTermLoan]                   = "ML:PAUSED";
-        messages[openTermLoanManager]            = "LM:PAUSED";
-        messages[address(pool)]                  = "PM:CC:PAUSED";
-        messages[address(poolManager)]           = "PM:PAUSED";
-        messages[address(queueWM)]               = "WM:PAUSED";
-        messages[queueWMFactory]                 = "MPF:PROTOCOL_PAUSED";
+        messages[poolManagerFactory]         = "MPF:PROTOCOL_PAUSED";
+        messages[openTermLoanFactory]        = "MPF:PROTOCOL_PAUSED";
+        messages[openTermLoanManagerFactory] = "MPF:PROTOCOL_PAUSED";
+        messages[openTermLoan]               = "ML:PAUSED";
+        messages[openTermLoanManager]        = "LM:PAUSED";
+        messages[address(pool)] = "PM:CC:PAUSED";
+        messages[address(poolManager)] = "PM:PAUSED";
+        messages[address(queueWM)] = "WM:PAUSED";
+        messages[queueWMFactory] = "MPF:PROTOCOL_PAUSED";
         messages[address(poolPermissionManager)] = "PPM:PAUSED";
-        messages[allocationStrategyManager]      = "MSM:PAUSED";
-        messages[allocationUnderlyingStrategy]   = "MAS:PAUSED";
+        messages[allocationStrategyManager]    = "MSM:PAUSED";
+        messages[allocationUnderlyingStrategy] = "MAS:PAUSED";
 
         // Caller overrides for factories where the implementation expects a specific contract context.
-        caller[poolManagerFactory]          = address(poolDeployer);
-        caller[openTermLoanManagerFactory]  = address(poolManager);
-        caller[openTermLoanFactory]         = address(borrower);
-        caller[queueWMFactory]              = address(poolDeployer);
+        caller[poolManagerFactory]         = address(poolDeployer);
+        caller[openTermLoanManagerFactory] = address(poolManager);
+        caller[openTermLoanFactory]        = address(borrower);
+        caller[queueWMFactory]             = address(poolDeployer);
 
-        bytes4 upgradeSelector = bytes4(keccak256("upgradeInstance(uint256,bytes)"));
-        functionCallerOverride[poolManagerFactory][upgradeSelector]          = address(poolManager);
-        functionCallerOverride[openTermLoanFactory][upgradeSelector]         = address(openTermLoan);
-        functionCallerOverride[openTermLoanManagerFactory][upgradeSelector]  = address(openTermLoanManager);
-        functionCallerOverride[queueWMFactory][upgradeSelector]              = address(queueWM);
+        bytes4 upgradeSelector                                              = bytes4(keccak256("upgradeInstance(uint256,bytes)"));
+        functionCallerOverride[poolManagerFactory][upgradeSelector]         = address(poolManager);
+        functionCallerOverride[openTermLoanFactory][upgradeSelector]        = address(openTermLoan);
+        functionCallerOverride[openTermLoanManagerFactory][upgradeSelector] = address(openTermLoanManager);
+        functionCallerOverride[queueWMFactory][upgradeSelector]             = address(queueWM);
 
         // Ensure factory ACL checks pass before pause checks in tests.
         vm.startPrank(governor);
-        globals.setCanDeployFrom(openTermLoanFactory,         borrower,             true);
-        globals.setCanDeployFrom(openTermLoanManagerFactory,  address(poolManager), true);
+        globals.setCanDeployFrom(openTermLoanFactory, borrower, true);
+        globals.setCanDeployFrom(openTermLoanManagerFactory, address(poolManager), true);
         vm.stopPrank();
     }
 
@@ -335,7 +330,6 @@ contract PauseTests is TestBaseWithAssertions {
 
         // Iterate through each of the tested contracts
         for (uint256 i = 0; i < contracts.length; i++) {
-
             // Iterate through each of the contract's functions
             for (uint256 j = 0; j < functions[contracts[i]].length; j++) {
                 bytes4 functionSig = bytes4(functions[contracts[i]][j]);
@@ -360,15 +354,10 @@ contract PauseTests is TestBaseWithAssertions {
     }
 
     function test_functionUnpauseAfterContractPause() external {
-        contracts = [
-            address(openTermLoan),
-            address(openTermLoanManager),
-            address(poolManager)
-        ];
+        contracts = [address(openTermLoan), address(openTermLoanManager), address(poolManager)];
 
         // Iterate through each of the tested contracts
         for (uint256 i = 0; i < contracts.length; i++) {
-
             // Set contract pause
             vm.prank(governor);
             globals.setContractPause(contracts[i], true);
@@ -400,11 +389,8 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setProtocolPause(true);
 
-        ( bool canCall_, string memory err_ ) = poolManager.canCall(
-            bytes32("P:transfer"),
-            address(this),
-            abi.encode(address(this), uint256(1))
-        );
+        (bool canCall_, string memory err_) =
+            poolManager.canCall(bytes32("P:transfer"), address(this), abi.encode(address(this), uint256(1)));
 
         assertTrue(!canCall_);
         assertEq(err_, "PM:CC:PAUSED");
@@ -412,11 +398,7 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setProtocolPause(false);
 
-        ( canCall_, err_ ) = poolManager.canCall(
-            bytes32("P:transfer"),
-            address(this),
-            abi.encode(address(this), uint256(1))
-        );
+        (canCall_, err_) = poolManager.canCall(bytes32("P:transfer"), address(this), abi.encode(address(this), uint256(1)));
 
         assertTrue(keccak256(bytes(err_)) != keccak256(bytes("PM:CC:PAUSED")));
     }
@@ -425,11 +407,8 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setContractPause(address(poolManager), true);
 
-        ( bool canCall_, string memory err_ ) = poolManager.canCall(
-            bytes32("P:transfer"),
-            address(this),
-            abi.encode(address(this), uint256(1))
-        );
+        (bool canCall_, string memory err_) =
+            poolManager.canCall(bytes32("P:transfer"), address(this), abi.encode(address(this), uint256(1)));
 
         assertTrue(!canCall_);
         assertEq(err_, "PM:CC:PAUSED");
@@ -437,11 +416,7 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setContractPause(address(poolManager), false);
 
-        ( canCall_, err_ ) = poolManager.canCall(
-            bytes32("P:transfer"),
-            address(this),
-            abi.encode(address(this), uint256(1))
-        );
+        (canCall_, err_) = poolManager.canCall(bytes32("P:transfer"), address(this), abi.encode(address(this), uint256(1)));
 
         assertTrue(keccak256(bytes(err_)) != keccak256(bytes("PM:CC:PAUSED")));
     }
@@ -453,22 +428,15 @@ contract PauseTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setFunctionUnpause(address(poolManager), bytes4(keccak256("canCall(bytes32,address,bytes)")), true);
 
-        ( bool canCall_, string memory err_ ) = poolManager.canCall(
-            bytes32("P:transfer"),
-            address(this),
-            abi.encode(address(this), uint256(1))
-        );
+        (bool canCall_, string memory err_) =
+            poolManager.canCall(bytes32("P:transfer"), address(this), abi.encode(address(this), uint256(1)));
 
         assertTrue(keccak256(bytes(err_)) != keccak256(bytes("PM:CC:PAUSED")));
 
         vm.prank(governor);
         globals.setFunctionUnpause(address(poolManager), bytes4(keccak256("canCall(bytes32,address,bytes)")), false);
 
-        ( canCall_, err_ ) = poolManager.canCall(
-            bytes32("P:transfer"),
-            address(this),
-            abi.encode(address(this), uint256(1))
-        );
+        (canCall_, err_) = poolManager.canCall(bytes32("P:transfer"), address(this), abi.encode(address(this), uint256(1)));
 
         assertTrue(!canCall_);
         assertEq(err_, "PM:CC:PAUSED");
@@ -480,7 +448,7 @@ contract PauseTests is TestBaseWithAssertions {
 
     function _assertAllPaused(address contract_, bytes[] memory calldataArray_, string memory message_) internal {
         for (uint256 i = 0; i < calldataArray_.length; i++) {
-            bytes4 sig = bytes4(calldataArray_[i]);
+            bytes4  sig  = bytes4(calldataArray_[i]);
             address from = caller[contract_];
             if (from == address(0)) from = defaultCaller;
             // Apply per-function caller override if present.
@@ -493,7 +461,7 @@ contract PauseTests is TestBaseWithAssertions {
 
     function _assertNonePaused(address contract_, bytes[] memory calldataArray_, string memory message_) internal {
         for (uint256 i = 0; i < calldataArray_.length; i++) {
-            bytes4 sig = bytes4(calldataArray_[i]);
+            bytes4  sig  = bytes4(calldataArray_[i]);
             address from = caller[contract_];
             if (from == address(0)) from = defaultCaller;
             // Apply per-function caller override if present.
@@ -505,7 +473,7 @@ contract PauseTests is TestBaseWithAssertions {
     }
 
     function _assertFunctionIsPaused(address contract_, bytes memory data, string memory message_) internal {
-        ( bool success, bytes memory returnData ) = contract_.call(data);
+        (bool success, bytes memory returnData) = contract_.call(data);
         assertTrue(!success);
 
         // If there's no revert data then it wasn't paused.
@@ -521,11 +489,12 @@ contract PauseTests is TestBaseWithAssertions {
         if (selector != 0x08c379a0) revert("Custom Error. Not Paused");
 
         string memory returnedMessage = abi.decode(slice(returnData, 4, returnData.length - 4), (string));
-        assertEq(returnedMessage, message_, "Wrong message. Not Paused.");  // If the call reverted with a different error, then it's not paused.
+        assertEq(returnedMessage, message_, "Wrong message. Not Paused."); // If the call reverted with a different error, then it's not
+        // paused.
     }
 
     function _assertFunctionIsNotPaused(address contract_, bytes memory data, string memory message_) internal {
-        ( bool success, bytes memory returnData ) = contract_.call(data);
+        (bool success, bytes memory returnData) = contract_.call(data);
 
         // The call didn't revert (or reverted without a message/only selector), so it's not paused.
         if (success || returnData.length <= 4) return;

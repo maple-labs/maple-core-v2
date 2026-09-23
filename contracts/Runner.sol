@@ -51,8 +51,8 @@ contract Runner is Test {
 
     function deployNTPv25(address owner, address impl) internal returns (address npt_) {
         npt_ = deployCode(
-                string(abi.encodePacked("./out/contracts/NonTransparentProxy.sol/NonTransparentProxy.json")), abi.encode(owner, impl)
-            );
+            string(abi.encodePacked("./out/contracts/NonTransparentProxy.sol/NonTransparentProxy.json")), abi.encode(owner, impl)
+        );
     }
 
 }

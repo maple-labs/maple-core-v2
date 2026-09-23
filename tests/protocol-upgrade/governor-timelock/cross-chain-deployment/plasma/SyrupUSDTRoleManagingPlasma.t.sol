@@ -15,7 +15,7 @@ contract SyrupUSDTRoleManagingTests is GovernorTimelockUpgradeTestsBasePlasma {
         address newSyrupUSDTBurner = makeAddr("newSyrupUSDTBurner");
 
         address[] memory targets = new address[](4);
-        bytes[]   memory data    = new bytes[](4);
+        bytes[] memory   data    = new bytes[](4);
 
         targets[0] = address(syrupUSDTPlasma);
         targets[1] = address(syrupUSDTPlasma);
@@ -49,13 +49,7 @@ contract SyrupUSDTRoleManagingTests is GovernorTimelockUpgradeTestsBasePlasma {
         vm.prank(proposerPlasma);
         IGovernorTimelock(timelockPlasma).scheduleProposals(targets, data);
 
-        (
-            ,
-            ,
-            ,
-            uint256 delayedUntil
-            ,
-        ) = IGovernorTimelock(timelockPlasma).proposals(IGovernorTimelock(timelockPlasma).latestProposalId());
+        (,,, uint256 delayedUntil,) = IGovernorTimelock(timelockPlasma).proposals(IGovernorTimelock(timelockPlasma).latestProposalId());
 
         assertTrue(
             ISyrupUSDCrossChainLike(syrupUSDTPlasma).hasRole(ISyrupUSDCrossChainLike(syrupUSDTPlasma).MINTER_ROLE(), syrupUSDTMinter)

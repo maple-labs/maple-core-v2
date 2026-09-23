@@ -4,10 +4,10 @@ pragma solidity ^0.8.7;
 import { IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyHandler } from "./handlers/AllocationStrategyHandler.sol";
-import { DepositHandler }            from "./handlers/DepositHandler.sol";
-import { DistributionHandler }       from "./handlers/DistributionHandler.sol";
-import { StrategyManagerHandler }    from "./handlers/StrategyManagerHandler.sol";
-import { WithdrawalHandler }         from "./handlers/WithdrawalHandler.sol";
+import { DepositHandler } from "./handlers/DepositHandler.sol";
+import { DistributionHandler } from "./handlers/DistributionHandler.sol";
+import { StrategyManagerHandler } from "./handlers/StrategyManagerHandler.sol";
+import { WithdrawalHandler } from "./handlers/WithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -38,7 +38,7 @@ contract AllocationStrategyInvariants is BaseInvariants {
     }
 
     function _setupAllocationStrategy() internal {
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -70,7 +70,7 @@ contract AllocationStrategyInvariants is BaseInvariants {
             vm.prank(governor);
             globals.setValidPoolDelegate(poolDelegate_, true);
 
-            ( , address poolManager_, ) = _createPoolWithMultipleStrategies({
+            (, address poolManager_,) = _createPoolWithMultipleStrategies({
                 poolDelegate_:      poolDelegate_,
                 fundsAsset_:        address(fundsAsset),
                 name_:              string(abi.encodePacked("Pool ", vm.toString(i))),
@@ -133,26 +133,26 @@ contract AllocationStrategyInvariants is BaseInvariants {
 
     function _setupHandlers() internal {
         depositHandler.addAction("deposit(uint256)", 7_500);
-        depositHandler.addAction("mint(uint256)",    2_500);
+        depositHandler.addAction("mint(uint256)", 2_500);
 
         strategyManagerHandler.addAction("fundStrategyManager(uint256)", 4_500);
-        strategyManagerHandler.addAction("requestRedeem(uint256)",       3_000);
-        strategyManagerHandler.addAction("cancelRedemption(uint256)",    500);
-        strategyManagerHandler.addAction("processRedemption(uint256)",   2_000);
+        strategyManagerHandler.addAction("requestRedeem(uint256)", 3_000);
+        strategyManagerHandler.addAction("cancelRedemption(uint256)", 500);
+        strategyManagerHandler.addAction("processRedemption(uint256)", 2_000);
 
-        withdrawalHandler.addAction("requestRedeem(uint256)",      5_000);
-        withdrawalHandler.addAction("removeShares(uint256)",       500);
-        withdrawalHandler.addAction("removeSharesById(uint256)",   500);
+        withdrawalHandler.addAction("requestRedeem(uint256)", 5_000);
+        withdrawalHandler.addAction("removeShares(uint256)", 500);
+        withdrawalHandler.addAction("removeSharesById(uint256)", 500);
         withdrawalHandler.addAction("processRedemptions(uint256)", 3_000);
-        withdrawalHandler.addAction("removeRequest(uint256)",      1_000);
+        withdrawalHandler.addAction("removeRequest(uint256)", 1_000);
 
-        allocationStrategyHandler.addAction("deployAssets(uint256)",               3_000);
-        allocationStrategyHandler.addAction("returnAssets(uint256)",               1_000);
-        allocationStrategyHandler.addAction("realizeYield(uint256)",               2_500);
-        allocationStrategyHandler.addAction("cancelYield(uint256)",                500);
-        allocationStrategyHandler.addAction("recognizeLoss(uint256)",              500);
-        allocationStrategyHandler.addAction("impair(uint256)",                     1_000);
-        allocationStrategyHandler.addAction("removeImpairment(uint256)",           500);
+        allocationStrategyHandler.addAction("deployAssets(uint256)", 3_000);
+        allocationStrategyHandler.addAction("returnAssets(uint256)", 1_000);
+        allocationStrategyHandler.addAction("realizeYield(uint256)", 2_500);
+        allocationStrategyHandler.addAction("cancelYield(uint256)", 500);
+        allocationStrategyHandler.addAction("recognizeLoss(uint256)", 500);
+        allocationStrategyHandler.addAction("impair(uint256)", 1_000);
+        allocationStrategyHandler.addAction("removeImpairment(uint256)", 500);
         allocationStrategyHandler.addAction("setStrategyDelegateFeeRate(uint256)", 500);
         allocationStrategyHandler.addAction("setStrategyProtocolFeeRate(uint256)", 500);
     }

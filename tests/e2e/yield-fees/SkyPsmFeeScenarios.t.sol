@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IERC20Like,
-    IERC4626Like,
-    IPSMLike,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, IERC4626Like, IPSMLike, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyStrategyTestBase } from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
 
@@ -19,8 +14,8 @@ contract SkyPsmEntryFeeTests is SkyStrategyTestBase {
 
     uint256 fundAmount    = 100_000e6;
     uint256 poolLiquidity = 1_000_000e6;
-    uint256 roundingLoss  = 1;        // The first USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
-    uint256 tin           = 0.01e18;  // 1% PSM entry fee.
+    uint256 roundingLoss  = 1; // The first USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 tin           = 0.01e18; // 1% PSM entry fee.
 
     function setUp() public override {
         super.setUp();
@@ -30,15 +25,15 @@ contract SkyPsmEntryFeeTests is SkyStrategyTestBase {
 
         deposit(firstPool, lp, poolLiquidity);
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
     }
 
     function testFork_skyPsmEntryFee_eachPoolPaysWithoutDilution() external {
-        uint256 entryFee       = fundAmount * tin / 1e18;               // 1_000e6.
-        uint256 firstNetAssets = fundAmount - entryFee - roundingLoss;  // 99_000e6 - 1.
-        uint256 firstShares    = firstNetAssets;                        // 99_000e6 - 1.
+        uint256 entryFee       = fundAmount * tin / 1e18; // 1_000e6.
+        uint256 firstNetAssets = fundAmount - entryFee - roundingLoss; // 99_000e6 - 1.
+        uint256 firstShares    = firstNetAssets; // 99_000e6 - 1.
 
         /**********************************************************************************************************************************/
         /*** Enable the PSM entry fee with no exit fee and fund the first Pool                                                          ***/
@@ -129,10 +124,10 @@ contract SkyPsmEntryFeeTests is SkyStrategyTestBase {
         /*** Fund the existing position from the second Pool and confirm each Pool bears only its own entry fee                         ***/
         /**********************************************************************************************************************************/
 
-        uint256 secondNetAssets = fundAmount - entryFee;                           // 99_000e6.
-        uint256 secondShares    = secondNetAssets * firstShares / firstNetAssets;  // 99_000e6.
-        uint256 totalAum        = firstNetAssets + secondNetAssets;                // 198_000e6 - 1.
-        uint256 totalShares     = firstShares + secondShares;                      // 198_000e6 - 1.
+        uint256 secondNetAssets = fundAmount - entryFee; // 99_000e6.
+        uint256 secondShares    = secondNetAssets * firstShares / firstNetAssets; // 99_000e6.
+        uint256 totalAum        = firstNetAssets + secondNetAssets; // 198_000e6 - 1.
+        uint256 totalShares     = firstShares + secondShares; // 198_000e6 - 1.
 
         fundStrategyManager(secondPoolManager, skyStrategyManager, fundAmount);
 
@@ -210,7 +205,7 @@ contract SkyPsmEntryFeeTests is SkyStrategyTestBase {
         /*** Request every share from both Pools                                                                                        ***/
         /**********************************************************************************************************************************/
 
-        requestRedeemFromStrategyManager(firstPoolManager,  skyStrategyManager, firstShares);
+        requestRedeemFromStrategyManager(firstPoolManager, skyStrategyManager, firstShares);
         requestRedeemFromStrategyManager(secondPoolManager, skyStrategyManager, secondShares);
 
         assertStrategyManager({
@@ -327,7 +322,7 @@ contract SkyPsmEntryFeeTests is SkyStrategyTestBase {
         /*** Redeem the second Pool and reconcile all assets, fees and conversion dust                                                  ***/
         /**********************************************************************************************************************************/
 
-        uint256 retainedFeesAndRounding = 2 * entryFee + roundingLoss;  // 2_000e6 + 1.
+        uint256 retainedFeesAndRounding = 2 * entryFee + roundingLoss; // 2_000e6 + 1.
 
         processRedemptionFromStrategyManager(secondPoolManager, skyStrategyManager, secondShares);
 
@@ -414,14 +409,14 @@ contract SkyPsmEntryFeeTests is SkyStrategyTestBase {
 
 contract SkyPsmExitFeeRemovalTests is SkyStrategyTestBase {
 
-    uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-    uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+    uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
-    uint256 additionalFunding = 100_850e6 + 1;  // +1 offsets floor division so each additional fund mints exactly 100_000e6 shares.
+    uint256 additionalFunding = 100_850e6 + 1; // +1 offsets floor division so each additional fund mints exactly 100_000e6 shares.
     uint256 fundAmount        = 505_000e6;
     uint256 poolLiquidity     = 1_000_000e6;
-    uint256 roundingLoss      = 1;              // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
-    uint256 tout              = 0.01e18;        // 1% PSM exit fee.
+    uint256 roundingLoss      = 1; // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 tout              = 0.01e18; // 1% PSM exit fee.
 
     function setUp() public override {
         super.setUp();
@@ -440,8 +435,8 @@ contract SkyPsmExitFeeRemovalTests is SkyStrategyTestBase {
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
 
-        uint256 initialAum    = fundAmount * 1e18 / (1e18 + tout) - roundingLoss;  // 500_000e6 - 1.
-        uint256 initialShares = initialAum;                                        // 500_000e6 - 1.
+        uint256 initialAum    = fundAmount * 1e18 / (1e18 + tout) - roundingLoss; // 500_000e6 - 1.
+        uint256 initialShares = initialAum; // 500_000e6 - 1.
 
         assertEq(IPSMLike(USDS_LITE_PSM).tout(), tout);
 
@@ -500,11 +495,11 @@ contract SkyPsmExitFeeRemovalTests is SkyStrategyTestBase {
         /*** Remove the PSM exit fee without moving assets and recognize the valuation increase as fee-bearing yield                    ***/
         /**********************************************************************************************************************************/
 
-        uint256 grossAumAfterRemoval   = fundAmount - roundingLoss;                                         // 505_000e6 - 1.
-        uint256 removedExitFeeDiscount = grossAumAfterRemoval - initialAum;                                 // 5_000e6.
-        uint256 expectedDelegateFee    = removedExitFeeDiscount * delegateFeeRate / 1e6;                    // 500e6.
-        uint256 expectedProtocolFee    = removedExitFeeDiscount * protocolFeeRate / 1e6;                    // 250e6.
-        uint256 netAumAfterRemoval     = grossAumAfterRemoval - expectedDelegateFee - expectedProtocolFee;  // 504_250e6 - 1.
+        uint256 grossAumAfterRemoval   = fundAmount - roundingLoss; // 505_000e6 - 1.
+        uint256 removedExitFeeDiscount = grossAumAfterRemoval - initialAum; // 5_000e6.
+        uint256 expectedDelegateFee    = removedExitFeeDiscount * delegateFeeRate / 1e6; // 500e6.
+        uint256 expectedProtocolFee    = removedExitFeeDiscount * protocolFeeRate / 1e6; // 250e6.
+        uint256 netAumAfterRemoval     = grossAumAfterRemoval - expectedDelegateFee - expectedProtocolFee; // 504_250e6 - 1.
 
         setSkyTout(0);
 
@@ -561,9 +556,9 @@ contract SkyPsmExitFeeRemovalTests is SkyStrategyTestBase {
         /*** Fund again to collect the fees and mint a round number of shares                                                           ***/
         /**********************************************************************************************************************************/
 
-        uint256 additionalShares     = additionalFunding * initialShares / netAumAfterRemoval;  // 100_000e6.
-        uint256 totalSharesAfterFund = initialShares + additionalShares;                        // 600_000e6 - 1.
-        uint256 aumAfterFund         = netAumAfterRemoval + additionalFunding;                  // 605_100e6.
+        uint256 additionalShares     = additionalFunding * initialShares / netAumAfterRemoval; // 100_000e6.
+        uint256 totalSharesAfterFund = initialShares + additionalShares; // 600_000e6 - 1.
+        uint256 aumAfterFund         = netAumAfterRemoval + additionalFunding; // 605_100e6.
 
         fundStrategyManager(address(poolManager), skyStrategyManager, additionalFunding);
 
@@ -616,9 +611,9 @@ contract SkyPsmExitFeeRemovalTests is SkyStrategyTestBase {
         /*** Repeat the funding and confirm the removed exit-fee discount is not charged again                                          ***/
         /**********************************************************************************************************************************/
 
-        uint256 secondAdditionalShares = additionalFunding * totalSharesAfterFund / aumAfterFund;  // 100_000e6.
-        uint256 finalTotalShares       = totalSharesAfterFund + secondAdditionalShares;            // 700_000e6 - 1.
-        uint256 finalAum               = aumAfterFund + additionalFunding;                         // 705_950e6 + 1.
+        uint256 secondAdditionalShares = additionalFunding * totalSharesAfterFund / aumAfterFund; // 100_000e6.
+        uint256 finalTotalShares       = totalSharesAfterFund + secondAdditionalShares; // 700_000e6 - 1.
+        uint256 finalAum               = aumAfterFund + additionalFunding; // 705_950e6 + 1.
 
         fundStrategyManager(address(poolManager), skyStrategyManager, additionalFunding);
 

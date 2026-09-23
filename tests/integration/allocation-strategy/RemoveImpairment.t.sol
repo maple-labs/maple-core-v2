@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAllocationStrategy,
-    IPool,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IPool, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -21,8 +17,8 @@ contract AllocationStrategyRemoveImpairmentTestBase is AllocationStrategyTestBas
     uint256 protocolFee       = 1_500e6;
     uint256 yieldAssets       = 50_000e6;
 
-    uint32 delegateFeeRate = 0.02e6;  // 2%
-    uint32 protocolFeeRate = 0.03e6;  // 3%
+    uint32 delegateFeeRate = 0.02e6; // 2%
+    uint32 protocolFeeRate = 0.03e6; // 3%
     uint32 yieldDuration   = 31 days;
 
     function setUp() public virtual override {
@@ -265,7 +261,6 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
     }
 
     function test_removeImpairment_success_fullAmount() external {
-
         /**********************************************************************************************************************************/
         /*** Remove the entire impairment                                                                                               ***/
         /**********************************************************************************************************************************/
@@ -320,7 +315,6 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
     }
 
     function test_removeImpairment_success_acrossAllAdmins() external {
-
         /**********************************************************************************************************************************/
         /*** Remove part of the impairment as the strategy delegate                                                                     ***/
         /**********************************************************************************************************************************/
@@ -440,10 +434,10 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         impairAllocationStrategy(allocationUnderlyingStrategy, extraImpairment);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        initialAssets,
-            totalSupply:        initialShares,
-            unrealizedLosses:   initialAssets,  // Clamped to the AUM.
+            pool: address(pool),
+            totalAssets: initialAssets,
+            totalSupply: initialShares,
+            unrealizedLosses: initialAssets, // Clamped to the AUM.
             availableLiquidity: 0
         });
 
@@ -477,7 +471,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(),                storedImpairment);
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
-        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0);  // Fully clamped: AUM is exhausted.
+        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0); // Fully clamped: AUM is exhausted.
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -492,10 +486,10 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         IAllocationStrategy(allocationUnderlyingStrategy).removeImpairment(removalAboveClamp);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        initialAssets,
-            totalSupply:        initialShares,
-            unrealizedLosses:   initialAssets,  // Still clamped to the AUM, unchanged.
+            pool: address(pool),
+            totalAssets: initialAssets,
+            totalSupply: initialShares,
+            unrealizedLosses: initialAssets, // Still clamped to the AUM, unchanged.
             availableLiquidity: 0
         });
 
@@ -529,7 +523,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(),                initialAssets);
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
-        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0);  // Still fully clamped, unchanged.
+        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0); // Still fully clamped, unchanged.
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -592,7 +586,6 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
     }
 
     function test_removeImpairment_success_withScheduledYield() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield while the impairment is outstanding                                                                         ***/
         /**********************************************************************************************************************************/
@@ -844,10 +837,10 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         recognizeLoss(allocationUnderlyingStrategy, managedWallet, lossAmount);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        aumAfterLoss,
-            totalSupply:        initialShares,
-            unrealizedLosses:   aumAfterLoss,  // Clamped down from stackedImpairment purely by the recognized loss.
+            pool: address(pool),
+            totalAssets: aumAfterLoss,
+            totalSupply: initialShares,
+            unrealizedLosses: aumAfterLoss, // Clamped down from stackedImpairment purely by the recognized loss.
             availableLiquidity: 0
         });
 
@@ -882,7 +875,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).totalDeployedAssets(),           initialDeployment - lossAmount);
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment - lossAmount);
 
-        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0);  // Fully clamped: AUM is exhausted.
+        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0); // Fully clamped: AUM is exhausted.
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -896,7 +889,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         vm.prank(strategyDelegate);
         IAllocationStrategy(allocationUnderlyingStrategy).removeImpairment(partialRemoval);
 
-        impairedAfterRemoval = stackedImpairment - partialRemoval;  // 600,000e6, now below the 700,000e6 AUM.
+        impairedAfterRemoval = stackedImpairment - partialRemoval; // 600,000e6, now below the 700,000e6 AUM.
 
         assertPoolState({
             pool:               address(pool),
@@ -961,10 +954,10 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         impairAllocationStrategy(allocationUnderlyingStrategy, extraImpairment);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        initialAssets,
-            totalSupply:        initialShares,
-            unrealizedLosses:   initialAssets,  // Clamped to the AUM.
+            pool: address(pool),
+            totalAssets: initialAssets,
+            totalSupply: initialShares,
+            unrealizedLosses: initialAssets, // Clamped to the AUM.
             availableLiquidity: 0
         });
 
@@ -1007,7 +1000,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(),                stackedImpairment);
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
-        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0);  // Fully clamped: AUM is exhausted.
+        assertEq(IStrategyManager(allocationStrategyManager).convertToExitAssets(initialShares), 0); // Fully clamped: AUM is exhausted.
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialAssets - initialDeployment);
         assertEq(fundsAsset.balanceOf(managedWallet),                initialDeployment);
@@ -1141,7 +1134,6 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
     }
 
     function test_removeImpairment_success_splitsAcrossPoolManagers() external {
-
         /**********************************************************************************************************************************/
         /*** Remove the existing impairment for a clean baseline, then fund a second pool that shares the strategy                      ***/
         /**********************************************************************************************************************************/
@@ -1152,7 +1144,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         firstPool        = address(pool);
         firstPoolManager = address(poolManager);
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         firstAssets  = 1_000_000e6;
         secondAssets = 450_000e6;
@@ -1170,7 +1162,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
 
         impairAllocationStrategy(allocationUnderlyingStrategy, impairment);
 
-        firstUnrealizedLoss  = divRoundUp(firstShares  * impairment, totalShares);
+        firstUnrealizedLoss  = divRoundUp(firstShares * impairment, totalShares);
         secondUnrealizedLoss = divRoundUp(secondShares * impairment, totalShares);
 
         assertPoolState({
@@ -1228,7 +1220,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(),                impairment);
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
-        assertEq(IPool(firstPool).convertToExitAssets(firstShares),   firstAssets  - firstUnrealizedLoss);
+        assertEq(IPool(firstPool).convertToExitAssets(firstShares),   firstAssets - firstUnrealizedLoss);
         assertEq(IPool(secondPool).convertToExitAssets(secondShares), secondAssets - secondUnrealizedLoss);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstAssets + secondAssets - initialDeployment);
@@ -1245,7 +1237,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
 
         remainingImpairment = impairment - impairmentRemoval;
 
-        firstUnrealizedLoss  = divRoundUp(firstShares  * remainingImpairment, totalShares);
+        firstUnrealizedLoss  = divRoundUp(firstShares * remainingImpairment, totalShares);
         secondUnrealizedLoss = divRoundUp(secondShares * remainingImpairment, totalShares);
 
         assertPoolState({
@@ -1303,7 +1295,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).impairedAssets(),                remainingImpairment);
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), initialDeployment);
 
-        assertEq(IPool(firstPool).convertToExitAssets(firstShares),   firstAssets  - firstUnrealizedLoss);
+        assertEq(IPool(firstPool).convertToExitAssets(firstShares),   firstAssets - firstUnrealizedLoss);
         assertEq(IPool(secondPool).convertToExitAssets(secondShares), secondAssets - secondUnrealizedLoss);
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), firstAssets + secondAssets - initialDeployment);
@@ -1313,7 +1305,6 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
     }
 
     function test_removeImpairment_success_bootstrapMint_exitThenRemoveImpairment_remainingPoolGainsAll() external {
-
         /**********************************************************************************************************************************/
         /*** Deploy a fresh allocation strategy funded with a bootstrap mint, then attach two pools that share it                       ***/
         /**********************************************************************************************************************************/
@@ -1321,7 +1312,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         bootstrapStrategyDelegate = makeAddr("bootstrapStrategyDelegate");
         bootstrapMint             = 10e6;
 
-        ( strategyManager, underlyingStrategy ) = _deployAllocationStrategy({
+        (strategyManager, underlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        bootstrapStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -1330,8 +1321,8 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
             bootstrapMint_:           bootstrapMint
         });
 
-        ( firstPool,  firstPoolManager )  = _createPoolSharingStrategy("bootstrapFirstPoolDelegate",  strategyManager);
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("bootstrapSecondPoolDelegate", strategyManager);
+        (firstPool, firstPoolManager)   = _createPoolSharingStrategy("bootstrapFirstPoolDelegate", strategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("bootstrapSecondPoolDelegate", strategyManager);
 
         assertPoolState({
             pool:               firstPool,
@@ -1406,10 +1397,10 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         shares1 = assets1;
         shares2 = assets2;
 
-        deposit(firstPool,  lp, assets1);
+        deposit(firstPool, lp, assets1);
         deposit(secondPool, lp, assets2);
 
-        fundStrategyManager(firstPoolManager,  strategyManager, assets1);
+        fundStrategyManager(firstPoolManager, strategyManager, assets1);
         fundStrategyManager(secondPoolManager, strategyManager, assets2);
 
         totalAssets = bootstrapMint + assets1 + assets2;
@@ -1486,8 +1477,8 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
 
         impairAllocationStrategy(underlyingStrategy, impairment);
 
-        firstLoss     = divRoundUp(shares1 * impairment,       totalShares);
-        secondLoss    = divRoundUp(shares2 * impairment,       totalShares);
+        firstLoss     = divRoundUp(shares1 * impairment, totalShares);
+        secondLoss    = divRoundUp(shares2 * impairment, totalShares);
         bootstrapLoss = divRoundUp(bootstrapMint * impairment, totalShares);
 
         secondNetBeforeExit = shares2 * (totalAssets - impairment) / totalShares;
@@ -1574,7 +1565,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
         secondGrossAfterExit    = shares2 * aumAfterExit / sharesAfterExit;
         bootstrapGrossAfterExit = bootstrapMint * aumAfterExit / sharesAfterExit;
 
-        secondLossAfterExit    = divRoundUp(shares2       * impairment, sharesAfterExit);
+        secondLossAfterExit    = divRoundUp(shares2 * impairment, sharesAfterExit);
         bootstrapLossAfterExit = divRoundUp(bootstrapMint * impairment, sharesAfterExit);
 
         secondNetAfterExit = secondGrossAfterExit - secondLossAfterExit;
@@ -1722,7 +1713,7 @@ contract AllocationStrategyRemoveImpairmentSuccessTests is AllocationStrategyRem
 
         assertEq(IStrategyManager(strategyManager).convertToExitAssets(shares2), secondNetAfterRemoval);
 
-        assertEq(secondNetAfterRemoval, totalAssets - exitAssets - bootstrapNetAfterRemoval - 1);  // Rounding error
+        assertEq(secondNetAfterRemoval, totalAssets - exitAssets - bootstrapNetAfterRemoval - 1); // Rounding error
 
         assertEq(IPool(firstPool).convertToExitAssets(shares1),  exitAssets);
         assertEq(IPool(secondPool).convertToExitAssets(shares2), secondNetAfterRemoval);

@@ -13,7 +13,7 @@ contract StrategyManagerSetPendingStrategyDelegateFailureTests is TestBaseWithAs
     function setUp() public override {
         super.setUp();
 
-        ( strategyManager, ) = _deployAllocationStrategy({
+        (strategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -54,7 +54,7 @@ contract StrategyManagerSetPendingStrategyDelegateSuccessTests is TestBaseWithAs
     function setUp() public override {
         super.setUp();
 
-        ( strategyManager, ) = _deployAllocationStrategy({
+        (strategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,

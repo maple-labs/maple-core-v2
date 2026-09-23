@@ -18,10 +18,10 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
     uint256 depositAmount = 100_000e6;
 
-    uint256 insufficientBitmap = 0x1;  // 0b0001
-    uint256 requiredBitmap     = 0x3;  // 0b0011
-    uint256 sufficientBitmap   = 0xB;  // 0b1011
-    uint256 zeroBitmap         = 0x0;  // 0b0000
+    uint256 insufficientBitmap = 0x1; // 0b0001
+    uint256 requiredBitmap     = 0x3; // 0b0011
+    uint256 sufficientBitmap   = 0xB; // 0b1011
+    uint256 zeroBitmap         = 0x0; // 0b0000
 
     SyrupRouter public syrupRouter;
 
@@ -48,15 +48,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
     }
 
     function test_depositWithPermit_private_unauthorized() external {
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -89,7 +83,7 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
     function test_depositWithPermit_private_invalidSignature() external {
         allowLender(address(poolManager), liquidityProvider);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
             _getDigest(
                 address(fundsAsset),
@@ -108,15 +102,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
     function test_depositWithPermit_private_expiredDeadline() external {
         allowLender(address(poolManager), liquidityProvider);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp - 2 seconds
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp - 2 seconds)
         );
 
         vm.prank(liquidityProvider);
@@ -135,15 +123,8 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
     function test_depositWithPermit_private_zeroShares() external {
         allowLender(address(poolManager), liquidityProvider);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
-            liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                0,
-                block.timestamp
-            )
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            liquidityProviderWallet, _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), 0, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -191,15 +172,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -230,15 +205,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, zeroBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -263,15 +232,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, insufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -313,14 +276,14 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
             _getDigest(
                 address(fundsAsset),
                 liquidityProviderWallet.addr,
                 address(syrupRouter),
                 depositAmount,
-                block.timestamp - 1 seconds  // Different signature
+                block.timestamp - 1 seconds // Different signature
             )
         );
 
@@ -335,15 +298,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp - 2 seconds
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp - 2 seconds)
         );
 
         vm.prank(liquidityProvider);
@@ -368,15 +325,8 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
-            liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                0,
-                block.timestamp
-            )
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            liquidityProviderWallet, _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), 0, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -433,15 +383,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -481,15 +425,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -520,15 +458,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, zeroBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -553,15 +485,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, insufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -603,14 +529,14 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
             _getDigest(
                 address(fundsAsset),
                 liquidityProviderWallet.addr,
                 address(syrupRouter),
                 depositAmount,
-                block.timestamp - 1 seconds  // Different signature
+                block.timestamp - 1 seconds // Different signature
             )
         );
 
@@ -625,15 +551,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp - 2 seconds
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp - 2 seconds)
         );
 
         vm.prank(liquidityProvider);
@@ -658,15 +578,8 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, liquidityProvider, sufficientBitmap);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
-            liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                0,
-                block.timestamp
-            )
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            liquidityProviderWallet, _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), 0, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -723,15 +636,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -771,15 +678,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -820,14 +721,14 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
             _getDigest(
                 address(fundsAsset),
                 liquidityProviderWallet.addr,
                 address(syrupRouter),
                 depositAmount,
-                block.timestamp - 1 seconds  // Different signature
+                block.timestamp - 1 seconds // Different signature
             )
         );
 
@@ -841,15 +742,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp - 2 seconds
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp - 2 seconds)
         );
 
         vm.prank(liquidityProvider);
@@ -870,15 +765,8 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
         erc20_mint(address(fundsAsset), liquidityProvider, depositAmount);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
-            liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                0,
-                block.timestamp
-            )
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            liquidityProviderWallet, _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), 0, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -926,15 +814,9 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         vm.prank(liquidityProvider);
@@ -946,8 +828,8 @@ contract SyrupRouterDepositsIntegrationTests is TestBase {
 
 }
 
-
 contract SyrupRouterAuthorizeAndDepositTests is TestBase {
+
     uint256 constant POOL_LEVEL = 2;
 
     address liquidityProvider = makeAddr("liquidityProvider");
@@ -957,8 +839,8 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
 
     uint256 depositAmount = 100_000e6;
 
-    uint256 requiredBitmap     = 0x3;  // 0b0011
-    uint256 sufficientBitmap   = 0xB;  // 0b1011
+    uint256 requiredBitmap   = 0x3; // 0b0011
+    uint256 sufficientBitmap = 0xB; // 0b1011
 
     uint256 authDeadline = block.timestamp;
 
@@ -1013,9 +895,8 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
         vm.prank(governor);
         poolPermissionManager.setPermissionAdmin(ppa, false);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(ppaWallet, _getAuthDigest(
-            address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline)
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(ppaWallet, _getAuthDigest(address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline));
 
         vm.prank(liquidityProvider);
         vm.expectRevert("SR:A:NOT_PERMISSION_ADMIN");
@@ -1023,9 +904,8 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
     }
 
     function test_authorizeAndDeposit_repeatedNonce() external {
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(ppaWallet, _getAuthDigest(
-            address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline)
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(ppaWallet, _getAuthDigest(address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline));
 
         // First transaction goes through
         vm.prank(liquidityProvider);
@@ -1041,9 +921,8 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
         assertEq(pool.balanceOf(liquidityProvider),       0);
 
-        (uint8 v, bytes32 r, bytes32 s ) = vm.sign(ppaWallet, _getAuthDigest(
-            address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline)
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(ppaWallet, _getAuthDigest(address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline));
 
         vm.prank(liquidityProvider);
         syrupRouter.authorizeAndDeposit(sufficientBitmap, authDeadline, v, r, s, depositAmount, bytes32(0));
@@ -1095,70 +974,35 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
     // }
 
     function test_authorizeAndDepositWithPermit_repeatedNonce() external {
-        (uint8 auth_v, bytes32 auth_r, bytes32 auth_s ) = vm.sign(ppaWallet, _getAuthDigest(
-            address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline)
-        );
+        (uint8 auth_v, bytes32 auth_r, bytes32 auth_s) =
+            vm.sign(ppaWallet, _getAuthDigest(address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline));
 
         (uint8 permit_v, bytes32 permit_r, bytes32 permit_s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         // First transaction succeeds
         vm.prank(liquidityProvider);
         syrupRouter.authorizeAndDepositWithPermit(
-            sufficientBitmap,
-            authDeadline,
-            auth_v,
-            auth_r,
-            auth_s,
-            depositAmount,
-            bytes32(0),
-            block.timestamp,
-            permit_v,
-            permit_r,
-            permit_s
+            sufficientBitmap, authDeadline, auth_v, auth_r, auth_s, depositAmount, bytes32(0), block.timestamp, permit_v, permit_r, permit_s
         );
 
         // Second transaction with the same nonce fails
         vm.prank(liquidityProvider);
         vm.expectRevert("SR:A:NOT_PERMISSION_ADMIN");
         syrupRouter.authorizeAndDepositWithPermit(
-            sufficientBitmap,
-            authDeadline,
-            auth_v,
-            auth_r,
-            auth_s,
-            depositAmount,
-            bytes32(0),
-            block.timestamp,
-            permit_v,
-            permit_r,
-            permit_s
+            sufficientBitmap, authDeadline, auth_v, auth_r, auth_s, depositAmount, bytes32(0), block.timestamp, permit_v, permit_r, permit_s
         );
     }
 
     function test_authorizeAndDepositWithPermit_success() external {
-
-        (uint8 auth_v, bytes32 auth_r, bytes32 auth_s ) = vm.sign(ppaWallet, _getAuthDigest(
-            address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline)
-        );
+        (uint8 auth_v, bytes32 auth_r, bytes32 auth_s) =
+            vm.sign(ppaWallet, _getAuthDigest(address(syrupRouter), liquidityProvider, sufficientBitmap, authDeadline));
 
         (uint8 permit_v, bytes32 permit_r, bytes32 permit_s) = vm.sign(
             liquidityProviderWallet,
-            _getDigest(
-                address(fundsAsset),
-                liquidityProviderWallet.addr,
-                address(syrupRouter),
-                depositAmount,
-                block.timestamp
-            )
+            _getDigest(address(fundsAsset), liquidityProviderWallet.addr, address(syrupRouter), depositAmount, block.timestamp)
         );
 
         assertEq(fundsAsset.balanceOf(liquidityProvider), depositAmount);
@@ -1166,17 +1010,7 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
 
         vm.prank(liquidityProvider);
         syrupRouter.authorizeAndDepositWithPermit(
-            sufficientBitmap,
-            authDeadline,
-            auth_v,
-            auth_r,
-            auth_s,
-            depositAmount,
-            bytes32(0),
-            block.timestamp,
-            permit_v,
-            permit_r,
-            permit_s
+            sufficientBitmap, authDeadline, auth_v, auth_r, auth_s, depositAmount, bytes32(0), block.timestamp, permit_v, permit_r, permit_s
         );
 
         assertEq(fundsAsset.balanceOf(liquidityProvider), 0);
@@ -1189,18 +1023,9 @@ contract SyrupRouterAuthorizeAndDepositTests is TestBase {
     /*** Helper                                                                                                                         ***/
     /**************************************************************************************************************************************/
 
-    function _getAuthDigest(address router_, address owner_, uint256 bitmap_, uint256 deadline_)
-        internal view returns (bytes32 digest_)
-    {
-        return keccak256(abi.encodePacked(
-            '\x19\x01',
-            block.chainid,
-            router_,
-            owner_,
-            SyrupRouter(router_).nonces(owner_),
-            bitmap_,
-            deadline_
-        ));
+    function _getAuthDigest(address router_, address owner_, uint256 bitmap_, uint256 deadline_) internal view returns (bytes32 digest_) {
+        return
+            keccak256(abi.encodePacked("\x19\x01", block.chainid, router_, owner_, SyrupRouter(router_).nonces(owner_), bitmap_, deadline_));
     }
 
 }

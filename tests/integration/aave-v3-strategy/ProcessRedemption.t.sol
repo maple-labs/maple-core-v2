@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20,
-    IPoolManager,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAaveV3Strategy, IERC20, IPoolManager, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { FakePoolManager } from "../../mocks/Mocks.sol";
 
@@ -15,7 +10,7 @@ import { AaveV3StrategyTestBase } from "./AaveV3StrategyTestBase.sol";
 contract AaveV3StrategyProcessRedemptionFailureTests is AaveV3StrategyTestBase {
 
     uint256 assets                = 1_000_000e6;
-    uint256 expectedRoundingError = 1;  // Aave reports 1 asset unit below the nominal supply at this fork block.
+    uint256 expectedRoundingError = 1; // Aave reports 1 asset unit below the nominal supply at this fork block.
 
     function testFork_processRedemption_failWhenManagerPaused() external {
         vm.prank(governor);
@@ -214,7 +209,7 @@ contract SparkLendStrategyProcessRedemptionFailureTests is AaveV3StrategyProcess
 
     function setUp() public override {
         aaveToken                   = SPARK_USDC;
-        expectedRoundingError       = 0;  // Spark reports the full nominal supply at this fork block.
+        expectedRoundingError       = 0; // Spark reports the full nominal supply at this fork block.
         useVirtualUnderlyingBalance = false;
 
         super.setUp();
@@ -224,11 +219,11 @@ contract SparkLendStrategyProcessRedemptionFailureTests is AaveV3StrategyProcess
 
 contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
-    uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-    uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+    uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
-    uint256 expectedRoundingError           = 1;  // Base unit used for Aave supply-rounding adjustments at this fork block.
-    uint256 expectedWithdrawalRoundingError = 0;  // Aave requires no post-withdrawal AUM adjustment at this fork block.
+    uint256 expectedRoundingError           = 1; // Base unit used for Aave supply-rounding adjustments at this fork block.
+    uint256 expectedWithdrawalRoundingError = 0; // Aave requires no post-withdrawal AUM adjustment at this fork block.
     uint256 firstPoolFunding                = 300_000e6;
     uint256 impairmentAmount                = 100_000e6;
     uint256 poolLiquidity                   = 1_000_000e6;
@@ -1079,11 +1074,11 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         });
 
         assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     impairment - expectedRoundingError + expectedWithdrawalRoundingError,
-            aTokenBalance:           impairment - expectedRoundingError + expectedWithdrawalRoundingError,
+            strategyManager: aaveV3StrategyManager,
+            aum: impairment - expectedRoundingError + expectedWithdrawalRoundingError,
+            aTokenBalance: impairment - expectedRoundingError + expectedWithdrawalRoundingError,
             lastRecordedTotalAssets: impairment - expectedRoundingError + expectedWithdrawalRoundingError,
-            unrealizedLosses:        impairment - expectedRoundingError  // Can be rounded down due to clamping but not increased
+            unrealizedLosses: impairment - expectedRoundingError // Can be rounded down due to clamping but not increased
         });
 
         assertStrategyManagerShares({
@@ -1359,13 +1354,13 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         /*** Fund two pool-manager positions, impair the shared strategy and request partial redemptions                                ***/
         /**********************************************************************************************************************************/
 
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  aaveV3StrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", aaveV3StrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
-        deposit(IPoolManager(firstPoolManager).pool(),  lp, poolLiquidity);
+        deposit(IPoolManager(firstPoolManager).pool(), lp, poolLiquidity);
         deposit(IPoolManager(secondPoolManager).pool(), lp, poolLiquidity);
 
-        fundStrategyManager(firstPoolManager,  aaveV3StrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, aaveV3StrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondPoolFunding);
 
         uint256 firstShares  = firstPoolFunding - 2 * expectedRoundingError;
@@ -1374,7 +1369,7 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         expectedTotalShares = totalAum;
 
-        requestRedeemFromStrategyManager(firstPoolManager,  aaveV3StrategyManager, firstShares / 2);
+        requestRedeemFromStrategyManager(firstPoolManager, aaveV3StrategyManager, firstShares / 2);
         requestRedeemFromStrategyManager(secondPoolManager, aaveV3StrategyManager, secondShares / 2);
 
         vm.prank(strategyDelegate);
@@ -1449,7 +1444,7 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         uint256 firstExitAssets = exitAssets;
 
-        expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
+        expectedFirstAssets           = firstShares * totalAum / expectedTotalShares;
         expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
@@ -1518,7 +1513,7 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         expectedTotalShares -= sharesToProcess;
         totalAum             = totalAum - exitAssets - expectedRoundingError;
 
-        expectedFirstAssets           = firstShares  * totalAum / expectedTotalShares;
+        expectedFirstAssets           = firstShares * totalAum / expectedTotalShares;
         expectedFirstUnrealizedLosses = divRoundUp(firstShares * impairmentAmount, expectedTotalShares);
 
         expectedSecondAssets           = secondShares * totalAum / expectedTotalShares;
@@ -1580,24 +1575,24 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
         /*** Deploy two pools that share the same strategy manager and deposit liquidity into both                                      ***/
         /**********************************************************************************************************************************/
 
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  aaveV3StrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", aaveV3StrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
-        deposit(IPoolManager(firstPoolManager).pool(),  lp, poolLiquidity);
+        deposit(IPoolManager(firstPoolManager).pool(), lp, poolLiquidity);
         deposit(IPoolManager(secondPoolManager).pool(), lp, poolLiquidity);
 
         /**********************************************************************************************************************************/
         /*** Fund the strategy from both pools and request redemption of all shares                                                     ***/
         /**********************************************************************************************************************************/
 
-        fundStrategyManager(firstPoolManager,  aaveV3StrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, aaveV3StrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondPoolFunding);
 
         // Aave's first supply mints 2 fewer shares and its second supply mints the full amount. Spark mints both in full.
         uint256 firstShares  = firstPoolFunding - 2 * expectedRoundingError;
         uint256 secondShares = secondPoolFunding;
 
-        requestRedeemFromStrategyManager(firstPoolManager,  aaveV3StrategyManager, firstShares);
+        requestRedeemFromStrategyManager(firstPoolManager, aaveV3StrategyManager, firstShares);
         requestRedeemFromStrategyManager(secondPoolManager, aaveV3StrategyManager, secondShares);
 
         /**********************************************************************************************************************************/
@@ -1608,10 +1603,10 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
 
         uint256 grossAum = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
 
-        uint256 firstAssets  = firstShares  * grossAum / (firstShares + secondShares);
+        uint256 firstAssets  = firstShares * grossAum / (firstShares + secondShares);
         uint256 secondAssets = secondShares * grossAum / (firstShares + secondShares);
 
-        assertGt(firstAssets,  firstShares);
+        assertGt(firstAssets, firstShares);
         assertGt(secondAssets, secondShares);
 
         assertPoolState({
@@ -1771,7 +1766,6 @@ contract AaveV3StrategyProcessRedemptionTests is AaveV3StrategyTestBase {
             pendingShares:    0,
             unrealizedLosses: 0
         });
-
     }
 
 }
@@ -1780,8 +1774,8 @@ contract SparkLendStrategyProcessRedemptionTests is AaveV3StrategyProcessRedempt
 
     function setUp() public override {
         aaveToken                       = SPARK_USDC;
-        expectedRoundingError           = 0;  // Spark reports the full nominal supply at this fork block.
-        expectedWithdrawalRoundingError = 1;  // Spark requires a 1-unit post-withdrawal AUM adjustment at this fork block.
+        expectedRoundingError           = 0; // Spark reports the full nominal supply at this fork block.
+        expectedWithdrawalRoundingError = 1; // Spark requires a 1-unit post-withdrawal AUM adjustment at this fork block.
         useVirtualUnderlyingBalance     = false;
 
         super.setUp();

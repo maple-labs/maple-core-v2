@@ -20,14 +20,14 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
     uint256 constant platformServiceFeeRate    = 0.04e6;
     uint256 constant principal                 = 1_500_000e6;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public virtual override {
         super.setUp();
 
         vm.startPrank(governor);
-        globals.setPlatformServiceFeeRate(address(poolManager)   , platformServiceFeeRate);
+        globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);
         globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
         vm.stopPrank();
 
@@ -37,15 +37,17 @@ contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
+            )
+        );
 
         vm.prank(borrower);
         loan.acceptLoanTerms();
@@ -99,7 +101,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
         vm.warp(start + paymentInterval + gracePeriod);
 
         vm.startPrank(address(poolDelegate));
-        vm.expectRevert('ML:R:NOT_IN_DEFAULT');
+        vm.expectRevert("ML:R:NOT_IN_DEFAULT");
         poolManager.triggerDefault(address(loan));
 
         vm.warp(start + paymentInterval + gracePeriod + 1);
@@ -113,11 +115,7 @@ contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTes
     }
 
     function test_triggerDefault_treasuryZeroAddress() external {
-        vm.store(
-            address(globals),
-            bytes32(uint256(0)),
-            bytes32(uint256(uint160(0)))
-        );
+        vm.store(address(globals), bytes32(uint256(0)), bytes32(uint256(uint160(0))));
 
         vm.prank(address(poolDelegate));
         loanManager.fund(address(loan));

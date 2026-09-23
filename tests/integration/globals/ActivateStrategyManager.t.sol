@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import { Proxy } from "../../../contracts/Contracts@7.sol";
 
-import { AllocationStrategyInitializerParams }  from "../../../contracts/interfaces/Interfaces.sol";
+import { AllocationStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
 import { IMapleProxyFactory, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
@@ -24,7 +24,7 @@ contract ActivateStrategyManagerFailureTests is TestBaseWithAssertions {
         });
 
         vm.prank(strategyDelegate);
-        ( inactiveStrategyManager, ) = strategyDeployer.deploy({
+        (inactiveStrategyManager,) = strategyDeployer.deploy({
             strategyManagerFactory: strategyManagerFactory,
             strategyFactory:        allocationStrategyFactory,
             strategyLiquidityCap:   0,
@@ -115,7 +115,7 @@ contract ActivateStrategyManagerTests is TestBaseWithAssertions {
         });
 
         vm.prank(strategyDelegate);
-        ( inactiveStrategyManager, ) = strategyDeployer.deploy({
+        (inactiveStrategyManager,) = strategyDeployer.deploy({
             strategyManagerFactory: strategyManagerFactory,
             strategyFactory:        allocationStrategyFactory,
             strategyLiquidityCap:   0,

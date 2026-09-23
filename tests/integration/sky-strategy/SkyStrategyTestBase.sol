@@ -23,7 +23,7 @@ contract SkyStrategyTestBase is TestBaseWithAssertions {
         _createPoolWithOTLM(poolDelegate);
         _configurePool();
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,

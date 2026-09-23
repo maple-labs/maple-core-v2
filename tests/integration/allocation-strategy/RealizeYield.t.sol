@@ -15,8 +15,8 @@ contract AllocationStrategyRealizeYieldTestBase is AllocationStrategyTestBase {
     uint256 protocolFee       = 1_500e6;
     uint256 yieldAssets       = 50_000e6;
 
-    uint32 delegateFeeRate = 0.02e6;  // 2%
-    uint32 protocolFeeRate = 0.03e6;  // 3%
+    uint32 delegateFeeRate = 0.02e6; // 2%
+    uint32 protocolFeeRate = 0.03e6; // 3%
     uint32 yieldCooldown   = 1 hours;
     uint32 yieldDuration   = 31 days;
 
@@ -202,7 +202,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     uint256 strategyShares2;
 
     function test_realizeYield_success_yieldCap() external {
-
         /**********************************************************************************************************************************/
         /*** Set the yield cap to match the amount that will be realized                                                                ***/
         /**********************************************************************************************************************************/
@@ -269,7 +268,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldCooldown() external {
-
         /**********************************************************************************************************************************/
         /*** Realize yield instantly, starting the cooldown                                                                             ***/
         /**********************************************************************************************************************************/
@@ -393,7 +391,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldAccrual() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield                                                                                                             ***/
         /**********************************************************************************************************************************/
@@ -619,7 +616,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldAccrual_withBootstrapMint() external {
-
         /**********************************************************************************************************************************/
         /*** Fully unwind the existing (non-bootstrap) strategy so the pool starts clean                                                ***/
         /**********************************************************************************************************************************/
@@ -641,7 +637,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         bootstrapAssets = 10e6;
         bootstrapShares = 10e6;
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: delegateFeeRate,
@@ -988,7 +984,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_instantYield() external {
-
         /**********************************************************************************************************************************/
         /*** Realize yield instantly                                                                                                    ***/
         /**********************************************************************************************************************************/
@@ -1046,7 +1041,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_scheduleExtended() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards in time                                                                                   ***/
         /**********************************************************************************************************************************/
@@ -1222,7 +1216,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_scheduleShortened() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -1398,7 +1391,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_scheduledUnchanged() external {
-
         /**********************************************************************************************************************************/
         /*** Realize yield normally and warp forwards                                                                                   ***/
         /**********************************************************************************************************************************/
@@ -1574,7 +1566,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_flushYield() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -1693,7 +1684,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_topUpYield() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule an initial batch of yield and warp forwards                                                                       ***/
         /**********************************************************************************************************************************/
@@ -1876,7 +1866,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldIncreased() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -2058,7 +2047,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldReduced() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -2236,7 +2224,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldCancelled() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -2411,7 +2398,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_lossRealized() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -2590,7 +2576,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_impairedBeforeSchedule() external {
-
         /**********************************************************************************************************************************/
         /*** Impair part of the strategy before any yield has been scheduled                                                            ***/
         /**********************************************************************************************************************************/
@@ -2760,7 +2745,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_impairedDuringSchedule() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -2935,7 +2919,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldRedeployed() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -3116,7 +3099,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_assetsReturned() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -3297,7 +3279,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_strategyFunded() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -3475,7 +3456,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_yieldWithdrawn() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -3655,7 +3635,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_feesUpdated() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards                                                                                           ***/
         /**********************************************************************************************************************************/
@@ -3721,8 +3700,8 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         /*** Update the fee rates mid vesting, which has no effect on the already-scheduled yield                                       ***/
         /**********************************************************************************************************************************/
 
-        uint32 newDelegateFeeRate = 0.05e6;  // 5%
-        uint32 newProtocolFeeRate = 0.07e6;  // 7%
+        uint32 newDelegateFeeRate = 0.05e6; // 5%
+        uint32 newProtocolFeeRate = 0.07e6; // 7%
 
         setStrategyDelegateFeeRate(allocationUnderlyingStrategy, newDelegateFeeRate);
         setStrategyProtocolFeeRate(allocationUnderlyingStrategy, newProtocolFeeRate);
@@ -3898,7 +3877,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_poolsVestTogether() external {
-
         /**********************************************************************************************************************************/
         /*** Fund a second pool into the same strategy manager, so both pools share the same underlying allocation strategy             ***/
         /**********************************************************************************************************************************/
@@ -3906,7 +3884,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         address pool1        = address(pool);
         address poolManager1 = address(poolManager);
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         uint256 initialAssets1 = initialAssets;
         uint256 initialShares1 = initialShares;
@@ -4141,7 +4119,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_poolJoinsMidVesting() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards, before the 2nd pool exists                                                               ***/
         /**********************************************************************************************************************************/
@@ -4213,7 +4190,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         /*** Fund a 2nd pool into the same strategy manager mid vesting                                                                 ***/
         /**********************************************************************************************************************************/
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         poolAssets2     = 500_000e6;
         poolShares2     = poolAssets2;
@@ -4231,10 +4208,10 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         });
 
         assertPoolState({
-            pool:               pool2,
-            totalAssets:        poolAssets2 - 1,  // Rounding error
-            totalSupply:        poolShares2,
-            unrealizedLosses:   0,
+            pool: pool2,
+            totalAssets: poolAssets2 - 1, // Rounding error
+            totalSupply: poolShares2,
+            unrealizedLosses: 0,
             availableLiquidity: 0
         });
 
@@ -4257,11 +4234,11 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  allocationStrategyManager,
-            poolManager:      poolManager2,
-            assets:           poolAssets2 - 1,  // Rounding error
-            shares:           strategyShares2,
-            pendingShares:    0,
+            strategyManager: allocationStrategyManager,
+            poolManager: poolManager2,
+            assets: poolAssets2 - 1, // Rounding error
+            shares: strategyShares2,
+            pendingShares: 0,
             unrealizedLosses: 0
         });
 
@@ -4367,7 +4344,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_notEnoughLiquidity() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards, leaving the unvested portion of yield depressing available liquidity                     ***/
         /**********************************************************************************************************************************/
@@ -4513,7 +4489,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_pendingRedemptionAcrossVesting() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and immediately request a redemption, before any of the yield has vested                                    ***/
         /**********************************************************************************************************************************/
@@ -4692,7 +4667,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_impairmentRemoved() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp partway through vesting                                                                            ***/
         /**********************************************************************************************************************************/
@@ -4927,7 +4901,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_impairedAboveAum() external {
-
         /**********************************************************************************************************************************/
         /*** Impair more than the current AUM, before any yield is scheduled: the reported loss clamps down to the AUM itself           ***/
         /**********************************************************************************************************************************/
@@ -5139,7 +5112,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_impairedWithBootstrapMint() external {
-
         /**********************************************************************************************************************************/
         /*** Fully unwind the existing (non-bootstrap) strategy so the pool starts clean                                                ***/
         /**********************************************************************************************************************************/
@@ -5160,7 +5132,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         bootstrapAssets  = 10e6;
         bootstrapShares  = 10e6;
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: delegateFeeRate,
@@ -5267,7 +5239,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         deadLoss = divRoundUp(bootstrapShares * impairment, bootstrapShares + initialShares);
 
         assertLe(poolAssets + deadAssets, bootstrapAssets + initialAssets + realizedYield);
-        assertGe(poolLoss + deadLoss,     impairment);
+        assertGe(poolLoss + deadLoss, impairment);
 
         assertPoolState({
             pool:               address(pool),
@@ -5331,7 +5303,6 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
     }
 
     function test_realizeYield_success_poolsVestTogether_partial() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp forwards, before the 2nd pool exists                                                               ***/
         /**********************************************************************************************************************************/
@@ -5403,7 +5374,7 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         /*** Fund a 2nd pool into the same strategy manager mid vesting, minting strategy shares above par                              ***/
         /**********************************************************************************************************************************/
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         poolAssets2     = 300_000e6;
         poolShares2     = poolAssets2;
@@ -5421,10 +5392,10 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         });
 
         assertPoolState({
-            pool:               pool2,
-            totalAssets:        poolAssets2 - 1,  // Rounding error
-            totalSupply:        poolShares2,
-            unrealizedLosses:   0,
+            pool: pool2,
+            totalAssets: poolAssets2 - 1, // Rounding error
+            totalSupply: poolShares2,
+            unrealizedLosses: 0,
             availableLiquidity: 0
         });
 
@@ -5447,11 +5418,11 @@ contract AllocationStrategyRealizeYieldSuccessTests is AllocationStrategyRealize
         });
 
         assertStrategyManagerPosition({
-            strategyManager:  allocationStrategyManager,
-            poolManager:      poolManager2,
-            assets:           poolAssets2 - 1,  // Rounding error
-            shares:           strategyShares2,
-            pendingShares:    0,
+            strategyManager: allocationStrategyManager,
+            poolManager: poolManager2,
+            assets: poolAssets2 - 1, // Rounding error
+            shares: strategyShares2,
+            pendingShares: 0,
             unrealizedLosses: 0
         });
 

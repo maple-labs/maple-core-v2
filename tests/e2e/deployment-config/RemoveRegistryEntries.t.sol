@@ -3,11 +3,7 @@ pragma solidity 0.8.7;
 
 import { Action, ActionType } from "../../../modules/strategy-manager/contracts/interfaces/IMapleLiquidityRouter.sol";
 
-import {
-    AllocationStrategyInitializerParams,
-    IMapleProxyFactory,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { AllocationStrategyInitializerParams, IMapleProxyFactory, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "../../integration/allocation-strategy/AllocationStrategyTestBase.sol";
 
@@ -30,12 +26,12 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
     function test_removeLiquidityRouter_success() external {
         uint256 additionalFunding       = 100_000e6;
         uint256 cancelledShares         = 100_000e6;
-        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding;          // 1_000_000e6 - 600_000e6 = 400_000e6
-        uint256 pendingAfterCancel      = redemptionShares - cancelledShares;       // 400_000e6 - 100_000e6 = 300_000e6
+        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding; // 1_000_000e6 - 600_000e6 = 400_000e6
+        uint256 pendingAfterCancel      = redemptionShares - cancelledShares; // 400_000e6 - 100_000e6 = 300_000e6
         uint256 strategyShares          = 600_000e6;
         uint256 remainingStrategyAssets = 200_000e6;
-        uint256 remainingStrategyShares = strategyShares - redemptionShares;        // 600_000e6 - 400_000e6 = 200_000e6
-        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets;  // 1_000_000e6 - 200_000e6 = 800_000e6
+        uint256 remainingStrategyShares = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets; // 1_000_000e6 - 200_000e6 = 800_000e6
 
         Action[] memory actions = new Action[](1);
 
@@ -294,12 +290,12 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
     function test_removePoolManagerFactory_success() external {
         uint256 additionalFunding       = 100_000e6;
         uint256 additionalPendingShares = 100_000e6;
-        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding;          // 1_000_000e6 - 600_000e6 = 400_000e6
+        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding; // 1_000_000e6 - 600_000e6 = 400_000e6
         uint256 poolManagerCap          = 1_000_000e6;
         uint256 strategyShares          = 600_000e6;
         uint256 remainingStrategyAssets = 200_000e6;
-        uint256 remainingStrategyShares = strategyShares - redemptionShares;        // 600_000e6 - 400_000e6 = 200_000e6
-        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets;  // 1_000_000e6 - 200_000e6 = 800_000e6
+        uint256 remainingStrategyShares = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets; // 1_000_000e6 - 200_000e6 = 800_000e6
 
         Action[] memory actions = new Action[](1);
 
@@ -513,20 +509,22 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
     function test_removeStrategyManagerFactory_success() external {
         uint256 additionalFunding       = 100_000e6;
         uint256 cancelledShares         = 100_000e6;
-        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding;          // 1_000_000e6 - 600_000e6 = 400_000e6
-        uint256 pendingAfterCancel      = redemptionShares - cancelledShares;       // 400_000e6 - 100_000e6 = 300_000e6
+        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding; // 1_000_000e6 - 600_000e6 = 400_000e6
+        uint256 pendingAfterCancel      = redemptionShares - cancelledShares; // 400_000e6 - 100_000e6 = 300_000e6
         uint256 strategyShares          = 600_000e6;
         uint256 remainingStrategyAssets = 200_000e6;
-        uint256 remainingStrategyShares = strategyShares - redemptionShares;        // 600_000e6 - 400_000e6 = 200_000e6
-        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets;  // 1_000_000e6 - 200_000e6 = 800_000e6
+        uint256 remainingStrategyShares = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets; // 1_000_000e6 - 200_000e6 = 800_000e6
 
-        bytes memory deploymentData = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Fresh Allocation Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory deploymentData = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Fresh Allocation Strategy",
+                strategyDelegateFeeRate: 0,
+                strategyProtocolFeeRate: 0,
+                yieldCap: type(uint256).max
+            })
+        );
 
         Action[] memory actions = new Action[](1);
 
@@ -732,10 +730,8 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         });
 
         vm.prank(freshStrategyDelegate);
-        (
-            address freshStrategyManager,
-            address freshUnderlyingStrategy
-        ) = strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
+        (address freshStrategyManager, address freshUnderlyingStrategy) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
 
         assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(freshStrategyManager),       true);
         assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(freshUnderlyingStrategy), true);
@@ -785,20 +781,22 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
 
     function test_removeUnderlyingStrategyFactory_success() external {
         uint256 processedSharesWhileRemoved = 100_000e6;
-        uint256 pendingAfterProcess         = redemptionShares - processedSharesWhileRemoved;  // 400_000e6 - 100_000e6 = 300_000e6
+        uint256 pendingAfterProcess         = redemptionShares - processedSharesWhileRemoved; // 400_000e6 - 100_000e6 = 300_000e6
         uint256 strategyAssetsAfterProcess  = 500_000e6;
         uint256 strategyShares              = 600_000e6;
-        uint256 strategySharesAfterProcess  = strategyShares - processedSharesWhileRemoved;    // 600_000e6 - 100_000e6 = 500_000e6
+        uint256 strategySharesAfterProcess  = strategyShares - processedSharesWhileRemoved; // 600_000e6 - 100_000e6 = 500_000e6
         uint256 remainingStrategyAssets     = 200_000e6;
-        uint256 remainingStrategyShares     = strategyShares - redemptionShares;               // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 remainingStrategyShares     = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
 
-        bytes memory deploymentData = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Restored Allocation Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory deploymentData = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Restored Allocation Strategy",
+                strategyDelegateFeeRate: 0,
+                strategyProtocolFeeRate: 0,
+                yieldCap: type(uint256).max
+            })
+        );
 
         Action[] memory actions = new Action[](1);
 
@@ -824,11 +822,11 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         assertEq(IStrategyManager(allocationStrategyManager).underlyingStrategy(), allocationUnderlyingStrategy);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - strategyFunding  // 400_000e6
+            pool: address(pool),
+            totalAssets: poolLiquidity,
+            totalSupply: poolLiquidity,
+            unrealizedLosses: 0,
+            availableLiquidity: poolLiquidity - strategyFunding // 400_000e6
         });
 
         assertAllocationStrategy({
@@ -872,11 +870,11 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         assertEq(IStrategyManager(allocationStrategyManager).underlyingStrategy(), allocationUnderlyingStrategy);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - strategyFunding  // 400_000e6
+            pool: address(pool),
+            totalAssets: poolLiquidity,
+            totalSupply: poolLiquidity,
+            unrealizedLosses: 0,
+            availableLiquidity: poolLiquidity - strategyFunding // 400_000e6
         });
 
         assertAllocationStrategy({
@@ -918,11 +916,11 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         IStrategyManager(allocationStrategyManager).processRedemption(address(poolManager), processedSharesWhileRemoved, "");
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - strategyAssetsAfterProcess  // 500_000e6
+            pool: address(pool),
+            totalAssets: poolLiquidity,
+            totalSupply: poolLiquidity,
+            unrealizedLosses: 0,
+            availableLiquidity: poolLiquidity - strategyAssetsAfterProcess // 500_000e6
         });
 
         assertAllocationStrategy({
@@ -966,11 +964,11 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         assertEq(IStrategyManager(allocationStrategyManager).underlyingStrategy(), allocationUnderlyingStrategy);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - strategyAssetsAfterProcess  // 500_000e6
+            pool: address(pool),
+            totalAssets: poolLiquidity,
+            totalSupply: poolLiquidity,
+            unrealizedLosses: 0,
+            availableLiquidity: poolLiquidity - strategyAssetsAfterProcess // 500_000e6
         });
 
         assertStrategyManager({
@@ -992,10 +990,8 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         });
 
         vm.prank(freshStrategyDelegate);
-        (
-            address freshStrategyManager,
-            address freshUnderlyingStrategy
-        ) = strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
+        (address freshStrategyManager, address freshUnderlyingStrategy) =
+            strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, deploymentData, "");
 
         assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(freshStrategyManager),       true);
         assertEq(IMapleProxyFactory(allocationStrategyFactory).isInstance(freshUnderlyingStrategy), true);
@@ -1012,11 +1008,11 @@ contract RemoveRegistryEntriesTests is AllocationStrategyTestBase {
         liquidityRouter.executeActions(actions, block.timestamp);
 
         assertPoolState({
-            pool:               address(pool),
-            totalAssets:        poolLiquidity,
-            totalSupply:        poolLiquidity,
-            unrealizedLosses:   0,
-            availableLiquidity: poolLiquidity - remainingStrategyAssets  // 800_000e6
+            pool: address(pool),
+            totalAssets: poolLiquidity,
+            totalSupply: poolLiquidity,
+            unrealizedLosses: 0,
+            availableLiquidity: poolLiquidity - remainingStrategyAssets // 800_000e6
         });
 
         assertAllocationStrategy({

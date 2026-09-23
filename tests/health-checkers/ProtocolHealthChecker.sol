@@ -16,7 +16,7 @@ import {
 // NOTE: This contract assumes one strategy type is deployed per Pool.
 contract ProtocolHealthChecker {
 
-    uint256 constant internal BUFFER = 1e6;
+    uint256 internal constant BUFFER = 1e6;
 
     /******************************************************************************************************************************/
     /*** Invariant Tests                                                                                                        ***/
@@ -96,7 +96,10 @@ contract ProtocolHealthChecker {
         bool strategiesInvariantG;
     }
 
-    function checkInvariants(address poolManager_, address[] calldata manualRedeemers_)
+    function checkInvariants(
+        address poolManager_,
+        address[] calldata manualRedeemers_
+    )
         external
         view
         returns (Invariants memory invariants_)
@@ -123,11 +126,7 @@ contract ProtocolHealthChecker {
         invariants_.poolInvariantJ = check_pool_invariant_J(pool_, poolManager_);
         invariants_.poolInvariantK = check_pool_invariant_K(pool_, poolManager_);
 
-        invariants_.poolManagerInvariantA = check_poolManager_invariant_A(
-            fundsAsset_,
-            pool_,
-            poolManager_
-        );
+        invariants_.poolManagerInvariantA = check_poolManager_invariant_A(fundsAsset_, pool_, poolManager_);
 
         invariants_.poolManagerInvariantB = check_poolManager_invariant_B(poolManager_);
 
@@ -193,8 +192,7 @@ contract ProtocolHealthChecker {
 
         if (pool.totalAssets() > 0) {
             isMaintained_ =
-                pool.convertToExitShares(pool.totalAssets()) ==
-                IPoolManager(poolManager_).convertToExitShares(pool.totalAssets());
+                pool.convertToExitShares(pool.totalAssets()) == IPoolManager(poolManager_).convertToExitShares(pool.totalAssets());
         }
     }
 
@@ -206,7 +204,11 @@ contract ProtocolHealthChecker {
         address fundsAsset_,
         address pool_,
         address poolManager_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         uint256 length = IPoolManager(poolManager_).strategyListLength();
 
         uint256 totalAUM = 0;
@@ -216,12 +218,7 @@ contract ProtocolHealthChecker {
         }
 
         isMaintained_ =
-        _assertApproxEqAbs(
-            (totalAUM +
-            IERC20(fundsAsset_).balanceOf(pool_)),
-            IPoolManager(poolManager_).totalAssets(),
-            BUFFER
-        );
+            _assertApproxEqAbs((totalAUM + IERC20(fundsAsset_).balanceOf(pool_)), IPoolManager(poolManager_).totalAssets(), BUFFER);
     }
 
     function check_poolManager_invariant_B(address poolManager_) public view returns (bool isMaintained_) {
@@ -247,18 +244,22 @@ contract ProtocolHealthChecker {
     /******************************************************************************************************************************/
 
     function check_withdrawalManagerQueue_invariant_A(
-        address   withdrawalManager_,
+        address withdrawalManager_,
         address[] calldata manualRedeemers_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
         uint256 sumOfShares;
         uint256 totalShares = withdrawalManager.totalShares();
 
-        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+        (uint128 nextRequestId, uint128 lastRequestId) = withdrawalManager.queue();
 
         for (uint128 requestId = nextRequestId; requestId <= lastRequestId; requestId++) {
-            ( , uint256 shares ) = withdrawalManager.requests(requestId);
+            (, uint256 shares) = withdrawalManager.requests(requestId);
 
             sumOfShares += shares;
         }
@@ -283,7 +284,7 @@ contract ProtocolHealthChecker {
     function check_withdrawalManagerQueue_invariant_D(address withdrawalManager_) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( uint128 nextRequestId, uint128 lastRequestId ) = withdrawalManager.queue();
+        (uint128 nextRequestId, uint128 lastRequestId) = withdrawalManager.queue();
 
         isMaintained_ = nextRequestId <= lastRequestId + 1;
     }
@@ -291,7 +292,7 @@ contract ProtocolHealthChecker {
     function check_withdrawalManagerQueue_invariant_E(address withdrawalManager_) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( uint128 nextRequestId, ) = withdrawalManager.queue();
+        (uint128 nextRequestId,) = withdrawalManager.queue();
 
         isMaintained_ = nextRequestId != 0;
     }
@@ -299,7 +300,7 @@ contract ProtocolHealthChecker {
     function check_withdrawalManagerQueue_invariant_F(address withdrawalManager_) public view returns (bool isMaintained_) {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
-        ( address owner, uint256 shares ) = withdrawalManager.requests(0);
+        (address owner, uint256 shares) = withdrawalManager.requests(0);
 
         isMaintained_ = shares == 0 && owner == address(0);
     }
@@ -377,9 +378,8 @@ contract ProtocolHealthChecker {
 
         for (uint256 i = 0; i < length; i++) {
             address strategy = IPoolManager(poolManager).strategyList(i);
-            if (_isOpenTermLoanManager(strategy))  strategies.openTermLoanManager  = strategy;
+            if (_isOpenTermLoanManager(strategy)) strategies.openTermLoanManager = strategy;
         }
-
     }
 
     function _isOpenTermLoanManager(address loan) internal view returns (bool isOpenTermLoanManager_) {

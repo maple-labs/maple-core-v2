@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IERC20,
-    IPoolManager,
-    IStrategyHandler,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20, IPoolManager, IStrategyHandler, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -30,7 +25,7 @@ contract StrategyManagerHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     constructor(
-        string    memory handlerName_,
+        string memory handlerName_,
         address[] memory strategyManagers_,
         address[] memory poolManagers_,
         address[] memory strategyHandlers_
@@ -54,7 +49,7 @@ contract StrategyManagerHandler is HandlerBase {
     function fundStrategyManager(uint256 seed_) external {
         address strategyManager_ = _selectStrategyManager(seed_);
 
-        ( address poolManager_, uint256 maxAssets_ ) = _selectFundablePoolManager(seed_);
+        (address poolManager_, uint256 maxAssets_) = _selectFundablePoolManager(seed_);
 
         if (poolManager_ == address(0)) {
             _recordSkip();
@@ -78,7 +73,7 @@ contract StrategyManagerHandler is HandlerBase {
     function requestRedeem(uint256 seed_) external {
         address strategyManager_ = _selectStrategyManager(seed_);
 
-        ( address poolManager_, uint256 freeShares_ ) = _selectPoolManagerWithFreeShares(strategyManager_, seed_);
+        (address poolManager_, uint256 freeShares_) = _selectPoolManagerWithFreeShares(strategyManager_, seed_);
 
         if (poolManager_ == address(0)) {
             _recordSkip();
@@ -93,7 +88,7 @@ contract StrategyManagerHandler is HandlerBase {
     function cancelRedemption(uint256 seed_) external {
         address strategyManager_ = _selectStrategyManager(seed_);
 
-        ( address poolManager_, uint256 pendingShares_ ) = _selectPoolManagerWithPendingShares(strategyManager_, seed_);
+        (address poolManager_, uint256 pendingShares_) = _selectPoolManagerWithPendingShares(strategyManager_, seed_);
 
         if (poolManager_ == address(0)) {
             _recordSkip();
@@ -108,14 +103,14 @@ contract StrategyManagerHandler is HandlerBase {
     function processRedemption(uint256 seed_) external {
         address strategyManager_ = _selectStrategyManager(seed_);
 
-        ( address poolManager_, uint256 pendingShares_ ) = _selectPoolManagerWithPendingShares(strategyManager_, seed_);
+        (address poolManager_, uint256 pendingShares_) = _selectPoolManagerWithPendingShares(strategyManager_, seed_);
 
         if (poolManager_ == address(0)) {
             _recordSkip();
             return;
         }
 
-        ( uint256 shares_, uint256 assets_ ) = _boundProcessableRedemption(strategyManager_, pendingShares_, seed_, "shares");
+        (uint256 shares_, uint256 assets_) = _boundProcessableRedemption(strategyManager_, pendingShares_, seed_, "shares");
 
         if (shares_ == 0) {
             _recordSkip();
@@ -139,7 +134,9 @@ contract StrategyManagerHandler is HandlerBase {
         uint256 seed_,
         string memory salt_
     )
-        internal view returns (uint256 shares_, uint256 assets_)
+        internal
+        view
+        returns (uint256 shares_, uint256 assets_)
     {
         uint256 assetsUnderManagement_ = IStrategyManager(strategyManager_).assetsUnderManagement();
         uint256 unrealizedLosses_      = IStrategyManager(strategyManager_).unrealizedLosses();
@@ -192,7 +189,9 @@ contract StrategyManagerHandler is HandlerBase {
         address strategyManager_,
         uint256 seed_
     )
-        internal view returns (address poolManager_, uint256 freeShares_)
+        internal
+        view
+        returns (address poolManager_, uint256 freeShares_)
     {
         uint256 count_;
 
@@ -224,7 +223,9 @@ contract StrategyManagerHandler is HandlerBase {
         address strategyManager_,
         uint256 seed_
     )
-        internal view returns (address poolManager_, uint256 pendingShares_)
+        internal
+        view
+        returns (address poolManager_, uint256 pendingShares_)
     {
         uint256 count_;
 

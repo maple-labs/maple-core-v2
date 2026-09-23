@@ -91,13 +91,7 @@ contract ConfigurePoolTests is TestBase {
         }
     }
 
-    function testFuzz_configurePool(
-        uint256 oldPermissionLevel,
-        uint256 newPermissionLevel,
-        uint256[] memory bitmaps_
-    )
-        external
-    {
+    function testFuzz_configurePool(uint256 oldPermissionLevel, uint256 newPermissionLevel, uint256[] memory bitmaps_) external {
         oldPermissionLevel = bound(oldPermissionLevel, 0, PUBLIC);
         newPermissionLevel = bound(newPermissionLevel, 0, PUBLIC + 1);
 
@@ -118,10 +112,8 @@ contract ConfigurePoolTests is TestBase {
         poolPermissionManager.configurePool(address(poolManager), newPermissionLevel, functionIds_, bitmaps_);
 
         if (
-            oldPermissionLevel != PUBLIC &&
-            newPermissionLevel <= PUBLIC &&
-            functionIds_.length > 0 &&
-            functionIds_.length == bitmaps_.length
+            oldPermissionLevel != PUBLIC && newPermissionLevel <= PUBLIC && functionIds_.length > 0
+                && functionIds_.length == bitmaps_.length
         ) {
             assertEq(poolPermissionManager.permissionLevels(address(poolManager)), newPermissionLevel);
 

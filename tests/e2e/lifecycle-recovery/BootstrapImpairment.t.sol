@@ -41,7 +41,7 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
         /*** Deploy a bootstrap-funded strategy shared by two Pools                                                                     ***/
         /**********************************************************************************************************************************/
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            bootstrapDelegate,
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -51,27 +51,27 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
             bootstrapMint_:               bootstrapMint
         });
 
-        ( poolA, poolManagerA ) = _createPoolSharingStrategy("poolADelegate", aaveV3StrategyManager);
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
+        (poolA, poolManagerA) = _createPoolSharingStrategy("poolADelegate", aaveV3StrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
 
-        deposit(poolA,  lp, poolLiquidity);
+        deposit(poolA, lp, poolLiquidity);
         deposit(poolB, lp, poolLiquidity);
 
-        fundStrategyManager(poolManagerA,  aaveV3StrategyManager, poolAFunding);
+        fundStrategyManager(poolManagerA, aaveV3StrategyManager, poolAFunding);
         fundStrategyManager(poolManagerB, aaveV3StrategyManager, poolBFunding);
 
-        bootstrapShares     = bootstrapMint - roundingError;                               // 100_000e6 - 1
-        poolAStrategyShares = poolAFunding - roundingError;                                // 600_000e6 - 1
-        poolBStrategyShares = poolBFunding;                                                // 400_000e6
+        bootstrapShares     = bootstrapMint - roundingError; // 100_000e6 - 1
+        poolAStrategyShares = poolAFunding - roundingError; // 600_000e6 - 1
+        poolBStrategyShares = poolBFunding; // 400_000e6
         totalStrategyAssets = bootstrapShares + poolAStrategyShares + poolBStrategyShares; // 1_100_000e6 - 2
-        totalStrategyShares = totalStrategyAssets;                                         // 1_100_000e6 - 2
+        totalStrategyShares = totalStrategyAssets; // 1_100_000e6 - 2
 
-        bootstrapAssets = bootstrapShares;      // 100_000e6 - 1
-        bootstrapLosses = bootstrapAssets;      // 100_000e6 - 1
-        poolAAssets     = poolAStrategyShares;  // 600_000e6 - 1
-        poolALosses     = poolAAssets;          // 600_000e6 - 1
-        poolBAssets     = poolBStrategyShares;  // 400_000e6
-        poolBLosses     = poolBAssets;          // 400_000e6
+        bootstrapAssets = bootstrapShares; // 100_000e6 - 1
+        bootstrapLosses = bootstrapAssets; // 100_000e6 - 1
+        poolAAssets     = poolAStrategyShares; // 600_000e6 - 1
+        poolALosses     = poolAAssets; // 600_000e6 - 1
+        poolBAssets     = poolBStrategyShares; // 400_000e6
+        poolBLosses     = poolBAssets; // 400_000e6
 
         /**********************************************************************************************************************************/
         /*** Fully impair the strategy and request every Pool-owned share                                                               ***/
@@ -232,13 +232,13 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
 
         assertEq(fundsAsset.balanceOf(poolA), poolLiquidity - poolAFunding + poolAAssets);
 
-        poolBExitAssets = poolBFunding - roundingError;  // 400_000e6 - 1
+        poolBExitAssets = poolBFunding - roundingError; // 400_000e6 - 1
 
         processRedemptionFromStrategyManager(poolManagerB, aaveV3StrategyManager, poolBStrategyShares);
 
         assertEq(fundsAsset.balanceOf(poolB), poolLiquidity - poolBFunding + poolBExitAssets);
 
-        residualAssets = bootstrapMint - 2 * roundingError;  // 100_000e6 - 2
+        residualAssets = bootstrapMint - 2 * roundingError; // 100_000e6 - 2
 
         assertPoolState({
             pool:               poolA,
@@ -308,7 +308,7 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
         /*** Deploy a bootstrap-funded strategy shared by two Pools                                                                     ***/
         /**********************************************************************************************************************************/
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            bootstrapDelegate,
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -318,28 +318,28 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
             bootstrapMint_:               bootstrapMint
         });
 
-        ( poolA, poolManagerA ) = _createPoolSharingStrategy("poolADelegate", aaveV3StrategyManager);
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
+        (poolA, poolManagerA) = _createPoolSharingStrategy("poolADelegate", aaveV3StrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
 
-        deposit(poolA,  lp, poolLiquidity);
+        deposit(poolA, lp, poolLiquidity);
         deposit(poolB, lp, poolLiquidity);
 
-        fundStrategyManager(poolManagerA,  aaveV3StrategyManager, poolAFunding);
+        fundStrategyManager(poolManagerA, aaveV3StrategyManager, poolAFunding);
         fundStrategyManager(poolManagerB, aaveV3StrategyManager, poolBFunding);
 
-        bootstrapShares     = bootstrapMint - roundingError;                               // 100_000e6 - 1
-        poolAStrategyShares = poolAFunding - roundingError;                                // 600_000e6 - 1
-        poolBStrategyShares = poolBFunding;                                                // 400_000e6
+        bootstrapShares     = bootstrapMint - roundingError; // 100_000e6 - 1
+        poolAStrategyShares = poolAFunding - roundingError; // 600_000e6 - 1
+        poolBStrategyShares = poolBFunding; // 400_000e6
         totalStrategyAssets = bootstrapShares + poolAStrategyShares + poolBStrategyShares; // 1_100_000e6 - 2
-        totalStrategyShares = totalStrategyAssets;                                         // 1_100_000e6 - 2
-        impairmentAmount    = totalStrategyAssets / 4;                                     // 275_000e6 - 1
+        totalStrategyShares = totalStrategyAssets; // 1_100_000e6 - 2
+        impairmentAmount    = totalStrategyAssets / 4; // 275_000e6 - 1
 
-        bootstrapAssets = bootstrapShares;      // 100_000e6 - 1
-        bootstrapLosses = 25_000e6;             // 25_000e6
-        poolAAssets     = poolAStrategyShares;  // 600_000e6 - 1
-        poolALosses     = 150_000e6;            // 150_000e6
-        poolBAssets     = poolBStrategyShares;  // 400_000e6
-        poolBLosses     = 100_000e6;            // 100_000e6
+        bootstrapAssets = bootstrapShares; // 100_000e6 - 1
+        bootstrapLosses = 25_000e6; // 25_000e6
+        poolAAssets     = poolAStrategyShares; // 600_000e6 - 1
+        poolALosses     = 150_000e6; // 150_000e6
+        poolBAssets     = poolBStrategyShares; // 400_000e6
+        poolBLosses     = 100_000e6; // 100_000e6
 
         /**********************************************************************************************************************************/
         /*** Partially impair the strategy and process every Pool-owned share                                                           ***/
@@ -410,13 +410,13 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
             unrealizedLosses: poolBLosses
         });
 
-        poolAExitAssets = 450_000e6 - roundingError;  // 450_000e6 - 1
+        poolAExitAssets = 450_000e6 - roundingError; // 450_000e6 - 1
 
         processRedemptionFromStrategyManager(poolManagerA, aaveV3StrategyManager, poolAStrategyShares);
 
         assertEq(fundsAsset.balanceOf(poolA), poolLiquidity - poolAFunding + poolAExitAssets);
 
-        poolBExitAssets = 300_000e6 - roundingError;  // 300_000e6 - 1
+        poolBExitAssets = 300_000e6 - roundingError; // 300_000e6 - 1
 
         processRedemptionFromStrategyManager(poolManagerB, aaveV3StrategyManager, poolBStrategyShares);
 
@@ -426,7 +426,7 @@ contract BootstrapImpairmentTests is AaveV3StrategyTestBase {
         /*** Confirm only bootstrap shares remain and own the residual impaired value                                                   ***/
         /**********************************************************************************************************************************/
 
-        residualAssets = 350_000e6 - 2 * roundingError;  // 350_000e6 - 2
+        residualAssets = 350_000e6 - 2 * roundingError; // 350_000e6 - 2
 
         assertPoolState({
             pool:               poolA,

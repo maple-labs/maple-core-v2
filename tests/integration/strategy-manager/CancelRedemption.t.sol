@@ -22,7 +22,7 @@ contract StrategyManagerCancelRedemptionTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -81,7 +81,7 @@ contract StrategyManagerCancelRedemptionFailureTests is StrategyManagerCancelRed
         fundStrategyManager(firstPoolManager, strategyManager, INITIAL_LIQUIDITY);
         requestRedeemFromStrategyManager(firstPoolManager, strategyManager, request);
 
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", strategyManager);
 
         address secondPoolDelegate = IPoolManager(secondPoolManager).poolDelegate();
 
@@ -244,7 +244,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
         address newLiquidityBot    = makeAddr("newLiquidityBot");
         address newLiquidityRouter = makeAddr("liquidityRouter");
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    newLiquidityBot),    false);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT", newLiquidityBot),       false);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", newLiquidityRouter), false);
 
         /**********************************************************************************************************************************/
@@ -252,11 +252,11 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
         /**********************************************************************************************************************************/
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT",    newLiquidityBot,    true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT", newLiquidityBot, true);
         globals.setValidInstanceOf("LIQUIDITY_ROUTER", newLiquidityRouter, true);
         vm.stopPrank();
 
-        assertEq(globals.isInstanceOf("LIQUIDITY_BOT",    newLiquidityBot),    true);
+        assertEq(globals.isInstanceOf("LIQUIDITY_BOT", newLiquidityBot),       true);
         assertEq(globals.isInstanceOf("LIQUIDITY_ROUTER", newLiquidityRouter), true);
 
         assertPoolState({
@@ -846,7 +846,7 @@ contract StrategyManagerCancelRedemptionSuccessTests is StrategyManagerCancelRed
         /*** Step 1: Create a second pool, deposit liquidity, and fund                                                                  ***/
         /**********************************************************************************************************************************/
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("poolDelegate2", strategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("poolDelegate2", strategyManager);
 
         openPool(poolManager2);
 

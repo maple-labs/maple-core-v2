@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAavePoolLike,
-    IAaveV3Strategy,
-    IERC20,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAavePoolLike, IAaveV3Strategy, IERC20, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "./AaveV3StrategyTestBase.sol";
 
@@ -129,10 +124,10 @@ contract SparkLendStrategyRecognizeLossFailureTests is AaveV3StrategyRecognizeLo
 
 contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
 
-    uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-    uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+    uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
-    uint256 expectedRoundingError = 1;  // Aave reports 1 asset unit below the nominal supply at this fork block.
+    uint256 expectedRoundingError = 1; // Aave reports 1 asset unit below the nominal supply at this fork block.
     uint256 fundAmount            = 500_000e6;
     uint256 poolLiquidity         = 1_000_000e6;
 
@@ -608,7 +603,7 @@ contract AaveV3StrategyRecognizeLossTests is AaveV3StrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondPoolFunding);

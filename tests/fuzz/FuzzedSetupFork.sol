@@ -11,7 +11,6 @@ contract FuzzedSetupFork is FuzzedSetup {
     address skyStrategyDelegate  = makeAddr("skyStrategyDelegate");
 
     function _setupForkEnvironment() internal {
-
         /**********************************************************************************************************************************/
         /*** Deploy the protocol, the shared allocation strategy and both pools against the forked funds asset                          ***/
         /**********************************************************************************************************************************/
@@ -27,7 +26,7 @@ contract FuzzedSetupFork is FuzzedSetup {
         /*** Deploy the yield strategies that will be shared by both pools                                                              ***/
         /**********************************************************************************************************************************/
 
-        ( aaveStrategyManagerShared, aaveUnderlyingStrategyShared ) = _deployAaveV3Strategy({
+        (aaveStrategyManagerShared, aaveUnderlyingStrategyShared) = _deployAaveV3Strategy({
             strategyDelegate_:            aaveStrategyDelegate,
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -37,7 +36,7 @@ contract FuzzedSetupFork is FuzzedSetup {
             bootstrapMint_:               0
         });
 
-        ( skyStrategyManagerShared, skyUnderlyingStrategyShared ) = _deploySkyStrategy({
+        (skyStrategyManagerShared, skyUnderlyingStrategyShared) = _deploySkyStrategy({
             strategyDelegate_:        skyStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,

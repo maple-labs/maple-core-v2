@@ -41,7 +41,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
 
-        ( address poolManager_, bool isPoolDelegate_ ) = globals.poolDelegates(newPoolDelegate);
+        (address poolManager_, bool isPoolDelegate_) = globals.poolDelegates(newPoolDelegate);
 
         assertEq(poolManager_, address(poolManager));
 
@@ -65,7 +65,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
 
-        ( address poolManager_, bool isPoolDelegate_ ) = globals.poolDelegates(newPoolDelegate);
+        (address poolManager_, bool isPoolDelegate_) = globals.poolDelegates(newPoolDelegate);
 
         assertEq(poolManager_, address(poolManager));
 
@@ -89,7 +89,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
 
-        ( address poolManager_, bool isPoolDelegate_ ) = globals.poolDelegates(newPoolDelegate);
+        (address poolManager_, bool isPoolDelegate_) = globals.poolDelegates(newPoolDelegate);
 
         assertEq(poolManager_, address(poolManager));
 
@@ -109,7 +109,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
 
-        ( address poolManager_, bool isPoolDelegate_ ) = globals.poolDelegates(newPoolDelegate);
+        (address poolManager_, bool isPoolDelegate_) = globals.poolDelegates(newPoolDelegate);
 
         assertEq(poolManager_, address(poolManager));
 
@@ -143,7 +143,7 @@ contract TransferPoolOwnershipTests is TestBaseWithAssertions {
         assertEq(poolManager.poolDelegate(),        newPoolDelegate);
         assertEq(poolManager.pendingPoolDelegate(), address(0));
 
-        ( address poolManager_, bool isPoolDelegate_ ) = globals.poolDelegates(newPoolDelegate);
+        (address poolManager_, bool isPoolDelegate_) = globals.poolDelegates(newPoolDelegate);
 
         assertEq(poolManager_, address(poolManager));
 

@@ -14,7 +14,7 @@ import {
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { OpenTermLoanHealthChecker } from "../../health-checkers/OpenTermLoanHealthChecker.sol";
-import { ProtocolHealthChecker }     from "../../health-checkers/ProtocolHealthChecker.sol";
+import { ProtocolHealthChecker } from "../../health-checkers/ProtocolHealthChecker.sol";
 
 import { HealthCheckerAssertions } from "../../HealthCheckerAssertions.sol";
 
@@ -64,7 +64,7 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAsserti
 
     function testFuzzFork_syrupUSDG_lifecycle_assertInvariants(uint256 seed_) external {
         vm.skip(true);
-        
+
         seed = seed_;
 
         for (uint256 i; i < ACTION_COUNT; ++i) {
@@ -132,10 +132,7 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAsserti
     function removeSharesById() internal {
         address lender = lenders[getSomeValue(0, lenders.length - 1)];
 
-        (
-            uint256[] memory requestIds,
-            uint256[] memory shares
-        ) = IWithdrawalManagerQueue(usdgWithdrawalManager).requestsByOwner(lender);
+        (uint256[] memory requestIds, uint256[] memory shares) = IWithdrawalManagerQueue(usdgWithdrawalManager).requestsByOwner(lender);
 
         if (requestIds.length == 0) return;
 
@@ -182,28 +179,11 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAsserti
         uint256 principal = getSomeValue(MIN_ACTION_AMOUNT, maxPrincipal);
         address borrower  = makeAddr(string(abi.encodePacked("usdgFuzzBorrower", loans.length)));
 
-        uint256[3] memory terms = [
-            getSomeValue(1 hours, 10 days),
-            getSomeValue(1 hours, 10 days),
-            getSomeValue(10 days, 90 days)
-        ];
+        uint256[3] memory terms = [getSomeValue(1 hours, 10 days), getSomeValue(1 hours, 10 days), getSomeValue(10 days, 90 days)];
 
-        uint256[4] memory rates = [
-            getSomeValue(0,      0.1e6),
-            getSomeValue(0.01e6, 0.25e6),
-            getSomeValue(0,      0.1e6),
-            getSomeValue(0,      0.1e6)
-        ];
+        uint256[4] memory rates = [getSomeValue(0, 0.1e6), getSomeValue(0.01e6, 0.25e6), getSomeValue(0, 0.1e6), getSomeValue(0, 0.1e6)];
 
-        address loan = createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            usdgOpenTermLoanManager,
-            USDG,
-            principal,
-            terms,
-            rates
-        );
+        address loan = createOpenTermLoan(openTermLoanFactory, borrower, usdgOpenTermLoanManager, USDG, principal, terms, rates);
 
         loans.push(loan);
 
@@ -233,16 +213,11 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAsserti
 
         if (loan == address(0)) return;
 
-        (
-            uint256 principalDue,
-            uint256 interest,
-            uint256 lateInterest,
-            uint256 delegateServiceFee,
-            uint256 platformServiceFee
-        ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+        (uint256 principalDue, uint256 interest, uint256 lateInterest, uint256 delegateServiceFee, uint256 platformServiceFee) =
+            IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
 
         uint256 principalToReturn = principalDue == 0 ? getSomeValue(0, IOpenTermLoan(loan).principal()) : principalDue;
-        uint256 paymentAmount = principalToReturn + interest + lateInterest + delegateServiceFee + platformServiceFee;
+        uint256 paymentAmount     = principalToReturn + interest + lateInterest + delegateServiceFee + platformServiceFee;
 
         if (paymentAmount == 0) return;
 
@@ -271,7 +246,7 @@ contract SyrupUSDGFuzzForkTests is SyrupUSDGDeploymentBase, HealthCheckerAsserti
         assertEq(escrowedShares,                              totalQueuedShares);
         assertEq(IPool(usdgPool).balanceOf(address(0)),       INITIAL_DEPOSIT);
         assertEq(sumLoanPrincipal(),                          principalOut);
-        assertGe(loanAssetsUnderManagement,                   principalOut);
+        assertGe(loanAssetsUnderManagement, principalOut);
     }
 
     function getSomeActiveLoan(bool allowCalled_) internal returns (address loan_) {

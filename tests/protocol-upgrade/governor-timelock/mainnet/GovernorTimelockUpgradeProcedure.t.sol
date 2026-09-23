@@ -36,10 +36,10 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(daoMultisig, proposer, executor, canceller, roleAdmin));
 
         // Assert Roles
-        assertEq(IGovernorTimelock(timelock).hasRole(proposer,         IGovernorTimelock(timelock).PROPOSER_ROLE()),  true);
-        assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()),  true);
-        assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin,    IGovernorTimelock(timelock).CANCELLER_ROLE()), true);
-        assertEq(IGovernorTimelock(timelock).hasRole(daoMultisig,      IGovernorTimelock(timelock).ROLE_ADMIN()),     true);
+        assertEq(IGovernorTimelock(timelock).hasRole(proposer, IGovernorTimelock(timelock).PROPOSER_ROLE()),         true);
+        assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()), true);
+        assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin, IGovernorTimelock(timelock).CANCELLER_ROLE()),   true);
+        assertEq(IGovernorTimelock(timelock).hasRole(daoMultisig, IGovernorTimelock(timelock).ROLE_ADMIN()),         true);
 
         // Assert token withdrawer role
         assertEq(IGovernorTimelock(timelock).tokenWithdrawer(), daoMultisig);
@@ -49,7 +49,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         assertEq(IGovernorTimelock(timelock).MIN_EXECUTION_WINDOW(), 1 days);
 
         // Assert Default Timelock Parameters Set
-        ( uint32 defaultDelay, uint32 defaultExecutionWindow ) = IGovernorTimelock(timelock).defaultTimelockParameters();
+        (uint32 defaultDelay, uint32 defaultExecutionWindow) = IGovernorTimelock(timelock).defaultTimelockParameters();
 
         assertEq(defaultDelay,           IGovernorTimelock(timelock).MIN_DELAY());
         assertEq(defaultExecutionWindow, IGovernorTimelock(timelock).MIN_EXECUTION_WINDOW());
@@ -61,7 +61,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         // Setup backups for role admin and executor roles
         bytes32[] memory roles            = new bytes32[](2);
         address[] memory accounts         = new address[](2);
-        bool[]    memory shouldGrantArray = new bool[](2);
+        bool[] memory    shouldGrantArray = new bool[](2);
 
         roles[0]            = IGovernorTimelock(timelock).ROLE_ADMIN();
         accounts[0]         = backupRoleAdmin;
@@ -76,13 +76,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
 
         uint256 proposalId = IGovernorTimelock(timelock).latestProposalId();
 
-        (
-            proposalHash,
-            isUnschedulable ,
-            scheduledAt ,
-            delayedUntil,
-            validUntil
-        ) = IGovernorTimelock(timelock).proposals(proposalId - 1);
+        (proposalHash, isUnschedulable, scheduledAt, delayedUntil, validUntil) = IGovernorTimelock(timelock).proposals(proposalId - 1);
 
         // Assert Role Updates Proposed
         assertEq(proposalId - 1,  1);
@@ -91,13 +85,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         assertEq(scheduledAt,     block.timestamp);
         assertEq(validUntil,      block.timestamp + 1 days + 1 days);
 
-        (
-            proposalHash,
-            isUnschedulable ,
-            scheduledAt ,
-            delayedUntil,
-            validUntil
-        ) = IGovernorTimelock(timelock).proposals(proposalId);
+        (proposalHash, isUnschedulable, scheduledAt, delayedUntil, validUntil) = IGovernorTimelock(timelock).proposals(proposalId);
 
         // Assert Role Updates Proposed
         assertEq(proposalId,      2);
@@ -108,27 +96,17 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
 
         // Schedule changing of timelock params
         address[] memory targets = new address[](1);
-        bytes[] memory data      = new bytes[](1);
+        bytes[] memory   data    = new bytes[](1);
 
         targets[0] = timelock;
-        data[0]    = abi.encodeWithSelector(
-            IGovernorTimelock(timelock).setDefaultTimelockParameters.selector,
-            3 days,
-            2 days
-        );
+        data[0]    = abi.encodeWithSelector(IGovernorTimelock(timelock).setDefaultTimelockParameters.selector, 3 days, 2 days);
 
         vm.prank(daoMultisig);
         IGovernorTimelock(timelock).scheduleProposals(targets, data);
 
         proposalId = IGovernorTimelock(timelock).latestProposalId();
 
-        (
-            proposalHash,
-            isUnschedulable ,
-            scheduledAt ,
-            delayedUntil,
-            validUntil
-        ) = IGovernorTimelock(timelock).proposals(proposalId);
+        (proposalHash, isUnschedulable, scheduledAt, delayedUntil, validUntil) = IGovernorTimelock(timelock).proposals(proposalId);
 
         // Assert Timelock Params Change Proposed
         assertEq(proposalId,      3);
@@ -143,7 +121,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
 
         uint256[] memory proposalIdsToExecute = new uint256[](3);
         address[] memory targetsToExecute     = new address[](3);
-        bytes[] memory dataToExecute          = new bytes[](3);
+        bytes[] memory   dataToExecute        = new bytes[](3);
 
         proposalIdsToExecute[0] = 1;
         proposalIdsToExecute[1] = 2;
@@ -154,35 +132,25 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
         targetsToExecute[2] = timelock;
 
         dataToExecute[0] = abi.encodeWithSelector(
-            IGovernorTimelock(timelock).updateRole.selector,
-            IGovernorTimelock(timelock).ROLE_ADMIN(),
-            backupRoleAdmin,
-            true
+            IGovernorTimelock(timelock).updateRole.selector, IGovernorTimelock(timelock).ROLE_ADMIN(), backupRoleAdmin, true
         );
 
         dataToExecute[1] = abi.encodeWithSelector(
-            IGovernorTimelock(timelock).updateRole.selector,
-            IGovernorTimelock(timelock).EXECUTOR_ROLE(),
-            backupExecutor,
-            true
+            IGovernorTimelock(timelock).updateRole.selector, IGovernorTimelock(timelock).EXECUTOR_ROLE(), backupExecutor, true
         );
 
-        dataToExecute[2] = abi.encodeWithSelector(
-            IGovernorTimelock(timelock).setDefaultTimelockParameters.selector,
-            3 days,
-            2 days
-        );
+        dataToExecute[2] = abi.encodeWithSelector(IGovernorTimelock(timelock).setDefaultTimelockParameters.selector, 3 days, 2 days);
 
         vm.warp(start + 1 days + 1 seconds);
         vm.prank(operationalAdmin);
         IGovernorTimelock(timelock).executeProposals(proposalIdsToExecute, targetsToExecute, dataToExecute);
 
         // Assert Role Updates Executed
-        assertEq(IGovernorTimelock(timelock).hasRole(backupRoleAdmin, IGovernorTimelock(timelock).ROLE_ADMIN()),    true);
-        assertEq(IGovernorTimelock(timelock).hasRole(backupExecutor,  IGovernorTimelock(timelock).EXECUTOR_ROLE()), true);
+        assertEq(IGovernorTimelock(timelock).hasRole(backupRoleAdmin, IGovernorTimelock(timelock).ROLE_ADMIN()),   true);
+        assertEq(IGovernorTimelock(timelock).hasRole(backupExecutor, IGovernorTimelock(timelock).EXECUTOR_ROLE()), true);
 
         // Assert Timelock Params Changed
-        ( defaultDelay, defaultExecutionWindow ) = IGovernorTimelock(timelock).defaultTimelockParameters();
+        (defaultDelay, defaultExecutionWindow) = IGovernorTimelock(timelock).defaultTimelockParameters();
         assertEq(defaultDelay,           3 days);
         assertEq(defaultExecutionWindow, 2 days);
 
@@ -210,13 +178,7 @@ contract GovernorTimelockUpgradeProcedureTests is GovernorTimelockUpgradeTestsBa
 
         proposalId = IGovernorTimelock(timelock).latestProposalId();
 
-        (
-            proposalHash,
-            isUnschedulable ,
-            scheduledAt ,
-            delayedUntil,
-            validUntil
-        ) = IGovernorTimelock(timelock).proposals(proposalId);
+        (proposalHash, isUnschedulable, scheduledAt, delayedUntil, validUntil) = IGovernorTimelock(timelock).proposals(proposalId);
 
         // Assert Accept Governorship Proposed
         assertEq(proposalId,      4);

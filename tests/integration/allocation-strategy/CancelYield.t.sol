@@ -15,10 +15,10 @@ contract AllocationStrategyCancelYieldTestBase is AllocationStrategyTestBase {
     uint256 protocolFee       = 1_500e6;
     uint256 yieldAssets       = 50_000e6;
 
-    uint32 delegateFeeRate  = 0.02e6;  // 2%
-    uint32 protocolFeeRate  = 0.03e6;  // 3%
-    uint32 yieldCooldown    = 1 hours;
-    uint32 yieldDuration    = 31 days;
+    uint32 delegateFeeRate = 0.02e6; // 2%
+    uint32 protocolFeeRate = 0.03e6; // 3%
+    uint32 yieldCooldown   = 1 hours;
+    uint32 yieldDuration   = 31 days;
 
     function setUp() public virtual override {
         super.setUp();
@@ -245,7 +245,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     uint32 postCancelElapsed;
 
     function test_cancelYield_success_partialAmount() external {
-
         /**********************************************************************************************************************************/
         /*** Warp forward so part of the schedule has vested                                                                            ***/
         /**********************************************************************************************************************************/
@@ -427,7 +426,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     }
 
     function test_cancelYield_success_fullAmount_explicitAmount() external {
-
         /**********************************************************************************************************************************/
         /*** Warp forward so part of the schedule has vested                                                                            ***/
         /**********************************************************************************************************************************/
@@ -606,7 +604,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     }
 
     function test_cancelYield_success_fullAmount_maxConvention() external {
-
         /**********************************************************************************************************************************/
         /*** Warp forward so part of the schedule has vested                                                                            ***/
         /**********************************************************************************************************************************/
@@ -785,7 +782,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     }
 
     function test_cancelYield_success_thenRescheduled_lessYield() external {
-
         /**********************************************************************************************************************************/
         /*** Warp partway through the vesting period, then cancel part of the unrealized yield                                          ***/
         /**********************************************************************************************************************************/
@@ -1039,7 +1035,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     }
 
     function test_cancelYield_success_withExistingImpairment() external {
-
         /**********************************************************************************************************************************/
         /*** Warp partway through the vesting period, then impair part of the deployed assets                                           ***/
         /**********************************************************************************************************************************/
@@ -1224,7 +1219,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     }
 
     function test_cancelYield_success_afterLossRecognized() external {
-
         /**********************************************************************************************************************************/
         /*** Warp partway through the vesting period, then recognize a loss on the deployed assets                                      ***/
         /**********************************************************************************************************************************/
@@ -1598,7 +1592,6 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
     }
 
     function test_cancelYield_success_calledTwiceWithWarpBetween() external {
-
         /**********************************************************************************************************************************/
         /*** Warp partway through the schedule so part of the yield has vested                                                          ***/
         /**********************************************************************************************************************************/
@@ -1978,7 +1971,7 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
         /*** Fund a second pool into the same strategy manager mid-vesting: it mints shares at the current (non 1:1) price              ***/
         /**********************************************************************************************************************************/
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         initialAssets2      = 819_000e6;
         expectedShares2     = initialAssets2 * initialShares1 / (initialAssets1 + realizedAtCancel);
@@ -2068,7 +2061,7 @@ contract AllocationStrategyCancelYieldSuccessTests is AllocationStrategyCancelYi
         vm.warp(startingTime + elapsedDuration);
 
         aumAtCancel         = totalPrincipal + realizedAtCancel;
-        pool1AssetsAtCancel = initialShares1  * aumAtCancel / totalStrategyShares;
+        pool1AssetsAtCancel = initialShares1 * aumAtCancel / totalStrategyShares;
         pool2AssetsAtCancel = expectedShares2 * aumAtCancel / totalStrategyShares;
 
         assertPoolState({

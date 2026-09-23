@@ -24,10 +24,19 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
 
     function test_addShares_success() external {
         // assert lp1 before withdrawal request
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 0 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 0
+        });
 
-        assertEq(pool.balanceOf(lp1),       1_000e6);
+        assertEq(pool.balanceOf(lp1),             1_000e6);
         assertEq(pool.balanceOf(wm),              0);
         assertEq(queueWM.totalShares(),           0);
         assertEq(queueWM.userEscrowedShares(lp1), 0);
@@ -35,28 +44,55 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
         requestRedeem(lp1, 1_000e6);
 
         // assert lp1 after withdrawal request
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 1_000e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp1,
+            shares:      1_000e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
-        assertEq(pool.balanceOf(lp1),                   0);
+        assertEq(pool.balanceOf(lp1),             0);
         assertEq(pool.balanceOf(wm),              1_000e6);
         assertEq(queueWM.totalShares(),           1_000e6);
         assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
 
         // assert lp2 before withdrawal request
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   2,
+            owner:       address(0),
+            shares:      0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
-        assertEq(pool.balanceOf(lp2),       2_000e6);
-        assertEq(pool.balanceOf(wm),        1_000e6);
-        assertEq(queueWM.totalShares(),     1_000e6);
+        assertEq(pool.balanceOf(lp2),             2_000e6);
+        assertEq(pool.balanceOf(wm),              1_000e6);
+        assertEq(queueWM.totalShares(),           1_000e6);
         assertEq(queueWM.userEscrowedShares(lp2), 0);
 
         requestRedeem(lp2, 2_000e6);
 
         // assert lp2 after withdrawal request
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp2, shares: 2_000e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   2,
+            owner:       lp2,
+            shares:      2_000e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 2
+        });
 
         assertEq(pool.balanceOf(lp2), 0);
         assertEq(pool.balanceOf(wm),  3_000e6);
@@ -66,8 +102,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
     }
 
     function test_addShares_partialRequest() external {
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 0 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 0
+        });
 
         assertEq(pool.balanceOf(lp1), 1_000e6);
         assertEq(pool.balanceOf(wm),  0);
@@ -77,8 +122,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
 
         requestRedeem(lp1, 600e6);
 
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 600e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp1,
+            shares:      600e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
         assertEq(pool.balanceOf(lp1), 400e6);
         assertEq(pool.balanceOf(wm),  600e6);
@@ -91,22 +145,40 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
         vm.prank(poolDelegate);
         queueWM.setManualWithdrawal(lp1, true);
 
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 0 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 0
+        });
 
-        assertEq(pool.balanceOf(lp1),       1_000e6);
-        assertEq(pool.balanceOf(wm),              0);
+        assertEq(pool.balanceOf(lp1), 1_000e6);
+        assertEq(pool.balanceOf(wm),  0);
 
         assertEq(queueWM.totalShares(),           0);
         assertEq(queueWM.userEscrowedShares(lp1), 0);
 
         requestRedeem(lp1, 1_000e6);
 
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 1_000e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp1,
+            shares:      1_000e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
-        assertEq(pool.balanceOf(lp1),                   0);
-        assertEq(pool.balanceOf(wm),              1_000e6);
+        assertEq(pool.balanceOf(lp1), 0);
+        assertEq(pool.balanceOf(wm),  1_000e6);
 
         assertEq(queueWM.totalShares(),           1_000e6);
         assertEq(queueWM.userEscrowedShares(lp1), 1_000e6);
@@ -118,8 +190,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
         vm.prank(lp1);
         pool.approve(sender, 1_000e6);
 
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 0 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 0
+        });
 
         assertEq(pool.balanceOf(lp1),         1_000e6);
         assertEq(pool.balanceOf(wm),          0);
@@ -131,8 +212,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
         vm.prank(sender);
         pool.requestRedeem(1_000e6, lp1);
 
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 1_000e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp1,
+            shares:      1_000e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
         assertEq(pool.balanceOf(lp1),         0);
         assertEq(pool.balanceOf(wm),          1_000e6);
@@ -143,8 +233,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
     }
 
     function test_addShares_sameAddressCallingTwice() external {
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 0 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       address(0),
+            shares:      0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 0
+        });
 
         assertEq(pool.balanceOf(lp1), 1_000e6);
         assertEq(pool.balanceOf(wm),  0);
@@ -155,8 +254,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
         requestRedeem(lp1, 400e6);
 
         // assert lp1 after first withdrawal request
-        assertRequest({ poolManager: address(poolManager), requestId: 1, owner: lp1, shares: 400e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   1,
+            owner:       lp1,
+            shares:      400e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
         assertEq(pool.balanceOf(lp1), 600e6);
         assertEq(pool.balanceOf(wm),  400e6);
@@ -167,8 +275,17 @@ contract AddSharesQueueTests is TestBaseWithAssertions {
         requestRedeem(lp1, 500e6);
 
         // assert lp1 after second withdrawal request
-        assertRequest({ poolManager: address(poolManager), requestId: 2, owner: lp1, shares: 500e6 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 2 });
+        assertRequest({
+            poolManager: address(poolManager),
+            requestId:   2,
+            owner:       lp1,
+            shares:      500e6
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 2
+        });
 
         assertEq(pool.balanceOf(lp1), 100e6);
         assertEq(pool.balanceOf(wm),  900e6);
@@ -187,11 +304,11 @@ contract AddSharesQueueFailureTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        lp  = makeAddr("lp");
+        lp = makeAddr("lp");
 
-        wm  = address(queueWM);
+        wm = address(queueWM);
 
-        deposit(lp,  1_000e6);
+        deposit(lp, 1_000e6);
 
         fundsAsset.mint(address(pool), 1_000e6);
     }

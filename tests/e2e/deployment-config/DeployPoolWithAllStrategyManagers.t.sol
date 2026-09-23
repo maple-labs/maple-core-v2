@@ -27,7 +27,7 @@ contract AllStrategyManagersTestBase is TestBaseWithAssertions {
         _configureGlobals();
         _createFactories();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -37,7 +37,7 @@ contract AllStrategyManagersTestBase is TestBaseWithAssertions {
             bootstrapMint_:               0
         });
 
-        ( sparkLendStrategyManager, ) = _deployAaveV3Strategy({
+        (sparkLendStrategyManager,) = _deployAaveV3Strategy({
             strategyDelegate_:            makeAddr("sparkStrategyDelegate"),
             aaveToken_:                   SPARK_USDC,
             useVirtualUnderlyingBalance_: false,
@@ -47,7 +47,7 @@ contract AllStrategyManagersTestBase is TestBaseWithAssertions {
             bootstrapMint_:               0
         });
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        makeAddr("skyStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -58,7 +58,7 @@ contract AllStrategyManagersTestBase is TestBaseWithAssertions {
             bootstrapMint_:           0
         });
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("allocationStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -105,20 +105,20 @@ contract DeployPoolWithAllStrategyManagersSuccessTests is AllStrategyManagersTes
 
         vm.prank(poolDelegate);
         address poolManagerAddress = poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         address(fundsAsset),
+            poolManagerInitParams: PoolManagerInitParams({
+                asset: address(fundsAsset),
                 initialSupply: 0,
-                name:          POOL_NAME,
-                symbol:        POOL_SYMBOL
+                name: POOL_NAME,
+                symbol: POOL_SYMBOL
             }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: 0,
-                liquidityCap:              type(uint256).max
+                liquidityCap: type(uint256).max
             }),
-            strategiesParams:       new StrategyDeployParams[](0),
+            strategiesParams: new StrategyDeployParams[](0),
             strategyManagersParams: managers
         });
 
@@ -126,7 +126,7 @@ contract DeployPoolWithAllStrategyManagersSuccessTests is AllStrategyManagersTes
         /*** Assert each Strategy Manager was added once and in order with its exact cap                                                ***/
         /**********************************************************************************************************************************/
 
-        ( IPoolManager deployedPoolManager, ) = assertDeployedPool({
+        (IPoolManager deployedPoolManager,) = assertDeployedPool({
             poolManager_:               poolManagerAddress,
             initialSupply_:             0,
             liquidityCap_:              type(uint256).max,
@@ -195,20 +195,20 @@ contract DeployPoolWithAllStrategyManagersFailureTests is AllStrategyManagersTes
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ASM:ALREADY_STRATEGY_MANAGER");
         poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         address(fundsAsset),
+            poolManagerInitParams: PoolManagerInitParams({
+                asset: address(fundsAsset),
                 initialSupply: 0,
-                name:          POOL_NAME,
-                symbol:        POOL_SYMBOL
+                name: POOL_NAME,
+                symbol: POOL_SYMBOL
             }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: 0,
-                liquidityCap:              type(uint256).max
+                liquidityCap: type(uint256).max
             }),
-            strategiesParams:       new StrategyDeployParams[](0),
+            strategiesParams: new StrategyDeployParams[](0),
             strategyManagersParams: managers
         });
     }
@@ -244,20 +244,20 @@ contract DeployPoolWithAllStrategyManagersFailureTests is AllStrategyManagersTes
         vm.prank(poolDelegate);
         vm.expectRevert("PM:SDMFR:OOB");
         poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         address(fundsAsset),
+            poolManagerInitParams: PoolManagerInitParams({
+                asset: address(fundsAsset),
                 initialSupply: 0,
-                name:          POOL_NAME,
-                symbol:        POOL_SYMBOL
+                name: POOL_NAME,
+                symbol: POOL_SYMBOL
             }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: HUNDRED_PERCENT + 1,
-                liquidityCap:              type(uint256).max
+                liquidityCap: type(uint256).max
             }),
-            strategiesParams:       new StrategyDeployParams[](0),
+            strategiesParams: new StrategyDeployParams[](0),
             strategyManagersParams: managers
         });
     }
@@ -297,20 +297,20 @@ contract DeployPoolWithAllStrategyManagersFailureTests is AllStrategyManagersTes
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ASM:INVALID_STRATEGY_MANAGER");
         poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         address(fundsAsset),
+            poolManagerInitParams: PoolManagerInitParams({
+                asset: address(fundsAsset),
                 initialSupply: 0,
-                name:          POOL_NAME,
-                symbol:        POOL_SYMBOL
+                name: POOL_NAME,
+                symbol: POOL_SYMBOL
             }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: 0,
-                liquidityCap:              type(uint256).max
+                liquidityCap: type(uint256).max
             }),
-            strategiesParams:       new StrategyDeployParams[](0),
+            strategiesParams: new StrategyDeployParams[](0),
             strategyManagersParams: managers
         });
     }
@@ -323,7 +323,7 @@ contract DeployPoolWithAllStrategyManagersFailureTests is AllStrategyManagersTes
         vm.prank(governor);
         globals.setValidPoolAsset(address(collateralAsset), true);
 
-        ( address incompatibleStrategyManager, ) = _deployAllocationStrategy({
+        (address incompatibleStrategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("incompatibleStrategyDelegate"),
             fundsAsset_:              address(collateralAsset),
             strategyDelegateFeeRate_: 0,
@@ -362,20 +362,20 @@ contract DeployPoolWithAllStrategyManagersFailureTests is AllStrategyManagersTes
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ASM:ASSET_NOT_SUPPORTED");
         poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         address(fundsAsset),
+            poolManagerInitParams: PoolManagerInitParams({
+                asset: address(fundsAsset),
                 initialSupply: 0,
-                name:          POOL_NAME,
-                symbol:        POOL_SYMBOL
+                name: POOL_NAME,
+                symbol: POOL_SYMBOL
             }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: 0,
-                liquidityCap:              type(uint256).max
+                liquidityCap: type(uint256).max
             }),
-            strategiesParams:       new StrategyDeployParams[](0),
+            strategiesParams: new StrategyDeployParams[](0),
             strategyManagersParams: managers
         });
     }

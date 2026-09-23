@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IPool,
-    IPoolManager,
-    IWithdrawalManagerQueue as IWithdrawalManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IPool, IPoolManager, IWithdrawalManagerQueue as IWithdrawalManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -24,13 +20,7 @@ contract WithdrawalHandler is HandlerBase {
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(
-        string    memory handlerName_,
-        address[] memory pools_,
-        address[] memory lps_
-    )
-        HandlerBase(handlerName_)
-    {
+    constructor(string memory handlerName_, address[] memory pools_, address[] memory lps_) HandlerBase(handlerName_) {
         pools = pools_;
         lps   = lps_;
 
@@ -46,7 +36,7 @@ contract WithdrawalHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     function processRedemptions(uint256 seed_) external {
-        ( address pool_, address poolManager_, address withdrawalManager_ ) = _selectPool(seed_);
+        (address pool_, address poolManager_, address withdrawalManager_) = _selectPool(seed_);
 
         uint256 sharesToProcess_ = _selectSharesToProcess(seed_, withdrawalManager_);
 
@@ -64,9 +54,9 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function processEmptyRedemptions(uint256 seed_) external {
-        ( , address poolManager_, address withdrawalManager_ ) = _selectPool(seed_);
+        (, address poolManager_, address withdrawalManager_) = _selectPool(seed_);
 
-        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = IWithdrawalManager(withdrawalManager_).queue();
+        (uint128 nextRequestId_, uint128 lastRequestId_) = IWithdrawalManager(withdrawalManager_).queue();
 
         if (nextRequestId_ > lastRequestId_) {
             _recordSkip();
@@ -82,7 +72,7 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function redeem(uint256 seed_) external {
-        ( address pool_, , address withdrawalManager_ ) = _selectPool(seed_);
+        (address pool_,, address withdrawalManager_) = _selectPool(seed_);
 
         address lp_              = _selectRedeemLp(seed_);
         uint256 sharesAvailable_ = IWithdrawalManager(withdrawalManager_).manualSharesAvailable(lp_);
@@ -101,21 +91,21 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function removeRequest(uint256 seed_) external {
-        ( , address poolManager_, address withdrawalManager_ ) = _selectPool(seed_);
+        (, address poolManager_, address withdrawalManager_) = _selectPool(seed_);
 
         address lp_ = _selectRedeemLp(seed_);
 
-        ( uint256[] memory requestIds_, ) = IWithdrawalManager(withdrawalManager_).requestsByOwner(lp_);
+        (uint256[] memory requestIds_,) = IWithdrawalManager(withdrawalManager_).requestsByOwner(lp_);
 
         if (requestIds_.length == 0) {
             _recordSkip();
             return;
         }
 
-        ( , uint256 requestIdToRemove_ ) = _selectRequestToRemove(seed_, requestIds_);
+        (, uint256 requestIdToRemove_) = _selectRequestToRemove(seed_, requestIds_);
 
         uint256[] memory requestIdsToRemove_ = new uint256[](1);
-        requestIdsToRemove_[0] = requestIdToRemove_;
+        requestIdsToRemove_[0]               = requestIdToRemove_;
 
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
@@ -124,11 +114,11 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function removeShares(uint256 seed_) external {
-        ( address pool_, , address withdrawalManager_ ) = _selectPool(seed_);
+        (address pool_,, address withdrawalManager_) = _selectPool(seed_);
 
         address lp_ = _selectRedeemLp(seed_);
 
-        (, uint256[] memory shares_ ) = IWithdrawalManager(withdrawalManager_).requestsByOwner(lp_);
+        (, uint256[] memory shares_) = IWithdrawalManager(withdrawalManager_).requestsByOwner(lp_);
 
         uint256 totalShares_ = 0;
 
@@ -148,18 +138,18 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function removeSharesById(uint256 seed_) external {
-        ( , , address withdrawalManager_ ) = _selectPool(seed_);
+        (,, address withdrawalManager_) = _selectPool(seed_);
 
         address lp_ = _selectRedeemLp(seed_);
 
-        ( uint256[] memory requestIds_, uint256[] memory sharesPerRequest_ ) = IWithdrawalManager(withdrawalManager_).requestsByOwner(lp_);
+        (uint256[] memory requestIds_, uint256[] memory sharesPerRequest_) = IWithdrawalManager(withdrawalManager_).requestsByOwner(lp_);
 
         if (requestIds_.length == 0) {
             _recordSkip();
             return;
         }
 
-        ( uint256 indexOfRequestToRemove_, uint256 requestIdToRemove_ ) = _selectRequestToRemove(seed_, requestIds_);
+        (uint256 indexOfRequestToRemove_, uint256 requestIdToRemove_) = _selectRequestToRemove(seed_, requestIds_);
 
         uint256 sharesToRemove_ = _selectSharesToRemove(seed_, sharesPerRequest_[indexOfRequestToRemove_]);
 
@@ -168,7 +158,7 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function requestRedeem(uint256 seed_) external {
-        ( address pool_, , ) = _selectPool(seed_);
+        (address pool_,,) = _selectPool(seed_);
 
         address lp_      = _selectRedeemLp(seed_);
         uint256 balance_ = IPool(pool_).balanceOf(lp_);
@@ -185,7 +175,7 @@ contract WithdrawalHandler is HandlerBase {
     }
 
     function setManualWithdrawal(uint256 seed_) external {
-        ( , address poolManager_, address withdrawalManager_ ) = _selectPool(seed_);
+        (, address poolManager_, address withdrawalManager_) = _selectPool(seed_);
 
         address lp_ = _selectRedeemLp(seed_);
 
@@ -228,7 +218,9 @@ contract WithdrawalHandler is HandlerBase {
         uint128 nextRequestId_,
         uint128 lastRequestId_
     )
-        internal pure returns (uint256 numberOfRequestsToProcess_)
+        internal
+        pure
+        returns (uint256 numberOfRequestsToProcess_)
     {
         uint256 numberOfRequests_ = lastRequestId_ - nextRequestId_ + 1;
 
@@ -246,11 +238,10 @@ contract WithdrawalHandler is HandlerBase {
         lp_ = lps[_bound(_randomize(seed_, "redeemLp"), 0, lps.length - 1)];
     }
 
-    function _selectRequestToRemove(
-        uint256 seed_,
-        uint256[] memory requestIds_
-    )
-        internal pure returns (uint256 index_, uint256 requestId_)
+    function _selectRequestToRemove(uint256 seed_, uint256[] memory requestIds_)
+        internal
+        pure
+        returns (uint256 index_, uint256 requestId_)
     {
         index_     = _bound(_randomize(seed_, "indexOfRequestToRemove"), 0, requestIds_.length - 1);
         requestId_ = requestIds_[index_];

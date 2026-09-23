@@ -7,14 +7,13 @@ import { SkyFuzzBase } from "./SkyFuzzBase.sol";
 
 abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
 
-    SkyStrategyStorage             strategyStorage;
-    FeeAccrualStorage              feeAccrualStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    SkyStrategyStorage strategyStorage;
+    FeeAccrualStorage feeAccrualStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzzFork_sky_processRedemption(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
         /**********************************************************************************************************************************/
@@ -32,18 +31,14 @@ abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
                 if (fundsAsset.balanceOf(address(pool)) < minFundAmount) deposit(address(pool), lps[0], lpDeposit);
 
                 fundStrategyManager(
-                    address(poolManager),
-                    address(skyManager),
-                    getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
+                    address(poolManager), address(skyManager), getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
                 );
 
                 vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
             }
 
             requestRedeemFromStrategyManager(
-                address(poolManager),
-                address(skyManager),
-                getSomeValue(1, skyManager.sharesOf(address(poolManager)))
+                address(poolManager), address(skyManager), getSomeValue(1, skyManager.sharesOf(address(poolManager)))
             );
         }
 
@@ -74,10 +69,8 @@ abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
         positionStorage        = _snapshotStrategyManagerPosition(address(skyManager), address(poolManager));
         feeAccrualStorage      = _snapshotFeeAccrualSky(address(skyStrategy));
 
-        ( uint256 expectedDelegateFee, uint256 expectedProtocolFee ) = expectedFees(
-            address(skyStrategy),
-            strategyStorage.previousCurrentTotalAssets,
-            strategyStorage.previousLastRecordedTotalAssets
+        (uint256 expectedDelegateFee, uint256 expectedProtocolFee) = expectedFees(
+            address(skyStrategy), strategyStorage.previousCurrentTotalAssets, strategyStorage.previousLastRecordedTotalAssets
         );
 
         uint256 expectedAssetsToReceive = mulDivDown(
@@ -96,8 +89,8 @@ abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
         /*** Fees and exit assets leave the PSM as the funds asset, so every balance moves by an exact amount                           ***/
         /**********************************************************************************************************************************/
 
-        assertEq(fundsAsset.balanceOf(skyStrategyDelegate), feeAccrualStorage.previousDelegateBalance    + expectedDelegateFee);
-        assertEq(fundsAsset.balanceOf(treasury),            feeAccrualStorage.previousTreasuryBalance    + expectedProtocolFee);
+        assertEq(fundsAsset.balanceOf(skyStrategyDelegate), feeAccrualStorage.previousDelegateBalance + expectedDelegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),            feeAccrualStorage.previousTreasuryBalance + expectedProtocolFee);
         assertEq(fundsAsset.balanceOf(address(pool)),       poolManagerStorage.previousFundsAssetBalance + expectedAssetsToReceive);
 
         /**********************************************************************************************************************************/
@@ -109,9 +102,7 @@ abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
         uint256 expectedUnrealizedLosses   = min(strategyStorage.previousImpairedAssets, assetsUnderManagementAfter);
 
         assertApproxEqAbs(
-            assetsUnderManagementAfter,
-            strategyStorage.previousAssetsUnderManagement - expectedAssetsToReceive,
-            SKY_ROUNDING_ERROR
+            assetsUnderManagementAfter, strategyStorage.previousAssetsUnderManagement - expectedAssetsToReceive, SKY_ROUNDING_ERROR
         );
 
         assertEq(skyStrategy.impairedAssets(),          strategyStorage.previousImpairedAssets);
@@ -128,9 +119,9 @@ abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
         /*** Assert new state                                                                                                          ***/
         /**********************************************************************************************************************************/
 
-        assertEq(skyManager.totalShares(),           strategyManagerStorage.previousTotalShares        - sharesToProcess);
-        assertEq(skyManager.totalPendingShares(),    strategyManagerStorage.previousTotalPendingShares - sharesToProcess);
-        assertEq(skyManager.unrealizedLosses(),      expectedUnrealizedLosses);
+        assertEq(skyManager.totalShares(),        strategyManagerStorage.previousTotalShares - sharesToProcess);
+        assertEq(skyManager.totalPendingShares(), strategyManagerStorage.previousTotalPendingShares - sharesToProcess);
+        assertEq(skyManager.unrealizedLosses(),   expectedUnrealizedLosses);
 
         uint256 expectedAssetsOf = mulDivDown(
             assetsUnderManagementAfter,
@@ -148,7 +139,7 @@ abstract contract SkyProcessRedemptionFuzzTests is SkyFuzzBase {
 
         assertEq(skyManager.assetsOf(address(poolManager)),           expectedAssetsOf);
         assertEq(skyManager.unrealizedLossesOf(address(poolManager)), expectedUnrealizedLossesOf);
-        assertEq(skyManager.sharesOf(address(poolManager)),           positionStorage.previousShares        - sharesToProcess);
+        assertEq(skyManager.sharesOf(address(poolManager)),           positionStorage.previousShares - sharesToProcess);
         assertEq(skyManager.pendingSharesOf(address(poolManager)),    positionStorage.previousPendingShares - sharesToProcess);
 
         assertEq(

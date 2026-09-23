@@ -31,8 +31,8 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
     uint256 constant LIQUIDITY_CAP   = 100_000_000e6;
 
     uint256 constant DELEGATE_MANAGEMENT_FEE_RATE  = 0.0333e6; // 3.33%
-    uint256 constant PLATFORM_MANAGEMENT_FEE_RATE  = 0.01e6;   // 1%
-    uint256 constant PLATFORM_ORIGINATION_FEE_RATE = 0.005e6;  // 0.5%
+    uint256 constant PLATFORM_MANAGEMENT_FEE_RATE  = 0.01e6; // 1%
+    uint256 constant PLATFORM_ORIGINATION_FEE_RATE = 0.005e6; // 0.5%
     uint256 constant PLATFORM_SERVICE_FEE_RATE     = 0.0025e6; // 0.25%
 
     uint256 constant SYRUP_USDG_LENDER_BITMAP = 2 ** 4; // Keep the same as syrupUSDC and syrupUSDT
@@ -72,15 +72,11 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
         //          open-term loan manager factory as a valid strategy factory.
 
         vm.startPrank(governor);
-        IGlobals(globals).setCanDeployFrom(poolManagerFactory,            poolDeployer, true);
+        IGlobals(globals).setCanDeployFrom(poolManagerFactory, poolDeployer, true);
         IGlobals(globals).setCanDeployFrom(withdrawalManagerQueueFactory, poolDeployer, true);
-        IGlobals(globals).setCanDeployFrom(openTermLoanManagerFactory,    poolDeployer, true);
+        IGlobals(globals).setCanDeployFrom(openTermLoanManagerFactory, poolDeployer, true);
 
-        IMapleProxyFactory(poolManagerFactory).registerImplementation(
-            500,
-            poolManagerV500Implementation,
-            poolManagerV500Initializer
-        );
+        IMapleProxyFactory(poolManagerFactory).registerImplementation(500, poolManagerV500Implementation, poolManagerV500Initializer);
         IMapleProxyFactory(poolManagerFactory).setDefaultVersion(500);
 
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, true);
@@ -94,16 +90,16 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
         assertEq(IPoolDeployer(poolDeployer).globals(), globals);
 
-        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory,            poolDeployer), true);
+        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory, poolDeployer),            true);
         assertEq(IGlobals(globals).canDeployFrom(withdrawalManagerQueueFactory, poolDeployer), true);
-        assertEq(IGlobals(globals).canDeployFrom(openTermLoanManagerFactory,    poolDeployer), true);
+        assertEq(IGlobals(globals).canDeployFrom(openTermLoanManagerFactory, poolDeployer),    true);
 
         assertEq(IMapleProxyFactory(poolManagerFactory).defaultVersion(), 500);
 
         // Step 2: Governor whitelists USDG as pool asset
 
         address[] memory targets = new address[](1);
-        bytes[]   memory data    = new bytes[](1);
+        bytes[] memory   data    = new bytes[](1);
 
         targets[0] = globals;
         data[0]    = abi.encodeWithSignature("setValidPoolAsset(address,bool)", USDG, true);
@@ -143,20 +139,20 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
         // NOTE: `deployPool` must be called by a valid pool delegate.
         vm.prank(poolDelegate);
         usdgPoolManager = IPoolDeployer(poolDeployer).deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: withdrawalManagerQueueFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         USDG,
+            poolManagerInitParams: PoolManagerInitParams({
+                asset: USDG,
                 initialSupply: INITIAL_SUPPLY,
-                name:          "Syrup USDG",
-                symbol:        "syrupUSDG"
+                name: "Syrup USDG",
+                symbol: "syrupUSDG"
             }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     poolPermissionManager,
+                poolPermissionManager: poolPermissionManager,
                 delegateManagementFeeRate: DELEGATE_MANAGEMENT_FEE_RATE,
-                liquidityCap:              LIQUIDITY_CAP
+                liquidityCap: LIQUIDITY_CAP
             }),
-            strategiesParams:       strategiesParams,
+            strategiesParams: strategiesParams,
             strategyManagersParams: new StrategyManagerParams[](0)
         });
 
@@ -200,12 +196,13 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
         bitmaps[9]  = 0;
         bitmaps[10] = SYRUP_USDG_LENDER_BITMAP;
 
-        IPoolPermissionManager(poolPermissionManager).configurePool(
-            usdgPoolManager,
-            1,  // Function level pool permission
-            functionIdsToSet,
-            bitmaps
-        );
+        IPoolPermissionManager(poolPermissionManager)
+            .configurePool(
+                usdgPoolManager,
+                1, // Function level pool permission
+                functionIdsToSet,
+                bitmaps
+            );
 
         address[] memory lenders       = new address[](2);
         uint256[] memory lenderBitmaps = new uint256[](2);
@@ -224,7 +221,7 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
         usdgSyrupRouter = deployFromFile("Contracts@7", "SyrupRouter", abi.encode(usdgPool));
 
-        lenders = new address[](2);
+        lenders               = new address[](2);
         bool[] memory allowed = new bool[](2);
 
         lenders[0] = usdgSyrupRouter;

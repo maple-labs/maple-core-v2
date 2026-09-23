@@ -9,7 +9,7 @@ import {
     IPoolManager
 } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { FuzzedSetup }     from "../FuzzedSetup.sol";
+import { FuzzedSetup } from "../FuzzedSetup.sol";
 import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
@@ -31,14 +31,14 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
     uint256 principal_;
 
     // The fuzzed setup should set this at the end.
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     // Saving snapshots to storage to avoid stack too deep errors.
     OpenTermLoanManagerStorage loanManagerStorage;
-    OpenTermLoanStorage        loanStorage;
-    OpenTermPaymentStorage     paymentStorage;
-    PoolManagerStorage         poolManagerStorage;
+    OpenTermLoanStorage loanStorage;
+    OpenTermPaymentStorage paymentStorage;
+    PoolManagerStorage poolManagerStorage;
 
     function testFuzz_otlFuzzedSetup_makePayment(uint256 seed_) external {
         fuzzedSetup(OTL_LOAN_COUNT, ACTION_COUNT, 0, 0, 0, seed_);
@@ -66,13 +66,13 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
         poolBalance     = fundsAsset.balanceOf(address(pool));
         treasuryBalance = fundsAsset.balanceOf(address(treasury));
 
-        ( principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = loan.getPaymentBreakdown(block.timestamp);
+        (principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) = loan.getPaymentBreakdown(block.timestamp);
 
         uint256 totalPayment = principal_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
         uint256 datePaid     = loan.datePaid();
         uint256 dateFunded   = loan.dateFunded();
 
-        ( uint256 dateImpaired, ) = loanManager.impairmentFor(address(loan));
+        (uint256 dateImpaired,) = loanManager.impairmentFor(address(loan));
 
         erc20_approve(address(fundsAsset), loan.borrower(), address(loan), totalPayment);
 
@@ -126,14 +126,11 @@ contract MakePaymentFuzzTests is FuzzedSetup, StorageSnapshot {
                 diff:               3
             });
         } else {
-            uint256 netOnTimeInterest = interest_
-                - (interest_ * loanInfo.delegateManagementFeeRate / 1e6)
-                - (interest_ * loanInfo.platformManagementFeeRate / 1e6);
+            uint256 netOnTimeInterest =
+                interest_ - (interest_ * loanInfo.delegateManagementFeeRate / 1e6) - (interest_ * loanInfo.platformManagementFeeRate / 1e6);
 
             uint256 accountedInterest = _subtractWithDiff(
-                loanManagerStorage.previousAccountedInterest + loanManagerStorage.previousAccruedInterest,
-                netOnTimeInterest,
-                5
+                loanManagerStorage.previousAccountedInterest + loanManagerStorage.previousAccruedInterest, netOnTimeInterest, 5
             );
 
             // TODO: try to find out whether is is possible to come up with more narrow diff programmatically

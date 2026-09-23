@@ -99,17 +99,17 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     /*** Strategy fee rates                                                                                                             ***/
     /**************************************************************************************************************************************/
 
-    uint32 constant STRATEGY_DELEGATE_FEE_RATE = 0.1e6;   // 10% of accrued yield.
-    uint32 constant STRATEGY_PROTOCOL_FEE_RATE = 0.05e6;  // 5% of accrued yield.
+    uint32 constant STRATEGY_DELEGATE_FEE_RATE = 0.1e6; // 10% of accrued yield.
+    uint32 constant STRATEGY_PROTOCOL_FEE_RATE = 0.05e6; // 5% of accrued yield.
 
     /**************************************************************************************************************************************/
     /*** Open term loan fee rates                                                                                                       ***/
     /**************************************************************************************************************************************/
 
     // The delegate service fee rate is fuzzed per loan when the loan is created.
-    uint256 constant DELEGATE_MANAGEMENT_FEE_RATE = 0.1e6;   // 10% of accrued interest.
-    uint256 constant PLATFORM_MANAGEMENT_FEE_RATE = 0.05e6;  // 5% of accrued interest.
-    uint256 constant PLATFORM_SERVICE_FEE_RATE    = 0.02e6;  // 2% of principal, pro rated over the payment interval.
+    uint256 constant DELEGATE_MANAGEMENT_FEE_RATE = 0.1e6; // 10% of accrued interest.
+    uint256 constant PLATFORM_MANAGEMENT_FEE_RATE = 0.05e6; // 5% of accrued interest.
+    uint256 constant PLATFORM_SERVICE_FEE_RATE    = 0.02e6; // 2% of principal, pro rated over the payment interval.
 
     /**************************************************************************************************************************************/
     /*** Local addresses that will be used in the setup                                                                                 ***/
@@ -125,10 +125,10 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
     address allocationStrategyManagerShared;
     address allocationUnderlyingStrategyShared;
-    address aaveStrategyManagerShared;            // Used only on fork fuzz tests. Otherwise address(0)
-    address aaveUnderlyingStrategyShared;         // Used only on fork fuzz tests. Otherwise address(0)
-    address skyStrategyManagerShared;             // Used only on fork fuzz tests. Otherwise address(0)
-    address skyUnderlyingStrategyShared;          // Used only on fork fuzz tests. Otherwise address(0)
+    address aaveStrategyManagerShared; // Used only on fork fuzz tests. Otherwise address(0)
+    address aaveUnderlyingStrategyShared; // Used only on fork fuzz tests. Otherwise address(0)
+    address skyStrategyManagerShared; // Used only on fork fuzz tests. Otherwise address(0)
+    address skyUnderlyingStrategyShared; // Used only on fork fuzz tests. Otherwise address(0)
 
     address managedWalletShared;
 
@@ -177,14 +177,12 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
         for (uint256 i; i < loanActionCount; ++i) {
             // Get loan and due date of active loan with earliest due date.
-            ( address loan, uint256 dueDate ) = getEarliestDueDate();
+            (address loan, uint256 dueDate) = getEarliestDueDate();
 
             // If no active loans are remaining: no further loan actions can be performed.
             if (loan == address(0)) break;
 
-            uint256 maxDate = dueDate < block.timestamp
-                ? 1 days
-                : (dueDate - block.timestamp) + 10 days;
+            uint256 maxDate = dueDate < block.timestamp ? 1 days : (dueDate - block.timestamp) + 10 days;
 
             // Warp to anytime from 1 day from now to 11 days past the loan's due date.
             vm.warp(block.timestamp + 1 days + getSomeValue(0, maxDate));
@@ -490,7 +488,7 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         loan_ = getSomeLoan(isImpairedOpenTermLoan);
     }
 
-    function getSomeLoan(function (address) returns (bool) filter_) internal returns (address loan) {
+    function getSomeLoan(function(address) returns (bool) filter_) internal returns (address loan) {
         if (loans.length == 0) return address(0);
 
         // Choose the starting loan.
@@ -523,7 +521,7 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
         // Payments and calls can always be performed.
         factors[uint256(LoanAction.Payment)] = PAYMENT_FACTOR;
-        factors[uint256(LoanAction.Call)]    = CALL_FACTOR;
+        factors[uint256(LoanAction.Call)] = CALL_FACTOR;
 
         uint256 sumOfFactors = PAYMENT_FACTOR + CALL_FACTOR;
 
@@ -606,8 +604,8 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         }
 
         if (
-            strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses() &&
-            strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, address(strategyManager))) > 0
+            strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses()
+                && strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, address(strategyManager))) > 0
         ) {
             factors[uint256(AllocationStrategyAction.ProcessRedemption)] = ALLOCATION_PROCESS_REDEMPTION_FACTOR;
             sumOfFactors += ALLOCATION_PROCESS_REDEMPTION_FACTOR;
@@ -636,13 +634,13 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 
         uint256 impairedAssets = strategy.impairedAssets();
 
-        bool canFund              = fundsAsset.balanceOf(IPoolManager(poolManager_).pool()) >= getMinimumFundableAssets(strategyManager_);
-        bool canImpair            = impairedAssets < strategy.assetsUnderManagement();
-        bool canRemoveImpairment  = impairedAssets > 0;
-        bool canRequestRedeem     = strategyManager.sharesOf(poolManager_) > strategyManager.pendingSharesOf(poolManager_);
-        bool canCancelRedemption  = strategyManager.pendingSharesOf(poolManager_) > 0;
-        bool canProcessRedemption = strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses() &&
-                                    strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, strategyManager_)) > 0;
+        bool canFund             = fundsAsset.balanceOf(IPoolManager(poolManager_).pool()) >= getMinimumFundableAssets(strategyManager_);
+        bool canImpair           = impairedAssets < strategy.assetsUnderManagement();
+        bool canRemoveImpairment = impairedAssets > 0;
+        bool canRequestRedeem    = strategyManager.sharesOf(poolManager_) > strategyManager.pendingSharesOf(poolManager_);
+        bool canCancelRedemption = strategyManager.pendingSharesOf(poolManager_) > 0;
+        bool canProcessRedemption = strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses()
+            && strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, strategyManager_)) > 0;
 
         uint256[] memory factors = new uint256[](6);
 
@@ -725,10 +723,10 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     }
 
     function withdrawAllFromAllocationStrategy(address pool_) internal {
-        IAllocationStrategy strategy     = IAllocationStrategy(allocationUnderlyingStrategyShared);
-        IStrategyManager strategyManager = IStrategyManager(allocationStrategyManagerShared);
-        address poolManager_             = IPool(pool_).manager();
-        uint256 shares                   = IStrategyManager(allocationStrategyManagerShared).sharesOf(poolManager_);
+        IAllocationStrategy strategy        = IAllocationStrategy(allocationUnderlyingStrategyShared);
+        IStrategyManager    strategyManager = IStrategyManager(allocationStrategyManagerShared);
+        address             poolManager_    = IPool(pool_).manager();
+        uint256             shares          = IStrategyManager(allocationStrategyManagerShared).sharesOf(poolManager_);
 
         // Recognized losses can wipe out the entire position, which is then worth nothing and can never be redeemed.
         if (strategyManager.assetsOf(poolManager_) == 0) return;
@@ -756,7 +754,7 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
     }
 
     function payOffAllLoans(address pool_) internal returns (uint256 lastDomainStart_) {
-        ( address loan , ) = getEarliestDueDate(pool_);
+        (address loan,) = getEarliestDueDate(pool_);
 
         lastDomainStart_ = IOpenTermLoanManager(IPoolManager(IPool(pool_).manager()).strategyList(0)).domainStart();
 
@@ -780,7 +778,7 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
                 removeLoan(loan);
             }
 
-            ( loan , ) = getEarliestDueDate(pool_);
+            (loan,) = getEarliestDueDate(pool_);
         }
     }
 
@@ -807,9 +805,8 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
             uint256 availableLiquidity_    = fundsAsset.balanceOf(pool_);
             uint256 requiredLiquidity_     = totalAssetsWithLosses_ * totalShares / totalSupply_;
 
-            uint256 redeemableShares = availableLiquidity_ < requiredLiquidity_
-                ? totalShares * availableLiquidity_ / requiredLiquidity_
-                : totalShares;
+            uint256 redeemableShares =
+                availableLiquidity_ < requiredLiquidity_ ? totalShares * availableLiquidity_ / requiredLiquidity_ : totalShares;
 
             if (redeemableShares > 0) {
                 vm.prank(poolManager.poolDelegate());
@@ -824,7 +821,7 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
             if (manualSharesAvailable_ > 0) {
                 // manualSharesAvailable is only the unlocked amount
                 // previewRedeem caps it to what can be redeemed without over-asking the pool for assets.
-                ( uint256 redeemableShares_, ) = withdrawalManager.previewRedeem(lps[i], manualSharesAvailable_);
+                (uint256 redeemableShares_,) = withdrawalManager.previewRedeem(lps[i], manualSharesAvailable_);
 
                 if (redeemableShares_ > 0) {
                     redeem(pool_, lps[i], redeemableShares_);
@@ -843,17 +840,17 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
         require(fundsAsset.balanceOf(pool_) > 0, "No funding is available.");
 
         uint256 poolBalance  = fundsAsset.balanceOf(pool_);
-        uint256 maxPrincipal = poolBalance  / expectedLoanCount;
+        uint256 maxPrincipal = poolBalance / expectedLoanCount;
         uint256 minPrincipal = maxPrincipal / 5;
 
         uint256 principal              = getSomeValue(minPrincipal, maxPrincipal);
-        uint256 noticePeriod           = getSomeValue(1 hours,      10 days);
-        uint256 gracePeriod            = getSomeValue(0,            10 days);
-        uint256 paymentInterval        = getSomeValue(10 days,      90 days);
-        uint256 delegateServiceFeeRate = getSomeValue(0,            0.1e6);
-        uint256 interestRate           = getSomeValue(0.01e6,       0.25e6);
-        uint256 lateFeeRate            = getSomeValue(0,            0.1e6);
-        uint256 lateInterestPremium    = getSomeValue(0,            0.1e6);
+        uint256 noticePeriod           = getSomeValue(1 hours, 10 days);
+        uint256 gracePeriod            = getSomeValue(0, 10 days);
+        uint256 paymentInterval        = getSomeValue(10 days, 90 days);
+        uint256 delegateServiceFeeRate = getSomeValue(0, 0.1e6);
+        uint256 interestRate           = getSomeValue(0.01e6, 0.25e6);
+        uint256 lateFeeRate            = getSomeValue(0, 0.1e6);
+        uint256 lateInterestPremium    = getSomeValue(0, 0.1e6);
 
         address loanManager = IPoolManager(IPool(pool_).manager()).strategyList(0);
 
@@ -863,7 +860,7 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
             loanManager,
             address(fundsAsset),
             principal,
-            [gracePeriod,            noticePeriod, paymentInterval],
+            [gracePeriod, noticePeriod, paymentInterval],
             [delegateServiceFeeRate, interestRate, lateFeeRate, lateInterestPremium]
         );
 
@@ -887,7 +884,6 @@ abstract contract FuzzedUtil is TestBaseWithAssertions {
 contract FuzzedSetup is FuzzedUtil {
 
     function setUp() public virtual override {
-
         /**********************************************************************************************************************************/
         /*** Deploy core of the protocol                                                                                                ***/
         /**********************************************************************************************************************************/
@@ -900,7 +896,7 @@ contract FuzzedSetup is FuzzedUtil {
 
         managedWalletShared = makeAddr("managedWallet");
 
-        ( allocationStrategyManagerShared, allocationUnderlyingStrategyShared ) = _deployAllocationStrategy({
+        (allocationStrategyManagerShared, allocationUnderlyingStrategyShared) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: STRATEGY_DELEGATE_FEE_RATE,
@@ -925,8 +921,8 @@ contract FuzzedSetup is FuzzedUtil {
         /*** Deploy two pools that will share the allocation strategy                                                                   ***/
         /**********************************************************************************************************************************/
 
-        ( pool1, poolManager1 ) = _createPoolSharingStrategy("poolDelegate1", allocationStrategyManagerShared);
-        ( pool2, poolManager2 ) = _createPoolSharingStrategy("poolDelegate2", allocationStrategyManagerShared);
+        (pool1, poolManager1) = _createPoolSharingStrategy("poolDelegate1", allocationStrategyManagerShared);
+        (pool2, poolManager2) = _createPoolSharingStrategy("poolDelegate2", allocationStrategyManagerShared);
 
         openPool(poolManager1);
         openPool(poolManager2);
@@ -949,7 +945,8 @@ contract FuzzedSetup is FuzzedUtil {
         setDelegateManagementFeeRate(poolManager2, DELEGATE_MANAGEMENT_FEE_RATE);
 
         /**********************************************************************************************************************************/
-        /*** Create LPs and fund both pools with liquidity from the LPs                                                                  ***/
+        /*** Create LPs and fund both pools with liquidity from the LPs
+        ***/
         /**********************************************************************************************************************************/
 
         lps.push(makeAddr("lp1"));
@@ -968,8 +965,14 @@ contract FuzzedSetup is FuzzedUtil {
     /*** Shared Strategy Fuzz Helpers                                                                                                   ***/
     /**************************************************************************************************************************************/
 
-    function expectedFees(address strategy, uint256 grossAssets, uint256 lastRecordedTotalAssets)
-        internal view returns (uint256 delegateFee, uint256 protocolFee)
+    function expectedFees(
+        address strategy,
+        uint256 grossAssets,
+        uint256 lastRecordedTotalAssets
+    )
+        internal
+        view
+        returns (uint256 delegateFee, uint256 protocolFee)
     {
         if (grossAssets <= lastRecordedTotalAssets) return (0, 0);
 

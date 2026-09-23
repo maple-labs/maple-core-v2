@@ -30,25 +30,25 @@ contract CrossPoolFundingTests is TestBaseWithAssertions {
     IMockERC20 usdc;
     IMockERC20 usdt;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManagerB;
 
     uint32 gracePeriod             = 5 days;
     uint32 noticePeriod            = 5 days;
     uint32 paymentInterval         = 10 days;
-    uint32 strategyDelegateFeeRate = 0.04e6;  // 4%
-    uint32 strategyProtocolFeeRate = 0.06e6;  // 6%
+    uint32 strategyDelegateFeeRate = 0.04e6; // 4%
+    uint32 strategyProtocolFeeRate = 0.06e6; // 6%
 
-    uint64 delegateServiceFeeRate = 0.01e6;  // 1%
-    uint64 interestRate           = 0.05e6;  // 5%
-    uint64 platformServiceFeeRate = 0.02e6;  // 2%
+    uint64 delegateServiceFeeRate = 0.01e6; // 1%
+    uint64 interestRate           = 0.05e6; // 5%
+    uint64 platformServiceFeeRate = 0.02e6; // 2%
 
-    uint256 delegateManagementFeeRate = 0.05e6;  // 5%
+    uint256 delegateManagementFeeRate = 0.05e6; // 5%
     uint256 interestAccrualRounding   = 1;
     uint256 loanPrincipal             = 730_000e6;
-    uint256 platformManagementFeeRate = 0.10e6;  // 10%
+    uint256 platformManagementFeeRate = 0.1e6; // 10%
     uint256 poolAFunding              = 1_000_000e6;
-    uint256 swapSlippage              = 50e6;    // Per swap.
+    uint256 swapSlippage              = 50e6; // Per swap.
 
     uint256 delegateManagementFee;
     uint256 delegateServiceFee;
@@ -69,30 +69,30 @@ contract CrossPoolFundingTests is TestBaseWithAssertions {
     function setUp() public override {
         super.setUp();
 
-        grossLoanInterest     = loanPrincipal * interestRate * paymentInterval / (365 days * 1e6);            // 1_000e6
-        delegateManagementFee = grossLoanInterest * delegateManagementFeeRate / 1e6;                          // 50e6
-        delegateServiceFee    = loanPrincipal * delegateServiceFeeRate * paymentInterval / (365 days * 1e6);  // 200e6
-        platformManagementFee = grossLoanInterest * platformManagementFeeRate / 1e6;                          // 100e6
-        platformServiceFee    = loanPrincipal * platformServiceFeeRate * paymentInterval / (365 days * 1e6);  // 400e6
+        grossLoanInterest     = loanPrincipal * interestRate * paymentInterval / (365 days * 1e6); // 1_000e6
+        delegateManagementFee = grossLoanInterest * delegateManagementFeeRate / 1e6; // 50e6
+        delegateServiceFee    = loanPrincipal * delegateServiceFeeRate * paymentInterval / (365 days * 1e6); // 200e6
+        platformManagementFee = grossLoanInterest * platformManagementFeeRate / 1e6; // 100e6
+        platformServiceFee    = loanPrincipal * platformServiceFeeRate * paymentInterval / (365 days * 1e6); // 400e6
 
-        netLoanInterest = grossLoanInterest - delegateManagementFee - platformManagementFee;  // 850e6
-        issuanceRate    = netLoanInterest * 1e27 / paymentInterval;                           // Ray-scaled USDT per second.
+        netLoanInterest = grossLoanInterest - delegateManagementFee - platformManagementFee; // 850e6
+        issuanceRate    = netLoanInterest * 1e27 / paymentInterval; // Ray-scaled USDT per second.
 
-        poolBDeposit     = poolAFunding - swapSlippage;     // 999_950e6
-        poolBExitAssets  = poolBDeposit + netLoanInterest;  // 1_000_800e6
-        returnSwapAssets = poolBExitAssets - swapSlippage;  // 1_000_750e6
+        poolBDeposit     = poolAFunding - swapSlippage; // 999_950e6
+        poolBExitAssets  = poolBDeposit + netLoanInterest; // 1_000_800e6
+        returnSwapAssets = poolBExitAssets - swapSlippage; // 1_000_750e6
 
-        grossStrategyYield  = returnSwapAssets - poolAFunding;                                 // 750e6
-        strategyDelegateFee = grossStrategyYield * strategyDelegateFeeRate / 1e6;              // 30e6
-        strategyProtocolFee = grossStrategyYield * strategyProtocolFeeRate / 1e6;              // 45e6
-        netStrategyYield    = grossStrategyYield - strategyDelegateFee - strategyProtocolFee;  // 675e6
-        finalPoolAAssets    = poolAFunding + netStrategyYield;                                 // 1_000_675e6
+        grossStrategyYield  = returnSwapAssets - poolAFunding; // 750e6
+        strategyDelegateFee = grossStrategyYield * strategyDelegateFeeRate / 1e6; // 30e6
+        strategyProtocolFee = grossStrategyYield * strategyProtocolFeeRate / 1e6; // 45e6
+        netStrategyYield    = grossStrategyYield - strategyDelegateFee - strategyProtocolFee; // 675e6
+        finalPoolAAssets    = poolAFunding + netStrategyYield; // 1_000_675e6
 
         usdc         = fundsAsset;
         poolA        = address(pool);
         poolManagerA = address(poolManager);
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(usdc),
             strategyDelegateFeeRate_: strategyDelegateFeeRate,
@@ -121,7 +121,7 @@ contract CrossPoolFundingTests is TestBaseWithAssertions {
 
         fundsAsset = usdt;
 
-        ( poolB, poolManagerB, withdrawalManagerB ) = _createPoolWithOTLM(poolBDelegate);
+        (poolB, poolManagerB, withdrawalManagerB) = _createPoolWithOTLM(poolBDelegate);
 
         _configurePool();
         openPool(poolManagerB);
@@ -135,15 +135,17 @@ contract CrossPoolFundingTests is TestBaseWithAssertions {
 
         loanManagerB = IOpenTermLoanManager(IPoolManager(poolManagerB).strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManagerB),
-            address(usdt),
-            loanPrincipal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(0), uint256(0)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManagerB),
+                address(usdt),
+                loanPrincipal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(0), uint256(0)]
+            )
+        );
     }
 
     function test_crossPoolFunding_differentAssets_roundTrip() external {
@@ -292,7 +294,7 @@ contract CrossPoolFundingTests is TestBaseWithAssertions {
             unrealizedLosses:  0
         });
 
-        ( uint256 principalPaid, uint256 interestPaid, uint256 serviceFeesPaid ) = makePayment(address(loan), loanPrincipal);
+        (uint256 principalPaid, uint256 interestPaid, uint256 serviceFeesPaid) = makePayment(address(loan), loanPrincipal);
 
         assertEq(principalPaid,   loanPrincipal);
         assertEq(interestPaid,    grossLoanInterest);

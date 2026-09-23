@@ -53,7 +53,7 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
         _proposeRoleUpdate(timelock.ROLE_ADMIN(), roleAdmin, false);
         _executeRoleUpdate(3, timelock.ROLE_ADMIN(), roleAdmin, false);
 
-        assertEq(timelock.hasRole(roleAdmin,  timelock.ROLE_ADMIN()), false);
+        assertEq(timelock.hasRole(roleAdmin, timelock.ROLE_ADMIN()),  false);
         assertEq(timelock.hasRole(roleAdmin2, timelock.ROLE_ADMIN()), true);
     }
 
@@ -72,10 +72,10 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
         uint256 timelockBalance = 100e18;
         collateralAsset.mint(address(timelock), timelockBalance);
 
-        bytes4 functionToExecute = collateralAsset.transfer.selector;
-        bytes memory parameters  = abi.encode(makeAddr("malicious"), timelockBalance);
+        bytes4       functionToExecute = collateralAsset.transfer.selector;
+        bytes memory parameters        = abi.encode(makeAddr("malicious"), timelockBalance);
 
-        ( uint256 proposalId, ) = _scheduleProposal(address(timelock), functionToExecute, parameters);
+        (uint256 proposalId,) = _scheduleProposal(address(timelock), functionToExecute, parameters);
 
         uint256[] memory proposalsToCancel = new uint256[](1);
         proposalsToCancel[0]               = proposalId;
@@ -108,7 +108,7 @@ contract GovernorTimelockScenariosTests is GovernorTimelockTestBase {
         _scheduleProposal(address(queueWMFactory), functionToExecute2, parameters2);
 
         uint32 scheduledAt = uint32(block.timestamp);
-        ( uint32 delay, )  = timelock.defaultTimelockParameters();
+        (uint32 delay,)    = timelock.defaultTimelockParameters();
 
         vm.warp(scheduledAt + delay);
         _executeProposal(2, address(queueWMFactory), functionToExecute1, parameters1);

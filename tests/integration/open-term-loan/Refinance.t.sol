@@ -29,7 +29,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
     uint256 expectedTotalAssets;
     uint256 expectedTotalSupply;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
@@ -38,24 +38,26 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         deposit(lp, 3_500_000e6);
 
         setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,
-            delegateManagementFeeRate:  0.02e6,
+            delegateOriginationFee: 500e6,
+            delegateServiceFee: 300e6,
+            delegateManagementFeeRate: 0.02e6,
             platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.031536e6,  // 10k after 1m seconds
-            platformManagementFeeRate:  0.08e6
+            platformServiceFeeRate: 0.031536e6, // 10k after 1m seconds
+            platformManagementFeeRate: 0.08e6
         });
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            address(borrower),
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [0.015768e6, interestRate, 0.01e6, 0.015768e6]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                address(borrower),
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [gracePeriod, noticePeriod, paymentInterval],
+                [0.015768e6, interestRate, 0.01e6, 0.015768e6]
+            )
+        );
 
         fundLoan(address(loan));
 
@@ -141,7 +143,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(borrower)), 0);
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  2_000_000e6);
+        calls[0]             = abi.encodeWithSignature("increasePrincipal(uint256)", 2_000_000e6);
 
         proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
@@ -172,15 +174,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(start + 1_400_000),
-            principal:          0,
-            interest:           30_000e6,  // 30k per 1m seconds
-            lateInterest:       0,
+            loan: address(loan),
+            paymentTimestamp: uint40(start + 1_400_000),
+            principal: 0,
+            interest: 30_000e6, // 30k per 1m seconds
+            lateInterest: 0,
             delegateServiceFee: 1_500e6,
             platformServiceFee: 3_000e6,
-            paymentDueDate:     start + 1_400_000,
-            defaultDate:        start + 1_600_000
+            paymentDueDate: start + 1_400_000,
+            defaultDate: start + 1_600_000
         });
 
         assertOpenTermPaymentInfo({
@@ -207,7 +209,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // Treasury: service fees (4000e6) + management fees (4000 * 0.08)
         assertAssetBalancesIncrease(
             address(fundsAsset),
-            [address(poolDelegate),          address(treasury)],
+            [address(poolDelegate), address(treasury)],
             [uint256(200e6) + uint256(80e6), uint256(400e6) + uint256(320e6)]
         );
     }
@@ -270,7 +272,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(borrower)), 0);
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  2_000_000e6);
+        calls[0]             = abi.encodeWithSignature("increasePrincipal(uint256)", 2_000_000e6);
 
         proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
@@ -291,15 +293,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(start + 1_400_000),
-            principal:          0,
-            interest:           30_000e6,  // 30k per 1m seconds
-            lateInterest:       0,
+            loan: address(loan),
+            paymentTimestamp: uint40(start + 1_400_000),
+            principal: 0,
+            interest: 30_000e6, // 30k per 1m seconds
+            lateInterest: 0,
             delegateServiceFee: 1_500e6,
             platformServiceFee: 3_000e6,
-            paymentDueDate:     start + 1_400_000,
-            defaultDate:        start + 1_600_000
+            paymentDueDate: start + 1_400_000,
+            defaultDate: start + 1_600_000
         });
 
         assertOpenTermPaymentInfo({
@@ -326,7 +328,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // Treasury: service fees (4000e6) + management fees (4000 * 0.08)
         assertAssetBalancesIncrease(
             address(fundsAsset),
-            [address(poolDelegate),          address(treasury)],
+            [address(poolDelegate), address(treasury)],
             [uint256(200e6) + uint256(80e6), uint256(400e6) + uint256(320e6)]
         );
     }
@@ -349,15 +351,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(block.timestamp),
-            principal:          0,
-            interest:           14_000e6,
-            lateInterest:       200e6 + 10_000e6, // Flat late fee + 1k per 1m seconds
+            loan: address(loan),
+            paymentTimestamp: uint40(block.timestamp),
+            principal: 0,
+            interest: 14_000e6,
+            lateInterest: 200e6 + 10_000e6, // Flat late fee + 1k per 1m seconds
             delegateServiceFee: 700e6,
             platformServiceFee: 1_400e6,
-            paymentDueDate:     start + 1_000_000,
-            defaultDate:        start + 1_200_000
+            paymentDueDate: start + 1_000_000,
+            defaultDate: start + 1_200_000
         });
 
         assertOpenTermPaymentInfo({
@@ -379,7 +381,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSignature("decreasePrincipal(uint256)",  500_000e6);
+        calls[0]             = abi.encodeWithSignature("decreasePrincipal(uint256)", 500_000e6);
 
         // Borrower must send enough to cover the principal + interest + fees
         fundsAsset.mint(address(borrower), 26_300e6); // 41_400e6 = interest (14_000e6) + late interest (10_200e6) + serviceFees (2_100e6)
@@ -395,7 +397,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         /*** Post Refinance Assertions ***/
         /*********************************/
 
-        expectedTotalAssets += 9_180e6;  // 10_200e6 of late interest net of management fees
+        expectedTotalAssets += 9_180e6; // 10_200e6 of late interest net of management fees
         expectedCash        += 500_000e6 + 12_600e6 + 9_180e6;
 
         assertPoolState({
@@ -442,7 +444,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // Treasury: service fees (14_000e6) + management fees (26_000 * 0.08)
         assertAssetBalancesIncrease(
             address(fundsAsset),
-            [address(poolDelegate),           address(treasury)],
+            [address(poolDelegate), address(treasury)],
             [uint256(700e6) + uint256(484e6), uint256(1_400e6) + uint256(1_936e6)]
         );
     }
@@ -473,15 +475,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(block.timestamp),
-            principal:          1_000_000e6,
-            interest:           5_000e6,
-            lateInterest:       0,
+            loan: address(loan),
+            paymentTimestamp: uint40(block.timestamp),
+            principal: 1_000_000e6,
+            interest: 5_000e6,
+            lateInterest: 0,
             delegateServiceFee: 250e6,
             platformServiceFee: 500e6,
-            paymentDueDate:     start + 500_000,
-            defaultDate:        start + 500_000  // No grace period on called loan.
+            paymentDueDate: start + 500_000,
+            defaultDate: start + 500_000 // No grace period on called loan.
         });
 
         assertOpenTermPaymentInfo({
@@ -510,11 +512,11 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
 
         // Perform multiple actions, but none changes principal
         bytes[] memory calls = new bytes[](5);
-        calls[0] = abi.encodeWithSignature("setGracePeriod(uint32)",             500_000);
-        calls[1] = abi.encodeWithSignature("setInterestRate(uint64)",            0.63072e6);
-        calls[2] = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", 0.031536e6);
-        calls[3] = abi.encodeWithSignature("setNoticePeriod(uint32)",            50_000);
-        calls[4] = abi.encodeWithSignature("setPaymentInterval(uint32)",         500_000);
+        calls[0]             = abi.encodeWithSignature("setGracePeriod(uint32)", 500_000);
+        calls[1]             = abi.encodeWithSignature("setInterestRate(uint64)", 0.63072e6);
+        calls[2]             = abi.encodeWithSignature("setLateInterestPremiumRate(uint64)", 0.031536e6);
+        calls[3]             = abi.encodeWithSignature("setNoticePeriod(uint32)", 50_000);
+        calls[4]             = abi.encodeWithSignature("setPaymentInterval(uint32)", 500_000);
 
         assertEq(loan.gracePeriod(),             200_000);
         assertEq(loan.interestRate(),            0.31536e6);
@@ -536,7 +538,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         assertEq(loan.lateInterestPremiumRate(), 0.031536e6);
         assertEq(loan.noticePeriod(),            50_000);
         assertEq(loan.paymentInterval(),         500_000);
-        assertEq(loan.dateCalled(),              0);           // Resets regardless of principal change.
+        assertEq(loan.dateCalled(),              0); // Resets regardless of principal change.
 
         expectedCash += 4_500e6;
 
@@ -549,15 +551,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(start + 1_000_000),
-            principal:          0,
-            interest:           10_000e6,  // 20k interest in 1m seconds
-            lateInterest:       0,
+            loan: address(loan),
+            paymentTimestamp: uint40(start + 1_000_000),
+            principal: 0,
+            interest: 10_000e6, // 20k interest in 1m seconds
+            lateInterest: 0,
             delegateServiceFee: 250e6,
             platformServiceFee: 500e6,
-            paymentDueDate:     start + 1_000_000,
-            defaultDate:        start + 1_500_000
+            paymentDueDate: start + 1_000_000,
+            defaultDate: start + 1_500_000
         });
 
         assertOpenTermPaymentInfo({
@@ -584,7 +586,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         // Treasury: service fees (4000e6) + management fees (5000 * 0.08)
         assertAssetBalancesIncrease(
             address(fundsAsset),
-            [address(poolDelegate),          address(treasury)],
+            [address(poolDelegate), address(treasury)],
             [uint256(250e6) + uint256(100e6), uint256(500e6) + uint256(400e6)]
         );
     }
@@ -643,7 +645,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(borrower)), 0);
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  dueInterestAndFees);
+        calls[0]             = abi.encodeWithSignature("increasePrincipal(uint256)", dueInterestAndFees);
 
         proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
@@ -681,15 +683,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(start + 1_100_000),
-            principal:          0,
-            interest:           newInterest,  // 30k per 1m seconds
-            lateInterest:       0,
+            loan: address(loan),
+            paymentTimestamp: uint40(start + 1_100_000),
+            principal: 0,
+            interest: newInterest, // 30k per 1m seconds
+            lateInterest: 0,
             delegateServiceFee: newInterest * 0.015768e6 * scaler * 100 / (365 days * scaler),
             platformServiceFee: newInterest * 0.031536e6 * scaler * 100 / (365 days * scaler),
-            paymentDueDate:     start + 1_100_000,
-            defaultDate:        start + 1_300_000
+            paymentDueDate: start + 1_100_000,
+            defaultDate: start + 1_300_000
         });
 
         assertOpenTermPaymentInfo({
@@ -710,14 +712,12 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
             unrealizedLosses:  0
         });
 
-        assertEq(fundsAsset.balanceOf(address(borrower)), 0);  // Borrower balance is still s0
+        assertEq(fundsAsset.balanceOf(address(borrower)), 0); // Borrower balance is still s0
 
         // PD:       service fees (50e6)  + management fees (1000 * 0.02)
         // Treasury: service fees (100e6) + management fees (1000 * 0.08)
         assertAssetBalancesIncrease(
-            address(fundsAsset),
-            [address(poolDelegate),          address(treasury)],
-            [uint256(50e6) + uint256(20e6), uint256(100e6) + uint256(80e6)]
+            address(fundsAsset), [address(poolDelegate), address(treasury)], [uint256(50e6) + uint256(20e6), uint256(100e6) + uint256(80e6)]
         );
     }
 
@@ -777,7 +777,7 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         assertEq(fundsAsset.balanceOf(address(borrower)), 0);
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSignature("increasePrincipal(uint256)",  desiredPrincipal + dueInterestAndFees);
+        calls[0]             = abi.encodeWithSignature("increasePrincipal(uint256)", desiredPrincipal + dueInterestAndFees);
 
         proposeRefinanceOT(address(loan), openTermRefinancer, block.timestamp + 1, calls);
 
@@ -815,15 +815,15 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(start + 1_100_000),
-            principal:          0,
-            interest:           newInterest,  // 30k per 1m seconds
-            lateInterest:       0,
+            loan: address(loan),
+            paymentTimestamp: uint40(start + 1_100_000),
+            principal: 0,
+            interest: newInterest, // 30k per 1m seconds
+            lateInterest: 0,
             delegateServiceFee: newInterest * 0.015768e6 * scaler * 100 / (365 days * scaler),
             platformServiceFee: newInterest * 0.031536e6 * scaler * 100 / (365 days * scaler),
-            paymentDueDate:     start + 1_100_000,
-            defaultDate:        start + 1_300_000
+            paymentDueDate: start + 1_100_000,
+            defaultDate: start + 1_300_000
         });
 
         assertOpenTermPaymentInfo({
@@ -844,14 +844,12 @@ contract RefinanceOpenTermLoan is TestBaseWithAssertions {
             unrealizedLosses:  0
         });
 
-        assertEq(fundsAsset.balanceOf(address(borrower)), desiredPrincipal);  // Borrower got exactly the desired principal
+        assertEq(fundsAsset.balanceOf(address(borrower)), desiredPrincipal); // Borrower got exactly the desired principal
 
         // PD:       service fees (50e6)  + management fees (1000 * 0.02)
         // Treasury: service fees (100e6) + management fees (1000 * 0.08)
         assertAssetBalancesIncrease(
-            address(fundsAsset),
-            [address(poolDelegate),          address(treasury)],
-            [uint256(50e6) + uint256(20e6), uint256(100e6) + uint256(80e6)]
+            address(fundsAsset), [address(poolDelegate), address(treasury)], [uint256(50e6) + uint256(20e6), uint256(100e6) + uint256(80e6)]
         );
     }
 

@@ -21,20 +21,21 @@ contract MintFuzzTests is FuzzBase {
         uint256 sharesToMint,
         uint256 receiverShares,
         uint256 cash
-    ) external {
-
+    )
+        external
+    {
         if (depositor == address(0)) depositor = address(1);
-        if (receiver  == address(0)) receiver  = address(1);
+        if (receiver == address(0)) receiver = address(1);
 
         vm.assume(depositor != address(pool) && depositor != address(this));
-        vm.assume(receiver  != address(pool) && receiver  != address(this));
+        vm.assume(receiver != address(pool) && receiver != address(this));
 
-        totalSupply      = bound(totalSupply,      0, 1e30);
-        totalAssets      = bound(totalAssets,      0, 1e30);
+        totalSupply      = bound(totalSupply, 0, 1e30);
+        totalAssets      = bound(totalAssets, 0, 1e30);
         unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
-        depositorAssets  = bound(depositorAssets,  0, 1e30);
-        receiverShares   = bound(receiverShares,   0, totalSupply);
-        cash             = bound(cash,             0, totalAssets);
+        depositorAssets  = bound(depositorAssets, 0, 1e30);
+        receiverShares   = bound(receiverShares, 0, totalSupply);
+        cash             = bound(cash, 0, totalAssets);
 
         mintShares(receiver, receiverShares, totalSupply);
         mintAssets(depositor, depositorAssets);
@@ -63,7 +64,7 @@ contract MintFuzzTests is FuzzBase {
 
         if (totalSupply != 0 && totalAssets == 0) {
             vm.expectRevert(divisionError);
-            pool.mint(sharesToMint, receiver);  // Use assets since conversion fails
+            pool.mint(sharesToMint, receiver); // Use assets since conversion fails
             return;
         }
 
@@ -80,11 +81,11 @@ contract MintFuzzTests is FuzzBase {
         assertEq(fundsAsset.allowance(depositor, address(pool)), 0);
 
         assertEq(depositedAssets,                     assetsToDeposit);
-        assertEq(pool.balanceOf(receiver),            receiverShares  + sharesToMint);
-        assertEq(pool.totalSupply(),                  totalSupply     + sharesToMint);
-        assertEq(pool.totalAssets(),                  totalAssets     + assetsToDeposit);
+        assertEq(pool.balanceOf(receiver),            receiverShares + sharesToMint);
+        assertEq(pool.totalSupply(),                  totalSupply + sharesToMint);
+        assertEq(pool.totalAssets(),                  totalAssets + assetsToDeposit);
         assertEq(fundsAsset.balanceOf(depositor),     depositorAssets - assetsToDeposit);
-        assertEq(fundsAsset.balanceOf(address(pool)), cash            + assetsToDeposit);
+        assertEq(fundsAsset.balanceOf(address(pool)), cash + assetsToDeposit);
     }
 
 }

@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IProxyFactoryLike
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager, IProxyFactoryLike } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { FakeLoan } from "../../mocks/Mocks.sol";
 
@@ -29,7 +25,7 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
     uint256 platformServiceFeeRate    = 0.04e6;
     uint256 platformManagementFeeRate = 0.08e6;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
@@ -43,15 +39,17 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), 0, 0]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), 0, 0]
+            )
+        );
     }
 
     function test_fund_protocolPause() external {
@@ -129,12 +127,8 @@ contract OpenTermLoanManagerFundTests is TestBaseWithAssertions {
         deposit(address(pool), lp, principal);
 
         vm.prank(address(poolManager));
-        IOpenTermLoanManager fakeLoanManager = IOpenTermLoanManager(
-            IProxyFactoryLike(openTermLoanManagerFactory).createInstance(
-                abi.encode(address(poolManager)),
-                "SALT"
-            )
-        );
+        IOpenTermLoanManager fakeLoanManager =
+            IOpenTermLoanManager(IProxyFactoryLike(openTermLoanManagerFactory).createInstance(abi.encode(address(poolManager)), "SALT"));
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:RF:INVALID_STRATEGY_OR_MANAGER");

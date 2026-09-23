@@ -26,7 +26,7 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
 
     function test_scheduleProposals_revert_updateRoleNotAllowed() public {
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(timelock);
@@ -41,7 +41,7 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
 
     function test_scheduleProposals_revert_emptyTarget() public {
         address[] memory targets = new address[](1);
-        bytes[]   memory data    = new bytes[](1);
+        bytes[] memory   data    = new bytes[](1);
 
         targets[0] = address(1337);
         data[0]    = abi.encodeWithSignature("randomFunction(bytes)", "randomParameters");
@@ -53,7 +53,7 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
 
     function test_scheduleProposals_success_respectsDefaultTimelockAndFunctionSpecific() public {
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(queueWM);
@@ -67,7 +67,7 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
         uint32 secondFunctionDelay           = 2 days;
         uint32 secondFunctionExecutionWindow = 2 days;
 
-        ( uint32 delay, uint32 executionWindow ) = timelock.defaultTimelockParameters();
+        (uint32 delay, uint32 executionWindow) = timelock.defaultTimelockParameters();
 
         assertEq(delay,           1 days);
         assertEq(executionWindow, 1 days);
@@ -78,7 +78,7 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
             abi.encode(address(queueWM), functionToCall2, secondFunctionDelay, secondFunctionExecutionWindow)
         );
 
-        ( uint32 currentSecondFunctionDelay, uint32 currentSecondFunctionExecutionWindow ) =
+        (uint32 currentSecondFunctionDelay, uint32 currentSecondFunctionExecutionWindow) =
             timelock.functionTimelockParameters(address(queueWM), functionToCall2);
 
         assertEq(currentSecondFunctionDelay,           secondFunctionDelay);
@@ -102,7 +102,7 @@ contract ScheduleProposalsTests is GovernorTimelockTestBase {
             validUntil:      currentTimestamp + secondFunctionDelay + secondFunctionExecutionWindow
         });
 
-        assertEq(timelock.latestProposalId(),  2);
+        assertEq(timelock.latestProposalId(), 2);
         assertEmptyProposal(address(timelock), 3);
         assertEmptyProposal(address(timelock), 4);
 

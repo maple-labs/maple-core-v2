@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IMapleProxyFactory,
-    IProxiedLike
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IMapleProxyFactory, IProxiedLike } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
 
@@ -106,7 +103,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     }
 
     function test_previewRedeem_reflectsUpdatedManualShares() external {
-        ( uint256 rs0, uint256 ra0 ) = queueWM.previewRedeem(lp, 1);
+        (uint256 rs0, uint256 ra0) = queueWM.previewRedeem(lp, 1);
         assertEq(rs0, 0);
         assertEq(ra0, 0);
 
@@ -114,18 +111,18 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         requestRedeem(lp, 200e6);
         processRedemptions(address(pool), 200e6);
 
-        ( uint256 rs1, uint256 ra1 ) = queueWM.previewRedeem(lp, 50e6);
+        (uint256 rs1, uint256 ra1) = queueWM.previewRedeem(lp, 50e6);
         assertEq(rs1, 50e6);
         assertTrue(ra1 > 0);
     }
 
     function test_previewWithdraw_alwaysZero() external {
-        ( uint256 redeemableAssets_, uint256 resultingShares_ ) = queueWM.previewWithdraw(address(0), 0);
+        (uint256 redeemableAssets_, uint256 resultingShares_) = queueWM.previewWithdraw(address(0), 0);
         assertEq(redeemableAssets_, 0);
         assertEq(resultingShares_,  0);
 
         requestRedeem(lp, 10e6);
-        ( redeemableAssets_, resultingShares_ ) = queueWM.previewWithdraw(address(lp), 1);
+        (redeemableAssets_, resultingShares_) = queueWM.previewWithdraw(address(lp), 1);
         assertEq(redeemableAssets_, 0);
         assertEq(resultingShares_,  0);
     }
@@ -141,7 +138,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     function test_requests_updatesAfterAddAndRemove() external {
         requestRedeem(lp, 75e6);
 
-        ( address ownerAdd_, uint256 sharesAdd_ ) = queueWM.requests(1);
+        (address ownerAdd_, uint256 sharesAdd_) = queueWM.requests(1);
         assertEq(ownerAdd_,  lp);
         assertEq(sharesAdd_, 75e6);
 
@@ -153,7 +150,7 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
         vm.prank(poolManager.poolDelegate());
         queueWM.removeRequest(lp, requestIds);
 
-        ( address ownerRem_, uint256 sharesRem_ ) = queueWM.requests(1);
+        (address ownerRem_, uint256 sharesRem_) = queueWM.requests(1);
         assertEq(ownerRem_,  address(0));
         assertEq(sharesRem_, 0);
     }
@@ -176,19 +173,19 @@ contract WithdrawalManagerQueueViewFunctionsAdditionalTests is TestBaseWithAsser
     }
 
     function test_queue_updatesAfterRequestAndProcess() external {
-        ( uint128 nextId0, uint128 lastId0 ) = queueWM.queue();
+        (uint128 nextId0, uint128 lastId0) = queueWM.queue();
         assertEq(nextId0, 1);
         assertEq(lastId0, 0);
 
         requestRedeem(lp, 100e6);
 
-        ( uint128 nextId1, uint128 lastId1 ) = queueWM.queue();
+        (uint128 nextId1, uint128 lastId1) = queueWM.queue();
         assertEq(nextId1, 1);
         assertEq(lastId1, 1);
 
         processRedemptions(address(pool), 100e6);
 
-        ( uint128 nextId2, uint128 lastId2 ) = queueWM.queue();
+        (uint128 nextId2, uint128 lastId2) = queueWM.queue();
         assertEq(nextId2, 2);
         assertEq(lastId2, 1);
     }

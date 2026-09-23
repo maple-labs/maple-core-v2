@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAllocationStrategy,
-    IPool,
-    IPoolManager,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IPool, IPoolManager, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "../../integration/allocation-strategy/AllocationStrategyTestBase.sol";
 
@@ -73,7 +68,7 @@ contract LossesAcrossSharedStrategiesTests is AllocationStrategyTestBase {
         strategyManagerX = allocationStrategyManager;
         strategyX        = allocationUnderlyingStrategy;
 
-        ( strategyManagerY, strategyY ) = _deployAllocationStrategy({
+        (strategyManagerY, strategyY) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegateY,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -91,41 +86,41 @@ contract LossesAcrossSharedStrategiesTests is AllocationStrategyTestBase {
             deploymentCap_:   type(uint256).max
         });
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", strategyManagerX);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", strategyManagerX);
 
         addStrategyManagerToPool(poolManagerB, strategyManagerY);
         openPool(poolManagerB);
 
-        ( poolC, poolManagerC ) = _createPoolSharingStrategy("poolCDelegate", strategyManagerY);
+        (poolC, poolManagerC) = _createPoolSharingStrategy("poolCDelegate", strategyManagerY);
 
         openPool(poolManagerC);
     }
 
     function test_lossesAcrossSharedStrategies_onlyAffectAllocatedShareholders() external {
-        strategyXInitialAssets = poolAStrategyXFunding + poolBStrategyXFunding;  // 1_000_000e6
-        strategyYInitialAssets = poolBStrategyYFunding + poolCStrategyYFunding;  // 1_000_000e6
+        strategyXInitialAssets = poolAStrategyXFunding + poolBStrategyXFunding; // 1_000_000e6
+        strategyYInitialAssets = poolBStrategyYFunding + poolCStrategyYFunding; // 1_000_000e6
 
-        strategyXInitialAvailable = strategyXInitialAssets - strategyDeployment;  // 500_000e6
-        strategyYInitialAvailable = strategyYInitialAssets - strategyDeployment;  // 500_000e6
+        strategyXInitialAvailable = strategyXInitialAssets - strategyDeployment; // 500_000e6
+        strategyYInitialAvailable = strategyYInitialAssets - strategyDeployment; // 500_000e6
 
-        firstPoolALoss  = poolAStrategyXFunding * firstImpairmentX / strategyXInitialAssets;  // 80_000e6
-        firstPoolBLossX = poolBStrategyXFunding * firstImpairmentX / strategyXInitialAssets;  // 120_000e6
-        firstPoolBLossY = poolBStrategyYFunding * firstImpairmentY / strategyYInitialAssets;  // 180_000e6
-        firstPoolCLoss  = poolCStrategyYFunding * firstImpairmentY / strategyYInitialAssets;  // 120_000e6
+        firstPoolALoss  = poolAStrategyXFunding * firstImpairmentX / strategyXInitialAssets; // 80_000e6
+        firstPoolBLossX = poolBStrategyXFunding * firstImpairmentX / strategyXInitialAssets; // 120_000e6
+        firstPoolBLossY = poolBStrategyYFunding * firstImpairmentY / strategyYInitialAssets; // 180_000e6
+        firstPoolCLoss  = poolCStrategyYFunding * firstImpairmentY / strategyYInitialAssets; // 120_000e6
 
-        strategyXAssetsAfterLoss = strategyXInitialAssets - firstLossX;  // 900_000e6
-        strategyYAssetsAfterLoss = strategyYInitialAssets - firstLossY;  // 800_000e6
+        strategyXAssetsAfterLoss = strategyXInitialAssets - firstLossX; // 900_000e6
+        strategyYAssetsAfterLoss = strategyYInitialAssets - firstLossY; // 800_000e6
 
-        poolAAssetsAfterLoss  = poolAStrategyXFunding * strategyXAssetsAfterLoss / strategyXInitialAssets;  // 360_000e6
-        poolBAssetsAfterLossX = poolBStrategyXFunding * strategyXAssetsAfterLoss / strategyXInitialAssets;  // 540_000e6
-        poolBAssetsAfterLossY = poolBStrategyYFunding * strategyYAssetsAfterLoss / strategyYInitialAssets;  // 480_000e6
-        poolCAssetsAfterLoss  = poolCStrategyYFunding * strategyYAssetsAfterLoss / strategyYInitialAssets;  // 320_000e6
+        poolAAssetsAfterLoss  = poolAStrategyXFunding * strategyXAssetsAfterLoss / strategyXInitialAssets; // 360_000e6
+        poolBAssetsAfterLossX = poolBStrategyXFunding * strategyXAssetsAfterLoss / strategyXInitialAssets; // 540_000e6
+        poolBAssetsAfterLossY = poolBStrategyYFunding * strategyYAssetsAfterLoss / strategyYInitialAssets; // 480_000e6
+        poolCAssetsAfterLoss  = poolCStrategyYFunding * strategyYAssetsAfterLoss / strategyYInitialAssets; // 320_000e6
 
-        strategyXAvailableAfterRedemption = strategyXInitialAvailable - poolAAssetsAfterLoss;  // 140_000e6
-        strategyYAvailableAfterRedemption = strategyYInitialAvailable - poolCAssetsAfterLoss;  // 180_000e6
+        strategyXAvailableAfterRedemption = strategyXInitialAvailable - poolAAssetsAfterLoss; // 140_000e6
+        strategyYAvailableAfterRedemption = strategyYInitialAvailable - poolCAssetsAfterLoss; // 180_000e6
 
-        finalPoolBAssetsX = poolBAssetsAfterLossX - secondLossX;  // 500_000e6
-        finalPoolBAssetsY = poolBAssetsAfterLossY - secondLossY;  // 460_000e6
+        finalPoolBAssetsX = poolBAssetsAfterLossX - secondLossX; // 500_000e6
+        finalPoolBAssetsY = poolBAssetsAfterLossY - secondLossY; // 460_000e6
 
         /**********************************************************************************************************************************/
         /*** Fund Pool A into X, Pool B into X and Y, and Pool C into Y                                                                 ***/
@@ -156,7 +151,7 @@ contract LossesAcrossSharedStrategiesTests is AllocationStrategyTestBase {
         fundStrategyManager(poolManagerB, strategyManagerY, poolBStrategyYFunding);
         fundStrategyManager(poolManagerC, strategyManagerY, poolCStrategyYFunding);
 
-        deployAssets(strategyX, managedWallet,  strategyDeployment);
+        deployAssets(strategyX, managedWallet, strategyDeployment);
         deployAssets(strategyY, managedWalletY, strategyDeployment);
 
         requestRedeemFromStrategyManager(poolManagerA, strategyManagerX, poolAStrategyXFunding);
@@ -1150,10 +1145,7 @@ contract LossesAcrossSharedStrategiesTests is AllocationStrategyTestBase {
         });
 
         assertEq(IPool(poolA).convertToExitAssets(poolAFunding), poolAAssetsAfterLoss);
-        assertEq(
-            IPool(poolB).convertToExitAssets(poolBFunding),
-            poolBAssetsAfterLossX + poolBAssetsAfterLossY - secondImpairmentY
-        );
+        assertEq(IPool(poolB).convertToExitAssets(poolBFunding), poolBAssetsAfterLossX + poolBAssetsAfterLossY - secondImpairmentY);
         assertEq(IPool(poolC).convertToExitAssets(poolCFunding), poolCAssetsAfterLoss);
 
         assertEq(IStrategyManager(strategyManagerX).unrealizedLosses(), 0);

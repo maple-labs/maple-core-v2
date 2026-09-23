@@ -86,7 +86,7 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
         assertEq(IGlobals(globals).platformServiceFeeRate(usdgPoolManager),     PLATFORM_SERVICE_FEE_RATE);
         assertEq(IGlobals(globals).platformManagementFeeRate(usdgPoolManager),  PLATFORM_MANAGEMENT_FEE_RATE);
 
-        ( address ownedPoolManager, bool isPoolDelegate ) = IGlobals(globals).poolDelegates(poolDelegate);
+        (address ownedPoolManager, bool isPoolDelegate) = IGlobals(globals).poolDelegates(poolDelegate);
 
         assertEq(ownedPoolManager, usdgPoolManager);
         assertEq(isPoolDelegate,   true);
@@ -270,11 +270,7 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
         _setLenderBitmap(lender);
         deal(USDG, lender, amount);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = vm.sign(lenderPrivateKey, _getPermitDigest(lender, usdgSyrupRouter, amount, deadline));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(lenderPrivateKey, _getPermitDigest(lender, usdgSyrupRouter, amount, deadline));
 
         vm.prank(lender);
         uint256 shares = ISyrupRouter(usdgSyrupRouter).depositWithPermit(amount, deadline, v, r, s, DEPOSIT_DATA);
@@ -303,19 +299,12 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
 
         deal(USDG, lender, amount);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = vm.sign(permissionAdminPrivateKey, _getAuthDigest(lender, SYRUP_USDG_LENDER_BITMAP, deadline));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(permissionAdminPrivateKey, _getAuthDigest(lender, SYRUP_USDG_LENDER_BITMAP, deadline));
 
         vm.startPrank(lender);
         IERC20(USDG).approve(usdgSyrupRouter, amount);
-        uint256 shares = ISyrupRouter(usdgSyrupRouter).authorizeAndDeposit(
-            SYRUP_USDG_LENDER_BITMAP,
-            deadline,
-            v,
-            r,
-            s,
-            amount,
-            DEPOSIT_DATA
-        );
+        uint256 shares =
+            ISyrupRouter(usdgSyrupRouter).authorizeAndDeposit(SYRUP_USDG_LENDER_BITMAP, deadline, v, r, s, amount, DEPOSIT_DATA);
         vm.stopPrank();
 
         assertEq(shares,                                                              amount);
@@ -338,27 +327,18 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
 
         deal(USDG, lender, amount);
 
-        uint8[2]   memory v;
+        uint8[2] memory v;
         bytes32[2] memory r;
         bytes32[2] memory s;
 
-        ( v[0], r[0], s[0] ) = vm.sign(permissionAdminPrivateKey, _getAuthDigest(lender, SYRUP_USDG_LENDER_BITMAP, deadline));
-        ( v[1], r[1], s[1] ) = vm.sign(lenderPrivateKey, _getPermitDigest(lender, usdgSyrupRouter, amount, deadline));
+        (v[0], r[0], s[0]) = vm.sign(permissionAdminPrivateKey, _getAuthDigest(lender, SYRUP_USDG_LENDER_BITMAP, deadline));
+        (v[1], r[1], s[1]) = vm.sign(lenderPrivateKey, _getPermitDigest(lender, usdgSyrupRouter, amount, deadline));
 
         vm.prank(lender);
-        uint256 shares = ISyrupRouter(usdgSyrupRouter).authorizeAndDepositWithPermit(
-            SYRUP_USDG_LENDER_BITMAP,
-            deadline,
-            v[0],
-            r[0],
-            s[0],
-            amount,
-            DEPOSIT_DATA,
-            deadline,
-            v[1],
-            r[1],
-            s[1]
-        );
+        uint256 shares = ISyrupRouter(usdgSyrupRouter)
+            .authorizeAndDepositWithPermit(
+                SYRUP_USDG_LENDER_BITMAP, deadline, v[0], r[0], s[0], amount, DEPOSIT_DATA, deadline, v[1], r[1], s[1]
+            );
 
         assertEq(shares,                                                              amount);
         assertEq(IERC20(USDG).balanceOf(lender),                                      0);
@@ -400,15 +380,11 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
     }
 
     function _getAuthDigest(address owner_, uint256 bitmap_, uint256 deadline_) internal view returns (bytes32 digest_) {
-        digest_ = keccak256(abi.encodePacked(
-            "\x19\x01",
-            block.chainid,
-            usdgSyrupRouter,
-            owner_,
-            ISyrupRouter(usdgSyrupRouter).nonces(owner_),
-            bitmap_,
-            deadline_
-        ));
+        digest_ = keccak256(
+            abi.encodePacked(
+                "\x19\x01", block.chainid, usdgSyrupRouter, owner_, ISyrupRouter(usdgSyrupRouter).nonces(owner_), bitmap_, deadline_
+            )
+        );
     }
 
 }

@@ -34,7 +34,9 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
         start                      = block.timestamp;
         ModularReleaseBase upgrade = new ModularReleaseBase();
 
-        upgrade.upgradeProtocol({ attachAaveAndSkyStrategies: true });
+        upgrade.upgradeProtocol({
+            attachAaveAndSkyStrategies: true
+        });
 
         /**********************************************************************************************************************************/
         /*** Take the upgraded pool as the first one, along with every strategy manager the release attached to it                      ***/
@@ -77,7 +79,7 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
 
         strategyFactories.push(upgrade.openTermLoanManagerFactory());
 
-        ( pool2, poolManager2 ) = _createPoolSharingStrategy("poolDelegate2", aaveStrategyManagerShared);
+        (pool2, poolManager2) = _createPoolSharingStrategy("poolDelegate2", aaveStrategyManagerShared);
 
         _addSharedStrategyManager(poolManager2, skyStrategyManagerShared);
         _addSharedStrategyManager(poolManager2, allocationStrategyManagerShared);
@@ -94,10 +96,10 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
         setLiquidityCap(poolManager1, type(uint256).max);
 
         vm.startPrank(governor);
-        IPoolManager(poolManager1).setStrategyCap(aaveStrategyManagerShared,       type(uint256).max);
-        IPoolManager(poolManager1).setStrategyCap(skyStrategyManagerShared,        type(uint256).max);
+        IPoolManager(poolManager1).setStrategyCap(aaveStrategyManagerShared, type(uint256).max);
+        IPoolManager(poolManager1).setStrategyCap(skyStrategyManagerShared, type(uint256).max);
         IPoolManager(poolManager1).setStrategyCap(allocationStrategyManagerShared, type(uint256).max);
-        IPoolManager(poolManager1).setStrategyCap(openTermLoanManagerPool1,        type(uint256).max);
+        IPoolManager(poolManager1).setStrategyCap(openTermLoanManagerPool1, type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(operationalAdmin);

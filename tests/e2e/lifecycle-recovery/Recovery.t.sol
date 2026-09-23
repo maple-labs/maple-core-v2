@@ -11,7 +11,7 @@ import {
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
-import { SkyStrategyTestBase }    from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
+import { SkyStrategyTestBase } from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
 
 contract AaveV3StrategyRecoveryTests is AaveV3StrategyTestBase {
 
@@ -40,21 +40,21 @@ contract AaveV3StrategyRecoveryTests is AaveV3StrategyTestBase {
         firstPool        = address(pool);
         firstPoolManager = address(poolManager);
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         firstOpenTermLoanManager  = IPoolManager(firstPoolManager).strategyList(0);
         secondOpenTermLoanManager = IPoolManager(secondPoolManager).strategyList(0);
 
-        deposit(firstPool,  lp, firstPoolFunding + secondPoolFunding);
+        deposit(firstPool, lp, firstPoolFunding + secondPoolFunding);
         deposit(secondPool, lp, firstPoolFunding + secondPoolFunding);
 
-        fundStrategyManager(firstPoolManager,  aaveV3StrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, aaveV3StrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, secondPoolFunding);
 
-        firstPoolShares     = firstPoolFunding - 2 * roundingError;  // 600_000e6 - 2
-        secondPoolShares    = secondPoolFunding;                     // 400_000e6
-        totalStrategyShares = firstPoolShares + secondPoolShares;    // 1_000_000e6 - 2
-        pendingShares       = firstPoolShares / 4;                   // (600_000e6 - 2) / 4
+        firstPoolShares     = firstPoolFunding - 2 * roundingError; // 600_000e6 - 2
+        secondPoolShares    = secondPoolFunding; // 400_000e6
+        totalStrategyShares = firstPoolShares + secondPoolShares; // 1_000_000e6 - 2
+        pendingShares       = firstPoolShares / 4; // (600_000e6 - 2) / 4
 
         requestRedeemFromStrategyManager(firstPoolManager, aaveV3StrategyManager, pendingShares);
 
@@ -363,7 +363,7 @@ contract SparkLendStrategyRecoveryTests is AaveV3StrategyRecoveryTests {
 
     function setUp() public override {
         aaveToken                   = SPARK_USDC;
-        roundingError               = 0;  // Spark reports the full nominal supply at this fork block.
+        roundingError               = 0; // Spark reports the full nominal supply at this fork block.
         useVirtualUnderlyingBalance = false;
 
         super.setUp();
@@ -398,21 +398,21 @@ contract SkyStrategyRecoveryTests is SkyStrategyTestBase {
         firstPool        = address(pool);
         firstPoolManager = address(poolManager);
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         firstOpenTermLoanManager  = IPoolManager(firstPoolManager).strategyList(0);
         secondOpenTermLoanManager = IPoolManager(secondPoolManager).strategyList(0);
 
-        deposit(firstPool,  lp, firstPoolFunding + secondPoolFunding);
+        deposit(firstPool, lp, firstPoolFunding + secondPoolFunding);
         deposit(secondPool, lp, firstPoolFunding + secondPoolFunding);
 
-        fundStrategyManager(firstPoolManager,  skyStrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, skyStrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondPoolFunding);
 
-        firstPoolShares     = firstPoolFunding - roundingError;    // 600_000e6 - 1
-        secondPoolShares    = secondPoolFunding;                   // 400_000e6
-        totalStrategyShares = firstPoolShares + secondPoolShares;  // 1_000_000e6 - 1
-        pendingShares       = firstPoolShares / 4;                 // (600_000e6 - 1) / 4
+        firstPoolShares     = firstPoolFunding - roundingError; // 600_000e6 - 1
+        secondPoolShares    = secondPoolFunding; // 400_000e6
+        totalStrategyShares = firstPoolShares + secondPoolShares; // 1_000_000e6 - 1
+        pendingShares       = firstPoolShares / 4; // (600_000e6 - 1) / 4
 
         requestRedeemFromStrategyManager(firstPoolManager, skyStrategyManager, pendingShares);
 

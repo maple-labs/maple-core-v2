@@ -6,14 +6,16 @@ import { IERC20 } from "../../modules/erc20/contracts/interfaces/IERC20.sol";
 import { IMapleProxied } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
 
 import { IGovernorTimelock as IGTL } from "../../modules/globals/contracts/interfaces/IGovernorTimelock.sol";
-import { IMapleGlobals as IMG }      from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
+import { IMapleGlobals as IMG } from "../../modules/globals/contracts/interfaces/IMapleGlobals.sol";
 
-import { INonTransparentProxied } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
-import { INonTransparentProxy }   from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
+import {
+    INonTransparentProxied
+} from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxied.sol";
+import { INonTransparentProxy } from "../../modules/globals/modules/non-transparent-proxy/contracts/interfaces/INonTransparentProxy.sol";
 
 import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 
-import { IMapleLoanManager as IMOTLM }         from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
+import { IMapleLoanManager as IMOTLM } from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
 import { IMapleLoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
 import { IMaplePool as IMP } from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
@@ -26,23 +28,25 @@ import {
     StrategyManagerParams
 } from "../../modules/pool/contracts/interfaces/IMaplePoolDeployer.sol";
 
-import { IMaplePoolManager as IMPM }        from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
-import { IMapleProxied }                    from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
-import { IMapleProxyFactory }               from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
+import { IMaplePoolManager as IMPM } from "../../modules/pool/contracts/interfaces/IMaplePoolManager.sol";
+import { IMapleProxied } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
+import { IMapleProxyFactory } from "../../modules/pool/modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { IMaplePoolPermissionManager as IMPPM }
-    from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManager.sol";
+import {
+    IMaplePoolPermissionManager as IMPPM
+} from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManager.sol";
 
-import { IMaplePoolPermissionManagerInitializer as IMPPMI }
-    from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManagerInitializer.sol";
+import {
+    IMaplePoolPermissionManagerInitializer as IMPPMI
+} from "../../modules/pool-permission-manager/contracts/interfaces/IMaplePoolPermissionManagerInitializer.sol";
 
 import { ISyrupRouter as ISR } from "../../modules/syrup-utils/contracts/interfaces/ISyrupRouter.sol";
 
-import { IMapleWithdrawalManager as IMWMC }
-    from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
+import {
+    IMapleWithdrawalManager as IMWMC
+} from "../../modules/withdrawal-manager-cyclical/contracts/interfaces/IMapleWithdrawalManager.sol";
 
-import { IMapleWithdrawalManager as IMWMQ }
-    from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
+import { IMapleWithdrawalManager as IMWMQ } from "../../modules/withdrawal-manager-queue/contracts/interfaces/IMapleWithdrawalManager.sol";
 
 import { IMapleBorrowerActions } from "../../modules/syrup-utils/contracts/interfaces/IMapleBorrowerActions.sol";
 
@@ -53,19 +57,20 @@ import {
 } from "../../modules/strategy-manager/contracts/interfaces/IMapleLiquidityRouter.sol";
 
 import { IMapleStrategyDeployer as IMSD } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyDeployer.sol";
-import { IMapleStrategyManager as IMSM }  from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
+import { IMapleStrategyManager as IMSM } from "../../modules/strategy-manager/contracts/interfaces/IMapleStrategyManager.sol";
 
-import { IAavePoolLike as IAPL }          from "../../modules/defi-strategies/contracts/interfaces/Interfaces.sol";
+import { IAavePoolLike as IAPL } from "../../modules/defi-strategies/contracts/interfaces/Interfaces.sol";
 import { IMapleAaveV3Strategy as IMAV3S } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3Strategy.sol";
-import { IMapleSkyStrategy as IMSS }      from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategy.sol";
+import { IMapleSkyStrategy as IMSS } from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategy.sol";
 
 import { AaveV3StrategyInitializerParams } from "../../modules/defi-strategies/contracts/interfaces/IMapleAaveV3StrategyInitializer.sol";
-import { SkyStrategyInitializerParams }    from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategyInitializer.sol";
+import { SkyStrategyInitializerParams } from "../../modules/defi-strategies/contracts/interfaces/IMapleSkyStrategyInitializer.sol";
 
 import { IMapleAllocationStrategy as IMAS } from "../../modules/allocation-strategy/contracts/interfaces/IMapleAllocationStrategy.sol";
 
-import { AllocationStrategyInitializerParams }
-    from "../../modules/allocation-strategy/contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
+import {
+    AllocationStrategyInitializerParams
+} from "../../modules/allocation-strategy/contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
 
 /******************************************************************************************************************************************/
 /*** Re-Exports                                                                                                                         ***/
@@ -135,20 +140,9 @@ interface IAavePoolConfiguratorLike {
 
 interface IAavePoolLike is IAPL {
 
-    function borrow(
-        address asset_,
-        uint256 amount_,
-        uint256 interestRateMode_,
-        uint16  referralCode_,
-        address onBehalfOf_
-    ) external;
+    function borrow(address asset_, uint256 amount_, uint256 interestRateMode_, uint16 referralCode_, address onBehalfOf_) external;
 
-    function repay(
-        address asset_,
-        uint256 amount_,
-        uint256 interestRateMode_,
-        address onBehalfOf_
-    ) external returns (uint256 repaidAssets_);
+    function repay(address asset_, uint256 amount_, uint256 interestRateMode_, address onBehalfOf_) external returns (uint256 repaidAssets_);
 
 }
 
@@ -233,16 +227,17 @@ interface IKycERC20Like {
 interface IPoolDeployerV2Like {
 
     function deployPool(
-        address           poolManagerFactory_,
-        address           withdrawalManagerFactory_,
-        address[]  memory loanManagerFactories_,
-        address           asset_,
-        string     memory name_,
-        string     memory symbol_,
+        address poolManagerFactory_,
+        address withdrawalManagerFactory_,
+        address[] memory loanManagerFactories_,
+        address asset_,
+        string memory name_,
+        string memory symbol_,
         uint256[6] memory configParams_
     )
         external
         returns (address poolManager_);
+
 }
 
 interface IProxiedLike {
@@ -268,8 +263,7 @@ interface ILoanLike is IProxiedLike {
 
     function acceptLoanTerms() external;
 
-    function acceptNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
-        external returns (bytes32 refinanceCommitment_);
+    function acceptNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_) external returns (bytes32 refinanceCommitment_);
 
     function borrower() external view returns (address borrower_);
 
@@ -287,11 +281,15 @@ interface ILoanLike is IProxiedLike {
 
     function principal() external view returns (uint256 principal_);
 
-    function proposeNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
-        external returns (bytes32 refinanceCommitment_);
+    function proposeNewTerms(
+        address refinancer_,
+        uint256 deadline_,
+        bytes[] calldata calls_
+    )
+        external
+        returns (bytes32 refinanceCommitment_);
 
-    function rejectNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_)
-        external returns (bytes32 refinanceCommitment_);
+    function rejectNewTerms(address refinancer_, uint256 deadline_, bytes[] calldata calls_) external returns (bytes32 refinanceCommitment_);
 
     function setPendingBorrower(address pendingBorrower_) external;
 
@@ -326,8 +324,12 @@ interface ILoanManagerLike is IProxiedLike {
 
     function removeLoanImpairment(address loan_) external;
 
-    function triggerDefault(address loan_, address liquidatorFactory_)
-        external returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
+    function triggerDefault(
+        address loan_,
+        address liquidatorFactory_
+    )
+        external
+        returns (bool liquidationComplete_, uint256 remainingLosses_, uint256 platformFees_);
 
     function unrealizedLosses() external view returns (uint128 unrealizedLosses_);
 
@@ -347,10 +349,10 @@ interface IMapleCCIPReceiverLike {
     }
 
     struct Any2EVMMessage {
-        bytes32          messageId;
-        uint64           sourceChainSelector;
-        bytes            sender;
-        bytes            data;
+        bytes32 messageId;
+        uint64 sourceChainSelector;
+        bytes sender;
+        bytes data;
         EVMTokenAmount[] destTokenAmounts;
     }
 
@@ -386,6 +388,7 @@ interface IProxyFactoryLike {
     function upgradeEnabledForPath(uint256 toVersion_, uint256 fromVersion_) external view returns (bool allowed_);
 
     function upgradeInstance(uint256 toVersion_, bytes calldata arguments_) external;
+
 }
 
 interface IPSMLike {
@@ -438,9 +441,12 @@ interface IUnderlyingStrategyLike {
 interface IWithdrawalManagerLike {
 
     function cycleConfigs(uint256 configId_)
-        external view returns (uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration);
+        external
+        view
+        returns (uint64 initialCycleId, uint64 initialCycleTime, uint64 cycleDuration, uint64 windowDuration);
 
     function getCurrentCycleId() external view returns (uint256 cycleId_);
+
 }
 
 interface IWithdrawalManagerQueueV200Like {

@@ -364,7 +364,6 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
     }
 
     function test_deployAssets_success_multipleDeploymentsAccumulate() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: First deployment                                                                                                   ***/
         /**********************************************************************************************************************************/
@@ -877,14 +876,15 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
             unrealizedLosses:      0
         });
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount - lossAmount + lossAmount);
+        assertEq(
+            IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(cappedManagedWallet), deployAmount - lossAmount + lossAmount
+        );
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), initialLiquidity - deployAmount - lossAmount);
         assertEq(fundsAsset.balanceOf(cappedManagedWallet),          deployAmount + lossAmount);
     }
 
     function test_deployAssets_success_scheduledYield() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Schedule yield                                                                                                     ***/
         /**********************************************************************************************************************************/
@@ -1003,12 +1003,11 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
     }
 
     function test_deployAssets_success_partiallyRealizedYield() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Schedule yield                                                                                                     ***/
         /**********************************************************************************************************************************/
 
-        uint256 yieldAssets  = 100_000e6;
+        uint256 yieldAssets = 100_000e6;
 
         uint32 totalDuration   = 10 days;
         uint32 elapsedDuration = 7 days;
@@ -1180,7 +1179,6 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
     }
 
     function test_deployAssets_success_fullyRealizedYield() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Schedule yield                                                                                                     ***/
         /**********************************************************************************************************************************/
@@ -1354,7 +1352,6 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
     }
 
     function test_deployAssets_success_pastYieldDeadline() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Schedule yield                                                                                                     ***/
         /**********************************************************************************************************************************/
@@ -1529,7 +1526,6 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
     }
 
     function test_deployAssets_success_impairment() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Impair assets                                                                                                      ***/
         /**********************************************************************************************************************************/
@@ -1623,7 +1619,6 @@ contract AllocationStrategyDeployAssetsSuccessTests is AllocationStrategyTestBas
     }
 
     function test_deployAssets_success_afterLossRecognition() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Deploy assets                                                                                                      ***/
         /**********************************************************************************************************************************/

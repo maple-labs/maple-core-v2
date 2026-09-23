@@ -7,14 +7,13 @@ import { AaveV3FuzzBase } from "./AaveV3FuzzBase.sol";
 
 abstract contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
 
-    AaveStrategyStorage            strategyStorage;
-    FeeAccrualStorage              feeAccrualStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    AaveStrategyStorage strategyStorage;
+    FeeAccrualStorage feeAccrualStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzzFork_aave_processRedemption(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
         /**********************************************************************************************************************************/
@@ -32,18 +31,14 @@ abstract contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
                 if (fundsAsset.balanceOf(address(pool)) < minFundAmount) deposit(address(pool), lps[0], lpDeposit);
 
                 fundStrategyManager(
-                    address(poolManager),
-                    address(aaveStrategyManager),
-                    getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
+                    address(poolManager), address(aaveStrategyManager), getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
                 );
 
                 vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
             }
 
             requestRedeemFromStrategyManager(
-                address(poolManager),
-                address(aaveStrategyManager),
-                getSomeValue(1, aaveStrategyManager.sharesOf(address(poolManager)))
+                address(poolManager), address(aaveStrategyManager), getSomeValue(1, aaveStrategyManager.sharesOf(address(poolManager)))
             );
         }
 
@@ -74,7 +69,7 @@ abstract contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
         positionStorage        = _snapshotStrategyManagerPosition(address(aaveStrategyManager), address(poolManager));
         feeAccrualStorage      = _snapshotFeeAccrual(address(aaveStrategy));
 
-        ( uint256 expectedDelegateFee, uint256 expectedProtocolFee ) =
+        (uint256 expectedDelegateFee, uint256 expectedProtocolFee) =
             expectedFees(address(aaveStrategy), strategyStorage.previousATokenBalance, strategyStorage.previousLastRecordedTotalAssets);
 
         uint256 expectedAssetsToReceive = mulDivDown(
@@ -93,8 +88,8 @@ abstract contract ProcessRedemptionFuzzTests is AaveV3FuzzBase {
         /*** Fees accrued before the redemption are settled and the exit assets are transferred straight to the pool                    ***/
         /**********************************************************************************************************************************/
 
-        assertEq(fundsAsset.balanceOf(aaveStrategyDelegate), feeAccrualStorage.previousDelegateBalance    + expectedDelegateFee);
-        assertEq(fundsAsset.balanceOf(treasury),             feeAccrualStorage.previousTreasuryBalance    + expectedProtocolFee);
+        assertEq(fundsAsset.balanceOf(aaveStrategyDelegate), feeAccrualStorage.previousDelegateBalance + expectedDelegateFee);
+        assertEq(fundsAsset.balanceOf(treasury),             feeAccrualStorage.previousTreasuryBalance + expectedProtocolFee);
         assertEq(fundsAsset.balanceOf(address(pool)),        poolManagerStorage.previousFundsAssetBalance + expectedAssetsToReceive);
 
         /**********************************************************************************************************************************/

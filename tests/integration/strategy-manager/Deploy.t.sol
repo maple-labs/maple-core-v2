@@ -25,13 +25,15 @@ contract StrategyDeployerRevertTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        deploymentData = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
-        }));
+        deploymentData = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0,
+                strategyProtocolFeeRate: 0,
+                yieldCap: type(uint256).max
+            })
+        );
     }
 
     function test_deploy_revert_invalidStrategyDelegate() external {
@@ -99,12 +101,12 @@ contract StrategyDeployerRevertTests is TestBase {
     }
 
     function test_deploy_revert_setUnderlyingStrategyPaused() external {
-        ( address strategyManager, ) =
+        (address strategyManager,) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, deploymentData);
 
         vm.startPrank(governor);
         globals.setContractPause(strategyManager, true);
-        globals.setFunctionUnpause(strategyManager, bytes4(keccak256("migrate(address,bytes)")),  true);
+        globals.setFunctionUnpause(strategyManager, bytes4(keccak256("migrate(address,bytes)")), true);
         vm.stopPrank();
 
         vm.prank(strategyDelegate);
@@ -113,12 +115,12 @@ contract StrategyDeployerRevertTests is TestBase {
     }
 
     function test_deploy_revert_completeConfigurationPaused() external {
-        ( address strategyManager, ) =
+        (address strategyManager,) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, deploymentData);
 
         vm.startPrank(governor);
         globals.setContractPause(strategyManager, true);
-        globals.setFunctionUnpause(strategyManager, bytes4(keccak256("migrate(address,bytes)")),         true);
+        globals.setFunctionUnpause(strategyManager, bytes4(keccak256("migrate(address,bytes)")), true);
         globals.setFunctionUnpause(strategyManager, bytes4(keccak256("setUnderlyingStrategy(address)")), true);
         vm.stopPrank();
 
@@ -135,13 +137,15 @@ contract AllocationStrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setCanDeployFrom(allocationStrategyFactory, address(strategyDeployer), false);
 
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0,
+                strategyProtocolFeeRate: 0,
+                yieldCap: type(uint256).max
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MASF:CI:CANNOT_DEPLOY");
@@ -149,13 +153,15 @@ contract AllocationStrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_invalidAsset() external {
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              makeAddr("notPoolAsset"),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0,
-            strategyProtocolFeeRate: 0,
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: makeAddr("notPoolAsset"),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0,
+                strategyProtocolFeeRate: 0,
+                yieldCap: type(uint256).max
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -163,13 +169,15 @@ contract AllocationStrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0.5e6,      // 50% Fee
-            strategyProtocolFeeRate: 0.5e6 + 1,  // 50.0001% Fee
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0.5e6, // 50% Fee
+                strategyProtocolFeeRate: 0.5e6 + 1, // 50.0001% Fee
+                yieldCap: type(uint256).max
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -177,20 +185,22 @@ contract AllocationStrategyDeployTests is TestBase {
     }
 
     function test_deploy_success() external {
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                yieldCap: type(uint256).max
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address allocationStrategyManager_, address allocationUnderlyingStrategy_ ) =
+        (address allocationStrategyManager_, address allocationUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
         assertEq(allocationStrategyManager_,    expectedStrategyManager);
@@ -230,15 +240,17 @@ contract AllocationStrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
 
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                yieldCap: type(uint256).max
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
@@ -248,7 +260,7 @@ contract AllocationStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
 
-        ( address allocationStrategyManager_, address allocationUnderlyingStrategy_ ) =
+        (address allocationStrategyManager_, address allocationUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
         assertEq(allocationStrategyManager_,    expectedStrategyManager);
@@ -289,20 +301,22 @@ contract AllocationStrategyDeployTests is TestBase {
     function test_deploy_success_withStrategyLiquidityCap() external {
         uint256 strategyLiquidityCap = 1_000_000e6;
 
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                yieldCap: type(uint256).max
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, allocationStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address allocationStrategyManager_, address allocationUnderlyingStrategy_ ) =
+        (address allocationStrategyManager_, address allocationUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, strategyLiquidityCap, data, "");
 
         assertEq(allocationStrategyManager_,    expectedStrategyManager);
@@ -345,28 +359,30 @@ contract AllocationStrategyDeployTests is TestBase {
         globals.setValidStrategyDelegate(strategyDelegate2, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(AllocationStrategyInitializerParams({
-            fundsAsset:              address(fundsAsset),
-            strategyMetadata:        "Allocation Strategy",
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            yieldCap:                type(uint256).max
-        }));
+        bytes memory data = abi.encode(
+            AllocationStrategyInitializerParams({
+                fundsAsset: address(fundsAsset),
+                strategyMetadata: "Allocation Strategy",
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                yieldCap: type(uint256).max
+            })
+        );
 
-        ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
+        (address expectedStrategyManager1, address expectedUnderlyingStrategy1) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, allocationStrategyFactory, data);
 
-        ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
+        (address expectedStrategyManager2, address expectedUnderlyingStrategy2) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, allocationStrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        ( address allocationStrategyManager1, address allocationUnderlyingStrategy1 ) =
+        (address allocationStrategyManager1, address allocationUnderlyingStrategy1) =
             strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        ( address allocationStrategyManager2, address allocationUnderlyingStrategy2 ) =
+        (address allocationStrategyManager2, address allocationUnderlyingStrategy2) =
             strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, data, "");
 
         assertEq(allocationStrategyManager1,    expectedStrategyManager1);
@@ -374,7 +390,7 @@ contract AllocationStrategyDeployTests is TestBase {
         assertEq(allocationUnderlyingStrategy1, expectedUnderlyingStrategy1);
         assertEq(allocationUnderlyingStrategy2, expectedUnderlyingStrategy2);
 
-        assertNotEq(allocationStrategyManager1,    allocationStrategyManager2);
+        assertNotEq(allocationStrategyManager1, allocationStrategyManager2);
         assertNotEq(allocationUnderlyingStrategy1, allocationUnderlyingStrategy2);
 
         assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(allocationStrategyManager1),       true);
@@ -440,14 +456,16 @@ contract AaveV3StrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setCanDeployFrom(aaveV3StrategyFactory, address(strategyDeployer), false);
 
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MAV3SF:CI:CANNOT_DEPLOY");
@@ -455,14 +473,16 @@ contract AaveV3StrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_zeroAaveToken() external {
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   address(0),
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: address(0),
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -470,14 +490,16 @@ contract AaveV3StrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.5e6,      // 50% Fee
-            strategyProtocolFeeRate:     0.5e6 + 1,  // 50.0001% Fee
-            referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.5e6, // 50% Fee
+                strategyProtocolFeeRate: 0.5e6 + 1, // 50.0001% Fee
+                referralCode: 0,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -485,14 +507,16 @@ contract AaveV3StrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_invalidStrategyVault() external {
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -505,14 +529,16 @@ contract AaveV3StrategyDeployTests is TestBase {
         globals.setValidPoolAsset(USDC, false);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                0,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -523,21 +549,23 @@ contract AaveV3StrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
 
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address aaveStrategyManager_, address aaveUnderlyingStrategy_ ) =
+        (address aaveStrategyManager_, address aaveUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         assertEq(aaveStrategyManager_,    expectedStrategyManager);
@@ -581,16 +609,18 @@ contract AaveV3StrategyDeployTests is TestBase {
         globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
 
         erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
@@ -600,7 +630,7 @@ contract AaveV3StrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
 
-        ( address aaveStrategyManager_, address aaveUnderlyingStrategy_ ) =
+        (address aaveStrategyManager_, address aaveUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         uint256 assetsDeposited = IStrategyManager(aaveStrategyManager_).assetsUnderManagement();
@@ -649,21 +679,23 @@ contract AaveV3StrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
 
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, aaveV3StrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address aaveStrategyManager_, address aaveUnderlyingStrategy_ ) =
+        (address aaveStrategyManager_, address aaveUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, strategyLiquidityCap, data, "");
 
         assertEq(aaveStrategyManager_,    expectedStrategyManager);
@@ -709,29 +741,31 @@ contract AaveV3StrategyDeployTests is TestBase {
         globals.setValidInstanceOf("STRATEGY_VAULT", aaveToken, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(AaveV3StrategyInitializerParams({
-            aaveToken:                   aaveToken,
-            strategyDelegateFeeRate:     0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate:     0.002e6,  // 0.2% Fee
-            referralCode:                7,
-            useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:            ""
-        }));
+        bytes memory data = abi.encode(
+            AaveV3StrategyInitializerParams({
+                aaveToken: aaveToken,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
+        (address expectedStrategyManager1, address expectedUnderlyingStrategy1) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, aaveV3StrategyFactory, data);
 
-        ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
+        (address expectedStrategyManager2, address expectedUnderlyingStrategy2) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, aaveV3StrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        ( address aaveStrategyManager1, address aaveUnderlyingStrategy1 ) =
+        (address aaveStrategyManager1, address aaveUnderlyingStrategy1) =
             strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        ( address aaveStrategyManager2, address aaveUnderlyingStrategy2 ) =
+        (address aaveStrategyManager2, address aaveUnderlyingStrategy2) =
             strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, data, "");
 
         assertEq(aaveStrategyManager1,    expectedStrategyManager1);
@@ -739,7 +773,7 @@ contract AaveV3StrategyDeployTests is TestBase {
         assertEq(aaveUnderlyingStrategy1, expectedUnderlyingStrategy1);
         assertEq(aaveUnderlyingStrategy2, expectedUnderlyingStrategy2);
 
-        assertNotEq(aaveStrategyManager1,    aaveStrategyManager2);
+        assertNotEq(aaveStrategyManager1, aaveStrategyManager2);
         assertNotEq(aaveUnderlyingStrategy1, aaveUnderlyingStrategy2);
 
         assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(aaveStrategyManager1),   true);
@@ -816,15 +850,17 @@ contract SkyStrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setCanDeployFrom(skyStrategyFactory, address(strategyDeployer), false);
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSSF:CI:CANNOT_DEPLOY");
@@ -832,15 +868,17 @@ contract SkyStrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_zeroSavingsUsds() external {
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             address(0),
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: address(0),
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -848,15 +886,17 @@ contract SkyStrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_zeroPsm() external {
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     address(0),
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: address(0),
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -864,15 +904,17 @@ contract SkyStrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_invalidFeeRateSum() external {
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.5e6,      // 50% Fee
-            strategyProtocolFeeRate: 0.5e6 + 1,  // 50.0001% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.5e6, // 50% Fee
+                strategyProtocolFeeRate: 0.5e6 + 1, // 50.0001% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -880,15 +922,17 @@ contract SkyStrategyDeployTests is TestBase {
     }
 
     function test_deploy_revert_invalidAsset() external {
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              makeAddr("notPoolAsset"),
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: makeAddr("notPoolAsset"),
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -899,15 +943,17 @@ contract SkyStrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -918,15 +964,17 @@ contract SkyStrategyDeployTests is TestBase {
         vm.prank(governor);
         globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS, true);
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -940,15 +988,17 @@ contract SkyStrategyDeployTests is TestBase {
         globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDT,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDT,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -957,19 +1007,21 @@ contract SkyStrategyDeployTests is TestBase {
 
     function test_deploy_revert_invalidUsdsPsm() external {
         vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", SDAI,          true);
-        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SDAI, true);
+        globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SDAI,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            0,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SDAI,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 0,
+                strategyMetadata: ""
+            })
+        );
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MPF:CI:FAILED");
@@ -978,26 +1030,28 @@ contract SkyStrategyDeployTests is TestBase {
 
     function test_deploy_success() external {
         vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
-        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS, true);
+        globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address skyStrategyManager_, address skyUnderlyingStrategy_ ) =
+        (address skyStrategyManager_, address skyUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         assertEq(skyStrategyManager_,    expectedStrategyManager);
@@ -1037,22 +1091,24 @@ contract SkyStrategyDeployTests is TestBase {
         uint256 bootstrapMint = 1e6;
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
-        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS, true);
+        globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
         globals.setBootstrapMint(address(fundsAsset), bootstrapMint);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
 
         erc20_mint(address(fundsAsset), strategyDelegate, bootstrapMint);
@@ -1062,7 +1118,7 @@ contract SkyStrategyDeployTests is TestBase {
 
         vm.prank(strategyDelegate);
 
-        ( address skyStrategyManager_, address skyUnderlyingStrategy_ ) =
+        (address skyStrategyManager_, address skyUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         uint256 assetsDeposited = IStrategyManager(skyStrategyManager_).assetsUnderManagement();
@@ -1109,26 +1165,28 @@ contract SkyStrategyDeployTests is TestBase {
         uint256 strategyLiquidityCap = 1_000_000e6;
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
-        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS, true);
+        globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) =
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate, strategyManagerFactory, skyStrategyFactory, data);
 
         vm.prank(strategyDelegate);
 
-        ( address skyStrategyManager_, address skyUnderlyingStrategy_ ) =
+        (address skyStrategyManager_, address skyUnderlyingStrategy_) =
             strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, strategyLiquidityCap, data, "");
 
         assertEq(skyStrategyManager_,    expectedStrategyManager);
@@ -1171,34 +1229,36 @@ contract SkyStrategyDeployTests is TestBase {
         vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate1, true);
         globals.setValidStrategyDelegate(strategyDelegate2, true);
-        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS,  true);
-        globals.setValidInstanceOf("PSM",            USDS_LITE_PSM, true);
+        globals.setValidInstanceOf("STRATEGY_VAULT", SAVINGS_USDS, true);
+        globals.setValidInstanceOf("PSM", USDS_LITE_PSM, true);
         vm.stopPrank();
 
-        bytes memory data = abi.encode(SkyStrategyInitializerParams({
-            fundsAsset:              USDC,
-            psm:                     USDS_LITE_PSM,
-            savingsUsds:             SAVINGS_USDS,
-            strategyDelegateFeeRate: 0.001e6,  // 0.1% Fee
-            strategyProtocolFeeRate: 0.002e6,  // 0.2% Fee
-            referralCode:            7,
-            strategyMetadata:        ""
-        }));
+        bytes memory data = abi.encode(
+            SkyStrategyInitializerParams({
+                fundsAsset: USDC,
+                psm: USDS_LITE_PSM,
+                savingsUsds: SAVINGS_USDS,
+                strategyDelegateFeeRate: 0.001e6, // 0.1% Fee
+                strategyProtocolFeeRate: 0.002e6, // 0.2% Fee
+                referralCode: 7,
+                strategyMetadata: ""
+            })
+        );
 
-        ( address expectedStrategyManager1, address expectedUnderlyingStrategy1 ) =
+        (address expectedStrategyManager1, address expectedUnderlyingStrategy1) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate1, strategyManagerFactory, skyStrategyFactory, data);
 
-        ( address expectedStrategyManager2, address expectedUnderlyingStrategy2 ) =
+        (address expectedStrategyManager2, address expectedUnderlyingStrategy2) =
             strategyDeployer.getDeploymentAddresses(strategyDelegate2, strategyManagerFactory, skyStrategyFactory, data);
 
         vm.prank(strategyDelegate1);
 
-        ( address skyStrategyManager1, address skyUnderlyingStrategy1 ) =
+        (address skyStrategyManager1, address skyUnderlyingStrategy1) =
             strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         vm.prank(strategyDelegate2);
 
-        ( address skyStrategyManager2, address skyUnderlyingStrategy2 ) =
+        (address skyStrategyManager2, address skyUnderlyingStrategy2) =
             strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, data, "");
 
         assertEq(skyStrategyManager1,    expectedStrategyManager1);
@@ -1206,7 +1266,7 @@ contract SkyStrategyDeployTests is TestBase {
         assertEq(skyUnderlyingStrategy1, expectedUnderlyingStrategy1);
         assertEq(skyUnderlyingStrategy2, expectedUnderlyingStrategy2);
 
-        assertNotEq(skyStrategyManager1,    skyStrategyManager2);
+        assertNotEq(skyStrategyManager1, skyStrategyManager2);
         assertNotEq(skyUnderlyingStrategy1, skyUnderlyingStrategy2);
 
         assertEq(IMapleProxyFactory(strategyManagerFactory).isInstance(skyStrategyManager1), true);

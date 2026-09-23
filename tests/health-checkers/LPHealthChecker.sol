@@ -68,32 +68,23 @@ contract LPHealthChecker {
         invariants_.poolInvariantG = check_pool_invariant_G(pool_, withdrawalManager_, poolLps_);
 
         invariants_.withdrawalManagerCyclicalInvariantA =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_A(pool_, withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_A(pool_, withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantB =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_B(withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_B(withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantF =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_F(pool_, withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_F(pool_, withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantG =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_G(withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_G(withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantH =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_H(withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_H(withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantI =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_I(pool_, withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_I(pool_, withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantJ =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_J(pool_, withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_J(pool_, withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantK =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_K(pool_, withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_K(pool_, withdrawalManager_, poolLps_);
         invariants_.withdrawalManagerCyclicalInvariantL =
-            (noSupply || !isWithdrawalManagerCyclical_) ||
-            check_withdrawalManagerCyclical_invariant_L(pool_, withdrawalManager_, poolLps_);
+            (noSupply || !isWithdrawalManagerCyclical_) || check_withdrawalManagerCyclical_invariant_L(pool_, withdrawalManager_, poolLps_);
 
         invariants_.withdrawalManagerQueueInvariantC =
             isWithdrawalManagerCyclical_ || check_withdrawalManagerQueue_invariant_C(withdrawalManager_, poolLps_);
@@ -108,10 +99,14 @@ contract LPHealthChecker {
     /******************************************************************************************************************************/
 
     function check_pool_invariant_B(
-        address          pool_,
-        address          withdrawManager_,
+        address pool_,
+        address withdrawManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         if (poolLps_.length == 0) return true;
 
         IPool pool = IPool(pool_);
@@ -129,10 +124,14 @@ contract LPHealthChecker {
     }
 
     function check_pool_invariant_G(
-        address          pool_,
-        address          withdrawManager_,
+        address pool_,
+        address withdrawManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         if (poolLps_.length == 0) return true;
 
         IPool pool = IPool(pool_);
@@ -154,10 +153,14 @@ contract LPHealthChecker {
     /******************************************************************************************************************************/
 
     function check_withdrawalManagerCyclical_invariant_A(
-        address          pool_,
-        address          withdrawalManager_,
+        address pool_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         if (poolLps_.length == 0) return true;
 
         uint256 sumLockedShares;
@@ -170,9 +173,13 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_B(
-        address          withdrawalManager_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         if (poolLps_.length == 0) return true;
 
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -195,14 +202,18 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_F(
-        address          pool_,
-        address          withdrawalManager_,
+        address pool_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint256 shares, , ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (uint256 shares,,) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
             if (shares > IPool(pool_).balanceOf(withdrawalManager_)) return false;
         }
@@ -211,13 +222,17 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_G(
-        address          withdrawalManager_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint256 shares, , ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (uint256 shares,,) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
             if (shares > withdrawalManager.lockedShares(poolLps_[i])) return false;
         }
@@ -226,29 +241,37 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_H(
-        address          withdrawalManager_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint256 shares, , ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (uint256 shares,,) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
-            if (shares > withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId( poolLps_[i]))) return false;
+            if (shares > withdrawalManager.totalCycleShares(withdrawalManager.exitCycleId(poolLps_[i]))) return false;
         }
 
         isMaintained_ = true;
     }
 
     function check_withdrawalManagerCyclical_invariant_I(
-        address          pool_,
-        address          withdrawalManager_,
+        address pool_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( , uint256 assets, ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (, uint256 assets,) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
             if (assets > IERC20(IPool(pool_).asset()).balanceOf(pool_)) return false;
         }
@@ -257,14 +280,18 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_J(
-        address          pool_,
-        address          withdrawalManager_,
+        address pool_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( , uint256 assets, ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (, uint256 assets,) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
             uint256 totalRequestedLiquidity = _getTotalRequestedLiquidity(pool_, withdrawalManager_, poolLps_[i]);
 
@@ -275,10 +302,14 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_K(
-        address          pool_,
-        address          withdrawalManager_,
+        address pool_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IPool pool = IPool(pool_);
 
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
@@ -286,7 +317,7 @@ contract LPHealthChecker {
         if (pool.totalSupply() == 0) return true;
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( , uint256 assets, ) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (, uint256 assets,) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
             uint256 lpRequestedLiquidity =
                 (withdrawalManager.lockedShares(poolLps_[i]) * (pool.totalAssets() - pool.unrealizedLosses())) / pool.totalSupply();
@@ -298,15 +329,18 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerCyclical_invariant_L(
-        address          pool_,
-        address          withdrawalManager_,
+        address pool_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManager withdrawalManager = IWithdrawalManager(withdrawalManager_);
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( , , bool partialLiquidity ) =
-                withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
+            (,, bool partialLiquidity) = withdrawalManager.getRedeemableAmounts(withdrawalManager.lockedShares(poolLps_[i]), poolLps_[i]);
 
             uint256 totalRequestedLiquidity = _getTotalRequestedLiquidity(pool_, withdrawalManager_, poolLps_[i]);
 
@@ -321,19 +355,23 @@ contract LPHealthChecker {
     /******************************************************************************************************************************/
 
     function check_withdrawalManagerQueue_invariant_C(
-        address          withdrawalManager_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
         address owner;
         uint256 shares;
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+            (uint256[] memory requests,) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
             if (requests.length > 0) {
-                ( owner, shares ) = withdrawalManager.requests(requests[requests.length - 1]);
+                (owner, shares) = withdrawalManager.requests(requests[requests.length - 1]);
 
                 if (!(shares > 0 && owner == poolLps_[i])) {
                     return false;
@@ -345,17 +383,21 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerQueue_invariant_G(
-        address          withdrawalManager_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
         uint256 requestId;
 
-        ( , uint256 lastRequestId) = withdrawalManager.queue();
+        (, uint256 lastRequestId) = withdrawalManager.queue();
 
         for (uint256 i; i < poolLps_.length; i++) {
-            ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+            (uint256[] memory requests,) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
             if (requests.length > 0) {
                 requestId = requests[requests.length - 1];
@@ -370,9 +412,13 @@ contract LPHealthChecker {
     }
 
     function check_withdrawalManagerQueue_invariant_H(
-        address          withdrawalManager_,
+        address withdrawalManager_,
         address[] memory poolLps_
-    ) public view returns (bool isMaintained_) {
+    )
+        public
+        view
+        returns (bool isMaintained_)
+    {
         IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(withdrawalManager_);
 
         uint256[] memory requestIdList = new uint256[](poolLps_.length);
@@ -382,7 +428,7 @@ contract LPHealthChecker {
         for (uint256 i; i < poolLps_.length; i++) {
             uint256 requestId;
 
-            ( uint256[] memory requests, ) = withdrawalManager.requestsByOwner(poolLps_[i]);
+            (uint256[] memory requests,) = withdrawalManager.requestsByOwner(poolLps_[i]);
 
             if (requests.length == 0) continue;
 
@@ -409,20 +455,18 @@ contract LPHealthChecker {
         address pool_,
         address withdrawalManager_,
         address poolLp_
-    ) internal view returns (uint256 totalRequestedLiquidity_) {
+    )
+        internal
+        view
+        returns (uint256 totalRequestedLiquidity_)
+    {
         uint256 supply = IPool(pool_).totalSupply();
 
         if (supply == 0) return 0;
 
         totalRequestedLiquidity_ =
-            (
-                IWithdrawalManager(withdrawalManager_).totalCycleShares(
-                    IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_)
-                ) *
-                (
-                    IPool(pool_).totalAssets() - IPool(pool_).unrealizedLosses()
-                )
-            ) / IPool(pool_).totalSupply();
+            (IWithdrawalManager(withdrawalManager_).totalCycleShares(IWithdrawalManager(withdrawalManager_).exitCycleId(poolLp_))
+                    * (IPool(pool_).totalAssets() - IPool(pool_).unrealizedLosses())) / IPool(pool_).totalSupply();
     }
 
     function _getDiff(uint256 x, uint256 y) internal pure returns (uint256 diff) {

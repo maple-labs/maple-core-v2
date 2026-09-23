@@ -97,7 +97,7 @@ contract PoolManagerUpgradeTests is TestBase {
 
 contract LoanManagerUpgradeTests is TestBase {
 
-    address newImplementation = deployFromFile("Contracts@7","OpenTermLoanManager");
+    address newImplementation = deployFromFile("Contracts@7", "OpenTermLoanManager");
 
     address loanManager;
 

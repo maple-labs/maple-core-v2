@@ -15,22 +15,24 @@ contract WithdrawFuzzTests is FuzzBase {
         uint256 assetsToWithdraw,
         uint256 receiverAssets,
         uint256 availableAssets
-    ) external {
-        if (owner    == address(0)) owner    = address(1);
-        if (caller   == address(0)) caller   = address(1);
+    )
+        external
+    {
+        if (owner == address(0)) owner = address(1);
+        if (caller == address(0)) caller = address(1);
         if (receiver == address(0)) receiver = address(1);
 
-        vm.assume(owner    != address(pool));
-        vm.assume(caller   != address(pool));
+        vm.assume(owner != address(pool));
+        vm.assume(caller != address(pool));
         vm.assume(receiver != address(pool));
         vm.assume(receiver != address(this));
 
-        totalSupply      = bound(totalSupply,      0, 1e29);
-        totalAssets      = bound(totalAssets,      0, 1e20);
+        totalSupply      = bound(totalSupply, 0, 1e29);
+        totalAssets      = bound(totalAssets, 0, 1e20);
         unrealizedLosses = bound(unrealizedLosses, 0, totalAssets);
         assetsToWithdraw = bound(assetsToWithdraw, 1, 1e20);
-        receiverAssets   = bound(receiverAssets,   0, 1e20);
-        availableAssets  = bound(availableAssets,  0, totalAssets - unrealizedLosses);
+        receiverAssets   = bound(receiverAssets, 0, 1e20);
+        availableAssets  = bound(availableAssets, 0, totalAssets - unrealizedLosses);
 
         if ((totalAssets - unrealizedLosses) == 0) return;
 

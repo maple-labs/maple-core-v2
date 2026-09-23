@@ -3,11 +3,11 @@ pragma solidity ^0.8.7;
 
 import { IMockERC20, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
-import { AaveV3StrategyHandler }  from "./handlers/AaveV3StrategyHandler.sol";
-import { DepositHandler }         from "./handlers/DepositHandler.sol";
-import { DistributionHandler }    from "./handlers/DistributionHandler.sol";
+import { AaveV3StrategyHandler } from "./handlers/AaveV3StrategyHandler.sol";
+import { DepositHandler } from "./handlers/DepositHandler.sol";
+import { DistributionHandler } from "./handlers/DistributionHandler.sol";
 import { StrategyManagerHandler } from "./handlers/StrategyManagerHandler.sol";
-import { WithdrawalHandler }      from "./handlers/WithdrawalHandler.sol";
+import { WithdrawalHandler } from "./handlers/WithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -44,7 +44,7 @@ contract AaveV3StrategyInvariants is BaseInvariants {
     }
 
     function _setupAaveV3Strategy() internal {
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   AAVE_USDC,
             useVirtualUnderlyingBalance_: true,
@@ -62,7 +62,7 @@ contract AaveV3StrategyInvariants is BaseInvariants {
             vm.prank(governor);
             globals.setValidPoolDelegate(poolDelegate_, true);
 
-            ( , address poolManager_, ) = _createPoolWithMultipleStrategies({
+            (, address poolManager_,) = _createPoolWithMultipleStrategies({
                 poolDelegate_:      poolDelegate_,
                 fundsAsset_:        address(fundsAsset),
                 name_:              string(abi.encodePacked("Pool ", vm.toString(i))),
@@ -105,10 +105,11 @@ contract AaveV3StrategyInvariants is BaseInvariants {
             lps_:         lps
         });
 
-        aaveV3StrategyHandler = new AaveV3StrategyHandler({
-            handlerName_:        "aaveV3StrategyHandler",
-            underlyingStrategy_: aaveV3UnderlyingStrategy
-        });
+        aaveV3StrategyHandler =
+            new AaveV3StrategyHandler({
+                handlerName_:        "aaveV3StrategyHandler",
+                underlyingStrategy_: aaveV3UnderlyingStrategy
+            });
 
         address[] memory strategyHandlers_ = new address[](1);
 
@@ -124,21 +125,21 @@ contract AaveV3StrategyInvariants is BaseInvariants {
 
     function _setupHandlers() internal {
         depositHandler.addAction("deposit(uint256)", 7_500);
-        depositHandler.addAction("mint(uint256)",    2_500);
+        depositHandler.addAction("mint(uint256)", 2_500);
 
         strategyManagerHandler.addAction("fundStrategyManager(uint256)", 4_500);
-        strategyManagerHandler.addAction("requestRedeem(uint256)",       3_000);
-        strategyManagerHandler.addAction("cancelRedemption(uint256)",    500);
-        strategyManagerHandler.addAction("processRedemption(uint256)",   2_000);
+        strategyManagerHandler.addAction("requestRedeem(uint256)", 3_000);
+        strategyManagerHandler.addAction("cancelRedemption(uint256)", 500);
+        strategyManagerHandler.addAction("processRedemption(uint256)", 2_000);
 
-        withdrawalHandler.addAction("requestRedeem(uint256)",      5_000);
-        withdrawalHandler.addAction("removeShares(uint256)",       500);
-        withdrawalHandler.addAction("removeSharesById(uint256)",   500);
+        withdrawalHandler.addAction("requestRedeem(uint256)", 5_000);
+        withdrawalHandler.addAction("removeShares(uint256)", 500);
+        withdrawalHandler.addAction("removeSharesById(uint256)", 500);
         withdrawalHandler.addAction("processRedemptions(uint256)", 3_000);
-        withdrawalHandler.addAction("removeRequest(uint256)",      1_000);
+        withdrawalHandler.addAction("removeRequest(uint256)", 1_000);
 
-        aaveV3StrategyHandler.addAction("impair(uint256)",                     3_500);
-        aaveV3StrategyHandler.addAction("removeImpairment(uint256)",           2_500);
+        aaveV3StrategyHandler.addAction("impair(uint256)", 3_500);
+        aaveV3StrategyHandler.addAction("removeImpairment(uint256)", 2_500);
         aaveV3StrategyHandler.addAction("setStrategyDelegateFeeRate(uint256)", 2_000);
         aaveV3StrategyHandler.addAction("setStrategyProtocolFeeRate(uint256)", 2_000);
     }

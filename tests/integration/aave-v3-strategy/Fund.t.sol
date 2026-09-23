@@ -72,11 +72,11 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
             strategyProtocolFeeRate:     0,
             referralCode:                0,
             useVirtualUnderlyingBalance: useVirtualUnderlyingBalance,
-            strategyMetadata:           ""
+            strategyMetadata:            ""
         });
 
         vm.prank(inactiveDelegate);
-        ( address inactiveStrategyManager, ) =
+        (address inactiveStrategyManager,) =
             strategyDeployer.deploy(strategyManagerFactory, aaveV3StrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(inactiveDelegate);
@@ -119,11 +119,7 @@ contract AaveV3StrategyFundFailureTests is AaveV3StrategyTestBase {
     }
 
     function testFork_fund_failWithNonInstanceUnderlyingStrategy() external {
-        vm.mockCall(
-            aaveV3StrategyFactory,
-            abi.encodeWithSignature("isInstance(address)", aaveV3UnderlyingStrategy),
-            abi.encode(false)
-        );
+        vm.mockCall(aaveV3StrategyFactory, abi.encodeWithSignature("isInstance(address)", aaveV3UnderlyingStrategy), abi.encode(false));
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:INVALID_US");
@@ -344,7 +340,7 @@ contract SparkLendStrategyFundFailureTests is AaveV3StrategyFundFailureTests {
 
 contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
-    uint256 expectedRoundingError = 1;  // Aave's initial supply is reported 1 asset unit below nominal at this fork block.
+    uint256 expectedRoundingError = 1; // Aave's initial supply is reported 1 asset unit below nominal at this fork block.
     uint256 poolLiquidity         = 1_000_000e6;
 
     function setUp() public virtual override {
@@ -590,7 +586,6 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
     }
 
     function testFork_fund_multipleFundsAcrossPoolManagers() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Deploy and configure two pools that share the same strategy manager                                                ***/
         /**********************************************************************************************************************************/
@@ -599,8 +594,8 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         uint256 firstPoolFollowUpFunding = 300_000e6;
         uint256 secondPoolFunding        = 400_000e6;
 
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  aaveV3StrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", aaveV3StrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         address firstPool  = IPoolManager(firstPoolManager).pool();
         address secondPool = IPoolManager(secondPoolManager).pool();
@@ -657,7 +652,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         /*** Step 2: Deposit liquidity into both pools                                                                                  ***/
         /**********************************************************************************************************************************/
 
-        deposit(firstPool,  lp, poolLiquidity);
+        deposit(firstPool, lp, poolLiquidity);
         deposit(secondPool, lp, poolLiquidity);
 
         assertPoolState({
@@ -719,7 +714,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
         uint256 expectedFirstPoolAum                = 200_000e6 - expectedRoundingError;
         uint256 expectedFirstPoolShares             = expectedFirstPoolAum;
-        uint256 expectedFirstPoolAvailableLiquidity = 800_000e6;  // 1_000_000e6 initial liquidity - 200_000e6 funded.
+        uint256 expectedFirstPoolAvailableLiquidity = 800_000e6; // 1_000_000e6 initial liquidity - 200_000e6 funded.
 
         // 800_000e6 available liquidity + 200_000e6 nominal strategy AUM - the protocol-specific rounding adjustment.
         uint256 expectedFirstPoolTotalAssets = 1_000_000e6 - expectedRoundingError;
@@ -853,7 +848,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
         uint256 expectedSecondPoolAum                = 400_000e6 - expectedRoundingError;
         uint256 expectedSecondPoolShares             = expectedSecondPoolAum;
-        uint256 expectedSecondPoolAvailableLiquidity = 600_000e6;  // 1_000_000e6 initial liquidity - 400_000e6 funded.
+        uint256 expectedSecondPoolAvailableLiquidity = 600_000e6; // 1_000_000e6 initial liquidity - 400_000e6 funded.
         uint256 expectedSecondPoolTotalAssets        = expectedSecondPoolAvailableLiquidity + expectedSecondPoolAum;
         uint256 expectedAum                          = expectedFirstPoolAum + expectedSecondPoolAum;
         uint256 expectedShares                       = expectedAum;
@@ -912,8 +907,8 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
     function testFork_fund_accruesFeesAndMintsFewerSharesAfterYield() external {
         uint256 fundAmount      = 250_000e6;
-        uint32  delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-        uint32  protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+        uint32  delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32  protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         /**********************************************************************************************************************************/
         /*** Step 1: Set the delegate and protocol strategy fee rates                                                                   ***/
@@ -1069,7 +1064,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         // Spark reports the nominal post-fund AUM in full.
         uint256 expectedAumAfter = firstAum + expectedNetYield + fundAmount - expectedRoundingError;
 
-        expectedAvailableLiquidity = 500_000e6;  // 1_000_000e6 initial liquidity - two 250_000e6 funds.
+        expectedAvailableLiquidity = 500_000e6; // 1_000_000e6 initial liquidity - two 250_000e6 funds.
         expectedTotalAssets        = expectedAvailableLiquidity + expectedAumAfter;
 
         assertPoolState({
@@ -1111,8 +1106,8 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
     }
 
     function testFork_fund_yieldSplitsAcrossPoolManagers() external {
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  aaveV3StrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", aaveV3StrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
         uint256 firstPoolFunding   = 250_000e6;
         uint256 secondPoolFunding  = 500_000e6;
@@ -1120,7 +1115,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         uint256 secondPoolShares   = secondPoolFunding - expectedRoundingError;
         uint256 expectedInitialAum = firstPoolShares + secondPoolShares;
 
-        deposit(IPoolManager(firstPoolManager).pool(),  lp, poolLiquidity);
+        deposit(IPoolManager(firstPoolManager).pool(), lp, poolLiquidity);
         deposit(IPoolManager(secondPoolManager).pool(), lp, poolLiquidity);
 
         assertEq(fundsAsset.balanceOf(aaveV3UnderlyingStrategy),        0);
@@ -1188,12 +1183,12 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
         uint256 totalShares                   = firstPoolShares + secondPoolShares;
         uint256 positionValue                 = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy);
-        uint256 expectedFirstPoolAssets       = firstPoolShares  * positionValue / totalShares;
+        uint256 expectedFirstPoolAssets       = firstPoolShares * positionValue / totalShares;
         uint256 expectedSecondPoolAssets      = secondPoolShares * positionValue / totalShares;
-        uint256 expectedFirstPoolTotalAssets  = (poolLiquidity - firstPoolFunding)  + expectedFirstPoolAssets;
+        uint256 expectedFirstPoolTotalAssets  = (poolLiquidity - firstPoolFunding) + expectedFirstPoolAssets;
         uint256 expectedSecondPoolTotalAssets = (poolLiquidity - secondPoolFunding) + expectedSecondPoolAssets;
 
-        assertGt(expectedFirstPoolAssets,  firstPoolShares);
+        assertGt(expectedFirstPoolAssets, firstPoolShares);
         assertGt(expectedSecondPoolAssets, secondPoolShares);
 
         assertAaveV3Strategy({
@@ -1263,11 +1258,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         vm.expectCall(
             aavePool,
             abi.encodeWithSignature(
-                "supply(address,uint256,address,uint16)",
-                address(fundsAsset),
-                fundAmount,
-                aaveV3UnderlyingStrategy,
-                referralCode
+                "supply(address,uint256,address,uint16)", address(fundsAsset), fundAmount, aaveV3UnderlyingStrategy, referralCode
             )
         );
 
@@ -1316,9 +1307,9 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         uint256 secondFund = 300_000e6;
         uint256 impairment = 100_000e6;
 
-        uint256 expectedAumAfterFirstFund         = 250_000e6 - expectedRoundingError;
-        uint256 expectedSharesAfterFirstFund      = expectedAumAfterFirstFund;
-        uint256 expectedAvailableAfterFirstFund   = poolLiquidity - firstFund;
+        uint256 expectedAumAfterFirstFund       = 250_000e6 - expectedRoundingError;
+        uint256 expectedSharesAfterFirstFund    = expectedAumAfterFirstFund;
+        uint256 expectedAvailableAfterFirstFund = poolLiquidity - firstFund;
 
         // 750_000e6 available liquidity + 250_000e6 nominal strategy AUM - the protocol-specific rounding adjustment.
         uint256 expectedTotalAssetsAfterFirstFund = 1_000_000e6 - expectedRoundingError;
@@ -1398,7 +1389,8 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Impair part of the position — the AUM is unchanged, but the loss is now reported as unrealized                     ***/
+        /*** Step 2: Impair part of the position — the AUM is unchanged, but the loss is now reported as unrealized
+        ***/
         /**********************************************************************************************************************************/
 
         vm.prank(strategyDelegate);
@@ -1413,11 +1405,11 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         });
 
         assertAaveV3Strategy({
-            strategyManager:         aaveV3StrategyManager,
-            aum:                     expectedAumAfterFirstFund,  // Impairment does not reduce the reported AUM.
-            aTokenBalance:           expectedAumAfterFirstFund,
+            strategyManager: aaveV3StrategyManager,
+            aum: expectedAumAfterFirstFund, // Impairment does not reduce the reported AUM.
+            aTokenBalance: expectedAumAfterFirstFund,
             lastRecordedTotalAssets: expectedAumAfterFirstFund,
-            unrealizedLosses:        impairment
+            unrealizedLosses: impairment
         });
 
         assertStrategyManagerShares({
@@ -1436,7 +1428,8 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 3: Fund again — the outstanding impairment does not block funding, and it stays reported as unrealized loss           ***/
+        /*** Step 3: Fund again — the outstanding impairment does not block funding, and it stays reported as unrealized loss
+        ***/
         /**********************************************************************************************************************************/
 
         assertEq(fundsAsset.balanceOf(aaveV3UnderlyingStrategy),        0);
@@ -1448,7 +1441,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         // Spark reports the full nominal AUM.
         uint256 expectedCumulativeRoundingError  = expectedRoundingError * 3;
         uint256 expectedAumAfterSecondFund       = 550_000e6 - expectedCumulativeRoundingError;
-        uint256 expectedAvailableAfterSecondFund = 450_000e6;  // 1_000_000e6 initial liquidity - 250_000e6 - 300_000e6.
+        uint256 expectedAvailableAfterSecondFund = 450_000e6; // 1_000_000e6 initial liquidity - 250_000e6 - 300_000e6.
 
         // Before protocol-specific rounding, the second fund brings both nominal AUM and total shares to 550_000e6.
         uint256 expectedTotalAssetsAfterSecondFund = 1_000_000e6 - expectedCumulativeRoundingError;
@@ -1494,12 +1487,12 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
         uint256 firstPoolPosition          = fundAmount - expectedRoundingError;
         uint256 firstPoolShares            = firstPoolPosition;
         uint256 impairment                 = 100_000e6;
-        uint256 expectedAvailableLiquidity = 750_000e6;  // 1_000_000e6 pool liquidity - 250_000e6 funded.
+        uint256 expectedAvailableLiquidity = 750_000e6; // 1_000_000e6 pool liquidity - 250_000e6 funded.
 
-        ( , address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  aaveV3StrategyManager);
-        ( , address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
+        (, address firstPoolManager)  = _createPoolSharingStrategy("firstPoolDelegate", aaveV3StrategyManager);
+        (, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", aaveV3StrategyManager);
 
-        deposit(IPoolManager(firstPoolManager).pool(),  lp, poolLiquidity);
+        deposit(IPoolManager(firstPoolManager).pool(), lp, poolLiquidity);
         deposit(IPoolManager(secondPoolManager).pool(), lp, poolLiquidity);
 
         /**********************************************************************************************************************************/
@@ -1626,7 +1619,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
         fundStrategyManager(secondPoolManager, aaveV3StrategyManager, fundAmount);
 
-        uint256 secondPoolPosition = fundAmount - 1;  // Both protocols report the follow-up fund 1 asset unit below nominal.
+        uint256 secondPoolPosition = fundAmount - 1; // Both protocols report the follow-up fund 1 asset unit below nominal.
         uint256 secondPoolShares   = secondPoolPosition;
 
         // Total nominal funding less the initial Aave-only adjustment and the shared one-unit follow-up adjustment.
@@ -1635,7 +1628,7 @@ contract AaveV3StrategyFundTests is AaveV3StrategyTestBase {
 
         // Aave assigns 50_000e6 of impairment to the first pool; Spark's pro rata rounding assigns 1 additional asset unit.
         uint256 expectedFirstPoolLoss  = 50_000e6 + 1 - expectedRoundingError;
-        uint256 expectedSecondPoolLoss = 50_000e6;  // Rounded-up pro rata share of the 100_000e6 impairment.
+        uint256 expectedSecondPoolLoss = 50_000e6; // Rounded-up pro rata share of the 100_000e6 impairment.
 
         assertPoolState({
             pool:               IPoolManager(firstPoolManager).pool(),
@@ -1695,7 +1688,7 @@ contract SparkLendStrategyFundTests is AaveV3StrategyFundTests {
 
     function setUp() public override {
         aaveToken                   = SPARK_USDC;
-        expectedRoundingError       = 0;  // Spark reports the full nominal amount after the initial supply at this fork block.
+        expectedRoundingError       = 0; // Spark reports the full nominal amount after the initial supply at this fork block.
         useVirtualUnderlyingBalance = false;
 
         super.setUp();

@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAllocationStrategy,
-    IMapleProxyFactory,
-    IPoolManager,
-    IStrategyManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IMapleProxyFactory, IPoolManager, IStrategyManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import {
     PoolConfigParams,
@@ -21,7 +16,7 @@ contract DeployPoolTestBase is TestBaseWithAssertions {
 
     uint256 constant INITIAL_SUPPLY = 1_000e6;
     uint256 constant LIQUIDITY_CAP  = 1_000_000e6;
-    uint256 constant MANAGEMENT_FEE = 0.1e6;  // 10% fee
+    uint256 constant MANAGEMENT_FEE = 0.1e6; // 10% fee
 
     function setUp() public virtual override {
         _deployProtocol();
@@ -62,10 +57,15 @@ contract DeployPoolTestBase is TestBaseWithAssertions {
         strategies[0] = createOtlmStrategyParam(cap, keccak256(abi.encode(POOL_NAME, uint256(0))));
     }
 
-    function createStrategyManagerParams(address strategyManager, uint256 cap) internal pure
+    function createStrategyManagerParams(
+        address strategyManager,
+        uint256 cap
+    )
+        internal
+        pure
         returns (StrategyManagerParams[] memory managers)
     {
-        managers    = new StrategyManagerParams[](1);
+        managers = new StrategyManagerParams[](1);
         managers[0] = StrategyManagerParams({
             instance: strategyManager,
             cap:      cap
@@ -78,9 +78,11 @@ contract DeployPoolTestBase is TestBaseWithAssertions {
         address strategyManager1,
         uint256 cap1
     )
-        internal pure returns (StrategyManagerParams[] memory managers)
+        internal
+        pure
+        returns (StrategyManagerParams[] memory managers)
     {
-        managers    = new StrategyManagerParams[](2);
+        managers = new StrategyManagerParams[](2);
         managers[0] = StrategyManagerParams({
             instance: strategyManager0,
             cap:      cap0
@@ -142,10 +144,8 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
 
     function test_createInstance_revert_directPoolManagerFactoryCall() external {
         vm.expectRevert("PMF:CI:NOT_DEPLOYER");
-        IMapleProxyFactory(poolManagerFactory).createInstance(
-            abi.encode(poolDelegate, address(fundsAsset), 0, POOL_NAME, POOL_SYMBOL),
-            keccak256(abi.encode(poolDelegate))
-        );
+        IMapleProxyFactory(poolManagerFactory)
+            .createInstance(abi.encode(poolDelegate, address(fundsAsset), 0, POOL_NAME, POOL_SYMBOL), keccak256(abi.encode(poolDelegate)));
     }
 
     function test_createInstance_revert_directWithdrawalManagerFactoryCall() external {
@@ -154,7 +154,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_createInstance_revert_directOpenTermLoanManagerFactoryCall() external {
-        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager_,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -353,7 +353,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_invalidStrategyManager() external {
-        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager_,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -380,7 +380,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_duplicateStrategyManager() external {
-        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager_,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -389,12 +389,8 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        StrategyManagerParams[] memory managers = createStrategyManagerParams(
-            allocationStrategyManager_,
-            type(uint256).max,
-            allocationStrategyManager_,
-            type(uint256).max
-        );
+        StrategyManagerParams[] memory managers =
+            createStrategyManagerParams(allocationStrategyManager_, type(uint256).max, allocationStrategyManager_, type(uint256).max);
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:ASM:ALREADY_STRATEGY_MANAGER");
@@ -409,7 +405,7 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_strategyManagerAssetNotSupported() external {
-        ( address allocationStrategyManager_, address underlyingStrategy ) = _deployAllocationStrategy({
+        (address allocationStrategyManager_, address underlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -438,20 +434,20 @@ contract DeployPoolRevertTests is DeployPoolTestBase {
     }
 
     function test_deployPool_revert_invalidManagementFeeRate() external {
-        uint256 invalidManagementFee = HUNDRED_PERCENT + 1;  // >100% fee
+        uint256 invalidManagementFee = HUNDRED_PERCENT + 1; // >100% fee
 
         vm.prank(poolDelegate);
         vm.expectRevert("PM:SDMFR:OOB");
         poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    createPoolManagerInitParams(address(fundsAsset), 0),
-            poolConfigParams:         PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+            poolManagerInitParams: createPoolManagerInitParams(address(fundsAsset), 0),
+            poolConfigParams: PoolConfigParams({
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: invalidManagementFee,
-                liquidityCap:              LIQUIDITY_CAP
+                liquidityCap: LIQUIDITY_CAP
             }),
-            strategiesParams:       new StrategyDeployParams[](0),
+            strategiesParams: new StrategyDeployParams[](0),
             strategyManagersParams: new StrategyManagerParams[](0)
         });
     }
@@ -478,7 +474,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyManagersParams:   new StrategyManagerParams[](0)
         });
 
-        ( IPoolManager pm, ) = assertDeployedPool({
+        (IPoolManager pm,) = assertDeployedPool({
             poolManager_:               poolManager_,
             initialSupply_:             0,
             liquidityCap_:              LIQUIDITY_CAP,
@@ -489,7 +485,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         address otlm = pm.strategyList(0);
 
         address[] memory factories      = new address[](1);
-        bytes[]   memory deploymentData = new bytes[](1);
+        bytes[] memory   deploymentData = new bytes[](1);
         bytes32[] memory salts          = new bytes32[](1);
 
         factories[0]      = openTermLoanManagerFactory;
@@ -528,7 +524,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyManagersParams:   new StrategyManagerParams[](0)
         });
 
-        ( IPoolManager pm, ) = assertDeployedPool({
+        (IPoolManager pm,) = assertDeployedPool({
             poolManager_:               poolManager_,
             initialSupply_:             0,
             liquidityCap_:              LIQUIDITY_CAP,
@@ -540,7 +536,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
         address otlm1 = pm.strategyList(1);
 
         address[] memory factories      = new address[](2);
-        bytes[]   memory deploymentData = new bytes[](2);
+        bytes[] memory   deploymentData = new bytes[](2);
         bytes32[] memory salts          = new bytes32[](2);
 
         factories[0]      = openTermLoanManagerFactory;
@@ -567,7 +563,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_otlmAndModularStrategy() external {
-        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager_,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -576,7 +572,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        StrategyDeployParams[]  memory strategies = createOtlmStrategyParams(type(uint256).max);
+        StrategyDeployParams[] memory  strategies = createOtlmStrategyParams(type(uint256).max);
         StrategyManagerParams[] memory managers   = createStrategyManagerParams(allocationStrategyManager_, type(uint256).max);
 
         vm.prank(poolDelegate);
@@ -589,7 +585,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyManagersParams:   managers
         });
 
-        ( IPoolManager pm, ) = assertDeployedPool({
+        (IPoolManager pm,) = assertDeployedPool({
             poolManager_:               poolManager_,
             initialSupply_:             0,
             liquidityCap_:              LIQUIDITY_CAP,
@@ -633,7 +629,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_otlmAndMultipleModularStrategies() external {
-        ( address allocationStrategyManager0, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager0,) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("strategyDelegate0"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -642,7 +638,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             bootstrapMint_:           0
         });
 
-        ( address allocationStrategyManager1, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager1,) = _deployAllocationStrategy({
             strategyDelegate_:        makeAddr("strategyDelegate1"),
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -655,12 +651,8 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
 
         StrategyDeployParams[] memory strategies = createOtlmStrategyParams(type(uint256).max);
 
-        StrategyManagerParams[] memory managers = createStrategyManagerParams(
-            allocationStrategyManager0,
-            type(uint256).max,
-            allocationStrategyManager1,
-            type(uint256).max
-        );
+        StrategyManagerParams[] memory managers =
+            createStrategyManagerParams(allocationStrategyManager0, type(uint256).max, allocationStrategyManager1, type(uint256).max);
 
         vm.prank(poolDelegate);
         address poolManager_ = poolDeployer.deployPool({
@@ -672,7 +664,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyManagersParams:   managers
         });
 
-        ( IPoolManager pm, ) = assertDeployedPool({
+        (IPoolManager pm,) = assertDeployedPool({
             poolManager_:               poolManager_,
             initialSupply_:             0,
             liquidityCap_:              LIQUIDITY_CAP,
@@ -740,7 +732,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
     }
 
     function test_deployPool_success_modularStrategyOnly() external {
-        ( address allocationStrategyManager_, ) = _deployAllocationStrategy({
+        (address allocationStrategyManager_,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -761,7 +753,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyManagersParams:   managers
         });
 
-        ( IPoolManager pm, ) = assertDeployedPool({
+        (IPoolManager pm,) = assertDeployedPool({
             poolManager_:               poolManager_,
             initialSupply_:             0,
             liquidityCap_:              LIQUIDITY_CAP,
@@ -809,7 +801,7 @@ contract DeployPoolSuccessTests is DeployPoolTestBase {
             strategyManagersParams:   new StrategyManagerParams[](0)
         });
 
-        ( IPoolManager pm, ) = assertDeployedPool({
+        (IPoolManager pm,) = assertDeployedPool({
             poolManager_:               poolManager_,
             initialSupply_:             INITIAL_SUPPLY,
             liquidityCap_:              LIQUIDITY_CAP,

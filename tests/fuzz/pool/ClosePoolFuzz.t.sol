@@ -41,7 +41,6 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
             availableLiquidity: 0,
             diff:               ALLOWED_DIFF
         });
-
     }
 
     function test_closePool_withWorthlessStrategyPosition() external {
@@ -93,8 +92,8 @@ contract ClosePoolFuzzWithWMQueue is FuzzedSetup {
 
         payOffLoansAndRedeemAllLps(pool1);
 
-        assertEq(IAllocationStrategy(allocationUnderlyingStrategyShared).impairedAssets(),        impairedBefore);
-        assertEq(IStrategyManager(allocationStrategyManagerShared).sharesOf(poolManager1),        sharesBefore);
+        assertEq(IAllocationStrategy(allocationUnderlyingStrategyShared).impairedAssets(), impairedBefore);
+        assertEq(IStrategyManager(allocationStrategyManagerShared).sharesOf(poolManager1), sharesBefore);
 
         assertPoolStateWithDiff({
             pool:               pool1,

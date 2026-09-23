@@ -25,7 +25,7 @@ contract CallPrincipalTestsBase is TestBaseWithAssertions {
     uint256 constant managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
     uint256 constant issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public virtual override {
@@ -42,15 +42,17 @@ contract CallPrincipalTestsBase is TestBaseWithAssertions {
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(lateInterestPremiumRate)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(lateInterestPremiumRate)]
+            )
+        );
     }
 
 }
@@ -242,10 +244,10 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
         uint256 accruedInterest = (issuanceRate * (block.timestamp - start)) / 1e27;
 
         assertPoolState({
-            pool:               address(pool),
-            totalSupply:        1_500_000e6,  // Same as initial deposit
-            totalAssets:        principal + accruedInterest,
-            unrealizedLosses:   principal + accruedInterest,
+            pool: address(pool),
+            totalSupply: 1_500_000e6, // Same as initial deposit
+            totalAssets: principal + accruedInterest,
+            unrealizedLosses: principal + accruedInterest,
             availableLiquidity: 0
         });
 
@@ -294,10 +296,10 @@ contract CallPrincipalTests is CallPrincipalTestsBase {
         callLoan(address(loan), principal);
 
         assertPoolState({
-            pool:               address(pool),
-            totalSupply:        1_500_000e6,  // Same as initial deposit
-            totalAssets:        principal + accruedInterest,  // Interest has stopped accruing because of impairment
-            unrealizedLosses:   principal + accruedInterest,
+            pool: address(pool),
+            totalSupply: 1_500_000e6, // Same as initial deposit
+            totalAssets: principal + accruedInterest, // Interest has stopped accruing because of impairment
+            unrealizedLosses: principal + accruedInterest,
             availableLiquidity: 0
         });
 

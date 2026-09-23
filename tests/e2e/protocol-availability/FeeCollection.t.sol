@@ -11,20 +11,20 @@ import {
 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
-import { SkyStrategyTestBase }    from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
+import { SkyStrategyTestBase } from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
 
 contract AaveV3StrategyFeeCollectionTests is AaveV3StrategyTestBase {
 
-    uint32 delegateFeeRate    = 0.1e6;   // 10% of accrued yield.
-    uint32 newDelegateFeeRate = 0.2e6;   // 20% of future accrued yield.
-    uint32 newProtocolFeeRate = 0.1e6;   // 10% of future accrued yield.
-    uint32 protocolFeeRate    = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate    = 0.1e6; // 10% of accrued yield.
+    uint32 newDelegateFeeRate = 0.2e6; // 20% of future accrued yield.
+    uint32 newProtocolFeeRate = 0.1e6; // 10% of future accrued yield.
+    uint32 protocolFeeRate    = 0.05e6; // 5% of accrued yield.
 
     uint256 additionalFunding                      = 100_000e6;
-    uint256 expectedAdditionalFundingRoundingError = 2;  // The restored follow-up supply leaves two fewer aToken units.
-    uint256 expectedFeeCollectionRoundingError     = 1;  // Aave rounds a fee-only withdrawal down one unit after repayment.
-    uint256 expectedRoundingError                  = 1;  // Aave supply rounds down one unit at this fork block.
-    uint256 expectedWithdrawalRoundingAdjustment   = 0;  // Aave has no combined-withdrawal rounding adjustment after repayment.
+    uint256 expectedAdditionalFundingRoundingError = 2; // The restored follow-up supply leaves two fewer aToken units.
+    uint256 expectedFeeCollectionRoundingError     = 1; // Aave rounds a fee-only withdrawal down one unit after repayment.
+    uint256 expectedRoundingError                  = 1; // Aave supply rounds down one unit at this fork block.
+    uint256 expectedWithdrawalRoundingAdjustment   = 0; // Aave has no combined-withdrawal rounding adjustment after repayment.
     uint256 fundAmount                             = 500_000e6;
     uint256 poolLiquidity                          = 1_000_000e6;
 
@@ -72,7 +72,7 @@ contract AaveV3StrategyFeeCollectionTests is AaveV3StrategyTestBase {
         /**********************************************************************************************************************************/
 
         // SparkLend's collateral oracle is stale after the one-year warp, so the borrow must happen before yield accrual.
-        ( address aavePool, address borrower, uint256 borrowAmount ) = borrowOnAave();
+        (address aavePool, address borrower, uint256 borrowAmount) = borrowOnAave();
 
         assertEq(
             useVirtualUnderlyingBalance
@@ -400,10 +400,10 @@ contract SparkLendStrategyFeeCollectionTests is AaveV3StrategyFeeCollectionTests
 
     function setUp() public override {
         aaveToken                              = SPARK_USDC;
-        expectedAdditionalFundingRoundingError = 0;  // The restored follow-up supply retains the full nominal amount.
-        expectedFeeCollectionRoundingError     = 0;  // Spark retains the full net AUM after fee-only withdrawal and repayment.
-        expectedRoundingError                  = 0;  // Spark reports the full nominal supply at this fork block.
-        expectedWithdrawalRoundingAdjustment   = 1;  // Spark retains one additional aToken unit after the combined withdrawal.
+        expectedAdditionalFundingRoundingError = 0; // The restored follow-up supply retains the full nominal amount.
+        expectedFeeCollectionRoundingError     = 0; // Spark retains the full net AUM after fee-only withdrawal and repayment.
+        expectedRoundingError                  = 0; // Spark reports the full nominal supply at this fork block.
+        expectedWithdrawalRoundingAdjustment   = 1; // Spark retains one additional aToken unit after the combined withdrawal.
         useVirtualUnderlyingBalance            = false;
 
         super.setUp();
@@ -413,10 +413,10 @@ contract SparkLendStrategyFeeCollectionTests is AaveV3StrategyFeeCollectionTests
 
 contract SkyStrategyFeeCollectionTests is SkyStrategyTestBase {
 
-    uint32 delegateFeeRate    = 0.1e6;   // 10% of accrued yield.
-    uint32 newDelegateFeeRate = 0.2e6;   // 20% of future accrued yield.
-    uint32 newProtocolFeeRate = 0.1e6;   // 10% of future accrued yield.
-    uint32 protocolFeeRate    = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate    = 0.1e6; // 10% of accrued yield.
+    uint32 newDelegateFeeRate = 0.2e6; // 20% of future accrued yield.
+    uint32 newProtocolFeeRate = 0.1e6; // 10% of future accrued yield.
+    uint32 protocolFeeRate    = 0.05e6; // 5% of accrued yield.
 
     uint256 additionalFunding = 100_000e6;
     uint256 fundAmount        = 500_000e6;
@@ -469,10 +469,10 @@ contract SkyStrategyFeeCollectionTests is SkyStrategyTestBase {
 
         grossAum = fundAmount * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - roundingLoss;
 
-        grossYield          = grossAum - fundedAssets;                         // 18_000_000_000.
-        expectedDelegateFee = grossYield * delegateFeeRate / HUNDRED_PERCENT;  // 1_800_000_000.
-        expectedProtocolFee = grossYield * protocolFeeRate / HUNDRED_PERCENT;  // 900_000_000.
-        expectedTotalFees   = expectedDelegateFee + expectedProtocolFee;       // 2_700_000_000.
+        grossYield          = grossAum - fundedAssets; // 18_000_000_000.
+        expectedDelegateFee = grossYield * delegateFeeRate / HUNDRED_PERCENT; // 1_800_000_000.
+        expectedProtocolFee = grossYield * protocolFeeRate / HUNDRED_PERCENT; // 900_000_000.
+        expectedTotalFees   = expectedDelegateFee + expectedProtocolFee; // 2_700_000_000.
         netAum              = grossAum - expectedTotalFees;
         redemptionAssets    = redemptionShares * netAum / totalShares;
 

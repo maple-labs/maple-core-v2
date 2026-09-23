@@ -8,6 +8,26 @@ block_timestamp = 1_685_721_539           # Timestamp for tests (non-zero)
 gas_limit       = "18446744073709551615"  # Gas limit for tests
 evm_version     = "cancun"                # EVM version for tests
 
+[profile.default.fmt]
+line_length                  = 140
+tab_width                    = 4
+style                        = "space"
+bracket_spacing              = true
+contract_new_lines           = true
+prefer_compact               = "none"
+multiline_func_header        = "all"
+quote_style                  = "double"
+int_types                    = "long"
+number_underscore            = "preserve"
+hex_underscore               = "remove"
+single_line_statement_blocks = "preserve"
+sort_imports                 = false
+override_spacing             = false
+pow_no_space                 = false
+wrap_comments                = true
+docs_style                   = "block"
+ignore                       = []
+
 [profile.production]
 optimizer      = true  # Enable or disable the solc optimizer
 optimizer_runs = 200   # The number of optimizer runs

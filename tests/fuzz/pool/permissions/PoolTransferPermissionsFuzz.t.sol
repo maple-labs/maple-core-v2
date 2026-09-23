@@ -43,27 +43,29 @@ contract PoolTransferPermissionsFuzzTests is TestBase {
         uint256 ownerBitmap,
         uint256 recipientBitmap,
         uint256 amount,
-        bool    isOwnerAllowed,
-        bool    isRecipientAllowed
-    ) external {
+        bool isOwnerAllowed,
+        bool isRecipientAllowed
+    )
+        external
+    {
         permissionLevel = bound(permissionLevel, PRIVATE, PUBLIC);
-        amount          = bound(amount,          1,       MAX_AMOUNT);
+        amount          = bound(amount, 1, MAX_AMOUNT);
 
-        setBitmaps("P:deposit",  poolBitmap);
+        setBitmaps("P:deposit", poolBitmap);
         setBitmaps("P:transfer", poolBitmap);
 
         setPoolPermissionLevel(address(poolManager), permissionLevel);
 
         if (permissionLevel == PRIVATE) {
-            setLenderAllowlist(address(poolManager), owner,     isOwnerAllowed);
+            setLenderAllowlist(address(poolManager), owner, isOwnerAllowed);
             setLenderAllowlist(address(poolManager), recipient, isRecipientAllowed);
         } else {
-            setLenderBitmap(address(poolPermissionManager), permissionAdmin, owner,     ownerBitmap);
+            setLenderBitmap(address(poolPermissionManager), permissionAdmin, owner, ownerBitmap);
             setLenderBitmap(address(poolPermissionManager), permissionAdmin, recipient, recipientBitmap);
 
             permissionLevel == FUNCTION_LEVEL
-            ? setPoolBitmaps(address(poolManager), functionIds, poolBitmaps)
-            : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
+                ? setPoolBitmaps(address(poolManager), functionIds, poolBitmaps)
+                : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
         }
 
         if (!ppm.hasPermission(address(poolManager), lenders, "P:transfer")) {
@@ -91,27 +93,29 @@ contract PoolTransferPermissionsFuzzTests is TestBase {
         uint256 ownerBitmap,
         uint256 recipientBitmap,
         uint256 amount,
-        bool    isOwnerAllowed,
-        bool    isRecipientAllowed
-    ) external {
+        bool isOwnerAllowed,
+        bool isRecipientAllowed
+    )
+        external
+    {
         permissionLevel = bound(permissionLevel, PRIVATE, PUBLIC);
-        amount          = bound(amount,          1,       MAX_AMOUNT);
+        amount          = bound(amount, 1, MAX_AMOUNT);
 
-        setBitmaps("P:deposit",      poolBitmap);
+        setBitmaps("P:deposit", poolBitmap);
         setBitmaps("P:transferFrom", poolBitmap);
 
         setPoolPermissionLevel(address(poolManager), permissionLevel);
 
         if (permissionLevel == PRIVATE) {
-            setLenderAllowlist(address(poolManager), owner,     isOwnerAllowed);
+            setLenderAllowlist(address(poolManager), owner, isOwnerAllowed);
             setLenderAllowlist(address(poolManager), recipient, isRecipientAllowed);
         } else {
-            setLenderBitmap(address(poolPermissionManager), permissionAdmin, owner,     ownerBitmap);
+            setLenderBitmap(address(poolPermissionManager), permissionAdmin, owner, ownerBitmap);
             setLenderBitmap(address(poolPermissionManager), permissionAdmin, recipient, recipientBitmap);
 
             permissionLevel == FUNCTION_LEVEL
-            ? setPoolBitmaps(address(poolManager), functionIds, poolBitmaps)
-            : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
+                ? setPoolBitmaps(address(poolManager), functionIds, poolBitmaps)
+                : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
         }
 
         if (!ppm.hasPermission(address(poolManager), lenders, "P:transferFrom")) {

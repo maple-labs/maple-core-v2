@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IERC20Like,
-    IPool,
-    IStrategyManager,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, IPool, IStrategyManager, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyStrategyTestBase } from "./SkyStrategyTestBase.sol";
 
@@ -91,7 +86,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
     }
 
     function testFork_removeImpairment_acrossAllAdmins() external {
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
         /**********************************************************************************************************************************/
         /*** Impair the strategy                                                                                                        ***/
@@ -496,8 +491,8 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
     }
 
     function testFork_removeImpairment_aboveAndBelowAumClamp() external {
-        uint256 storedImpairment  = fundAmount + impairment;            // 750k.
-        uint256 removalAboveClamp = storedImpairment - strategyAssets;  // 250k + 1.
+        uint256 storedImpairment  = fundAmount + impairment; // 750k.
+        uint256 removalAboveClamp = storedImpairment - strategyAssets; // 250k + 1.
 
         /**********************************************************************************************************************************/
         /*** Impair the strategy above the AUM clamp                                                                                    ***/
@@ -783,20 +778,20 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
         /*** Fund a second pool that shares the strategy                                                                                ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondFundAmount);
 
         uint256 firstAssets  = strategyAssets;
         uint256 secondAssets = secondFundAmount;
-        uint256 totalAssets  = firstAssets + secondAssets;  // 950k - 1.
+        uint256 totalAssets  = firstAssets + secondAssets; // 950k - 1.
 
         uint256 firstShares  = strategyShares;
         uint256 secondShares = secondFundShares;
         uint256 totalShares  = firstShares + secondShares;
 
-        uint256 firstUnrealizedLoss  = divRoundUp(firstShares  * impairment, totalShares);
+        uint256 firstUnrealizedLoss  = divRoundUp(firstShares * impairment, totalShares);
         uint256 secondUnrealizedLoss = divRoundUp(secondShares * impairment, totalShares);
 
         /**********************************************************************************************************************************/
@@ -867,9 +862,9 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
 
         removeStrategyImpairment(skyUnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
-        firstUnrealizedLoss  = divRoundUp(firstShares  * remainingImpairment, totalShares);
+        firstUnrealizedLoss  = divRoundUp(firstShares * remainingImpairment, totalShares);
         secondUnrealizedLoss = divRoundUp(secondShares * remainingImpairment, totalShares);
 
         assertPoolState({
@@ -930,8 +925,8 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
     }
 
     function testFork_removeImpairment_doesNotCollectAccruedFees() external {
-        uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-        uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+        uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         /**********************************************************************************************************************************/
         /*** Accrue yield and confirm the outstanding fees                                                                              ***/
@@ -1047,7 +1042,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
 
         removeStrategyImpairment(skyUnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
         assertPoolState({
             pool:               address(pool),
@@ -1101,7 +1096,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
         /*** Fund a second pool and fully exit the first pool manager                                                                   ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondFundAmount);
@@ -1177,7 +1172,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
 
         removeStrategyImpairment(skyUnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
         assertPoolState({
             pool:               firstPool,
@@ -1244,7 +1239,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
         /*** Fund a second pool and impair the shared strategy                                                                          ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondFundAmount);
@@ -1252,7 +1247,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
         uint256 totalAssets = strategyAssets + secondFundAmount;
         uint256 totalShares = strategyShares + secondFundShares;
 
-        uint256 firstUnrealizedLoss  = divRoundUp(strategyShares   * impairment, totalShares);
+        uint256 firstUnrealizedLoss  = divRoundUp(strategyShares * impairment, totalShares);
         uint256 secondUnrealizedLoss = divRoundUp(secondFundShares * impairment, totalShares);
 
         impairStrategy(skyUnderlyingStrategy, impairment);
@@ -1458,7 +1453,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
         /*** Deploy a bootstrapped strategy and fund two pools                                                                          ***/
         /**********************************************************************************************************************************/
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        makeAddr("bootstrapStrategyDelegate"),
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -1469,8 +1464,8 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
             bootstrapMint_:           bootstrapMint
         });
 
-        ( address firstPool,  address firstPoolManager )  = _createPoolSharingStrategy("bootstrapPoolDelegate", skyStrategyManager);
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address firstPool, address firstPoolManager)   = _createPoolSharingStrategy("bootstrapPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(firstPool, lp, poolLiquidity);
         deposit(secondPool, lp, poolLiquidity);
@@ -1484,10 +1479,10 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
         requestRedeemFromStrategyManager(firstPoolManager, skyStrategyManager, firstPoolShares);
         processRedemptionFromStrategyManager(firstPoolManager, skyStrategyManager, firstPoolShares);
 
-        uint256 positionValue = bootstrapAssets + secondFundAmount;  // 550k - 1.
+        uint256 positionValue = bootstrapAssets + secondFundAmount; // 550k - 1.
         uint256 totalShares   = bootstrapShares + secondFundShares;
 
-        uint256 bootstrapImpairment  = divRoundUp(bootstrapShares  * impairment, totalShares);
+        uint256 bootstrapImpairment  = divRoundUp(bootstrapShares * impairment, totalShares);
         uint256 secondPoolImpairment = divRoundUp(secondFundShares * impairment, totalShares);
 
         /**********************************************************************************************************************************/
@@ -1567,7 +1562,7 @@ contract SkyStrategyRemoveImpairmentTests is SkyStrategyTestBase {
 
         removeStrategyImpairment(skyUnderlyingStrategy, impairmentRemoval);
 
-        uint256 remainingImpairment = impairment - impairmentRemoval;  // 150k.
+        uint256 remainingImpairment = impairment - impairmentRemoval; // 150k.
 
         uint256 bootstrapRemainingImpairment  = divRoundUp(bootstrapShares * remainingImpairment, totalShares);
         uint256 secondPoolRemainingImpairment = divRoundUp(secondFundShares * remainingImpairment, totalShares);

@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IPool,
-    IPoolManager,
-    IStrategyManager,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IPool, IPoolManager, IStrategyManager, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { FuzzedSetupUpgradeFork } from "../FuzzedSetupUpgradeFork.sol";
-import { StorageSnapshot }        from "../StorageSnapshot.sol";
+import { StorageSnapshot } from "../StorageSnapshot.sol";
 
 contract SkyFuzzBase is FuzzedSetupUpgradeFork, StorageSnapshot {
 
@@ -21,7 +16,7 @@ contract SkyFuzzBase is FuzzedSetupUpgradeFork, StorageSnapshot {
 
     uint256 constant SKY_ROUNDING_ERROR = 2;
 
-    ISkyStrategy     skyStrategy;
+    ISkyStrategy skyStrategy;
     IStrategyManager skyManager;
 
     function fuzzSkySetup(uint256 seed_) internal {

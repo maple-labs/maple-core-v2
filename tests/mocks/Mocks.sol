@@ -9,7 +9,7 @@ contract ConfigurableMockERC20 is MockERC20 {
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_) MockERC20(name_, symbol_, decimals_) { }
 
-    modifier fail {
+    modifier fail() {
         if (msg.sender == _caller) {
             require(false);
         }
@@ -85,10 +85,10 @@ contract MockPoolManager {
 
     address public factory;
     address public poolDelegate;
-    bool    public active;
+    bool public active;
 
     constructor(address factory_, address poolDelegate_) {
-        factory = factory_;
+        factory      = factory_;
         poolDelegate = poolDelegate_;
     }
 
@@ -134,7 +134,7 @@ contract MockMultisig {
         require(targets_.length == calls_.length, "MM:E:LENGTH_MISMATCH");
 
         for (uint256 i; i < targets_.length; ++i) {
-            ( bool success_, bytes memory returnData_ ) = targets_[i].call(calls_[i]);
+            (bool success_, bytes memory returnData_) = targets_[i].call(calls_[i]);
 
             if (!success_) {
                 assembly {

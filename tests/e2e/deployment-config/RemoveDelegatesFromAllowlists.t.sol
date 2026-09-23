@@ -25,11 +25,11 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
     }
 
     function test_removeDelegates_success_successorDelegatesSettle() external {
-        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding;          // 1_000_000e6 - 600_000e6 = 400_000e6
+        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding; // 1_000_000e6 - 600_000e6 = 400_000e6
         uint256 strategyShares          = 600_000e6;
         uint256 remainingStrategyAssets = 200_000e6;
-        uint256 remainingStrategyShares = strategyShares - redemptionShares;        // 600_000e6 - 400_000e6 = 200_000e6
-        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets;  // 1_000_000e6 - 200_000e6 = 800_000e6
+        uint256 remainingStrategyShares = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets; // 1_000_000e6 - 200_000e6 = 800_000e6
 
         /**********************************************************************************************************************************/
         /*** Assert the funded position and pending partial redemption                                                                  ***/
@@ -61,12 +61,12 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        assertEq(globals.ownedPoolManager(poolDelegate),           address(poolManager));
-        assertEq(globals.ownedStrategyManager(strategyDelegate),   allocationStrategyManager);
-        assertEq(globals.isPoolDelegate(poolDelegate),             true);
-        assertEq(globals.isPoolDelegate(newPoolDelegate),          false);
-        assertEq(globals.isStrategyDelegate(strategyDelegate),     true);
-        assertEq(globals.isStrategyDelegate(newStrategyDelegate),  false);
+        assertEq(globals.ownedPoolManager(poolDelegate),          address(poolManager));
+        assertEq(globals.ownedStrategyManager(strategyDelegate),  allocationStrategyManager);
+        assertEq(globals.isPoolDelegate(poolDelegate),            true);
+        assertEq(globals.isPoolDelegate(newPoolDelegate),         false);
+        assertEq(globals.isStrategyDelegate(strategyDelegate),    true);
+        assertEq(globals.isStrategyDelegate(newStrategyDelegate), false);
 
         /**********************************************************************************************************************************/
         /*** Confirm neither owning delegate can be removed from its allowlist                                                          ***/
@@ -289,11 +289,11 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
     }
 
     function test_removeDelegates_success_liquidityBotSettles() external {
-        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding;          // 1_000_000e6 - 600_000e6 = 400_000e6
+        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding; // 1_000_000e6 - 600_000e6 = 400_000e6
         uint256 strategyShares          = 600_000e6;
         uint256 remainingStrategyAssets = 200_000e6;
-        uint256 remainingStrategyShares = strategyShares - redemptionShares;        // 600_000e6 - 400_000e6 = 200_000e6
-        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets;  // 1_000_000e6 - 200_000e6 = 800_000e6
+        uint256 remainingStrategyShares = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets; // 1_000_000e6 - 200_000e6 = 800_000e6
 
         /**********************************************************************************************************************************/
         /*** Allowlist the successors, transfer both managers and remove the former delegates                                           ***/
@@ -397,11 +397,11 @@ contract RemoveDelegatesFromAllowlistsTests is AllocationStrategyTestBase {
     }
 
     function test_removeDelegates_success_liquidityRouterSettles() external {
-        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding;          // 1_000_000e6 - 600_000e6 = 400_000e6
+        uint256 initialPoolLiquidity    = poolLiquidity - strategyFunding; // 1_000_000e6 - 600_000e6 = 400_000e6
         uint256 strategyShares          = 600_000e6;
         uint256 remainingStrategyAssets = 200_000e6;
-        uint256 remainingStrategyShares = strategyShares - redemptionShares;        // 600_000e6 - 400_000e6 = 200_000e6
-        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets;  // 1_000_000e6 - 200_000e6 = 800_000e6
+        uint256 remainingStrategyShares = strategyShares - redemptionShares; // 600_000e6 - 400_000e6 = 200_000e6
+        uint256 finalPoolLiquidity      = poolLiquidity - remainingStrategyAssets; // 1_000_000e6 - 200_000e6 = 800_000e6
 
         /**********************************************************************************************************************************/
         /*** Allowlist the successors, transfer both managers and remove the former delegates                                           ***/

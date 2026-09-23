@@ -14,7 +14,7 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
 
     uint256 exitingLpDeposit   = 800_000e6;
     uint256 remainingLpDeposit = 200_000e6;
-    uint256 poolLiquidity      = exitingLpDeposit + remainingLpDeposit;  // 1_000_000e6
+    uint256 poolLiquidity      = exitingLpDeposit + remainingLpDeposit; // 1_000_000e6
     uint256 impairment         = 200_000e6;
 
     function setUp() public override {
@@ -26,14 +26,14 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
 
         _setUpClosedPool();
 
-        setPoolPermissionLevel(address(poolManager), 1);  // FUNCTION_LEVEL
+        setPoolPermissionLevel(address(poolManager), 1); // FUNCTION_LEVEL
 
         operationalAdmin = address(new MockMultisig());
 
         vm.prank(governor);
         globals.setOperationalAdmin(operationalAdmin);
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -50,7 +50,7 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         /*** Mint LP tokens, fund, impair and request redeem on a pool and assert state                                                 ***/
         /**********************************************************************************************************************************/
 
-        mint(address(pool), exitingLp,   exitingLpDeposit);
+        mint(address(pool), exitingLp, exitingLpDeposit);
         mint(address(pool), remainingLp, remainingLpDeposit);
 
         fundStrategyManager(address(poolManager), strategyManager, poolLiquidity);
@@ -92,8 +92,16 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             unrealizedLosses: impairment
         });
 
-        assertRequestOnWm({ requestId: 1, owner: exitingLp, shares: exitingLpDeposit });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequestOnWm({
+            requestId: 1,
+            owner:     exitingLp,
+            shares:    exitingLpDeposit
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
         assertEq(pool.balanceOf(exitingLp),        0);
         assertEq(pool.balanceOf(remainingLp),      remainingLpDeposit);
@@ -157,32 +165,29 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         vm.expectRevert("WM:RSBI:NOT_ALLOWED");
         queueWM.removeSharesById(1, exitingLpDeposit);
 
-        assertRequestOnWm({ requestId: 1, owner: exitingLp, shares: exitingLpDeposit });
+        assertRequestOnWm({
+            requestId: 1,
+            owner:     exitingLp,
+            shares:    exitingLpDeposit
+        });
 
         /**********************************************************************************************************************************/
         /*** Ops admin batches the strategy withdrawal and the pool redemption into a single transaction                                ***/
         /**********************************************************************************************************************************/
 
-        uint256 netAssets  = poolLiquidity - impairment;                    // 800_000e6
-        uint256 exitAssets = exitingLpDeposit * netAssets / poolLiquidity;  // 640_000e6
+        uint256 netAssets  = poolLiquidity - impairment; // 800_000e6
+        uint256 exitAssets = exitingLpDeposit * netAssets / poolLiquidity; // 640_000e6
 
         address[] memory targets = new address[](2);
-        bytes[]   memory calls   = new bytes[](2);
+        bytes[] memory   calls   = new bytes[](2);
 
         targets[0] = strategyManager;
         targets[1] = address(queueWM);
 
-        calls[0] = abi.encodeWithSelector(
-            IStrategyManager(strategyManager).processRedemption.selector,
-            address(poolManager),
-            poolLiquidity,
-            ""
-        );
+        calls[0] =
+            abi.encodeWithSelector(IStrategyManager(strategyManager).processRedemption.selector, address(poolManager), poolLiquidity, "");
 
-        calls[1] = abi.encodeWithSelector(
-            IWithdrawalManagerQueue(address(queueWM)).processRedemptions.selector,
-            exitingLpDeposit
-        );
+        calls[1] = abi.encodeWithSelector(IWithdrawalManagerQueue(address(queueWM)).processRedemptions.selector, exitingLpDeposit);
 
         MockMultisig(operationalAdmin).execute(targets, calls);
 
@@ -221,14 +226,18 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             availableLiquidity: netAssets - exitAssets
         });
 
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 1 });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 2,
+            lastRequestId: 1
+        });
 
         assertEq(fundsAsset.balanceOf(exitingLp),  exitAssets);
         assertEq(pool.balanceOf(exitingLp),        0);
         assertEq(pool.balanceOf(address(queueWM)), 0);
 
         assertEq(pool.balanceOf(remainingLp),                  remainingLpDeposit);
-        assertEq(pool.convertToExitAssets(remainingLpDeposit), netAssets - exitAssets);  // 160_000e6
+        assertEq(pool.convertToExitAssets(remainingLpDeposit), netAssets - exitAssets); // 160_000e6
 
         /**********************************************************************************************************************************/
         /*** Ops admin restores the withdrawal permissions                                                                              ***/
@@ -249,16 +258,32 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
 
         requestRedeem(address(pool), remainingLp, remainingLpDeposit);
 
-        assertRequestOnWm({ requestId: 2, owner: remainingLp, shares: remainingLpDeposit });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+        assertRequestOnWm({
+            requestId: 2,
+            owner:     remainingLp,
+            shares:    remainingLpDeposit
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 2,
+            lastRequestId: 2
+        });
 
         assertEq(pool.balanceOf(remainingLp),      0);
         assertEq(pool.balanceOf(address(queueWM)), remainingLpDeposit);
 
         removeShares(address(pool), remainingLp, remainingLpDeposit);
 
-        assertRequestOnWm({ requestId: 2, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+        assertRequestOnWm({
+            requestId: 2,
+            owner:     address(0),
+            shares:    0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 2,
+            lastRequestId: 2
+        });
 
         assertEq(pool.balanceOf(remainingLp),      remainingLpDeposit);
         assertEq(pool.balanceOf(address(queueWM)), 0);
@@ -296,8 +321,8 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         /*** One atomic batch pauses the exits, drains the strategy, processes the queue and restores the exits                         ***/
         /**********************************************************************************************************************************/
 
-        uint256 netAssets  = poolLiquidity - impairment;                    // 800_000e6
-        uint256 exitAssets = exitingLpDeposit * netAssets / poolLiquidity;  // 640_000e6
+        uint256 netAssets  = poolLiquidity - impairment; // 800_000e6
+        uint256 exitAssets = exitingLpDeposit * netAssets / poolLiquidity; // 640_000e6
 
         bytes32[] memory functionIds   = new bytes32[](2);
         uint256[] memory pausedBitmaps = new uint256[](2);
@@ -309,38 +334,21 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         pausedBitmaps[1] = 1;
 
         address[] memory targets = new address[](4);
-        bytes[]   memory calls   = new bytes[](4);
+        bytes[] memory   calls   = new bytes[](4);
 
         targets[0] = address(poolPermissionManager);
         targets[1] = strategyManager;
         targets[2] = address(queueWM);
         targets[3] = address(poolPermissionManager);
 
-        calls[0] = abi.encodeWithSelector(
-            poolPermissionManager.setPoolBitmaps.selector,
-            address(poolManager),
-            functionIds,
-            pausedBitmaps
-        );
+        calls[0] = abi.encodeWithSelector(poolPermissionManager.setPoolBitmaps.selector, address(poolManager), functionIds, pausedBitmaps);
 
-        calls[1] = abi.encodeWithSelector(
-            IStrategyManager(strategyManager).processRedemption.selector,
-            address(poolManager),
-            poolLiquidity,
-            ""
-        );
+        calls[1] =
+            abi.encodeWithSelector(IStrategyManager(strategyManager).processRedemption.selector, address(poolManager), poolLiquidity, "");
 
-        calls[2] = abi.encodeWithSelector(
-            IWithdrawalManagerQueue(address(queueWM)).processRedemptions.selector,
-            exitingLpDeposit
-        );
+        calls[2] = abi.encodeWithSelector(IWithdrawalManagerQueue(address(queueWM)).processRedemptions.selector, exitingLpDeposit);
 
-        calls[3] = abi.encodeWithSelector(
-            poolPermissionManager.setPoolBitmaps.selector,
-            address(poolManager),
-            functionIds,
-            openBitmaps
-        );
+        calls[3] = abi.encodeWithSelector(poolPermissionManager.setPoolBitmaps.selector, address(poolManager), functionIds, openBitmaps);
 
         MockMultisig(operationalAdmin).execute(targets, calls);
 
@@ -379,14 +387,18 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
             availableLiquidity: netAssets - exitAssets
         });
 
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 1 });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 2,
+            lastRequestId: 1
+        });
 
         assertEq(fundsAsset.balanceOf(exitingLp),  exitAssets);
         assertEq(pool.balanceOf(exitingLp),        0);
         assertEq(pool.balanceOf(address(queueWM)), 0);
 
         assertEq(pool.balanceOf(remainingLp),                  remainingLpDeposit);
-        assertEq(pool.convertToExitAssets(remainingLpDeposit), netAssets - exitAssets);  // 160_000e6
+        assertEq(pool.convertToExitAssets(remainingLpDeposit), netAssets - exitAssets); // 160_000e6
 
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "WM:removeSharesById"), 0);
         assertEq(poolPermissionManager.poolBitmaps(address(poolManager), "P:removeShares"),      0);
@@ -397,8 +409,16 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
 
         requestRedeem(address(pool), remainingLp, remainingLpDeposit);
 
-        assertRequestOnWm({ requestId: 2, owner: remainingLp, shares: remainingLpDeposit });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+        assertRequestOnWm({
+            requestId: 2,
+            owner:     remainingLp,
+            shares:    remainingLpDeposit
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 2,
+            lastRequestId: 2
+        });
 
         assertEq(pool.balanceOf(remainingLp),      0);
         assertEq(pool.balanceOf(address(queueWM)), remainingLpDeposit);
@@ -406,8 +426,16 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         vm.prank(remainingLp);
         queueWM.removeSharesById(2, remainingLpDeposit);
 
-        assertRequestOnWm({ requestId: 2, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 2, lastRequestId: 2 });
+        assertRequestOnWm({
+            requestId: 2,
+            owner:     address(0),
+            shares:    0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 2,
+            lastRequestId: 2
+        });
 
         assertEq(pool.balanceOf(remainingLp),      remainingLpDeposit);
         assertEq(pool.balanceOf(address(queueWM)), 0);
@@ -442,7 +470,7 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
         /*** Ops admin withdraws the whole strategy position without pausing cancellations                                              ***/
         /**********************************************************************************************************************************/
 
-        uint256 netAssets = poolLiquidity - impairment;  // 800_000e6
+        uint256 netAssets = poolLiquidity - impairment; // 800_000e6
 
         vm.prank(operationalAdmin);
         IStrategyManager(strategyManager).processRedemption(address(poolManager), poolLiquidity, "");
@@ -491,8 +519,16 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
 
         removeShares(address(pool), exitingLp, exitingLpDeposit);
 
-        assertRequestOnWm({ requestId: 1, owner: address(0), shares: 0 });
-        assertQueue({ poolManager: address(poolManager), nextRequestId: 1, lastRequestId: 1 });
+        assertRequestOnWm({
+            requestId: 1,
+            owner:     address(0),
+            shares:    0
+        });
+        assertQueue({
+            poolManager:   address(poolManager),
+            nextRequestId: 1,
+            lastRequestId: 1
+        });
 
         assertEq(pool.balanceOf(exitingLp),        exitingLpDeposit);
         assertEq(pool.balanceOf(address(queueWM)), 0);
@@ -576,8 +612,8 @@ contract OperationalAdminImpairedExitTests is TestBaseWithAssertions {
 
         assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), impairment);
 
-        uint256 expectedExitingLpAssets   = exitingLpDeposit * netAssets / poolLiquidity;    // 640_000e6
-        uint256 expectedRemainingLpAssets = remainingLpDeposit * netAssets / poolLiquidity;  // 160_000e6
+        uint256 expectedExitingLpAssets   = exitingLpDeposit * netAssets / poolLiquidity; // 640_000e6
+        uint256 expectedRemainingLpAssets = remainingLpDeposit * netAssets / poolLiquidity; // 160_000e6
 
         assertEq(pool.convertToExitAssets(exitingLpDeposit),   expectedExitingLpAssets);
         assertEq(pool.convertToExitAssets(remainingLpDeposit), expectedRemainingLpAssets);

@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IERC20Like,
-    IERC4626Like,
-    IStrategyManager,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20Like, IERC4626Like, IStrategyManager, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyStrategyTestBase } from "./SkyStrategyTestBase.sol";
 
@@ -118,10 +113,10 @@ contract SkyStrategyRecognizeLossFailureTests is SkyStrategyTestBase {
 
 contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
 
-    uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-    uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+    uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
-    uint256 expectedRoundingLoss = 1;  // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 expectedRoundingLoss = 1; // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
     uint256 fundAmount           = 500_000e6;
     uint256 poolLiquidity        = 1_000_000e6;
 
@@ -745,7 +740,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
         /*** Fund a second pool that shares the strategy                                                                                ***/
         /**********************************************************************************************************************************/
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondPoolFunding);
@@ -848,7 +843,7 @@ contract SkyStrategyRecognizeLossTests is SkyStrategyTestBase {
             impairedAssets:          0,
             lastRecordedTotalAssets: 0
         });
-        assertEq(IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy),     susdsBalance);
+        assertEq(IERC20Like(SAVINGS_USDS).balanceOf(skyUnderlyingStrategy), susdsBalance);
 
         assertStrategyManager({
             strategyManager:       skyStrategyManager,

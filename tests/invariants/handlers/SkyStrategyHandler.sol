@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IERC20,
-    IERC4626Like,
-    IPSMLike,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IERC20, IERC4626Like, IPSMLike, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { DefiStrategyHandler } from "./DefiStrategyHandler.sol";
 

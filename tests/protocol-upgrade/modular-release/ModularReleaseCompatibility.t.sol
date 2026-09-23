@@ -50,7 +50,9 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         startingTime = block.timestamp;
 
-        upgradeProtocol({ attachAaveAndSkyStrategies: true });
+        upgradeProtocol({
+            attachAaveAndSkyStrategies: true
+        });
     }
 
     /**************************************************************************************************************************************/
@@ -319,10 +321,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assertEq(IOpenTermLoan(aqruActiveOpenTermLoan).isImpaired(),   false);
         assertEq(IOpenTermLoan(aqruActiveOpenTermLoan).dateImpaired(), 0);
 
-        (
-            uint40 impairedDate,
-            bool   impairedByGovernor
-        ) = IOpenTermLoanManager(aqruOpenTermLoanManager).impairmentFor(aqruActiveOpenTermLoan);
+        (uint40 impairedDate, bool impairedByGovernor) = IOpenTermLoanManager(aqruOpenTermLoanManager).impairmentFor(aqruActiveOpenTermLoan);
 
         assertEq(impairedDate,       0);
         assertEq(impairedByGovernor, false);
@@ -332,10 +331,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assertEq(IOpenTermLoan(aqruActiveOpenTermLoan).isImpaired(),   true);
         assertEq(IOpenTermLoan(aqruActiveOpenTermLoan).dateImpaired(), block.timestamp);
 
-        (
-            impairedDate,
-            impairedByGovernor
-        ) = IOpenTermLoanManager(aqruOpenTermLoanManager).impairmentFor(aqruActiveOpenTermLoan);
+        (impairedDate, impairedByGovernor) = IOpenTermLoanManager(aqruOpenTermLoanManager).impairmentFor(aqruActiveOpenTermLoan);
 
         assertEq(impairedDate,       block.timestamp);
         assertEq(impairedByGovernor, false);
@@ -386,7 +382,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         uint256 exitCycleId       = IWithdrawalManagerCyclical(withdrawalManager).exitCycleId(account);
         uint256 lockedShares      = IWithdrawalManagerCyclical(withdrawalManager).lockedShares(account);
 
-        ( uint256 windowStart, ) = IWithdrawalManagerCyclical(withdrawalManager).getWindowAtId(exitCycleId);
+        (uint256 windowStart,) = IWithdrawalManagerCyclical(withdrawalManager).getWindowAtId(exitCycleId);
 
         vm.warp(windowStart);
 
@@ -423,13 +419,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         IERC20(asset).transfer(address(0xdead), amount);
     }
 
-    function topUpCyclicalLiquidity(
-        address pool,
-        address withdrawalManager,
-        uint256 exitCycleId
-    )
-        internal returns (uint256 toppedUp)
-    {
+    function topUpCyclicalLiquidity(address pool, address withdrawalManager, uint256 exitCycleId) internal returns (uint256 toppedUp) {
         address poolManager = IPool(pool).manager();
         address asset       = IPool(pool).asset();
 

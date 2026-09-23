@@ -3,11 +3,11 @@ pragma solidity ^0.8.7;
 
 import { console } from "../../contracts/Runner.sol";
 
-import { DepositHandler }      from "./handlers/DepositHandler.sol";
+import { DepositHandler } from "./handlers/DepositHandler.sol";
 import { DistributionHandler } from "./handlers/DistributionHandler.sol";
 import { OpenTermLoanHandler } from "./handlers/OpenTermLoanHandler.sol";
-import { TransferHandler }     from "./handlers/TransferHandler.sol";
-import { WithdrawalHandler }   from "./handlers/WithdrawalHandler.sol";
+import { TransferHandler } from "./handlers/TransferHandler.sol";
+import { WithdrawalHandler } from "./handlers/WithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -36,12 +36,12 @@ contract DefaultingInvariants is BaseInvariants {
         }
 
         setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,
-            delegateManagementFeeRate:  0.02e6,
+            delegateOriginationFee: 500e6,
+            delegateServiceFee: 300e6,
+            delegateManagementFeeRate: 0.02e6,
             platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.005e6,  // 10k after 1m seconds
-            platformManagementFeeRate:  0.08e6
+            platformServiceFeeRate: 0.005e6, // 10k after 1m seconds
+            platformManagementFeeRate: 0.08e6
         });
 
         depositHandler    = new DepositHandler("depositHandler", pools, lps);
@@ -59,39 +59,39 @@ contract DefaultingInvariants is BaseInvariants {
         });
 
         depositHandler.addAction("deposit(uint256)", 7_500);
-        depositHandler.addAction("mint(uint256)",    2_500);
+        depositHandler.addAction("mint(uint256)", 2_500);
 
         transferHandler.addAction("transfer(uint256)", 10_000);
 
-        withdrawalHandler.addAction("processRedemptions(uint256)",      2_700);
+        withdrawalHandler.addAction("processRedemptions(uint256)", 2_700);
         withdrawalHandler.addAction("processEmptyRedemptions(uint256)", 300);
-        withdrawalHandler.addAction("redeem(uint256)",                  1_000);
-        withdrawalHandler.addAction("removeRequest(uint256)",           1_000);
-        withdrawalHandler.addAction("removeShares(uint256)",            500);
-        withdrawalHandler.addAction("removeSharesById(uint256)",        500);
-        withdrawalHandler.addAction("requestRedeem(uint256)",           3_000);
-        withdrawalHandler.addAction("setManualWithdrawal(uint256)",     1_000);
+        withdrawalHandler.addAction("redeem(uint256)", 1_000);
+        withdrawalHandler.addAction("removeRequest(uint256)", 1_000);
+        withdrawalHandler.addAction("removeShares(uint256)", 500);
+        withdrawalHandler.addAction("removeSharesById(uint256)", 500);
+        withdrawalHandler.addAction("requestRedeem(uint256)", 3_000);
+        withdrawalHandler.addAction("setManualWithdrawal(uint256)", 1_000);
 
-        otlHandler.addAction("callLoan(uint256)",             1_000);
-        otlHandler.addAction("fundLoan(uint256)",             1_000);
-        otlHandler.addAction("impairLoan(uint256)",           1_000);
-        otlHandler.addAction("makePayment(uint256)",          2_500);
-        otlHandler.addAction("refinance(uint256)",            1_000);
-        otlHandler.addAction("removeLoanCall(uint256)",       1_000);
+        otlHandler.addAction("callLoan(uint256)", 1_000);
+        otlHandler.addAction("fundLoan(uint256)", 1_000);
+        otlHandler.addAction("impairLoan(uint256)", 1_000);
+        otlHandler.addAction("makePayment(uint256)", 2_500);
+        otlHandler.addAction("refinance(uint256)", 1_000);
+        otlHandler.addAction("removeLoanCall(uint256)", 1_000);
         otlHandler.addAction("removeLoanImpairment(uint256)", 1_000);
-        otlHandler.addAction("triggerDefault(uint256)",       1_500);
+        otlHandler.addAction("triggerDefault(uint256)", 1_500);
 
         address[] memory targetContracts = new address[](4);
-        targetContracts[0] = address(transferHandler);
-        targetContracts[1] = address(depositHandler);
-        targetContracts[2] = address(withdrawalHandler);
-        targetContracts[3] = address(otlHandler);
+        targetContracts[0]               = address(transferHandler);
+        targetContracts[1]               = address(depositHandler);
+        targetContracts[2]               = address(withdrawalHandler);
+        targetContracts[3]               = address(otlHandler);
 
         uint256[] memory weightsDistributorHandler = new uint256[](4);
-        weightsDistributorHandler[0] = 10;
-        weightsDistributorHandler[1] = 10;
-        weightsDistributorHandler[2] = 10;
-        weightsDistributorHandler[3] = 70;
+        weightsDistributorHandler[0]               = 10;
+        weightsDistributorHandler[1]               = 10;
+        weightsDistributorHandler[2]               = 10;
+        weightsDistributorHandler[3]               = 70;
 
         address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
 

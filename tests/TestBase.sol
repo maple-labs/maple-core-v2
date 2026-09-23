@@ -30,12 +30,12 @@ import {
 } from "../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../contracts/ProtocolActions.sol";
-import { Utils }           from "../contracts/Utils.sol";
+import { Utils } from "../contracts/Utils.sol";
 
 contract TestBase is ProtocolActions, Utils {
 
     uint256 constant MAINNET_FORK_BLOCK = 25_523_119;
-    uint256 constant SKY_ANNUAL_APY     = 0.036e6;  // 3.6% over 365 days at MAINNET_FORK_BLOCK.
+    uint256 constant SKY_ANNUAL_APY     = 0.036e6; // 3.6% over 365 days at MAINNET_FORK_BLOCK.
 
     uint256 constant MAX_TOKEN_AMOUNT = 1e29;
 
@@ -104,7 +104,7 @@ contract TestBase is ProtocolActions, Utils {
     uint256 nextDelegateOriginationFee;
     uint256 nextDelegateServiceFee;
 
-    uint32  startingTime;
+    uint32 startingTime;
     uint256 start;
 
     address[] managedWallets;
@@ -119,16 +119,16 @@ contract TestBase is ProtocolActions, Utils {
     // Avoid stack-too-deep error.
     bytes[] strategyDeploymentData_;
 
-    IGlobals                   globals;
-    IGovernorTimelock          governorTimelock;
-    IMapleLiquidityRouter      liquidityRouter;
-    IPool                      pool;
-    IPoolDeployer              poolDeployer;
-    IPoolManager               poolManager;
-    IPoolPermissionManager     poolPermissionManager;
-    IStrategyDeployer          strategyDeployer;
-    IWithdrawalManagerQueue    queueWM;
-    IWithdrawalManagerQueue    withdrawalManager;
+    IGlobals globals;
+    IGovernorTimelock governorTimelock;
+    IMapleLiquidityRouter liquidityRouter;
+    IPool pool;
+    IPoolDeployer poolDeployer;
+    IPoolManager poolManager;
+    IPoolPermissionManager poolPermissionManager;
+    IStrategyDeployer strategyDeployer;
+    IWithdrawalManagerQueue queueWM;
+    IWithdrawalManagerQueue withdrawalManager;
 
     IMockERC20 collateralAsset;
     IMockERC20 fundsAsset;
@@ -164,32 +164,32 @@ contract TestBase is ProtocolActions, Utils {
             strategyData[i] = abi.encode(new bytes(0));
         }
 
-        (
-            pool_,
-            pm_,
-            wm_
-        ) = _createPoolWithMultipleStrategies(poolDelegate_, address(fundsAsset), POOL_NAME, strategyFactories, strategyData);
+        (pool_, pm_, wm_) =
+            _createPoolWithMultipleStrategies(poolDelegate_, address(fundsAsset), POOL_NAME, strategyFactories, strategyData);
     }
 
     function _createPoolWithMultipleStrategies(
-        address          poolDelegate_,
-        address          fundsAsset_,
-        string    memory name_,
+        address poolDelegate_,
+        address fundsAsset_,
+        string memory name_,
         address[] memory strategyFactories_,
-        bytes[]   memory strategyData_
+        bytes[] memory strategyData_
     )
-        internal returns (address pool_, address pm_, address wm_)
+        internal
+        returns (address pool_, address pm_, address wm_)
     {
-        poolManager = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate_,
-            fundsAsset_:                fundsAsset_,
-            strategyFactories_:         strategyFactories_,
-            strategyData_:              strategyData_,
-            name_:                      name_,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        poolManager = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate_,
+                fundsAsset_: fundsAsset_,
+                strategyFactories_: strategyFactories_,
+                strategyData_: strategyData_,
+                name_: name_,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
         pool    = IPool(poolManager.pool());
         queueWM = IWithdrawalManagerQueue(poolManager.withdrawalManager());
@@ -208,15 +208,19 @@ contract TestBase is ProtocolActions, Utils {
         allowLender(address(poolManager), address(queueWM));
     }
 
-    function _createPoolSharingStrategy(string memory delegateLabel_, address strategyManager_)
-        internal returns (address pool_, address poolManager_)
+    function _createPoolSharingStrategy(
+        string memory delegateLabel_,
+        address strategyManager_
+    )
+        internal
+        returns (address pool_, address poolManager_)
     {
         address poolDelegate_ = makeAddr(delegateLabel_);
 
         vm.prank(governor);
         globals.setValidPoolDelegate(poolDelegate_, true);
 
-        ( pool_, poolManager_, ) = _createPoolWithOTLM(poolDelegate_);
+        (pool_, poolManager_,) = _createPoolWithOTLM(poolDelegate_);
 
         activatePool(poolManager_, HUNDRED_PERCENT);
 
@@ -233,12 +237,13 @@ contract TestBase is ProtocolActions, Utils {
     function _deployAllocationStrategy(
         address strategyDelegate_,
         address fundsAsset_,
-        uint32  strategyDelegateFeeRate_,
-        uint32  strategyProtocolFeeRate_,
+        uint32 strategyDelegateFeeRate_,
+        uint32 strategyProtocolFeeRate_,
         uint256 strategyLiquidityCap_,
         uint256 bootstrapMint_
     )
-        internal returns (address strategyManager_, address underlyingStrategy_)
+        internal
+        returns (address strategyManager_, address underlyingStrategy_)
     {
         AllocationStrategyInitializerParams memory params = AllocationStrategyInitializerParams({
             fundsAsset:              fundsAsset_,
@@ -260,7 +265,7 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(strategyDelegate_);
 
-        ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
+        (strategyManager_, underlyingStrategy_) = strategyDeployer.deploy({
             strategyManagerFactory: strategyManagerFactory,
             strategyFactory:        allocationStrategyFactory,
             strategyLiquidityCap:   strategyLiquidityCap_,
@@ -277,9 +282,9 @@ contract TestBase is ProtocolActions, Utils {
     function _setManagedWallet(
         address strategy_,
         address managedWallet_,
-        bool    canDeployAssets_,
-        bool    canReturnAssets_,
-        bool    canRealizeYield_,
+        bool canDeployAssets_,
+        bool canReturnAssets_,
+        bool canRealizeYield_,
         uint256 deploymentCap_
     )
         internal
@@ -292,13 +297,14 @@ contract TestBase is ProtocolActions, Utils {
     function _deployAaveV3Strategy(
         address strategyDelegate_,
         address aaveToken_,
-        bool    useVirtualUnderlyingBalance_,
-        uint32  strategyDelegateFeeRate_,
-        uint32  strategyProtocolFeeRate_,
+        bool useVirtualUnderlyingBalance_,
+        uint32 strategyDelegateFeeRate_,
+        uint32 strategyProtocolFeeRate_,
         uint256 strategyLiquidityCap_,
         uint256 bootstrapMint_
     )
-        internal returns (address strategyManager_, address underlyingStrategy_)
+        internal
+        returns (address strategyManager_, address underlyingStrategy_)
     {
         AaveV3StrategyInitializerParams memory params = AaveV3StrategyInitializerParams({
             aaveToken:                   aaveToken_,
@@ -306,7 +312,7 @@ contract TestBase is ProtocolActions, Utils {
             strategyProtocolFeeRate:     strategyProtocolFeeRate_,
             referralCode:                0,
             useVirtualUnderlyingBalance: useVirtualUnderlyingBalance_,
-            strategyMetadata:           ""
+            strategyMetadata:            ""
         });
 
         vm.startPrank(governor);
@@ -322,7 +328,7 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(strategyDelegate_);
 
-        ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
+        (strategyManager_, underlyingStrategy_) = strategyDeployer.deploy({
             strategyManagerFactory: strategyManagerFactory,
             strategyFactory:        aaveV3StrategyFactory,
             strategyLiquidityCap:   strategyLiquidityCap_,
@@ -341,12 +347,13 @@ contract TestBase is ProtocolActions, Utils {
         address fundsAsset_,
         address savingsUsds_,
         address psm_,
-        uint32  strategyDelegateFeeRate_,
-        uint32  strategyProtocolFeeRate_,
+        uint32 strategyDelegateFeeRate_,
+        uint32 strategyProtocolFeeRate_,
         uint256 strategyLiquidityCap_,
         uint256 bootstrapMint_
     )
-        internal returns (address strategyManager_, address underlyingStrategy_)
+        internal
+        returns (address strategyManager_, address underlyingStrategy_)
     {
         SkyStrategyInitializerParams memory params = SkyStrategyInitializerParams({
             fundsAsset:              fundsAsset_,
@@ -355,13 +362,13 @@ contract TestBase is ProtocolActions, Utils {
             strategyDelegateFeeRate: strategyDelegateFeeRate_,
             strategyProtocolFeeRate: strategyProtocolFeeRate_,
             referralCode:            0,
-            strategyMetadata:       ""
+            strategyMetadata:        ""
         });
 
         vm.startPrank(governor);
         globals.setValidStrategyDelegate(strategyDelegate_, true);
         globals.setValidInstanceOf("STRATEGY_VAULT", savingsUsds_, true);
-        globals.setValidInstanceOf("PSM",            psm_,         true);
+        globals.setValidInstanceOf("PSM", psm_, true);
         globals.setBootstrapMint(fundsAsset_, bootstrapMint_);
         vm.stopPrank();
 
@@ -372,7 +379,7 @@ contract TestBase is ProtocolActions, Utils {
 
         vm.prank(strategyDelegate_);
 
-        ( strategyManager_, underlyingStrategy_ ) = strategyDeployer.deploy({
+        (strategyManager_, underlyingStrategy_) = strategyDeployer.deploy({
             strategyManagerFactory: strategyManagerFactory,
             strategyFactory:        skyStrategyFactory,
             strategyLiquidityCap:   strategyLiquidityCap_,
@@ -449,8 +456,8 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _createAssets() internal virtual {
-        collateralAsset = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapper Ether",   "WETH", 18)));
-        fundsAsset      = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("USD Coin",        "USDC", 6)));
+        collateralAsset = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("Wrapper Ether", "WETH", 18)));
+        fundsAsset      = IMockERC20(deployMock("ConfigurableMockERC20", abi.encode("USD Coin", "USDC", 6)));
     }
 
     function _configureGlobals() internal {
@@ -466,26 +473,26 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function _createFactories() internal {
-        liquidatorFactory          = makeAddr("liquidatorFactoryStub");  // Stub: PM:TD validation passport; OTLM ignores its value.
-        openTermLoanFactory        = deployFromFile("Contracts@7", "OpenTermLoanFactory",           abi.encode(address(globals)));
-        openTermLoanManagerFactory = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory",    abi.encode(address(globals)));
-        poolManagerFactory         = deployFromFile("Contracts@7", "PoolManagerFactory",            abi.encode(address(globals)));
+        liquidatorFactory          = makeAddr("liquidatorFactoryStub"); // Stub: PM:TD validation passport; OTLM ignores its value.
+        openTermLoanFactory        = deployFromFile("Contracts@7", "OpenTermLoanFactory", abi.encode(address(globals)));
+        openTermLoanManagerFactory = deployFromFile("Contracts@7", "OpenTermLoanManagerFactory", abi.encode(address(globals)));
+        poolManagerFactory         = deployFromFile("Contracts@7", "PoolManagerFactory", abi.encode(address(globals)));
         queueWMFactory             = deployFromFile("Contracts@7", "WithdrawalManagerQueueFactory", abi.encode(address(globals)));
 
-        openTermLoanImplementation        = deployFromFile("Contracts@7",  "OpenTermLoan");
-        openTermLoanManagerImplementation = deployFromFile("Contracts@7",  "OpenTermLoanManager");
+        openTermLoanImplementation        = deployFromFile("Contracts@7", "OpenTermLoan");
+        openTermLoanManagerImplementation = deployFromFile("Contracts@7", "OpenTermLoanManager");
         poolManagerImplementation         = deployFromFile("Contracts@34", "PoolManager");
         queueWMImplementation             = deployFromFile("Contracts@34", "WithdrawalManagerQueue");
 
-        openTermLoanInitializer        = deployFromFile("Contracts@7",  "OpenTermLoanInitializer");
-        openTermLoanManagerInitializer = deployFromFile("Contracts@7",  "OpenTermLoanManagerInitializer");
+        openTermLoanInitializer        = deployFromFile("Contracts@7", "OpenTermLoanInitializer");
+        openTermLoanManagerInitializer = deployFromFile("Contracts@7", "OpenTermLoanManagerInitializer");
         poolManagerInitializer         = deployFromFile("Contracts@34", "PoolManagerInitializer");
         queueWMInitializer             = deployFromFile("Contracts@34", "WithdrawalManagerQueueInitializer");
 
         openTermRefinancer = deployFromFile("Contracts@7", "OpenTermRefinancer");
 
-        poolPermissionManagerImplementation = deployFromFile("Contracts@7","PoolPermissionManager");
-        poolPermissionManagerInitializer    = deployFromFile("Contracts@7","PoolPermissionManagerInitializer");
+        poolPermissionManagerImplementation = deployFromFile("Contracts@7", "PoolPermissionManager");
+        poolPermissionManagerInitializer    = deployFromFile("Contracts@7", "PoolPermissionManagerInitializer");
 
         poolPermissionManager = IPoolPermissionManager(deployNTP(governor, poolPermissionManagerInitializer));
 
@@ -504,41 +511,39 @@ contract TestBase is ProtocolActions, Utils {
 
         borrowerActions = deployNTP(securityAdmin, deployFromFile("Contracts@25", "BorrowerActions"));
 
-        liquidityRouter = IMapleLiquidityRouter(
-            deployFromFile("Contracts@34", "LiquidityRouter", abi.encode(address(globals)))
-        );
+        liquidityRouter = IMapleLiquidityRouter(deployFromFile("Contracts@34", "LiquidityRouter", abi.encode(address(globals))));
 
         vm.startPrank(governor);
 
         IPoolPermissionManagerInitializer(address(poolPermissionManager)).initialize(poolPermissionManagerImplementation, address(globals));
         poolPermissionManager.setPermissionAdmin(permissionAdmin, true);
 
-        globals.setValidInstanceOf("LIQUIDATOR_FACTORY",               liquidatorFactory,              true);
-        globals.setValidInstanceOf("LOAN_FACTORY",                     openTermLoanFactory,            true);
-        globals.setValidInstanceOf("OT_LOAN_FACTORY",                  openTermLoanFactory,            true);
-        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY",          openTermLoanManagerFactory,     true);
-        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY",             openTermLoanManagerFactory,     true);
-        globals.setValidInstanceOf("STRATEGY_FACTORY",                 openTermLoanManagerFactory,     true);
-        globals.setValidInstanceOf("POOL_MANAGER_FACTORY",             poolManagerFactory,             true);
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory,                 true);
-        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY",       queueWMFactory,                 true);
-        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER",          address(poolPermissionManager), true);
-        globals.setValidInstanceOf("REFINANCER",                       openTermRefinancer,             true);
-        globals.setValidInstanceOf("OT_REFINANCER",                    openTermRefinancer,             true);
-        globals.setValidInstanceOf("STRATEGY_MANAGER",                 strategyManager,                true);
-        globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY",         strategyManagerFactory,         true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      aaveV3StrategyFactory,          true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      skyStrategyFactory,             true);
-        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY",      allocationStrategyFactory,      true);
-        globals.setValidInstanceOf("LIQUIDITY_BOT",                    liquidityBot,                   true);
-        globals.setValidInstanceOf("LIQUIDITY_ROUTER",                 address(liquidityRouter),       true);
-        globals.setValidInstanceOf("LIQUIDITY_ROUTER_BOT",             liquidityRouterBot,             true);
+        globals.setValidInstanceOf("LIQUIDATOR_FACTORY", liquidatorFactory, true);
+        globals.setValidInstanceOf("LOAN_FACTORY", openTermLoanFactory, true);
+        globals.setValidInstanceOf("OT_LOAN_FACTORY", openTermLoanFactory, true);
+        globals.setValidInstanceOf("OT_LOAN_MANAGER_FACTORY", openTermLoanManagerFactory, true);
+        globals.setValidInstanceOf("LOAN_MANAGER_FACTORY", openTermLoanManagerFactory, true);
+        globals.setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, true);
+        globals.setValidInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", queueWMFactory, true);
+        globals.setValidInstanceOf("WITHDRAWAL_MANAGER_FACTORY", queueWMFactory, true);
+        globals.setValidInstanceOf("POOL_PERMISSION_MANAGER", address(poolPermissionManager), true);
+        globals.setValidInstanceOf("REFINANCER", openTermRefinancer, true);
+        globals.setValidInstanceOf("OT_REFINANCER", openTermRefinancer, true);
+        globals.setValidInstanceOf("STRATEGY_MANAGER", strategyManager, true);
+        globals.setValidInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory, true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY", aaveV3StrategyFactory, true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY", skyStrategyFactory, true);
+        globals.setValidInstanceOf("UNDERLYING_STRATEGY_FACTORY", allocationStrategyFactory, true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
+        globals.setValidInstanceOf("LIQUIDITY_ROUTER", address(liquidityRouter), true);
+        globals.setValidInstanceOf("LIQUIDITY_ROUTER_BOT", liquidityRouterBot, true);
 
-        globals.setCanDeployFrom(poolManagerFactory,        address(poolDeployer),     true);
-        globals.setCanDeployFrom(queueWMFactory,            address(poolDeployer),     true);
-        globals.setCanDeployFrom(aaveV3StrategyFactory,     address(strategyDeployer), true);
-        globals.setCanDeployFrom(skyStrategyFactory,        address(strategyDeployer), true);
-        globals.setCanDeployFrom(strategyManagerFactory,    address(strategyDeployer), true);
+        globals.setCanDeployFrom(poolManagerFactory, address(poolDeployer), true);
+        globals.setCanDeployFrom(queueWMFactory, address(poolDeployer), true);
+        globals.setCanDeployFrom(aaveV3StrategyFactory, address(strategyDeployer), true);
+        globals.setCanDeployFrom(skyStrategyFactory, address(strategyDeployer), true);
+        globals.setCanDeployFrom(strategyManagerFactory, address(strategyDeployer), true);
         globals.setCanDeployFrom(allocationStrategyFactory, address(strategyDeployer), true);
 
         globals.setValidStrategyDelegate(strategyDelegate, true);
@@ -546,16 +551,12 @@ contract TestBase is ProtocolActions, Utils {
         IMapleProxyFactory(openTermLoanFactory).registerImplementation(1, openTermLoanImplementation, openTermLoanInitializer);
         IMapleProxyFactory(openTermLoanFactory).setDefaultVersion(1);
 
-        IMapleProxyFactory(openTermLoanManagerFactory).registerImplementation(
-            1,
-            openTermLoanManagerImplementation,
-            openTermLoanManagerInitializer
-        );
+        IMapleProxyFactory(openTermLoanManagerFactory)
+            .registerImplementation(1, openTermLoanManagerImplementation, openTermLoanManagerInitializer);
         IMapleProxyFactory(openTermLoanManagerFactory).setDefaultVersion(1);
 
         IMapleProxyFactory(poolManagerFactory).registerImplementation(1, poolManagerImplementation, poolManagerInitializer);
         IMapleProxyFactory(poolManagerFactory).setDefaultVersion(1);
-
 
         IMapleProxyFactory(queueWMFactory).registerImplementation(1, queueWMImplementation, queueWMInitializer);
         IMapleProxyFactory(queueWMFactory).setDefaultVersion(1);
@@ -569,11 +570,8 @@ contract TestBase is ProtocolActions, Utils {
         IMapleProxyFactory(strategyManagerFactory).registerImplementation(1, strategyManagerImplementation, strategyManagerInitializer);
         IMapleProxyFactory(strategyManagerFactory).setDefaultVersion(1);
 
-        IMapleProxyFactory(allocationStrategyFactory).registerImplementation(
-            1,
-            allocationStrategyImplementation,
-            allocationStrategyInitializer
-        );
+        IMapleProxyFactory(allocationStrategyFactory)
+            .registerImplementation(1, allocationStrategyImplementation, allocationStrategyInitializer);
         IMapleProxyFactory(allocationStrategyFactory).setDefaultVersion(1);
 
         vm.stopPrank();
@@ -586,43 +584,41 @@ contract TestBase is ProtocolActions, Utils {
     /**************************************************************************************************************************************/
 
     function _deployPoolWithQueue(
-        address           poolDelegate_,
-        address           fundsAsset_,
-        address[]  memory strategyFactories_,
-        bytes[]    memory strategyData_,
-        string     memory name_,
-        string     memory symbol_,
-        uint256           liquidityCap_,
-        uint256           delegateManagementFeeRate_
+        address poolDelegate_,
+        address fundsAsset_,
+        address[] memory strategyFactories_,
+        bytes[] memory strategyData_,
+        string memory name_,
+        string memory symbol_,
+        uint256 liquidityCap_,
+        uint256 delegateManagementFeeRate_
     )
-        internal returns (address poolManager_)
+        internal
+        returns (address poolManager_)
     {
         vm.prank(poolDelegate_);
         poolManager_ = poolDeployer.deployPool({
-            poolManagerFactory:       poolManagerFactory,
+            poolManagerFactory: poolManagerFactory,
             withdrawalManagerFactory: queueWMFactory,
-            poolManagerInitParams:    PoolManagerInitParams({
-                asset:         fundsAsset_,
-                initialSupply: 0,
-                name:          name_,
-                symbol:        symbol_
-            }),
+            poolManagerInitParams: PoolManagerInitParams({ asset: fundsAsset_, initialSupply: 0, name: name_, symbol: symbol_ }),
             poolConfigParams: PoolConfigParams({
-                poolPermissionManager:     address(poolPermissionManager),
+                poolPermissionManager: address(poolPermissionManager),
                 delegateManagementFeeRate: delegateManagementFeeRate_,
-                liquidityCap:              liquidityCap_
+                liquidityCap: liquidityCap_
             }),
-            strategiesParams:       _buildStrategyDeployParams(strategyFactories_, strategyData_, name_),
+            strategiesParams: _buildStrategyDeployParams(strategyFactories_, strategyData_, name_),
             strategyManagersParams: new StrategyManagerParams[](0)
         });
     }
 
     function _buildStrategyDeployParams(
         address[] memory strategyFactories_,
-        bytes[]   memory strategyData_,
-        string    memory name_
+        bytes[] memory strategyData_,
+        string memory name_
     )
-        internal pure returns (StrategyDeployParams[] memory strategies_)
+        internal
+        pure
+        returns (StrategyDeployParams[] memory strategies_)
     {
         strategies_ = new StrategyDeployParams[](strategyFactories_.length);
 
@@ -653,14 +649,15 @@ contract TestBase is ProtocolActions, Utils {
     }
 
     function createOpenTermLoan(
-        address          borrower,
-        address          lender,
-        address          asset,
-        uint256          principal,
+        address borrower,
+        address lender,
+        address asset,
+        uint256 principal,
         uint32[3] memory terms,
         uint64[4] memory rates
     )
-        internal returns (address loan)
+        internal
+        returns (address loan)
     {
         vm.prank(governor);
         globals.setValidBorrower(borrower, true);
@@ -684,7 +681,9 @@ contract TestBase is ProtocolActions, Utils {
         uint256 delegateOriginationFee,
         uint256 delegateServiceFee,
         uint256 delegateManagementFeeRate
-    ) internal {
+    )
+        internal
+    {
         vm.startPrank(governor);
         globals.setPlatformOriginationFeeRate(address(poolManager), platformOriginationFeeRate);
         globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);

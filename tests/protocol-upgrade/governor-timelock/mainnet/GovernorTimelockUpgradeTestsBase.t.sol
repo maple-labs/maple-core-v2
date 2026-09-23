@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 import { IGovernorTimelock, IMG as IMapleGlobals } from "../../../../contracts/interfaces/Interfaces.sol";
-import { Runner }                                  from "../../../../contracts/Runner.sol";
+import { Runner } from "../../../../contracts/Runner.sol";
 
 import { UpgradeAddressRegistry } from "../../UpgradeAddressRegistry.sol";
 
@@ -28,19 +28,18 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
         timelock  = deployFromFile("Contracts@25", "Timelock", abi.encode(daoMultisig, proposer, executor, canceller, roleAdmin));
     }
 
-
     function testFork_setUp_governorTimelockUpgradeTests() public view {
-        assertEq(IGovernorTimelock(timelock).hasRole(proposer,         IGovernorTimelock(timelock).PROPOSER_ROLE()),  true);
-        assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()),  true);
-        assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin,    IGovernorTimelock(timelock).CANCELLER_ROLE()), true);
-        assertEq(IGovernorTimelock(timelock).hasRole(daoMultisig,      IGovernorTimelock(timelock).ROLE_ADMIN()),     true);
+        assertEq(IGovernorTimelock(timelock).hasRole(proposer, IGovernorTimelock(timelock).PROPOSER_ROLE()),         true);
+        assertEq(IGovernorTimelock(timelock).hasRole(operationalAdmin, IGovernorTimelock(timelock).EXECUTOR_ROLE()), true);
+        assertEq(IGovernorTimelock(timelock).hasRole(securityAdmin, IGovernorTimelock(timelock).CANCELLER_ROLE()),   true);
+        assertEq(IGovernorTimelock(timelock).hasRole(daoMultisig, IGovernorTimelock(timelock).ROLE_ADMIN()),         true);
 
         assertEq(IGovernorTimelock(timelock).tokenWithdrawer(), daoMultisig);
 
         assertEq(IGovernorTimelock(timelock).MIN_DELAY(),            1 days);
         assertEq(IGovernorTimelock(timelock).MIN_EXECUTION_WINDOW(), 1 days);
 
-        ( uint32 defaultDelay, uint32 defaultExecutionWindow ) = IGovernorTimelock(timelock).defaultTimelockParameters();
+        (uint32 defaultDelay, uint32 defaultExecutionWindow) = IGovernorTimelock(timelock).defaultTimelockParameters();
 
         assertEq(defaultDelay,           IGovernorTimelock(timelock).MIN_DELAY());
         assertEq(defaultExecutionWindow, IGovernorTimelock(timelock).MIN_EXECUTION_WINDOW());
@@ -61,14 +60,15 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
     }
 
     function _scheduleProposal(
-        address      target,
-        bytes4       functionSelector,
+        address target,
+        bytes4 functionSelector,
         bytes memory parameters
     )
-        internal returns (uint256 proposalId, uint32 delayedUntil)
+        internal
+        returns (uint256 proposalId, uint32 delayedUntil)
     {
         address[] memory targets = new address[](1);
-        bytes[] memory data      = new bytes[](1);
+        bytes[] memory   data    = new bytes[](1);
 
         targets[0] = target;
         data[0]    = bytes.concat(functionSelector, parameters);
@@ -76,21 +76,14 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
         vm.prank(proposer);
         IGovernorTimelock(timelock).scheduleProposals(targets, data);
 
-        proposalId              = IGovernorTimelock(timelock).latestProposalId();
-        ( , , , delayedUntil, ) = IGovernorTimelock(timelock).proposals(proposalId);
+        proposalId          = IGovernorTimelock(timelock).latestProposalId();
+        (,,, delayedUntil,) = IGovernorTimelock(timelock).proposals(proposalId);
     }
 
-    function _executeProposal(
-        uint256      proposalId,
-        address      target,
-        bytes4       functionSelector,
-        bytes memory parameters
-    )
-        internal
-    {
+    function _executeProposal(uint256 proposalId, address target, bytes4 functionSelector, bytes memory parameters) internal {
         uint256[] memory proposalsToExecute = new uint256[](1);
         address[] memory targets            = new address[](1);
-        bytes[] memory data                 = new bytes[](1);
+        bytes[] memory   data               = new bytes[](1);
 
         proposalsToExecute[0] = proposalId;
         targets[0]            = target;
@@ -100,14 +93,8 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
         IGovernorTimelock(timelock).executeProposals(proposalsToExecute, targets, data);
     }
 
-    function _executeThroughTimelock(
-        address target,
-        bytes4 functionSelector,
-        bytes memory parameters
-    )
-        internal
-    {
-        ( uint256 proposalId, uint32 delayedUntil ) = _scheduleProposal(target, functionSelector, parameters);
+    function _executeThroughTimelock(address target, bytes4 functionSelector, bytes memory parameters) internal {
+        (uint256 proposalId, uint32 delayedUntil) = _scheduleProposal(target, functionSelector, parameters);
 
         vm.warp(delayedUntil);
         _executeProposal(proposalId, target, functionSelector, parameters);
@@ -116,7 +103,7 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
     function _proposeRoleUpdate(address caller, bytes32 role, address account, bool shouldGrant) internal {
         bytes32[] memory roles            = new bytes32[](1);
         address[] memory accounts         = new address[](1);
-        bool[]    memory shouldGrantArray = new bool[](1);
+        bool[] memory    shouldGrantArray = new bool[](1);
 
         roles[0]            = role;
         accounts[0]         = account;
@@ -127,25 +114,15 @@ contract GovernorTimelockUpgradeTestsBase is Runner, UpgradeAddressRegistry {
     }
 
     function _executeRoleUpdate(uint256 proposalId, bytes32 role, address account, bool shouldGrant) internal {
-        ( , , , uint32 delayedUntil, ) = IGovernorTimelock(timelock).proposals(proposalId);
+        (,,, uint32 delayedUntil,) = IGovernorTimelock(timelock).proposals(proposalId);
 
         vm.warp(delayedUntil);
-        _executeProposal(
-            proposalId,
-            timelock,
-            IGovernorTimelock(timelock).updateRole.selector,
-            abi.encode(role, account, shouldGrant)
-        );
+        _executeProposal(proposalId, timelock, IGovernorTimelock(timelock).updateRole.selector, abi.encode(role, account, shouldGrant));
     }
 
     function _assertEmptyProposal(uint256 proposalId) internal view {
-        (
-            bytes32 proposalHash,
-            bool    isUnschedulable,
-            uint32  scheduledAt,
-            uint32  delayedUntil,
-            uint32  validUntil
-        ) = IGovernorTimelock(timelock).proposals(proposalId);
+        (bytes32 proposalHash, bool isUnschedulable, uint32 scheduledAt, uint32 delayedUntil, uint32 validUntil) =
+            IGovernorTimelock(timelock).proposals(proposalId);
 
         assertEq(proposalHash,    bytes32(0));
         assertEq(isUnschedulable, false);

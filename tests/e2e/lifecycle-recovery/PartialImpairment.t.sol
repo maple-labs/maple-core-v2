@@ -34,16 +34,16 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
 
         openPool(address(poolManager));
 
-        poolShares = deposit(lp, depositAmount);  // 1_000_000e6
+        poolShares = deposit(lp, depositAmount); // 1_000_000e6
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, depositAmount);
         impairStrategy(aaveV3UnderlyingStrategy, impairmentAmount);
 
-        initialStrategyShares = depositAmount - roundingError;             // 1_000_000e6 - 1
-        initialNetAssets      = initialStrategyShares - impairmentAmount;  // 800_000e6 - 1
-        partialResidualAssets = impairmentAmount - roundingError;          // 200_000e6 - 1
-        fullResidualAssets    = impairmentAmount;                          // 200_000e6
-        assets                = initialStrategyShares;                     // 1_000_000e6 - 1
+        initialStrategyShares = depositAmount - roundingError; // 1_000_000e6 - 1
+        initialNetAssets      = initialStrategyShares - impairmentAmount; // 800_000e6 - 1
+        partialResidualAssets = impairmentAmount - roundingError; // 200_000e6 - 1
+        fullResidualAssets    = impairmentAmount; // 200_000e6
+        assets                = initialStrategyShares; // 1_000_000e6 - 1
 
         uint256 snapshot = vm.snapshotState();
 
@@ -85,14 +85,14 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
         /*** Process the first strategy tranche and withdraw the matching Pool shares                                                   ***/
         /**********************************************************************************************************************************/
 
-        sharesToRedeem  = initialStrategyShares / 4;                            // 250_000e6 - 1
-        lpShares        = poolShares * sharesToRedeem / initialStrategyShares;  // 250_000e6 - 1
-        remainingShares = initialStrategyShares - sharesToRedeem;               // 750_000e6
-        poolNetAssets   = initialNetAssets;                                     // 800_000e6 - 1
-        exitAssets      = lpShares * poolNetAssets / poolShares;                // 200_000e6 - 2
-        remainingLosses = impairmentAmount;                                     // 200_000e6
+        sharesToRedeem  = initialStrategyShares / 4; // 250_000e6 - 1
+        lpShares        = poolShares * sharesToRedeem / initialStrategyShares; // 250_000e6 - 1
+        remainingShares = initialStrategyShares - sharesToRedeem; // 750_000e6
+        poolNetAssets   = initialNetAssets; // 800_000e6 - 1
+        exitAssets      = lpShares * poolNetAssets / poolShares; // 200_000e6 - 2
+        remainingLosses = impairmentAmount; // 200_000e6
 
-        assets -= sharesToRedeem * (assets - remainingLosses) / initialStrategyShares;  // 800_000e6
+        assets -= sharesToRedeem * (assets - remainingLosses) / initialStrategyShares; // 800_000e6
 
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
         processRedemptionFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
@@ -131,8 +131,8 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
         requestRedeem(address(pool), lp, lpShares);
         processRedemptions(address(pool), lpShares);
 
-        poolShares    -= lpShares;    // 750_000e6 + 1
-        poolNetAssets -= exitAssets;  // 600_000e6 + 1
+        poolShares    -= lpShares; // 750_000e6 + 1
+        poolNetAssets -= exitAssets; // 600_000e6 + 1
 
         assertPoolState({
             pool:               address(pool),
@@ -157,13 +157,13 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
         /*** Process the second strategy tranche and withdraw the matching Pool shares                                                  ***/
         /**********************************************************************************************************************************/
 
-        sharesToRedeem = initialStrategyShares / 4;                      // 250_000e6 - 1
-        lpShares       = poolShares * sharesToRedeem / remainingShares;  // 250_000e6 - 1
+        sharesToRedeem = initialStrategyShares / 4; // 250_000e6 - 1
+        lpShares       = poolShares * sharesToRedeem / remainingShares; // 250_000e6 - 1
 
-        assets -= sharesToRedeem * (assets - remainingLosses) / remainingShares;  // 600_000e6 + 1
+        assets -= sharesToRedeem * (assets - remainingLosses) / remainingShares; // 600_000e6 + 1
 
-        remainingShares -= sharesToRedeem;                         // 500_000e6 + 1
-        exitAssets       = lpShares * poolNetAssets / poolShares;  // 200_000e6 - 1
+        remainingShares -= sharesToRedeem; // 500_000e6 + 1
+        exitAssets       = lpShares * poolNetAssets / poolShares; // 200_000e6 - 1
 
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
         processRedemptionFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
@@ -202,8 +202,8 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
         requestRedeem(address(pool), lp, lpShares);
         processRedemptions(address(pool), lpShares);
 
-        poolShares    -= lpShares;    // 500_000e6 + 2
-        poolNetAssets -= exitAssets;  // 400_000e6 + 2
+        poolShares    -= lpShares; // 500_000e6 + 2
+        poolNetAssets -= exitAssets; // 400_000e6 + 2
 
         assertPoolState({
             pool:               address(pool),
@@ -219,9 +219,9 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
         /*** Process all remaining strategy shares and withdraw all remaining Pool shares                                               ***/
         /**********************************************************************************************************************************/
 
-        sharesToRedeem = remainingShares;  // 500_000e6 + 1
-        lpShares       = poolShares;       // 500_000e6 + 2
-        exitAssets     = poolNetAssets;    // 400_000e6 + 2
+        sharesToRedeem = remainingShares; // 500_000e6 + 1
+        lpShares       = poolShares; // 500_000e6 + 2
+        exitAssets     = poolNetAssets; // 400_000e6 + 2
 
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
         processRedemptionFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
@@ -284,7 +284,7 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
 
         vm.revertToState(snapshot);
 
-        sharesToRedeem = initialStrategyShares;  // 1_000_000e6 - 1
+        sharesToRedeem = initialStrategyShares; // 1_000_000e6 - 1
 
         requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
         processRedemptionFromStrategyManager(address(poolManager), aaveV3StrategyManager, sharesToRedeem);
@@ -297,8 +297,8 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
             unrealizedLosses:        fullResidualAssets
         });
 
-        exitAssets = initialNetAssets;  // 800_000e6 - 1
-        lpShares   = poolShares;        // 1_000_000e6
+        exitAssets = initialNetAssets; // 800_000e6 - 1
+        lpShares   = poolShares; // 1_000_000e6
 
         requestRedeem(address(pool), lp, lpShares);
         processRedemptions(address(pool), lpShares);
@@ -346,10 +346,10 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, depositAmount);
         impairStrategy(aaveV3UnderlyingStrategy, impairmentAmount);
 
-        initialStrategyShares = depositAmount - roundingError;             // 1_000_000e6 - 1
-        initialNetAssets      = initialStrategyShares - impairmentAmount;  // 800_000e6 - 1
-        fullResidualAssets    = impairmentAmount;                          // 200_000e6
-        assets                = initialStrategyShares;                     // 1_000_000e6 - 1
+        initialStrategyShares = depositAmount - roundingError; // 1_000_000e6 - 1
+        initialNetAssets      = initialStrategyShares - impairmentAmount; // 800_000e6 - 1
+        fullResidualAssets    = impairmentAmount; // 200_000e6
+        assets                = initialStrategyShares; // 1_000_000e6 - 1
 
         assertPoolState({
             pool:               address(pool),
@@ -475,8 +475,8 @@ contract PartialImpairmentTests is AaveV3StrategyTestBase {
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, secondDepositAmount);
 
-        initialStrategyShares = secondDepositAmount;                         // 100_000e6
-        assets                = fullResidualAssets + initialStrategyShares;  // 300_000e6
+        initialStrategyShares = secondDepositAmount; // 100_000e6
+        assets                = fullResidualAssets + initialStrategyShares; // 300_000e6
 
         assertPoolState({
             pool:               address(pool),

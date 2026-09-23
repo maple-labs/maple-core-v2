@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 import { IPoolManager, IStrategyManager, IAllocationStrategy } from "../../../contracts/interfaces/Interfaces.sol";
-import { AllocationStrategyInitializerParams }                 from "../../../contracts/interfaces/Interfaces.sol";
+import { AllocationStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "./AllocationStrategyTestBase.sol";
 
@@ -66,7 +66,7 @@ contract AllocationStrategyFundFailureTests is AllocationStrategyTestBase {
         globals.setValidStrategyDelegate(inactiveStrategyDelegate, true);
 
         vm.prank(inactiveStrategyDelegate);
-        ( address inactiveStrategyManager, ) =
+        (address inactiveStrategyManager,) =
             strategyDeployer.deploy(strategyManagerFactory, allocationStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(inactiveStrategyDelegate);
@@ -107,9 +107,7 @@ contract AllocationStrategyFundFailureTests is AllocationStrategyTestBase {
 
     function test_fundUnderlyingStrategy_revert_nonInstanceUnderlyingStrategy() external {
         vm.mockCall(
-            allocationStrategyFactory,
-            abi.encodeWithSignature("isInstance(address)", allocationUnderlyingStrategy),
-            abi.encode(false)
+            allocationStrategyFactory, abi.encodeWithSignature("isInstance(address)", allocationUnderlyingStrategy), abi.encode(false)
         );
 
         vm.prank(strategyDelegate);
@@ -293,7 +291,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
         address liquidityRouter = makeAddr("liquidityRouter");
 
         vm.startPrank(governor);
-        globals.setValidInstanceOf("LIQUIDITY_BOT",    newLiquidityBot, true);
+        globals.setValidInstanceOf("LIQUIDITY_BOT", newLiquidityBot, true);
         globals.setValidInstanceOf("LIQUIDITY_ROUTER", liquidityRouter, true);
         vm.stopPrank();
 
@@ -866,7 +864,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
         uint256 secondAssets = 550_000e6;
         uint32  duration     = 10 days;
 
-        uint256 expectedShares = 500_000e6;  // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + yieldAssets)
+        uint256 expectedShares = 500_000e6; // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + yieldAssets)
 
         /**********************************************************************************************************************************/
         /*** Step 1: Assert initial state                                                                                               ***/
@@ -1030,11 +1028,11 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
 
     function test_fundUnderlyingStrategy_success_withMidVestingYield() external {
         uint256 yieldAssets  = 100_000e6;
-        uint256 vestedYield  = 20_000e6;   // 100_000e6 * 2 days / 10 days
+        uint256 vestedYield  = 20_000e6; // 100_000e6 * 2 days / 10 days
         uint256 secondAssets = 510_000e6;
         uint32  duration     = 10 days;
 
-        uint256 expectedShares = 500_000e6;  // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + vestedYield)
+        uint256 expectedShares = 500_000e6; // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + vestedYield)
 
         /**********************************************************************************************************************************/
         /*** Step 1: Assert initial state                                                                                               ***/
@@ -1252,14 +1250,14 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
         uint256 secondAssets = 585_000e6;
         uint32  duration     = 10 days;
 
-        uint32 delegateFeeRate = 0.1e6;   // 10% of yield
-        uint32 protocolFeeRate = 0.05e6;  // 5% of yield
+        uint32 delegateFeeRate = 0.1e6; // 10% of yield
+        uint32 protocolFeeRate = 0.05e6; // 5% of yield
 
-        uint256 delegateFee = 20_000e6;   // 200_000e6 * 0.1e6 / 1e6
-        uint256 protocolFee = 10_000e6;   // 200_000e6 * 0.05e6 / 1e6
-        uint256 netYield    = 170_000e6;  // 200_000e6 - 20_000e6 - 10_000e6
+        uint256 delegateFee = 20_000e6; // 200_000e6 * 0.1e6 / 1e6
+        uint256 protocolFee = 10_000e6; // 200_000e6 * 0.05e6 / 1e6
+        uint256 netYield    = 170_000e6; // 200_000e6 - 20_000e6 - 10_000e6
 
-        uint256 expectedShares = 500_000e6;  // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + netYield)
+        uint256 expectedShares = 500_000e6; // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + netYield)
 
         /**********************************************************************************************************************************/
         /*** Step 1: Assert initial state                                                                                               ***/
@@ -1621,7 +1619,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
         uint256 loss         = 250_000e6;
         uint256 secondAssets = 300_000e6;
 
-        uint256 expectedShares = 400_000e6;  // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY - loss)
+        uint256 expectedShares = 400_000e6; // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY - loss)
 
         /**********************************************************************************************************************************/
         /*** Step 1: Assert initial state                                                                                               ***/
@@ -1835,7 +1833,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
         uint256 secondAssets = 550_000e6;
         uint32  duration     = 10 days;
 
-        uint256 expectedShares = 500_000e6;  // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + yieldAssets)
+        uint256 expectedShares = 500_000e6; // secondAssets * INITIAL_LIQUIDITY / (INITIAL_LIQUIDITY + yieldAssets)
 
         address pool1        = address(pool);
         address poolManager1 = address(poolManager);
@@ -1954,7 +1952,7 @@ contract AllocationStrategyFundSuccessTests is AllocationStrategyTestBase {
         /*** Step 4: Create a second pool and add the same strategy manager                                                             ***/
         /**********************************************************************************************************************************/
 
-        ( address pool2, address poolManager2 ) = _createPoolSharingStrategy("poolDelegate2", allocationStrategyManager);
+        (address pool2, address poolManager2) = _createPoolSharingStrategy("poolDelegate2", allocationStrategyManager);
 
         address queueWM2 = IPoolManager(poolManager2).withdrawalManager();
 

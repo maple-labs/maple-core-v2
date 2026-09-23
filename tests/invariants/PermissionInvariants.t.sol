@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 import { DistributionHandler } from "./handlers/DistributionHandler.sol";
-import { PermissionHandler }   from "./handlers/PermissionHandler.sol";
+import { PermissionHandler } from "./handlers/PermissionHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
@@ -47,14 +47,14 @@ contract PermissionInvariants is BaseInvariants {
         });
 
         permissionHandler.addAction("setPoolPermissionLevel(uint256)", 1_000);
-        permissionHandler.addAction("setLenderBitmaps(uint256)",       7_000);
-        permissionHandler.addAction("setPoolBitmaps(uint256)",         2_000);
+        permissionHandler.addAction("setLenderBitmaps(uint256)", 7_000);
+        permissionHandler.addAction("setPoolBitmaps(uint256)", 2_000);
 
         address[] memory targetContracts = new address[](1);
-        targetContracts[0] = address(permissionHandler);
+        targetContracts[0]               = address(permissionHandler);
 
         uint256[] memory weightsDistributorHandler = new uint256[](1);
-        weightsDistributorHandler[0] = 100;
+        weightsDistributorHandler[0]               = 100;
 
         address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
 

@@ -25,9 +25,9 @@ contract DeployLoanByBorrowerTests is TestBase {
         assets = [address(collateralAsset), address(fundsAsset)];
 
         vm.startPrank(governor);
-        globals.setCanDeployFrom(openTermLoanFactory,  borrower, false);
+        globals.setCanDeployFrom(openTermLoanFactory, borrower, false);
 
-        globals.setValidInstanceOf("LOAN_FACTORY", openTermLoanFactory,  false);
+        globals.setValidInstanceOf("LOAN_FACTORY", openTermLoanFactory, false);
 
         globals.setValidBorrower(borrower, false);
         vm.stopPrank();

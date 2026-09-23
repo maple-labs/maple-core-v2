@@ -51,13 +51,7 @@ contract AllocationStrategyHandler is HandlerBase {
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(
-        string    memory handlerName_,
-        address   underlyingStrategy_,
-        address[] memory managedWallets_
-    )
-        HandlerBase(handlerName_)
-    {
+    constructor(string memory handlerName_, address underlyingStrategy_, address[] memory managedWallets_) HandlerBase(handlerName_) {
         underlyingStrategy = IAllocationStrategy(underlyingStrategy_);
         managedWallets     = managedWallets_;
     }
@@ -83,7 +77,7 @@ contract AllocationStrategyHandler is HandlerBase {
     }
 
     function returnAssets(uint256 seed_) external {
-        ( address managedWallet_, uint256 deployedAssets_ ) = _selectWalletWithDeployedAssets(seed_);
+        (address managedWallet_, uint256 deployedAssets_) = _selectWalletWithDeployedAssets(seed_);
 
         if (managedWallet_ == address(0)) {
             _recordSkip();
@@ -105,7 +99,7 @@ contract AllocationStrategyHandler is HandlerBase {
 
         address managedWallet_ = _selectManagedWallet(seed_);
 
-        uint256 yield_    = _bound(_randomize(seed_, "yield"),    MIN_YIELD_AMOUNT,   MAX_YIELD_AMOUNT);
+        uint256 yield_    = _bound(_randomize(seed_, "yield"), MIN_YIELD_AMOUNT, MAX_YIELD_AMOUNT);
         uint256 duration_ = _bound(_randomize(seed_, "duration"), MIN_YIELD_DURATION, MAX_YIELD_DURATION);
 
         uint256 delegateFee_ = yield_ * underlyingStrategy.strategyDelegateFeeRate() / 1e6;
@@ -134,7 +128,7 @@ contract AllocationStrategyHandler is HandlerBase {
     }
 
     function recognizeLoss(uint256 seed_) external {
-        ( address managedWallet_, uint256 deployedAssets_ ) = _selectWalletWithDeployedAssets(seed_);
+        (address managedWallet_, uint256 deployedAssets_) = _selectWalletWithDeployedAssets(seed_);
 
         if (managedWallet_ == address(0)) {
             _recordSkip();
@@ -245,6 +239,6 @@ contract AllocationStrategyHandler is HandlerBase {
     }
 
     // NOTE: Does nothing since yield and fees are already accounted for.
-    function _syncYieldAndFees() public {}
+    function _syncYieldAndFees() public { }
 
 }

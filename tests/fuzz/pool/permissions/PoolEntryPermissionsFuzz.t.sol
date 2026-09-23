@@ -18,7 +18,7 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
     uint256 deadline   = 50e9 seconds;
     uint256 privateKey = 100;
 
-    uint8   v;
+    uint8 v;
     bytes32 r;
     bytes32 s;
 
@@ -40,10 +40,12 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
         uint256 assets,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowed
-    ) external {
+        bool isAllowed
+    )
+        external
+    {
         permissionLevel = bound(permissionLevel, PRIVATE, PUBLIC);
-        assets          = bound(assets,          1,       1e29);
+        assets          = bound(assets, 1, 1e29);
 
         erc20_mint(address(fundsAsset), lp1, assets);
         erc20_approve(address(fundsAsset), lp1, address(pool), assets);
@@ -56,8 +58,8 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
             setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp1, lenderBitmap);
 
             permissionLevel == FUNCTION_LEVEL
-            ? setPoolBitmap(address(poolManager), "P:deposit", poolBitmap)
-            : setPoolBitmap(address(poolManager), bytes32(0),  poolBitmap);
+                ? setPoolBitmap(address(poolManager), "P:deposit", poolBitmap)
+                : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
         }
 
         if (!ppm.hasPermission(address(poolManager), lp1, "P:deposit")) {
@@ -88,12 +90,14 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
         uint256 assets,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowed
-    ) external {
+        bool isAllowed
+    )
+        external
+    {
         permissionLevel = bound(permissionLevel, PRIVATE, PUBLIC);
-        assets          = bound(assets,          1,       1e29);
+        assets          = bound(assets, 1, 1e29);
 
-        ( v, r, s ) = _getValidPermitSignature(address(fundsAsset), lp2, address(pool), assets, deadline, privateKey);
+        (v, r, s) = _getValidPermitSignature(address(fundsAsset), lp2, address(pool), assets, deadline, privateKey);
 
         erc20_mint(address(fundsAsset), lp2, assets);
         erc20_approve(address(fundsAsset), lp2, address(pool), assets);
@@ -106,8 +110,8 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
             setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp2, lenderBitmap);
 
             permissionLevel == FUNCTION_LEVEL
-            ? setPoolBitmap(address(poolManager), "P:depositWithPermit", poolBitmap)
-            : setPoolBitmap(address(poolManager), bytes32(0),            poolBitmap);
+                ? setPoolBitmap(address(poolManager), "P:depositWithPermit", poolBitmap)
+                : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
         }
 
         if (!ppm.hasPermission(address(poolManager), lp2, "P:depositWithPermit")) {
@@ -138,10 +142,12 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
         uint256 amount,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowed
-    ) external {
+        bool isAllowed
+    )
+        external
+    {
         permissionLevel = bound(permissionLevel, PRIVATE, PUBLIC);
-        amount          = bound(amount,          1,       1e29);
+        amount          = bound(amount, 1, 1e29);
 
         erc20_mint(address(fundsAsset), lp1, amount);
         erc20_approve(address(fundsAsset), lp1, address(pool), amount);
@@ -154,8 +160,8 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
             setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp1, lenderBitmap);
 
             permissionLevel == FUNCTION_LEVEL
-            ? setPoolBitmap(address(poolManager), "P:mint",   poolBitmap)
-            : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
+                ? setPoolBitmap(address(poolManager), "P:mint", poolBitmap)
+                : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
         }
 
         if (!ppm.hasPermission(address(poolManager), lp1, "P:mint")) {
@@ -186,12 +192,14 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
         uint256 amount,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowed
-    ) external {
+        bool isAllowed
+    )
+        external
+    {
         permissionLevel = bound(permissionLevel, PRIVATE, PUBLIC);
-        amount          = bound(amount,          1,       1e29);
+        amount          = bound(amount, 1, 1e29);
 
-        ( v, r, s ) = _getValidPermitSignature(address(fundsAsset), lp2, address(pool), amount, deadline, privateKey);
+        (v, r, s) = _getValidPermitSignature(address(fundsAsset), lp2, address(pool), amount, deadline, privateKey);
 
         erc20_mint(address(fundsAsset), lp2, amount);
         erc20_approve(address(fundsAsset), lp2, address(pool), amount);
@@ -204,8 +212,8 @@ contract PoolEntryPermissionsFuzzTests is TestBase {
             setLenderBitmap(address(poolPermissionManager), permissionAdmin, lp2, lenderBitmap);
 
             permissionLevel == FUNCTION_LEVEL
-            ? setPoolBitmap(address(poolManager), "P:mintWithPermit", poolBitmap)
-            : setPoolBitmap(address(poolManager), bytes32(0),         poolBitmap);
+                ? setPoolBitmap(address(poolManager), "P:mintWithPermit", poolBitmap)
+                : setPoolBitmap(address(poolManager), bytes32(0), poolBitmap);
         }
 
         if (!ppm.hasPermission(address(poolManager), lp2, "P:mintWithPermit")) {

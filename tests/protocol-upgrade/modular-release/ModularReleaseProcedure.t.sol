@@ -28,20 +28,21 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         startingTime = block.timestamp;
 
-        upgradeProtocol({ attachAaveAndSkyStrategies: true });
+        upgradeProtocol({
+            attachAaveAndSkyStrategies: true
+        });
     }
 
     function testFork_modularRelease_fullUpgradeProcedure() external {
-
         /**********************************************************************************************************************************/
         /*** Globals                                                                                                                    ***/
         /**********************************************************************************************************************************/
 
         assertEq(address(uint160(uint256(vm.load(globals, IMPLEMENTATION_SLOT)))), globalsV500Implementation);
 
-        assertEq(IGlobals(globals).isInstanceOf("POOL_MANAGER_FACTORY",        poolManagerFactory),            true);
-        assertEq(IGlobals(globals).isInstanceOf("WITHDRAWAL_MANAGER_FACTORY",  withdrawalManagerQueueFactory), true);
-        assertEq(IGlobals(globals).isInstanceOf("STRATEGY_MANAGER_FACTORY",    strategyManagerFactory),        true);
+        assertEq(IGlobals(globals).isInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory),                  true);
+        assertEq(IGlobals(globals).isInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerQueueFactory), true);
+        assertEq(IGlobals(globals).isInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory),          true);
 
         assertEq(IGlobals(globals).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", modularAaveStrategyFactory), true);
         assertEq(IGlobals(globals).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", modularSkyStrategyFactory),  true);
@@ -54,20 +55,20 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         assertEq(IGlobals(globals).isInstanceOf("LIQUIDITY_ROUTER", liquidityRouterV100), true);
 
-        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory,            poolDeployerV500), true);
+        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory, poolDeployerV500),            true);
         assertEq(IGlobals(globals).canDeployFrom(withdrawalManagerQueueFactory, poolDeployerV500), true);
 
-        assertEq(IGlobals(globals).canDeployFrom(strategyManagerFactory,     strategyDeployerV100), true);
+        assertEq(IGlobals(globals).canDeployFrom(strategyManagerFactory, strategyDeployerV100),     true);
         assertEq(IGlobals(globals).canDeployFrom(modularAaveStrategyFactory, strategyDeployerV100), true);
-        assertEq(IGlobals(globals).canDeployFrom(modularSkyStrategyFactory,  strategyDeployerV100), true);
-        assertEq(IGlobals(globals).canDeployFrom(allocationStrategyFactory,  strategyDeployerV100), true);
+        assertEq(IGlobals(globals).canDeployFrom(modularSkyStrategyFactory, strategyDeployerV100),  true);
+        assertEq(IGlobals(globals).canDeployFrom(allocationStrategyFactory, strategyDeployerV100),  true);
 
         assertEq(IGlobals(globals).bootstrapMint(USDC), BOOTSTRAP_MINT);
         assertEq(IGlobals(globals).bootstrapMint(USDT), BOOTSTRAP_MINT);
         assertEq(IGlobals(globals).bootstrapMint(USDG), BOOTSTRAP_MINT);
 
         for (uint256 i; i < specs.length; i++) {
-            assertEq(IGlobals(globals).isStrategyDelegate(specs[i].delegate), true);
+            assertEq(IGlobals(globals).isStrategyDelegate(specs[i].delegate),   true);
             assertEq(IGlobals(globals).ownedStrategyManager(specs[i].delegate), strategyManagers[specs[i].name]);
 
             if (specs[i].kind != StrategyKind.Allocation) continue;
@@ -79,21 +80,21 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         /*** Factories                                                                                                                  ***/
         /**********************************************************************************************************************************/
 
-        assertEq(IMapleProxyFactory(poolManagerFactory).implementationOf(500), poolManagerV500Implementation);
-        assertEq(IMapleProxyFactory(poolManagerFactory).defaultVersion(), 500);
+        assertEq(IMapleProxyFactory(poolManagerFactory).implementationOf(500),           poolManagerV500Implementation);
+        assertEq(IMapleProxyFactory(poolManagerFactory).defaultVersion(),                500);
         assertEq(IMapleProxyFactory(poolManagerFactory).upgradeEnabledForPath(400, 500), true);
 
         assertEq(IMapleProxyFactory(strategyManagerFactory).implementationOf(100), strategyManagerV100Implementation);
-        assertEq(IMapleProxyFactory(strategyManagerFactory).defaultVersion(), 100);
+        assertEq(IMapleProxyFactory(strategyManagerFactory).defaultVersion(),      100);
 
         assertEq(IMapleProxyFactory(modularAaveStrategyFactory).implementationOf(100), modularAaveStrategyV100Implementation);
-        assertEq(IMapleProxyFactory(modularAaveStrategyFactory).defaultVersion(), 100);
+        assertEq(IMapleProxyFactory(modularAaveStrategyFactory).defaultVersion(),      100);
 
         assertEq(IMapleProxyFactory(modularSkyStrategyFactory).implementationOf(100), modularSkyStrategyV100Implementation);
-        assertEq(IMapleProxyFactory(modularSkyStrategyFactory).defaultVersion(), 100);
+        assertEq(IMapleProxyFactory(modularSkyStrategyFactory).defaultVersion(),      100);
 
         assertEq(IMapleProxyFactory(allocationStrategyFactory).implementationOf(100), allocationStrategyV100Implementation);
-        assertEq(IMapleProxyFactory(allocationStrategyFactory).defaultVersion(), 100);
+        assertEq(IMapleProxyFactory(allocationStrategyFactory).defaultVersion(),      100);
 
         assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).implementationOf(201), withdrawalManagerQueueV201Implementation);
         assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).defaultVersion(), 201);
@@ -177,8 +178,8 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
             // NOTE: AUM can be higher than the bootstrap mint amount due to yield accrual.
             assertGe(IStrategyManager(strategyManager).assetsUnderManagement(), BOOTSTRAP_MINT);
-            assertEq(IStrategyManager(strategyManager).totalShares(),           bootstrapShares);
-            assertEq(IStrategyManager(strategyManager).unrealizedLosses(),      0);
+            assertEq(IStrategyManager(strategyManager).totalShares(),      bootstrapShares);
+            assertEq(IStrategyManager(strategyManager).unrealizedLosses(), 0);
         }
 
         /**********************************************************************************************************************************/
@@ -197,7 +198,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 assertEq(IAaveV3Strategy(underlyingStrategy).strategyDelegateFeeRate(),     spec.delegateFeeRate);
                 assertEq(IAaveV3Strategy(underlyingStrategy).strategyProtocolFeeRate(),     spec.protocolFeeRate);
                 assertEq(IAaveV3Strategy(underlyingStrategy).useVirtualUnderlyingBalance(), true);
-                assertGe(IAaveV3Strategy(underlyingStrategy).assetsUnderManagement(),       BOOTSTRAP_MINT);
+                assertGe(IAaveV3Strategy(underlyingStrategy).assetsUnderManagement(), BOOTSTRAP_MINT);
             }
 
             if (spec.kind == StrategyKind.Sky) {
@@ -207,7 +208,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 assertEq(ISkyStrategy(underlyingStrategy).strategyDelegate(),        spec.delegate);
                 assertEq(ISkyStrategy(underlyingStrategy).strategyDelegateFeeRate(), spec.delegateFeeRate);
                 assertEq(ISkyStrategy(underlyingStrategy).strategyProtocolFeeRate(), spec.protocolFeeRate);
-                assertGe(ISkyStrategy(underlyingStrategy).assetsUnderManagement(),   BOOTSTRAP_MINT);
+                assertGe(ISkyStrategy(underlyingStrategy).assetsUnderManagement(), BOOTSTRAP_MINT);
             }
 
             if (spec.kind == StrategyKind.Allocation) {
@@ -219,11 +220,8 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 assertEq(IAllocationStrategy(underlyingStrategy).strategyProtocolFeeRate(), spec.protocolFeeRate);
                 assertEq(IAllocationStrategy(underlyingStrategy).assetsUnderManagement(),   BOOTSTRAP_MINT);
 
-                (
-                    bool canDeployAssets,
-                    bool canReturnAssets,
-                    bool canRealizeYield
-                ) = IAllocationStrategy(underlyingStrategy).permissions(managedWallets[spec.name]);
+                (bool canDeployAssets, bool canReturnAssets, bool canRealizeYield) =
+                    IAllocationStrategy(underlyingStrategy).permissions(managedWallets[spec.name]);
 
                 assertEq(canDeployAssets, true);
                 assertEq(canReturnAssets, true);
@@ -292,29 +290,13 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 openStrategyCaps(poolManager, strategyManager);
                 fundStrategyManager(poolManager, strategyManager, assetsToDeposit);
 
-                assertApproxEqAbs(
-                    IStrategyManager(strategyManager).assetsOf(poolManager),
-                    assetsToDeposit,
-                    maxRoundingError
-                );
+                assertApproxEqAbs(IStrategyManager(strategyManager).assetsOf(poolManager), assetsToDeposit, maxRoundingError);
 
-                assertApproxEqAbs(
-                    IStrategyManager(strategyManager).sharesOf(poolManager),
-                    sharesMinted,
-                    maxRoundingError
-                );
+                assertApproxEqAbs(IStrategyManager(strategyManager).sharesOf(poolManager), sharesMinted, maxRoundingError);
 
-                assertApproxEqAbs(
-                    IStrategyManager(strategyManager).assetsUnderManagement(),
-                    aumBefore + assetsToDeposit,
-                    maxRoundingError
-                );
+                assertApproxEqAbs(IStrategyManager(strategyManager).assetsUnderManagement(), aumBefore + assetsToDeposit, maxRoundingError);
 
-                assertApproxEqAbs(
-                    IStrategyManager(strategyManager).totalShares(),
-                    totalSharesBefore + sharesMinted,
-                    maxRoundingError
-                );
+                assertApproxEqAbs(IStrategyManager(strategyManager).totalShares(), totalSharesBefore + sharesMinted, maxRoundingError);
 
                 uint256 sharesToRedeem  = sharesMinted / 3;
                 uint256 assetsWithdrawn = IStrategyManager(strategyManager).convertToExitAssets(sharesToRedeem);
@@ -324,16 +306,10 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 processRedemptionFromStrategyManager(poolManager, strategyManager, sharesToRedeem);
 
                 assertApproxEqAbs(
-                    IStrategyManager(strategyManager).assetsOf(poolManager),
-                    assetsToDeposit - assetsWithdrawn,
-                    maxRoundingError
+                    IStrategyManager(strategyManager).assetsOf(poolManager), assetsToDeposit - assetsWithdrawn, maxRoundingError
                 );
 
-                assertApproxEqAbs(
-                    IStrategyManager(strategyManager).sharesOf(poolManager),
-                    sharesMinted - sharesToRedeem,
-                    maxRoundingError
-                );
+                assertApproxEqAbs(IStrategyManager(strategyManager).sharesOf(poolManager), sharesMinted - sharesToRedeem, maxRoundingError);
 
                 assertApproxEqAbs(
                     IStrategyManager(strategyManager).assetsUnderManagement(),
@@ -342,9 +318,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 );
 
                 assertApproxEqAbs(
-                    IStrategyManager(strategyManager).totalShares(),
-                    totalSharesBefore + sharesMinted - sharesToRedeem,
-                    maxRoundingError
+                    IStrategyManager(strategyManager).totalShares(), totalSharesBefore + sharesMinted - sharesToRedeem, maxRoundingError
                 );
 
                 assertEq(IERC20(asset).balanceOf(pool), poolLiquidity + assetsWithdrawn);

@@ -34,7 +34,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         _createPoolWithOTLM(poolDelegate);
         _configurePool();
 
-        ( aaveV3StrategyManager, aaveV3UnderlyingStrategy ) = _deployAaveV3Strategy({
+        (aaveV3StrategyManager, aaveV3UnderlyingStrategy) = _deployAaveV3Strategy({
             strategyDelegate_:            strategyDelegate,
             aaveToken_:                   aaveToken,
             useVirtualUnderlyingBalance_: useVirtualUnderlyingBalance,
@@ -60,7 +60,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         borrowAmount = aaveLiquidity - 1;
 
         IAavePoolAddressesProviderLike addressesProvider = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool).ADDRESSES_PROVIDER());
-        IAavePoolConfiguratorLike poolConfigurator       = IAavePoolConfiguratorLike(addressesProvider.getPoolConfigurator());
+        IAavePoolConfiguratorLike      poolConfigurator  = IAavePoolConfiguratorLike(addressesProvider.getPoolConfigurator());
 
         // Remove the WETH supply cap so the borrower can post enough collateral to drain lending-market liquidity.
         vm.prank(addressesProvider.getACLAdmin());
@@ -79,7 +79,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         address aavePool_ = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
 
         IAavePoolAddressesProviderLike addressesProvider_ = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool_).ADDRESSES_PROVIDER());
-        IAavePoolConfiguratorLike poolConfigurator_       = IAavePoolConfiguratorLike(addressesProvider_.getPoolConfigurator());
+        IAavePoolConfiguratorLike      poolConfigurator_  = IAavePoolConfiguratorLike(addressesProvider_.getPoolConfigurator());
 
         vm.prank(addressesProvider_.getACLAdmin());
         poolConfigurator_.setReserveFreeze(address(fundsAsset), freeze_);
@@ -89,7 +89,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         address aavePool_ = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
 
         IAavePoolAddressesProviderLike addressesProvider_ = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool_).ADDRESSES_PROVIDER());
-        IAavePoolConfiguratorLike poolConfigurator_       = IAavePoolConfiguratorLike(addressesProvider_.getPoolConfigurator());
+        IAavePoolConfiguratorLike      poolConfigurator_  = IAavePoolConfiguratorLike(addressesProvider_.getPoolConfigurator());
 
         vm.prank(addressesProvider_.getACLAdmin());
         poolConfigurator_.setReservePause(address(fundsAsset), pause_);
@@ -99,7 +99,7 @@ contract AaveV3StrategyTestBase is TestBaseWithAssertions {
         address aavePool_ = IAaveV3Strategy(aaveV3UnderlyingStrategy).aavePool();
 
         IAavePoolAddressesProviderLike addressesProvider_ = IAavePoolAddressesProviderLike(IAavePoolLike(aavePool_).ADDRESSES_PROVIDER());
-        IAavePoolConfiguratorLike poolConfigurator_       = IAavePoolConfiguratorLike(addressesProvider_.getPoolConfigurator());
+        IAavePoolConfiguratorLike      poolConfigurator_  = IAavePoolConfiguratorLike(addressesProvider_.getPoolConfigurator());
 
         vm.prank(addressesProvider_.getACLAdmin());
         poolConfigurator_.setSupplyCap(address(fundsAsset), supplyCap_);

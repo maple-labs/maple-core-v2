@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IHandlerEntryPoint,
-    IWithdrawalManagerQueue
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IHandlerEntryPoint, IWithdrawalManagerQueue } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { ProtocolActions } from "../../../contracts/ProtocolActions.sol";
-import { Utils }           from "../../../contracts/Utils.sol";
+import { Utils } from "../../../contracts/Utils.sol";
 
 import { console } from "../../../contracts/Runner.sol";
 
@@ -17,7 +14,7 @@ contract HandlerBase is ProtocolActions, Utils, IHandlerEntryPoint {
     /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    uint256 constant internal WEIGHTS_RANGE = 10_000;
+    uint256 internal constant WEIGHTS_RANGE = 10_000;
 
     /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
@@ -29,7 +26,7 @@ contract HandlerBase is ProtocolActions, Utils, IHandlerEntryPoint {
 
     bytes4[] public selectors;
 
-    mapping(bytes4 => string)  public signatureOf;
+    mapping(bytes4 => string) public signatureOf;
     mapping(bytes4 => uint256) public weightOf;
 
     mapping(string => uint256) public numberOfCalls;
@@ -85,7 +82,7 @@ contract HandlerBase is ProtocolActions, Utils, IHandlerEntryPoint {
                 numberOfCalls[""]++;
                 numberOfCalls[actionName_]++;
 
-                ( bool success, ) = address(this).call(abi.encodeWithSelector(selectors[i], seed_));
+                (bool success,) = address(this).call(abi.encodeWithSelector(selectors[i], seed_));
 
                 require(success, "HB:CALL_FAILED");
                 break;

@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAllocationStrategy,
-    IAaveV3Strategy,
-    IERC20,
-    IStrategyManager,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IAaveV3Strategy, IERC20, IStrategyManager, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { AaveV3StrategyTestBase }     from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
+import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
 import { AllocationStrategyTestBase } from "../../integration/allocation-strategy/AllocationStrategyTestBase.sol";
-import { SkyStrategyTestBase }        from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
+import { SkyStrategyTestBase } from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
 
 contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase {
 
@@ -20,10 +14,10 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
     bool isSparkLend;
 
-    uint32 delegateFeeRate    = 0.1e6;   // 10% of accrued yield.
-    uint32 newDelegateFeeRate = 0.2e6;   // 20% of future accrued yield.
-    uint32 newProtocolFeeRate = 0.1e6;   // 10% of future accrued yield.
-    uint32 protocolFeeRate    = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate    = 0.1e6; // 10% of accrued yield.
+    uint32 newDelegateFeeRate = 0.2e6; // 20% of future accrued yield.
+    uint32 newProtocolFeeRate = 0.1e6; // 10% of future accrued yield.
+    uint32 protocolFeeRate    = 0.05e6; // 5% of accrued yield.
 
     uint256 collectionFunding = 10_000e6;
     uint256 fundAmount        = 500_000e6;
@@ -46,7 +40,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount);
 
-        uint256 fundedAssets = isSparkLend ? fundAmount : fundAmount - roundingError;  // 500_000e6 for Spark, 500_000e6 - 1 for Aave.
+        uint256 fundedAssets = isSparkLend ? fundAmount : fundAmount - roundingError; // 500_000e6 for Spark, 500_000e6 - 1 for Aave.
 
         vm.warp(block.timestamp + 365 days);
 
@@ -81,9 +75,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, collectionFunding);
 
-        uint256 firstRecordedAssets = isSparkLend
-            ? netAssets + collectionFunding - roundingError
-            : netAssets + collectionFunding;
+        uint256 firstRecordedAssets = isSparkLend ? netAssets + collectionFunding - roundingError : netAssets + collectionFunding;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -108,9 +100,8 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, collectionFunding);
 
-        uint256 secondRecordedAssets = isSparkLend
-            ? firstRecordedAssets + collectionFunding
-            : firstRecordedAssets + collectionFunding - roundingError;
+        uint256 secondRecordedAssets =
+            isSparkLend ? firstRecordedAssets + collectionFunding : firstRecordedAssets + collectionFunding - roundingError;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -135,7 +126,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount);
 
-        uint256 fundedAssets = isSparkLend ? fundAmount : fundAmount - roundingError;  // 500_000e6 for Spark, 500_000e6 - 1 for Aave.
+        uint256 fundedAssets = isSparkLend ? fundAmount : fundAmount - roundingError; // 500_000e6 for Spark, 500_000e6 - 1 for Aave.
 
         vm.warp(block.timestamp + 365 days);
 
@@ -176,9 +167,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, collectionFunding);
 
-        uint256 firstRecordedAssets = isSparkLend
-            ? netAssets + collectionFunding - roundingError
-            : netAssets + collectionFunding;
+        uint256 firstRecordedAssets = isSparkLend ? netAssets + collectionFunding - roundingError : netAssets + collectionFunding;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -206,9 +195,8 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, collectionFunding);
 
-        uint256 secondRecordedAssets = isSparkLend
-            ? firstRecordedAssets + collectionFunding
-            : firstRecordedAssets + collectionFunding - roundingError;
+        uint256 secondRecordedAssets =
+            isSparkLend ? firstRecordedAssets + collectionFunding : firstRecordedAssets + collectionFunding - roundingError;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -233,7 +221,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, fundAmount);
 
-        uint256 recordedAssets = isSparkLend ? fundAmount : fundAmount - roundingError;  // 500_000e6 for Spark, 500_000e6 - 1 for Aave.
+        uint256 recordedAssets = isSparkLend ? fundAmount : fundAmount - roundingError; // 500_000e6 for Spark, 500_000e6 - 1 for Aave.
 
         vm.warp(block.timestamp + 365 days);
 
@@ -252,9 +240,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, collectionFunding);
 
-        recordedAssets = isSparkLend
-            ? netAssets + collectionFunding - roundingError
-            : netAssets + collectionFunding;
+        recordedAssets = isSparkLend ? netAssets + collectionFunding - roundingError : netAssets + collectionFunding;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -274,9 +260,8 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
         vm.warp(block.timestamp + 365 days);
 
         grossYield = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy) - recordedAssets;
-        netAssets  = recordedAssets + grossYield
-            - grossYield * delegateFeeRate / HUNDRED_PERCENT
-            - grossYield * protocolFeeRate / HUNDRED_PERCENT;
+        netAssets =
+            recordedAssets + grossYield - grossYield * delegateFeeRate / HUNDRED_PERCENT - grossYield * protocolFeeRate / HUNDRED_PERCENT;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -314,9 +299,8 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
         vm.warp(block.timestamp + 365 days);
 
         grossYield = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy) - recordedAssets;
-        netAssets  = recordedAssets + grossYield
-            - grossYield * newDelegateFeeRate / HUNDRED_PERCENT
-            - grossYield * protocolFeeRate / HUNDRED_PERCENT;
+        netAssets = recordedAssets + grossYield - grossYield * newDelegateFeeRate / HUNDRED_PERCENT - grossYield * protocolFeeRate
+            / HUNDRED_PERCENT;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -354,9 +338,8 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
         vm.warp(block.timestamp + 365 days);
 
         grossYield = IERC20(aaveToken).balanceOf(aaveV3UnderlyingStrategy) - recordedAssets;
-        netAssets  = recordedAssets + grossYield
-            - grossYield * newDelegateFeeRate / HUNDRED_PERCENT
-            - grossYield * newProtocolFeeRate / HUNDRED_PERCENT;
+        netAssets = recordedAssets + grossYield - grossYield * newDelegateFeeRate / HUNDRED_PERCENT - grossYield * newProtocolFeeRate
+            / HUNDRED_PERCENT;
 
         assertAaveV3Strategy({
             strategyManager:         aaveV3StrategyManager,
@@ -368,9 +351,7 @@ contract AaveV3StrategyFeeRecipientAndRateChangeTests is AaveV3StrategyTestBase 
 
         fundStrategyManager(address(poolManager), aaveV3StrategyManager, collectionFunding);
 
-        recordedAssets = isSparkLend
-            ? netAssets + collectionFunding + roundingError
-            : netAssets + collectionFunding - roundingError;
+        recordedAssets = isSparkLend ? netAssets + collectionFunding + roundingError : netAssets + collectionFunding - roundingError;
         delegateFee   += grossYield * newDelegateFeeRate / HUNDRED_PERCENT;
         protocolFee   += grossYield * newProtocolFeeRate / HUNDRED_PERCENT;
 
@@ -405,10 +386,10 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
     address newStrategyDelegate = makeAddr("newStrategyDelegate");
     address newTreasury         = makeAddr("newTreasury");
 
-    uint32 delegateFeeRate    = 0.1e6;   // 10% of accrued yield.
-    uint32 newDelegateFeeRate = 0.2e6;   // 20% of future accrued yield.
-    uint32 newProtocolFeeRate = 0.1e6;   // 10% of future accrued yield.
-    uint32 protocolFeeRate    = 0.05e6;  // 5% of accrued yield.
+    uint32 delegateFeeRate    = 0.1e6; // 10% of accrued yield.
+    uint32 newDelegateFeeRate = 0.2e6; // 20% of future accrued yield.
+    uint32 newProtocolFeeRate = 0.1e6; // 10% of future accrued yield.
+    uint32 protocolFeeRate    = 0.05e6; // 5% of accrued yield.
 
     uint256 collectionFunding = 10_000e6;
     uint256 fundAmount        = 500_000e6;
@@ -431,7 +412,7 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
 
-        uint256 fundedAssets = fundAmount - roundingError;  // 500_000e6 - 1.
+        uint256 fundedAssets = fundAmount - roundingError; // 500_000e6 - 1.
 
         vm.warp(block.timestamp + 365 days);
 
@@ -531,7 +512,7 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
 
-        uint256 fundedAssets = fundAmount - roundingError;  // 500_000e6 - 1.
+        uint256 fundedAssets = fundAmount - roundingError; // 500_000e6 - 1.
 
         vm.warp(block.timestamp + 365 days);
 
@@ -640,7 +621,7 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
 
-        uint256 recordedAssets = fundAmount - roundingError;  // 500_000e6 - 1.
+        uint256 recordedAssets = fundAmount - roundingError; // 500_000e6 - 1.
 
         vm.warp(block.timestamp + 365 days);
 
@@ -689,9 +670,8 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
         vm.warp(block.timestamp + 365 days);
 
         grossYield = (recordedAssets + roundingError) * SKY_ANNUAL_APY / HUNDRED_PERCENT;
-        netAssets  = recordedAssets + grossYield
-            - grossYield * delegateFeeRate / HUNDRED_PERCENT
-            - grossYield * protocolFeeRate / HUNDRED_PERCENT;
+        netAssets =
+            recordedAssets + grossYield - grossYield * delegateFeeRate / HUNDRED_PERCENT - grossYield * protocolFeeRate / HUNDRED_PERCENT;
 
         assertSkyStrategy({
             strategyManager:  skyStrategyManager,
@@ -739,9 +719,8 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
         vm.warp(block.timestamp + 365 days);
 
         grossYield = (recordedAssets + roundingError) * SKY_ANNUAL_APY / HUNDRED_PERCENT;
-        netAssets  = recordedAssets + grossYield
-            - grossYield * newDelegateFeeRate / HUNDRED_PERCENT
-            - grossYield * protocolFeeRate / HUNDRED_PERCENT;
+        netAssets = recordedAssets + grossYield - grossYield * newDelegateFeeRate / HUNDRED_PERCENT - grossYield * protocolFeeRate
+            / HUNDRED_PERCENT;
 
         assertSkyStrategy({
             strategyManager:  skyStrategyManager,
@@ -788,11 +767,9 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        grossYield = (recordedAssets + roundingError) * SKY_ANNUAL_APY / HUNDRED_PERCENT
-            + roundingError;
-        netAssets  = recordedAssets + grossYield
-            - grossYield * newDelegateFeeRate / HUNDRED_PERCENT
-            - grossYield * newProtocolFeeRate / HUNDRED_PERCENT;
+        grossYield = (recordedAssets + roundingError) * SKY_ANNUAL_APY / HUNDRED_PERCENT + roundingError;
+        netAssets = recordedAssets + grossYield - grossYield * newDelegateFeeRate / HUNDRED_PERCENT - grossYield * newProtocolFeeRate
+            / HUNDRED_PERCENT;
 
         assertSkyStrategy({
             strategyManager:  skyStrategyManager,
@@ -834,10 +811,10 @@ contract SkyStrategyFeeRecipientAndRateChangeTests is SkyStrategyTestBase {
 
 contract AllocationStrategyFeeRateChangeTests is AllocationStrategyTestBase {
 
-    uint32 delegateFeeRate    = 0.1e6;   // 10% of realized yield.
-    uint32 newDelegateFeeRate = 0.2e6;   // 20% of future realized yield.
-    uint32 newProtocolFeeRate = 0.1e6;   // 10% of future realized yield.
-    uint32 protocolFeeRate    = 0.05e6;  // 5% of realized yield.
+    uint32 delegateFeeRate    = 0.1e6; // 10% of realized yield.
+    uint32 newDelegateFeeRate = 0.2e6; // 20% of future realized yield.
+    uint32 newProtocolFeeRate = 0.1e6; // 10% of future realized yield.
+    uint32 protocolFeeRate    = 0.05e6; // 5% of realized yield.
     uint32 yieldDuration      = 10 days;
 
     uint256 fundAmount;
@@ -858,16 +835,14 @@ contract AllocationStrategyFeeRateChangeTests is AllocationStrategyTestBase {
         poolLiquidity = 1_000_000e6;
         yieldAmount   = 100_000e6;
 
-        mixedNetYield  = yieldAmount - yieldAmount * newDelegateFeeRate / HUNDRED_PERCENT
-            - yieldAmount * protocolFeeRate / HUNDRED_PERCENT;                // 75_000e6.
-        newDelegateFee = yieldAmount * newDelegateFeeRate / HUNDRED_PERCENT;  // 20_000e6 per new-delegate tranche.
-        newNetYield    = yieldAmount - yieldAmount * newDelegateFeeRate / HUNDRED_PERCENT
-            - yieldAmount * newProtocolFeeRate / HUNDRED_PERCENT;             // 70_000e6.
-        newProtocolFee = yieldAmount * newProtocolFeeRate / HUNDRED_PERCENT;  // 10_000e6 for the final tranche.
-        oldDelegateFee = yieldAmount * delegateFeeRate / HUNDRED_PERCENT;     // 10_000e6 per old-rate tranche.
-        oldNetYield    = yieldAmount - yieldAmount * delegateFeeRate / HUNDRED_PERCENT
-            - yieldAmount * protocolFeeRate / HUNDRED_PERCENT;                // 85_000e6 per old-rate tranche.
-        oldProtocolFee = yieldAmount * protocolFeeRate / HUNDRED_PERCENT;     //  5_000e6 per old-rate tranche.
+        mixedNetYield = yieldAmount - yieldAmount * newDelegateFeeRate / HUNDRED_PERCENT - yieldAmount * protocolFeeRate / HUNDRED_PERCENT; // 75_000e6.
+        newDelegateFee = yieldAmount * newDelegateFeeRate / HUNDRED_PERCENT; // 20_000e6 per new-delegate tranche.
+        newNetYield = yieldAmount - yieldAmount * newDelegateFeeRate / HUNDRED_PERCENT - yieldAmount * newProtocolFeeRate / HUNDRED_PERCENT; // 70_000e6.
+        newProtocolFee = yieldAmount * newProtocolFeeRate / HUNDRED_PERCENT; // 10_000e6 for the final tranche.
+        oldDelegateFee = yieldAmount * delegateFeeRate / HUNDRED_PERCENT; // 10_000e6 per old-rate tranche.
+        oldNetYield = yieldAmount - yieldAmount * delegateFeeRate / HUNDRED_PERCENT - yieldAmount * protocolFeeRate / HUNDRED_PERCENT; // 85_000e6
+        // per old-rate tranche.
+        oldProtocolFee = yieldAmount * protocolFeeRate / HUNDRED_PERCENT; //  5_000e6 per old-rate tranche.
 
         deposit(lp, poolLiquidity);
         fundStrategyManager(address(poolManager), allocationStrategyManager, fundAmount);

@@ -8,8 +8,8 @@ import { Proxy } from "../../../contracts/Contracts@7.sol";
 import { IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AllocationStrategyTestBase } from "../allocation-strategy/AllocationStrategyTestBase.sol";
-import { AaveV3StrategyTestBase }     from "../aave-v3-strategy/AaveV3StrategyTestBase.sol";
-import { SkyStrategyTestBase }        from "../sky-strategy/SkyStrategyTestBase.sol";
+import { AaveV3StrategyTestBase } from "../aave-v3-strategy/AaveV3StrategyTestBase.sol";
+import { SkyStrategyTestBase } from "../sky-strategy/SkyStrategyTestBase.sol";
 
 contract ExecuteActionsFailureTests is AllocationStrategyTestBase {
 
@@ -147,12 +147,12 @@ contract ExecuteActionsAllocationStrategyCoreFlowTests is AllocationStrategyTest
 
     function test_executeActions_success_coreLifecycle() external {
         uint256 cancelledShares   = 100_000e6;
-        uint256 initialPoolShares = 1_000_000e6;  // Initial empty-pool deposit mints shares 1:1.
+        uint256 initialPoolShares = 1_000_000e6; // Initial empty-pool deposit mints shares 1:1.
         uint256 processedAssets   = 500_000e6;
         uint256 processedShares   = 500_000e6;
-        uint256 requestedShares   = 600_000e6;    // Cancelled shares plus processed shares.
-        uint256 remainingAssets   = 500_000e6;    // Initial assets minus processed assets.
-        uint256 remainingShares   = 500_000e6;    // Initial shares minus processed shares.
+        uint256 requestedShares   = 600_000e6; // Cancelled shares plus processed shares.
+        uint256 remainingAssets   = 500_000e6; // Initial assets minus processed assets.
+        uint256 remainingShares   = 500_000e6; // Initial shares minus processed shares.
 
         deposit(address(pool), lp, initialLiquidity);
 
@@ -284,13 +284,13 @@ contract ExecuteActionsAaveV3StrategyCoreFlowTests is AaveV3StrategyTestBase {
 
     function testFork_executeActions_success_coreLifecycle() external {
         uint256 cancelledShares   = 100_000e6;
-        uint256 initialPoolShares = 1_000_000e6;      // Initial empty-pool deposit mints shares 1:1.
+        uint256 initialPoolShares = 1_000_000e6; // Initial empty-pool deposit mints shares 1:1.
         uint256 processedAssets   = 500_000e6;
         uint256 processedShares   = 500_000e6;
-        uint256 requestedShares   = 600_000e6;        // Cancelled shares plus processed shares.
-        uint256 fundedAssets      = 1_000_000e6 - 1;  // The aToken conversion rounds down by one asset unit.
-        uint256 remainingAssets   = 500_000e6 - 1;    // Funded assets minus processed assets.
-        uint256 remainingShares   = 500_000e6 - 1;    // Funded shares minus processed shares.
+        uint256 requestedShares   = 600_000e6; // Cancelled shares plus processed shares.
+        uint256 fundedAssets      = 1_000_000e6 - 1; // The aToken conversion rounds down by one asset unit.
+        uint256 remainingAssets   = 500_000e6 - 1; // Funded assets minus processed assets.
+        uint256 remainingShares   = 500_000e6 - 1; // Funded shares minus processed shares.
 
         deposit(address(pool), lp, initialLiquidity);
 
@@ -420,13 +420,13 @@ contract ExecuteActionsSkyStrategyCoreFlowTests is SkyStrategyTestBase {
 
     function testFork_executeActions_success_coreLifecycle() external {
         uint256 cancelledShares   = 100_000e6;
-        uint256 initialPoolShares = 1_000_000e6;      // Initial empty-pool deposit mints shares 1:1.
+        uint256 initialPoolShares = 1_000_000e6; // Initial empty-pool deposit mints shares 1:1.
         uint256 processedAssets   = 500_000e6;
         uint256 processedShares   = 500_000e6;
-        uint256 requestedShares   = 600_000e6;        // Cancelled shares plus processed shares.
-        uint256 fundedAssets      = 1_000_000e6 - 1;  // The sUSDS conversion rounds down by one asset unit.
-        uint256 remainingAssets   = 500_000e6 - 1;    // Funded assets minus processed assets.
-        uint256 remainingShares   = 500_000e6 - 1;    // Funded shares minus processed shares.
+        uint256 requestedShares   = 600_000e6; // Cancelled shares plus processed shares.
+        uint256 fundedAssets      = 1_000_000e6 - 1; // The sUSDS conversion rounds down by one asset unit.
+        uint256 remainingAssets   = 500_000e6 - 1; // Funded assets minus processed assets.
+        uint256 remainingShares   = 500_000e6 - 1; // Funded shares minus processed shares.
 
         deposit(address(pool), lp, initialLiquidity);
 
@@ -556,25 +556,25 @@ contract ExecuteActionsRebalanceSuccessTests is AaveV3StrategyTestBase {
     uint256 constant pool1AaveAssets = 720_000e6;
     uint256 constant pool1SkyAssets  = 480_000e6;
 
-    uint256 constant initialPool1TotalAssets = 1_200_000e6 - 2;  // One conversion unit from each strategy.
-    uint256 constant initialAaveAssets       = 720_000e6 - 1;    // The aToken conversion rounds down.
-    uint256 constant initialAaveShares       = 720_000e6 - 1;    // Shares mirror the rounded assets.
-    uint256 constant initialSkyAssets        = 480_000e6 - 1;    // The sUSDS conversion rounds down.
-    uint256 constant initialSkyShares        = 480_000e6 - 1;    // Shares mirror the rounded assets.
+    uint256 constant initialPool1TotalAssets = 1_200_000e6 - 2; // One conversion unit from each strategy.
+    uint256 constant initialAaveAssets       = 720_000e6 - 1; // The aToken conversion rounds down.
+    uint256 constant initialAaveShares       = 720_000e6 - 1; // Shares mirror the rounded assets.
+    uint256 constant initialSkyAssets        = 480_000e6 - 1; // The sUSDS conversion rounds down.
+    uint256 constant initialSkyShares        = 480_000e6 - 1; // Shares mirror the rounded assets.
 
     uint256 constant aaveSharesToRedeem       = 240_000e6;
     uint256 constant allocationSharesToRedeem = 240_000e6;
 
-    uint256 constant finalPool1TotalAssets = 1_200_000e6 - 3;  // Two funding units plus one redemption unit.
-    uint256 constant finalAaveAssets       = 480_000e6 - 2;    // Funding and redemption each add one aToken rounding unit.
-    uint256 constant finalAaveShares       = 480_000e6 - 1;    // Shares retain only the initial funding rounding unit.
+    uint256 constant finalPool1TotalAssets = 1_200_000e6 - 3; // Two funding units plus one redemption unit.
+    uint256 constant finalAaveAssets       = 480_000e6 - 2; // Funding and redemption each add one aToken rounding unit.
+    uint256 constant finalAaveShares       = 480_000e6 - 1; // Shares retain only the initial funding rounding unit.
     uint256 constant pool1AllocationAssets = 240_000e6;
     uint256 constant pool1AllocationShares = 240_000e6;
     uint256 constant pool2AllocationAssets = 560_000e6;
     uint256 constant pool2AllocationShares = 560_000e6;
     uint256 constant pool2SkyAssets        = 240_000e6;
     uint256 constant pool2SkyShares        = 240_000e6;
-    uint256 constant finalSkyAssets        = 720_000e6 - 1;    // The initial sUSDS conversion rounding remains.
+    uint256 constant finalSkyAssets        = 720_000e6 - 1; // The initial sUSDS conversion rounding remains.
     uint256 constant finalAllocationAssets = 800_000e6;
 
     address allocationStrategyDelegate = makeAddr("allocationStrategyDelegate");
@@ -591,7 +591,7 @@ contract ExecuteActionsRebalanceSuccessTests is AaveV3StrategyTestBase {
         pool1        = address(pool);
         poolManager1 = address(poolManager);
 
-        ( skyStrategyManager, skyUnderlyingStrategy ) = _deploySkyStrategy({
+        (skyStrategyManager, skyUnderlyingStrategy) = _deploySkyStrategy({
             strategyDelegate_:        skyStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             savingsUsds_:             SAVINGS_USDS,
@@ -602,7 +602,7 @@ contract ExecuteActionsRebalanceSuccessTests is AaveV3StrategyTestBase {
             bootstrapMint_:           0
         });
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        allocationStrategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -614,7 +614,7 @@ contract ExecuteActionsRebalanceSuccessTests is AaveV3StrategyTestBase {
         addStrategyManagerToPool(poolManager1, skyStrategyManager);
         addStrategyManagerToPool(poolManager1, allocationStrategyManager);
 
-        ( pool2, poolManager2 ) = _createPoolSharingStrategy("poolDelegate2", aaveV3StrategyManager);
+        (pool2, poolManager2) = _createPoolSharingStrategy("poolDelegate2", aaveV3StrategyManager);
 
         vm.startPrank(governor);
         IPoolManager(poolManager2).addStrategyManager(skyStrategyManager);

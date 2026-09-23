@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IPoolManager,
-    IPSMLike,
-    IStrategyManager,
-    ISkyStrategy
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IPoolManager, IPSMLike, IStrategyManager, ISkyStrategy } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { SkyStrategyInitializerParams } from "../../../contracts/interfaces/Interfaces.sol";
 
@@ -72,8 +67,7 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         });
 
         vm.prank(inactiveDelegate);
-        ( address inactiveStrategyManager, ) =
-            strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
+        (address inactiveStrategyManager,) = strategyDeployer.deploy(strategyManagerFactory, skyStrategyFactory, 0, abi.encode(params), "");
 
         vm.prank(inactiveDelegate);
         vm.expectRevert("MSM:FSM:NOT_ACTIVE");
@@ -113,11 +107,7 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_failWithNonInstanceUnderlyingStrategy() external {
-        vm.mockCall(
-            skyStrategyFactory,
-            abi.encodeWithSignature("isInstance(address)", skyUnderlyingStrategy),
-            abi.encode(false)
-        );
+        vm.mockCall(skyStrategyFactory, abi.encodeWithSignature("isInstance(address)", skyUnderlyingStrategy), abi.encode(false));
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSM:FSM:INVALID_US");
@@ -317,7 +307,7 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
 contract SkyStrategyFundTests is SkyStrategyTestBase {
 
     uint256 poolLiquidity        = 1_000e6;
-    uint256 expectedRoundingLoss = 1;  // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
+    uint256 expectedRoundingLoss = 1; // USDC -> USDS -> sUSDS round-trip rounds down 1 wei at the fork block.
 
     function setUp() public virtual override {
         super.setUp();
@@ -378,7 +368,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_partial_asLiquidityBot() external {
-        uint256 fundAmount   = poolLiquidity / 4;
+        uint256 fundAmount = poolLiquidity / 4;
 
         assertPoolState({
             pool:               address(pool),
@@ -481,7 +471,6 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_multipleFundsAcrossPoolManagers() external {
-
         /**********************************************************************************************************************************/
         /*** Step 1: Deploy and configure two pools that share the same strategy manager                                                ***/
         /**********************************************************************************************************************************/
@@ -490,8 +479,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         uint256 firstPoolFollowUpFunding = poolLiquidity / 4;
         uint256 secondPoolFunding        = poolLiquidity / 5;
 
-        ( address firstPool,  address firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  skyStrategyManager);
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address firstPool, address firstPoolManager)   = _createPoolSharingStrategy("firstPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         assertPoolState({
             pool:               firstPool,
@@ -537,7 +526,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         /*** Step 2: Deposit liquidity into both pools                                                                                  ***/
         /**********************************************************************************************************************************/
 
-        deposit(firstPool,  lp, poolLiquidity);
+        deposit(firstPool, lp, poolLiquidity);
         deposit(secondPool, lp, poolLiquidity);
 
         assertPoolState({
@@ -722,8 +711,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     function testFork_fund_accruesFeesAndMintsFewerSharesAfterYield() external {
         uint256 fundAmount       = poolLiquidity / 4;
         uint256 secondFundAmount = poolLiquidity / 5;
-        uint32  delegateFeeRate  = 0.1e6;              // 10% of accrued yield.
-        uint32  protocolFeeRate  = 0.05e6;             // 5% of accrued yield.
+        uint32  delegateFeeRate  = 0.1e6; // 10% of accrued yield.
+        uint32  protocolFeeRate  = 0.05e6; // 5% of accrued yield.
 
         /**********************************************************************************************************************************/
         /*** Step 1: Set the delegate and protocol strategy fee rates                                                                   ***/
@@ -799,7 +788,7 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
 
         vm.warp(block.timestamp + 365 days);
 
-        uint256 expectedGrossYield  = fundAmount         * SKY_ANNUAL_APY  / HUNDRED_PERCENT;
+        uint256 expectedGrossYield  = fundAmount * SKY_ANNUAL_APY / HUNDRED_PERCENT;
         uint256 expectedDelegateFee = expectedGrossYield * delegateFeeRate / HUNDRED_PERCENT;
         uint256 expectedProtocolFee = expectedGrossYield * protocolFeeRate / HUNDRED_PERCENT;
         uint256 expectedNetYield    = expectedGrossYield - expectedDelegateFee - expectedProtocolFee;
@@ -831,7 +820,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         assertEq(fundsAsset.balanceOf(treasury),         0);
 
         /**********************************************************************************************************************************/
-        /*** Step 4: Fund again — the accrued fees are skimmed to the delegate and treasury                                             ***/
+        /*** Step 4: Fund again — the accrued fees are skimmed to the delegate and treasury
+        ***/
         /**********************************************************************************************************************************/
 
         fundStrategyManager(address(poolManager), skyStrategyManager, secondFundAmount);
@@ -883,10 +873,10 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
             address firstPool;
             address secondPool;
 
-            ( firstPool,  firstPoolManager  ) = _createPoolSharingStrategy("firstPoolDelegate",  skyStrategyManager);
-            ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+            (firstPool, firstPoolManager)   = _createPoolSharingStrategy("firstPoolDelegate", skyStrategyManager);
+            (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
-            deposit(firstPool,  lp, poolLiquidity);
+            deposit(firstPool, lp, poolLiquidity);
             deposit(secondPool, lp, poolLiquidity);
         }
 
@@ -934,10 +924,10 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         /*** Step 2: Fund the strategy from both pools before any yield accrues                                                         ***/
         /**********************************************************************************************************************************/
 
-        fundStrategyManager(firstPoolManager,  skyStrategyManager, firstPoolFunding);
+        fundStrategyManager(firstPoolManager, skyStrategyManager, firstPoolFunding);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondPoolFunding);
 
-        uint256 firstPoolShares  = firstPoolFunding - expectedRoundingLoss;  // First funding overall absorbs the 1 wei rounding loss.
+        uint256 firstPoolShares  = firstPoolFunding - expectedRoundingLoss; // First funding overall absorbs the 1 wei rounding loss.
         uint256 secondPoolShares = secondPoolFunding;
 
         assertPoolState({
@@ -989,9 +979,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         uint256 expectedPositionValue =
             (firstPoolFunding + secondPoolFunding) * (HUNDRED_PERCENT + SKY_ANNUAL_APY) / HUNDRED_PERCENT - expectedRoundingLoss;
 
-        uint256 expectedFirstPoolYield  = firstPoolShares  * expectedPositionValue / (firstPoolShares + secondPoolShares) - firstPoolShares;
-        uint256 expectedSecondPoolYield =
-            secondPoolShares * expectedPositionValue / (firstPoolShares + secondPoolShares) - secondPoolShares;
+        uint256 expectedFirstPoolYield = firstPoolShares * expectedPositionValue / (firstPoolShares + secondPoolShares) - firstPoolShares;
+        uint256 expectedSecondPoolYield = secondPoolShares * expectedPositionValue / (firstPoolShares + secondPoolShares) - secondPoolShares;
 
         assertPoolState({
             pool:               IPoolManager(firstPoolManager).pool(),
@@ -1035,9 +1024,9 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_appliesPsmExitFee() external {
-        uint256 tout        = 0.01e18;                       // tout is WAD-scaled (1e18 = 100%), so 0.01e18 is a 1% PSM exit fee.
-        uint256 fundAmount  = 101e6;                         // Chosen so that funding valued net of the 1% exit fee lands on a round 100e6.
-        uint256 expectedAum = 100e6 - expectedRoundingLoss;  // 101e6 / (1 + tout), less the sUSDS round-trip rounding.
+        uint256 tout        = 0.01e18; // tout is WAD-scaled (1e18 = 100%), so 0.01e18 is a 1% PSM exit fee.
+        uint256 fundAmount  = 101e6; // Chosen so that funding valued net of the 1% exit fee lands on a round 100e6.
+        uint256 expectedAum = 100e6 - expectedRoundingLoss; // 101e6 / (1 + tout), less the sUSDS round-trip rounding.
 
         /**********************************************************************************************************************************/
         /*** Step 1: Sky governance turns on the PSM exit fee                                                                           ***/
@@ -1071,7 +1060,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Fund the strategy — the position is valued net of the exit fee it would incur to exit                              ***/
+        /*** Step 2: Fund the strategy — the position is valued net of the exit fee it would incur to exit
+        ***/
         /**********************************************************************************************************************************/
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
@@ -1101,11 +1091,11 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_appliesPsmExitFeeAcrossFundingsWithYield() external {
-        uint256 tout             = 0.01e18;  // tout is WAD-scaled (1e18 = 100%), so 0.01e18 is a 1% PSM exit fee.
-        uint256 fundAmount       = 101e6;    // Nets a round 100e6 after the 1% exit fee.
-        uint256 secondFundAmount = 202e6;    // Nets a round 200e6 after the 1% exit fee.
-        uint256 toutLoss         = 1e6;      // 1% exit fee on the first funding.
-        uint256 secondToutLoss   = 2e6;      // 1% exit fee on the second funding.
+        uint256 tout             = 0.01e18; // tout is WAD-scaled (1e18 = 100%), so 0.01e18 is a 1% PSM exit fee.
+        uint256 fundAmount       = 101e6; // Nets a round 100e6 after the 1% exit fee.
+        uint256 secondFundAmount = 202e6; // Nets a round 200e6 after the 1% exit fee.
+        uint256 toutLoss         = 1e6; // 1% exit fee on the first funding.
+        uint256 secondToutLoss   = 2e6; // 1% exit fee on the second funding.
 
         /**********************************************************************************************************************************/
         /*** Step 1: Sky governance turns on the PSM exit fee, then fund the strategy for the first time                                ***/
@@ -1164,7 +1154,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Accrue yield — the position appreciates, still valued net of the exit fee                                          ***/
+        /*** Step 2: Accrue yield — the position appreciates, still valued net of the exit fee
+        ***/
         /**********************************************************************************************************************************/
 
         vm.warp(block.timestamp + 365 days);
@@ -1195,7 +1186,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 3: Fund again — the second funding is also valued net of the exit fee and mints fewer shares                          ***/
+        /*** Step 3: Fund again — the second funding is also valued net of the exit fee and mints fewer shares
+        ***/
         /**********************************************************************************************************************************/
 
         fundStrategyManager(address(poolManager), skyStrategyManager, secondFundAmount);
@@ -1216,8 +1208,9 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        uint256 sharesMintedInFirstFund  = fundAmount - toutLoss - expectedRoundingLoss;
-        uint256 expectedSecondFundShares = (secondFundAmount - secondToutLoss) * sharesMintedInFirstFund / (sharesMintedInFirstFund + expectedYield);
+        uint256 sharesMintedInFirstFund = fundAmount - toutLoss - expectedRoundingLoss;
+        uint256 expectedSecondFundShares =
+            (secondFundAmount - secondToutLoss) * sharesMintedInFirstFund / (sharesMintedInFirstFund + expectedYield);
 
         assertStrategyManagerPosition({
             strategyManager:  skyStrategyManager,
@@ -1230,9 +1223,9 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_withEntryFee() external {
-        uint256 tin        = 0.01e18;  // tin is WAD-scaled (1e18 = 100%), so 0.01e18 is a 1% PSM entry fee.
+        uint256 tin        = 0.01e18; // tin is WAD-scaled (1e18 = 100%), so 0.01e18 is a 1% PSM entry fee.
         uint256 fundAmount = 100e6;
-        uint256 tinLoss    = 1e6;      // 1% entry fee charged on the 100e6 funded.
+        uint256 tinLoss    = 1e6; // 1% entry fee charged on the 100e6 funded.
 
         /**********************************************************************************************************************************/
         /*** Step 1: Sky governance turns on the PSM entry fee                                                                          ***/
@@ -1264,7 +1257,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Fund the strategy — fewer USDS are acquired, so the position is smaller than the amount funded                     ***/
+        /*** Step 2: Fund the strategy — fewer USDS are acquired, so the position is smaller than the amount funded
+        ***/
         /**********************************************************************************************************************************/
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
@@ -1294,8 +1288,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
     }
 
     function testFork_fund_withEntryAndExitFee() external {
-        uint256 tin              = 0.01e18;  // 1% PSM entry fee (sellGem).
-        uint256 tout             = 0.01e18;  // 1% PSM exit fee (buyGem).
+        uint256 tin              = 0.01e18; // 1% PSM entry fee (sellGem).
+        uint256 tout             = 0.01e18; // 1% PSM exit fee (buyGem).
         uint256 fundAmount       = 101e6;
         uint256 expectedToutLoss = 1e6;
         uint256 expectedTinLoss  = 1e6;
@@ -1334,7 +1328,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Fund the strategy — the entry fee shrinks the deposit and the exit fee marks the position down                     ***/
+        /*** Step 2: Fund the strategy — the entry fee shrinks the deposit and the exit fee marks the position down
+        ***/
         /**********************************************************************************************************************************/
 
         fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
@@ -1421,7 +1416,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 2: Impair part of the position — the AUM is unchanged, but the loss is now reported as unrealized                     ***/
+        /*** Step 2: Impair part of the position — the AUM is unchanged, but the loss is now reported as unrealized
+        ***/
         /**********************************************************************************************************************************/
 
         vm.prank(strategyDelegate);
@@ -1436,8 +1432,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         assertSkyStrategy({
-            strategyManager:  skyStrategyManager,
-            aum:              firstFund - expectedRoundingLoss,  // Impairment does not reduce the reported AUM.
+            strategyManager: skyStrategyManager,
+            aum: firstFund - expectedRoundingLoss, // Impairment does not reduce the reported AUM.
             unrealizedLosses: impairment
         });
 
@@ -1451,7 +1447,8 @@ contract SkyStrategyFundTests is SkyStrategyTestBase {
         });
 
         /**********************************************************************************************************************************/
-        /*** Step 3: Fund again — the outstanding impairment does not block funding, and it stays reported as unrealized loss           ***/
+        /*** Step 3: Fund again — the outstanding impairment does not block funding, and it stays reported as unrealized loss
+        ***/
         /**********************************************************************************************************************************/
 
         fundStrategyManager(address(poolManager), skyStrategyManager, secondFund);

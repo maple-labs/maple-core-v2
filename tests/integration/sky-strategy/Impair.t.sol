@@ -324,7 +324,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondFund);
@@ -382,8 +382,8 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
             unrealizedLosses: 0
         });
 
-        uint256 firstLoss  = firstShares  * impairment / totalShares + 1;  // Round up
-        uint256 secondLoss = secondShares * impairment / totalShares + 1;  // Round up
+        uint256 firstLoss  = firstShares * impairment / totalShares + 1; // Round up
+        uint256 secondLoss = secondShares * impairment / totalShares + 1; // Round up
 
         impairStrategy(skyUnderlyingStrategy, impairment);
 
@@ -481,17 +481,17 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
     }
 
     function testFork_impair_withHaltedPsmAndNonZeroFallbackTout() external {
-        uint256 fallbackTout = 0.01e18;  // 1% fallback PSM exit fee.
+        uint256 fallbackTout = 0.01e18; // 1% fallback PSM exit fee.
         uint256 impairment   = 100_000e6;
 
         // Discount the USDS position by the fallback PSM exit fee to calculate its USDC-equivalent AUM.
-        uint256 expectedAum  = fundAmount * 1e18 / (1e18 + fallbackTout);
+        uint256 expectedAum = fundAmount * 1e18 / (1e18 + fallbackTout);
 
         setSkyTout(type(uint256).max);
         setFallbackTout(skyUnderlyingStrategy, fallbackTout);
 
         assertEq(ISkyStrategy(skyUnderlyingStrategy).fallbackTout(), fallbackTout);
-        assertGt(expectedAum,                                        impairment);
+        assertGt(expectedAum, impairment);
 
         impairStrategy(skyUnderlyingStrategy, impairment);
 
@@ -529,8 +529,8 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
     }
 
     function testFork_impair_withFeesAndYield() external {
-        uint32 delegateFeeRate = 0.1e6;   // 10% of accrued yield.
-        uint32 protocolFeeRate = 0.05e6;  // 5% of accrued yield.
+        uint32 delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32 protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         uint256 fundedAssets = fundAmount - expectedRoundingLoss;
         uint256 impairment   = 100_000e6;
@@ -545,10 +545,10 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
         uint256 expectedProtocolFee = grossYield * protocolFeeRate / HUNDRED_PERCENT;
         uint256 netAum              = fundedAssets + grossYield - expectedDelegateFee - expectedProtocolFee;
 
-        assertGt(grossYield,          0);
+        assertGt(grossYield, 0);
         assertGt(expectedDelegateFee, 0);
         assertGt(expectedProtocolFee, 0);
-        assertGt(netAum,              impairment);
+        assertGt(netAum, impairment);
 
         impairStrategy(skyUnderlyingStrategy, impairment);
 
@@ -589,9 +589,9 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
     }
 
     function testFork_impair_withFeesYieldAndPsmExitFee() external {
-        uint256 tout            = 0.01e18;  // 1% PSM exit fee.
-        uint32  delegateFeeRate = 0.1e6;    // 10% of accrued yield.
-        uint32  protocolFeeRate = 0.05e6;   // 5% of accrued yield.
+        uint256 tout            = 0.01e18; // 1% PSM exit fee.
+        uint32  delegateFeeRate = 0.1e6; // 10% of accrued yield.
+        uint32  protocolFeeRate = 0.05e6; // 5% of accrued yield.
 
         uint256 fundedAssets = fundAmount - expectedRoundingLoss;
         uint256 impairment   = 100_000e6;
@@ -613,10 +613,10 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
         uint256 expectedProtocolFee = feeBearingYield * protocolFeeRate / HUNDRED_PERCENT;
         uint256 netAum              = grossAum - expectedDelegateFee - expectedProtocolFee;
 
-        assertGt(feeBearingYield,     0);
+        assertGt(feeBearingYield, 0);
         assertGt(expectedDelegateFee, 0);
         assertGt(expectedProtocolFee, 0);
-        assertGt(netAum,              impairment);
+        assertGt(netAum, impairment);
 
         impairStrategy(skyUnderlyingStrategy, impairment);
 
@@ -663,7 +663,7 @@ contract SkyStrategyImpairTests is SkyStrategyTestBase {
         address firstPool        = address(pool);
         address firstPoolManager = address(poolManager);
 
-        ( address secondPool, address secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
+        (address secondPool, address secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", skyStrategyManager);
 
         deposit(secondPool, lp, poolLiquidity);
         fundStrategyManager(secondPoolManager, skyStrategyManager, secondFund);

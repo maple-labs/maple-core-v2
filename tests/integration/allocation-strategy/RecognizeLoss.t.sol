@@ -178,7 +178,6 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     uint32 yieldDuration;
 
     function test_recognizeLoss_success_partialLoss_accumulatesAcrossAdmins() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize a partial loss via the strategy delegate                                                                         ***/
         /**********************************************************************************************************************************/
@@ -430,10 +429,7 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
             unrealizedLosses:      0
         });
 
-        assertEq(
-            IStrategyManager(allocationStrategyManager).convertToAssets(initialShares - sharesToRedeem),
-            assetsAfterLoss - assetsOut
-        );
+        assertEq(IStrategyManager(allocationStrategyManager).convertToAssets(initialShares - sharesToRedeem), assetsAfterLoss - assetsOut);
 
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
 
@@ -589,10 +585,7 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
             unrealizedLosses:      0
         });
 
-        assertEq(
-            IStrategyManager(allocationStrategyManager).convertToAssets(initialShares - sharesToRedeem),
-            assetsAfterLoss - assetsOut
-        );
+        assertEq(IStrategyManager(allocationStrategyManager).convertToAssets(initialShares - sharesToRedeem), assetsAfterLoss - assetsOut);
 
         assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), remainingDeployedAssets);
 
@@ -674,7 +667,6 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_totalLoss() external {
-
         /**********************************************************************************************************************************/
         /*** Recognize the entire deployed position as lost                                                                             ***/
         /**********************************************************************************************************************************/
@@ -726,13 +718,12 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_doesNotAffectYieldSchedule() external {
-
         /**********************************************************************************************************************************/
         /*** Schedule yield and warp partway through it                                                                                 ***/
         /**********************************************************************************************************************************/
 
-        delegateFeeRate = 0.02e6;  // 2%
-        protocolFeeRate = 0.03e6;  // 3%
+        delegateFeeRate = 0.02e6; // 2%
+        protocolFeeRate = 0.03e6; // 3%
         yieldAssets     = 50_000e6;
         yieldDuration   = 31 days;
 
@@ -864,7 +855,6 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_clampsUnrealizedLossesToReducedAum() external {
-
         /**********************************************************************************************************************************/
         /*** Impair for the full AUM                                                                                                    ***/
         /**********************************************************************************************************************************/
@@ -963,7 +953,6 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_multipleDeployersIndependent() external {
-
         /**********************************************************************************************************************************/
         /*** Onboard a second managed wallet and deploy assets to it as well                                                            ***/
         /**********************************************************************************************************************************/
@@ -1075,15 +1064,14 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_afterPermissionsRevoked() external {
-
         /**********************************************************************************************************************************/
         /*** Revoke the managed wallet's permissions entirely, e.g. after it is found to be compromised                                 ***/
         /**********************************************************************************************************************************/
 
         address[] memory accounts        = new address[](1);
-        bool[]    memory canDeployAssets = new bool[](1);
-        bool[]    memory canReturnAssets = new bool[](1);
-        bool[]    memory canRealizeYield = new bool[](1);
+        bool[] memory    canDeployAssets = new bool[](1);
+        bool[] memory    canReturnAssets = new bool[](1);
+        bool[] memory    canRealizeYield = new bool[](1);
 
         accounts[0] = managedWallet;
 
@@ -1180,7 +1168,6 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_splitsAcrossPoolManagers() external {
-
         /**********************************************************************************************************************************/
         /*** Set up a second pool sharing the strategy                                                                                  ***/
         /**********************************************************************************************************************************/
@@ -1189,7 +1176,7 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
         firstPoolManager = address(poolManager);
         firstShares      = initialShares;
 
-        ( secondPool, secondPoolManager ) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
+        (secondPool, secondPoolManager) = _createPoolSharingStrategy("secondPoolDelegate", allocationStrategyManager);
 
         secondFund   = 450_000e6;
         secondShares = secondFund;
@@ -1327,7 +1314,6 @@ contract AllocationStrategyRecognizeLossSuccessTests is AllocationStrategyRecogn
     }
 
     function test_recognizeLoss_success_donationDoesNotInflateAum() external {
-
         /**********************************************************************************************************************************/
         /*** An external actor donates raw assets directly to the strategy, bypassing deployAssets()/returnAssets()                     ***/
         /**********************************************************************************************************************************/

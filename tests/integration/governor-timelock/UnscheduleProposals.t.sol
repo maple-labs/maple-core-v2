@@ -21,7 +21,7 @@ contract UnscheduleProposalsTests is GovernorTimelockTestBase {
 
         bytes32[] memory roles       = new bytes32[](1);
         address[] memory accounts    = new address[](1);
-        bool[]    memory shouldGrant = new bool[](1);
+        bool[] memory    shouldGrant = new bool[](1);
 
         roles[0]       = timelock.PROPOSER_ROLE();
         accounts[0]    = securityAdmin;
@@ -44,7 +44,7 @@ contract UnscheduleProposalsTests is GovernorTimelockTestBase {
         assertEq(timelock.latestProposalId(), 1);
 
         address[] memory targets = new address[](2);
-        bytes[]   memory data    = new bytes[](2);
+        bytes[] memory   data    = new bytes[](2);
 
         targets[0] = address(globals);
         targets[1] = address(collateralAsset);
@@ -64,8 +64,8 @@ contract UnscheduleProposalsTests is GovernorTimelockTestBase {
         assertEq(timelock.latestProposalId(), 3);
 
         uint256[] memory proposalIds = new uint256[](2);
-        proposalIds[0] = 3;
-        proposalIds[1] = 2;
+        proposalIds[0]               = 3;
+        proposalIds[1]               = 2;
 
         vm.prank(canceller);
         timelock.unscheduleProposals(proposalIds);

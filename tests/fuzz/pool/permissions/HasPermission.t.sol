@@ -21,7 +21,7 @@ contract HasPermissionFuzzTests is TestBase {
 
         // NOTE: Pool and Withdrawal manager need to be whitelisted to allow redemption workflow to work.
         setLenderAllowlist(address(poolManager), address(poolManager), true);
-        setLenderAllowlist(address(poolManager), address(queueWM),  true);
+        setLenderAllowlist(address(poolManager), address(queueWM), true);
     }
 
     /**************************************************************************************************************************************/
@@ -30,11 +30,13 @@ contract HasPermissionFuzzTests is TestBase {
 
     function hasPermission(
         uint256 permissionLevel,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 poolBitmap,
         uint256 lenderBitmap
     )
-        internal pure returns (bool isAllowed)
+        internal
+        pure
+        returns (bool isAllowed)
     {
         if (permissionLevel == PUBLIC || isAllowlisted) return true;
         if (permissionLevel == PRIVATE) return false;
@@ -94,7 +96,7 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 assetsToDeposit
     )
         external
@@ -136,7 +138,7 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 assetsToDeposit
     )
         external
@@ -146,14 +148,8 @@ contract HasPermissionFuzzTests is TestBase {
 
         fundsAsset.mint(lender, assetsToDeposit);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(
-            address(fundsAsset),
-            lender,
-            address(pool),
-            assetsToDeposit,
-            type(uint256).max,
-            privateKey
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            _getValidPermitSignature(address(fundsAsset), lender, address(pool), assetsToDeposit, type(uint256).max, privateKey);
 
         setupPoolPermissions(permissionLevel, "P:depositWithPermit", poolBitmap);
         setupLenderPermissions(lender, isAllowlisted, lenderBitmap);
@@ -178,20 +174,19 @@ contract HasPermissionFuzzTests is TestBase {
 
         assertEq(pool.balanceOf(lender), assetsToDeposit);
         assertEq(pool.totalSupply(),     assetsToDeposit);
-
     }
 
     function testFuzz_hasPermission_mint(
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 sharesToMint
     )
         external
     {
         permissionLevel = bound(permissionLevel, 0, PUBLIC);
-        sharesToMint    = bound(sharesToMint,    1, MAX_AMOUNT);
+        sharesToMint    = bound(sharesToMint, 1, MAX_AMOUNT);
 
         vm.startPrank(lender);
         fundsAsset.mint(lender, sharesToMint);
@@ -227,24 +222,18 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 sharesToMint
     )
         external
     {
         permissionLevel = bound(permissionLevel, 0, PUBLIC);
-        sharesToMint    = bound(sharesToMint,    1, MAX_AMOUNT);
+        sharesToMint    = bound(sharesToMint, 1, MAX_AMOUNT);
 
         fundsAsset.mint(lender, sharesToMint);
 
-        ( uint8 v, bytes32 r, bytes32 s ) = _getValidPermitSignature(
-            address(fundsAsset),
-            lender,
-            address(pool),
-            sharesToMint,
-            type(uint256).max,
-            privateKey
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            _getValidPermitSignature(address(fundsAsset), lender, address(pool), sharesToMint, type(uint256).max, privateKey);
 
         setupPoolPermissions(permissionLevel, "P:mintWithPermit", poolBitmap);
         setupLenderPermissions(lender, isAllowlisted, lenderBitmap);
@@ -275,7 +264,7 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 sharesToRequest,
         uint256 sharesToRemove
     )
@@ -283,7 +272,7 @@ contract HasPermissionFuzzTests is TestBase {
     {
         permissionLevel = bound(permissionLevel, 0, PUBLIC);
         sharesToRequest = bound(sharesToRequest, 1, MAX_AMOUNT);
-        sharesToRemove  = bound(sharesToRemove,  1, sharesToRequest);
+        sharesToRemove  = bound(sharesToRemove, 1, sharesToRequest);
 
         setupDeposit(lender, sharesToRequest);
         setupRequest(lender, sharesToRequest);
@@ -311,7 +300,7 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 sharesToRedeem,
         address receiver
     )
@@ -321,7 +310,7 @@ contract HasPermissionFuzzTests is TestBase {
         vm.assume(receiver != address(pool));
 
         permissionLevel = bound(permissionLevel, 0, PUBLIC);
-        sharesToRedeem  = bound(sharesToRedeem,  1, MAX_AMOUNT);
+        sharesToRedeem  = bound(sharesToRedeem, 1, MAX_AMOUNT);
 
         setupDeposit(lender, sharesToRedeem);
 
@@ -356,13 +345,13 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 sharesToRedeem
     )
         external
     {
         permissionLevel = bound(permissionLevel, 0, PUBLIC);
-        sharesToRedeem  = bound(sharesToRedeem,  1, MAX_AMOUNT);
+        sharesToRedeem  = bound(sharesToRedeem, 1, MAX_AMOUNT);
 
         setupDeposit(lender, sharesToRedeem);
         setupPoolPermissions(permissionLevel, "P:requestRedeem", poolBitmap);
@@ -388,12 +377,12 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 assetsToWithdraw
     )
         external
     {
-        permissionLevel  = bound(permissionLevel,  0, PUBLIC);
+        permissionLevel  = bound(permissionLevel, 0, PUBLIC);
         assetsToWithdraw = bound(assetsToWithdraw, 0, MAX_AMOUNT);
 
         fundsAsset.mint(address(pool), 1);
@@ -418,10 +407,10 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 poolBitmap,
         address sender,
         uint256 senderBitmap,
-        bool    isSenderAllowlisted,
+        bool isSenderAllowlisted,
         address receiver,
         uint256 receiverBitmap,
-        bool    isReceiverAllowlisted,
+        bool isReceiverAllowlisted,
         uint256 sharesToTransfer
     )
         external
@@ -429,7 +418,7 @@ contract HasPermissionFuzzTests is TestBase {
         vm.assume(sender != address(0));
         vm.assume(sender != receiver);
 
-        permissionLevel  = bound(permissionLevel,  0, PUBLIC);
+        permissionLevel  = bound(permissionLevel, 0, PUBLIC);
         sharesToTransfer = bound(sharesToTransfer, 1, MAX_AMOUNT);
 
         setupDeposit(sender, sharesToTransfer);
@@ -437,7 +426,7 @@ contract HasPermissionFuzzTests is TestBase {
         setupLenderPermissions(sender, isSenderAllowlisted, senderBitmap);
         setupLenderPermissions(receiver, isReceiverAllowlisted, receiverBitmap);
 
-        bool isSenderAllowed   = hasPermission(permissionLevel, isSenderAllowlisted,   poolBitmap, senderBitmap);
+        bool isSenderAllowed   = hasPermission(permissionLevel, isSenderAllowlisted, poolBitmap, senderBitmap);
         bool isReceiverAllowed = hasPermission(permissionLevel, isReceiverAllowlisted, poolBitmap, receiverBitmap);
         bool isAllowed         = isSenderAllowed && isReceiverAllowed;
 
@@ -460,10 +449,10 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 poolBitmap,
         address sender,
         uint256 senderBitmap,
-        bool    isSenderAllowlisted,
+        bool isSenderAllowlisted,
         address receiver,
         uint256 receiverBitmap,
-        bool    isReceiverAllowlisted,
+        bool isReceiverAllowlisted,
         address caller,
         uint256 sharesToTransfer
     )
@@ -472,7 +461,7 @@ contract HasPermissionFuzzTests is TestBase {
         vm.assume(sender != address(0));
         vm.assume(sender != receiver);
 
-        permissionLevel  = bound(permissionLevel,  0, PUBLIC);
+        permissionLevel  = bound(permissionLevel, 0, PUBLIC);
         sharesToTransfer = bound(sharesToTransfer, 1, MAX_AMOUNT);
 
         setupDeposit(sender, sharesToTransfer);
@@ -481,7 +470,7 @@ contract HasPermissionFuzzTests is TestBase {
         setupLenderPermissions(sender, isSenderAllowlisted, senderBitmap);
         setupLenderPermissions(receiver, isReceiverAllowlisted, receiverBitmap);
 
-        bool isSenderAllowed   = hasPermission(permissionLevel, isSenderAllowlisted,   poolBitmap, senderBitmap);
+        bool isSenderAllowed   = hasPermission(permissionLevel, isSenderAllowlisted, poolBitmap, senderBitmap);
         bool isReceiverAllowed = hasPermission(permissionLevel, isReceiverAllowlisted, poolBitmap, receiverBitmap);
         bool isAllowed         = isSenderAllowed && isReceiverAllowed;
 
@@ -503,13 +492,13 @@ contract HasPermissionFuzzTests is TestBase {
         uint256 permissionLevel,
         uint256 poolBitmap,
         uint256 lenderBitmap,
-        bool    isAllowlisted,
+        bool isAllowlisted,
         uint256 assetsToWithdraw,
         address receiver
     )
         external
     {
-        permissionLevel  = bound(permissionLevel,  0, PUBLIC);
+        permissionLevel  = bound(permissionLevel, 0, PUBLIC);
         assetsToWithdraw = bound(assetsToWithdraw, 0, MAX_AMOUNT);
 
         fundsAsset.mint(address(pool), 1);

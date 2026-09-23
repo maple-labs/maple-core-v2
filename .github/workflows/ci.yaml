@@ -34,6 +34,20 @@ env:
   FUZZ_PROFILE: ${{ github.event_name == 'push' && 'super_deep' || 'deep' }}
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.8.3
+      - name: Install Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6
+      - name: Check formatting
+        run: make check-format
+
   integration-tests:
     runs-on: ubuntu-latest
     steps:

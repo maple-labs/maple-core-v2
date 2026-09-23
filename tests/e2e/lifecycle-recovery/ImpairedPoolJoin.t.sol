@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20,
-    IPool
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAaveV3Strategy, IERC20, IPool } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
 
@@ -22,7 +18,7 @@ contract ImpairedPoolJoinTests is AaveV3StrategyTestBase {
     uint256 impairmentAmount = 300_000e6 - 1;
     uint256 poolAFunding     = 1_000_000e6;
     uint256 poolBFunding     = 500_000e6;
-    uint256 rounding         = 1;  // One funds-asset base unit.
+    uint256 rounding         = 1; // One funds-asset base unit.
 
     uint256 initialNetAssets;
     uint256 initialStrategyAum;
@@ -47,7 +43,7 @@ contract ImpairedPoolJoinTests is AaveV3StrategyTestBase {
         poolA        = address(pool);
         poolManagerA = address(poolManager);
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", aaveV3StrategyManager);
 
         openPool(poolManagerA);
         openPool(poolManagerB);
@@ -55,16 +51,16 @@ contract ImpairedPoolJoinTests is AaveV3StrategyTestBase {
         deposit(poolA, poolALp, poolAFunding);
         fundStrategyManager(poolManagerA, aaveV3StrategyManager, poolAFunding);
 
-        poolAShares        = poolAFunding - rounding;    // 1_000_000e6 - 1
-        initialStrategyAum = poolAShares;                // 1_000_000e6 - 1
-        poolBShares        = poolBFunding;               // 500_000e6
-        totalShares        = poolAShares + poolBShares;  // 1_500_000e6 - 1
-        jointStrategyAum   = totalShares;                // 1_500_000e6 - 1
+        poolAShares        = poolAFunding - rounding; // 1_000_000e6 - 1
+        initialStrategyAum = poolAShares; // 1_000_000e6 - 1
+        poolBShares        = poolBFunding; // 500_000e6
+        totalShares        = poolAShares + poolBShares; // 1_500_000e6 - 1
+        jointStrategyAum   = totalShares; // 1_500_000e6 - 1
 
-        poolAAssets = poolAShares * jointStrategyAum / totalShares;  // 1_000_000e6 - 1
-        poolBAssets = poolBShares * jointStrategyAum / totalShares;  // 500_000e6
+        poolAAssets = poolAShares * jointStrategyAum / totalShares; // 1_000_000e6 - 1
+        poolBAssets = poolBShares * jointStrategyAum / totalShares; // 500_000e6
 
-        postCleanExitAum = initialStrategyAum - rounding;  // 1_000_000e6 - 2
+        postCleanExitAum = initialStrategyAum - rounding; // 1_000_000e6 - 2
     }
 
     function testFork_joinBeforeImpairment_valueTransfersToIncumbentPool() external {
@@ -127,13 +123,13 @@ contract ImpairedPoolJoinTests is AaveV3StrategyTestBase {
         /*** Let Pool B join before impairment and allocate the subsequent loss across both Pools                                       ***/
         /**********************************************************************************************************************************/
 
-        jointNetAssets   = jointStrategyAum - impairmentAmount;                      // 1_200_000e6
-        poolALoss        = divRoundUp(poolAShares * impairmentAmount, totalShares);  // 200_000e6
-        poolBLoss        = divRoundUp(poolBShares * impairmentAmount, totalShares);  // 100_000e6
-        poolANetAssets   = poolAAssets - poolALoss;                                  // 800_000e6 - 1
-        poolBExitAssets  = poolBShares * jointNetAssets / totalShares;               // 400_000e6
-        postExitAum      = jointStrategyAum - poolBExitAssets - rounding;            // 1_100_000e6 - 2
-        valueTransferred = postExitAum - postCleanExitAum;                           // 100_000e6
+        jointNetAssets   = jointStrategyAum - impairmentAmount; // 1_200_000e6
+        poolALoss        = divRoundUp(poolAShares * impairmentAmount, totalShares); // 200_000e6
+        poolBLoss        = divRoundUp(poolBShares * impairmentAmount, totalShares); // 100_000e6
+        poolANetAssets   = poolAAssets - poolALoss; // 800_000e6 - 1
+        poolBExitAssets  = poolBShares * jointNetAssets / totalShares; // 400_000e6
+        postExitAum      = jointStrategyAum - poolBExitAssets - rounding; // 1_100_000e6 - 2
+        valueTransferred = postExitAum - postCleanExitAum; // 100_000e6
 
         deposit(poolB, poolBLp, poolBFunding);
         fundStrategyManager(poolManagerB, aaveV3StrategyManager, poolBFunding);
@@ -371,14 +367,14 @@ contract ImpairedPoolJoinTests is AaveV3StrategyTestBase {
         /*** Impair Pool A before Pool B joins the Strategy Manager                                                                     ***/
         /**********************************************************************************************************************************/
 
-        initialNetAssets = poolAShares - impairmentAmount;                           // 700_000e6
-        jointNetAssets   = jointStrategyAum - impairmentAmount;                      // 1_200_000e6
-        poolALoss        = divRoundUp(poolAShares * impairmentAmount, totalShares);  // 200_000e6
-        poolBLoss        = divRoundUp(poolBShares * impairmentAmount, totalShares);  // 100_000e6
-        poolANetAssets   = poolAAssets - poolALoss;                                  // 800_000e6 - 1
-        poolBExitAssets  = poolBShares * jointNetAssets / totalShares;               // 400_000e6
-        postExitAum      = jointStrategyAum - poolBExitAssets - rounding;            // 1_100_000e6 - 2
-        valueTransferred = postExitAum - postCleanExitAum;                           // 100_000e6
+        initialNetAssets = poolAShares - impairmentAmount; // 700_000e6
+        jointNetAssets   = jointStrategyAum - impairmentAmount; // 1_200_000e6
+        poolALoss        = divRoundUp(poolAShares * impairmentAmount, totalShares); // 200_000e6
+        poolBLoss        = divRoundUp(poolBShares * impairmentAmount, totalShares); // 100_000e6
+        poolANetAssets   = poolAAssets - poolALoss; // 800_000e6 - 1
+        poolBExitAssets  = poolBShares * jointNetAssets / totalShares; // 400_000e6
+        postExitAum      = jointStrategyAum - poolBExitAssets - rounding; // 1_100_000e6 - 2
+        valueTransferred = postExitAum - postCleanExitAum; // 100_000e6
 
         impairStrategy(aaveV3UnderlyingStrategy, impairmentAmount);
 

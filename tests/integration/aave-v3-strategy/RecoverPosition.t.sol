@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IAaveV3Strategy,
-    IERC20
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAaveV3Strategy, IERC20 } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { AaveV3StrategyTestBase } from "./AaveV3StrategyTestBase.sol";
 
@@ -89,7 +86,7 @@ contract AaveV3StrategyRecoverPositionTests is AaveV3StrategyTestBase {
     uint256 fundAmount      = 500_000e6;
     uint256 poolLiquidity   = 1_000_000e6;
     uint256 poolShares      = 1_000_000e6;
-    uint256 recoveredShares = 500_000e6 - 1;  // Aave reports 1 asset unit below the nominal supply at this fork block.
+    uint256 recoveredShares = 500_000e6 - 1; // Aave reports 1 asset unit below the nominal supply at this fork block.
     uint256 strategyShares  = 500_000e6 - 1;
 
     function setUp() public virtual override {

@@ -13,7 +13,7 @@ contract AllocationStrategyTestBase is TestBaseWithAssertions {
     function setUp() public virtual override {
         super.setUp();
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,

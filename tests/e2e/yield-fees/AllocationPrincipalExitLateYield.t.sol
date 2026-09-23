@@ -22,8 +22,8 @@ contract AllocationPrincipalExitLateYieldWithoutBootstrapTests is AllocationStra
     uint256 principalPoolShares     = 1_000_000e6;
     uint256 principalStrategyShares = 1_000_000e6;
 
-    uint32 delegateFeeRate = 0.02e6;  // 2%
-    uint32 protocolFeeRate = 0.03e6;  // 3%
+    uint32 delegateFeeRate = 0.02e6; // 2%
+    uint32 protocolFeeRate = 0.03e6; // 3%
     uint32 yieldDuration   = 10 days;
 
     function setUp() public override {
@@ -37,9 +37,9 @@ contract AllocationPrincipalExitLateYieldWithoutBootstrapTests is AllocationStra
     }
 
     function test_allocationPrincipalExit_lateImmediateYield_noBootstrapMint() external {
-        uint256 delegateFee = grossYield * delegateFeeRate / 1e6;      // 1_000e6
-        uint256 protocolFee = grossYield * protocolFeeRate / 1e6;      // 1_500e6
-        uint256 netYield    = grossYield - delegateFee - protocolFee;  // 47_500e6
+        uint256 delegateFee = grossYield * delegateFeeRate / 1e6; // 1_000e6
+        uint256 protocolFee = grossYield * protocolFeeRate / 1e6; // 1_500e6
+        uint256 netYield    = grossYield - delegateFee - protocolFee; // 47_500e6
 
         /**********************************************************************************************************************************/
         /*** Deploy the Pool principal and return the same tokens from the managed wallet                                               ***/
@@ -215,7 +215,7 @@ contract AllocationPrincipalExitLateYieldWithoutBootstrapTests is AllocationStra
         /*** Let a fresh Pool fund first and redeem its contribution plus all of the shareless AUM                                      ***/
         /**********************************************************************************************************************************/
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
 
         deposit(poolB, lateLp, lateFundingAssets);
         fundStrategyManager(poolManagerB, allocationStrategyManager, lateFundingAssets);
@@ -354,10 +354,10 @@ contract AllocationPrincipalExitLateYieldWithoutBootstrapTests is AllocationStra
     }
 
     function test_allocationPrincipalExit_lateVestingYield_noBootstrapMint() external {
-        uint256 delegateFee  = grossYield * delegateFeeRate / 1e6;      // 1_000e6
-        uint256 protocolFee  = grossYield * protocolFeeRate / 1e6;      // 1_500e6
-        uint256 netYield     = grossYield - delegateFee - protocolFee;  // 47_500e6
-        uint256 halfwayYield = netYield / 2;                            // 23_750e6
+        uint256 delegateFee  = grossYield * delegateFeeRate / 1e6; // 1_000e6
+        uint256 protocolFee  = grossYield * protocolFeeRate / 1e6; // 1_500e6
+        uint256 netYield     = grossYield - delegateFee - protocolFee; // 47_500e6
+        uint256 halfwayYield = netYield / 2; // 23_750e6
 
         /**********************************************************************************************************************************/
         /*** Deploy and return the same principal, then redeem every Pool-owned strategy share                                          ***/
@@ -592,7 +592,7 @@ contract AllocationPrincipalExitLateYieldWithoutBootstrapTests is AllocationStra
         /*** Let a fresh Pool fund halfway through vesting and absorb both the vested and future shareless yield                        ***/
         /**********************************************************************************************************************************/
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
 
         deposit(poolB, lateLp, lateFundingAssets);
         fundStrategyManager(poolManagerB, allocationStrategyManager, lateFundingAssets);
@@ -860,8 +860,8 @@ contract AllocationPrincipalExitLateYieldWithBootstrapTests is AllocationStrateg
     uint256 principalPoolShares     = 1_000_000e6;
     uint256 principalStrategyShares = 1_000_000e6;
 
-    uint32 delegateFeeRate = 0.02e6;  // 2%
-    uint32 protocolFeeRate = 0.03e6;  // 3%
+    uint32 delegateFeeRate = 0.02e6; // 2%
+    uint32 protocolFeeRate = 0.03e6; // 3%
     uint32 yieldDuration   = 10 days;
 
     function setUp() public override {
@@ -874,7 +874,7 @@ contract AllocationPrincipalExitLateYieldWithBootstrapTests is AllocationStrateg
 
         strategyDelegate = bootstrapDelegate;
 
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: delegateFeeRate,
@@ -896,11 +896,11 @@ contract AllocationPrincipalExitLateYieldWithBootstrapTests is AllocationStrateg
     }
 
     function test_allocationPrincipalExit_lateImmediateYield_withBootstrapMint() external {
-        uint256 delegateFee = grossYield * delegateFeeRate / 1e6;      // 1_000e6
-        uint256 protocolFee = grossYield * protocolFeeRate / 1e6;      // 1_500e6
-        uint256 netYield    = grossYield - delegateFee - protocolFee;  // 47_500e6
+        uint256 delegateFee = grossYield * delegateFeeRate / 1e6; // 1_000e6
+        uint256 protocolFee = grossYield * protocolFeeRate / 1e6; // 1_500e6
+        uint256 netYield    = grossYield - delegateFee - protocolFee; // 47_500e6
 
-        uint256 lateFundingAssets = bootstrapAssets + netYield;  // 147_500e6
+        uint256 lateFundingAssets = bootstrapAssets + netYield; // 147_500e6
 
         /**********************************************************************************************************************************/
         /*** Deploy and return the Pool principal, then redeem every Pool-owned share                                                   ***/
@@ -1071,7 +1071,7 @@ contract AllocationPrincipalExitLateYieldWithBootstrapTests is AllocationStrateg
         /*** Fund from a fresh Pool at the post-yield exchange rate                                                                     ***/
         /**********************************************************************************************************************************/
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
 
         deposit(poolB, lateLp, lateFundingAssets);
         fundStrategyManager(poolManagerB, allocationStrategyManager, lateFundingAssets);
@@ -1237,19 +1237,19 @@ contract AllocationPrincipalExitLateYieldWithBootstrapTests is AllocationStrateg
     }
 
     function test_allocationPrincipalExit_lateVestingYield_withBootstrapMint() external {
-        uint256 delegateFee            = grossYield * delegateFeeRate / 1e6;      // 1_000e6
-        uint256 protocolFee            = grossYield * protocolFeeRate / 1e6;      // 1_500e6
-        uint256 netYield               = grossYield - delegateFee - protocolFee;  // 47_500e6
-        uint256 halfwayYield           = netYield / 2;                            // 23_750e6
-        uint256 futureYield            = netYield - halfwayYield;                 // 23_750e6
-        uint256 halfwayBootstrapAssets = bootstrapAssets + halfwayYield;          // 123_750e6
+        uint256 delegateFee            = grossYield * delegateFeeRate / 1e6; // 1_000e6
+        uint256 protocolFee            = grossYield * protocolFeeRate / 1e6; // 1_500e6
+        uint256 netYield               = grossYield - delegateFee - protocolFee; // 47_500e6
+        uint256 halfwayYield           = netYield / 2; // 23_750e6
+        uint256 futureYield            = netYield - halfwayYield; // 23_750e6
+        uint256 halfwayBootstrapAssets = bootstrapAssets + halfwayYield; // 123_750e6
 
-        uint256 lateFundingAssets         = halfwayBootstrapAssets * 3;                     // 371_250e6
-        uint256 lateVestingStrategyShares = bootstrapStrategyShares * 3;                    // 300_000e6
-        uint256 futureBootstrapYield      = futureYield / 4;                                // 5_937.5e6
-        uint256 futureLateYield           = futureYield - futureBootstrapYield;             // 17_812.5e6
-        uint256 finalBootstrapAssets      = halfwayBootstrapAssets + futureBootstrapYield;  // 129_687.5e6
-        uint256 finalLateAssets           = lateFundingAssets + futureLateYield;            // 389_062.5e6
+        uint256 lateFundingAssets         = halfwayBootstrapAssets * 3; // 371_250e6
+        uint256 lateVestingStrategyShares = bootstrapStrategyShares * 3; // 300_000e6
+        uint256 futureBootstrapYield      = futureYield / 4; // 5_937.5e6
+        uint256 futureLateYield           = futureYield - futureBootstrapYield; // 17_812.5e6
+        uint256 finalBootstrapAssets      = halfwayBootstrapAssets + futureBootstrapYield; // 129_687.5e6
+        uint256 finalLateAssets           = lateFundingAssets + futureLateYield; // 389_062.5e6
 
         /**********************************************************************************************************************************/
         /*** Deploy and return the Pool principal, then redeem every Pool-owned share                                                   ***/
@@ -1483,7 +1483,7 @@ contract AllocationPrincipalExitLateYieldWithBootstrapTests is AllocationStrateg
         /*** Fund from a fresh Pool halfway through vesting without diluting the yield already attributed to bootstrap shares           ***/
         /**********************************************************************************************************************************/
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("latePoolDelegate", allocationStrategyManager);
 
         deposit(poolB, lateLp, lateFundingAssets);
         fundStrategyManager(poolManagerB, allocationStrategyManager, lateFundingAssets);

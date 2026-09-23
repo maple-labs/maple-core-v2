@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.7;
 
-import {
-    IAllocationStrategy,
-    IERC20,
-    IERC20Like,
-    IERC4626Like
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IAllocationStrategy, IERC20, IERC20Like, IERC4626Like } from "../../../contracts/interfaces/Interfaces.sol";
 
-import { AaveV3StrategyTestBase }      from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
-import { AllocationStrategyTestBase }  from "../../integration/allocation-strategy/AllocationStrategyTestBase.sol";
-import { SkyStrategyTestBase }         from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
+import { AaveV3StrategyTestBase } from "../../integration/aave-v3-strategy/AaveV3StrategyTestBase.sol";
+import { AllocationStrategyTestBase } from "../../integration/allocation-strategy/AllocationStrategyTestBase.sol";
+import { SkyStrategyTestBase } from "../../integration/sky-strategy/SkyStrategyTestBase.sol";
 
 // At the configured fork block, Aave loses one USDC base unit per cycle, leaving the pool ten base units below its initial value.
 contract AaveV3StrategyRepeatedFundingAndWithdrawalTests is AaveV3StrategyTestBase {
@@ -18,8 +13,8 @@ contract AaveV3StrategyRepeatedFundingAndWithdrawalTests is AaveV3StrategyTestBa
     uint256 cycleCount    = 10;
     uint256 cycleFunding  = 100_000e6;
     uint256 poolLiquidity = 1_000_000e6;
-    uint256 roundingGain  = 0;  // At the fork block, Aave gains zero; Spark overrides this with one asset unit.
-    uint256 roundingLoss  = 1;  // At the fork block, Aave loses one asset unit; Spark overrides this with zero.
+    uint256 roundingGain  = 0; // At the fork block, Aave gains zero; Spark overrides this with one asset unit.
+    uint256 roundingLoss  = 1; // At the fork block, Aave loses one asset unit; Spark overrides this with zero.
 
     function test_repeatedFundingAndWithdrawal_fullExitEveryCycle() external {
         deposit(lp, poolLiquidity);
@@ -29,11 +24,11 @@ contract AaveV3StrategyRepeatedFundingAndWithdrawalTests is AaveV3StrategyTestBa
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < cycleCount; ++i) {
-            uint256 cumulativeGain    = (i + 1) * roundingGain;                           // Expected Spark gain at the fork block.
-            uint256 cumulativeLoss    = (i + 1) * roundingLoss;                           // Expected Aave loss at the fork block.
-            uint256 strategyAssets    = cycleFunding + roundingGain - roundingLoss;       // Aave: 100_000e6 - 1; Spark: 100_000e6 + 1.
-            uint256 strategyShares    = strategyAssets;                                   // Equal to deployed assets.
-            uint256 expectedPoolValue = poolLiquidity + cumulativeGain - cumulativeLoss;  // Initial liquidity plus net cumulative rounding.
+            uint256 cumulativeGain    = (i + 1) * roundingGain; // Expected Spark gain at the fork block.
+            uint256 cumulativeLoss    = (i + 1) * roundingLoss; // Expected Aave loss at the fork block.
+            uint256 strategyAssets    = cycleFunding + roundingGain - roundingLoss; // Aave: 100_000e6 - 1; Spark: 100_000e6 + 1.
+            uint256 strategyShares    = strategyAssets; // Equal to deployed assets.
+            uint256 expectedPoolValue = poolLiquidity + cumulativeGain - cumulativeLoss; // Initial liquidity plus net cumulative rounding.
 
             fundStrategyManager(address(poolManager), aaveV3StrategyManager, cycleFunding);
             requestRedeemFromStrategyManager(address(poolManager), aaveV3StrategyManager, strategyShares);
@@ -104,7 +99,7 @@ contract SparkLendStrategyRepeatedFundingAndWithdrawalTests is AaveV3StrategyRep
 
     function setUp() public override {
         aaveToken                   = SPARK_USDC;
-        roundingGain                = 1;  // Spark reports one asset unit above this cycle's nominal supply at the fork block.
+        roundingGain                = 1; // Spark reports one asset unit above this cycle's nominal supply at the fork block.
         roundingLoss                = 0;
         useVirtualUnderlyingBalance = false;
 
@@ -129,9 +124,9 @@ contract SkyStrategyRepeatedFundingAndWithdrawalTests is SkyStrategyTestBase {
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < cycleCount; ++i) {
-            uint256 cycleRoundingLoss = i == 0 ? shareRoundingLoss : 0;    // One asset unit on the first cycle, zero thereafter.
-            uint256 strategyAssets    = cycleFunding - cycleRoundingLoss;  // 100_000e6 - 1 on the first cycle, 100_000e6 thereafter.
-            uint256 strategyShares    = strategyAssets;                    // Equal to deployed assets with no existing manager shares.
+            uint256 cycleRoundingLoss = i == 0 ? shareRoundingLoss : 0; // One asset unit on the first cycle, zero thereafter.
+            uint256 strategyAssets    = cycleFunding - cycleRoundingLoss; // 100_000e6 - 1 on the first cycle, 100_000e6 thereafter.
+            uint256 strategyShares    = strategyAssets; // Equal to deployed assets with no existing manager shares.
             uint256 expectedPoolValue = poolLiquidity - shareRoundingLoss; // 1_000_000e6 - 1 after the first cycle.
 
             fundStrategyManager(address(poolManager), skyStrategyManager, cycleFunding);
@@ -222,8 +217,8 @@ contract AllocationStrategyRepeatedFundingAndWithdrawalTests is AllocationStrate
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < cycleCount; ++i) {
-            uint256 strategyAssets = cycleFunding;  // 100_000e6.
-            uint256 strategyShares = cycleFunding;  // 100_000e6.
+            uint256 strategyAssets = cycleFunding; // 100_000e6.
+            uint256 strategyShares = cycleFunding; // 100_000e6.
 
             fundStrategyManager(address(poolManager), allocationStrategyManager, cycleFunding);
             deployAssets(allocationUnderlyingStrategy, managedWallet, cycleFunding);
@@ -257,8 +252,8 @@ contract AllocationStrategyRepeatedFundingAndWithdrawalTests is AllocationStrate
             });
 
             assertEq(IAllocationStrategy(allocationUnderlyingStrategy).deployedAssetsOf(managedWallet), 0);
-            assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy), strategyAssets);
-            assertEq(fundsAsset.balanceOf(managedWallet),                0);
+            assertEq(fundsAsset.balanceOf(allocationUnderlyingStrategy),                                strategyAssets);
+            assertEq(fundsAsset.balanceOf(managedWallet),                                               0);
 
             requestRedeemFromStrategyManager(address(poolManager), allocationStrategyManager, strategyShares);
 

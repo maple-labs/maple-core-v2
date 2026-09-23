@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IMapleProxyFactory,
-    IOpenTermLoanManager,
-    IPoolManager
-} from "../../../contracts/interfaces/Interfaces.sol";
+import { IMapleProxyFactory, IOpenTermLoanManager, IPoolManager } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { InvalidStrategyFactory } from "../../mocks/Mocks.sol";
 
@@ -16,16 +12,18 @@ contract AddStrategyRevertTests is TestBaseWithAssertions {
     function setUp() public override {
         _deployProtocol();
 
-        poolManager = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         new address[](0),
-            strategyData_:              new bytes[](0),
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        poolManager = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: new address[](0),
+                strategyData_: new bytes[](0),
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
     }
 
     function test_addStrategy_revert_paused() external {
@@ -93,31 +91,27 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
     }
 
     function test_addStrategy_success_emptyPool() external {
-        poolManager = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         new address[](0),
-            strategyData_:              new bytes[](0),
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        poolManager = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: new address[](0),
+                strategyData_: new bytes[](0),
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
         assertEq(poolManager.configured(),         true);
         assertEq(poolManager.strategyListLength(), 0);
 
         vm.startPrank(governor);
-        address firstOpenTermLoanManager_ = poolManager.addStrategy(
-            openTermLoanManagerFactory,
-            keccak256("firstOpenTermLoanManager"),
-            new bytes(0)
-        );
-        address secondOpenTermLoanManager_ = poolManager.addStrategy(
-            openTermLoanManagerFactory,
-            keccak256("secondOpenTermLoanManager"),
-            new bytes(0)
-        );
+        address firstOpenTermLoanManager_ =
+            poolManager.addStrategy(openTermLoanManagerFactory, keccak256("firstOpenTermLoanManager"), new bytes(0));
+        address secondOpenTermLoanManager_ =
+            poolManager.addStrategy(openTermLoanManagerFactory, keccak256("secondOpenTermLoanManager"), new bytes(0));
         vm.stopPrank();
 
         assertNotEq(firstOpenTermLoanManager_, secondOpenTermLoanManager_);
@@ -158,21 +152,23 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
 
     function test_addStrategy_success_poolWithLegacyStrategy() external {
         address[] memory strategyFactories_ = new address[](1);
-        bytes[]   memory strategyData_      = new bytes[](1);
+        bytes[] memory   strategyData_      = new bytes[](1);
 
         strategyFactories_[0] = openTermLoanManagerFactory;
         strategyData_[0]      = new bytes(0);
 
-        poolManager = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         strategyFactories_,
-            strategyData_:              strategyData_,
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        poolManager = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: strategyFactories_,
+                strategyData_: strategyData_,
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
         address existingOpenTermLoanManager_ = poolManager.strategyList(0);
 
@@ -196,11 +192,7 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
         });
 
         vm.prank(governor);
-        address openTermLoanManager_ = poolManager.addStrategy(
-            openTermLoanManagerFactory,
-            keccak256("openTermLoanManager"),
-            new bytes(0)
-        );
+        address openTermLoanManager_ = poolManager.addStrategy(openTermLoanManagerFactory, keccak256("openTermLoanManager"), new bytes(0));
 
         assertNotEq(existingOpenTermLoanManager_, openTermLoanManager_);
 
@@ -240,18 +232,20 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
     }
 
     function test_addStrategy_success_poolWithStrategyManager() external {
-        poolManager = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         new address[](0),
-            strategyData_:              new bytes[](0),
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        poolManager = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: new address[](0),
+                strategyData_: new bytes[](0),
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
-        ( allocationStrategyManager, ) = _deployAllocationStrategy({
+        (allocationStrategyManager,) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(fundsAsset),
             strategyDelegateFeeRate_: 0,
@@ -271,11 +265,7 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
         assertEq(poolManager.strategyList(0),                              allocationStrategyManager);
 
         vm.prank(governor);
-        address openTermLoanManager_ = poolManager.addStrategy(
-            openTermLoanManagerFactory,
-            keccak256("openTermLoanManager"),
-            new bytes(0)
-        );
+        address openTermLoanManager_ = poolManager.addStrategy(openTermLoanManagerFactory, keccak256("openTermLoanManager"), new bytes(0));
 
         assertEq(IMapleProxyFactory(openTermLoanManagerFactory).isInstance(openTermLoanManager_), true);
 
@@ -308,43 +298,39 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
         vm.prank(governor);
         globals.setValidPoolDelegate(secondPoolDelegate_, true);
 
-        IPoolManager firstPoolManager_ = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         new address[](0),
-            strategyData_:              new bytes[](0),
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        IPoolManager firstPoolManager_ = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: new address[](0),
+                strategyData_: new bytes[](0),
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
-        IPoolManager secondPoolManager_ = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              secondPoolDelegate_,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         new address[](0),
-            strategyData_:              new bytes[](0),
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        IPoolManager secondPoolManager_ = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: secondPoolDelegate_,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: new address[](0),
+                strategyData_: new bytes[](0),
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
         vm.startPrank(governor);
-        address firstOpenTermLoanManager_ = firstPoolManager_.addStrategy(
-            openTermLoanManagerFactory,
-            salt_,
-            new bytes(0)
-        );
-        address secondOpenTermLoanManager_ = secondPoolManager_.addStrategy(
-            openTermLoanManagerFactory,
-            salt_,
-            new bytes(0)
-        );
+        address firstOpenTermLoanManager_  = firstPoolManager_.addStrategy(openTermLoanManagerFactory, salt_, new bytes(0));
+        address secondOpenTermLoanManager_ = secondPoolManager_.addStrategy(openTermLoanManagerFactory, salt_, new bytes(0));
         vm.stopPrank();
 
         assertNotEq(address(firstPoolManager_), address(secondPoolManager_));
-        assertNotEq(firstOpenTermLoanManager_,  secondOpenTermLoanManager_);
+        assertNotEq(firstOpenTermLoanManager_, secondOpenTermLoanManager_);
 
         assertEq(firstPoolManager_.isStrategy(firstOpenTermLoanManager_),  true);
         assertEq(firstPoolManager_.isStrategy(secondOpenTermLoanManager_), false);
@@ -381,16 +367,18 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
     }
 
     function test_addStrategy_success_governorTimelock() external {
-        poolManager = IPoolManager(_deployPoolWithQueue({
-            poolDelegate_:              poolDelegate,
-            fundsAsset_:                address(fundsAsset),
-            strategyFactories_:         new address[](0),
-            strategyData_:              new bytes[](0),
-            name_:                      POOL_NAME,
-            symbol_:                    POOL_SYMBOL,
-            liquidityCap_:              type(uint256).max,
-            delegateManagementFeeRate_: 0
-        }));
+        poolManager = IPoolManager(
+            _deployPoolWithQueue({
+                poolDelegate_: poolDelegate,
+                fundsAsset_: address(fundsAsset),
+                strategyFactories_: new address[](0),
+                strategyData_: new bytes[](0),
+                name_: POOL_NAME,
+                symbol_: POOL_SYMBOL,
+                liquidityCap_: type(uint256).max,
+                delegateManagementFeeRate_: 0
+            })
+        );
 
         _deployTimelockAndReassignGovernor();
 
@@ -398,10 +386,7 @@ contract AddStrategySuccessTests is TestBaseWithAssertions {
         assertEq(poolManager.governor(),   address(governorTimelock));
 
         bytes memory callData_ = abi.encodeWithSignature(
-            "addStrategy(address,bytes32,bytes)",
-            openTermLoanManagerFactory,
-            keccak256("openTermLoanManager"),
-            new bytes(0)
+            "addStrategy(address,bytes32,bytes)", openTermLoanManagerFactory, keccak256("openTermLoanManager"), new bytes(0)
         );
 
         uint256 proposalId_ = executeThroughTimelock({

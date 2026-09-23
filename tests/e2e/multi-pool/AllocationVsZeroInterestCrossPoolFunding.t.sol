@@ -30,25 +30,25 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
 
     IMockERC20 usdc;
 
-    IOpenTermLoan        crossPoolLoan;
-    IOpenTermLoan        loan;
+    IOpenTermLoan crossPoolLoan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager poolALoanManager;
     IOpenTermLoanManager poolBLoanManager;
 
     uint32 gracePeriod             = 5 days;
     uint32 noticePeriod            = 5 days;
     uint32 paymentInterval         = 10 days;
-    uint32 strategyDelegateFeeRate = 0.04e6;  // 4%
-    uint32 strategyProtocolFeeRate = 0.06e6;  // 6%
+    uint32 strategyDelegateFeeRate = 0.04e6; // 4%
+    uint32 strategyProtocolFeeRate = 0.06e6; // 6%
 
-    uint64 delegateServiceFeeRate = 0.01e6;  // 1%
-    uint64 interestRate           = 0.05e6;  // 5%
-    uint64 platformServiceFeeRate = 0.02e6;  // 2%
+    uint64 delegateServiceFeeRate = 0.01e6; // 1%
+    uint64 interestRate           = 0.05e6; // 5%
+    uint64 platformServiceFeeRate = 0.02e6; // 2%
 
-    uint256 delegateManagementFeeRate = 0.05e6;  // 5%
+    uint256 delegateManagementFeeRate = 0.05e6; // 5%
     uint256 interestAccrualRounding   = 1;
     uint256 loanPrincipal             = 730_000e6;
-    uint256 platformManagementFeeRate = 0.10e6;  // 10%
+    uint256 platformManagementFeeRate = 0.1e6; // 10%
     uint256 poolAFunding              = 1_000_000e6;
 
     uint256 allocationFinalAssets;
@@ -79,23 +79,23 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
     function setUp() public override {
         super.setUp();
 
-        grossLoanInterest     = loanPrincipal * interestRate * paymentInterval / (365 days * 1e6);            // 1_000e6
-        delegateManagementFee = grossLoanInterest * delegateManagementFeeRate / 1e6;                          // 50e6
-        delegateServiceFee    = loanPrincipal * delegateServiceFeeRate * paymentInterval / (365 days * 1e6);  // 200e6
-        platformManagementFee = grossLoanInterest * platformManagementFeeRate / 1e6;                          // 100e6
-        platformServiceFee    = loanPrincipal * platformServiceFeeRate * paymentInterval / (365 days * 1e6);  // 400e6
+        grossLoanInterest     = loanPrincipal * interestRate * paymentInterval / (365 days * 1e6); // 1_000e6
+        delegateManagementFee = grossLoanInterest * delegateManagementFeeRate / 1e6; // 50e6
+        delegateServiceFee    = loanPrincipal * delegateServiceFeeRate * paymentInterval / (365 days * 1e6); // 200e6
+        platformManagementFee = grossLoanInterest * platformManagementFeeRate / 1e6; // 100e6
+        platformServiceFee    = loanPrincipal * platformServiceFeeRate * paymentInterval / (365 days * 1e6); // 400e6
 
-        netLoanInterest  = grossLoanInterest - delegateManagementFee - platformManagementFee;  // 850e6
-        issuanceRate     = netLoanInterest * 1e27 / paymentInterval;                           // Ray-scaled USDC per second.
-        poolBFinalAssets = poolAFunding + netLoanInterest;                                     // 1_000_850e6
-        borrowerTopUp    = grossLoanInterest + delegateServiceFee + platformServiceFee;        // 1_600e6
+        netLoanInterest  = grossLoanInterest - delegateManagementFee - platformManagementFee; // 850e6
+        issuanceRate     = netLoanInterest * 1e27 / paymentInterval; // Ray-scaled USDC per second.
+        poolBFinalAssets = poolAFunding + netLoanInterest; // 1_000_850e6
+        borrowerTopUp    = grossLoanInterest + delegateServiceFee + platformServiceFee; // 1_600e6
 
-        grossStrategyYield          = netLoanInterest;                                                 // 850e6
-        strategyDelegateFee         = grossStrategyYield * strategyDelegateFeeRate / 1e6;              // 34e6
-        strategyProtocolFee         = grossStrategyYield * strategyProtocolFeeRate / 1e6;              // 51e6
-        strategyNetYield            = grossStrategyYield - strategyDelegateFee - strategyProtocolFee;  // 765e6
-        allocationFinalAssets       = poolAFunding + strategyNetYield;                                 // 1_000_765e6
-        zeroInterestLoanFinalAssets = poolAFunding + netLoanInterest;                                  // 1_000_850e6
+        grossStrategyYield          = netLoanInterest; // 850e6
+        strategyDelegateFee         = grossStrategyYield * strategyDelegateFeeRate / 1e6; // 34e6
+        strategyProtocolFee         = grossStrategyYield * strategyProtocolFeeRate / 1e6; // 51e6
+        strategyNetYield            = grossStrategyYield - strategyDelegateFee - strategyProtocolFee; // 765e6
+        allocationFinalAssets       = poolAFunding + strategyNetYield; // 1_000_765e6
+        zeroInterestLoanFinalAssets = poolAFunding + netLoanInterest; // 1_000_850e6
 
         usdc                   = fundsAsset;
         poolA                  = address(pool);
@@ -108,7 +108,7 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
     }
 
     function test_crossPoolFunding_withAllocation() external {
-        ( allocationStrategyManager, allocationUnderlyingStrategy ) = _deployAllocationStrategy({
+        (allocationStrategyManager, allocationUnderlyingStrategy) = _deployAllocationStrategy({
             strategyDelegate_:        strategyDelegate,
             fundsAsset_:              address(usdc),
             strategyDelegateFeeRate_: strategyDelegateFeeRate,
@@ -128,7 +128,7 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
             deploymentCap_:   poolAFunding
         });
 
-        ( poolB, poolBManager, poolBWithdrawalManager ) = _createPoolWithOTLM(poolBDelegate);
+        (poolB, poolBManager, poolBWithdrawalManager) = _createPoolWithOTLM(poolBDelegate);
 
         _configurePool();
         openPool(poolBManager);
@@ -142,15 +142,17 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
 
         poolBLoanManager = IOpenTermLoanManager(IPoolManager(poolBManager).strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(poolBLoanManager),
-            address(usdc),
-            loanPrincipal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(0), uint256(0)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(poolBLoanManager),
+                address(usdc),
+                loanPrincipal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(0), uint256(0)]
+            )
+        );
 
         /**********************************************************************************************************************************/
         /*** Deploy Pool A assets through the Allocation strategy and deposit them into Pool B                                          ***/
@@ -347,7 +349,7 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
         erc20_approve(address(usdc), borrower, address(loan), loanPrincipal + borrowerTopUp);
 
         vm.prank(borrower);
-        ( interestPaid, lateInterestPaid, delegateServiceFeePaid, platformServiceFeePaid ) = loan.makePayment(loanPrincipal);
+        (interestPaid, lateInterestPaid, delegateServiceFeePaid, platformServiceFeePaid) = loan.makePayment(loanPrincipal);
 
         assertEq(interestPaid,           grossLoanInterest);
         assertEq(lateInterestPaid,       0);
@@ -610,7 +612,7 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
     }
 
     function test_crossPoolFunding_withZeroInterestLoan() external {
-        ( poolB, poolBManager, poolBWithdrawalManager ) = _createPoolWithOTLM(poolBDelegate);
+        (poolB, poolBManager, poolBWithdrawalManager) = _createPoolWithOTLM(poolBDelegate);
 
         _configurePool();
         openPool(poolBManager);
@@ -624,25 +626,29 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
 
         poolBLoanManager = IOpenTermLoanManager(IPoolManager(poolBManager).strategyList(0));
 
-        crossPoolLoan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            poolBDepositor,
-            address(poolALoanManager),
-            address(usdc),
-            poolAFunding,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(0), uint256(0), uint256(0), uint256(0)]
-        ));
+        crossPoolLoan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                poolBDepositor,
+                address(poolALoanManager),
+                address(usdc),
+                poolAFunding,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(0), uint256(0), uint256(0), uint256(0)]
+            )
+        );
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            openTermLoanFactory,
-            borrower,
-            address(poolBLoanManager),
-            address(usdc),
-            loanPrincipal,
-            [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
-            [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(0), uint256(0)]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(poolBLoanManager),
+                address(usdc),
+                loanPrincipal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), uint256(0), uint256(0)]
+            )
+        );
 
         /**********************************************************************************************************************************/
         /*** Lend Pool A assets to Pool B's depositor at zero interest and deposit them into Pool B                                     ***/
@@ -747,11 +753,11 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
             shares:      poolAFunding
         });
 
-        assertEq(IWithdrawalManagerQueue(poolAWithdrawalManager).totalShares(),                    poolAFunding);
-        assertEq(IWithdrawalManagerQueue(poolAWithdrawalManager).userEscrowedShares(poolALp),      poolAFunding);
-        assertEq(IWithdrawalManagerQueue(poolAWithdrawalManager).manualSharesAvailable(poolALp),   0);
-        assertEq(IPool(poolA).balanceOf(poolALp),                                                  0);
-        assertEq(IPool(poolA).balanceOf(poolAWithdrawalManager),                                   poolAFunding);
+        assertEq(IWithdrawalManagerQueue(poolAWithdrawalManager).totalShares(),                  poolAFunding);
+        assertEq(IWithdrawalManagerQueue(poolAWithdrawalManager).userEscrowedShares(poolALp),    poolAFunding);
+        assertEq(IWithdrawalManagerQueue(poolAWithdrawalManager).manualSharesAvailable(poolALp), 0);
+        assertEq(IPool(poolA).balanceOf(poolALp),                                                0);
+        assertEq(IPool(poolA).balanceOf(poolAWithdrawalManager),                                 poolAFunding);
 
         /**********************************************************************************************************************************/
         /*** Fund, accrue and repay Pool B's open-term loan                                                                             ***/
@@ -854,7 +860,7 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
         erc20_approve(address(usdc), borrower, address(loan), loanPrincipal + borrowerTopUp);
 
         vm.prank(borrower);
-        ( interestPaid, lateInterestPaid, delegateServiceFeePaid, platformServiceFeePaid ) = loan.makePayment(loanPrincipal);
+        (interestPaid, lateInterestPaid, delegateServiceFeePaid, platformServiceFeePaid) = loan.makePayment(loanPrincipal);
 
         assertEq(interestPaid,           grossLoanInterest);
         assertEq(lateInterestPaid,       0);
@@ -940,12 +946,8 @@ contract AllocationVsZeroInterestCrossPoolFundingTests is TestBaseWithAssertions
         erc20_approve(address(usdc), poolBDepositor, address(crossPoolLoan), poolAFunding);
 
         vm.prank(poolBDepositor);
-        (
-            crossPoolInterestPaid,
-            crossPoolLateInterestPaid,
-            crossPoolDelegateServiceFeePaid,
-            crossPoolPlatformServiceFeePaid
-        ) = crossPoolLoan.makePayment(poolAFunding);
+        (crossPoolInterestPaid, crossPoolLateInterestPaid, crossPoolDelegateServiceFeePaid, crossPoolPlatformServiceFeePaid) =
+            crossPoolLoan.makePayment(poolAFunding);
 
         assertEq(crossPoolInterestPaid,           0);
         assertEq(crossPoolLateInterestPaid,       0);

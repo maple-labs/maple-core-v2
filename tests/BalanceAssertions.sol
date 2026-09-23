@@ -11,7 +11,7 @@ contract BalanceAssertions is Runner {
     /*** Balance Assertion Functions ***/
     /***********************************/
 
-    mapping(address => mapping(address => uint256)) partialAssetBalances;  // Helper mapping to assert differences in balance.
+    mapping(address => mapping(address => uint256)) partialAssetBalances; // Helper mapping to assert differences in balance.
 
     // NOTE: Overloading was used here to allow for tests to not need to cast values in arrays.
 
@@ -29,21 +29,21 @@ contract BalanceAssertions is Runner {
         for (uint256 i; i < addresses.length; ++i) {
             assertAssetBalance(asset, addresses[i], amounts[i] + partialAssetBalances[asset][addresses[i]], i);
         }
-        checkpointBalance(asset, addresses);  // Mark a new checkpoint.
+        checkpointBalance(asset, addresses); // Mark a new checkpoint.
     }
 
     function assertAssetBalancesIncrease(address asset, address[2] memory addresses, uint40[2] memory amounts) internal {
         for (uint256 i; i < addresses.length; ++i) {
             assertAssetBalance(asset, addresses[i], amounts[i] + partialAssetBalances[asset][addresses[i]], i);
         }
-        checkpointBalance(asset, addresses);  // Mark a new checkpoint.
+        checkpointBalance(asset, addresses); // Mark a new checkpoint.
     }
 
     function assertAssetBalancesIncrease(address asset, address[2] memory addresses, uint256[2] memory amounts) internal {
         for (uint256 i; i < addresses.length; ++i) {
             assertAssetBalance(asset, addresses[i], amounts[i] + partialAssetBalances[asset][addresses[i]], i);
         }
-        checkpointBalance(asset, addresses);  // Mark a new checkpoint.
+        checkpointBalance(asset, addresses); // Mark a new checkpoint.
     }
 
     function assertAssetBalances(address asset, address[3] memory addresses, uint256[3] memory amounts) internal view {

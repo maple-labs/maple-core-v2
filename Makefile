@@ -40,6 +40,14 @@ scenario-v2:
 deploy:
 	./deploy.sh
 
+# Formatting
+
+format:
+	@node scripts/align_fmt.js
+
+check-format:
+	@node scripts/align_fmt.js --check
+
 # Utility
 
 validate:

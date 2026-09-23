@@ -7,14 +7,13 @@ import { SkyFuzzBase } from "./SkyFuzzBase.sol";
 
 abstract contract SkyRecognizeLossFuzzTests is SkyFuzzBase {
 
-    SkyStrategyStorage             strategyStorage;
-    FeeAccrualStorage              feeAccrualStorage;
-    PoolManagerStorage             poolManagerStorage;
-    StrategyManagerStorage         strategyManagerStorage;
+    SkyStrategyStorage strategyStorage;
+    FeeAccrualStorage feeAccrualStorage;
+    PoolManagerStorage poolManagerStorage;
+    StrategyManagerStorage strategyManagerStorage;
     StrategyManagerPositionStorage positionStorage;
 
     function testFuzzFork_sky_recognizeLoss(uint256 seed_) external {
-
         /**********************************************************************************************************************************/
         /*** Execute set of random actions across all strategies on both pools and choose on which pool to perform testing              ***/
         /**********************************************************************************************************************************/
@@ -30,11 +29,7 @@ abstract contract SkyRecognizeLossFuzzTests is SkyFuzzBase {
 
             if (fundsAsset.balanceOf(address(pool)) < minFundAmount) deposit(address(pool), lps[0], lpDeposit);
 
-            fundStrategyManager(
-                address(poolManager),
-                address(skyManager),
-                getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool)))
-            );
+            fundStrategyManager(address(poolManager), address(skyManager), getSomeValue(minFundAmount, fundsAsset.balanceOf(address(pool))));
 
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
         }
@@ -90,10 +85,10 @@ abstract contract SkyRecognizeLossFuzzTests is SkyFuzzBase {
         assertEq(skyManager.pendingSharesOf(address(poolManager)),    positionStorage.previousPendingShares);
 
         assertEq(pool.totalSupply(),      poolManagerStorage.previousTotalSupply);
-        assertEq(pool.totalAssets(),      poolManagerStorage.previousTotalAssets      - positionStorage.previousAssets);
+        assertEq(pool.totalAssets(),      poolManagerStorage.previousTotalAssets - positionStorage.previousAssets);
         assertEq(pool.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - positionStorage.previousUnrealizedLosses);
 
-        assertEq(poolManager.totalAssets(),      poolManagerStorage.previousTotalAssets      - positionStorage.previousAssets);
+        assertEq(poolManager.totalAssets(),      poolManagerStorage.previousTotalAssets - positionStorage.previousAssets);
         assertEq(poolManager.unrealizedLosses(), poolManagerStorage.previousUnrealizedLosses - positionStorage.previousUnrealizedLosses);
     }
 

@@ -20,8 +20,8 @@ contract AllocationYieldEntryTimingTests is AllocationStrategyTestBase {
     uint256 poolShares     = 380_000e6;
     uint256 strategyShares = 380_000e6;
 
-    uint32 delegateFeeRate = 0.02e6;  // 2%
-    uint32 protocolFeeRate = 0.03e6;  // 3%
+    uint32 delegateFeeRate = 0.02e6; // 2%
+    uint32 protocolFeeRate = 0.03e6; // 3%
 
     function setUp() public override {
         super.setUp();
@@ -34,23 +34,23 @@ contract AllocationYieldEntryTimingTests is AllocationStrategyTestBase {
     }
 
     function test_poolJoinsBeforeYieldRealization_receivesPreEntryYield() external {
-        uint256 delegateFee = grossYield * delegateFeeRate / 1e6;      // 2_000e6
-        uint256 protocolFee = grossYield * protocolFeeRate / 1e6;      // 3_000e6
-        uint256 netYield    = grossYield - delegateFee - protocolFee;  // 95_000e6
+        uint256 delegateFee = grossYield * delegateFeeRate / 1e6; // 2_000e6
+        uint256 protocolFee = grossYield * protocolFeeRate / 1e6; // 3_000e6
+        uint256 netYield    = grossYield - delegateFee - protocolFee; // 95_000e6
 
-        uint256 totalStrategyShares   = strategyShares + strategyShares;       // 760_000e6
-        uint256 totalAssetsAfterYield = poolFunding + poolFunding + netYield;  // 855_000e6
+        uint256 totalStrategyShares   = strategyShares + strategyShares; // 760_000e6
+        uint256 totalAssetsAfterYield = poolFunding + poolFunding + netYield; // 855_000e6
 
-        uint256 poolAAssetsAfterYield = strategyShares * totalAssetsAfterYield / totalStrategyShares;  // 427_500e6
-        uint256 poolBAssetsAfterYield = strategyShares * totalAssetsAfterYield / totalStrategyShares;  // 427_500e6
+        uint256 poolAAssetsAfterYield = strategyShares * totalAssetsAfterYield / totalStrategyShares; // 427_500e6
+        uint256 poolBAssetsAfterYield = strategyShares * totalAssetsAfterYield / totalStrategyShares; // 427_500e6
 
-        uint256 poolBPreEntryYield = poolBAssetsAfterYield - poolFunding;  // 47_500e6
+        uint256 poolBPreEntryYield = poolBAssetsAfterYield - poolFunding; // 47_500e6
 
         /**********************************************************************************************************************************/
         /*** Keep Pool A invested while its unrecognized yield sits in the managed wallet                                               ***/
         /**********************************************************************************************************************************/
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", allocationStrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", allocationStrategyManager);
 
         openPool(poolManagerB);
 
@@ -503,23 +503,23 @@ contract AllocationYieldEntryTimingTests is AllocationStrategyTestBase {
     }
 
     function test_poolJoinsAfterYieldRealization_receivesNoPreEntryYield() external {
-        uint256 delegateFee = grossYield * delegateFeeRate / 1e6;      // 2_000e6
-        uint256 protocolFee = grossYield * protocolFeeRate / 1e6;      // 3_000e6
-        uint256 netYield    = grossYield - delegateFee - protocolFee;  // 95_000e6
+        uint256 delegateFee = grossYield * delegateFeeRate / 1e6; // 2_000e6
+        uint256 protocolFee = grossYield * protocolFeeRate / 1e6; // 3_000e6
+        uint256 netYield    = grossYield - delegateFee - protocolFee; // 95_000e6
 
-        uint256 poolAAssetsAfterYield = poolFunding + netYield;                                // 475_000e6
-        uint256 poolBStrategyShares   = poolFunding * strategyShares / poolAAssetsAfterYield;  // 304_000e6
-        uint256 totalStrategyShares   = strategyShares + poolBStrategyShares;                  // 684_000e6
-        uint256 totalAssetsAfterEntry = poolAAssetsAfterYield + poolFunding;                   // 855_000e6
+        uint256 poolAAssetsAfterYield = poolFunding + netYield; // 475_000e6
+        uint256 poolBStrategyShares   = poolFunding * strategyShares / poolAAssetsAfterYield; // 304_000e6
+        uint256 totalStrategyShares   = strategyShares + poolBStrategyShares; // 684_000e6
+        uint256 totalAssetsAfterEntry = poolAAssetsAfterYield + poolFunding; // 855_000e6
 
-        uint256 poolAAssetsAfterEntry = strategyShares * totalAssetsAfterEntry / totalStrategyShares;       // 475_000e6
-        uint256 poolBAssetsAfterEntry = poolBStrategyShares * totalAssetsAfterEntry / totalStrategyShares;  // 380_000e6
+        uint256 poolAAssetsAfterEntry = strategyShares * totalAssetsAfterEntry / totalStrategyShares; // 475_000e6
+        uint256 poolBAssetsAfterEntry = poolBStrategyShares * totalAssetsAfterEntry / totalStrategyShares; // 380_000e6
 
         /**********************************************************************************************************************************/
         /*** Keep Pool A invested while its unrecognized yield sits in the managed wallet                                               ***/
         /**********************************************************************************************************************************/
 
-        ( poolB, poolManagerB ) = _createPoolSharingStrategy("poolBDelegate", allocationStrategyManager);
+        (poolB, poolManagerB) = _createPoolSharingStrategy("poolBDelegate", allocationStrategyManager);
 
         openPool(poolManagerB);
 

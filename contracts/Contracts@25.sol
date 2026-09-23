@@ -3,20 +3,27 @@ pragma solidity 0.8.25;
 
 import { GovernorTimelock as GT } from "../modules/globals/contracts/GovernorTimelock.sol";
 
-import { MapleBorrowerActions }          from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
-import { MapleRouter as MR }             from "../modules/syrup-utils/contracts/MapleRouter.sol";
+import { MapleBorrowerActions } from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
+import { MapleRouter as MR } from "../modules/syrup-utils/contracts/MapleRouter.sol";
 import { MapleRouterInitializer as MRI } from "../modules/syrup-utils/contracts/MapleRouterInitializer.sol";
-import { NonTransparentProxy as NTP }    from "../modules/syrup-utils/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
+import { NonTransparentProxy as NTP } from "../modules/syrup-utils/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
 contract BorrowerActions is MapleBorrowerActions { }
 
-contract MapleRouter is MR {}
+contract MapleRouter is MR { }
 
-contract MapleRouterInitializer is MRI {}
+contract MapleRouterInitializer is MRI { }
 
 contract Timelock is GT {
 
-    constructor(address tokenWithdrawer_, address proposer_, address executor_, address canceller_, address roleAdmin_)
-        GT(tokenWithdrawer_, proposer_, executor_, canceller_, roleAdmin_) { }
+    constructor(
+        address tokenWithdrawer_,
+        address proposer_,
+        address executor_,
+        address canceller_,
+        address roleAdmin_
+    )
+        GT(tokenWithdrawer_, proposer_, executor_, canceller_, roleAdmin_)
+    { }
 
 }

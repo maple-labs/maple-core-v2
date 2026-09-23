@@ -18,7 +18,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
     address borrower = makeAddr("borrower");
     address lp       = makeAddr("lp");
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
@@ -27,37 +27,41 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
         deposit(lp, 1_500_000e6);
 
         setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,
-            delegateManagementFeeRate:  0.02e6,
+            delegateOriginationFee: 500e6,
+            delegateServiceFee: 300e6,
+            delegateManagementFeeRate: 0.02e6,
             platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.31536e6,  // 10k after 1m seconds
-            platformManagementFeeRate:  0.08e6
+            platformServiceFeeRate: 0.31536e6, // 10k after 1m seconds
+            platformManagementFeeRate: 0.08e6
         });
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            address(borrower),
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [0.031536e6, interestRate, 0, 0.15768e6]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                address(borrower),
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [gracePeriod, noticePeriod, paymentInterval],
+                [0.031536e6, interestRate, 0, 0.15768e6]
+            )
+        );
 
         fundLoan(address(loan));
     }
 
     function test_makePayment_inactiveLoan() external {
-        loan = IOpenTermLoan(createOpenTermLoan(
-            address(borrower),
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [0.031536e6, interestRate, 0, 0]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                address(borrower),
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [gracePeriod, noticePeriod, paymentInterval],
+                [0.031536e6, interestRate, 0, 0]
+            )
+        );
 
         vm.expectRevert("ML:MP:LOAN_INACTIVE");
         loan.makePayment(0);
@@ -95,14 +99,16 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
         fundsAsset.mint(address(loanManager), 111_000e6);
 
         // Create a loan that's not in the LM and call claim from it.
-        loan = IOpenTermLoan(createOpenTermLoan(
-            address(borrower),
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [0.031536e6, interestRate, 0, 0]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                address(borrower),
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [gracePeriod, noticePeriod, paymentInterval],
+                [0.031536e6, interestRate, 0, 0]
+            )
+        );
 
         vm.prank(address(loan));
         vm.expectRevert("LM:NOT_LOAN");
@@ -110,7 +116,7 @@ contract MakePaymentOpenTermFailureTests is TestBaseWithAssertions {
     }
 
     function test_makePayment_transferToPoolBoundary() external {
-        fundsAsset.mint(address(loanManager), 90_000e6 - 1);  // Net Interest
+        fundsAsset.mint(address(loanManager), 90_000e6 - 1); // Net Interest
 
         vm.prank(address(loan));
         vm.expectRevert("LM:DCF:TRANSFER_P");
@@ -167,7 +173,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
     address borrower = makeAddr("borrower");
     address lp       = makeAddr("lp");
 
-    IOpenTermLoan        loan;
+    IOpenTermLoan loan;
     IOpenTermLoanManager loanManager;
 
     function setUp() public override {
@@ -176,24 +182,26 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
         deposit(lp, 1_500_000e6);
 
         setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,
-            delegateManagementFeeRate:  0.02e6,
+            delegateOriginationFee: 500e6,
+            delegateServiceFee: 300e6,
+            delegateManagementFeeRate: 0.02e6,
             platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.031536e6,  // 1k after 1m seconds
-            platformManagementFeeRate:  0.08e6
+            platformServiceFeeRate: 0.031536e6, // 1k after 1m seconds
+            platformManagementFeeRate: 0.08e6
         });
 
         loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
-        loan = IOpenTermLoan(createOpenTermLoan(
-            address(borrower),
-            address(loanManager),
-            address(fundsAsset),
-            principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [0.015768e6, interestRate, 0, 0.015768e6]
-        ));
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                address(borrower),
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [gracePeriod, noticePeriod, paymentInterval],
+                [0.015768e6, interestRate, 0, 0.015768e6]
+            )
+        );
 
         fundLoan(address(loan));
     }
@@ -311,11 +319,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
 
         // Pool Delegate fee: 500e6   (1_000_000s of service fees) + 0.02 * 1_000 (management fee)
         // Treasury fee:      1_000e6 (1_000_000s of service fees) + 0.08 * 1_000 (management fee)
-        assertAssetBalancesIncrease(
-            address(fundsAsset),
-            [poolDelegate, treasury],
-            [500e6 + 20e6, 1_000e6 + 80e6]
-        );
+        assertAssetBalancesIncrease(address(fundsAsset), [poolDelegate, treasury], [500e6 + 20e6, 1_000e6 + 80e6]);
     }
 
     function test_makePayment_OT_latePayment() public {
@@ -356,15 +360,15 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(block.timestamp),
-            principal:          0,
-            interest:           1_100e6,
-            lateInterest:       50e6, // 100_000s at interest premium.
+            loan: address(loan),
+            paymentTimestamp: uint40(block.timestamp),
+            principal: 0,
+            interest: 1_100e6,
+            lateInterest: 50e6, // 100_000s at interest premium.
             delegateServiceFee: 550e6,
             platformServiceFee: 1_100e6,
-            paymentDueDate:     start + 1_000_000,
-            defaultDate:        start + 1_200_000
+            paymentDueDate: start + 1_000_000,
+            defaultDate: start + 1_200_000
         });
 
         assertOpenTermPaymentInfo({
@@ -423,22 +427,18 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanManager({
-            loanManager:       address(loanManager),
-            accountedInterest: 0,          // Accounted during claim
-            principalOut:      1_000_000e6,
-            accruedInterest:   0,
-            issuanceRate:      0.0009e6 * 1e27,
-            domainStart:       start + 1_100_000,
-            unrealizedLosses:  0
+            loanManager: address(loanManager),
+            accountedInterest: 0, // Accounted during claim
+            principalOut: 1_000_000e6,
+            accruedInterest: 0,
+            issuanceRate: 0.0009e6 * 1e27,
+            domainStart: start + 1_100_000,
+            unrealizedLosses: 0
         });
 
         // Pool Delegate fee: 550e6   (1_100_000s of service fee) + 0.02 * 1_150e6 (management fee)
         // Treasury fee:      1_100e6 (1_100_000s of service fee) + 0.08 * 1_150e6
-        assertAssetBalancesIncrease(
-            address(fundsAsset),
-            [poolDelegate, treasury],
-            [550e6 + 23e6, 1_100e6 + 92e6]
-        );
+        assertAssetBalancesIncrease(address(fundsAsset), [poolDelegate, treasury], [550e6 + 23e6, 1_100e6 + 92e6]);
     }
 
     function test_makePayment_OT_withCall() public {
@@ -505,13 +505,13 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanManager({
-            loanManager:       address(loanManager),
+            loanManager: address(loanManager),
             accountedInterest: 0,
-            principalOut:      1_000_000e6,
-            accruedInterest:   540e6,  // 90% of 600e6
-            issuanceRate:      0.0009e6 * 1e27,
-            domainStart:       start,
-            unrealizedLosses:  0
+            principalOut: 1_000_000e6,
+            accruedInterest: 540e6, // 90% of 600e6
+            issuanceRate: 0.0009e6 * 1e27,
+            domainStart: start,
+            unrealizedLosses: 0
         });
 
         /*******************************/
@@ -560,11 +560,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
 
         // Pool Delegate fee: 600e6   (600_000s of service fees) + 0.02 * 600 (management fee)
         // Treasury fee:      6_000e6 (600_000s of service fees) + 0.08 * 600 (management fee)
-        assertAssetBalancesIncrease(
-            address(fundsAsset),
-            [poolDelegate, treasury],
-            [300e6 + 12e6, 600e6 + 48e6]
-        );
+        assertAssetBalancesIncrease(address(fundsAsset), [poolDelegate, treasury], [300e6 + 12e6, 600e6 + 48e6]);
     }
 
     function test_makePayment_OT_withImpairment() public {
@@ -611,15 +607,15 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
         });
 
         assertOpenTermLoanPaymentState({
-            loan:               address(loan),
-            paymentTimestamp:   uint40(start + 1_200_000),
-            principal:          0,
-            interest:           1200e6,  // Accruing for 1.2m seconds
-            lateInterest:       200e6,   // Accruing for 400k seconds since impaired at 800k
+            loan: address(loan),
+            paymentTimestamp: uint40(start + 1_200_000),
+            principal: 0,
+            interest: 1200e6, // Accruing for 1.2m seconds
+            lateInterest: 200e6, // Accruing for 400k seconds since impaired at 800k
             delegateServiceFee: 600e6,
             platformServiceFee: 1200e6,
-            paymentDueDate:     uint40(start + 800_000),
-            defaultDate:        start + 1_000_000
+            paymentDueDate: uint40(start + 800_000),
+            defaultDate: start + 1_000_000
         });
 
         assertOpenTermPaymentInfo({
@@ -687,11 +683,7 @@ contract MakePaymentTestsSingleLoanOpenTerm is TestBaseWithAssertions {
 
         // Pool Delegate fee:  1_200e6 (1_200_000s of service fees) + 0.02 * 1400 (management fee)
         // Treasury fee:      12_000e6 (1_200_000s of service fees) + 0.08 * 1_260 (management fee)
-        assertAssetBalancesIncrease(
-            address(fundsAsset),
-            [poolDelegate, treasury],
-            [600e6 + 28e6, 1_200e6 + 112e6]
-        );
+        assertAssetBalancesIncrease(address(fundsAsset), [poolDelegate, treasury], [600e6 + 28e6, 1_200e6 + 112e6]);
     }
 
 }

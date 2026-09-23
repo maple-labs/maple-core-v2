@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IMapleCCIPReceiverLike,
-    IPool,
-    IWithdrawalManagerQueue
-} from "../../contracts/interfaces/Interfaces.sol";
+import { IMapleCCIPReceiverLike, IPool, IWithdrawalManagerQueue } from "../../contracts/interfaces/Interfaces.sol";
 
 import { MapleAddressRegistryETH as AddressRegistry } from "../../modules/address-registry/contracts/MapleAddressRegistryETH.sol";
 
@@ -24,13 +20,17 @@ interface IProtocolHealthCheckerV2 {
 interface IProtocolHealthCheckerV3 {
 
     function checkInvariants(
-        address   poolManager_,
+        address poolManager_,
         address[] memory manualRedeemers_
-    ) external view returns (ProtocolHealthChecker.Invariants memory invariants_);
+    )
+        external
+        view
+        returns (ProtocolHealthChecker.Invariants memory invariants_);
 
 }
 
 contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertions, ProtocolActions {
+
     uint64 constant BASE_CHAIN_SELECTOR = 15971525489660198786;
 
     /**************************************************************************************************************************************/
@@ -74,7 +74,7 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
 
     function testFork_protocolHealthCheckerV3_securedLendingUSDC_syrupUSDT_success() public view {
         assertProtocolInvariants(securedLendingUSDCPoolManager, protocolHealthCheckerV3, new address[](0));
-        assertProtocolInvariants(syrupUSDTPoolManager,          protocolHealthCheckerV3, new address[](0));
+        assertProtocolInvariants(syrupUSDTPoolManager, protocolHealthCheckerV3, new address[](0));
     }
 
     function testFork_protocolHealthCheckerV3_syrupUSDC_ccipReceiverDoingWithdrawals_success() public {
@@ -86,11 +86,11 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
 
         uint256 expectedSharesAmountInTheQueue = 0.4e6;
 
-        ( uint256 nextRequestId, uint256 lastRequestId ) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).queue();
+        (uint256 nextRequestId, uint256 lastRequestId) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).queue();
 
         assertEq(nextRequestId, lastRequestId);
 
-        ( address owner, uint256 sharesInTheQueue ) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).requests(nextRequestId);
+        (address owner, uint256 sharesInTheQueue) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).requests(nextRequestId);
 
         assertEq(owner,            mapleCCIPReceiverProxy);
         assertEq(sharesInTheQueue, expectedSharesAmountInTheQueue);
@@ -115,10 +115,10 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
 
         requestCrossChainRedeem(mapleCCIPReceiverProxy, syrupUSDCPool, redeemAmount, BASE_CHAIN_SELECTOR);
 
-        ( nextRequestId, lastRequestId ) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).queue();
+        (nextRequestId, lastRequestId) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).queue();
 
         // Check new request is in the queue and owned by CCIP receiver proxy with the correct shares amount.
-        ( owner, sharesInTheQueue ) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).requests(lastRequestId);
+        (owner, sharesInTheQueue) = IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).requests(lastRequestId);
 
         assertEq(owner,            mapleCCIPReceiverProxy);
         assertEq(sharesInTheQueue, redeemAmount);
@@ -140,10 +140,7 @@ contract ProtocolHealthCheckerV3Tests is AddressRegistry, HealthCheckerAssertion
 
         assertEq(IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).totalShares(), sharesToProcess + expectedSharesLeft);
 
-        assertEq(
-            IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).manualSharesAvailable(mapleCCIPReceiverProxy),
-            sharesToProcess
-        );
+        assertEq(IWithdrawalManagerQueue(syrupUSDCWithdrawalManagerQueue).manualSharesAvailable(mapleCCIPReceiverProxy), sharesToProcess);
 
         /**********************************************************************************************************************************/
         /*** Step 5: Execute manual redemption on CCIP receiver proxy and check protocol health checker invariants                      ***/
