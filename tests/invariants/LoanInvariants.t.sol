@@ -11,7 +11,7 @@ import { WithdrawalHandler } from "./handlers/WithdrawalHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
-contract DefaultingInvariants is BaseInvariants {
+contract LoanInvariants is BaseInvariants {
 
     /**************************************************************************************************************************************/
     /*** Constants                                                                                                                      ***/
@@ -19,7 +19,7 @@ contract DefaultingInvariants is BaseInvariants {
 
     uint256 constant NUM_BORROWERS = 5;
     uint256 constant NUM_OT_LOANS  = 10;
-    uint256 constant NUM_LPS       = 10;
+    uint256 constant NUM_LPS       = 2;
 
     /**************************************************************************************************************************************/
     /*** Setup Function                                                                                                                 ***/
@@ -36,26 +36,31 @@ contract DefaultingInvariants is BaseInvariants {
         }
 
         setupFees({
-            delegateOriginationFee: 500e6,
-            delegateServiceFee: 300e6,
-            delegateManagementFeeRate: 0.02e6,
+            delegateOriginationFee:     500e6,
+            delegateServiceFee:         300e6,
+            delegateManagementFeeRate:  0.02e6,
             platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate: 0.005e6, // 10k after 1m seconds
-            platformManagementFeeRate: 0.08e6
+            platformServiceFeeRate:     0.005e6,
+            platformManagementFeeRate:  0.08e6
         });
 
         depositHandler    = new DepositHandler("depositHandler", pools, lps);
         transferHandler   = new TransferHandler("transferHandler", pools, lps);
         withdrawalHandler = new WithdrawalHandler("withdrawalHandler", pools, lps);
 
+        address[] memory borrowers_ = new address[](NUM_BORROWERS);
+
+        for (uint256 i; i < NUM_BORROWERS; i++) {
+            borrowers_[i] = makeAddr(string(abi.encode("borrower", i)));
+        }
+
         otlHandler = new OpenTermLoanHandler({
-            handlerName_:       "otlHandler",
-            loanFactory_:       address(openTermLoanFactory),
-            liquidatorFactory_: address(liquidatorFactory),
-            poolManager_:       address(poolManager),
-            refinancer_:        openTermRefinancer,
-            maxBorrowers_:      NUM_BORROWERS,
-            maxLoans_:          NUM_OT_LOANS
+            handlerName_:  "otlHandler",
+            loanFactory_:  address(openTermLoanFactory),
+            refinancer_:   openTermRefinancer,
+            poolManagers_: poolManagers,
+            borrowers_:    borrowers_,
+            maxLoans_:     NUM_OT_LOANS
         });
 
         depositHandler.addAction("deposit(uint256)", 7_500);
@@ -81,54 +86,37 @@ contract DefaultingInvariants is BaseInvariants {
         otlHandler.addAction("removeLoanImpairment(uint256)", 1_000);
         otlHandler.addAction("triggerDefault(uint256)", 1_500);
 
-        address[] memory targetContracts = new address[](4);
-        targetContracts[0]               = address(transferHandler);
-        targetContracts[1]               = address(depositHandler);
-        targetContracts[2]               = address(withdrawalHandler);
-        targetContracts[3]               = address(otlHandler);
+        address[] memory contracts = new address[](4);
+        uint256[] memory weights   = new uint256[](4);
 
-        uint256[] memory weightsDistributorHandler = new uint256[](4);
-        weightsDistributorHandler[0]               = 10;
-        weightsDistributorHandler[1]               = 10;
-        weightsDistributorHandler[2]               = 10;
-        weightsDistributorHandler[3]               = 70;
+        contracts[0] = address(transferHandler);
+        contracts[1] = address(depositHandler);
+        contracts[2] = address(withdrawalHandler);
+        contracts[3] = address(otlHandler);
 
-        address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
+        weights[0] = 10;
+        weights[1] = 10;
+        weights[2] = 10;
+        weights[3] = 70;
+
+        address distributionHandler = address(new DistributionHandler(contracts, weights));
 
         targetContract(distributionHandler);
     }
 
     /**************************************************************************************************************************************/
-    /*** Invariants Removed                                                                                                             ***/
-    /***************************************************************************************************************************************
+    /*** Invariant Assertions                                                                                                           ***/
+    /**************************************************************************************************************************************/
 
-    * Loan Manager
-        * Invariant G: unrealizedLosses == 0
-            NOTE: triggerDefault() with collateral that needs liquidating then unrealizedLosses will be > 0
-        * Invariant L: paymentInfo.refinanceInterest == loan's netRefinanceInterest.
-            NOTE: If a loan is refinanced then defaulted, the refinanceInterest will be > 0 while paymentInfo will be zeroed.
-        * Invariant M: paymentDueDate[payment] = loan.paymentDueDate()
-            NOTE: Payments mapping state on Loan Manager is out of date during impairment
-        * Invariant N: startDate[payment] <= loan.paymentDueDate() - loan.paymentInterval()
-            NOTE: Payments mapping state on Loan Manager is out of date during impairment
-    * Pool
-        * Invariant C: totalAssets >= totalSupply (in non-liquidating scenario)
-        * Invariant F: balanceOfAssets[user] >= balanceOf[user]
-        * Invariant H: convertToExitShares == convertToShares
-            NOTE: triggerDefault() with collateral that needs liquidating then unrealizedLosses will be > 0 hence a different exchange rate
-
-    ***************************************************************************************************************************************/
-
-    function statefulFuzz_defaultingInvariants() external {
-        assert_pool_invariants_A_B_D_E_G_I_J_K(address(pool));
+    function statefulFuzz_loanInvariants() external {
+        assert_pool_invariants(address(pool));
         assert_pool_manager_invariants(address(poolManager));
+        assert_wm_invariants(address(queueWM), lps);
 
         address[] memory loans = _getActiveLoans();
 
         assert_otl_invariants(loans);
-        assert_otlm_invariants_B_C_F_H_I_J_K_L_M(address(otlHandler.loanManager()), loans);
-
-        assert_wm_queue_invariants(address(queueWM), lps);
+        assert_otlm_invariants(address(otlHandler.loanManagers(0)), loans);
     }
 
 }

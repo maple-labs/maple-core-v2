@@ -182,9 +182,9 @@ contract AllocationStrategyInvariants is BaseInvariants {
 
     function statefulFuzz_allocationStrategyInvariants() external {
         for (uint256 i; i < pools.length; i++) {
-            assert_pool_invariants_A_B_D_E_G_I_J_K(pools[i]);
+            assert_pool_invariants(pools[i]);
             assert_pool_manager_invariants(poolManagers[i]);
-            assert_wm_queue_invariants(withdrawalManagers[i], lps);
+            assert_wm_invariants(withdrawalManagers[i], lps);
         }
 
         assert_strategyManager_invariants(allocationStrategyManager, poolManagers);
