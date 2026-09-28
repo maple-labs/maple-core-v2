@@ -109,6 +109,8 @@ contract ModularReleaseProcedure is ModularReleaseBase {
             assertEq(IPoolManager(poolManagers[i]).implementation(), poolManagerV500Implementation);
             assertEq(IPoolManager(poolManagers[i]).active(),         true);
             assertEq(IPoolManager(poolManagers[i]).configured(),     true);
+
+            assertEq(IPoolManager(poolManagers[i]).strategyCapOf(openTermLoanManagers[i]), type(uint256).max);
         }
 
         assertEq(IPoolManager(syrupUSDCPoolManager).strategyListLength(), 7);

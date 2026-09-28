@@ -71,6 +71,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     uint256 startingTime;
 
     address[] public poolManagers;
+    address[] public openTermLoanManagers;
 
     StrategySpecification[] specs;
 
@@ -553,6 +554,11 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         poolManagers.push(syrupUSDGPoolManager);
         poolManagers.push(securedLendingUSDCPoolManager);
 
+        openTermLoanManagers.push(syrupUSDCOpenTermLoanManager);
+        openTermLoanManagers.push(syrupUSDTOpenTermLoanManager);
+        openTermLoanManagers.push(syrupUSDGOpenTermLoanManager);
+        openTermLoanManagers.push(securedLendingUSDCOpenTermLoanManager);
+
         /**********************************************************************************************************************************/
         /*** Step 5.1 - Cleanup Old Strategies                                                                                          ***/
         /**********************************************************************************************************************************/
@@ -609,6 +615,19 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
 
             assertEq(withdrawalManager.implementation(), withdrawalManagerQueueV201Implementation);
             assertEq(withdrawalManager.totalShares(),    totalShares);
+        }
+
+        /**********************************************************************************************************************************/
+        /*** Step 5.4 - Configure Open Term Loan Manager Caps                                                                           ***/
+        /**********************************************************************************************************************************/
+
+        for (uint256 i; i < poolManagers.length; i++) {
+            assertEq(IPoolManager(poolManagers[i]).strategyCapOf(openTermLoanManagers[i]), 0);
+
+            vm.prank(operationalAdmin);
+            IPoolManager(poolManagers[i]).setStrategyCap(openTermLoanManagers[i], type(uint256).max);
+
+            assertEq(IPoolManager(poolManagers[i]).strategyCapOf(openTermLoanManagers[i]), type(uint256).max);
         }
     }
 
