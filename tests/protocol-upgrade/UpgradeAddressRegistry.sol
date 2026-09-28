@@ -115,17 +115,6 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address updatedOpenTermLoanHealthChecker = 0xa2e3c1e3e2b8E2B8B5e3FF1d4c3b2A1f4e5d6C7d;
 
     /**************************************************************************************************************************************/
-    /*** syrupUSDG Addresses                                                                                                            ***/
-    /**************************************************************************************************************************************/
-
-    address syrupUSDGPool                   = 0x87b65C4aAFFA76881f9E96F3e7ED945ddFC3Cd7A;
-    address syrupUSDGPoolManager            = 0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327;
-    address syrupUSDGOpenTermLoanManager    = 0x7bE9A1FA4CD69F7a077692d4AFA52bD09531920A;
-    address syrupUSDGWithdrawalManagerQueue = 0xAf63C06970086d535F338565D77c5fA3bDC5fD79;
-    address syrupUSDGPoolDelegateCover      = 0xFdc1b5A10f4da87b459dfc3bF1313b33a2F6bfA9;
-    address syrupUSDGSyrupRouter            = 0x191ac16255f49F7C6cB2e3b2502064A805943849;
-
-    /**************************************************************************************************************************************/
     /*** Modular Release - Deployed Contracts                                                                                           ***/
     /**************************************************************************************************************************************/
 
