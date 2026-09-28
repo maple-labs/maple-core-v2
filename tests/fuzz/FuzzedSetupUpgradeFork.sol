@@ -31,7 +31,8 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
         /*** Upgrade the protocol                                                                                                       ***/
         /**********************************************************************************************************************************/
 
-        start                      = block.timestamp;
+        start = block.timestamp;
+
         ModularReleaseBase upgrade = new ModularReleaseBase();
 
         upgrade.upgradeProtocol({
@@ -99,7 +100,6 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
         IPoolManager(poolManager1).setStrategyCap(aaveStrategyManagerShared, type(uint256).max);
         IPoolManager(poolManager1).setStrategyCap(skyStrategyManagerShared, type(uint256).max);
         IPoolManager(poolManager1).setStrategyCap(allocationStrategyManagerShared, type(uint256).max);
-        IPoolManager(poolManager1).setStrategyCap(openTermLoanManagerPool1, type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(operationalAdmin);
