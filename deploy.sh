@@ -44,19 +44,16 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     scripts/ModularReleaseDeployment.s.sol:ModularReleaseDeployment
 
-# For Production
-
-# For Healthchecker
+# For HealthCheckerDeployment
 # forge script \
 #     --rpc-url $ETH_RPC_URL \
 #     -vvvv \
-#     --mnemonic-indexes 2 \
-#     --ledger \
+#     --unlocked \
 #     --slow \
 #     --sender $ETH_SENDER \
-#     --gas-estimate-multiplier 150 \
-#     --broadcast \
-#     scripts/DeployHealthChecker.s.sol:DeployHealthChecker
+#     scripts/HealthCheckerDeployment.s.sol:HealthCheckerDeployment
+
+# For Production
 
 # For Refinance Upgrades Deployment
 # forge script \
@@ -102,3 +99,15 @@ echo Using profile: $FOUNDRY_PROFILE
 #     --sender $ETH_SENDER \
 #     --gas-estimate-multiplier 150 \
 #     scripts/ModularReleaseDeployment.s.sol:ModularReleaseDeployment
+
+# For HealthCheckerDeployment
+# forge script \
+#     --rpc-url $ETH_RPC_URL \
+#     -vvvv \
+#     --mnemonic-indexes 21 \
+#     --ledger \
+#     --slow \
+#     --sender $ETH_SENDER \
+#     --gas-estimate-multiplier 150 \
+#     --broadcast \
+#     scripts/HealthCheckerDeployment.s.sol:HealthCheckerDeployment

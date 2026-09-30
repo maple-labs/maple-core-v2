@@ -146,11 +146,261 @@ interface IAavePoolLike is IAPL {
 
 }
 
+interface IAaveV3StrategyLike {
+
+    function aavePool() external view returns (address aavePool);
+
+    function aaveToken() external view returns (address aaveToken);
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
+
+    function fundsAsset() external view returns (address fundsAsset);
+
+    function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
+
+    function strategyDelegateFeeRate() external view returns (uint32 strategyDelegateFeeRate);
+
+    function strategyProtocolFeeRate() external view returns (uint32 strategyProtocolFeeRate);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    function useVirtualUnderlyingBalance() external view returns (bool useVirtualUnderlyingBalance);
+
+}
+
+interface IAllocationStrategyLike {
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
+
+    function deployedAssetsOf(address account) external view returns (uint256 deployedAssets);
+
+    function fundsAsset() external view returns (address fundsAsset);
+
+    function recordedAssets() external view returns (uint256 recordedAssets);
+
+    function scheduledYieldAssets() external view returns (uint256 scheduledYieldAssets);
+
+    function strategyDelegateFeeRate() external view returns (uint32 strategyDelegateFeeRate);
+
+    function strategyProtocolFeeRate() external view returns (uint32 strategyProtocolFeeRate);
+
+    function totalDeployedAssets() external view returns (uint256 totalDeployedAssets);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    function unrealizedYield() external view returns (uint256 unrealizedYield);
+
+    function yieldDeadline() external view returns (uint32 yieldDeadline);
+
+    function yieldLastRealized() external view returns (uint32 yieldLastRealized);
+
+    function yieldStart() external view returns (uint32 yieldStart);
+
+}
+
 interface IDefiStrategyLike {
 
     function isLossRecognized() external view returns (bool isLossRecognized_);
 
     function recognizeLoss() external;
+
+}
+
+interface IOpenTermLoanLike {
+
+    function calledPrincipal() external view returns (uint256 calledPrincipal_);
+
+    function dateCalled() external view returns (uint40 dateCalled_);
+
+    function dateFunded() external view returns (uint40 dateFunded_);
+
+    function dateImpaired() external view returns (uint40 dateImpaired_);
+
+    function datePaid() external view returns (uint40 datePaid_);
+
+    function defaultDate() external view returns (uint40 defaultDate_);
+
+    function delegateServiceFeeRate() external view returns (uint64 delegateServiceFeeRate_);
+
+    function getPaymentBreakdown(uint256 timestamp_)
+        external
+        view
+        returns (uint256 principal_, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_);
+
+    function interestRate() external view returns (uint64 interestRate_);
+
+    function isImpaired() external view returns (bool isImpaired_);
+
+    function lateFeeRate() external view returns (uint64 lateFeeRate_);
+
+    function lateInterestPremiumRate() external view returns (uint64 lateInterestPremiumRate_);
+
+    function paymentDueDate() external view returns (uint40 paymentDueDate_);
+
+    function paymentInterval() external view returns (uint32 paymentInterval_);
+
+    function platformServiceFeeRate() external view returns (uint64 platformServiceFeeRate_);
+
+    function principal() external view returns (uint256 principal_);
+
+}
+
+interface IOpenTermLoanManagerLike {
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement_);
+
+    function domainStart() external view returns (uint40 domainStart_);
+
+    function fundsAsset() external view returns (address fundsAsset_);
+
+    function impairmentFor(address loan_) external view returns (uint40 impairedDate, bool impairedByGovernor);
+
+    function issuanceRate() external view returns (uint256 issuanceRate_);
+
+    function paymentFor(address loan_)
+        external
+        view
+        returns (uint24 platformManagementFeeRate, uint24 delegateManagementFeeRate, uint40 startDate, uint168 issuanceRate);
+
+    function principalOut() external view returns (uint128 principalOut_);
+
+    function unrealizedLosses() external view returns (uint128 unrealizedLosses_);
+
+}
+
+interface IPoolLike {
+
+    function asset() external view returns (address asset_);
+
+    function balanceOf(address account_) external view returns (uint256 balance_);
+
+    function balanceOfAssets(address account_) external view returns (uint256 assets_);
+
+    function convertToAssets(uint256 shares_) external view returns (uint256 assets_);
+
+    function convertToExitShares(uint256 assets_) external view returns (uint256 shares_);
+
+    function convertToShares(uint256 assets_) external view returns (uint256 shares_);
+
+    function manager() external view returns (address manager_);
+
+    function totalAssets() external view returns (uint256 totalAssets_);
+
+    function totalSupply() external view returns (uint256 totalSupply_);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses_);
+
+}
+
+interface IPoolManagerLike {
+
+    function asset() external view returns (address asset_);
+
+    function convertToExitShares(uint256 amount) external view returns (uint256 shares);
+
+    function isStrategy(address strategy_) external view returns (bool isStrategy_);
+
+    function isStrategyManager(address strategyManager_) external view returns (bool isStrategyManager_);
+
+    function pool() external view returns (address pool_);
+
+    function poolPermissionManager() external view returns (address poolPermissionManager_);
+
+    function strategyList(uint256 index_) external view returns (address strategy_);
+
+    function strategyListLength() external view returns (uint256 strategyListLength);
+
+    function totalAssets() external view returns (uint256 totalAssets);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    function withdrawalManager() external view returns (address withdrawalManager_);
+
+}
+
+interface IPoolPermissionManagerLike {
+
+    function lenderBitmaps(address lender) external view returns (uint256 bitmap);
+
+    function permissionLevels(address poolManager) external view returns (uint256 permissionLevel);
+
+    function poolBitmaps(address poolManager, bytes32 functionId) external view returns (uint256 bitmap);
+
+}
+
+interface ISkyStrategyLike {
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
+
+    function fallbackTout() external view returns (uint256 fallbackTout);
+
+    function fundsAsset() external view returns (address fundsAsset);
+
+    function lastRecordedTotalAssets() external view returns (uint256 lastRecordedTotalAssets);
+
+    function psm() external view returns (address psm);
+
+    function savingsUsds() external view returns (address savingsUsds);
+
+    function strategyDelegateFeeRate() external view returns (uint32 strategyDelegateFeeRate);
+
+    function strategyProtocolFeeRate() external view returns (uint32 strategyProtocolFeeRate);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    function usds() external view returns (address usds);
+
+}
+
+interface IStrategyManagerLike {
+
+    function assetsOf(address poolManager) external view returns (uint256 assets);
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function convertToAssets(uint256 shares) external view returns (uint256 assets);
+
+    function convertToExitAssets(uint256 shares) external view returns (uint256 assets);
+
+    function pendingSharesOf(address poolManager) external view returns (uint256 pendingSharesOf);
+
+    function sharesOf(address poolManager) external view returns (uint256 sharesOf);
+
+    function totalPendingShares() external view returns (uint256 totalPendingShares);
+
+    function totalShares() external view returns (uint256 totalShares);
+
+    function underlyingStrategy() external view returns (address underlyingStrategy);
+
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    function unrealizedLossesOf(address poolManager) external view returns (uint256 unrealizedLosses);
+
+}
+
+interface IWithdrawalManagerQueueLike {
+
+    function manualSharesAvailable(address owner) external view returns (uint256 sharesAvailable);
+
+    function pool() external view returns (address pool);
+
+    function queue() external view returns (uint128 nextRequestId, uint128 lastRequestId);
+
+    function requestIds(address owner) external view returns (uint256 requestId);
+
+    function requests(uint256 requestId) external view returns (address owner, uint256 shares);
+
+    function requestsByOwner(address owner) external view returns (uint256[] memory requestIds, uint256[] memory shares);
+
+    function totalShares() external view returns (uint256 totalShares);
+
+    function userEscrowedShares(address owner) external view returns (uint256 escrowedShares);
 
 }
 
