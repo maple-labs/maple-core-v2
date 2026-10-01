@@ -44,20 +44,23 @@ contract PoolHealthChecker is IHealthChecker {
     /*** Invariant B: sum(balanceOfAssets(lp)) == totalAssets (with rounding tolerance)                                                 ***/
     /**************************************************************************************************************************************/
 
+    // NOTE: This computes balanceOfAssets(lp) manually in order to save gas: (balanceOf(lp) * totalAssets / totalSupply)
     function _checkInvariantB(address pool_, address[] memory lps_) internal view returns (InvariantResult memory result_) {
         address poolManager_       = IPoolLike(pool_).manager();
         address withdrawalManager_ = IPoolManagerLike(poolManager_).withdrawalManager();
 
-        uint256 sumBalanceOfAssets_ = IPoolLike(pool_).balanceOfAssets(address(0)) + IPoolLike(pool_).balanceOfAssets(withdrawalManager_);
+        uint256 totalAssets_ = IPoolLike(pool_).totalAssets();
+        uint256 totalSupply_ = IPoolLike(pool_).totalSupply();
+
+        uint256 sumBalanceOfAssets_ = _toAssets(IPoolLike(pool_).balanceOf(address(0)), totalAssets_, totalSupply_)
+            + _toAssets(IPoolLike(pool_).balanceOf(withdrawalManager_), totalAssets_, totalSupply_);
 
         for (uint256 i; i < lps_.length; ++i) {
             // NOTE: Skip address(0) and the withdrawal manager if they are passed in, since they are already included by default.
             if (lps_[i] == address(0) || lps_[i] == withdrawalManager_) continue;
 
-            sumBalanceOfAssets_ += IPoolLike(pool_).balanceOfAssets(lps_[i]);
+            sumBalanceOfAssets_ += _toAssets(IPoolLike(pool_).balanceOf(lps_[i]), totalAssets_, totalSupply_);
         }
-
-        uint256 totalAssets_ = IPoolLike(pool_).totalAssets();
 
         result_ = InvariantResult({
             name:   "Pool Invariant B",
@@ -185,6 +188,15 @@ contract PoolHealthChecker is IHealthChecker {
             output: abi.encode(poolConvertToExitShares_, poolManagerConvertToExitShares_),
             valid:  poolConvertToExitShares_ == poolManagerConvertToExitShares_
         });
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Helpers                                                                                                                         **/
+    /**************************************************************************************************************************************/
+
+    // NOTE: Mirrors Pool.convertToAssets, given an already-fetched totalAssets_/totalSupply_.
+    function _toAssets(uint256 shares_, uint256 totalAssets_, uint256 totalSupply_) internal pure returns (uint256 assets_) {
+        assets_ = totalSupply_ == 0 ? shares_ : (shares_ * totalAssets_) / totalSupply_;
     }
 
 }

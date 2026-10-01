@@ -24,7 +24,7 @@ contract OpenTermLoanManagerHealthChecker is IHealthChecker {
         results_[8]  = _checkInvariantI(loanManager_, loans_);
         results_[9]  = _checkInvariantJ(loanManager_, loans_);
         results_[10] = _checkInvariantK(loanManager_, loans_, tolerance_);
-        results_[11] = _checkInvariantL(loanManager_);
+        results_[11] = _checkInvariantL(loanManager_, tolerance_);
         results_[12] = _checkInvariantM(loanManager_, loans_);
     }
 
@@ -300,17 +300,17 @@ contract OpenTermLoanManagerHealthChecker is IHealthChecker {
     }
 
     /**************************************************************************************************************************************/
-    /*** Invariant L: fundsAsset.balanceOf(loanManager) == 0                                                                            ***/
+    /*** Invariant L: fundsAsset.balanceOf(loanManager) ~= 0, within `tolerance`                                                        ***/
     /**************************************************************************************************************************************/
 
-    function _checkInvariantL(address loanManager_) internal view returns (InvariantResult memory result_) {
+    function _checkInvariantL(address loanManager_, uint256 tolerance_) internal view returns (InvariantResult memory result_) {
         address fundsAsset_ = IOpenTermLoanManagerLike(loanManager_).fundsAsset();
         uint256 balance_    = IERC20(fundsAsset_).balanceOf(loanManager_);
 
         result_ = InvariantResult({
             name:   "OTLM Invariant L",
             output: abi.encode(balance_),
-            valid:  balance_ == 0
+            valid:  balance_ <= tolerance_
         });
     }
 
