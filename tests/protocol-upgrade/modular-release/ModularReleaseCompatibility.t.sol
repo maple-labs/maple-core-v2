@@ -46,7 +46,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
     uint256 wethAmount       = 10e18;
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 25_823_715);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_096_404);
 
         startingTime = block.timestamp;
 
@@ -270,11 +270,13 @@ contract ModularReleaseProcedure is ModularReleaseBase {
     /**************************************************************************************************************************************/
 
     function testFork_modularRelease_aqru_fundNewLoan() external {
-        setLiquidityCap(aqruPoolManager, type(uint256).max);
-        deposit(aqruPool, makeAddr("otlmLiquidityProvider"), 5_000_000e6);
-
         address borrower  = makeAddr("otlmBorrower");
         uint256 principal = 1_000e6;
+
+        uint256 lockedLiquidity = IWithdrawalManagerCyclical(IPoolManager(aqruPoolManager).withdrawalManager()).lockedLiquidity();
+
+        setLiquidityCap(aqruPoolManager, type(uint256).max);
+        deposit(aqruPool, makeAddr("otlmLiquidityProvider"), lockedLiquidity + principal);
 
         uint256[3] memory terms = [uint256(5 days), 5 days, 30 days];
         uint256[4] memory rates = [uint256(0.03e6), 0.1e6, 0, 0];

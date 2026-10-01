@@ -22,7 +22,7 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
     string constant SKY_STRATEGY_NAME        = "Sky Strategy USDC";
     string constant ALLOCATION_STRATEGY_NAME = "LP DEX USDC";
 
-    uint256 constant UPGRADE_FORK_BLOCK = 25_823_715;
+    uint256 constant UPGRADE_FORK_BLOCK = 26_096_404;
 
     function _setupUpgradeForkEnvironment() internal {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), UPGRADE_FORK_BLOCK);

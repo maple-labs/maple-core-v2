@@ -553,11 +553,13 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         poolManagers.push(syrupUSDTPoolManager);
         poolManagers.push(syrupUSDGPoolManager);
         poolManagers.push(securedLendingUSDCPoolManager);
+        poolManagers.push(securedLending2USDCPoolManager);
 
         openTermLoanManagers.push(syrupUSDCOpenTermLoanManager);
         openTermLoanManagers.push(syrupUSDTOpenTermLoanManager);
         openTermLoanManagers.push(syrupUSDGOpenTermLoanManager);
         openTermLoanManagers.push(securedLendingUSDCOpenTermLoanManager);
+        openTermLoanManagers.push(securedLending2USDCOpenTermLoanManager);
 
         /**********************************************************************************************************************************/
         /*** Step 5.1 - Cleanup Old Strategies                                                                                          ***/

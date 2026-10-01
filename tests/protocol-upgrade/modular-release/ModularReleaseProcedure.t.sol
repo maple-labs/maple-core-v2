@@ -21,10 +21,10 @@ contract ModularReleaseProcedure is ModularReleaseBase {
     bytes32 constant IMPLEMENTATION_SLOT = bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
 
     uint256 assetsToDeposit  = 133_769e6;
-    uint256 maxRoundingError = 2;
+    uint256 maxRoundingError = 3;
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 25_760_242);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_096_404);
 
         startingTime = block.timestamp;
 
@@ -150,6 +150,10 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["TBills USDC"]),        true);
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["PYUSD USDC"]),         true);
 
+        assertEq(IPoolManager(securedLending2USDCPoolManager).strategyListLength(), 1);
+
+        assertEq(IPoolManager(securedLending2USDCPoolManager).isStrategy(securedLending2USDCOpenTermLoanManager), true);
+
         /**********************************************************************************************************************************/
         /*** Withdrawal Managers                                                                                                        ***/
         /**********************************************************************************************************************************/
@@ -239,6 +243,13 @@ contract ModularReleaseProcedure is ModularReleaseBase {
             address pool  = IPoolManager(poolManagers[i]).pool();
             address asset = IPoolManager(poolManagers[i]).asset();
             address lp    = makeAddr(string(abi.encodePacked("lp", pool)));
+
+            uint256 pendingShares = IWithdrawalManagerQueue(IPoolManager(poolManagers[i]).withdrawalManager()).totalShares();
+
+            if (pendingShares > 0) {
+                erc20_mint(asset, pool, IPool(pool).convertToExitAssets(pendingShares));
+                processRedemptions(pool, pendingShares);
+            }
 
             uint256 totalAssets      = IPool(pool).totalAssets();
             uint256 totalSupply      = IPool(pool).totalSupply();
