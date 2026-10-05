@@ -85,6 +85,8 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address backupExecutorInk  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
     address backupRoleAdminInk = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
+    address syrupUSDCInk = 0x3c23e6FB09064e9A64829Fa8FEe27Ad19A27Bfa9;
+
     /**************************************************************************************************************************************/
     /*** GovernorTimelock Procedure Addresses - Monad                                                                                   ***/
     /**************************************************************************************************************************************/
@@ -98,6 +100,58 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address tokenWithdrawerMonad = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
     address backupExecutorMonad  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
     address backupRoleAdminMonad = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCMonad = 0xaB6e5a0C3799d020c790D34F7B2C02639e238AF7;
+
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Arbitrum                                                                                ***/
+    /**************************************************************************************************************************************/
+
+    address timelockArbitrum = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerArbitrum       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorArbitrum        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerArbitrum        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminArbitrum       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerArbitrum = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorArbitrum  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminArbitrum = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCArbitrum             = 0x41CA7586cC1311807B4605fBB748a3B8862b42b5;
+    address syrupUSDCArbitrumDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Arc                                                                                     ***/
+    /**************************************************************************************************************************************/
+
+    address timelockArc = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerArc       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorArc        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerArc        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminArc       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerArc = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorArc  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminArc = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCArc             = 0x0dC6b79F3c3854E4d74514fD4d29BE6c96Beee39;
+    address syrupUSDCArcDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** CCIP Procedure Addresses - Robinhood                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace with the Robinhood default admin once it is confirmed.
+    address syrupUSDCRobinhood             = 0xC6a4854eeB493224d5f9485E12Dd3A81f22EEE14;
+    address syrupUSDCRobinhoodDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** CCIP Procedure Addresses - Tempo                                                                                               ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace with the Tempo default admin once it is confirmed.
+    address syrupUSDCTempo             = 0x20c0000000000000000000008191667423F70E67;
+    address syrupUSDCTempoDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
 
     /**************************************************************************************************************************************/
     /*** Withdrawal Manager Queue v2.0.0 Addresses                                                                                      ***/
