@@ -7,8 +7,7 @@ on:
       - main
 
 permissions:
-  contents:      read
-  pull-requests: write
+  contents: read
 
 env:
   SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
@@ -39,6 +38,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
@@ -53,6 +54,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
@@ -68,6 +71,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
@@ -83,6 +88,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
@@ -98,6 +105,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
@@ -112,6 +121,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
@@ -129,6 +140,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
         with:
