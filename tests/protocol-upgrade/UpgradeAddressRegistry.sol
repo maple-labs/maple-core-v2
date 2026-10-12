@@ -120,6 +120,9 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address syrupUSDCArbitrum             = 0x41CA7586cC1311807B4605fBB748a3B8862b42b5;
     address syrupUSDCArbitrumDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
 
+    address syrupUSDGArbitrum             = 0xE1B0dC5A21b10f1634fBfbE9976fBA2Ee2e1c762;
+    address syrupUSDGArbitrumDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
     /**************************************************************************************************************************************/
     /*** GovernorTimelock Procedure Addresses - Arc                                                                                     ***/
     /**************************************************************************************************************************************/

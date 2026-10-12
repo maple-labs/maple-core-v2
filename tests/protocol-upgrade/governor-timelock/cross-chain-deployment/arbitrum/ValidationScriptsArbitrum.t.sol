@@ -114,20 +114,17 @@ contract ValidateConfigurationExecutionArbitrum is TimelockValidationScriptArbit
 
 }
 
-contract ValidateSyrupUSDCTokenAdminArbitrum is TimelockValidationScriptArbitrum {
+contract ValidateSyrupTokenAdminsArbitrum is TimelockValidationScriptArbitrum {
+
+    ISyrupUSDCrossChainLike syrupUSDC = ISyrupUSDCrossChainLike(syrupUSDCArbitrum);
+    ISyrupUSDCrossChainLike syrupUSDG = ISyrupUSDCrossChainLike(syrupUSDGArbitrum);
 
     function run() external view {
-        assertEq(
-            ISyrupUSDCrossChainLike(syrupUSDCArbitrum)
-                .hasRole(ISyrupUSDCrossChainLike(syrupUSDCArbitrum).DEFAULT_ADMIN_ROLE(), timelockArbitrum),
-            true
-        );
+        assertEq(syrupUSDC.hasRole(syrupUSDC.DEFAULT_ADMIN_ROLE(), timelockArbitrum),              true);
+        assertEq(syrupUSDC.hasRole(syrupUSDC.DEFAULT_ADMIN_ROLE(), syrupUSDCArbitrumDefaultAdmin), false);
 
-        assertEq(
-            ISyrupUSDCrossChainLike(syrupUSDCArbitrum)
-                .hasRole(ISyrupUSDCrossChainLike(syrupUSDCArbitrum).DEFAULT_ADMIN_ROLE(), syrupUSDCArbitrumDefaultAdmin),
-            false
-        );
+        assertEq(syrupUSDG.hasRole(syrupUSDG.DEFAULT_ADMIN_ROLE(), timelockArbitrum),              true);
+        assertEq(syrupUSDG.hasRole(syrupUSDG.DEFAULT_ADMIN_ROLE(), syrupUSDGArbitrumDefaultAdmin), false);
     }
 
 }
