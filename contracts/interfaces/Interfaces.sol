@@ -202,6 +202,14 @@ interface IAllocationStrategyLike {
 
 }
 
+interface IDaiJoinLike {
+
+    function cage() external;
+
+    function live() external view returns (uint256 live_);
+
+}
+
 interface IDefiStrategyLike {
 
     function isLossRecognized() external view returns (bool isLossRecognized_);

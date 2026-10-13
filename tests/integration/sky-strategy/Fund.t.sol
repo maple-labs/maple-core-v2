@@ -220,6 +220,25 @@ contract SkyStrategyFundFailureTests is SkyStrategyTestBase {
         IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), assets, "");
     }
 
+    function testFork_fund_failWhenDaiJoinCaged() external {
+        deposit(lp, assets);
+
+        uint256 fundAmount = assets / 2;
+
+        fundStrategyManager(address(poolManager), skyStrategyManager, fundAmount);
+
+        // The funded position lands at fundAmount - 1 (the 1 wei sUSDS round-trip loss).
+        assertEq(ISkyStrategy(skyUnderlyingStrategy).availableToWithdraw(), fundAmount - 1);
+
+        cageSkyDaiJoin();
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSS:FUS:DAI_JOIN_CAGED");
+        IStrategyManager(skyStrategyManager).fundStrategyManager(address(poolManager), fundAmount, "");
+
+        assertEq(ISkyStrategy(skyUnderlyingStrategy).availableToWithdraw(), 0);
+    }
+
     function testFork_fund_failWhenSellGemHalted() external {
         deposit(lp, assets);
         setSkyTin(type(uint256).max);

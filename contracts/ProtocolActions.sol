@@ -3,6 +3,7 @@ pragma solidity ^0.8.7;
 
 import {
     IAllocationStrategy,
+    IDaiJoinLike,
     IDefiStrategyLike,
     IERC20,
     IERC20Like,
@@ -64,6 +65,7 @@ contract ProtocolActions is Runner {
 
     address USDS_LITE_PSM   = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
     address DSS_LITE_PSM    = address(0xf6e72Db5454dd049d0788e411b06CfAF16853042);
+    address SKY_DAI_JOIN    = address(0x9759A6Ac90977b93B58547b4A71c78317f391A28);
     address SKY_PAUSE_PROXY = address(0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB);
 
     /**************************************************************************************************************************************/
@@ -104,6 +106,13 @@ contract ProtocolActions is Runner {
         IUSDCLike(USDC).configureMinter(address(this), type(uint256).max);
 
         if (amount_ > 0) IUSDCLike(USDC).mint(account_, amount_);
+    }
+
+    function cageSkyDaiJoin() internal {
+        // DaiJoin has renounced every ward, so authorize this contract before running the real shutdown. Slot 0 holds `wards`.
+        vm.store(SKY_DAI_JOIN, keccak256(abi.encode(address(this), uint256(0))), bytes32(uint256(1)));
+
+        IDaiJoinLike(SKY_DAI_JOIN).cage();
     }
 
     function setFallbackTout(address strategy_, uint256 fallbackTout_) internal {
