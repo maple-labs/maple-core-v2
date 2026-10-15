@@ -40,7 +40,7 @@ contract ModularReleaseHealthCheckers is ModularReleaseBase, HealthCheckerAddres
     address withdrawalManagerHealthChecker;
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_054_920);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_096_404);
 
         startingTime = block.timestamp;
 
@@ -69,7 +69,7 @@ contract ModularReleaseHealthCheckers is ModularReleaseBase, HealthCheckerAddres
         // - 2 calls per strategy: StrategyManager, plus one of Aave/Sky/Allocation
         // - 1 call per loan: OpenTermLoanHealth
         uint256 callCount = poolManagers.length * 5 + specs.length * 2 + securedLendingUSDCLoans.length + syrupUSDCLoans.length
-            + syrupUSDTLoans.length + syrupUSDGLoans.length;
+            + syrupUSDTLoans.length + syrupUSDGLoans.length + securedLending2USDCLoans.length;
 
         InvariantCall[] memory calls = new InvariantCall[](callCount);
 
@@ -155,10 +155,6 @@ contract ModularReleaseHealthCheckers is ModularReleaseBase, HealthCheckerAddres
         view
         returns (uint256 newIndex)
     {
-        address[4] memory openTermLoanManagers = [
-            syrupUSDCOpenTermLoanManager, syrupUSDTOpenTermLoanManager, syrupUSDGOpenTermLoanManager, securedLendingUSDCOpenTermLoanManager
-        ];
-
         for (uint256 i; i < poolManagers.length; i++) {
             calls[index++] = InvariantCall({
                 target: openTermLoanManagerHealthChecker,
@@ -256,16 +252,18 @@ contract ModularReleaseHealthCheckers is ModularReleaseBase, HealthCheckerAddres
         if (index == 0) return syrupUSDCLoans;
         if (index == 1) return syrupUSDTLoans;
         if (index == 2) return syrupUSDGLoans;
+        if (index == 3) return securedLendingUSDCLoans;
 
-        return securedLendingUSDCLoans;
+        return securedLending2USDCLoans;
     }
 
     function lpsForPoolManager(uint256 index) internal view returns (address[] storage lps_) {
         if (index == 0) return syrupUSDCLPs;
         if (index == 1) return syrupUSDTLPs;
         if (index == 2) return syrupUSDGLPs;
+        if (index == 3) return securedLendingUSDCLPs;
 
-        return securedLendingUSDCLPs;
+        return securedLending2USDCLPs;
     }
 
 }
