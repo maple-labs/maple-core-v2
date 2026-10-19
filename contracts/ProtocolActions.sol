@@ -48,6 +48,7 @@ contract ProtocolActions is Runner {
     address USDG      = address(0xe343167631d89B6Ffc58B88d6b7fB0228795491D);
     address USDT      = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     address USDC_BASE = address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
+    address USD1      = address(0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d);
 
     address MPL_SOURCE       = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
     address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
@@ -56,6 +57,7 @@ contract ProtocolActions is Runner {
     address USDT_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
+    address USD1_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
 
     address AAVE_USDC    = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
     address AAVE_USDG    = address(0x7c0477d085ECb607CF8429f3eC91Ae5E1e460F4F);
@@ -92,6 +94,7 @@ contract ProtocolActions is Runner {
         else if (asset_ == USDS) erc20_transfer(USDS, USDS_SOURCE, account_, amount_);
         else if (asset_ == USDG) erc20_transfer(USDG, USDG_SOURCE, account_, amount_);
         else if (asset_ == USDC) mintUSDC(account_, amount_);
+        else if (asset_ == USD1) erc20_transfer(USD1, USD1_SOURCE, account_, amount_);
         else IERC20Like(asset_).mint(account_, amount_); // Try to mint if its not one of the "real" tokens.
     }
 
