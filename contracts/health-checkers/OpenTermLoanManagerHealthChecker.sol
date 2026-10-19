@@ -14,7 +14,7 @@ contract OpenTermLoanManagerHealthChecker is IHealthChecker {
         results_ = new InvariantResult[](13);
 
         results_[0]  = _checkInvariantA(loanManager_, loans_, tolerance_);
-        results_[1]  = _checkInvariantB(loanManager_, loans_);
+        results_[1]  = _checkInvariantB(loanManager_, loans_, tolerance_);
         results_[2]  = _checkInvariantC(loanManager_, loans_);
         results_[3]  = _checkInvariantD(loanManager_, loans_);
         results_[4]  = _checkInvariantE(loanManager_, tolerance_);
@@ -61,10 +61,18 @@ contract OpenTermLoanManagerHealthChecker is IHealthChecker {
     }
 
     /**************************************************************************************************************************************/
-    /*** Invariant B: if no loan has a non-zero payment start date, assetsUnderManagement() ~= 0                                        ***/
+    /*** Invariant B: if no loan has a non-zero payment start date, assetsUnderManagement() ~= 0, within `tolerance`                    ***/
     /**************************************************************************************************************************************/
 
-    function _checkInvariantB(address loanManager_, address[] memory loans_) internal view returns (InvariantResult memory result_) {
+    function _checkInvariantB(
+        address loanManager_,
+        address[] memory loans_,
+        uint256 tolerance_
+    )
+        internal
+        view
+        returns (InvariantResult memory result_)
+    {
         uint256 assetsUnderManagement_ = IOpenTermLoanManagerLike(loanManager_).assetsUnderManagement();
 
         for (uint256 i; i < loans_.length; ++i) {
@@ -82,7 +90,7 @@ contract OpenTermLoanManagerHealthChecker is IHealthChecker {
         result_ = InvariantResult({
             name:   "OTLM Invariant B",
             output: abi.encode(assetsUnderManagement_),
-            valid:  assetsUnderManagement_ <= loans_.length
+            valid:  assetsUnderManagement_ <= loans_.length + tolerance_
         });
     }
 

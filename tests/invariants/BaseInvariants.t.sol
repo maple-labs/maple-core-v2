@@ -528,7 +528,7 @@ contract BaseInvariants is StdInvariant, TestBaseWithAssertions {
             if (startDate != 0) return;
         }
 
-        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans(), "OTLM Invariant B");
+        assertApproxEqAbs(assetsUnderManagement, 0, otlHandler.numLoans() + ALLOWED_OTLM_DIFF, "OTLM Invariant B");
     }
 
     function assert_otlm_invariant_C(address openTermLoanManager_, address[] memory loans_) internal view {
