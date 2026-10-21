@@ -141,6 +141,20 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address syrupUSDCArcDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
 
     /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - XLayer                                                                                  ***/
+    /**************************************************************************************************************************************/
+
+    address timelockXLayer = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerXLayer       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorXLayer        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerXLayer        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminXLayer       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerXLayer = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorXLayer  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminXLayer = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    /**************************************************************************************************************************************/
     /*** CCIP Procedure Addresses - Robinhood                                                                                           ***/
     /**************************************************************************************************************************************/
 
