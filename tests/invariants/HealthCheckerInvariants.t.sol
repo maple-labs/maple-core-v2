@@ -3,6 +3,7 @@ pragma solidity ^0.8.7;
 
 import { IMockERC20, IOpenTermLoan, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
+import { IHealthChecker } from "../../contracts/interfaces/IHealthChecker.sol";
 import { InvariantCall, InvariantResult, IHealthCheckerRouter } from "../../contracts/interfaces/IHealthCheckerRouter.sol";
 
 import { HealthCheckerRouter } from "../../contracts/health-checkers/HealthCheckerRouter.sol";
@@ -425,13 +426,24 @@ contract HealthCheckerInvariants is BaseInvariants {
             }
         }
 
-        InvariantResult[][] memory results = healthCheckerRouter.check(calls);
+        assertHealthCheckerResults(address(healthCheckerRouter), calls);
+    }
 
-        for (uint256 i; i < results.length; i++) {
-            for (uint256 j; j < results[i].length; j++) {
-                assertTrue(results[i][j].valid, results[i][j].name);
+    function assertHealthCheckerResults(address router, InvariantCall[] memory calls) internal {
+        InvariantResult[][] memory expectedResults = new InvariantResult[][](calls.length);
+
+        for (uint256 i; i < calls.length; i++) {
+            expectedResults[i] = IHealthChecker(calls[i].target).check(calls[i].input);
+
+            for (uint256 j; j < expectedResults[i].length; j++) {
+                assertTrue(expectedResults[i][j].valid, expectedResults[i][j].name);
             }
         }
+
+        (bool success, bytes memory returnData) = router.staticcall(abi.encodeWithSelector(IHealthCheckerRouter.check.selector, calls));
+
+        assertTrue(success, "router reverted");
+        assertEq(returnData, abi.encode(expectedResults), "router results mismatch");
     }
 
     /**************************************************************************************************************************************/
