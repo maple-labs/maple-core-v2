@@ -1,13 +1,12 @@
 [profile.default]
-contracts               = 'contracts'             # The source directory
-test                    = 'tests'                 # The test directory
-libs                    = ['modules']             # A list of library directories
-optimizer               = false                   # Enable or disable the solc optimizer
-verbosity               = 3                       # The verbosity of tests
-block_timestamp         = 1_685_721_539           # Timestamp for tests (non-zero)
-gas_limit               = "18446744073709551615"  # Gas limit for tests
-evm_version             = "cancun"                # EVM version for tests
-disable_block_gas_limit = true                    # Allow tests to exceed gas limit
+contracts       = 'contracts'             # The source directory
+test            = 'tests'                 # The test directory
+libs            = ['modules']             # A list of library directories
+optimizer       = false                   # Enable or disable the solc optimizer
+verbosity       = 3                       # The verbosity of tests
+block_timestamp = 1_685_721_539           # Timestamp for tests (non-zero)
+gas_limit       = "18446744073709551615"  # Gas limit for tests
+evm_version     = "prague"                # EVM version for tests
 
 [profile.default.fmt]
 line_length                  = 140

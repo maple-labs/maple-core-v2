@@ -46,9 +46,9 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
 
     struct StrategySpecification {
         string name;
+        string metadata;
         StrategyKind kind;
         address delegate;
-        address managedWallet;
         address asset;
         address vault;
         uint256 liquidityCap;
@@ -60,9 +60,20 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     /*** Variables                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    uint256 constant BOOTSTRAP_MINT    = 1e6;
-    uint256 constant MAX_STRATEGY_DUST = 11;
-    uint256 constant YIELD_CAP         = 1_000_000e6; // TODO: Check if this value should be updated.
+    string constant CONFIGURED_STRATEGY = "PYUSD - USDC";
+
+    address liquidityRouterBot = makeAddr("liquidityRouterBot");
+
+    address aaveStrategyUSDCDelegate = makeAddr("aaveStrategyUSDCDelegate");
+    address aaveStrategyUSDTDelegate = makeAddr("aaveStrategyUSDTDelegate");
+    address aaveStrategyUSDGDelegate = makeAddr("aaveStrategyUSDGDelegate");
+    address skyStrategyUSDCDelegate  = makeAddr("skyStrategyUSDCDelegate");
+
+    uint256 constant BOOTSTRAP_MINT          = 1e6;
+    uint256 constant CONFIGURED_STRATEGY_CAP = type(uint256).max;
+    uint256 constant DEPLOYMENT_CAP          = 10_000e6;
+    uint256 constant MAX_STRATEGY_DUST       = 11;
+    uint256 constant YIELD_CAP               = 10_000e6;
 
     uint32 constant USDC_PROTOCOL_FEE_RATE = 0.15e6;
     uint32 constant USDT_PROTOCOL_FEE_RATE = 0.125e6;
@@ -76,7 +87,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     StrategySpecification[] specs;
 
     mapping(string => address) public strategyManagers;
-    mapping(string => address) public managedWallets;
+    mapping(string => address[]) public managedWallets;
 
     /**************************************************************************************************************************************/
     /*** Upgrade Function                                                                                                               ***/
@@ -86,13 +97,365 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         // The timelock warps are measured from here, so callers that run the upgrade from a separate instance still line up.
         startingTime = block.timestamp;
 
+        defineStrategySpecifications();
         deployContracts();
         configureGlobals();
         upgradeGlobalsAndSetupFactories();
-        setupModularStrategies();
         upgradePools();
+        configureCapsAndWhitelistDelegates();
+        deployModularStrategies();
         attachModularStrategies(attachAaveAndSkyStrategies);
         setupManagedWallets();
+        configurePermissionsAndWalletCapOnAllocationStrategy();
+        activateRemainingStrategyManagers();
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Strategy Specifications                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function defineStrategySpecifications() internal {
+        // NOTE: The Aave and Sky strategies are neither deployed nor attached as part of the modular release. They are included
+        //       here only to prove that the modular system works with those underlyings as well.
+        specs.push(
+            StrategySpecification({
+                name: "Aave Strategy USDC",
+                metadata: "Aave Strategy USDC",
+                kind: StrategyKind.Aave,
+                delegate: aaveStrategyUSDCDelegate,
+                asset: USDC,
+                vault: aUsdc,
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "Aave Strategy USDT",
+                metadata: "Aave Strategy USDT",
+                kind: StrategyKind.Aave,
+                delegate: aaveStrategyUSDTDelegate,
+                asset: USDT,
+                vault: aUsdt,
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "Aave Strategy USDG",
+                metadata: "Aave Strategy USDG",
+                kind: StrategyKind.Aave,
+                delegate: aaveStrategyUSDGDelegate,
+                asset: USDG,
+                vault: AAVE_USDG,
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "Sky Strategy USDC",
+                metadata: "Sky Strategy USDC",
+                kind: StrategyKind.Sky,
+                delegate: skyStrategyUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "DEX LP - USDC",
+                metadata: "DEX LP",
+                kind: StrategyKind.Allocation,
+                delegate: dexLpUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "PYUSD - USDC",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: pyusdUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "PYUSD - USDC (PPOA only)",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: pyusdMislUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "USDtb - USDC",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: usdtbUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "USTB - USDC",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: ustbUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "USTB - USDC (PPOA only)",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: ustbMislUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "DEX LP - USDT",
+                metadata: "DEX LP",
+                kind: StrategyKind.Allocation,
+                delegate: dexLpUSDTDelegate,
+                asset: USDT,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "Basis - USDT",
+                metadata: "Maple Trading",
+                kind: StrategyKind.Allocation,
+                delegate: basisUSDTDelegate,
+                asset: USDT,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "PYUSD - USDT",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: pyusdUSDTDelegate,
+                asset: USDT,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "USDtb - USDT",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: usdtbUSDTDelegate,
+                asset: USDT,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "USTB - USDT",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: ustbUSDTDelegate,
+                asset: USDT,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "DEX LP - USDG",
+                metadata: "DEX LP",
+                kind: StrategyKind.Allocation,
+                delegate: dexLpUSDGDelegate,
+                asset: USDG,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "PYUSD - USDG",
+                metadata: "U.S. Treasuries",
+                kind: StrategyKind.Allocation,
+                delegate: pyusdUSDGDelegate,
+                asset: USDG,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "DeFi - USDC",
+                metadata: "DeFi",
+                kind: StrategyKind.Allocation,
+                delegate: defiUSDCDelegate,
+                asset: USDC,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "Aave V3 - USDC",
+                metadata: "DeFi",
+                kind: StrategyKind.Aave,
+                delegate: aaveV3USDCDelegate,
+                asset: USDC,
+                vault: aUsdc,
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "DeFi - USDT",
+                metadata: "DeFi",
+                kind: StrategyKind.Allocation,
+                delegate: defiUSDTDelegate,
+                asset: USDT,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "Aave V3 - USDT",
+                metadata: "DeFi",
+                kind: StrategyKind.Aave,
+                delegate: aaveV3USDTDelegate,
+                asset: USDT,
+                vault: aUsdt,
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
+            })
+        );
+
+        specs.push(
+            StrategySpecification({
+                name: "DeFi - USDG",
+                metadata: "DeFi",
+                kind: StrategyKind.Allocation,
+                delegate: defiUSDGDelegate,
+                asset: USDG,
+                vault: address(0),
+                liquidityCap: 0,
+                delegateFeeRate: 0,
+                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
+            })
+        );
+
+        defineManagedWallets();
+    }
+
+    function defineManagedWallets() internal {
+        managedWallets["DEX LP - USDC"].push(dexLpUSDC_syrupUSDC_managedWallet);
+
+        managedWallets["PYUSD - USDC"].push(pyusdUSDC_syrupUSDC_managedWallet);
+        managedWallets["PYUSD - USDC"].push(pyusdUSDC_securedLending2USDC_managedWallet);
+
+        managedWallets["PYUSD - USDC (PPOA only)"].push(pyusdMislUSDC_securedLendingUSDC_managedWallet);
+
+        managedWallets["USDtb - USDC"].push(usdtbUSDC_syrupUSDC_managedWallet);
+        managedWallets["USDtb - USDC"].push(usdtbUSDC_securedLending2USDC_managedWallet);
+
+        managedWallets["USTB - USDC"].push(ustbUSDC_syrupUSDC_managedWallet);
+        managedWallets["USTB - USDC"].push(ustbUSDC_securedLending2USDC_managedWallet);
+
+        managedWallets["USTB - USDC (PPOA only)"].push(ustbMislUSDC_securedLendingUSDC_managedWallet);
+
+        managedWallets["DEX LP - USDT"].push(dexLpUSDT_syrupUSDT_managedWallet);
+        managedWallets["Basis - USDT"].push(basisUSDT_syrupUSDT_managedWallet);
+        managedWallets["PYUSD - USDT"].push(pyusdUSDT_syrupUSDT_managedWallet);
+        managedWallets["USDtb - USDT"].push(usdtbUSDT_syrupUSDT_managedWallet);
+        managedWallets["USTB - USDT"].push(ustbUSDT_syrupUSDT_managedWallet);
+
+        managedWallets["DEX LP - USDG"].push(dexLpUSDG_syrupUSDG_managedWallet);
+        managedWallets["PYUSD - USDG"].push(pyusdUSDG_syrupUSDG_managedWallet);
+
+        managedWallets["DeFi - USDC"].push(defiUSDC_syrupUSDC_managedWallet);
+        managedWallets["DeFi - USDT"].push(defiUSDT_syrupUSDT_managedWallet);
+        managedWallets["DeFi - USDG"].push(defiUSDG_syrupUSDG_managedWallet);
     }
 
     /**************************************************************************************************************************************/
@@ -100,28 +463,28 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     /**************************************************************************************************************************************/
 
     function deployContracts() internal {
-        globalsV500Implementation                = deployFromFile("Contracts@34", "Globals");
-        poolManagerV500Implementation            = deployFromFile("Contracts@34", "PoolManager");
-        poolManagerV500Initializer               = deployFromFile("Contracts@34", "PoolManagerInitializer");
-        poolManagerV500Migrator                  = deployFromFile("Contracts@34", "PoolManagerMigrator");
-        withdrawalManagerQueueV201Implementation = deployFromFile("Contracts@34", "WithdrawalManagerQueue");
-        withdrawalManagerQueueV201Initializer    = deployFromFile("Contracts@34", "WithdrawalManagerQueueInitializer");
-        strategyManagerV100Implementation        = deployFromFile("Contracts@34", "StrategyManager");
-        strategyManagerV100Initializer           = deployFromFile("Contracts@34", "StrategyManagerInitializer");
-        modularAaveStrategyV100Implementation    = deployFromFile("Contracts@34", "AaveV3Strategy");
-        modularAaveStrategyV100Initializer       = deployFromFile("Contracts@34", "AaveV3StrategyInitializer");
-        modularSkyStrategyV100Implementation     = deployFromFile("Contracts@34", "SkyStrategy");
-        modularSkyStrategyV100Initializer        = deployFromFile("Contracts@34", "SkyStrategyInitializer");
-        allocationStrategyV100Implementation     = deployFromFile("Contracts@34", "AllocationStrategy");
-        allocationStrategyV100Initializer        = deployFromFile("Contracts@34", "AllocationStrategyInitializer");
+        deployFromFileTo("Contracts@34", "Globals", globalsV500Implementation);
+        deployFromFileTo("Contracts@34", "PoolManager", PoolManagerV500Implementation);
+        deployFromFileTo("Contracts@34", "PoolManagerInitializer", PoolManagerV500Initializer);
+        deployFromFileTo("Contracts@34", "PoolManagerMigrator", PoolManagerV500Migrator);
+        deployFromFileTo("Contracts@34", "WithdrawalManagerQueue", WithdrawalManagerQueueV201Implementation);
+        deployFromFileTo("Contracts@34", "WithdrawalManagerQueueInitializer", WithdrawalManagerQueueV201Initializer);
+        deployFromFileTo("Contracts@34", "StrategyManager", strategyManagerV100Implementation);
+        deployFromFileTo("Contracts@34", "StrategyManagerInitializer", strategyManagerV100Initializer);
+        deployFromFileTo("Contracts@34", "AaveV3Strategy", modularAaveStrategyV100Implementation);
+        deployFromFileTo("Contracts@34", "AaveV3StrategyInitializer", modularAaveStrategyV100Initializer);
+        deployFromFileTo("Contracts@34", "SkyStrategy", modularSkyStrategyV100Implementation);
+        deployFromFileTo("Contracts@34", "SkyStrategyInitializer", modularSkyStrategyV100Initializer);
+        deployFromFileTo("Contracts@34", "AllocationStrategy", allocationStrategyV100Implementation);
+        deployFromFileTo("Contracts@34", "AllocationStrategyInitializer", allocationStrategyV100Initializer);
 
-        poolDeployerV500           = deployFromFile("Contracts@34", "PoolDeployer", abi.encode(globals));
-        strategyDeployerV100       = deployFromFile("Contracts@34", "StrategyDeployer", abi.encode(globals));
-        strategyManagerFactory     = deployFromFile("Contracts@34", "StrategyManagerFactory", abi.encode(globals));
-        modularAaveStrategyFactory = deployFromFile("Contracts@34", "AaveV3StrategyFactory", abi.encode(globals));
-        modularSkyStrategyFactory  = deployFromFile("Contracts@34", "SkyStrategyFactory", abi.encode(globals));
-        allocationStrategyFactory  = deployFromFile("Contracts@34", "AllocationStrategyFactory", abi.encode(globals));
-        liquidityRouterV100        = deployFromFile("Contracts@34", "LiquidityRouter", abi.encode(globals));
+        deployFromFileTo("Contracts@34", "PoolDeployer", abi.encode(globals), poolDeployerV5);
+        deployFromFileTo("Contracts@34", "StrategyDeployer", abi.encode(globals), strategyDeployerV100);
+        deployFromFileTo("Contracts@34", "StrategyManagerFactory", abi.encode(globals), strategyManagerFactory);
+        deployFromFileTo("Contracts@34", "AaveV3StrategyFactory", abi.encode(globals), modularAaveStrategyFactory);
+        deployFromFileTo("Contracts@34", "SkyStrategyFactory", abi.encode(globals), modularSkyStrategyFactory);
+        deployFromFileTo("Contracts@34", "AllocationStrategyFactory", abi.encode(globals), allocationStrategyFactory);
+        deployFromFileTo("Contracts@34", "LiquidityRouter", abi.encode(globals), liquidityRouterV100);
     }
 
     /**************************************************************************************************************************************/
@@ -138,8 +501,8 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         IGlobals(globals).setValidInstanceOf("STRATEGY_VAULT", AAVE_USDG, true);
         IGlobals(globals).setValidInstanceOf("LIQUIDITY_ROUTER", liquidityRouterV100, true);
 
-        IGlobals(globals).setCanDeployFrom(poolManagerFactory, poolDeployerV500, true);
-        IGlobals(globals).setCanDeployFrom(withdrawalManagerQueueFactory, poolDeployerV500, true);
+        IGlobals(globals).setCanDeployFrom(poolManagerFactory, poolDeployerV5, true);
+        IGlobals(globals).setCanDeployFrom(withdrawalManagerQueueFactory, poolDeployerV5, true);
 
         IGlobals(globals).setCanDeployFrom(strategyManagerFactory, strategyDeployerV100, true);
         IGlobals(globals).setCanDeployFrom(modularAaveStrategyFactory, strategyDeployerV100, true);
@@ -155,7 +518,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     }
 
     /**************************************************************************************************************************************/
-    /*** Step 3 - Upgrade Globals and Setup Factories (Timelocked)                                                                     ***/
+    /*** Step 3 - Upgrade Globals and Setup Factories (Timelocked)                                                                      ***/
     /**************************************************************************************************************************************/
 
     function upgradeGlobalsAndSetupFactories() internal {
@@ -168,14 +531,14 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         proposals[1] = Proposal(
             poolManagerFactory,
             abi.encodeWithSignature(
-                "registerImplementation(uint256,address,address)", 500, poolManagerV500Implementation, poolManagerV500Initializer
+                "registerImplementation(uint256,address,address)", 500, PoolManagerV500Implementation, PoolManagerV500Initializer
             )
         );
 
         proposals[2] = Proposal(poolManagerFactory, abi.encodeWithSignature("setDefaultVersion(uint256)", 500));
 
         proposals[3] = Proposal(
-            poolManagerFactory, abi.encodeWithSignature("enableUpgradePath(uint256,uint256,address)", 400, 500, poolManagerV500Migrator)
+            poolManagerFactory, abi.encodeWithSignature("enableUpgradePath(uint256,uint256,address)", 400, 500, PoolManagerV500Migrator)
         );
 
         // Strategy Manager Factory
@@ -233,8 +596,8 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
             abi.encodeWithSignature(
                 "registerImplementation(uint256,address,address)",
                 201,
-                withdrawalManagerQueueV201Implementation,
-                withdrawalManagerQueueV201Initializer
+                WithdrawalManagerQueueV201Implementation,
+                WithdrawalManagerQueueV201Initializer
             )
         );
 
@@ -261,291 +624,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     }
 
     /**************************************************************************************************************************************/
-    /*** Step 4 - Setup Modular Strategies                                                                                              ***/
-    /**************************************************************************************************************************************/
-
-    function setupModularStrategies() internal {
-        specs.push(
-            StrategySpecification({
-                name: "Aave Strategy USDC",
-                kind: StrategyKind.Aave,
-                delegate: aaveStrategyUSDCDelegate,
-                managedWallet: address(0),
-                asset: USDC,
-                vault: aUsdc,
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Aave Strategy USDT",
-                kind: StrategyKind.Aave,
-                delegate: aaveStrategyUSDTDelegate,
-                managedWallet: address(0),
-                asset: USDT,
-                vault: aUsdt,
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Aave Strategy USDG",
-                kind: StrategyKind.Aave,
-                delegate: aaveStrategyUSDGDelegate,
-                managedWallet: address(0),
-                asset: USDG,
-                vault: AAVE_USDG,
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Sky Strategy USDC",
-                kind: StrategyKind.Sky,
-                delegate: skyStrategyUSDCDelegate,
-                managedWallet: address(0),
-                asset: USDC,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "LP DEX USDC",
-                kind: StrategyKind.Allocation,
-                delegate: lpDexUSDCDelegate,
-                managedWallet: lpDexUSDCManagedWallet,
-                asset: USDC,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Cross Pool USDC",
-                kind: StrategyKind.Allocation,
-                delegate: crossPoolUSDCDelegate,
-                managedWallet: crossPoolUSDCManagedWallet,
-                asset: USDC,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "TBills USDC",
-                kind: StrategyKind.Allocation,
-                delegate: tBillsUSDCDelegate,
-                managedWallet: tBillsUSDCManagedWallet,
-                asset: USDC,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "PYUSD USDC",
-                kind: StrategyKind.Allocation,
-                delegate: pyusdUSDCDelegate,
-                managedWallet: pyusdUSDCManagedWallet,
-                asset: USDC,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDC_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Spreads USDT",
-                kind: StrategyKind.Allocation,
-                delegate: spreadsUSDTDelegate,
-                managedWallet: spreadsUSDTManagedWallet,
-                asset: USDT,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "LP DEX USDT",
-                kind: StrategyKind.Allocation,
-                delegate: lpDexUSDTDelegate,
-                managedWallet: lpDexUSDTManagedWallet,
-                asset: USDT,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Cross Pool USDT",
-                kind: StrategyKind.Allocation,
-                delegate: crossPoolUSDTDelegate,
-                managedWallet: crossPoolUSDTManagedWallet,
-                asset: USDT,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "TBills USDT",
-                kind: StrategyKind.Allocation,
-                delegate: tBillsUSDTDelegate,
-                managedWallet: tBillsUSDTManagedWallet,
-                asset: USDT,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "PYUSD USDT",
-                kind: StrategyKind.Allocation,
-                delegate: pyusdUSDTDelegate,
-                managedWallet: pyusdUSDTManagedWallet,
-                asset: USDT,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDT_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "LP DEX USDG",
-                kind: StrategyKind.Allocation,
-                delegate: lpDexUSDGDelegate,
-                managedWallet: lpDexUSDGManagedWallet,
-                asset: USDG,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "Cross Pool USDG",
-                kind: StrategyKind.Allocation,
-                delegate: crossPoolUSDGDelegate,
-                managedWallet: crossPoolUSDGManagedWallet,
-                asset: USDG,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "TBills USDG",
-                kind: StrategyKind.Allocation,
-                delegate: tBillsUSDGDelegate,
-                managedWallet: tBillsUSDGManagedWallet,
-                asset: USDG,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
-            })
-        );
-
-        specs.push(
-            StrategySpecification({
-                name: "PYUSD USDG",
-                kind: StrategyKind.Allocation,
-                delegate: pyusdUSDGDelegate,
-                managedWallet: pyusdUSDGManagedWallet,
-                asset: USDG,
-                vault: address(0),
-                liquidityCap: 0,
-                delegateFeeRate: 0,
-                protocolFeeRate: USDG_PROTOCOL_FEE_RATE
-            })
-        );
-
-        /**********************************************************************************************************************************/
-        /*** Step 4.1 - Preparation                                                                                                     ***/
-        /**********************************************************************************************************************************/
-
-        for (uint256 i; i < specs.length; i++) {
-            erc20_mint(specs[i].asset, specs[i].delegate, BOOTSTRAP_MINT);
-            erc20_approve(specs[i].asset, specs[i].delegate, strategyDeployerV100, BOOTSTRAP_MINT);
-
-            vm.prank(operationalAdmin);
-            IGlobals(globals).setValidStrategyDelegate(specs[i].delegate, true);
-        }
-
-        /**********************************************************************************************************************************/
-        /*** Step 4.2 - Deployment                                                                                                      ***/
-        /**********************************************************************************************************************************/
-
-        for (uint256 i; i < specs.length; i++) {
-            StrategySpecification memory spec = specs[i];
-
-            vm.prank(spec.delegate);
-            (address strategyManager,) = IStrategyDeployer(strategyDeployerV100).deploy({
-                strategyManagerFactory: strategyManagerFactory,
-                strategyFactory:        strategyFactory(spec.kind),
-                strategyLiquidityCap:   spec.liquidityCap,
-                strategyDeploymentData: buildDeploymentData(spec),
-                bootstrapFundingData:   ""
-            });
-
-            strategyManagers[spec.name] = strategyManager;
-        }
-
-        /**********************************************************************************************************************************/
-        /*** Step 4.3 - Activation                                                                                                      ***/
-        /**********************************************************************************************************************************/
-
-        for (uint256 i; i < specs.length; i++) {
-            vm.prank(operationalAdmin);
-            IGlobals(globals).activateStrategyManager(strategyManagers[specs[i].name]);
-        }
-    }
-
-    /**************************************************************************************************************************************/
-    /*** Step 5 - Upgrade Pools                                                                                                         ***/
+    /*** Step 4 - Upgrade Pools                                                                                                         ***/
     /**************************************************************************************************************************************/
 
     function upgradePools() internal {
@@ -554,15 +633,17 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         poolManagers.push(syrupUSDGPoolManager);
         poolManagers.push(securedLendingUSDCPoolManager);
         poolManagers.push(securedLending2USDCPoolManager);
+        poolManagers.push(securedLending3USDCPoolManager);
 
         openTermLoanManagers.push(syrupUSDCOpenTermLoanManager);
         openTermLoanManagers.push(syrupUSDTOpenTermLoanManager);
         openTermLoanManagers.push(syrupUSDGOpenTermLoanManager);
         openTermLoanManagers.push(securedLendingUSDCOpenTermLoanManager);
         openTermLoanManagers.push(securedLending2USDCOpenTermLoanManager);
+        openTermLoanManagers.push(securedLending3USDCOpenTermLoanManager);
 
         /**********************************************************************************************************************************/
-        /*** Step 5.1 - Cleanup Old Strategies                                                                                          ***/
+        /*** Step 4.1 - Cleanup Old Strategies                                                                                          ***/
         /**********************************************************************************************************************************/
 
         address[3] memory fixedTermLoanManagers =
@@ -587,7 +668,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         /**********************************************************************************************************************************/
-        /*** Step 5.2 - Upgrade pool managers                                                                                           ***/
+        /*** Step 4.2 - Upgrade pool managers                                                                                           ***/
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < poolManagers.length; i++) {
@@ -604,7 +685,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         /**********************************************************************************************************************************/
-        /*** Step 5.3 - Upgrade Withdrawal Managers                                                                                     ***/
+        /*** Step 4.3 - Upgrade Withdrawal Managers                                                                                     ***/
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < poolManagers.length; i++) {
@@ -615,14 +696,16 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
             vm.prank(securityAdmin);
             withdrawalManager.upgrade(201, "");
 
-            assertEq(withdrawalManager.implementation(), withdrawalManagerQueueV201Implementation);
+            assertEq(withdrawalManager.implementation(), WithdrawalManagerQueueV201Implementation);
             assertEq(withdrawalManager.totalShares(),    totalShares);
         }
+    }
 
-        /**********************************************************************************************************************************/
-        /*** Step 5.4 - Configure Open Term Loan Manager Caps                                                                           ***/
-        /**********************************************************************************************************************************/
+    /**************************************************************************************************************************************/
+    /*** Step 5 - Configure Open Term Loan Manager Caps and Whitelist Strategy Delegates                                                ***/
+    /**************************************************************************************************************************************/
 
+    function configureCapsAndWhitelistDelegates() internal {
         for (uint256 i; i < poolManagers.length; i++) {
             assertEq(IPoolManager(poolManagers[i]).strategyCapOf(openTermLoanManagers[i]), 0);
 
@@ -631,14 +714,45 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
 
             assertEq(IPoolManager(poolManagers[i]).strategyCapOf(openTermLoanManagers[i]), type(uint256).max);
         }
+
+        for (uint256 i; i < specs.length; i++) {
+            vm.prank(operationalAdmin);
+            IGlobals(globals).setValidStrategyDelegate(specs[i].delegate, true);
+        }
     }
 
     /**************************************************************************************************************************************/
-    /*** Step 6 - Attach Modular Strategies (Timelocked)                                                                                ***/
+    /*** Step 6 - Deploy Modular Strategies                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    function deployModularStrategies() internal {
+        for (uint256 i; i < specs.length; i++) {
+            erc20_mint(specs[i].asset, specs[i].delegate, BOOTSTRAP_MINT);
+            erc20_approve(specs[i].asset, specs[i].delegate, strategyDeployerV100, BOOTSTRAP_MINT);
+        }
+
+        for (uint256 i; i < specs.length; i++) {
+            StrategySpecification memory spec = specs[i];
+
+            vm.prank(spec.delegate);
+            (address strategyManager,) = IStrategyDeployer(strategyDeployerV100).deploy({
+                strategyManagerFactory: strategyManagerFactory,
+                strategyFactory:        strategyFactory(spec.kind),
+                strategyLiquidityCap:   spec.liquidityCap,
+                strategyDeploymentData: buildDeploymentData(spec),
+                bootstrapFundingData:   ""
+            });
+
+            strategyManagers[spec.name] = strategyManager;
+        }
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Step 7 - Attach Modular Strategies (Timelocked)                                                                                ***/
     /**************************************************************************************************************************************/
 
     function attachModularStrategies(bool attachAaveAndSkyStrategies) internal {
-        Proposal[] memory allProposals = new Proposal[](21);
+        Proposal[] memory allProposals = new Proposal[](27);
 
         uint256 count;
 
@@ -654,16 +768,22 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         allProposals[count++] =
-            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["LP DEX USDC"]));
+            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["DEX LP - USDC"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Cross Pool USDC"]));
+            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD - USDC"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["TBills USDC"]));
+            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USDtb - USDC"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD USDC"]));
+            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USTB - USDC"]));
+
+        allProposals[count++] =
+            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["DeFi - USDC"]));
+
+        allProposals[count++] =
+            Proposal(syrupUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Aave V3 - USDC"]));
 
         // Syrup USDT
         if (attachAaveAndSkyStrategies) {
@@ -673,19 +793,25 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         allProposals[count++] =
-            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["LP DEX USDT"]));
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["DEX LP - USDT"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Cross Pool USDT"]));
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Basis - USDT"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["TBills USDT"]));
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD - USDT"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD USDT"]));
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USDtb - USDT"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Spreads USDT"]));
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USTB - USDT"]));
+
+        allProposals[count++] =
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["DeFi - USDT"]));
+
+        allProposals[count++] =
+            Proposal(syrupUSDTPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Aave V3 - USDT"]));
 
         // Syrup USDG
         if (attachAaveAndSkyStrategies) {
@@ -695,16 +821,13 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         allProposals[count++] =
-            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["LP DEX USDG"]));
+            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["DEX LP - USDG"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["Cross Pool USDG"]));
+            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD - USDG"]));
 
         allProposals[count++] =
-            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["TBills USDG"]));
-
-        allProposals[count++] =
-            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD USDG"]));
+            Proposal(syrupUSDGPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["DeFi - USDG"]));
 
         // MISL
         if (attachAaveAndSkyStrategies) {
@@ -719,11 +842,26 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         allProposals[count++] = Proposal(
-            securedLendingUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["TBills USDC"])
+            securedLendingUSDCPoolManager,
+            abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD - USDC (PPOA only)"])
         );
 
         allProposals[count++] = Proposal(
-            securedLendingUSDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD USDC"])
+            securedLendingUSDCPoolManager,
+            abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USTB - USDC (PPOA only)"])
+        );
+
+        // MISL2
+        allProposals[count++] = Proposal(
+            securedLending2USDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["PYUSD - USDC"])
+        );
+
+        allProposals[count++] = Proposal(
+            securedLending2USDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USDtb - USDC"])
+        );
+
+        allProposals[count++] = Proposal(
+            securedLending2USDCPoolManager, abi.encodeWithSignature("addStrategyManager(address)", strategyManagers["USTB - USDC"])
         );
 
         Proposal[] memory proposals = new Proposal[](count);
@@ -733,13 +871,13 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
         }
 
         /**********************************************************************************************************************************/
-        /*** Step 6.1 - Schedule Proposals                                                                                              ***/
+        /*** Step 7.1 - Schedule Proposals                                                                                              ***/
         /**********************************************************************************************************************************/
 
         uint256[] memory proposalIds = scheduleProposals(proposals);
 
         /**********************************************************************************************************************************/
-        /*** Step 6.2 - Execute Proposals                                                                                               ***/
+        /*** Step 7.2 - Execute Proposals                                                                                               ***/
         /**********************************************************************************************************************************/
 
         vm.warp(startingTime + 8 days);
@@ -748,44 +886,77 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
     }
 
     /**************************************************************************************************************************************/
-    /*** Step 7 - Setup Managed Wallets                                                                                                 ***/
+    /*** Step 8 - Whitelist Managed Wallets and Activate Strategy Manager                                                               ***/
     /**************************************************************************************************************************************/
 
     function setupManagedWallets() internal {
-        for (uint256 i; i < specs.length; i++) {
-            if (specs[i].kind == StrategyKind.Allocation) {
-                managedWallets[specs[i].name] = specs[i].managedWallet;
-            }
-        }
-
         /**********************************************************************************************************************************/
-        /*** Step 7.1 - Whitelist Managed Wallets                                                                                       ***/
+        /*** Step 8.1 - Whitelist Managed Wallets                                                                                       ***/
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < specs.length; i++) {
-            if (specs[i].kind == StrategyKind.Allocation) {
+            address[] memory wallets = managedWallets[specs[i].name];
+
+            for (uint256 j; j < wallets.length; j++) {
                 vm.prank(operationalAdmin);
-                IGlobals(globals).setValidMapleManagedWallet(managedWallets[specs[i].name], true);
+                IGlobals(globals).setValidMapleManagedWallet(wallets[j], true);
             }
         }
 
+        vm.prank(operationalAdmin);
+        IGlobals(globals).setValidInstanceOf("LIQUIDITY_ROUTER_BOT", liquidityRouterBot, true);
+
         /**********************************************************************************************************************************/
-        /*** Step 7.2 - Set Managed Wallet Permissions                                                                                  ***/
+        /*** Step 8.2 - Configure and Activate the First Strategy Manager                                                               ***/
         /**********************************************************************************************************************************/
 
-        address[] memory addresses = new address[](1);
-        bool[] memory    flags     = new bool[](1);
+        address configuredStrategyManager = strategyManagers[CONFIGURED_STRATEGY];
 
+        vm.prank(operationalAdmin);
+        IPoolManager(syrupUSDCPoolManager).setStrategyCap(configuredStrategyManager, CONFIGURED_STRATEGY_CAP);
+
+        vm.prank(operationalAdmin);
+        IGlobals(globals).activateStrategyManager(configuredStrategyManager);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Step 9 - Configure Permissions and Wallet Cap on Allocation Strategy                                                           ***/
+    /**************************************************************************************************************************************/
+
+    function configurePermissionsAndWalletCapOnAllocationStrategy() internal {
         for (uint256 i; i < specs.length; i++) {
-            if (specs[i].kind != StrategyKind.Allocation) continue;
+            if (keccak256(bytes(specs[i].name)) != keccak256(bytes(CONFIGURED_STRATEGY))) continue;
 
             address underlyingStrategy = IStrategyManager(strategyManagers[specs[i].name]).underlyingStrategy();
 
-            addresses[0] = managedWallets[specs[i].name];
-            flags[0]     = true;
+            address[] memory addresses = managedWallets[specs[i].name];
+            bool[] memory    flags     = new bool[](addresses.length);
+            uint256[] memory caps      = new uint256[](addresses.length);
 
-            vm.prank(specs[i].delegate);
+            for (uint256 j; j < addresses.length; j++) {
+                flags[j] = true;
+                caps[j]  = DEPLOYMENT_CAP;
+            }
+
+            vm.startPrank(specs[i].delegate);
+
             IAllocationStrategy(underlyingStrategy).setPermissions(addresses, flags, flags, flags);
+            IAllocationStrategy(underlyingStrategy).setDeploymentCaps(addresses, caps);
+
+            vm.stopPrank();
+        }
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Step 10 - Activate Remaining Strategy Managers                                                                                 ***/
+    /**************************************************************************************************************************************/
+
+    function activateRemainingStrategyManagers() internal {
+        for (uint256 i; i < specs.length; i++) {
+            if (keccak256(bytes(specs[i].name)) == keccak256(bytes(CONFIGURED_STRATEGY))) continue;
+
+            vm.prank(operationalAdmin);
+            IGlobals(globals).activateStrategyManager(strategyManagers[specs[i].name]);
         }
     }
 
@@ -802,7 +973,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
                     strategyProtocolFeeRate: spec_.protocolFeeRate,
                     referralCode: 0,
                     useVirtualUnderlyingBalance: true,
-                    strategyMetadata: spec_.name
+                    strategyMetadata: spec_.metadata
                 })
             );
         }
@@ -816,7 +987,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
                     strategyDelegateFeeRate: spec_.delegateFeeRate,
                     strategyProtocolFeeRate: spec_.protocolFeeRate,
                     referralCode: 0,
-                    strategyMetadata: spec_.name
+                    strategyMetadata: spec_.metadata
                 })
             );
         }
@@ -825,7 +996,7 @@ contract ModularReleaseBase is ProtocolActions, UpgradeAddressRegistry {
             data_ = abi.encode(
                 AllocationStrategyInitializerParams({
                     fundsAsset: spec_.asset,
-                    strategyMetadata: spec_.name,
+                    strategyMetadata: spec_.metadata,
                     strategyDelegateFeeRate: spec_.delegateFeeRate,
                     strategyProtocolFeeRate: spec_.protocolFeeRate,
                     yieldCap: YIELD_CAP

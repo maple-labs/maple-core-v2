@@ -20,9 +20,9 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
 
     string constant AAVE_STRATEGY_NAME       = "Aave Strategy USDC";
     string constant SKY_STRATEGY_NAME        = "Sky Strategy USDC";
-    string constant ALLOCATION_STRATEGY_NAME = "LP DEX USDC";
+    string constant ALLOCATION_STRATEGY_NAME = "DEX LP - USDC";
 
-    uint256 constant UPGRADE_FORK_BLOCK = 26_096_404;
+    uint256 constant UPGRADE_FORK_BLOCK = 26_185_500;
 
     function _setupUpgradeForkEnvironment() internal {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), UPGRADE_FORK_BLOCK);
@@ -46,7 +46,7 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
         poolManager1 = upgrade.poolManagers(0);
         pool1        = IPoolManager(poolManager1).pool();
 
-        managedWalletShared                = upgrade.managedWallets(ALLOCATION_STRATEGY_NAME);
+        managedWalletShared                = upgrade.managedWallets(ALLOCATION_STRATEGY_NAME, 0);
         aaveStrategyManagerShared          = upgrade.strategyManagers(AAVE_STRATEGY_NAME);
         skyStrategyManagerShared           = upgrade.strategyManagers(SKY_STRATEGY_NAME);
         allocationStrategyManagerShared    = upgrade.strategyManagers(ALLOCATION_STRATEGY_NAME);
@@ -75,7 +75,7 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
 
         poolManagerFactory    = upgrade.poolManagerFactory();
         queueWMFactory        = upgrade.withdrawalManagerQueueFactory();
-        poolDeployer          = IPoolDeployer(upgrade.poolDeployerV500());
+        poolDeployer          = IPoolDeployer(upgrade.poolDeployerV5());
         poolPermissionManager = IPoolPermissionManager(upgrade.poolPermissionManager());
 
         strategyFactories.push(upgrade.openTermLoanManagerFactory());
@@ -108,6 +108,7 @@ contract FuzzedSetupUpgradeFork is FuzzedSetupFork {
         IStrategyManager(allocationStrategyManagerShared).setStrategyLiquidityCap(type(uint256).max);
         vm.stopPrank();
 
+        setPermissions(allocationUnderlyingStrategyShared, managedWalletShared, true, true, true);
         setDeploymentCap(allocationUnderlyingStrategyShared, managedWalletShared, type(uint256).max);
 
         for (uint256 i; i < 5; ++i) {

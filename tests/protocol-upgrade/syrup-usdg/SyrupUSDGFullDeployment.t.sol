@@ -44,7 +44,7 @@ contract SyrupUSDGFullDeploymentTests is SyrupUSDGDeploymentBase {
         assertEq(IPoolManager(usdgPoolManager).governor(),                  timelock);
         assertEq(IPoolManager(usdgPoolManager).globals(),                   globals);
         assertEq(IPoolManager(usdgPoolManager).factory(),                   poolManagerFactory);
-        assertEq(IPoolManager(usdgPoolManager).implementation(),            poolManagerV500Implementation);
+        assertEq(IPoolManager(usdgPoolManager).implementation(),            PoolManagerV500Implementation);
         assertEq(IPoolManager(usdgPoolManager).configured(),                true);
         assertEq(IPoolManager(usdgPoolManager).active(),                    true);
         assertEq(IPoolManager(usdgPoolManager).hasSufficientCover(),        true);

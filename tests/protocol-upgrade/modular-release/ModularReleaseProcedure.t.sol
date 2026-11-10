@@ -24,10 +24,12 @@ contract ModularReleaseProcedure is ModularReleaseBase {
     uint256 maxRoundingError = 3;
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_096_404);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_186_000);
 
         startingTime = block.timestamp;
 
+        // NOTE: The Aave and Sky strategies are not part of the release. They are included here only to prove that the modular
+        //       system works with those underlyings as well.
         upgradeProtocol({
             attachAaveAndSkyStrategies: true
         });
@@ -40,9 +42,9 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         assertEq(address(uint160(uint256(vm.load(globals, IMPLEMENTATION_SLOT)))), globalsV500Implementation);
 
-        assertEq(IGlobals(globals).isInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory),                  true);
-        assertEq(IGlobals(globals).isInstanceOf("WITHDRAWAL_MANAGER_FACTORY", withdrawalManagerQueueFactory), true);
-        assertEq(IGlobals(globals).isInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory),          true);
+        assertEq(IGlobals(globals).isInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory),                        true);
+        assertEq(IGlobals(globals).isInstanceOf("WITHDRAWAL_MANAGER_QUEUE_FACTORY", withdrawalManagerQueueFactory), true);
+        assertEq(IGlobals(globals).isInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory),                true);
 
         assertEq(IGlobals(globals).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", modularAaveStrategyFactory), true);
         assertEq(IGlobals(globals).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", modularSkyStrategyFactory),  true);
@@ -55,8 +57,8 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         assertEq(IGlobals(globals).isInstanceOf("LIQUIDITY_ROUTER", liquidityRouterV100), true);
 
-        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory, poolDeployerV500),            true);
-        assertEq(IGlobals(globals).canDeployFrom(withdrawalManagerQueueFactory, poolDeployerV500), true);
+        assertEq(IGlobals(globals).canDeployFrom(poolManagerFactory, poolDeployerV5),            true);
+        assertEq(IGlobals(globals).canDeployFrom(withdrawalManagerQueueFactory, poolDeployerV5), true);
 
         assertEq(IGlobals(globals).canDeployFrom(strategyManagerFactory, strategyDeployerV100),     true);
         assertEq(IGlobals(globals).canDeployFrom(modularAaveStrategyFactory, strategyDeployerV100), true);
@@ -73,14 +75,18 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
             if (specs[i].kind != StrategyKind.Allocation) continue;
 
-            assertEq(IGlobals(globals).isInstanceOf("MAPLE_MANAGED_WALLET", managedWallets[specs[i].name]), true);
+            address[] memory wallets = managedWallets[specs[i].name];
+
+            for (uint256 j; j < wallets.length; j++) {
+                assertEq(IGlobals(globals).isInstanceOf("MAPLE_MANAGED_WALLET", wallets[j]), true);
+            }
         }
 
         /**********************************************************************************************************************************/
         /*** Factories                                                                                                                  ***/
         /**********************************************************************************************************************************/
 
-        assertEq(IMapleProxyFactory(poolManagerFactory).implementationOf(500),           poolManagerV500Implementation);
+        assertEq(IMapleProxyFactory(poolManagerFactory).implementationOf(500),           PoolManagerV500Implementation);
         assertEq(IMapleProxyFactory(poolManagerFactory).defaultVersion(),                500);
         assertEq(IMapleProxyFactory(poolManagerFactory).upgradeEnabledForPath(400, 500), true);
 
@@ -96,7 +102,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assertEq(IMapleProxyFactory(allocationStrategyFactory).implementationOf(100), allocationStrategyV100Implementation);
         assertEq(IMapleProxyFactory(allocationStrategyFactory).defaultVersion(),      100);
 
-        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).implementationOf(201), withdrawalManagerQueueV201Implementation);
+        assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).implementationOf(201), WithdrawalManagerQueueV201Implementation);
         assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).defaultVersion(), 201);
         assertEq(IMapleProxyFactory(withdrawalManagerQueueFactory).upgradeEnabledForPath(200, 201), true);
 
@@ -106,53 +112,65 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         for (uint256 i; i < poolManagers.length; i++) {
             assertEq(IPoolManager(poolManagers[i]).factory(),        poolManagerFactory);
-            assertEq(IPoolManager(poolManagers[i]).implementation(), poolManagerV500Implementation);
+            assertEq(IPoolManager(poolManagers[i]).implementation(), PoolManagerV500Implementation);
             assertEq(IPoolManager(poolManagers[i]).active(),         true);
             assertEq(IPoolManager(poolManagers[i]).configured(),     true);
 
             assertEq(IPoolManager(poolManagers[i]).strategyCapOf(openTermLoanManagers[i]), type(uint256).max);
         }
 
-        assertEq(IPoolManager(syrupUSDCPoolManager).strategyListLength(), 7);
+        assertEq(IPoolManager(syrupUSDCPoolManager).strategyListLength(), 9);
 
         assertEq(IPoolManager(syrupUSDCPoolManager).isStrategy(syrupUSDCOpenTermLoanManager),                  true);
         assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["Aave Strategy USDC"]), true);
         assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["Sky Strategy USDC"]),  true);
-        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["LP DEX USDC"]),        true);
-        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["Cross Pool USDC"]),    true);
-        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["TBills USDC"]),        true);
-        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["PYUSD USDC"]),         true);
+        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["DEX LP - USDC"]),      true);
+        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["PYUSD - USDC"]),       true);
+        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["USDtb - USDC"]),       true);
+        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["USTB - USDC"]),        true);
+        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["DeFi - USDC"]),        true);
+        assertEq(IPoolManager(syrupUSDCPoolManager).isStrategyManager(strategyManagers["Aave V3 - USDC"]),     true);
 
-        assertEq(IPoolManager(syrupUSDTPoolManager).strategyListLength(), 7);
+        assertEq(IPoolManager(syrupUSDTPoolManager).strategyListLength(), 9);
 
         assertEq(IPoolManager(syrupUSDTPoolManager).isStrategy(syrupUSDTOpenTermLoanManager),                  true);
         assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["Aave Strategy USDT"]), true);
-        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["LP DEX USDT"]),        true);
-        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["Cross Pool USDT"]),    true);
-        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["TBills USDT"]),        true);
-        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["PYUSD USDT"]),         true);
-        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["Spreads USDT"]),       true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["DEX LP - USDT"]),      true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["Basis - USDT"]),       true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["PYUSD - USDT"]),       true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["USDtb - USDT"]),       true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["USTB - USDT"]),        true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["DeFi - USDT"]),        true);
+        assertEq(IPoolManager(syrupUSDTPoolManager).isStrategyManager(strategyManagers["Aave V3 - USDT"]),     true);
 
-        assertEq(IPoolManager(syrupUSDGPoolManager).strategyListLength(), 6);
+        assertEq(IPoolManager(syrupUSDGPoolManager).strategyListLength(), 5);
 
         assertEq(IPoolManager(syrupUSDGPoolManager).isStrategy(syrupUSDGOpenTermLoanManager),                  true);
         assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["Aave Strategy USDG"]), true);
-        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["LP DEX USDG"]),        true);
-        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["Cross Pool USDG"]),    true);
-        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["TBills USDG"]),        true);
-        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["PYUSD USDG"]),         true);
+        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["DEX LP - USDG"]),      true);
+        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["PYUSD - USDG"]),       true);
+        assertEq(IPoolManager(syrupUSDGPoolManager).isStrategyManager(strategyManagers["DeFi - USDG"]),        true);
 
         assertEq(IPoolManager(securedLendingUSDCPoolManager).strategyListLength(), 5);
 
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategy(securedLendingUSDCOpenTermLoanManager),         true);
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["Aave Strategy USDC"]), true);
         assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["Sky Strategy USDC"]),  true);
-        assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["TBills USDC"]),        true);
-        assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["PYUSD USDC"]),         true);
 
-        assertEq(IPoolManager(securedLending2USDCPoolManager).strategyListLength(), 1);
+        assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["PYUSD - USDC (PPOA only)"]), true);
 
-        assertEq(IPoolManager(securedLending2USDCPoolManager).isStrategy(securedLending2USDCOpenTermLoanManager), true);
+        assertEq(IPoolManager(securedLendingUSDCPoolManager).isStrategyManager(strategyManagers["USTB - USDC (PPOA only)"]), true);
+
+        assertEq(IPoolManager(securedLending2USDCPoolManager).strategyListLength(), 4);
+
+        assertEq(IPoolManager(securedLending2USDCPoolManager).isStrategy(securedLending2USDCOpenTermLoanManager),  true);
+        assertEq(IPoolManager(securedLending2USDCPoolManager).isStrategyManager(strategyManagers["PYUSD - USDC"]), true);
+        assertEq(IPoolManager(securedLending2USDCPoolManager).isStrategyManager(strategyManagers["USDtb - USDC"]), true);
+        assertEq(IPoolManager(securedLending2USDCPoolManager).isStrategyManager(strategyManagers["USTB - USDC"]),  true);
+
+        assertEq(IPoolManager(securedLending3USDCPoolManager).strategyListLength(), 1);
+
+        assertEq(IPoolManager(securedLending3USDCPoolManager).isStrategy(securedLending3USDCOpenTermLoanManager), true);
 
         /**********************************************************************************************************************************/
         /*** Withdrawal Managers                                                                                                        ***/
@@ -162,7 +180,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
             address withdrawalManager = IPoolManager(poolManagers[i]).withdrawalManager();
 
             assertEq(IWithdrawalManagerQueue(withdrawalManager).factory(),        withdrawalManagerQueueFactory);
-            assertEq(IWithdrawalManagerQueue(withdrawalManager).implementation(), withdrawalManagerQueueV201Implementation);
+            assertEq(IWithdrawalManagerQueue(withdrawalManager).implementation(), WithdrawalManagerQueueV201Implementation);
         }
 
         /**********************************************************************************************************************************/
@@ -226,12 +244,20 @@ contract ModularReleaseProcedure is ModularReleaseBase {
                 assertEq(IAllocationStrategy(underlyingStrategy).strategyProtocolFeeRate(), spec.protocolFeeRate);
                 assertEq(IAllocationStrategy(underlyingStrategy).assetsUnderManagement(),   BOOTSTRAP_MINT);
 
-                (bool canDeployAssets, bool canReturnAssets, bool canRealizeYield) =
-                    IAllocationStrategy(underlyingStrategy).permissions(managedWallets[spec.name]);
+                bool isConfigured = keccak256(bytes(spec.name)) == keccak256(bytes(CONFIGURED_STRATEGY));
 
-                assertEq(canDeployAssets, true);
-                assertEq(canReturnAssets, true);
-                assertEq(canRealizeYield, true);
+                address[] memory wallets = managedWallets[spec.name];
+
+                for (uint256 j; j < wallets.length; j++) {
+                    (bool canDeployAssets, bool canReturnAssets, bool canRealizeYield) =
+                        IAllocationStrategy(underlyingStrategy).permissions(wallets[j]);
+
+                    assertEq(canDeployAssets, isConfigured);
+                    assertEq(canReturnAssets, isConfigured);
+                    assertEq(canRealizeYield, isConfigured);
+
+                    assertEq(IAllocationStrategy(underlyingStrategy).deploymentCapOf(wallets[j]), isConfigured ? DEPLOYMENT_CAP : 0);
+                }
             }
         }
 
@@ -240,6 +266,9 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         /**********************************************************************************************************************************/
 
         for (uint256 i; i < poolManagers.length; i++) {
+            // Pool not configured yet
+            if (poolManagers[i] == securedLending3USDCPoolManager) continue;
+
             address pool  = IPoolManager(poolManagers[i]).pool();
             address asset = IPoolManager(poolManagers[i]).asset();
             address lp    = makeAddr(string(abi.encodePacked("lp", pool)));
@@ -347,8 +376,10 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         address poolDelegate     = IPoolManager(poolManager).poolDelegate();
         address strategyDelegate = IStrategyManager(strategyManager).strategyDelegate();
 
-        vm.prank(poolDelegate);
-        IPoolManager(poolManager).setStrategyCap(strategyManager, type(uint256).max);
+        if (IPoolManager(poolManager).strategyCapOf(strategyManager) != type(uint256).max) {
+            vm.prank(poolDelegate);
+            IPoolManager(poolManager).setStrategyCap(strategyManager, type(uint256).max);
+        }
 
         if (IStrategyManager(strategyManager).strategyLiquidityCap() == type(uint256).max) return;
 

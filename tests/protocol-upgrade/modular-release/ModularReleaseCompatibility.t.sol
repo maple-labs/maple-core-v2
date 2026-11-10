@@ -46,7 +46,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
     uint256 wethAmount       = 10e18;
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_096_404);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 26_186_000);
 
         startingTime = block.timestamp;
 
@@ -72,10 +72,10 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         requestRedeem(aqruPool, lp, sharesMinted);
 
-        uint256 assetsWithdrawn = processCyclicalRedeem(aqruPool, lp);
+        (uint256 assetsWithdrawn, uint256 liquidityAdded) = processCyclicalRedeem(aqruPool, lp);
 
         assertEq(IERC20(USDC).balanceOf(lp),       assetsWithdrawn);
-        assertEq(IERC20(USDC).balanceOf(aqruPool), poolAssetBalance + stablecoinAmount - assetsWithdrawn);
+        assertEq(IERC20(USDC).balanceOf(aqruPool), poolAssetBalance + stablecoinAmount + liquidityAdded - assetsWithdrawn);
 
         assertEq(IPool(aqruPool).balanceOf(lp), 0);
     }
@@ -378,7 +378,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         processRedemptions(pool, pendingShares);
     }
 
-    function processCyclicalRedeem(address pool, address account) internal returns (uint256 assets) {
+    function processCyclicalRedeem(address pool, address account) internal returns (uint256 assets, uint256 liquidityAdded) {
         address poolManager       = IPool(pool).manager();
         address withdrawalManager = IPoolManager(poolManager).withdrawalManager();
         uint256 exitCycleId       = IWithdrawalManagerCyclical(withdrawalManager).exitCycleId(account);
@@ -392,7 +392,7 @@ contract ModularReleaseProcedure is ModularReleaseBase {
 
         assets = redeem(pool, account, lockedShares);
 
-        removeExcessLiquidity(pool, toppedUp);
+        liquidityAdded = toppedUp - removeExcessLiquidity(pool, toppedUp);
     }
 
     function processQueueRedeem(address pool, address account) internal returns (uint256 assets) {
@@ -412,13 +412,17 @@ contract ModularReleaseProcedure is ModularReleaseBase {
         assets = IERC20(asset).balanceOf(account) - balance;
     }
 
-    function removeExcessLiquidity(address pool, uint256 amount) internal {
-        if (amount == 0) return;
-
+    function removeExcessLiquidity(address pool, uint256 amount) internal returns (uint256 removed) {
         address asset = IPool(pool).asset();
 
+        uint256 balance = IERC20(asset).balanceOf(pool);
+
+        removed = amount > balance ? balance : amount;
+
+        if (removed == 0) return 0;
+
         vm.prank(pool);
-        IERC20(asset).transfer(address(0xdead), amount);
+        IERC20(asset).transfer(address(0xdead), removed);
     }
 
     function topUpCyclicalLiquidity(address pool, address withdrawalManager, uint256 exitCycleId) internal returns (uint256 toppedUp) {

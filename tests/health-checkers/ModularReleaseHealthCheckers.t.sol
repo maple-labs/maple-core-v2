@@ -134,8 +134,7 @@ contract ModularReleaseHealthCheckers is ModularReleaseBase, HealthCheckerAddres
 
             address underlyingStrategy = IStrategyManager(strategyManagers[specs[i].name]).underlyingStrategy();
 
-            address[] memory wallets = new address[](1);
-            wallets[0]               = managedWallets[specs[i].name];
+            address[] memory wallets = managedWallets[specs[i].name];
 
             calls[index++] = InvariantCall({
                 target: allocationStrategyHealthChecker,

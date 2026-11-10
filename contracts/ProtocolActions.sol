@@ -890,9 +890,9 @@ contract ProtocolActions is Runner {
         address asset_ = IAllocationStrategy(strategy_).fundsAsset();
 
         erc20_mint(asset_, caller_, amount_);
+        erc20_approve(asset_, caller_, strategy_, amount_);
 
         vm.startPrank(caller_);
-        IERC20(asset_).approve(strategy_, amount_);
         IAllocationStrategy(strategy_).returnAssets(amount_, deployer_, "");
         vm.stopPrank();
     }
@@ -932,9 +932,9 @@ contract ProtocolActions is Runner {
         address asset_ = IAllocationStrategy(strategy_).fundsAsset();
 
         erc20_mint(asset_, managedWallet_, yieldAssets_);
+        erc20_approve(asset_, managedWallet_, strategy_, yieldAssets_);
 
         vm.startPrank(managedWallet_);
-        IERC20(asset_).approve(strategy_, yieldAssets_);
         IAllocationStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
         vm.stopPrank();
     }

@@ -186,53 +186,41 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     address updatedOpenTermLoanHealthChecker = 0xa2e3c1e3e2b8E2B8B5e3FF1d4c3b2A1f4e5d6C7d;
 
     /**************************************************************************************************************************************/
-    /*** Modular Release - Deployed Contracts                                                                                           ***/
+    /*** Modular Release - Legacy Strategies                                                                                            ***/
     /**************************************************************************************************************************************/
 
-    address public allocationStrategyFactory;
-    address public allocationStrategyV100Implementation;
-    address public allocationStrategyV100Initializer;
-    address public globalsV500Implementation;
-    address public liquidityRouterV100;
-    address public modularAaveStrategyFactory;
-    address public modularAaveStrategyV100Implementation;
-    address public modularAaveStrategyV100Initializer;
-    address public modularSkyStrategyFactory;
-    address public modularSkyStrategyV100Implementation;
-    address public modularSkyStrategyV100Initializer;
-    address public poolDeployerV500;
-    address public poolManagerV500Implementation;
-    address public poolManagerV500Initializer;
-    address public poolManagerV500Migrator;
-    address public strategyDeployerV100;
-    address public strategyManagerFactory;
-    address public strategyManagerV100Implementation;
-    address public strategyManagerV100Initializer;
-    address public withdrawalManagerQueueV201Implementation;
-    address public withdrawalManagerQueueV201Initializer;
+    address syrupUSDCFixedTermLoanManager          = 0x4A1c3F0D9aD0b3f9dA085bEBfc22dEA54263371b;
+    address syrupUSDTFixedTermLoanManager          = 0xC17aa0Cb662bC4787bB16bD3Bc13d0d88eB7aBDd;
+    address securedLendingUSDCFixedTermLoanManager = 0x78a13c2f24dF55feeF7f8C895396cf1DD21Cf56f;
+
+    address syrupUSDCAaveStrategy          = 0x560B3A85Af1cEF113BB60105d0Cf21e1d05F91d4;
+    address syrupUSDCSkyStrategy           = 0x859C9980931fa0A63765fD8EF2e29918Af5b038C;
+    address syrupUSDTAaveStrategy          = 0x2b817B822B0ddd4597a92dBEd1bD0a6796CA37E0;
+    address securedLendingUSDCAaveStrategy = 0x87Aa770f610679DFC2553FB95fAc1B4d996BA1cd;
+    address securedLendingUSDCSkyStrategy  = 0xe3eE1b26AF5396Cec45c8C3b4c4FD5136A2455CC;
 
     /**************************************************************************************************************************************/
     /*** Modular Release - Strategy Delegates                                                                                           ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Replace these with real addresses when they are known.
-    address aaveStrategyUSDCDelegate = makeAddr("aaveStrategyUSDCDelegate");
-    address aaveStrategyUSDTDelegate = makeAddr("aaveStrategyUSDTDelegate");
-    address aaveStrategyUSDGDelegate = makeAddr("aaveStrategyUSDGDelegate");
-    address skyStrategyUSDCDelegate  = makeAddr("skyStrategyUSDCDelegate");
-    address lpDexUSDCDelegate        = makeAddr("lpDexUSDCDelegate");
-    address crossPoolUSDCDelegate    = makeAddr("crossPoolUSDCDelegate");
-    address tBillsUSDCDelegate       = makeAddr("tBillsUSDCDelegate");
-    address pyusdUSDCDelegate        = makeAddr("pyusdUSDCDelegate");
-    address spreadsUSDTDelegate      = makeAddr("spreadsUSDTDelegate");
-    address lpDexUSDTDelegate        = makeAddr("lpDexUSDTDelegate");
-    address crossPoolUSDTDelegate    = makeAddr("crossPoolUSDTDelegate");
-    address tBillsUSDTDelegate       = makeAddr("tBillsUSDTDelegate");
-    address pyusdUSDTDelegate        = makeAddr("pyusdUSDTDelegate");
-    address lpDexUSDGDelegate        = makeAddr("lpDexUSDGDelegate");
-    address crossPoolUSDGDelegate    = makeAddr("crossPoolUSDGDelegate");
-    address tBillsUSDGDelegate       = makeAddr("tBillsUSDGDelegate");
-    address pyusdUSDGDelegate        = makeAddr("pyusdUSDGDelegate");
+    address dexLpUSDCDelegate     = 0xD6c4aa6aCe3d84042F20f4104dB73b8e9498af20;
+    address dexLpUSDTDelegate     = 0x161C8444e26589c889D3272EA16fBF4542823bD3;
+    address dexLpUSDGDelegate     = 0xce856C275F5F538cBf98b775F4c5f82BD11953C8;
+    address basisUSDTDelegate     = 0xc273F952D5F8bEad96F48e9eF825349EAEAbA941;
+    address pyusdUSDCDelegate     = 0xbDb279963Fa7E8D21e455A39255803c17f58c3d2;
+    address pyusdMislUSDCDelegate = 0xFdD0254684cb059D90151f864405Fc47d50329AF;
+    address pyusdUSDTDelegate     = 0xeF82e192A10d19C8984A80fd4045288b475ac2f9;
+    address pyusdUSDGDelegate     = 0xbe6ebdAf944169B0a0522AFecf1Ec1377A04C3a1;
+    address usdtbUSDCDelegate     = 0xDD6325358295eBA7434f31a692F96C4b0209f4B3;
+    address usdtbUSDTDelegate     = 0xEd6E21286eBe15B53aa0C9CD8cdDb3726b12A3fE;
+    address ustbUSDCDelegate      = 0xDC24F91f20e6B1e75A7343393C8749184801f810;
+    address ustbMislUSDCDelegate  = 0x73C3e24b928d2a024043a8A8AddE06065eaA1C69;
+    address ustbUSDTDelegate      = 0x3eF5CEB04B9B9ec3ba7E9e83200D18782BFdFf62;
+    address defiUSDCDelegate      = 0x01FAEC366bb8f508D03e54368078633c060b532d;
+    address defiUSDTDelegate      = 0xA9c5398FbEdaa21BFD5175445bEa0669246Faa02;
+    address defiUSDGDelegate      = 0x02a064e126998726E838394469C2009f7Fe6150B;
+    address aaveV3USDCDelegate    = 0x280dE039be6C86E782f2F5DF0482873a1ea49840;
+    address aaveV3USDTDelegate    = 0x900AC4DE423AC307572Ebd685A34D8aA6647075a;
 
     /**************************************************************************************************************************************/
     /*** Modular Release - Deployed Strategies                                                                                          ***/
@@ -242,19 +230,24 @@ contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
     /*** Modular Release - Managed Wallets                                                                                              ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Replace these with real addresses when they are known.
-    address lpDexUSDCManagedWallet     = makeAddr("lpDexUSDCManagedWallet");
-    address crossPoolUSDCManagedWallet = makeAddr("crossPoolUSDCManagedWallet");
-    address tBillsUSDCManagedWallet    = makeAddr("tBillsUSDCManagedWallet");
-    address pyusdUSDCManagedWallet     = makeAddr("pyusdUSDCManagedWallet");
-    address spreadsUSDTManagedWallet   = makeAddr("spreadsUSDTManagedWallet");
-    address lpDexUSDTManagedWallet     = makeAddr("lpDexUSDTManagedWallet");
-    address crossPoolUSDTManagedWallet = makeAddr("crossPoolUSDTManagedWallet");
-    address tBillsUSDTManagedWallet    = makeAddr("tBillsUSDTManagedWallet");
-    address pyusdUSDTManagedWallet     = makeAddr("pyusdUSDTManagedWallet");
-    address lpDexUSDGManagedWallet     = makeAddr("lpDexUSDGManagedWallet");
-    address crossPoolUSDGManagedWallet = makeAddr("crossPoolUSDGManagedWallet");
-    address tBillsUSDGManagedWallet    = makeAddr("tBillsUSDGManagedWallet");
-    address pyusdUSDGManagedWallet     = makeAddr("pyusdUSDGManagedWallet");
+    address dexLpUSDC_syrupUSDC_managedWallet              = 0x649aEF93e8688e74965f1E60ce4eB6b273180DE1;
+    address dexLpUSDT_syrupUSDT_managedWallet              = 0x232f60a3cD961Ae4024C9761a59E091Ea0Eb5328;
+    address dexLpUSDG_syrupUSDG_managedWallet              = 0x3B1E96fB67c8E4B17a764f735650764c7661C7a0;
+    address basisUSDT_syrupUSDT_managedWallet              = 0xa4943BEe2cE013e547E90E0F4565a181A2dc5391;
+    address pyusdUSDC_syrupUSDC_managedWallet              = 0x0F6b3eAd281c44c4F4571aB494836F9001827A11;
+    address pyusdUSDC_securedLending2USDC_managedWallet    = 0x5D060Be5e00e42baa72425Aa7b11fAd2052Db089;
+    address pyusdMislUSDC_securedLendingUSDC_managedWallet = 0x02Ed70FF9689f27205e66111113a6671eC0F65bC;
+    address pyusdUSDT_syrupUSDT_managedWallet              = 0xA58a1Ad9bbE5cA9124C7AB29c3C6b7b442906814;
+    address pyusdUSDG_syrupUSDG_managedWallet              = 0x8D0be82e1ea979898285BE2e97C8F3F82f2bB979;
+    address usdtbUSDC_syrupUSDC_managedWallet              = 0x1c4Ba6076b7a4058fd016b9DE937c465D57Ab0Fb;
+    address usdtbUSDC_securedLending2USDC_managedWallet    = 0x539854C14dBB2fDB9F5FA8f6F52120c309791C7A;
+    address usdtbUSDT_syrupUSDT_managedWallet              = 0xD33bAdBd105ac2e6473E0308be00c413Bb0CF3e4;
+    address ustbUSDC_syrupUSDC_managedWallet               = 0xECf5fd0B39C81e850C1AA2A2C7b3BFFe396Abc73;
+    address ustbUSDC_securedLending2USDC_managedWallet     = 0x9B1629012fd0d9dF69667D3EB7e972dCe7901371;
+    address ustbMislUSDC_securedLendingUSDC_managedWallet  = 0x7CaF30307efEeeCb9B042dA71749ae5660A5C0d2;
+    address ustbUSDT_syrupUSDT_managedWallet               = 0xdCd572776B5E669d576CcB8314d251CfE59C7fF4;
+    address defiUSDC_syrupUSDC_managedWallet               = 0x2bCdf509eEE48E19d17444903a63872CE51A3259;
+    address defiUSDT_syrupUSDT_managedWallet               = 0x7a5c8809Ee2D66A712205E57ca295894751273cA;
+    address defiUSDG_syrupUSDG_managedWallet               = 0xEf65d8aA4003B6FBC2169abCB5204AE2165967E3;
 
 }

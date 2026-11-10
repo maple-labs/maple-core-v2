@@ -37,6 +37,14 @@ contract Runner is Test {
         contract_ = deployCode(string(abi.encodePacked("./out/", folder, ".sol/", contractName, ".json")), data);
     }
 
+    function deployFromFileTo(string memory folder, string memory contractName, address where) internal {
+        deployCodeTo(string(abi.encodePacked("./out/", folder, ".sol/", contractName, ".json")), where);
+    }
+
+    function deployFromFileTo(string memory folder, string memory contractName, bytes memory data, address where) internal {
+        deployCodeTo(string(abi.encodePacked("./out/", folder, ".sol/", contractName, ".json")), data, where);
+    }
+
     function deployMock(string memory mockName) internal returns (address mock_) {
         mock_ = deployCode(string(abi.encodePacked("./out/Mocks.sol/", mockName, ".json")));
     }

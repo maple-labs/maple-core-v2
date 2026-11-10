@@ -65,8 +65,8 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
 
         address poolDeployer = deployFromFile("Contracts@34", "PoolDeployer", abi.encode(globals));
 
-        poolManagerV500Implementation = deployFromFile("Contracts@34", "PoolManager");
-        poolManagerV500Initializer    = deployFromFile("Contracts@34", "PoolManagerInitializer");
+        deployFromFileTo("Contracts@34", "PoolManager", PoolManagerV500Implementation);
+        deployFromFileTo("Contracts@34", "PoolManagerInitializer", PoolManagerV500Initializer);
 
         // Step -1: Whitelist the modular pool deployer, register the modular pool manager and register the
         //          open-term loan manager factory as a valid strategy factory.
@@ -76,7 +76,7 @@ contract SyrupUSDGDeploymentBase is ProtocolActions, UpgradeAddressRegistry {
         IGlobals(globals).setCanDeployFrom(withdrawalManagerQueueFactory, poolDeployer, true);
         IGlobals(globals).setCanDeployFrom(openTermLoanManagerFactory, poolDeployer, true);
 
-        IMapleProxyFactory(poolManagerFactory).registerImplementation(500, poolManagerV500Implementation, poolManagerV500Initializer);
+        IMapleProxyFactory(poolManagerFactory).registerImplementation(500, PoolManagerV500Implementation, PoolManagerV500Initializer);
         IMapleProxyFactory(poolManagerFactory).setDefaultVersion(500);
 
         IGlobals(globals).setValidInstanceOf("STRATEGY_FACTORY", openTermLoanManagerFactory, true);
