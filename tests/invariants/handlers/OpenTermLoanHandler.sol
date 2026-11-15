@@ -166,11 +166,6 @@ contract OpenTermLoanHandler is HandlerBase {
         if (principalDelta_ < 0) {
             amountToReturn_ += uint256(principalDelta_ * -1);
         }
-        // If principal is increased the borrower deducts fees/interest from the increased amount.
-        // This can result in all fees/interest being covered by the increased principal.
-        else if (principalDelta_ > 0) {
-            amountToReturn_ = uint256(principalDelta_) < amountToReturn_ ? amountToReturn_ - uint256(principalDelta_) : 0;
-        }
 
         address borrower_ = IOpenTermLoan(loan_).borrower();
 

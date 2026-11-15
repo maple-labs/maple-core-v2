@@ -4,15 +4,9 @@ pragma solidity 0.8.25;
 import { GovernorTimelock as GT } from "../modules/globals/contracts/GovernorTimelock.sol";
 
 import { MapleBorrowerActions } from "../modules/syrup-utils/contracts/MapleBorrowerActions.sol";
-import { MapleRouter as MR } from "../modules/syrup-utils/contracts/MapleRouter.sol";
-import { MapleRouterInitializer as MRI } from "../modules/syrup-utils/contracts/MapleRouterInitializer.sol";
 import { NonTransparentProxy as NTP } from "../modules/syrup-utils/modules/non-transparent-proxy/contracts/NonTransparentProxy.sol";
 
 contract BorrowerActions is MapleBorrowerActions { }
-
-contract MapleRouter is MR { }
-
-contract MapleRouterInitializer is MRI { }
 
 contract Timelock is GT {
 

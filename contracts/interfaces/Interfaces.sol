@@ -15,8 +15,8 @@ import { INonTransparentProxy } from "../../modules/globals/modules/non-transpar
 
 import { IMapleLoan as IMOTL } from "../../modules/open-term-loan/contracts/interfaces/IMapleLoan.sol";
 
-import { IMapleLoanManager as IMOTLM } from "../../modules/open-term-loan-manager/contracts/interfaces/IMapleLoanManager.sol";
-import { IMapleLoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
+import { ILoanManager as IMOTLM } from "../../modules/open-term-loan-manager/contracts/interfaces/ILoanManager.sol";
+import { ILoanManagerStructs as IMOTLMS } from "../../modules/open-term-loan-manager/tests/utils/Interfaces.sol";
 
 import { IMaplePool as IMP } from "../../modules/pool/contracts/interfaces/IMaplePool.sol";
 
