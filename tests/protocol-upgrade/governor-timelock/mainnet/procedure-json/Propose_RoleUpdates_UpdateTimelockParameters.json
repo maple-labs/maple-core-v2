@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1757685525843,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "1.18.2",
+    "createdFromSafeAddress": "0xd6d4Bcde6c816F17889f1Dd3000aF0261B03a196",
+    "createdFromOwnerAddress": "",
+    "checksum": "0x33f3979e8fa3d8a1029f311d9e7d5fe4c972096bd3cf7ee9a93984c4707ca752"
+  },
+  "transactions": [
+    {
+      "to": "0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "roles_",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "accounts_",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "shouldGrant_",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          }
+        ],
+        "name": "proposeRoleUpdates",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "roles_": "[0x2172861495e7b85edac73e3cd5fbb42dd675baadf627720e687bcfdaca025096,0xd8aa0f3194971a2a116679f7c2090f6939c8d4e01a2a8d7e41d55e5351469e63]",
+        "accounts_": "[0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a,0x6D9F3a385796A5407C06a5BF18e903916548993e]",
+        "shouldGrant_": "[true,true]"
+      }
+    },
+    {
+      "to": "0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "targets_",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "data_",
+            "type": "bytes[]",
+            "internalType": "bytes[]"
+          }
+        ],
+        "name": "scheduleProposals",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "targets_": "[0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b]",
+        "data_": "[0xb573bf82000000000000000000000000000000000000000000000000000000000003f480000000000000000000000000000000000000000000000000000000000002a300]"
+      }
+    }
+  ]
+}

@@ -1,158 +1,253 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import { MapleAddressRegistryETH as AddressRegistry } from "../../modules/address-registry/contracts/MapleAddressRegistryETH.sol";
 
-contract UpgradeAddressRegistry is AddressRegistry {
+import { StdCheats } from "../../modules/forge-std/src/StdCheats.sol";
 
-    // Using deployer for strategies 0x14e289f19898a5c16AF00b81180C18A791Fa0979
-    // Using deployer for DIL        0x89D70c5127035d7558df6594229d9868B643DC1a
+contract UpgradeAddressRegistry is AddressRegistry, StdCheats {
 
-    address newAaveStrategyImplementation  = 0xFc8F7F97165d446B02Cc95363d2cA31154BBe9F9;
-    address newAaveStrategyInitializer     = 0x0d2dBb28B1c7d225132722FAdb2402E93A35c1Be;
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses                                                                                           ***/
+    /**************************************************************************************************************************************/
 
-    address newBasicStrategyImplementation = 0x7a1E281Ec29F3A861f211a28a23161762BD55B73;
-    address newBasicStrategyInitializer    = 0x2b9aDDb5244548f126e59FA5483040efc102f69e;
+    address oldGlobalsOnTreasury = 0xC234c62c8C09687DFf0d9047e40042cd166F3600;
 
-    address newSkyStrategyImplementation   = 0xBBEe42621499005Ff0dDEF947BBDeFfBBeE77730;
-    address newSkyStrategyInitializer      = 0x29199d071717c72baab50eEf9adD6736A18A1d1d;
+    address timelock = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
 
-    address newGlobalsImplementation = 0x9BeAbb1B6F3ad1DdB87b65148BA5Eb6102334956;
+    address canceller = securityAdmin;
+    address executor  = operationalAdmin;
+    address proposer  = governor;
+    address roleAdmin = governor;
 
-    address newPoolManagerInitializer    = 0xB33Bfa00E1d92fDaC5AeCB2976d6998C2ecca759;
-    address newPoolManagerImplementation = 0xfE02Be1aD28EdFd8e3dD6F29C402B244C2A258B8;
-    address newPoolDeployer              = 0xdaF005B31B10F33EE42cEB1A4b983434FE947488;
+    address backupExecutor  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdmin = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
-    address newFixedTermLoanImplementation = 0xe1714CEEB10683448E40bFE73c9F493662ff5b7e;
-    address newFixedTermLoanInitializer    = 0xC43e722A0F9432609a96Df0cF1aFA99556532F18;
-    address newOpenTermLoanImplementation  = 0xEeaDb66693d63cFCF3E4D942D2812D4aE9443Fc1;
-    address newOpenTermLoanInitializer     = 0x9385A0F681c3D4b39c2780cD69777Dd97a681485;
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Plasma                                                                                  ***/
+    /**************************************************************************************************************************************/
 
-    address borrowerActionsImplementation = 0x78c5f240A1150c3c2ebDBDe559d04a0418DFCFF3;
-    address borrowerActionsProxy          = 0x70Eb188452DaA5f4662150E437B61dA148449E20;
+    address timelockPlasma = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
 
-    address securedLendingAaveStrategy = 0x87Aa770f610679DFC2553FB95fAc1B4d996BA1cd;
-    address securedLendingSkyStrategy  = 0xe3eE1b26AF5396Cec45c8C3b4c4FD5136A2455CC;
+    address cancellerPlasma       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorPlasma        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerPlasma        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminPlasma       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerPlasma = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorPlasma  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminPlasma = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
-    // Pool Delegates
-    address aqruPoolDelegate              = 0x39DF355Ae51fDf17aE1a68D00F770701e9627A93;
-    address cashUSDCPoolDelegate          = 0x94b8dcbe4c7841B54170925b67918a6312154C9c;
-    address blueChipPoolDelegate          = 0x0984af3FcB364c1f30337F9aB453f876e7Ff6D0B;
-    address highYieldCorpPoolDelegate     = 0xeb636FF0b27c2EE99731Cb0588DB6DB76DA6e06e;
-    address highYieldCorpWETHPoolDelegate = 0x6d03aa567aE55FAd71Fd58D9A4ba44D9dc6aDc5f;
-    address secureLendingPoolDelegate     = 0x8c6a34E2b9CeceE4a1fce672ba37e611B1AECebB;
-    address syrupUSDCPoolDelegate         = 0xEe3cBEFF9dC14EC9710A643B7624C5BEaF20BCcb;
-    address syrupUSDTPoolDelegate         = 0xE512aCb671cCE2c976B151DEC89f9aAf701Bb006;
+    address syrupUSDTPlasma       = 0xC4374775489CB9C56003BF2C9b12495fC64F0771;
+    address syrupUSDTDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
 
-    address[] poolDelegates = [
-        aqruPoolDelegate,
-        cashUSDCPoolDelegate,
-        blueChipPoolDelegate,
-        highYieldCorpPoolDelegate,
-        highYieldCorpWETHPoolDelegate,
-        secureLendingPoolDelegate,
-        syrupUSDCPoolDelegate,
-        syrupUSDTPoolDelegate
-    ];
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Base                                                                                    ***/
+    /**************************************************************************************************************************************/
 
-    address[] poolManagers = [
-        aqruPoolManager,
-        cashUSDCPoolManager,
-        blueChipSecuredUSDCPoolManager,
-        highYieldCorpUSDCPoolManager,
-        highYieldCorpWETHPoolManager,
-        securedLendingUSDCPoolManager,
-        syrupUSDCPoolManager,
-        syrupUSDTPoolManager,
-        LendAndLongUSDC1PoolManager,
-        LendAndLongUSDC2PoolManager
-    ];
+    address timelockBase = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
 
-    // TODO: Populate and add the same data for other pools.
-    address[] syrupUSDCAllowedLenders;
-    address[] syrupUSDCFixedTermLoans;
-    address[] syrupUSDCOpenTermLoans = [
-        0x1637fC0B7E3Eb0A0d8d2576eA599cFa178276E49,
-        0x20D4cce9e045c9948FF7b28A62394c4A4ab14303,
-        0x40457B17772666C901f2Ebc16673Bd76BC5081B6,
-        0x53ED2C82dc0E1E782e4c7e67e551F667319019D1,
-        0x5B53d596CBf4a0e5d6438031Ea501d260b0d1eaF,
-        0x6699C3B303CA08564069D9dcdE258Bc07F558D7D,
-        0x9F0492fF1074aCa7aA0B9C66215e24c276f912a8,
-        0xA3B8c8891E9c96452f9fF42598942eb36d6B8710,
-        0xa69aDda903FEc32932EBbd753978773Cb7C33AA0,
-        0xA828761E9EFaFA3A823ea562802Dd1CeFa1fAB7f,
-        0xC9EE9f15a999Ad3903FEdB3d5aC298061eFaFb1D,
-        0xdBE714A8b70F11B257436E7a870f7420432e9a64,
-        0xFfe7d64b58daf8A1209566E14Fe699dc474c26D4
-    ];
+    address cancellerBase       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorBase        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerBase        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminBase       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerBase = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorBase  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminBase = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
-    address[] syrupUSDTAllowedLenders;
-    address[] syrupUSDTFixedTermLoans;
-    address[] syrupUSDTOpenTermLoans = [
-        0x1C1412B76156D78273F6A922E90F28954C0265E9,
-        0x2c18f990Cb29B8ea4b5eb8e927Ee7C0f71308f45,
-        0x5494501C6e0664B85593eFC4EAe4a2Ac9daE5b81,
-        0x85bbA5D3957706d61F3467332E11FdD1D0cD121e,
-        0x9b55aee465D48285e0dE777975020A531b1dEDd5
-    ];
+    address syrupUSDCBase             = 0x660975730059246A68521a3e2FBD4740173100f5;
+    address syrupUSDCBaseDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
 
-    address[] aqruAllowedLenders;
-    address[] aqruFixedTermLoans = [
-        0x1F2bCA37106b30C4d72d8E60eBD2bFeAa10BFfE2,
-        0x3E36372119f12DEe3De6C260CC7283557C24f471
-    ];
-    address[] aqruOpenTermLoans = [
-        0x29356F80d6016583C03991Cda7Dd42259517c005,
-        0x51d8cd0f68f3A9D4ab7Ce4062bc89B5C47A96818,
-        0xf2FDA7D97CF9920E0857Ec60416eD0006ea610f9
-    ];
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Mantle                                                                                  ***/
+    /**************************************************************************************************************************************/
 
-    address[] cashUSDCAllowedLenders;
-    address[] cashUSDCFixedTermLoans;
-    address[] cashUSDCOpenTermLoans;
+    address timelockMantle = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
 
-    address[] blueChipAllowedLenders;
-    address[] blueChipFixedTermLoans;
-    address[] blueChipOpenTermLoans = [
-        0x492656f1D1deca03B255b776bCB537d6157816ae,
-        0x4E9E3c5fEE726151E29121c1588259F4310B89ab,
-        0x7D43bc35860b35519323d3Df65b35b38Fb048a19,
-        0xbA782A156129E2d115FB0076Eb0F77e45aCe654B,
-        0xC51ef20d4327010fa49Ade9FDEDE324dF7AfD600
-    ];
+    address cancellerMantle       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorMantle        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerMantle        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminMantle       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerMantle = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorMantle  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminMantle = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
 
-    address[] highYieldCorpUSDCAllowedLenders;
-    address[] highYieldCorpUSDCFixedTermLoans;
-    address[] highYieldCorpUSDCOpenTermLoans = [
-        0x02a8ECBCCc5bF0e6eD2fcd9546248D18061811e2,
-        0x5CB3baE99e9A5809c52d7211f828d4F7289e0A1a
-    ];
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Ink                                                                                     ***/
+    /**************************************************************************************************************************************/
 
-    address[] highYieldCorpWETHAllowedLenders;
-    address[] highYieldCorpWETHFixedTermLoans;
-    address[] highYieldCorpWETHOpenTermLoans = [
-        0x4a7108D22081fA39158f4c4Ff8E36e77829A528D,
-        0x81AFbEA65120823C5734e1B2BD2dD2F77364ed90,
-        0xd6A1D866BD477522CB0FFA4A2d8D324A7a75F17F
-    ];
+    address timelockInk = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
 
-    address[] securedLendingUSDCAllowedLenders;
-    address[] securedLendingUSDCFixedTermLoans;
-    address[] securedLendingUSDCOpenTermLoans = [
-        0x01f172f2C6E8425BeC64E91971670ac12078629b,
-        0x0236F317d1730B8412836c05c84E51e49A404360,
-        0x15f65337ae0A7EEa82Fb8D0840ae7EAFFF00E3d2,
-        0x2874d8d3256fC5f3B96B229C9CBB01004cF3EF16,
-        0x6D995973F22C18Ce413870BC865f0AA73B2B8810,
-        0x70AE22E0Ec81A656D405AA3972153Ec79f9Db1C3,
-        0x869E450FD7c5239568b2a87964cF42Bf91D1C430,
-        0x86e2ADbf90547DA902F273060C8b84C578719c24,
-        0x96345886Bd48B4789CBE80C69233633D06c3986c,
-        0x9eFCD695BC5261ec4CaDcc7CBA0a3D51B0AF1aE8,
-        0xb4CB9affB100506600C79cC6D8834Cc0D93e9C36,
-        0xce77f0ca51819baD7C2acF13eC1a36f39Ad40057,
-        0xF55a06BB41E2D513Abb56E888d456912CCBa877b
-    ];
+    address cancellerInk       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorInk        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerInk        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminInk       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerInk = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorInk  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminInk = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCInk = 0x3c23e6FB09064e9A64829Fa8FEe27Ad19A27Bfa9;
+
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Monad                                                                                   ***/
+    /**************************************************************************************************************************************/
+
+    address timelockMonad = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerMonad       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorMonad        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerMonad        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminMonad       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerMonad = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorMonad  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminMonad = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCMonad = 0xaB6e5a0C3799d020c790D34F7B2C02639e238AF7;
+
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Arbitrum                                                                                ***/
+    /**************************************************************************************************************************************/
+
+    address timelockArbitrum = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerArbitrum       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorArbitrum        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerArbitrum        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminArbitrum       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerArbitrum = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorArbitrum  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminArbitrum = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCArbitrum             = 0x41CA7586cC1311807B4605fBB748a3B8862b42b5;
+    address syrupUSDCArbitrumDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    address syrupUSDGArbitrum             = 0xE1B0dC5A21b10f1634fBfbE9976fBA2Ee2e1c762;
+    address syrupUSDGArbitrumDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - Arc                                                                                     ***/
+    /**************************************************************************************************************************************/
+
+    address timelockArc = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerArc       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorArc        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerArc        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminArc       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerArc = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorArc  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminArc = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    address syrupUSDCArc             = 0x0dC6b79F3c3854E4d74514fD4d29BE6c96Beee39;
+    address syrupUSDCArcDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** GovernorTimelock Procedure Addresses - XLayer                                                                                  ***/
+    /**************************************************************************************************************************************/
+
+    address timelockXLayer = 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b;
+
+    address cancellerXLayer       = 0x013B906178aefe190Ac238e1b08d4C9Ba9A3894c;
+    address executorXLayer        = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+    address proposerXLayer        = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address roleAdminXLayer       = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address tokenWithdrawerXLayer = 0xfDc1603A3B6675eAB4d29119752c19FeD730639e;
+    address backupExecutorXLayer  = 0x6D9F3a385796A5407C06a5BF18e903916548993e;
+    address backupRoleAdminXLayer = 0xa04Bddfb5bCe1Afc0a939749Dc721BA762019b2a;
+
+    /**************************************************************************************************************************************/
+    /*** CCIP Procedure Addresses - Robinhood                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace with the Robinhood default admin once it is confirmed.
+    address syrupUSDCRobinhood             = 0xC6a4854eeB493224d5f9485E12Dd3A81f22EEE14;
+    address syrupUSDCRobinhoodDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** CCIP Procedure Addresses - Tempo                                                                                               ***/
+    /**************************************************************************************************************************************/
+
+    // TODO: Replace with the Tempo default admin once it is confirmed.
+    address syrupUSDCTempo             = 0x20c0000000000000000000008191667423F70E67;
+    address syrupUSDCTempoDefaultAdmin = 0xdd2d33F35D4D46c5Ec6E6351907964A6EcD49ec9;
+
+    /**************************************************************************************************************************************/
+    /*** Withdrawal Manager Queue v2.0.0 Addresses                                                                                      ***/
+    /**************************************************************************************************************************************/
+
+    address mapleWithdrawalManagerV200Implementation = 0xF95E5722226a1018d058CD757B75F1D10289e967;
+    address mapleWithdrawalManagerV200Initializer    = 0xD389BFE4A129525b486B098411336a4fCecF3024;
+    address mapleWithdrawalManagerV200Migrator       = 0x327ec27a6D898D865D7759D47d36a2c3FBbD23a5;
+
+    /**************************************************************************************************************************************/
+    /*** Health Checker Addresses                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    address updatedProtocolHealthChecker     = 0xfb8F87D716ac3fC54f33664F51E3961bc2DD3EDb;
+    address updatedOpenTermLoanHealthChecker = 0xa2e3c1e3e2b8E2B8B5e3FF1d4c3b2A1f4e5d6C7d;
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Legacy Strategies                                                                                            ***/
+    /**************************************************************************************************************************************/
+
+    address syrupUSDCFixedTermLoanManager          = 0x4A1c3F0D9aD0b3f9dA085bEBfc22dEA54263371b;
+    address syrupUSDTFixedTermLoanManager          = 0xC17aa0Cb662bC4787bB16bD3Bc13d0d88eB7aBDd;
+    address securedLendingUSDCFixedTermLoanManager = 0x78a13c2f24dF55feeF7f8C895396cf1DD21Cf56f;
+
+    address syrupUSDCAaveStrategy          = 0x560B3A85Af1cEF113BB60105d0Cf21e1d05F91d4;
+    address syrupUSDCSkyStrategy           = 0x859C9980931fa0A63765fD8EF2e29918Af5b038C;
+    address syrupUSDTAaveStrategy          = 0x2b817B822B0ddd4597a92dBEd1bD0a6796CA37E0;
+    address securedLendingUSDCAaveStrategy = 0x87Aa770f610679DFC2553FB95fAc1B4d996BA1cd;
+    address securedLendingUSDCSkyStrategy  = 0xe3eE1b26AF5396Cec45c8C3b4c4FD5136A2455CC;
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Strategy Delegates                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    address dexLpUSDCDelegate     = 0xD6c4aa6aCe3d84042F20f4104dB73b8e9498af20;
+    address dexLpUSDTDelegate     = 0x161C8444e26589c889D3272EA16fBF4542823bD3;
+    address dexLpUSDGDelegate     = 0xce856C275F5F538cBf98b775F4c5f82BD11953C8;
+    address basisUSDTDelegate     = 0xc273F952D5F8bEad96F48e9eF825349EAEAbA941;
+    address pyusdUSDCDelegate     = 0xbDb279963Fa7E8D21e455A39255803c17f58c3d2;
+    address pyusdMislUSDCDelegate = 0xFdD0254684cb059D90151f864405Fc47d50329AF;
+    address pyusdUSDTDelegate     = 0xeF82e192A10d19C8984A80fd4045288b475ac2f9;
+    address pyusdUSDGDelegate     = 0xbe6ebdAf944169B0a0522AFecf1Ec1377A04C3a1;
+    address usdtbUSDCDelegate     = 0xDD6325358295eBA7434f31a692F96C4b0209f4B3;
+    address usdtbUSDTDelegate     = 0xEd6E21286eBe15B53aa0C9CD8cdDb3726b12A3fE;
+    address ustbUSDCDelegate      = 0xDC24F91f20e6B1e75A7343393C8749184801f810;
+    address ustbMislUSDCDelegate  = 0x73C3e24b928d2a024043a8A8AddE06065eaA1C69;
+    address ustbUSDTDelegate      = 0x3eF5CEB04B9B9ec3ba7E9e83200D18782BFdFf62;
+    address defiUSDCDelegate      = 0x01FAEC366bb8f508D03e54368078633c060b532d;
+    address defiUSDTDelegate      = 0xA9c5398FbEdaa21BFD5175445bEa0669246Faa02;
+    address defiUSDGDelegate      = 0x02a064e126998726E838394469C2009f7Fe6150B;
+    address aaveV3USDCDelegate    = 0x280dE039be6C86E782f2F5DF0482873a1ea49840;
+    address aaveV3USDTDelegate    = 0x900AC4DE423AC307572Ebd685A34D8aA6647075a;
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Deployed Strategies                                                                                          ***/
+    /**************************************************************************************************************************************/
+
+    /**************************************************************************************************************************************/
+    /*** Modular Release - Managed Wallets                                                                                              ***/
+    /**************************************************************************************************************************************/
+
+    address dexLpUSDC_syrupUSDC_managedWallet              = 0x649aEF93e8688e74965f1E60ce4eB6b273180DE1;
+    address dexLpUSDT_syrupUSDT_managedWallet              = 0x232f60a3cD961Ae4024C9761a59E091Ea0Eb5328;
+    address dexLpUSDG_syrupUSDG_managedWallet              = 0x3B1E96fB67c8E4B17a764f735650764c7661C7a0;
+    address basisUSDT_syrupUSDT_managedWallet              = 0xa4943BEe2cE013e547E90E0F4565a181A2dc5391;
+    address pyusdUSDC_syrupUSDC_managedWallet              = 0x0F6b3eAd281c44c4F4571aB494836F9001827A11;
+    address pyusdUSDC_securedLending2USDC_managedWallet    = 0x5D060Be5e00e42baa72425Aa7b11fAd2052Db089;
+    address pyusdMislUSDC_securedLendingUSDC_managedWallet = 0x02Ed70FF9689f27205e66111113a6671eC0F65bC;
+    address pyusdUSDT_syrupUSDT_managedWallet              = 0xA58a1Ad9bbE5cA9124C7AB29c3C6b7b442906814;
+    address pyusdUSDG_syrupUSDG_managedWallet              = 0x8D0be82e1ea979898285BE2e97C8F3F82f2bB979;
+    address usdtbUSDC_syrupUSDC_managedWallet              = 0x1c4Ba6076b7a4058fd016b9DE937c465D57Ab0Fb;
+    address usdtbUSDC_securedLending2USDC_managedWallet    = 0x539854C14dBB2fDB9F5FA8f6F52120c309791C7A;
+    address usdtbUSDT_syrupUSDT_managedWallet              = 0xD33bAdBd105ac2e6473E0308be00c413Bb0CF3e4;
+    address ustbUSDC_syrupUSDC_managedWallet               = 0xECf5fd0B39C81e850C1AA2A2C7b3BFFe396Abc73;
+    address ustbUSDC_securedLending2USDC_managedWallet     = 0x9B1629012fd0d9dF69667D3EB7e972dCe7901371;
+    address ustbMislUSDC_securedLendingUSDC_managedWallet  = 0x7CaF30307efEeeCb9B042dA71749ae5660A5C0d2;
+    address ustbUSDT_syrupUSDT_managedWallet               = 0xdCd572776B5E669d576CcB8314d251CfE59C7fF4;
+    address defiUSDC_syrupUSDC_managedWallet               = 0x2bCdf509eEE48E19d17444903a63872CE51A3259;
+    address defiUSDT_syrupUSDT_managedWallet               = 0x7a5c8809Ee2D66A712205E57ca295894751273cA;
+    address defiUSDG_syrupUSDG_managedWallet               = 0xEf65d8aA4003B6FBC2169abCB5204AE2165967E3;
 
 }

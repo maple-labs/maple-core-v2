@@ -16,6 +16,9 @@ build:
 test:
 	forge test
 
+gas-benchmarks:
+	FOUNDRY_PROFILE=gas_benchmarks forge test --match-path benchmarks/liquidity-router/ExecuteActionsGas.t.sol
+
 e2e:
 	./test.sh -d tests/e2e -p $(profile)
 
@@ -25,20 +28,25 @@ fuzz:
 integration:
 	./test.sh -d tests/integration -p $(profile)
 
-strategies:
-	./test.sh -d tests/integration/strategies -p $(profile)
-
 invariant:
 	./test.sh -d tests/invariants -p $(profile)
 
 protocol-upgrade:
 	./test.sh -d tests/protocol-upgrade -p $(profile)
 
-scenario:
-	./scenarios.sh
+scenario-v2:
+	VERSION=v2 ./scenarios.sh
 
 deploy:
 	./deploy.sh
+
+# Formatting
+
+format:
+	@node scripts/align_fmt.js
+
+check-format:
+	@node scripts/align_fmt.js --check
 
 # Utility
 

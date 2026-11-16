@@ -6,39 +6,79 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 env:
+  SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
+  SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
+  SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
+  SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
+  SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
+  SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
+  SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
+  SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
+  SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
+  SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
+  SSH_KEY_SYRUP_UTILS: ${{secrets.SSH_KEY_SYRUP_UTILS}}
+  SSH_KEY_ALLOCATION_STRATEGY: ${{secrets.SSH_KEY_ALLOCATION_STRATEGY}}
+  SSH_KEY_STRATEGY_MANAGER: ${{secrets.SSH_KEY_STRATEGY_MANAGER}}
+  SSH_KEY_DEFI_STRATEGIES: ${{secrets.SSH_KEY_DEFI_STRATEGIES}}
+
   BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
   ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
+  ALCHEMY_API_KEY: ${{secrets.ALCHEMY_API_KEY}}
 
   FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'production' || 'default' }}
   FUZZ_PROFILE: ${{ github.event_name == 'push' && 'super_deep' || 'deep' }}
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.8.3
+      - name: Install Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6
+      - name: Check formatting
+        run: make check-format
+
   integration-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.7.1
       - name: Update submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: ./setup-ci.sh
       - name: Run integration tests
         run: ./test.sh -d tests/integration -p $FOUNDRY_PROFILE
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.7.1
       - name: Update submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: ./setup-ci.sh
       - name: Run end to end tests
         run: ./test.sh -d tests/e2e -p $FOUNDRY_PROFILE
 
@@ -47,13 +87,15 @@ jobs:
       group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.7.1
       - name: Update submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: ./setup-ci.sh
       - name: Run fuzz tests
         run: ./test.sh -t testFuzz -p $FUZZ_PROFILE
 
@@ -62,13 +104,15 @@ jobs:
         group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.7.1
       - name: Update submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: ./setup-ci.sh
       - name: Run invariant tests
         run: ./test.sh -d tests/invariants -p $FUZZ_PROFILE
 
@@ -76,31 +120,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
         with:
-          version: "nightly-0dceb536da7129c8e58b2c30c7059e247467838f"
+          persist-credentials: false
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.7.1
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6
       - name: Update submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
-      - name: Run Scenarios
-        run: ./scenarios.sh
+        run: ./setup-ci.sh
+      - name: Run Scenarios v2
+        run:  VERSION=v2 ./scenarios.sh
 
   protocol-upgrade-tests:
     runs-on:
         group: SC-HighMemory
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6
+        with:
+          persist-credentials: false
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09  # v1.9.1
+        with:
+          version: v1.7.1
       - name: Update submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --recursive
+        run: ./setup-ci.sh
       - name: Run Protocol Upgrade tests
         run: ./test.sh -d tests/protocol-upgrade -p $FOUNDRY_PROFILE

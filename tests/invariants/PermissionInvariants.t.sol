@@ -2,11 +2,15 @@
 pragma solidity ^0.8.7;
 
 import { DistributionHandler } from "./handlers/DistributionHandler.sol";
-import { PermissionHandler }   from "./handlers/PermissionHandler.sol";
+import { PermissionHandler } from "./handlers/PermissionHandler.sol";
 
 import { BaseInvariants } from "./BaseInvariants.t.sol";
 
 contract PermissionInvariants is BaseInvariants {
+
+    /**************************************************************************************************************************************/
+    /*** Constants                                                                                                                      ***/
+    /**************************************************************************************************************************************/
 
     uint256 constant NUM_LPS = 100;
 
@@ -15,14 +19,7 @@ contract PermissionInvariants is BaseInvariants {
     /**************************************************************************************************************************************/
 
     function setUp() public override {
-        start = currentTimestamp = block.timestamp;
-
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setUpClosedPool();
 
         for (uint256 i; i < NUM_LPS; i++) {
             lps.push(makeAddr(string(abi.encode("lp", i))));
@@ -40,31 +37,32 @@ contract PermissionInvariants is BaseInvariants {
         functionIds.push("P:requestRedeem");
         functionIds.push("P:requestWithdraw");
 
-        permissionHandler = new PermissionHandler(address(poolPermissionManager), address(globals), lps, poolManagers, functionIds);
+        permissionHandler = new PermissionHandler({
+            handlerName_:           "permissionHandler",
+            poolPermissionManager_: address(poolPermissionManager),
+            globals_:               address(globals),
+            lenders_:               lps,
+            poolManagers_:          poolManagers,
+            functionIds_:           functionIds
+        });
 
-        permissionHandler.setSelectorWeight("setPoolPermissionLevel(uint256)", 1_000);
-        permissionHandler.setSelectorWeight("setLenderBitmaps(uint256)",       7_000);
-        permissionHandler.setSelectorWeight("setPoolBitmaps(uint256)",         2_000);
+        permissionHandler.addAction("setPoolPermissionLevel(uint256)", 1_000);
+        permissionHandler.addAction("setLenderBitmaps(uint256)", 7_000);
+        permissionHandler.addAction("setPoolBitmaps(uint256)", 2_000);
 
         address[] memory targetContracts = new address[](1);
-        targetContracts[0] = address(permissionHandler);
+        targetContracts[0]               = address(permissionHandler);
 
         uint256[] memory weightsDistributorHandler = new uint256[](1);
-        weightsDistributorHandler[0] = 100;
+        weightsDistributorHandler[0]               = 100;
 
         address distributionHandler = address(new DistributionHandler(targetContracts, weightsDistributorHandler));
 
         targetContract(distributionHandler);
     }
 
-    /**************************************************************************************************************************************/
-    /*** Invariants                                                                                                                     ***/
-    /**************************************************************************************************************************************/
-
-    function statefulFuzz_permissionManager_A_B_C() external useCurrentTimestamp {
-        assert_ppm_invariant_A(address(poolPermissionManager), address(poolManager));
-        assert_ppm_invariant_B(address(poolPermissionManager), address(poolManager), functionIds);
-        assert_ppm_invariant_C(address(poolPermissionManager), lps);
+    function statefulFuzz_permissionManager_invariants() external view {
+        assert_ppm_invariants(address(poolPermissionManager));
     }
 
 }

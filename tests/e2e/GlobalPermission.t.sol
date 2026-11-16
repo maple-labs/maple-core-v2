@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IPool,
-    IPoolManager,
-    IWithdrawalManagerCyclical,
-    IWithdrawalManagerQueue
-} from "../../contracts/interfaces/Interfaces.sol";
+import { IPool, IPoolManager, IWithdrawalManagerQueue } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBase } from "../TestBase.sol";
 
@@ -30,10 +25,10 @@ contract GlobalPermissionTests is TestBase {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
-        _setTreasury();
 
         start = block.timestamp;
 
@@ -41,9 +36,9 @@ contract GlobalPermissionTests is TestBase {
         vm.prank(governor);
         globals.setValidPoolDelegate(poolDelegate2, true);
 
-        // Create two pools.
-        ( pool1, poolManager1, withdrawalManager1 ) = _createPoolWithCyclical(start, 1 weeks, 2 days);
-        ( pool2, poolManager2, withdrawalManager2 ) = _createPoolWithQueue(poolDelegate2, "Maple Pool 2");
+        // Create two pools, one per delegate.
+        (pool1, poolManager1, withdrawalManager1) = _createPoolWithOTLM(poolDelegate);
+        (pool2, poolManager2, withdrawalManager2) = _createPoolWithOTLM(poolDelegate2);
 
         // Active both pools.
         activatePoolManager(poolManager1);
@@ -54,21 +49,21 @@ contract GlobalPermissionTests is TestBase {
         setPoolPermissionLevel(poolManager2, FUNCTION_LEVEL);
 
         // Whitelist contracts to enable redemption workflow.
-        setLenderAllowlist(poolManager1, poolManager1,       true);
+        setLenderAllowlist(poolManager1, poolManager1, true);
         setLenderAllowlist(poolManager1, withdrawalManager1, true);
-        setLenderAllowlist(poolManager2, poolManager2,       true);
+        setLenderAllowlist(poolManager2, poolManager2, true);
         setLenderAllowlist(poolManager2, withdrawalManager2, true);
 
         // Set pool bitmaps for each pool.
-        setPoolBitmap(poolManager1, "",                createBitmap([1]));
-        setPoolBitmap(poolManager2, "P:transfer",      createBitmap([1]));
-        setPoolBitmap(poolManager2, "P:transferFrom",  createBitmap([1]));
-        setPoolBitmap(poolManager2, "P:deposit",       createBitmap([1, 3]));
+        setPoolBitmap(poolManager1, "", createBitmap([1]));
+        setPoolBitmap(poolManager2, "P:transfer", createBitmap([1]));
+        setPoolBitmap(poolManager2, "P:transferFrom", createBitmap([1]));
+        setPoolBitmap(poolManager2, "P:deposit", createBitmap([1, 3]));
         setPoolBitmap(poolManager2, "P:requestRedeem", createBitmap([1, 3]));
-        setPoolBitmap(poolManager2, "P:redeem",        createBitmap([1, 3]));
+        setPoolBitmap(poolManager2, "P:redeem", createBitmap([1, 3]));
 
         // Set the lender bitmap.
-        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lender,     createBitmap([1, 3]));
+        setLenderBitmap(address(poolPermissionManager), permissionAdmin, lender, createBitmap([1, 3]));
         setLenderBitmap(address(poolPermissionManager), permissionAdmin, integrator, createBitmap([1, 3]));
 
         // Enable manual withdrawals for the integrator.
@@ -76,37 +71,40 @@ contract GlobalPermissionTests is TestBase {
     }
 
     function test_e2e_globalPermission() external {
-        deposit(pool1, lender,     1_250_000e6);
+        deposit(pool1, lender, 1_250_000e6);
         deposit(pool1, integrator, 1_000_000e6);
-        deposit(pool2, lender,     1_000_000e6);
+        deposit(pool2, lender, 1_000_000e6);
         deposit(pool2, integrator, 2_000_000e6);
 
         vm.warp(start + 1 weeks);
-        requestRedeem(pool1, lender,     250_000e6);
+        requestRedeem(pool1, lender, 250_000e6);
         requestRedeem(pool1, integrator, 500_000e6);
 
         assertEq(fundsAsset.balanceOf(lender),     0);
         assertEq(fundsAsset.balanceOf(integrator), 0);
 
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(lender),     250_000e6);
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(integrator), 500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(lender),     250_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(integrator), 500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).totalShares(),                  750_000e6);
 
         vm.warp(start + 2 weeks);
-        requestRedeem(pool2, lender,     500_000e6);
+        requestRedeem(pool2, lender, 500_000e6);
         requestRedeem(pool2, integrator, 1_500_000e6);
 
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerQueue(withdrawalManager2).lockedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(lender),     500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).userEscrowedShares(integrator), 1_500_000e6);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager2).totalShares(),                  2_000_000e6);
 
         vm.warp(start + 3 weeks);
-        redeem(pool1, lender,     250_000e6);
-        redeem(pool1, integrator, 500_000e6);
+        processRedemptions(pool1, 250_000e6);
+        processRedemptions(pool1, 500_000e6);
 
         assertEq(fundsAsset.balanceOf(lender),     250_000e6);
         assertEq(fundsAsset.balanceOf(integrator), 500_000e6);
 
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(lender),     0);
-        assertEq(IWithdrawalManagerCyclical(withdrawalManager1).lockedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(lender),     0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).userEscrowedShares(integrator), 0);
+        assertEq(IWithdrawalManagerQueue(withdrawalManager1).totalShares(),                  0);
 
         vm.warp(start + 4 weeks);
         processRedemptions(pool2, 1_750_000e6);

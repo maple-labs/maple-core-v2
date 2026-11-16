@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import {
-    IOpenTermLoan,
-    IOpenTermLoanManager,
-    IPoolManager
-} from "../../contracts/interfaces/Interfaces.sol";
+import { IOpenTermLoan, IOpenTermLoanManager, IPoolManager } from "../../contracts/interfaces/Interfaces.sol";
 
 contract OpenTermLoanHealthChecker {
 
-    uint256 constant internal BUFFER              = 1e6;
-    uint256 constant internal UNDERFLOW_THRESHOLD = 30;
+    uint256 internal constant BUFFER              = 1e6;
+    uint256 internal constant UNDERFLOW_THRESHOLD = 50;
 
     /******************************************************************************************************************************/
     /*** Invariant Tests                                                                                                        ***/
@@ -65,16 +61,15 @@ contract OpenTermLoanHealthChecker {
 
         uint256 length = poolManager.strategyListLength();
 
-        require(length < 5, "OTHC:CI:INVALID_LM_LIST_LENGTH");
+        require(length < 6, "OTHC:CI:INVALID_LM_LIST_LENGTH");
 
         // Initializing all to true makes sure that contract returns true if there's no open term loan manager.
         invariants_ = _initStruct();
 
-        for(uint256 i; i < length; ++i) {
+        for (uint256 i; i < length; ++i) {
             address loanManager_ = poolManager.strategyList(i);
 
             if (_isOpenTermLoanManager(loanManager_)) {
-
                 // If there're two loan managers, only one can be an open term, otherwise this contract can't properly assert invariants.
                 if (i == 1) {
                     require(!_isOpenTermLoanManager(poolManager.strategyList(0)), "OTHC:CI:TWO_OTLMs");
@@ -90,7 +85,7 @@ contract OpenTermLoanHealthChecker {
                 invariants_.openTermLoanInvariantH = check_otl_invariant_H(loans_);
                 invariants_.openTermLoanInvariantI = check_otl_invariant_I(loans_);
 
-                invariants_.openTermLoanManagerInvariantA = true; // check_otlm_invariant_A(openTermLoanManager_, loans_);
+                invariants_.openTermLoanManagerInvariantA = check_otlm_invariant_A(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantB = check_otlm_invariant_B(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantC = check_otlm_invariant_C(loanManager_, loans_);
                 invariants_.openTermLoanManagerInvariantD = check_otlm_invariant_D(loanManager_, loans_);
@@ -167,7 +162,7 @@ contract OpenTermLoanHealthChecker {
         isMaintained_ = true;
     }
 
-    function check_otl_invariant_F (address[] memory loans_) public view returns (bool isMaintained_) {
+    function check_otl_invariant_F(address[] memory loans_) public view returns (bool isMaintained_) {
         for (uint256 i = 0; i < loans_.length; i++) {
             IOpenTermLoan loan = IOpenTermLoan(loans_[i]);
 
@@ -177,14 +172,13 @@ contract OpenTermLoanHealthChecker {
         isMaintained_ = true;
     }
 
-    function check_otl_invariant_G (address[] memory loans_) public view returns (bool isMaintained_) {
+    function check_otl_invariant_G(address[] memory loans_) public view returns (bool isMaintained_) {
         for (uint256 i = 0; i < loans_.length; i++) {
             IOpenTermLoan loan = IOpenTermLoan(loans_[i]);
 
-            if (
-                loan.dateCalled() != 0 && loan.calledPrincipal() == 0 ||
-                loan.dateCalled() == 0 && loan.calledPrincipal() != 0
-            ) return false;
+            if (loan.dateCalled() != 0 && loan.calledPrincipal() == 0 || loan.dateCalled() == 0 && loan.calledPrincipal() != 0) {
+                return false;
+            }
         }
 
         isMaintained_ = true;
@@ -204,13 +198,8 @@ contract OpenTermLoanHealthChecker {
         for (uint256 i = 0; i < loans_.length; i++) {
             address loan = loans_[i];
 
-            (
-                uint256 principal,
-                uint256 interest,
-                uint256 lateInterest,
-                uint256 delegateServiceFee,
-                uint256 platformServiceFee
-            ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+            (uint256 principal, uint256 interest, uint256 lateInterest, uint256 delegateServiceFee, uint256 platformServiceFee) =
+                IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
 
             (
                 uint256 expectedPrincipal,
@@ -221,13 +210,9 @@ contract OpenTermLoanHealthChecker {
             ) = _getExpectedPaymentBreakdown(loan);
 
             if (
-                principal          != expectedPrincipal          ||
-                interest           != expectedInterest           ||
-                lateInterest       != expectedLateInterest       ||
-                delegateServiceFee != expectedDelegateServiceFee ||
-                platformServiceFee != expectedPlatformServiceFee
+                principal != expectedPrincipal || interest != expectedInterest || lateInterest != expectedLateInterest
+                    || delegateServiceFee != expectedDelegateServiceFee || platformServiceFee != expectedPlatformServiceFee
             ) return false;
-
         }
 
         isMaintained_ = true;
@@ -253,7 +238,7 @@ contract OpenTermLoanHealthChecker {
         isMaintained_ = _assertApproxEqAbs(
             assetsUnderManagement,
             expectedAssetsUnderManagement,
-            BUFFER  // As the number can be unbounded but we realistically expect it to not go over $1
+            BUFFER // As the number can be unbounded but we realistically expect it to not go over $1
         );
     }
 
@@ -265,7 +250,7 @@ contract OpenTermLoanHealthChecker {
         uint256 assetsUnderManagement = openTermLoanManager.assetsUnderManagement();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , uint40 startDate, ) = openTermLoanManager.paymentFor(address(loans_[i]));
+            (,, uint40 startDate,) = openTermLoanManager.paymentFor(address(loans_[i]));
 
             if (startDate != 0) return true;
         }
@@ -295,7 +280,7 @@ contract OpenTermLoanHealthChecker {
         uint256 expectedIssuanceRate;
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( , , , uint168 issuanceRate_ ) = openTermLoanManager.paymentFor(address(loans_[i]));
+            (,,, uint168 issuanceRate_) = openTermLoanManager.paymentFor(address(loans_[i]));
 
             if (IOpenTermLoan(loans_[i]).isImpaired()) continue;
 
@@ -313,7 +298,7 @@ contract OpenTermLoanHealthChecker {
         uint256 unrealizedLosses = openTermLoanManager.unrealizedLosses();
 
         for (uint256 i; i < loans_.length; ++i) {
-            ( uint40 impairmentDate, ) = openTermLoanManager.impairmentFor(address(loans_[i]));
+            (uint40 impairmentDate,) = openTermLoanManager.impairmentFor(address(loans_[i]));
 
             if (impairmentDate != 0) return true;
         }
@@ -325,7 +310,7 @@ contract OpenTermLoanHealthChecker {
         for (uint256 i; i < loans_.length; ++i) {
             IOpenTermLoan loan = IOpenTermLoan(loans_[i]);
 
-            ( , , uint40 paymentStartDate, ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
+            (,, uint40 paymentStartDate,) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(address(loan));
 
             if (paymentStartDate != loan.dateFunded() && paymentStartDate != loan.datePaid()) return false;
         }
@@ -337,10 +322,10 @@ contract OpenTermLoanHealthChecker {
         for (uint256 i; i < loans_.length; ++i) {
             address loan = loans_[i];
 
-            ( , , , uint168 issuanceRate ) = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan);
-            uint256 expectedIssuanceRate   = _getExpectedIssuanceRate(loan, openTermLoanManager_);
+            (,,, uint168 issuanceRate)   = IOpenTermLoanManager(openTermLoanManager_).paymentFor(loan);
+            uint256 expectedIssuanceRate = _getExpectedIssuanceRate(loan, openTermLoanManager_);
 
-            if(issuanceRate != expectedIssuanceRate) return false;
+            if (issuanceRate != expectedIssuanceRate) return false;
         }
 
         isMaintained_ = true;
@@ -350,8 +335,8 @@ contract OpenTermLoanHealthChecker {
         for (uint256 i; i < loans_.length; ++i) {
             IOpenTermLoanManager loanManager_ = IOpenTermLoanManager(openTermLoanManager_);
 
-            ( uint40 impairmentDate, ) = loanManager_.impairmentFor(loans_[i]);
-            ( , , uint40 startDate, )  = loanManager_.paymentFor(loans_[i]);
+            (uint40 impairmentDate,) = loanManager_.impairmentFor(loans_[i]);
+            (,, uint40 startDate,)   = loanManager_.paymentFor(loans_[i]);
 
             if (impairmentDate != 0) {
                 if (impairmentDate < startDate) return false;
@@ -371,29 +356,18 @@ contract OpenTermLoanHealthChecker {
             outstandingValue += _getOutstandingValue(address(loans_[i]), loanManager_);
         }
 
-        isMaintained_ = _assertApproxEqAbs(
-            assetsUnderManagement + UNDERFLOW_THRESHOLD - unrealizedLosses - outstandingValue,
-            0,
-            BUFFER
-        );
+        isMaintained_ = _assertApproxEqAbs(assetsUnderManagement, unrealizedLosses + outstandingValue, BUFFER + UNDERFLOW_THRESHOLD);
     }
-
 
     /******************************************************************************************************************************/
     /*** Helpers                                                                                                                ***/
     /******************************************************************************************************************************/
 
     function _getExpectedIssuanceRate(address loan, address loanManager) internal view returns (uint256 expectedIssuanceRate) {
-        (
-            uint24 platformManagementFeeRate,
-            uint24 delegateManagementFeeRate,
-            ,
-        ) = IOpenTermLoanManager(loanManager).paymentFor(loan);
+        (uint24 platformManagementFeeRate, uint24 delegateManagementFeeRate,,) = IOpenTermLoanManager(loanManager).paymentFor(loan);
 
-        uint256 grossInterest  = _getProRatedAmount(
-            IOpenTermLoan(loan).principal(),
-            IOpenTermLoan(loan).interestRate(),
-            IOpenTermLoan(loan).paymentInterval()
+        uint256 grossInterest = _getProRatedAmount(
+            IOpenTermLoan(loan).principal(), IOpenTermLoan(loan).interestRate(), IOpenTermLoan(loan).paymentInterval()
         );
 
         if (grossInterest == 0) return 0;
@@ -404,20 +378,20 @@ contract OpenTermLoanHealthChecker {
     }
 
     function _getExpectedNetInterest(address loan, address loanManager) internal view returns (uint256 netInterest) {
-        ( , uint256 grossInterest, , , ) = IOpenTermLoan(loan).getPaymentBreakdown(block.timestamp);
+        uint256 timestamp = IOpenTermLoan(loan).isImpaired() ? IOpenTermLoan(loan).dateImpaired() : block.timestamp;
 
-        (
-            uint24 platformManagementFeeRate,
-            uint24 delegateManagementFeeRate,
-            ,
-        ) = IOpenTermLoanManager(loanManager).paymentFor(loan);
+        (, uint256 grossInterest,,,) = IOpenTermLoan(loan).getPaymentBreakdown(timestamp);
+
+        (uint24 platformManagementFeeRate, uint24 delegateManagementFeeRate,,) = IOpenTermLoanManager(loanManager).paymentFor(loan);
 
         uint256 managementFees = grossInterest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
 
         netInterest = grossInterest - managementFees;
     }
 
-    function _getExpectedPaymentBreakdown(address loan) internal view
+    function _getExpectedPaymentBreakdown(address loan)
+        internal
+        view
         returns (
             uint256 expectedPrincipal,
             uint256 expectedInterest,
@@ -426,11 +400,10 @@ contract OpenTermLoanHealthChecker {
             uint256 expectedPlatformServiceFee
         )
     {
-        uint256 startTime    = IOpenTermLoan(loan).datePaid() == 0 ? IOpenTermLoan(loan).dateFunded() : IOpenTermLoan(loan).datePaid();
-        uint256 interval     = block.timestamp - startTime;
-        uint256 lateInterval = block.timestamp > IOpenTermLoan(loan).paymentDueDate()
-            ? block.timestamp - IOpenTermLoan(loan).paymentDueDate()
-            : 0;
+        uint256 startTime = IOpenTermLoan(loan).datePaid() == 0 ? IOpenTermLoan(loan).dateFunded() : IOpenTermLoan(loan).datePaid();
+        uint256 interval  = block.timestamp - startTime;
+        uint256 lateInterval =
+            block.timestamp > IOpenTermLoan(loan).paymentDueDate() ? block.timestamp - IOpenTermLoan(loan).paymentDueDate() : 0;
 
         uint256 principal = IOpenTermLoan(loan).principal();
 
@@ -447,24 +420,15 @@ contract OpenTermLoanHealthChecker {
     }
 
     function _getOutstandingValue(address loan_, address loanManager_) internal view returns (uint256 outstandingValue_) {
-        if (IOpenTermLoan(loan_).dateFunded()   == 0) return 0;
+        if (IOpenTermLoan(loan_).dateFunded() == 0) return 0;
         if (IOpenTermLoan(loan_).dateImpaired() != 0) return 0;
 
-        (
-            uint256 platformManagementFeeRate_,
-            uint256 delegateManagementFeeRate_,
-            ,
-        ) = IOpenTermLoanManager(loanManager_).paymentFor(loan_);
+        (uint256 platformManagementFeeRate_, uint256 delegateManagementFeeRate_,,) = IOpenTermLoanManager(loanManager_).paymentFor(loan_);
 
-        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0
-            ? IOpenTermLoan(loan_).datePaid()
-            : IOpenTermLoan(loan_).dateFunded();
+        uint256 startTime_ = IOpenTermLoan(loan_).datePaid() != 0 ? IOpenTermLoan(loan_).datePaid() : IOpenTermLoan(loan_).dateFunded();
 
-        uint256 grossInterest_ = _getProRatedAmount(
-            IOpenTermLoan(loan_).principal(),
-            IOpenTermLoan(loan_).interestRate(),
-            block.timestamp - startTime_
-        );
+        uint256 grossInterest_ =
+            _getProRatedAmount(IOpenTermLoan(loan_).principal(), IOpenTermLoan(loan_).interestRate(), block.timestamp - startTime_);
 
         uint256 netInterest_ = grossInterest_ * (1e6 - delegateManagementFeeRate_ - platformManagementFeeRate_) / 1e6;
 

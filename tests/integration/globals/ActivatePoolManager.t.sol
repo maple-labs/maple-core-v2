@@ -9,11 +9,11 @@ contract ActivatePoolManagerTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithOTLM(poolDelegate);
     }
 
     function test_activatePoolManager() external {
@@ -49,11 +49,11 @@ contract ActivatePoolManagerFailureTests is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithOTLM(poolDelegate);
     }
 
     function test_activatePoolManager_failIfNotGovernor() public {

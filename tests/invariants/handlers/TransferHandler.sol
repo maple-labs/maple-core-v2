@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IInvariantTest, IPool } from "../../../contracts/interfaces/Interfaces.sol";
-
-import { console2 as console } from "../../../contracts/Runner.sol";
+import { IPool } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
@@ -14,37 +12,55 @@ contract TransferHandler is HandlerBase {
     /**************************************************************************************************************************************/
 
     address[] lps;
-
-    IPool pool;
+    address[] pools;
 
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(address pool_, address[] memory lps_) {
-        testContract = IInvariantTest(msg.sender);
-
-        pool = IPool(pool_);
-        lps  = lps_;
+    constructor(string memory handlerName_, address[] memory pools_, address[] memory lps_) HandlerBase(handlerName_) {
+        pools = pools_;
+        lps   = lps_;
     }
 
     /**************************************************************************************************************************************/
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function transfer(uint256 seed_) external useTimestamps {
-        console.log("transferHandler.transfer(%s)", seed_);
-        numberOfCalls["transferHandler.transfer"]++;
+    function transfer(uint256 seed_) external {
+        address pool_      = _selectPool(seed_);
+        address sender_    = _selectSender(seed_);
+        address recipient_ = _selectRecipient(seed_);
 
-        address sender_ = lps[_bound(_randomize(seed_, "sender"), 0, lps.length - 1)];
+        if (IPool(pool_).balanceOf(sender_) == 0) {
+            _recordSkip();
+            return;
+        }
 
-        if (pool.balanceOf(sender_) == 0) return;
-
-        uint256 amount_    = _bound(_randomize(seed_, "amount"), 1, pool.balanceOf(sender_));
-        address recipient_ = lps[_bound(_randomize(seed_, "recipient"), 0, lps.length - 1)];
+        uint256 amount_ = _selectAmount(seed_, pool_, sender_);
 
         vm.prank(sender_);
-        pool.transfer(recipient_, amount_);
+        IPool(pool_).transfer(recipient_, amount_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Helpers                                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function _selectAmount(uint256 seed_, address pool_, address sender_) internal view returns (uint256 amount_) {
+        amount_ = _bound(_randomize(seed_, "amount"), 1, IPool(pool_).balanceOf(sender_));
+    }
+
+    function _selectPool(uint256 seed_) internal view returns (address pool_) {
+        pool_ = pools[_bound(_randomize(seed_, "pool"), 0, pools.length - 1)];
+    }
+
+    function _selectRecipient(uint256 seed_) internal view returns (address recipient_) {
+        recipient_ = lps[_bound(_randomize(seed_, "recipient"), 0, lps.length - 1)];
+    }
+
+    function _selectSender(uint256 seed_) internal view returns (address sender_) {
+        sender_ = lps[_bound(_randomize(seed_, "sender"), 0, lps.length - 1)];
     }
 
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { Test, console2 } from "../modules/forge-std/src/Test.sol";
+import { Test, console } from "../modules/forge-std/src/Test.sol";
 
 import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
@@ -37,6 +37,14 @@ contract Runner is Test {
         contract_ = deployCode(string(abi.encodePacked("./out/", folder, ".sol/", contractName, ".json")), data);
     }
 
+    function deployFromFileTo(string memory folder, string memory contractName, address where) internal {
+        deployCodeTo(string(abi.encodePacked("./out/", folder, ".sol/", contractName, ".json")), where);
+    }
+
+    function deployFromFileTo(string memory folder, string memory contractName, bytes memory data, address where) internal {
+        deployCodeTo(string(abi.encodePacked("./out/", folder, ".sol/", contractName, ".json")), data, where);
+    }
+
     function deployMock(string memory mockName) internal returns (address mock_) {
         mock_ = deployCode(string(abi.encodePacked("./out/Mocks.sol/", mockName, ".json")));
     }
@@ -45,8 +53,14 @@ contract Runner is Test {
         mock_ = deployCode(string(abi.encodePacked("./out/Mocks.sol/", mockName, ".json")), data);
     }
 
-    function deployNPT(address owner, address impl) internal returns (address npt_) {
+    function deployNTP(address owner, address impl) internal returns (address npt_) {
         npt_ = deployCode(string(abi.encodePacked("./out/NonTransparentProxy.sol/NonTransparentProxy.json")), abi.encode(owner, impl));
+    }
+
+    function deployNTPv25(address owner, address impl) internal returns (address npt_) {
+        npt_ = deployCode(
+            string(abi.encodePacked("./out/contracts/NonTransparentProxy.sol/NonTransparentProxy.json")), abi.encode(owner, impl)
+        );
     }
 
 }

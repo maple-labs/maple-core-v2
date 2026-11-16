@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1779103675737,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "2.0.1",
+    "createdFromSafeAddress": "0xCe1cE7c7F436DCc4E28Bc8bf86115514d3DC34E8",
+    "createdFromOwnerAddress": "",
+    "checksum": "0xd6a6223cfa6619bde6fb1ec2835322bc7cd34f459e10736d1b76ebb6fe4b8242"
+  },
+  "transactions": [
+    {
+      "to": "0x804a6F5F667170F545Bf14e5DDB48C70B788390C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "account_",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "isValid_",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ],
+        "name": "setValidPoolDelegate",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "account_": "0x54e28Bb2D530Ee10386dbcA6E7e84EfaC809292C",
+        "isValid_": "true"
+      }
+    }
+  ]
+}

@@ -2,62 +2,73 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
+    IDaiJoinLike,
+    IDefiStrategyLike,
     IERC20,
     IERC20Like,
     IExemptionsManagerLike,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
     IGlobals,
+    IGovernorTimelock,
     IKycERC20Like,
     ILoanLike,
     ILoanManagerLike,
     IMapleProxyFactory,
+    IMapleCCIPReceiverLike,
     INonTransparentProxy,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
-    IPoolDeployer,
     IPoolManager,
     IPoolPermissionManager,
     IPoolPermissionManagerInitializer,
     IProxiedLike,
+    IPSMLike,
     IStrategyLike,
+    IStrategyManager,
+    ISkyStrategy,
     IUSDCLike,
-    IWithdrawalManagerCyclical as IWithdrawalManager,
+    IUnderlyingStrategyLike,
     IWithdrawalManagerQueue
 } from "./interfaces/Interfaces.sol";
 
+import { Runner, ERC20Helper, console } from "./Runner.sol";
 
-import { Runner, ERC20Helper, console2 as console } from "./Runner.sol";
-
+// TODO: Consider removing _ from all function variables in this file to align with test code standards.
 /// @dev This contract is the reference on how to perform most of the Maple Protocol actions.
 contract ProtocolActions is Runner {
 
-    uint256 constant HUNDRED_PERCENT = 100_0000;  // TODO: Fix Globals module to export this constant in its interface.
+    uint256 constant HUNDRED_PERCENT = 100_0000; // TODO: Fix Globals module to export this constant in its interface.
+
+    bytes32 constant EMPTY_METADATA = "";
 
     address MPL       = address(0x33349B282065b0284d756F0577FB39c158F935e6);
-    address WBTC      = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     address WETH      = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address USDC      = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address USDG      = address(0xe343167631d89B6Ffc58B88d6b7fB0228795491D);
     address USDT      = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     address USDC_BASE = address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);
+    address USD1      = address(0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d);
 
     address MPL_SOURCE       = address(0x4937A209D4cDbD3ecD48857277cfd4dA4D82914c);
-    address WBTC_SOURCE      = address(0xBF72Da2Bd84c5170618Fbe5914B0ECA9638d5eb5);
     address WETH_SOURCE      = address(0xF04a5cC80B1E94C69B48f5ee68a08CD2F09A7c3E);
     address USDC_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
-    address USDT_SOURCE      = address(0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06);
+    address USDG_SOURCE      = address(0xcC282E2004428939ee5149A9e7872F0B4d5d5ec7);
+    address USDT_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
     address USDC_BASE_SOURCE = address(0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A);
     address USDS_SOURCE      = address(0xDBF5E9c5206d0dB70a90108bf936DA60221dC080);
+    address USD1_SOURCE      = address(0xF977814e90dA44bFA03b6295A0616a897441aceC);
 
-    address AAVE_ACL      = address(0xc2aaCf6553D20d1e9d78E365AAba8032af9c85b0);
-    address AAVE_CONFIG   = address(0x64b761D848206f447Fe2dd461b0c635Ec39EbB27);
-    address AAVE_USDC     = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
-    address AAVE_USDS     = address(0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259);
-    address AAVE_USDT     = address(0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a);
-    address SAVINGS_USDS  = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
-    address USDS_LITE_PSM = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
-    address USDS          = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
+    address AAVE_USDC    = address(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c);
+    address AAVE_USDG    = address(0x7c0477d085ECb607CF8429f3eC91Ae5E1e460F4F);
+    address SPARK_USDC   = address(0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815);
+    address SAVINGS_USDS = address(0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD);
+    address USDS         = address(0xdC035D45d973E3EC169d2276DDab16f1e407384F);
+
+    address USDS_LITE_PSM   = address(0xA188EEC8F81263234dA3622A406892F3D630f98c);
+    address DSS_LITE_PSM    = address(0xf6e72Db5454dd049d0788e411b06CfAF16853042);
+    address SKY_DAI_JOIN    = address(0x9759A6Ac90977b93B58547b4A71c78317f391A28);
+    address SKY_PAUSE_PROXY = address(0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB);
 
     /**************************************************************************************************************************************/
     /*** Helpers                                                                                                                        ***/
@@ -76,18 +87,15 @@ contract ProtocolActions is Runner {
     }
 
     function erc20_mint(address asset_, address account_, uint256 amount_) internal {
-        if      (asset_ == MPL)       erc20_transfer(MPL,       MPL_SOURCE,       account_, amount_);
-        else if (asset_ == WBTC)      erc20_transfer(WBTC,      WBTC_SOURCE,      account_, amount_);
-        else if (asset_ == WETH)      erc20_transfer(WETH,      WETH_SOURCE,      account_, amount_);
-        else if (asset_ == USDT)      erc20_transfer(USDT,      USDT_SOURCE,      account_, amount_);
+        if (asset_ == MPL) erc20_transfer(MPL, MPL_SOURCE, account_, amount_);
+        else if (asset_ == WETH) erc20_transfer(WETH, WETH_SOURCE, account_, amount_);
+        else if (asset_ == USDT) erc20_transfer(USDT, USDT_SOURCE, account_, amount_);
         else if (asset_ == USDC_BASE) erc20_transfer(USDC_BASE, USDC_BASE_SOURCE, account_, amount_);
-        else if (asset_ == USDS)      erc20_transfer(USDS,      USDS_SOURCE,      account_, amount_);
-        else if (asset_ == USDC)      mintUSDC(account_, amount_);
-        else IERC20Like(asset_).mint(account_, amount_);  // Try to mint if its not one of the "real" tokens.
-    }
-
-    function isFixedTermLoan(address loan) internal view returns (bool isFixedTermLoan_) {
-        isFixedTermLoan_ = !isOpenTermLoan(loan);
+        else if (asset_ == USDS) erc20_transfer(USDS, USDS_SOURCE, account_, amount_);
+        else if (asset_ == USDG) erc20_transfer(USDG, USDG_SOURCE, account_, amount_);
+        else if (asset_ == USDC) mintUSDC(account_, amount_);
+        else if (asset_ == USD1) erc20_transfer(USD1, USD1_SOURCE, account_, amount_);
+        else IERC20Like(asset_).mint(account_, amount_); // Try to mint if its not one of the "real" tokens.
     }
 
     function isOpenTermLoan(address loan) internal view returns (bool isOpenTermLoan_) {
@@ -103,72 +111,46 @@ contract ProtocolActions is Runner {
         if (amount_ > 0) IUSDCLike(USDC).mint(account_, amount_);
     }
 
+    function cageSkyDaiJoin() internal {
+        // DaiJoin has renounced every ward, so authorize this contract before running the real shutdown. Slot 0 holds `wards`.
+        vm.store(SKY_DAI_JOIN, keccak256(abi.encode(address(this), uint256(0))), bytes32(uint256(1)));
+
+        IDaiJoinLike(SKY_DAI_JOIN).cage();
+    }
+
+    function setFallbackTout(address strategy_, uint256 fallbackTout_) internal {
+        address globals_          = ISkyStrategy(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        ISkyStrategy(strategy_).setFallbackTout(fallbackTout_);
+    }
+
+    function setSkyTin(uint256 tin_) internal {
+        vm.prank(SKY_PAUSE_PROXY);
+        IPSMLike(DSS_LITE_PSM).file("tin", tin_);
+    }
+
+    function setSkyTout(uint256 tout_) internal {
+        vm.prank(SKY_PAUSE_PROXY);
+        IPSMLike(DSS_LITE_PSM).file("tout", tout_);
+    }
+
     /**************************************************************************************************************************************/
     /*** Borrow Functions                                                                                                               ***/
     /**************************************************************************************************************************************/
 
-    function close(address loan_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).getClosingPaymentBreakdown();
-
-        address borrower_   = ILoanLike(loan_).borrower();
-        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
-        uint256 payment_    = principal_ + interest_ + fees_;
-
-        erc20_mint(fundsAsset_, borrower_, payment_);
-        erc20_approve(fundsAsset_, borrower_, loan_, payment_);
-
-        vm.startPrank(borrower_);
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).closeLoan(payment_);
-        vm.stopPrank();
-    }
-
-    function createFixedTermLoan(
-        address           factory_,
-        address           borrower_,
-        address           lender_,
-        address           feeManager_,
-        address[2] memory assets_,
-        uint256[3] memory amounts_,
-        uint256[3] memory terms_,
-        uint256[4] memory rates_,
-        uint256[2] memory fees_
-    )
-        internal returns (address loan_)
-    {
-        address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
-        address governor_ = IGlobals(globals_).governor();
-
-        vm.prank(governor_);
-        IGlobals(globals_).setValidBorrower(borrower_, true);
-
-        vm.prank(borrower_);
-        loan_ = IMapleProxyFactory(factory_).createInstance({
-            arguments_: abi.encode(
-                borrower_,
-                lender_,
-                feeManager_,
-                assets_,
-                terms_,
-                amounts_,
-                rates_,
-                fees_
-            ),
-            salt_: "SALT"
-        });
-    }
-
     function createOpenTermLoan(
-        address           factory_,
-        address           borrower_,
-        address           lender_,
-        address           asset_,
-        uint256           principal_,
+        address factory_,
+        address borrower_,
+        address lender_,
+        address asset_,
+        uint256 principal_,
         uint256[3] memory terms_,
         uint256[4] memory rates_
     )
-        internal returns (address loan_)
+        internal
+        returns (address loan_)
     {
         address globals_  = IMapleProxyFactory(factory_).mapleGlobals();
         address governor_ = IGlobals(globals_).governor();
@@ -190,94 +172,48 @@ contract ProtocolActions is Runner {
         });
     }
 
-    function drawdown(address loan_, uint256 amount_) internal returns (uint256 collateralPosted_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_           = ILoanLike(loan_).borrower();
-        address collateralAsset_    = IFixedTermLoan(loan_).collateralAsset();
-        uint256 collateralRequired_ = IFixedTermLoan(loan_).getAdditionalCollateralRequiredFor(amount_);
-
-        erc20_mint(collateralAsset_, borrower_, collateralRequired_);
-        erc20_approve(collateralAsset_, borrower_, loan_, collateralRequired_);
-
-        vm.startPrank(borrower_);
-        ( collateralPosted_ ) = IFixedTermLoan(loan_).drawdownFunds(amount_, borrower_);
-        vm.stopPrank();
-    }
-
     function makePayment(address loan_) internal returns (uint256 principal_, uint256 totalInterest_, uint256 totalFees_) {
-        if (isOpenTermLoan(loan_)) {
-            uint256 interest_;
-            uint256 lateInterest_;
-            uint256 delegateServiceFee_;
-            uint256 platformServiceFee_;
+        uint256 interest_;
+        uint256 lateInterest_;
+        uint256 delegateServiceFee_;
+        uint256 platformServiceFee_;
 
-            ( principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = makePaymentOT(loan_);
+        (principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) = makePaymentOT(loan_);
 
-            ( principal_, totalInterest_, totalFees_ )
-                = ( principal_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
-        } else {
-            ( principal_, totalInterest_, totalFees_ ) = makePaymentFT(loan_);
-        }
+        (principal_, totalInterest_, totalFees_) = (principal_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
     }
 
     function makePayment(address loan_, uint256 amount_) internal returns (uint256 principal_, uint256 totalInterest_, uint256 totalFees_) {
-        if (isOpenTermLoan(loan_)) {
-            uint256 interest_;
-            uint256 lateInterest_;
-            uint256 delegateServiceFee_;
-            uint256 platformServiceFee_;
+        uint256 interest_;
+        uint256 lateInterest_;
+        uint256 delegateServiceFee_;
+        uint256 platformServiceFee_;
 
-            ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = makePaymentOT(loan_, amount_);
+        (interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) = makePaymentOT(loan_, amount_);
 
-            ( principal_, totalInterest_, totalFees_ ) = ( amount_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
-        } else {
-            ( principal_, totalInterest_, totalFees_ ) = makePaymentFT(loan_, amount_);
-        }
+        (principal_, totalInterest_, totalFees_) = (amount_, interest_ + lateInterest_, delegateServiceFee_ + platformServiceFee_);
     }
 
-    function makePaymentFT(address loan_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).getNextPaymentBreakdown();
-        ( principal_, interest_, fees_ ) = _makePaymentFT(loan_, principal_ + interest_ + fees_);
-    }
-
-    function makePaymentFT(address loan_, uint256 amount_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        ( principal_, interest_, fees_ ) = _makePaymentFT(loan_, amount_);
-    }
-
-    function _makePaymentFT(address loan_, uint256 amount_) internal returns (uint256 principal_, uint256 interest_, uint256 fees_) {
-        address borrower_   = ILoanLike(loan_).borrower();
-        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
-
-        erc20_mint(fundsAsset_, borrower_, amount_);
-        erc20_approve(fundsAsset_, borrower_, loan_, amount_);
-
-        vm.startPrank(borrower_);
-        ( principal_, interest_, fees_ ) = IFixedTermLoan(loan_).makePayment(amount_);
-        vm.stopPrank();
-    }
-
-    function makePaymentOT(address loan_) internal
+    function makePaymentOT(address loan_)
+        internal
         returns (uint256 principal_, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_)
     {
-        (
-            principal_,
-            interest_,
-            lateInterest_,
-            delegateServiceFee_,
-            platformServiceFee_
-        ) = IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
+        (principal_, interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) =
+            IOpenTermLoan(loan_).getPaymentBreakdown(block.timestamp);
 
         uint256 paymentAmount_ = principal_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
 
-        ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = _makePaymentOT(loan_, paymentAmount_, principal_);
+        (interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) = _makePaymentOT(loan_, paymentAmount_, principal_);
     }
 
-    function makePaymentOT(address loan_, uint256 principalToReturn_) internal
+    function makePaymentOT(
+        address loan_,
+        uint256 principalToReturn_
+    )
+        internal
         returns (uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_)
     {
-        (
-            , // UNUSED
+        (, // UNUSED
             interest_,
             lateInterest_,
             delegateServiceFee_,
@@ -286,10 +222,15 @@ contract ProtocolActions is Runner {
 
         uint256 paymentAmount_ = principalToReturn_ + interest_ + lateInterest_ + delegateServiceFee_ + platformServiceFee_;
 
-        ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = _makePaymentOT(loan_, paymentAmount_, principalToReturn_);
+        (interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) = _makePaymentOT(loan_, paymentAmount_, principalToReturn_);
     }
 
-    function _makePaymentOT(address loan_, uint256 paymentAmount_, uint256 principalToReturn_) internal
+    function _makePaymentOT(
+        address loan_,
+        uint256 paymentAmount_,
+        uint256 principalToReturn_
+    )
+        internal
         returns (uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_)
     {
         address borrower_   = ILoanLike(loan_).borrower();
@@ -299,45 +240,7 @@ contract ProtocolActions is Runner {
         erc20_approve(fundsAsset_, borrower_, loan_, paymentAmount_);
 
         vm.startPrank(borrower_);
-        ( interest_, lateInterest_, delegateServiceFee_, platformServiceFee_ ) = IOpenTermLoan(loan_).makePayment(principalToReturn_);
-        vm.stopPrank();
-    }
-
-    function postCollateral(address loan_, uint256 amount_) internal returns (uint256 collateralPosted_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_        = ILoanLike(loan_).borrower();
-        address collateralAsset_ = IFixedTermLoan(loan_).collateralAsset();
-
-        erc20_mint(collateralAsset_, borrower_, amount_);
-        erc20_approve(collateralAsset_, borrower_, loan_, amount_);
-
-        vm.startPrank(borrower_);
-        collateralPosted_ = IFixedTermLoan(loan_).postCollateral(amount_);
-        vm.stopPrank();
-    }
-
-    function removeCollateral(address loan_, uint256 amount_) internal {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_ = ILoanLike(loan_).borrower();
-
-        vm.startPrank(borrower_);
-        IFixedTermLoan(loan_).removeCollateral(amount_, borrower_);
-        vm.stopPrank();
-    }
-
-    function returnFunds(address loan_, uint256 amount_) internal returns (uint256 fundsReturned_) {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        address borrower_   = ILoanLike(loan_).borrower();
-        address fundsAsset_ = ILoanLike(loan_).fundsAsset();
-
-        erc20_mint(fundsAsset_, borrower_, amount_);
-        erc20_approve(fundsAsset_, borrower_, loan_, amount_);
-
-        vm.startPrank(borrower_);
-        fundsReturned_ = IFixedTermLoan(loan_).returnFunds(amount_);
+        (interest_, lateInterest_, delegateServiceFee_, platformServiceFee_) = IOpenTermLoan(loan_).makePayment(principalToReturn_);
         vm.stopPrank();
     }
 
@@ -346,39 +249,7 @@ contract ProtocolActions is Runner {
     /**************************************************************************************************************************************/
 
     function acceptRefinance(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        if (isOpenTermLoan(loan_)) return acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
-
-        acceptRefinanceFT(loan_, refinancer_, expiry_, refinanceCalls_, 0);
-    }
-
-    function acceptRefinance(
-        address        loan_,
-        address        refinancer_,
-        uint256        expiry_,
-        bytes[] memory refinanceCalls_,
-        uint256        principalIncrease_
-    ) internal {
-        if (isOpenTermLoan(loan_)) return acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
-
-        acceptRefinanceFT(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
-    }
-
-    function acceptRefinanceFT(
-        address        loan_,
-        address        refinancer_,
-        uint256        expiry_,
-        bytes[] memory refinanceCalls_,
-        uint256        principalIncrease_
-    ) internal {
-        address loanManager_ = ILoanLike(loan_).lender();
-
-        address poolDelegate_ = IPoolManager(
-            ILoanManagerLike(loanManager_).poolManager()
-        ).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IFixedTermLoanManager(loanManager_).acceptNewTerms(loan_, refinancer_, expiry_, refinanceCalls_, principalIncrease_);
-        vm.stopPrank();
+        acceptRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
     }
 
     function acceptRefinanceOT(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
@@ -398,11 +269,7 @@ contract ProtocolActions is Runner {
     }
 
     function cancelRefinanceAsLender(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        address poolDelegate_ = IPoolManager(
-            ILoanManagerLike(
-                ILoanLike(loan_).lender()
-            ).poolManager()
-        ).poolDelegate();
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager()).poolDelegate();
 
         vm.startPrank(poolDelegate_);
         ILoanManagerLike(loan_).rejectNewTerms(loan_, refinancer_, expiry_, refinanceCalls_);
@@ -410,23 +277,13 @@ contract ProtocolActions is Runner {
     }
 
     function proposeRefinance(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        (isOpenTermLoan(loan_) ? proposeRefinanceOT : proposeRefinanceFT)(loan_, refinancer_, expiry_, refinanceCalls_);
-    }
-
-    function proposeRefinanceFT(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
-        address borrower_ = ILoanLike(loan_).borrower();
-
-        vm.startPrank(borrower_);
-        ILoanLike(loan_).proposeNewTerms(refinancer_, expiry_, refinanceCalls_);
-        vm.stopPrank();
+        proposeRefinanceOT(loan_, refinancer_, expiry_, refinanceCalls_);
     }
 
     function proposeRefinanceOT(address loan_, address refinancer_, uint256 expiry_, bytes[] memory refinanceCalls_) internal {
         address loanManager_ = ILoanLike(loan_).lender();
 
-        address poolDelegate_ = IPoolManager(
-            ILoanManagerLike(loanManager_).poolManager()
-        ).poolDelegate();
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
 
         vm.startPrank(poolDelegate_);
         IOpenTermLoanManager(loanManager_).proposeNewTerms(loan_, refinancer_, expiry_, refinanceCalls_);
@@ -457,11 +314,7 @@ contract ProtocolActions is Runner {
         address account_ = vm.addr(privateKey_);
         address asset_   = IPool(pool_).asset();
 
-        (
-            uint8   v_,
-            bytes32 r_,
-            bytes32 s_
-        ) = _getValidPermitSignature(asset_, account_, pool_, assets, deadline_, privateKey_);
+        (uint8 v_, bytes32 r_, bytes32 s_) = _getValidPermitSignature(asset_, account_, pool_, assets, deadline_, privateKey_);
 
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
@@ -494,13 +347,9 @@ contract ProtocolActions is Runner {
 
     function mintWithPermit(address pool_, uint256 privateKey_, uint256 shares_, uint256 deadline_) internal returns (uint256 assets_) {
         address account_ = vm.addr(privateKey_);
-        address asset_ = IPool(pool_).asset();
+        address asset_   = IPool(pool_).asset();
 
-        (
-            uint8   v_,
-            bytes32 r_,
-            bytes32 s_
-        ) = _getValidPermitSignature(asset_, account_, pool_, shares_, deadline_, privateKey_);
+        (uint8 v_, bytes32 r_, bytes32 s_) = _getValidPermitSignature(asset_, account_, pool_, shares_, deadline_, privateKey_);
 
         address poolManager_ = IPool(pool_).manager();
         address ppm_         = IPoolManager(poolManager_).poolPermissionManager();
@@ -533,6 +382,35 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
+    function requestCrossChainRedeem(address ccipReceiver_, address pool_, uint256 amount_, uint64 sourceChainSelector_) internal {
+        IMapleCCIPReceiverLike.EVMTokenAmount memory tokenAmount = IMapleCCIPReceiverLike.EVMTokenAmount({
+            token:  pool_,
+            amount: amount_
+        });
+
+        IMapleCCIPReceiverLike.EVMTokenAmount[] memory destTokenAmounts = new IMapleCCIPReceiverLike.EVMTokenAmount[](1);
+        destTokenAmounts[0]                                             = tokenAmount;
+
+        address sender = makeAddr("universalSenderAddress");
+
+        IMapleCCIPReceiverLike.UniversalMessage memory universalMessage = IMapleCCIPReceiverLike.UniversalMessage({
+            universalSenderAddress: bytes32(uint256(uint160(sender))),
+            pool:                   pool_,
+            metaData:               bytes32(0)
+        });
+
+        IMapleCCIPReceiverLike.Any2EVMMessage memory message = IMapleCCIPReceiverLike.Any2EVMMessage({
+            messageId: bytes32(0), // Not used
+            sourceChainSelector: sourceChainSelector_,
+            sender: abi.encode(sender),
+            data: abi.encode(universalMessage),
+            destTokenAmounts: destTokenAmounts
+        });
+
+        vm.prank(ccipReceiver_);
+        IMapleCCIPReceiverLike(ccipReceiver_).processMessage(message);
+    }
+
     /**************************************************************************************************************************************/
     /*** Pool Delegate Functions                                                                                                        ***/
     /**************************************************************************************************************************************/
@@ -563,18 +441,35 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
+    // TODO: Add salt parameter when writing tests for addStrategy function
     function addStrategy(address poolManager_, address strategyFactory_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IPoolManager(poolManager_).addStrategy(strategyFactory_, abi.encode(poolManager_));
+        IPoolManager(poolManager_)
+            .addStrategy(strategyFactory_, keccak256(abi.encode(strategyFactory_, poolManager_)), abi.encode(poolManager_));
     }
 
+    // TODO: Add salt parameter when writing tests for addStrategy function
     function addStrategy(address poolManager_, address strategyFactory_, bytes memory data_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.prank(poolDelegate_);
-        IPoolManager(poolManager_).addStrategy(strategyFactory_, data_);
+        IPoolManager(poolManager_).addStrategy(strategyFactory_, keccak256(abi.encode(strategyFactory_, data_)), data_);
+    }
+
+    function addStrategyManagerToPool(address poolManager_, address strategyManager_) internal {
+        address globals_          = IPoolManager(poolManager_).globals();
+        address governor_         = IGlobals(globals_).governor();
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.startPrank(governor_);
+        IPoolManager(poolManager_).addStrategyManager(strategyManager_);
+        IPoolManager(poolManager_).setStrategyCap(strategyManager_, type(uint256).max);
+        vm.stopPrank();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).setStrategyLiquidityCap(type(uint256).max);
     }
 
     function allowLender(address poolManager_, address lender_) internal {
@@ -582,10 +477,10 @@ contract ProtocolActions is Runner {
         address ppm_          = IPoolManager(poolManager_).poolPermissionManager();
 
         address[] memory lenders = new address[](1);
-        lenders[0] = lender_;
+        lenders[0]               = lender_;
 
         bool[] memory allows = new bool[](1);
-        allows[0] = true;
+        allows[0]            = true;
 
         vm.startPrank(poolDelegate_);
         IPoolPermissionManager(ppm_).setLenderAllowlist(poolManager_, lenders, allows);
@@ -593,163 +488,12 @@ contract ProtocolActions is Runner {
     }
 
     function callLoan(address loan_, uint256 principal_) internal {
-        require(isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_FT_LOAN");
-
         address loanManager_ = ILoanLike(loan_).lender();
 
-        address poolDelegate_ = IPoolManager(
-            ILoanManagerLike(loanManager_).poolManager()
-        ).poolDelegate();
+        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
 
         vm.startPrank(poolDelegate_);
         IOpenTermLoanManager(loanManager_).callPrincipal(loan_, principal_);
-        vm.stopPrank();
-    }
-
-    // TODO: This can only deploy pools with loan managers but not with strategies.
-    function deployAndActivatePool(
-        address           deployer_,
-        address           fundsAsset_,
-        address           globals_,
-        address           poolDelegate_,
-        address           poolManagerFactory_,
-        address           withdrawalManagerFactory_,
-        string     memory name_,
-        string     memory symbol_,
-        address[]  memory strategyFactories_,
-        uint256[7] memory configParams_
-    )
-        internal returns (address poolManager_)
-    {
-        if (configParams_[2] > 0) {
-            erc20_mint(fundsAsset_, poolDelegate_, configParams_[2]);
-
-            erc20_approve(fundsAsset_, poolDelegate_, deployer_, configParams_[2]);
-        }
-
-        // Set Valid PD
-        {
-            IGlobals globals = IGlobals(globals_);
-            vm.prank(globals.governor());
-            globals.setValidPoolDelegate(poolDelegate_, true);
-        }
-
-        address ppm_ = _deployPoolPermissionManager(globals_);
-
-        address poolManagerDeployment = IMapleProxyFactory(poolManagerFactory_).getInstanceAddress(
-            abi.encode(poolDelegate_, fundsAsset_, 0, name_, symbol_), // 0 is the initial supply
-            keccak256(abi.encode(poolDelegate_))
-        );
-
-        bytes[] memory strategyDeploymentData_ = new bytes[](strategyFactories_.length);
-        for (uint256 i = 0; i < strategyFactories_.length; i++) {
-            strategyDeploymentData_[i] = abi.encode(poolManagerDeployment);
-        }
-
-        poolManager_ = deployPoolWithCyclical(
-            poolDelegate_,
-            deployer_,
-            poolManagerFactory_,
-            withdrawalManagerFactory_,
-            strategyFactories_,
-            strategyDeploymentData_,
-            fundsAsset_,
-            ppm_,
-            name_,
-            symbol_,
-            configParams_
-        );
-
-        // Governor activates the pool
-        activatePool(poolManager_, HUNDRED_PERCENT);
-    }
-
-    function deployPoolWithCyclical(
-        address           poolDelegate_,
-        address           deployer_,
-        address           poolManagerFactory_,
-        address           cyclicalWMFactory_,
-        address[]  memory strategyFactories_,
-        bytes[]    memory strategyDeploymentData_,
-        address           fundsAsset_,
-        address           poolPermissionManager_,
-        string     memory name_,
-        string     memory symbol_,
-        uint256[7] memory configParams_
-    )
-        internal
-        returns (address poolManager_)
-    {
-        vm.prank(poolDelegate_);
-        poolManager_ = IPoolDeployer(deployer_).deployPool({
-            poolManagerFactory_:       poolManagerFactory_,
-            withdrawalManagerFactory_: cyclicalWMFactory_,
-            strategyFactories_:        strategyFactories_,
-            strategyDeploymentData_:   strategyDeploymentData_,
-            asset_:                    fundsAsset_,
-            poolPermissionManager_:    poolPermissionManager_,
-            name_:                     name_,
-            symbol_:                   symbol_,
-            configParams_:             configParams_
-        });
-    }
-
-    function deployPoolWithQueue(
-        address           poolDelegate_,
-        address           deployer_,
-        address           poolManagerFactory_,
-        address           queueWMFactory_,
-        address[]  memory strategyFactories_,
-        bytes[]    memory strategyDeploymentData_,
-        address           fundsAsset_,
-        address           poolPermissionManager_,
-        string     memory name_,
-        string     memory symbol_,
-        uint256[4] memory configParams_
-    )
-        internal returns (address poolManager_)
-    {
-        vm.prank(poolDelegate_);
-        poolManager_ = IPoolDeployer(deployer_).deployPool({
-            poolManagerFactory_:       poolManagerFactory_,
-            withdrawalManagerFactory_: queueWMFactory_,
-            strategyFactories_:        strategyFactories_,
-            strategyDeploymentData_:   strategyDeploymentData_,
-            asset_:                    fundsAsset_,
-            poolPermissionManager_:    poolPermissionManager_,
-            name_:                     name_,
-            symbol_:                   symbol_,
-            configParams_:             configParams_
-        });
-    }
-
-    function depositCover(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-        address asset_        = IPool(IPoolManager(poolManager_).pool()).asset();
-
-        erc20_mint(asset_, poolDelegate_, amount_);
-        erc20_approve(asset_, poolDelegate_, poolManager_, amount_);
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).depositCover(amount_);
-        vm.stopPrank();
-
-        assertEq(IERC20(asset_).balanceOf(IPoolManager(poolManager_).poolDelegateCover()), amount_);
-    }
-
-    function finishCollateralLiquidation(address loan_) internal {
-        require(!isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_OT_LOAN");
-
-        IPoolManager poolManager_ = IPoolManager(
-            ILoanManagerLike(
-                ILoanLike(loan_).lender()
-            ).poolManager()
-        );
-
-        address poolDelegate_ = poolManager_.poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        poolManager_.finishCollateralLiquidation(loan_);
         vm.stopPrank();
     }
 
@@ -795,15 +539,13 @@ contract ProtocolActions is Runner {
     function processRedemptions(address pool_, uint256 shares_) internal {
         address poolManager_       = IPool(pool_).manager();
         address withdrawalManager_ = IPoolManager(poolManager_).withdrawalManager();
-        address governor_          = IPoolManager(poolManager_).governor();
+        address poolDelegate_      = IPoolManager(poolManager_).poolDelegate();
 
-        vm.prank(governor_);
+        vm.prank(poolDelegate_);
         IWithdrawalManagerQueue(withdrawalManager_).processRedemptions(shares_);
     }
 
     function removeLoanCall(address loan_) internal {
-        require(isOpenTermLoan(loan_), "NOT_SUPPORTED_FOR_FT_LOAN");
-
         IOpenTermLoanManager loanManager_ = IOpenTermLoanManager(ILoanLike(loan_).lender());
 
         address poolDelegate_ = IPoolManager(loanManager_.poolManager()).poolDelegate();
@@ -826,19 +568,18 @@ contract ProtocolActions is Runner {
         loanManager_.removeLoanImpairment(loan_);
     }
 
+    function removeStrategyManager(address poolManager_, address strategyManager_) internal {
+        address operationalAdmin_ = IGlobals(IPoolManager(poolManager_).globals()).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IPoolManager(poolManager_).removeStrategyManager(strategyManager_);
+    }
+
     function setDelegateManagementFeeRate(address poolManager_, uint256 rate_) internal {
         address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
 
         vm.startPrank(poolDelegate_);
         IPoolManager(poolManager_).setDelegateManagementFeeRate(rate_);
-        vm.stopPrank();
-    }
-
-    function setExitConfig(address withdrawalManager_, uint256 cycleDuration_, uint256 windowDuration_) internal {
-        address poolDelegate_ = IPoolManager(IWithdrawalManager(withdrawalManager_).poolManager()).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IWithdrawalManager(withdrawalManager_).setExitConfig(cycleDuration_, windowDuration_);
         vm.stopPrank();
     }
 
@@ -852,12 +593,12 @@ contract ProtocolActions is Runner {
 
     // NOTE: Only works for queued withdrawal managers.
     function setManualWithdrawal(address poolManager_, address lender_, bool isManual_) internal {
-        IPoolManager pm_            = IPoolManager(poolManager_);
+        IPoolManager            pm_ = IPoolManager(poolManager_);
         IWithdrawalManagerQueue wm_ = IWithdrawalManagerQueue(pm_.withdrawalManager());
 
-        address governor_ = pm_.governor();
+        address poolDelegate_ = pm_.poolDelegate();
 
-        vm.prank(governor_);
+        vm.prank(poolDelegate_);
         wm_.setManualWithdrawal(lender_, isManual_);
     }
 
@@ -877,33 +618,17 @@ contract ProtocolActions is Runner {
         vm.stopPrank();
     }
 
-    function triggerDefault(address loan_, address liquidatorFactory_) internal {
+    function triggerDefault(address loan_) internal {
         address poolDelegate_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager()).poolDelegate();
 
-        triggerDefault(loan_, liquidatorFactory_, poolDelegate_);
+        triggerDefault(loan_, poolDelegate_);
     }
 
-    function triggerDefault(address loan_, address liquidatorFactory_, address caller_) internal {
+    function triggerDefault(address loan_, address caller_) internal {
         IPoolManager poolManager_ = IPoolManager(ILoanManagerLike(ILoanLike(loan_).lender()).poolManager());
 
         vm.prank(caller_);
-        poolManager_.triggerDefault(loan_, liquidatorFactory_);
-    }
-
-    function withdrawCover(address poolManager_, uint256 amount_) internal {
-        address poolDelegate_ = IPoolManager(poolManager_).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IPoolManager(poolManager_).withdrawCover(amount_, poolDelegate_);
-        vm.stopPrank();
-    }
-
-    function updateAccounting(address loanManager_) internal {
-        address poolDelegate_ = IPoolManager(ILoanManagerLike(loanManager_).poolManager()).poolDelegate();
-
-        vm.startPrank(poolDelegate_);
-        IFixedTermLoanManager(loanManager_).updateAccounting();
-        vm.stopPrank();
+        poolManager_.triggerDefault(loan_);
     }
 
     /**************************************************************************************************************************************/
@@ -925,12 +650,69 @@ contract ProtocolActions is Runner {
     }
 
     /**************************************************************************************************************************************/
+    /*** Governor Timelock Functions                                                                                                    ***/
+    /**************************************************************************************************************************************/
+
+    function executeProposal(address timelock_, address caller_, uint256 proposalId_, address target_, bytes memory callData_) internal {
+        uint256[] memory proposalIds = new uint256[](1);
+        address[] memory targets     = new address[](1);
+        bytes[] memory   data        = new bytes[](1);
+
+        proposalIds[0] = proposalId_;
+        targets[0]     = target_;
+        data[0]        = callData_;
+
+        vm.prank(caller_);
+        IGovernorTimelock(timelock_).executeProposals(proposalIds, targets, data);
+    }
+
+    function executeThroughTimelock(
+        address timelock_,
+        address proposer_,
+        address executor_,
+        address target_,
+        bytes memory callData_
+    )
+        internal
+        returns (uint256 proposalId_)
+    {
+        proposalId_ = scheduleProposal(timelock_, proposer_, target_, callData_);
+
+        (,,, uint32 delayedUntil_,) = IGovernorTimelock(timelock_).proposals(proposalId_);
+
+        vm.warp(delayedUntil_);
+
+        executeProposal(timelock_, executor_, proposalId_, target_, callData_);
+    }
+
+    function scheduleProposal(
+        address timelock_,
+        address caller_,
+        address target_,
+        bytes memory callData_
+    )
+        internal
+        returns (uint256 proposalId_)
+    {
+        address[] memory targets = new address[](1);
+        bytes[] memory   data    = new bytes[](1);
+
+        targets[0] = target_;
+        data[0]    = callData_;
+
+        vm.prank(caller_);
+        IGovernorTimelock(timelock_).scheduleProposals(targets, data);
+
+        proposalId_ = IGovernorTimelock(timelock_).latestProposalId();
+    }
+
+    /**************************************************************************************************************************************/
     /*** Permission Functions                                                                                                           ***/
     /**************************************************************************************************************************************/
 
     function setLenderAllowlist(address poolManager_, address lender_, bool boolean_) internal {
         address[] memory lenders_  = new address[](1);
-        bool[]    memory booleans_ = new bool[](1);
+        bool[] memory    booleans_ = new bool[](1);
 
         lenders_[0]  = lender_;
         booleans_[0] = boolean_;
@@ -1037,76 +819,231 @@ contract ProtocolActions is Runner {
     /*** Strategy Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
-    function deactivateStrategy(address strategy_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+    function cancelRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
 
-        address poolDelegate_ = pm_.poolDelegate();
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).cancelRedemption(poolManager_, shares_);
+    }
 
-        vm.prank(poolDelegate_);
-        s_.deactivateStrategy();
+    function cancelYield(address strategy_, uint256 amount_, address recipient_) internal {
+        address strategyDelegate_ = IAllocationStrategy(strategy_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IAllocationStrategy(strategy_).cancelYield(amount_, recipient_);
+    }
+
+    function deployAssets(address strategy_, address managedWallet_, uint256 amount_) internal {
+        vm.prank(managedWallet_);
+        IAllocationStrategy(strategy_).deployAssets(amount_, "");
     }
 
     function fundStrategy(address strategy_, uint256 assetsIn_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+        IStrategyLike s_  = IStrategyLike(strategy_);
+        IPoolManager  pm_ = IPoolManager(s_.poolManager());
 
         address poolDelegate_ = pm_.poolDelegate();
 
         vm.startPrank(poolDelegate_);
 
         // TODO: Replace with type checks.
-        try s_.fundStrategy(assetsIn_) {}
-        catch { s_.fundStrategy(assetsIn_, 0); }
+        try s_.fundStrategy(assetsIn_) { }
+        catch {
+            s_.fundStrategy(assetsIn_, 0);
+        }
 
         vm.stopPrank();
     }
 
-    function impairStrategy(address strategy_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+    function fundStrategyManager(address poolManager_, address strategyManager_, uint256 assetsIn_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
 
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.impairStrategy();
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).fundStrategyManager(poolManager_, assetsIn_, "");
     }
 
-    function reactivateStrategy(address strategy_) internal {
-        reactivateStrategy(strategy_, false);
+    function impairStrategy(address strategy_, uint256 amount_) internal {
+        address globals_          = IUnderlyingStrategyLike(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IUnderlyingStrategyLike(strategy_).impair(amount_);
     }
 
-    function reactivateStrategy(address strategy_, bool updateAccounting_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+    function impairAllocationStrategy(address strategy_, uint256 amount_) internal {
+        address strategyManager_  = IAllocationStrategy(strategy_).strategyManager();
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
 
-        address poolDelegate_ = pm_.poolDelegate();
-
-        vm.prank(poolDelegate_);
-        s_.reactivateStrategy(updateAccounting_);
+        vm.prank(strategyDelegate_);
+        IAllocationStrategy(strategy_).impair(amount_);
     }
 
-    function setStrategyFeeRate(address strategy_, uint256 feeRate_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+    function processRedemptionFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
 
-        address poolDelegate_ = pm_.poolDelegate();
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).processRedemption(poolManager_, shares_, "");
+    }
 
-        vm.prank(poolDelegate_);
-        s_.setStrategyFeeRate(feeRate_);
+    // TODO: Add a bool flag that decides if assets will be minted before being returned.
+    function returnAssets(address strategy_, address caller_, address deployer_, uint256 amount_) internal {
+        address asset_ = IAllocationStrategy(strategy_).fundsAsset();
+
+        erc20_mint(asset_, caller_, amount_);
+        erc20_approve(asset_, caller_, strategy_, amount_);
+
+        vm.startPrank(caller_);
+        IAllocationStrategy(strategy_).returnAssets(amount_, deployer_, "");
+        vm.stopPrank();
+    }
+
+    function recognizeStrategyLoss(address strategy_) internal {
+        address globals_          = IUnderlyingStrategyLike(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IDefiStrategyLike(strategy_).recognizeLoss();
+    }
+
+    function recognizeLoss(address strategy_, address deployer_, uint256 amount_) internal {
+        address strategyManager_  = IAllocationStrategy(strategy_).strategyManager();
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IAllocationStrategy(strategy_).recognizeLoss(amount_, deployer_);
+    }
+
+    function requestRedeemFromStrategyManager(address poolManager_, address strategyManager_, uint256 shares_) internal {
+        address strategyDelegate_ = IStrategyManager(strategyManager_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IStrategyManager(strategyManager_).requestRedeem(poolManager_, shares_);
+    }
+
+    function removeStrategyImpairment(address strategy_, uint256 amount_) internal {
+        address globals_          = IUnderlyingStrategyLike(strategy_).globals();
+        address operationalAdmin_ = IGlobals(globals_).operationalAdmin();
+
+        vm.prank(operationalAdmin_);
+        IUnderlyingStrategyLike(strategy_).removeImpairment(amount_);
+    }
+
+    function realizeYield(address strategy_, address managedWallet_, uint256 yieldAssets_, uint32 duration_) internal {
+        address asset_ = IAllocationStrategy(strategy_).fundsAsset();
+
+        erc20_mint(asset_, managedWallet_, yieldAssets_);
+        erc20_approve(asset_, managedWallet_, strategy_, yieldAssets_);
+
+        vm.startPrank(managedWallet_);
+        IAllocationStrategy(strategy_).realizeYield(yieldAssets_, duration_, "");
+        vm.stopPrank();
+    }
+
+    function setDeploymentCap(address strategy_, address account_, uint256 cap_) internal {
+        address strategyDelegate_ = IAllocationStrategy(strategy_).strategyDelegate();
+
+        address[] memory accounts = new address[](1);
+        uint256[] memory caps     = new uint256[](1);
+
+        accounts[0] = account_;
+        caps[0]     = cap_;
+
+        vm.prank(strategyDelegate_);
+        IAllocationStrategy(strategy_).setDeploymentCaps(accounts, caps);
+    }
+
+    function setPermissions(
+        address strategy_,
+        address account_,
+        bool canDeployAssets_,
+        bool canReturnAssets_,
+        bool canRealizeYield_
+    )
+        internal
+    {
+        address strategyDelegate_ = IAllocationStrategy(strategy_).strategyDelegate();
+
+        address[] memory accounts        = new address[](1);
+        bool[] memory    canDeployAssets = new bool[](1);
+        bool[] memory    canReturnAssets = new bool[](1);
+        bool[] memory    canRealizeYield = new bool[](1);
+
+        accounts[0]        = account_;
+        canDeployAssets[0] = canDeployAssets_;
+        canReturnAssets[0] = canReturnAssets_;
+        canRealizeYield[0] = canRealizeYield_;
+
+        vm.prank(strategyDelegate_);
+        IAllocationStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
+    }
+
+    function setStrategyDelegateFeeRate(address strategy_, uint32 feeRate_) internal {
+        address strategyDelegate_ = IUnderlyingStrategyLike(strategy_).strategyDelegate();
+
+        vm.prank(strategyDelegate_);
+        IUnderlyingStrategyLike(strategy_).setStrategyDelegateFeeRate(feeRate_);
+    }
+
+    function setStrategyProtocolFeeRate(address strategy_, uint32 feeRate_) internal {
+        address globals_  = IUnderlyingStrategyLike(strategy_).globals();
+        address governor_ = IGlobals(globals_).governor();
+
+        vm.prank(governor_);
+        IUnderlyingStrategyLike(strategy_).setStrategyProtocolFeeRate(feeRate_);
+    }
+
+    function setManagedWallet(
+        address strategy_,
+        address managedWallet_,
+        bool canDeployAssets_,
+        bool canReturnAssets_,
+        bool canRealizeYield_,
+        uint256 deploymentCap_
+    )
+        internal
+    {
+        address globals_  = IAllocationStrategy(strategy_).globals();
+        address governor_ = IGlobals(globals_).governor();
+        address admin_    = IAllocationStrategy(strategy_).strategyDelegate();
+
+        address[] memory accounts        = new address[](1);
+        bool[] memory    canDeployAssets = new bool[](1);
+        bool[] memory    canReturnAssets = new bool[](1);
+        bool[] memory    canRealizeYield = new bool[](1);
+        uint256[] memory deploymentCaps  = new uint256[](1);
+
+        accounts[0]        = managedWallet_;
+        canDeployAssets[0] = canDeployAssets_;
+        canReturnAssets[0] = canReturnAssets_;
+        canRealizeYield[0] = canRealizeYield_;
+        deploymentCaps[0]  = deploymentCap_;
+
+        vm.prank(governor_);
+        IGlobals(globals_).setValidMapleManagedWallet(managedWallet_, true);
+
+        vm.startPrank(admin_);
+        IAllocationStrategy(strategy_).setPermissions(accounts, canDeployAssets, canReturnAssets, canRealizeYield);
+
+        if (deploymentCap_ != 0) {
+            IAllocationStrategy(strategy_).setDeploymentCaps(accounts, deploymentCaps);
+        }
+
+        vm.stopPrank();
     }
 
     function withdrawFromStrategy(address strategy_, uint256 assetsOut_) internal {
-        IStrategyLike s_ = IStrategyLike(strategy_);
-        IPoolManager pm_ = IPoolManager(s_.poolManager());
+        IStrategyLike s_  = IStrategyLike(strategy_);
+        IPoolManager  pm_ = IPoolManager(s_.poolManager());
 
         address poolDelegate_ = pm_.poolDelegate();
 
         vm.startPrank(poolDelegate_);
 
         // TODO: Replace with type checks.
-        try s_.withdrawFromStrategy(assetsOut_) {}
-        catch { s_.withdrawFromStrategy(assetsOut_, type(uint256).max); }
+        try s_.withdrawFromStrategy(assetsOut_) { }
+        catch {
+            s_.withdrawFromStrategy(assetsOut_, type(uint256).max);
+        }
 
         vm.stopPrank();
     }
@@ -1138,20 +1075,28 @@ contract ProtocolActions is Runner {
         uint256 deadline_,
         uint256 ownerSk_
     )
-        internal view
+        internal
+        view
         returns (uint8 v_, bytes32 r_, bytes32 s_)
     {
-        ( v_, r_, s_ ) = vm.sign(ownerSk_, _getDigest(asset_, owner_, spender_, value_, deadline_));
+        (v_, r_, s_) = vm.sign(ownerSk_, _getDigest(asset_, owner_, spender_, value_, deadline_));
     }
 
     // Returns an ERC-2612 `permit` digest for the `owner` to sign
-    function _getDigest(address asset_, address owner_, address spender_, uint256 value_, uint256 deadline_)
-        internal view
+    function _getDigest(
+        address asset_,
+        address owner_,
+        address spender_,
+        uint256 value_,
+        uint256 deadline_
+    )
+        internal
+        view
         returns (bytes32 digest_)
     {
         digest_ = keccak256(
             abi.encodePacked(
-                '\x19\x01',
+                "\x19\x01",
                 IERC20(asset_).DOMAIN_SEPARATOR(),
                 keccak256(abi.encode(IERC20(asset_).PERMIT_TYPEHASH(), owner_, spender_, value_, IERC20(asset_).nonces(owner_), deadline_))
             )
@@ -1162,15 +1107,7 @@ contract ProtocolActions is Runner {
     /*** Governor Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
 
-    function configureFactory(
-        address globals_,
-        address factory_,
-        address implementation_,
-        address initializer_,
-        bytes32 key_
-    )
-        internal
-    {
+    function configureFactory(address globals_, address factory_, address implementation_, address initializer_, bytes32 key_) internal {
         address governor = IGlobals(globals_).governor();
 
         vm.startPrank(governor);

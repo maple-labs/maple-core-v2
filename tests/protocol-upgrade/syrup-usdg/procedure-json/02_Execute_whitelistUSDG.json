@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1779102343570,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "2.0.1",
+    "createdFromSafeAddress": "0xCe1cE7c7F436DCc4E28Bc8bf86115514d3DC34E8",
+    "createdFromOwnerAddress": "",
+    "checksum": "0x14a3638c2b473578a3761cc37488c4b02e805bac16e30dc339d488044b9e5de7"
+  },
+  "transactions": [
+    {
+      "to": "0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "proposalIds_",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "targets_",
+            "type": "address[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "data_",
+            "type": "bytes[]"
+          }
+        ],
+        "name": "executeProposals",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "proposalIds_": "[13]",
+        "targets_": "[0x804a6F5F667170F545Bf14e5DDB48C70B788390C]",
+        "data_": "[0xc75c4bef000000000000000000000000e343167631d89b6ffc58b88d6b7fb0228795491d0000000000000000000000000000000000000000000000000000000000000001]"
+      }
+    }
+  ]
+}

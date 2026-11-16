@@ -2,31 +2,24 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
     IERC20,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
-    IGlobals,
     ILoanLike,
-    IProxyFactoryLike,
     IOpenTermLoan,
     IOpenTermLoanManager,
     IPool,
     IPoolManager,
-    IStrategy,
-    IWithdrawalManagerCyclical,
+    IStrategyManager,
+    IUnderlyingStrategyLike,
     IWithdrawalManagerQueue
 } from "../../contracts/interfaces/Interfaces.sol";
 
-import { console2 as console } from "../../contracts/Runner.sol";
-
-import { ProtocolActions } from "../../contracts/ProtocolActions.sol";
+import { console } from "../../contracts/Runner.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
 
 enum LoanAction {
     Call,
-    Close,
-    Fund,
     Impair,
     Payment,
     RemoveCall,
@@ -34,79 +27,162 @@ enum LoanAction {
     TriggerDefault
 }
 
-enum StrategyAction {
+// TODO: Add more strategy managed functions as we develop fuzz tests
+enum AllocationStrategyAction {
+    CancelRedemption,
+    DeployAssets,
     Fund,
-    Withdraw
+    Impair,
+    ProcessRedemption,
+    ReturnAssets,
+    RemoveImpairment,
+    RecognizeLoss,
+    RequestRedeem,
+    RealizeYield,
+    None
 }
 
-contract FuzzedUtil is ProtocolActions {
+// Shared by the Aave and Sky strategies, which expose the same set of managed functions.
+enum DefiStrategyAction {
+    Fund,
+    RequestRedeem,
+    ProcessRedemption,
+    CancelRedemption,
+    Impair,
+    RemoveImpairment,
+    None
+}
+
+// TODO: Bootstrap mint is not set when deploying allocation strategy. Consider changing that when fuzz for allocation are being written.
+// TODO: Here we don't fuzz new LP deposits, consider changing that.
+abstract contract FuzzedUtil is TestBaseWithAssertions {
+
+    /**************************************************************************************************************************************/
+    /*** Open term loan manager factors                                                                                                 ***/
+    /**************************************************************************************************************************************/
 
     uint256 constant CALL_FACTOR              = 75;
-    // uint256 constant CLOSE_FACTOR          = 100;
     uint256 constant DEFAULT_FACTOR           = 33;
-    uint256 constant FUND_FACTOR              = 100;
     uint256 constant IMPAIR_FACTOR            = 75;
     uint256 constant PAYMENT_FACTOR           = 100;
     uint256 constant REMOVE_CALL_FACTOR       = 100;
     uint256 constant REMOVE_IMPAIRMENT_FACTOR = 100;
-    uint256 constant FUND_STRATEGY_FACTOR     = 125;
-    uint256 constant WITHDRAW_STRATEGY_FACTOR = 75;
 
-    // Local addresses that will be overridden by implementers.
-    address _collateralAsset;
-    address _feeManager;
-    address _fixedTermLoanManager;
-    address _fixedTermLoanFactory;
-    address _fundsAsset;
-    address _liquidatorFactory;
-    address _openTermLoanFactory;
-    address _openTermLoanManager;
-    address _pool;
-    address _poolManager;
+    /**************************************************************************************************************************************/
+    /*** Allocation strategy factors                                                                                                    ***/
+    /**************************************************************************************************************************************/
 
+    uint256 constant DEPLOY_ASSETS_FACTOR              = 125;
+    uint256 constant IMPAIR_STRATEGY_FACTOR            = 50;
+    uint256 constant REALIZE_YIELD_FACTOR              = 100;
+    uint256 constant RECOGNIZE_LOSS_FACTOR             = 33;
+    uint256 constant REMOVE_STRATEGY_IMPAIRMENT_FACTOR = 75;
+    uint256 constant RETURN_ASSETS_FACTOR              = 75;
+
+    uint256 constant ALLOCATION_CANCEL_REDEMPTION_FACTOR  = 50;
+    uint256 constant ALLOCATION_FUND_FACTOR               = 125;
+    uint256 constant ALLOCATION_PROCESS_REDEMPTION_FACTOR = 100;
+    uint256 constant ALLOCATION_REQUEST_REDEEM_FACTOR     = 100;
+
+    /**************************************************************************************************************************************/
+    /*** Defi strategy factors                                                                                                          ***/
+    /**************************************************************************************************************************************/
+
+    uint256 constant DEFI_CANCEL_REDEMPTION_FACTOR  = 50;
+    uint256 constant DEFI_FUND_FACTOR               = 125;
+    uint256 constant DEFI_IMPAIR_FACTOR             = 50;
+    uint256 constant DEFI_PROCESS_REDEMPTION_FACTOR = 100;
+    uint256 constant DEFI_REMOVE_IMPAIRMENT_FACTOR  = 75;
+    uint256 constant DEFI_REQUEST_REDEEM_FACTOR     = 100;
+
+    /**************************************************************************************************************************************/
+    /*** Strategy fee rates                                                                                                             ***/
+    /**************************************************************************************************************************************/
+
+    uint32 constant STRATEGY_DELEGATE_FEE_RATE = 0.1e6; // 10% of accrued yield.
+    uint32 constant STRATEGY_PROTOCOL_FEE_RATE = 0.05e6; // 5% of accrued yield.
+
+    /**************************************************************************************************************************************/
+    /*** Open term loan fee rates                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    // The delegate service fee rate is fuzzed per loan when the loan is created.
+    uint256 constant DELEGATE_MANAGEMENT_FEE_RATE = 0.1e6; // 10% of accrued interest.
+    uint256 constant PLATFORM_MANAGEMENT_FEE_RATE = 0.05e6; // 5% of accrued interest.
+    uint256 constant PLATFORM_SERVICE_FEE_RATE    = 0.02e6; // 2% of principal, pro rated over the payment interval.
+
+    /**************************************************************************************************************************************/
+    /*** Local addresses that will be used in the setup                                                                                 ***/
+    /**************************************************************************************************************************************/
+
+    address pool1;
+    address pool2;
+    address poolManager1;
+    address poolManager2;
+
+    address openTermLoanManagerPool1;
+    address openTermLoanManagerPool2;
+
+    address allocationStrategyManagerShared;
+    address allocationUnderlyingStrategyShared;
+    address aaveStrategyManagerShared; // Used only on fork fuzz tests. Otherwise address(0)
+    address aaveUnderlyingStrategyShared; // Used only on fork fuzz tests. Otherwise address(0)
+    address skyStrategyManagerShared; // Used only on fork fuzz tests. Otherwise address(0)
+    address skyUnderlyingStrategyShared; // Used only on fork fuzz tests. Otherwise address(0)
+
+    address managedWalletShared;
+
+    uint256 expectedLoanCount;
     uint256 seed;
 
-    address[] _fixedTermLoans;
-    address[] _openTermLoans;
+    uint256 lpDeposit = 100_000_000e6;
+
     address[] lps;
     address[] loans;
 
-    uint256[] escrowedShares;
-
     function fuzzedSetup(
-        uint256 fixedTermLoans,
         uint256 openTermLoans,
         uint256 loanActionCount,
-        uint256 strategyActionCount,
+        uint256 allocationActionCount,
+        uint256 aaveActionCount,
+        uint256 skyActionCount,
         uint256 seed_
     )
         internal
     {
-        seed = seed_;
+        seed              = seed_;
+        expectedLoanCount = openTermLoans;
 
-        // Create and fund fixed loans.
-        for (uint256 i; i < fixedTermLoans; ++i) {
-            vm.warp(block.timestamp + 1 days);
-            createAndFundLoan(createSomeFixedTermLoan);
-        }
+        /**********************************************************************************************************************************/
+        /*** Create and fund open term loans for both pools                                                                             ***/
+        /**********************************************************************************************************************************/
 
-        // Create and fund open loans.
         for (uint256 i; i < openTermLoans; ++i) {
             vm.warp(block.timestamp + 1 days);
-            createAndFundLoan(createSomeOpenTermLoan);
+
+            createAndFundLoan(pool1);
+            createAndFundLoan(pool2);
         }
 
-        // Perform random loan actions.
+        /**********************************************************************************************************************************/
+        /*** Fund the allocation strategy from both pools                                                                               ***/
+        /**********************************************************************************************************************************/
+
+        fundStrategyManager(poolManager1, allocationStrategyManagerShared, fundsAsset.balanceOf(pool1) / 2);
+        fundStrategyManager(poolManager2, allocationStrategyManagerShared, fundsAsset.balanceOf(pool2) / 2);
+
+        /**********************************************************************************************************************************/
+        /*** Perform random actions on the loans                                                                                        ***/
+        /**********************************************************************************************************************************/
+
         for (uint256 i; i < loanActionCount; ++i) {
             // Get loan and due date of active loan with earliest due date.
-            ( address loan, uint256 dueDate ) = getEarliestDueDate();
+            (address loan, uint256 dueDate) = getEarliestDueDate();
 
-            // If no active loans are remaining: no further actions can be performed.
-            if (loan == address(0)) return;
+            // If no active loans are remaining: no further loan actions can be performed.
+            if (loan == address(0)) break;
 
-            uint256 maxDate = dueDate < block.timestamp
-                ? 1 days
-                : (dueDate - block.timestamp) + 10 days;
+            uint256 maxDate = dueDate < block.timestamp ? 1 days : (dueDate - block.timestamp) + 10 days;
 
             // Warp to anytime from 1 day from now to 11 days past the loan's due date.
             vm.warp(block.timestamp + 1 days + getSomeValue(0, maxDate));
@@ -118,215 +194,42 @@ contract FuzzedUtil is ProtocolActions {
             }
         }
 
-        // Perform random strategy actions.
-        for (uint256 i; i < strategyActionCount; ++i) {
-            // Get a random strategy.
-            address strategy = getSomeStrategy();
+        /**********************************************************************************************************************************/
+        /*** Perform random actions on the allocation strategy                                                                          ***/
+        /**********************************************************************************************************************************/
 
-            if (strategy == address(0)) continue;
-
-            // Move forwards in time.
+        for (uint256 i; i < allocationActionCount; ++i) {
             vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
 
-            // Perform a random action on the strategy.
-            performSomeStrategyAction(strategy);
-        }
-    }
-
-    function payOffLoansAndRedeemAllLps() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
-        ( lastDomainStartFTLM_, lastDomainStartOTLM_ ) = payOffAllLoans();
-
-        requestRedeemAllLps();
-        redeemAllLps();
-    }
-
-    function payOffAllLoans() internal returns (uint256 lastDomainStartFTLM_, uint256 lastDomainStartOTLM_) {
-        ( address loan , ) = getEarliestDueDate();
-
-        lastDomainStartFTLM_ = IFixedTermLoanManager(_fixedTermLoanManager).domainStart();
-        lastDomainStartOTLM_ = IOpenTermLoanManager(_openTermLoanManager).domainStart();
-
-        while (loan != address(0)) {
-            bool isOpenTermLoan = isOpenTermLoan(loan);
-
-            uint256 nextPaymentDueDate = isOpenTermLoan
-                ? IOpenTermLoan(loan).paymentDueDate()
-                : IFixedTermLoan(loan).nextPaymentDueDate();
-
-            // Call open terms after 5 payments on average
-            if (isOpenTermLoan && uint256(keccak256(abi.encode(nextPaymentDueDate))) % 5 == 0) {
-                callLoan(loan, IOpenTermLoan(loan).principal());
-            }
-
-            if (nextPaymentDueDate > block.timestamp) {
-                vm.warp(nextPaymentDueDate);
-            }
-
-            makePayment(loan);
-
-            isOpenTermLoan ? lastDomainStartOTLM_ = block.timestamp : lastDomainStartFTLM_ = block.timestamp;
-
-            if (ILoanLike(loan).principal() == 0) {
-                removeLoan(loan);
-            }
-
-            ( loan , ) = getEarliestDueDate();
-        }
-    }
-
-    function requestRedeemAllLps() internal {
-        for (uint256 i; i < lps.length; ++i) {
-            address lp = lps[i];
-
-            escrowedShares.push(IERC20(address(_pool)).balanceOf(lp));
-
-            // Request redeem all LP tokens.
-            requestRedeem(address(_pool), lp, IERC20(address(_pool)).balanceOf(lp));
-        }
-    }
-
-    function redeemAllLps() internal {
-        if (isWMQueue(_poolManager)) {
-            redeemFromQueue();
-            return;
+            performSomeAllocationStrategyAction(poolManager1);
+            performSomeAllocationStrategyAction(poolManager2);
         }
 
-        for (uint256 i; i < lps.length; ++i) {
-            redeemFromCyclical(lps[i], escrowedShares[i]);
-        }
-    }
+        /**********************************************************************************************************************************/
+        /*** Perform random actions on the aave strategy                                                                                ***/
+        /**********************************************************************************************************************************/
 
-    function redeemFromCyclical(address lp, uint256 shares) internal {
-        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(_poolManager).withdrawalManager());
+        for (uint256 i; i < aaveActionCount; ++i) {
+            vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
 
-        uint256 exitCycleId = withdrawalManager.exitCycleId(lp);
-
-        uint256 withdrawalWindowStart = withdrawalManager.getWindowStart(exitCycleId);
-
-        if (withdrawalWindowStart > block.timestamp) {
-            vm.warp(withdrawalWindowStart);
+            performSomeDefiStrategyAction(poolManager1, aaveStrategyManagerShared);
+            performSomeDefiStrategyAction(poolManager2, aaveStrategyManagerShared);
         }
 
-        // Redeem all LP tokens.
-        redeem(address(_pool), lp, shares);
-    }
+        /**********************************************************************************************************************************/
+        /*** Perform random actions on the sky strategy                                                                                 ***/
+        /**********************************************************************************************************************************/
 
-    function redeemFromQueue() internal {
-        IPoolManager            poolManager       = IPoolManager(_poolManager);
-        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+        for (uint256 i; i < skyActionCount; ++i) {
+            vm.warp(block.timestamp + getSomeValue(1 hours, 10 days));
 
-        uint256 totalShares = withdrawalManager.totalShares();
-
-        // There's some rounding in the pools that prevent the last hundred or so shares from being redeemed.
-        if (totalShares > 100) {
-            vm.prank(poolManager.poolDelegate());
-            withdrawalManager.processRedemptions(totalShares - 100);
-            // Redeem all LP tokens.
-            for (uint256 i; i < lps.length; ++i) {
-                if (withdrawalManager.manualSharesAvailable(lps[i]) > 0) {
-                    redeem(address(_pool), lps[i], escrowedShares[i]);
-                }
-            }
-        }
-
-    }
-
-    function createAndFundLoan(function() returns (address) createLoan_) internal returns (address loan) {
-        loan = createLoan_();
-        loans.push(loan);
-        fundLoan(loan);
-    }
-
-    function createSomeOpenTermLoan() internal returns (address loan) {
-        require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
-
-        uint256 principal              = getSomeValue(100_000e6, 1_000_000e6);
-        uint256 noticePeriod           = getSomeValue(1 hours,   10 days);
-        uint256 gracePeriod            = getSomeValue(0,         10 days);
-        uint256 paymentInterval        = getSomeValue(10 days,   90 days);
-        uint256 delegateServiceFeeRate = getSomeValue(0,         0.1e6);
-        uint256 interestRate           = getSomeValue(0.01e6,    0.25e6);
-        uint256 lateFeeRate            = getSomeValue(0,         0.1e6);
-        uint256 lateInterestPremium    = getSomeValue(0,         0.1e6);
-        loan = createOpenTermLoan(
-            address(_openTermLoanFactory),
-            makeAddr("borrower"),
-            address(_openTermLoanManager),
-            address(_fundsAsset),
-            principal,
-            [gracePeriod, noticePeriod, paymentInterval],
-            [delegateServiceFeeRate, interestRate, lateFeeRate, lateInterestPremium]
-        );
-
-        console.log("Open-term loan created:", loan);
-    }
-
-    function createSomeFixedTermLoan() internal returns (address loan) {
-        require(IERC20(_fundsAsset).balanceOf(address(_pool)) > 0, "No funding is available.");
-
-        uint256 principal = getSomeValue(100_000e6, 1_000_000e6);
-
-        uint256[3] memory amounts = [
-            0,                          // collateralRequired
-            principal,                  // principalRequested
-            getSomeValue(0, principal)  // endingPrincipal
-        ];
-
-        uint256[3] memory term = [
-            getSomeValue(12 hours, 10 days),  // gracePeriod
-            getSomeValue(10 days,  90 days),  // paymentInterval
-            getSomeValue(1,        12)        // payments
-        ];
-
-        uint256[4] memory rates = [
-            getSomeValue(0.01e6, 0.25e6),  // interestRate
-            getSomeValue(0.01e6, 0.25e6),  // closingFeeRate
-            getSomeValue(0,      0.1e6),   // lateFeeRate
-            getSomeValue(0,      0.1e6)    // lateInterestPremiumRate
-        ];
-
-        uint256[2] memory fees = [
-            getSomeValue(0, principal * 0.025e6 / 1e6),  // delegateOriginationFee
-            getSomeValue(0, 100_000e6)                   // delegateServiceFee
-        ];
-
-        IGlobals globals = IGlobals(IProxyFactoryLike(_fixedTermLoanFactory).mapleGlobals());
-
-        if (!globals.isCollateralAsset(_collateralAsset)) {
-            vm.prank(globals.governor());
-            globals.setValidCollateralAsset(_collateralAsset, true);
-        }
-
-        loan = createFixedTermLoan(
-            address(_fixedTermLoanFactory),
-            makeAddr(string(abi.encode("borrower", getSomeValue(0, 100)))),
-            address(_fixedTermLoanManager),
-            address(_feeManager),
-            [address(_collateralAsset), address(_fundsAsset)],
-            amounts,
-            term,
-            rates,
-            fees
-        );
-
-        console.log("Fixed-term loan created:", loan);
-    }
-
-    function removeLoan(address loan) internal {
-        for (uint256 i; i < loans.length; ++i) {
-            if (loan != loans[i]) continue;
-
-            loans[i] = loans[loans.length - 1];
-
-            loans.pop();
-
-            return;
+            performSomeDefiStrategyAction(poolManager1, skyStrategyManagerShared);
+            performSomeDefiStrategyAction(poolManager2, skyStrategyManagerShared);
         }
     }
 
     function performSomeLoanAction(address loan) internal {
-        // Randomly select an action that can be performed on the loan.
-        LoanAction action = isOpenTermLoan(loan) ? getSomeOpenTermAction(loan) : getSomeFixedTermAction(loan);
+        LoanAction action = getSomeOpenTermAction(loan);
 
         if (action == LoanAction.Payment) {
             makePayment(loan);
@@ -347,7 +250,7 @@ contract FuzzedUtil is ProtocolActions {
         }
 
         if (action == LoanAction.TriggerDefault) {
-            triggerDefault(loan, address(_liquidatorFactory));
+            triggerDefault(loan);
             console.log("Default triggered:", loan);
             return;
         }
@@ -365,166 +268,213 @@ contract FuzzedUtil is ProtocolActions {
         }
     }
 
-    function performSomeStrategyAction(address strategy) internal {
-        // Randomly select an action that can be performed on the strategy.
-        StrategyAction action = getSomeStrategyAction(strategy);
+    function performSomeAllocationStrategyAction(address poolManager_) internal {
+        AllocationStrategyAction action = getSomeAllocationStrategyAction(poolManager_);
 
-        if (action == StrategyAction.Fund) {
-            uint256 max = 1_000_000 * 10 ** IERC20(_fundsAsset).decimals();
-            fundStrategy(strategy, getSomeValue(1, max));
+        if (action == AllocationStrategyAction.DeployAssets) {
+            uint256 assets = getSomeValue(1, IAllocationStrategy(allocationUnderlyingStrategyShared).availableToWithdraw());
 
-            console.log("Strategy funded:", strategy);
-            return;
+            deployAssets(allocationUnderlyingStrategyShared, managedWalletShared, assets);
+            console.log("Assets deployed:", assets);
         }
 
-        if (action == StrategyAction.Withdraw) {
-            uint256 max = IStrategy(strategy).assetsUnderManagement();
-            withdrawFromStrategy(strategy, getSomeValue(1, max));
+        if (action == AllocationStrategyAction.ReturnAssets) {
+            uint256 deployedAssets = IAllocationStrategy(allocationUnderlyingStrategyShared).deployedAssetsOf(managedWalletShared);
+            uint256 assets         = getSomeValue(1, deployedAssets);
 
-            console.log("Strategy withdrawn from:", strategy);
-            return;
+            returnAssets(allocationUnderlyingStrategyShared, managedWalletShared, managedWalletShared, assets);
+            console.log("Assets returned:", assets);
         }
 
-        require(false, "INVALID_STRATEGY_ACTION");
+        if (action == AllocationStrategyAction.RealizeYield) {
+            uint256 yield    = getSomeValue(0, IAllocationStrategy(allocationUnderlyingStrategyShared).yieldCap());
+            uint32  duration = uint32(getSomeValue(0, 30 days));
+
+            realizeYield(allocationUnderlyingStrategyShared, managedWalletShared, yield, duration);
+            console.log("Yield realized:", yield);
+        }
+
+        if (action == AllocationStrategyAction.Impair) {
+            IAllocationStrategy strategy = IAllocationStrategy(allocationUnderlyingStrategyShared);
+
+            uint256 impairedAssets = strategy.impairedAssets();
+            uint256 maxImpairment  = strategy.assetsUnderManagement() + strategy.unrealizedYield() - impairedAssets;
+            uint256 assets         = getSomeValue(1, maxImpairment);
+
+            impairAllocationStrategy(allocationUnderlyingStrategyShared, assets);
+            console.log("Strategy impaired:", assets);
+        }
+
+        if (action == AllocationStrategyAction.RemoveImpairment) {
+            uint256 assets = getSomeValue(1, IAllocationStrategy(allocationUnderlyingStrategyShared).impairedAssets());
+
+            removeStrategyImpairment(allocationUnderlyingStrategyShared, assets);
+            console.log("Strategy impairment removed:", assets);
+        }
+
+        if (action == AllocationStrategyAction.RecognizeLoss) {
+            uint256 deployedAssets = IAllocationStrategy(allocationUnderlyingStrategyShared).deployedAssetsOf(managedWalletShared);
+            uint256 assets         = getSomeValue(1, deployedAssets);
+
+            recognizeLoss(allocationUnderlyingStrategyShared, managedWalletShared, assets);
+            console.log("Loss recognized:", assets);
+        }
+
+        if (action == AllocationStrategyAction.Fund) {
+            uint256 minAssets = getMinimumFundableAssets(allocationStrategyManagerShared);
+            uint256 assets    = getSomeValue(minAssets, fundsAsset.balanceOf(IPoolManager(poolManager_).pool()));
+
+            fundStrategyManager(poolManager_, allocationStrategyManagerShared, assets);
+            console.log("Allocation strategy funded:", assets);
+        }
+
+        if (action == AllocationStrategyAction.RequestRedeem) {
+            IStrategyManager strategyManager = IStrategyManager(allocationStrategyManagerShared);
+
+            uint256 shares = getSomeValue(1, strategyManager.sharesOf(poolManager_) - strategyManager.pendingSharesOf(poolManager_));
+
+            requestRedeemFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+            console.log("Allocation strategy redemption requested:", shares);
+        }
+
+        if (action == AllocationStrategyAction.ProcessRedemption) {
+            IStrategyManager strategyManager = IStrategyManager(allocationStrategyManagerShared);
+
+            uint256 minShares = strategyManager.convertToExitShares(1);
+
+            if (strategyManager.convertToExitAssets(minShares) == 0) ++minShares;
+
+            uint256 shares = getSomeValue(minShares, getMaximumProcessableShares(poolManager_, allocationStrategyManagerShared));
+
+            processRedemptionFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+            console.log("Allocation strategy redemption processed:", shares);
+        }
+
+        if (action == AllocationStrategyAction.CancelRedemption) {
+            uint256 shares = getSomeValue(1, IStrategyManager(allocationStrategyManagerShared).pendingSharesOf(poolManager_));
+
+            cancelRedemptionFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+            console.log("Allocation strategy redemption cancelled:", shares);
+        }
     }
 
-    // NOTE: Code duplication with `getSomeOpenTermAction` because can not yet identify cleaner way to do this.
-    function getSomeFixedTermAction(address loan) internal returns (LoanAction action) {
-        // Always enable payments to be performed.
-        uint256 total = PAYMENT_FACTOR;
+    function performSomeDefiStrategyAction(address poolManager_, address strategyManager_) internal {
+        IStrategyManager        strategyManager    = IStrategyManager(strategyManager_);
+        IUnderlyingStrategyLike underlyingStrategy = IUnderlyingStrategyLike(strategyManager.underlyingStrategy());
 
-        bool isImpaired  = IFixedTermLoan(loan).isImpaired();
-        bool isInDefault = block.timestamp > IFixedTermLoan(loan).nextPaymentDueDate() + IFixedTermLoan(loan).gracePeriod();
+        DefiStrategyAction action = getSomeDefiStrategyAction(poolManager_, strategyManager_);
 
-        // If the loan is not impaired, enable impairment, else if the loan is impaired and not late, enable impairment removal.
-        if (!isImpaired) {
-            total += IMPAIR_FACTOR;
-        } else if (block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
-            total += REMOVE_IMPAIRMENT_FACTOR;
+        if (action == DefiStrategyAction.Fund) {
+            uint256 minAssets = getMinimumFundableAssets(strategyManager_);
+            uint256 assets    = getSomeValue(minAssets, fundsAsset.balanceOf(IPoolManager(poolManager_).pool()));
+
+            fundStrategyManager(poolManager_, strategyManager_, assets);
+            console.log("Defi strategy funded:", assets);
         }
 
-        // If the loan is past the default date also enable default triggering.
-        if (isInDefault) {
-            total += DEFAULT_FACTOR;
+        if (action == DefiStrategyAction.RequestRedeem) {
+            uint256 requestableShares = strategyManager.sharesOf(poolManager_) - strategyManager.pendingSharesOf(poolManager_);
+
+            uint256 shares = getSomeValue(1, requestableShares);
+
+            requestRedeemFromStrategyManager(poolManager_, strategyManager_, shares);
+            console.log("Defi strategy redemption requested:", shares);
         }
 
-        uint256 draw = getSomeValue(0, total - 1);
+        if (action == DefiStrategyAction.ProcessRedemption) {
+            uint256 minShares = strategyManager.convertToExitShares(1);
 
-        if (draw < PAYMENT_FACTOR) return LoanAction.Payment;
+            if (strategyManager.convertToExitAssets(minShares) == 0) ++minShares;
 
-        draw -= PAYMENT_FACTOR;
+            uint256 shares = getSomeValue(minShares, getMaximumProcessableShares(poolManager_, strategyManager_));
 
-        if (!isImpaired) {
-            if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
-
-            draw -= IMPAIR_FACTOR;
-        } else if (block.timestamp <= IFixedTermLoan(loan).originalNextPaymentDueDate()) {
-            if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
-
-            draw -= REMOVE_IMPAIRMENT_FACTOR;
+            processRedemptionFromStrategyManager(poolManager_, strategyManager_, shares);
+            console.log("Defi strategy redemption processed:", shares);
         }
 
-        return LoanAction.TriggerDefault;
-    }
+        if (action == DefiStrategyAction.CancelRedemption) {
+            uint256 shares = getSomeValue(1, IStrategyManager(strategyManager_).pendingSharesOf(poolManager_));
 
-    // NOTE: Code duplication with `getSomeFixedTermAction` because can not yet identify cleaner way to do this.
-    function getSomeOpenTermAction(address loan) internal returns (LoanAction action) {
-        // Always enable payments, calls, impairments to be performed.
-        uint256 total = PAYMENT_FACTOR + CALL_FACTOR + IMPAIR_FACTOR;
-
-        bool isCalled    = IOpenTermLoan(loan).isCalled();
-        bool isImpaired  = IOpenTermLoan(loan).isImpaired();
-        bool isInDefault = IOpenTermLoan(loan).isInDefault();
-
-        // If the loan is called also enable call removal.
-        if (isCalled) {
-            total += REMOVE_CALL_FACTOR;
+            cancelRedemptionFromStrategyManager(poolManager_, strategyManager_, shares);
+            console.log("Defi strategy redemption cancelled:", shares);
         }
 
-        // If the loan is impaired also enable impairment removal.
-        if (isImpaired) {
-            total += REMOVE_IMPAIRMENT_FACTOR;
+        if (action == DefiStrategyAction.Impair) {
+            // Over impairment is allowed. 2xAUM is set to be upper limit so we are giving equal chance to partial and full impairment.
+            // If we would allow impairments up to uint256.max partial impairment scenarios would be very rare.
+            uint256 assets = getSomeValue(1, underlyingStrategy.assetsUnderManagement() * 2 - underlyingStrategy.impairedAssets());
+
+            impairStrategy(address(underlyingStrategy), assets);
+            console.log("Defi strategy impaired:", assets);
         }
 
-        // If the loan is past the default date also enable default triggering.
-        if (isInDefault) {
-            total += DEFAULT_FACTOR;
+        if (action == DefiStrategyAction.RemoveImpairment) {
+            uint256 assets = getSomeValue(1, underlyingStrategy.impairedAssets());
+
+            removeStrategyImpairment(address(underlyingStrategy), assets);
+            console.log("Defi strategy impairment removed:", assets);
         }
-
-        uint256 draw = getSomeValue(0, total - 1);
-
-        if (draw < PAYMENT_FACTOR) return LoanAction.Payment;
-
-        draw -= PAYMENT_FACTOR;
-
-        if (draw < CALL_FACTOR) return LoanAction.Call;
-
-        draw -= CALL_FACTOR;
-
-        if (draw < IMPAIR_FACTOR) return LoanAction.Impair;
-
-        draw -= IMPAIR_FACTOR;
-
-        if (isCalled) {
-            if (draw < REMOVE_CALL_FACTOR) return LoanAction.RemoveCall;
-
-            draw -= REMOVE_CALL_FACTOR;
-        }
-
-        if (isImpaired) {
-            if (draw < REMOVE_IMPAIRMENT_FACTOR) return LoanAction.RemoveImpairment;
-
-            draw -= REMOVE_IMPAIRMENT_FACTOR;
-        }
-
-        return LoanAction.TriggerDefault;
-    }
-
-    function getSomeStrategyAction(address strategy) internal returns (StrategyAction action) {
-        // If there is nothing to withdraw, fund the strategy.
-        if (IStrategy(strategy).assetsUnderManagement() == 0) return StrategyAction.Fund;
-
-        // Otherwise choose randomly between funding and withdrawing.
-        uint256 total = FUND_STRATEGY_FACTOR + WITHDRAW_STRATEGY_FACTOR;
-        uint256 draw  = getSomeValue(0, total - 1);
-
-        if (draw < FUND_STRATEGY_FACTOR) return StrategyAction.Fund;
-        else return StrategyAction.Withdraw;
     }
 
     function getEarliestDueDate() internal view returns (address loan_, uint256 dueDate_) {
         for (uint256 i; i < loans.length; ++i) {
             address loan           = loans[i];
-            uint256 paymentDueDate = isOpenTermLoan(loan) ?
-                IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
+            uint256 paymentDueDate = IOpenTermLoan(loan).paymentDueDate();
 
-            if (paymentDueDate < dueDate_ || (paymentDueDate > 0 && dueDate_ == 0)) {
+            // Loans that are not funded anymore do not have a due date.
+            if (paymentDueDate == 0) continue;
+
+            if (paymentDueDate < dueDate_ || dueDate_ == 0) {
                 loan_    = loan;
                 dueDate_ = paymentDueDate;
             }
         }
     }
 
-    function getNextDueDate() internal view returns (address loan_, uint256 dueDate_) {
+    function getEarliestDueDate(address pool_) internal view returns (address loan_, uint256 dueDate_) {
+        address openTermLoanManager = IPoolManager(IPool(pool_).manager()).strategyList(0);
+
         for (uint256 i; i < loans.length; ++i) {
-            address loan           = loans[i];
-            uint256 paymentDueDate = isOpenTermLoan(loan) ?
-                IOpenTermLoan(loan).paymentDueDate() : IFixedTermLoan(loan).nextPaymentDueDate();
+            address loan = loans[i];
 
-            if (paymentDueDate < dueDate_ || (paymentDueDate > block.timestamp && dueDate_ == 0)) {
+            // Only consider loans that belong to the given pool.
+            if (IOpenTermLoan(loan).lender() != openTermLoanManager) continue;
+
+            uint256 paymentDueDate = IOpenTermLoan(loan).paymentDueDate();
+
+            // Loans that are not funded anymore do not have a due date.
+            if (paymentDueDate == 0) continue;
+
+            if (paymentDueDate < dueDate_ || dueDate_ == 0) {
                 loan_    = loan;
                 dueDate_ = paymentDueDate;
             }
         }
     }
 
-    function getSomeActiveLoan() internal returns (address loan_) {
-        loan_ = getSomeLoan(isActiveLoan);
+    /**************************************************************************************************************************************/
+    /*** Loan state functions                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    function isActiveLoan(address loan_) internal view returns (bool isActiveLoan_) {
+        isActiveLoan_ = ILoanLike(loan_).principal() > 0;
     }
 
-    function getSomeActiveFixedTermLoan() internal returns (address loan_) {
-        loan_ = getSomeLoan(isActiveFixedTermLoan);
+    function isActiveOpenTermLoan(address loan_) internal view returns (bool isActiveOpenTermLoan_) {
+        isActiveOpenTermLoan_ = isActiveLoan(loan_);
     }
+
+    function isCalledOpenTermLoan(address loan_) internal view returns (bool isCalledOpenTermLoan_) {
+        isCalledOpenTermLoan_ = IOpenTermLoan(loan_).isCalled();
+    }
+
+    function isImpairedOpenTermLoan(address loan_) internal view returns (bool isImpairedOpenTermLoan_) {
+        isImpairedOpenTermLoan_ = IOpenTermLoan(loan_).isImpaired();
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Functions for retrieving random loans and strategies                                                                           ***/
+    /**************************************************************************************************************************************/
 
     function getSomeActiveOpenTermLoan() internal returns (address loan_) {
         loan_ = getSomeLoan(isActiveOpenTermLoan);
@@ -538,55 +488,9 @@ contract FuzzedUtil is ProtocolActions {
         loan_ = getSomeLoan(isImpairedOpenTermLoan);
     }
 
-    function isActiveLoan(address loan_) internal view returns (bool isActiveLoan_) {
-        isActiveLoan_ = ILoanLike(loan_).principal() > 0;
-    }
+    function getSomeLoan(function(address) returns (bool) filter_) internal returns (address loan) {
+        if (loans.length == 0) return address(0);
 
-    function isActiveFixedTermLoan(address loan_) internal view returns (bool isActiveFixedTermLoan_) {
-        isActiveFixedTermLoan_ = isFixedTermLoan(loan_) && isActiveLoan(loan_);
-    }
-
-    function isActiveOpenTermLoan(address loan_) internal view returns (bool isActiveOpenTermLoan_) {
-        isActiveOpenTermLoan_ = isOpenTermLoan(loan_) && isActiveLoan(loan_);
-    }
-
-    function isCalledOpenTermLoan(address loan_) internal view returns (bool isCalledOpenTermLoan_) {
-        isCalledOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isCalled();
-    }
-
-    function isImpairedOpenTermLoan(address loan_) internal view returns (bool isImpairedOpenTermLoan_) {
-        isImpairedOpenTermLoan_ = isOpenTermLoan(loan_) && IOpenTermLoan(loan_).isImpaired();
-    }
-
-    function isWMQueue(address poolManager_) internal view returns (bool isWMQueue_) {
-        address wm = IPoolManager(poolManager_).withdrawalManager();
-
-        try IWithdrawalManagerQueue(wm).queue() {
-            isWMQueue_ = true;
-        } catch { }
-    }
-
-    function getAllActiveFixedTermLoans() internal returns (address[] memory loans_) {
-        for (uint256 i; i < loans.length; ++i) {
-            if (isActiveFixedTermLoan(loans[i])) {
-                _fixedTermLoans.push(loans[i]);
-            }
-        }
-
-        return abi.decode(abi.encode(_fixedTermLoans), (address[]));
-    }
-
-    function getAllActiveOpenTermLoans() internal returns (address[] memory loans_) {
-        for (uint256 i; i < loans.length; ++i) {
-            if (isActiveOpenTermLoan(loans[i])) {
-                _openTermLoans.push(loans[i]);
-            }
-        }
-
-        return abi.decode(abi.encode(_openTermLoans), (address[]));
-    }
-
-    function getSomeLoan(function (address) returns (bool) filter_) internal returns (address loan) {
         // Choose the starting loan.
         uint256 index = getSomeValue(0, loans.length - 1);
 
@@ -604,72 +508,447 @@ contract FuzzedUtil is ProtocolActions {
         return address(0);
     }
 
-    function getSomeStrategy() internal returns (address strategy) {
-        uint256 strategyCount = IPoolManager(_poolManager).strategyListLength();
-        uint256 index;
+    /**************************************************************************************************************************************/
+    /*** Functions for retrieving random loan and strategy actions                                                                      ***/
+    /**************************************************************************************************************************************/
 
-        // Pool only has loan managers.
-        if (strategyCount == 2) {
-            return address(0);
+    function getSomeOpenTermAction(address loan) internal returns (LoanAction) {
+        bool isCalled    = IOpenTermLoan(loan).isCalled();
+        bool isImpaired  = IOpenTermLoan(loan).isImpaired();
+        bool isInDefault = IOpenTermLoan(loan).isInDefault();
+
+        uint256[] memory factors = new uint256[](6);
+
+        // Payments and calls can always be performed.
+        factors[uint256(LoanAction.Payment)] = PAYMENT_FACTOR;
+        factors[uint256(LoanAction.Call)] = CALL_FACTOR;
+
+        uint256 sumOfFactors = PAYMENT_FACTOR + CALL_FACTOR;
+
+        // If the loan is called also enable call removal.
+        if (isCalled) {
+            factors[uint256(LoanAction.RemoveCall)] = REMOVE_CALL_FACTOR;
+            sumOfFactors += REMOVE_CALL_FACTOR;
         }
 
-        // Pool only has one strategy, select it.
-        if (strategyCount == 3) {
-            index = 2;
+        // If the loan is impaired enable impairment removal, otherwise enable impairments.
+        if (isImpaired) {
+            factors[uint256(LoanAction.RemoveImpairment)] = REMOVE_IMPAIRMENT_FACTOR;
+            sumOfFactors += REMOVE_IMPAIRMENT_FACTOR;
+        } else {
+            factors[uint256(LoanAction.Impair)] = IMPAIR_FACTOR;
+            sumOfFactors += IMPAIR_FACTOR;
         }
 
-        // Pool has two strategies, choose one randomly.
-        if (strategyCount == 4) {
-            index = getSomeValue(2, 3);
+        // If the loan is past the default date also enable default triggering.
+        if (isInDefault) {
+            factors[uint256(LoanAction.TriggerDefault)] = DEFAULT_FACTOR;
+            sumOfFactors += DEFAULT_FACTOR;
         }
 
-        strategy = IPoolManager(_poolManager).strategyList(index);
+        uint256 draw = getSomeValue(0, sumOfFactors - 1);
+
+        for (uint256 i; i < factors.length; ++i) {
+            if (draw < factors[i]) return LoanAction(i);
+
+            draw -= factors[i];
+        }
+    }
+
+    function getSomeAllocationStrategyAction(address poolManager_) internal returns (AllocationStrategyAction) {
+        IAllocationStrategy strategy        = IAllocationStrategy(allocationUnderlyingStrategyShared);
+        IStrategyManager    strategyManager = IStrategyManager(allocationStrategyManagerShared);
+
+        uint256 sumOfFactors;
+
+        uint256[] memory factors = new uint256[](10);
+
+        if (strategy.availableToWithdraw() > 0) {
+            factors[uint256(AllocationStrategyAction.DeployAssets)] = DEPLOY_ASSETS_FACTOR;
+            sumOfFactors += DEPLOY_ASSETS_FACTOR;
+        }
+
+        if (strategy.impairedAssets() < strategy.assetsUnderManagement()) {
+            factors[uint256(AllocationStrategyAction.Impair)] = IMPAIR_STRATEGY_FACTOR;
+            sumOfFactors += IMPAIR_STRATEGY_FACTOR;
+        }
+
+        if (strategy.deployedAssetsOf(managedWalletShared) > 0) {
+            factors[uint256(AllocationStrategyAction.ReturnAssets)] = RETURN_ASSETS_FACTOR;
+            sumOfFactors += RETURN_ASSETS_FACTOR;
+        }
+
+        if (strategy.impairedAssets() > 0) {
+            factors[uint256(AllocationStrategyAction.RemoveImpairment)] = REMOVE_STRATEGY_IMPAIRMENT_FACTOR;
+            sumOfFactors += REMOVE_STRATEGY_IMPAIRMENT_FACTOR;
+        }
+
+        if (strategy.deployedAssetsOf(managedWalletShared) > 0) {
+            factors[uint256(AllocationStrategyAction.RecognizeLoss)] = RECOGNIZE_LOSS_FACTOR;
+            sumOfFactors += RECOGNIZE_LOSS_FACTOR;
+        }
+
+        if (strategy.yieldCooldown() == 0) {
+            factors[uint256(AllocationStrategyAction.RealizeYield)] = REALIZE_YIELD_FACTOR;
+            sumOfFactors += REALIZE_YIELD_FACTOR;
+        }
+
+        if (fundsAsset.balanceOf(IPoolManager(poolManager_).pool()) >= getMinimumFundableAssets(address(strategyManager))) {
+            factors[uint256(AllocationStrategyAction.Fund)] = ALLOCATION_FUND_FACTOR;
+            sumOfFactors += ALLOCATION_FUND_FACTOR;
+        }
+
+        if (strategyManager.sharesOf(poolManager_) > strategyManager.pendingSharesOf(poolManager_)) {
+            factors[uint256(AllocationStrategyAction.RequestRedeem)] = ALLOCATION_REQUEST_REDEEM_FACTOR;
+            sumOfFactors += ALLOCATION_REQUEST_REDEEM_FACTOR;
+        }
+
+        if (
+            strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses()
+                && strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, address(strategyManager))) > 0
+        ) {
+            factors[uint256(AllocationStrategyAction.ProcessRedemption)] = ALLOCATION_PROCESS_REDEMPTION_FACTOR;
+            sumOfFactors += ALLOCATION_PROCESS_REDEMPTION_FACTOR;
+        }
+
+        if (strategyManager.pendingSharesOf(poolManager_) > 0) {
+            factors[uint256(AllocationStrategyAction.CancelRedemption)] = ALLOCATION_CANCEL_REDEMPTION_FACTOR;
+            sumOfFactors += ALLOCATION_CANCEL_REDEMPTION_FACTOR;
+        }
+
+        // No action can be performed when the strategy holds no assets and has no impairment to remove.
+        if (sumOfFactors == 0) return AllocationStrategyAction.None;
+
+        uint256 draw = getSomeValue(0, sumOfFactors - 1);
+
+        for (uint256 i; i < factors.length; ++i) {
+            if (draw < factors[i]) return AllocationStrategyAction(i);
+
+            draw -= factors[i];
+        }
+    }
+
+    function getSomeDefiStrategyAction(address poolManager_, address strategyManager_) internal returns (DefiStrategyAction) {
+        IStrategyManager        strategyManager = IStrategyManager(strategyManager_);
+        IUnderlyingStrategyLike strategy        = IUnderlyingStrategyLike(strategyManager.underlyingStrategy());
+
+        uint256 impairedAssets = strategy.impairedAssets();
+
+        bool canFund             = fundsAsset.balanceOf(IPoolManager(poolManager_).pool()) >= getMinimumFundableAssets(strategyManager_);
+        bool canImpair           = impairedAssets < strategy.assetsUnderManagement();
+        bool canRemoveImpairment = impairedAssets > 0;
+        bool canRequestRedeem    = strategyManager.sharesOf(poolManager_) > strategyManager.pendingSharesOf(poolManager_);
+        bool canCancelRedemption = strategyManager.pendingSharesOf(poolManager_) > 0;
+        bool canProcessRedemption = strategyManager.assetsUnderManagement() > strategyManager.unrealizedLosses()
+            && strategyManager.convertToExitAssets(getMaximumProcessableShares(poolManager_, strategyManager_)) > 0;
+
+        uint256[] memory factors = new uint256[](6);
+
+        uint256 sumOfFactors;
+
+        if (canFund) {
+            factors[uint256(DefiStrategyAction.Fund)] = DEFI_FUND_FACTOR;
+            sumOfFactors += DEFI_FUND_FACTOR;
+        }
+
+        if (canRequestRedeem) {
+            factors[uint256(DefiStrategyAction.RequestRedeem)] = DEFI_REQUEST_REDEEM_FACTOR;
+            sumOfFactors += DEFI_REQUEST_REDEEM_FACTOR;
+        }
+
+        if (canProcessRedemption) {
+            factors[uint256(DefiStrategyAction.ProcessRedemption)] = DEFI_PROCESS_REDEMPTION_FACTOR;
+            sumOfFactors += DEFI_PROCESS_REDEMPTION_FACTOR;
+        }
+
+        if (canCancelRedemption) {
+            factors[uint256(DefiStrategyAction.CancelRedemption)] = DEFI_CANCEL_REDEMPTION_FACTOR;
+            sumOfFactors += DEFI_CANCEL_REDEMPTION_FACTOR;
+        }
+
+        if (canImpair) {
+            factors[uint256(DefiStrategyAction.Impair)] = DEFI_IMPAIR_FACTOR;
+            sumOfFactors += DEFI_IMPAIR_FACTOR;
+        }
+
+        if (canRemoveImpairment) {
+            factors[uint256(DefiStrategyAction.RemoveImpairment)] = DEFI_REMOVE_IMPAIRMENT_FACTOR;
+            sumOfFactors += DEFI_REMOVE_IMPAIRMENT_FACTOR;
+        }
+
+        // No action can be performed when the pool holds no liquidity and the strategy holds no position.
+        if (sumOfFactors == 0) return DefiStrategyAction.None;
+
+        uint256 draw = getSomeValue(0, sumOfFactors - 1);
+
+        for (uint256 i; i < factors.length; ++i) {
+            if (draw < factors[i]) return DefiStrategyAction(i);
+
+            draw -= factors[i];
+        }
+
+        return DefiStrategyAction.None;
+    }
+
+    // Pending shares capped by the liquidity the underlying strategy can release.
+    function getMaximumProcessableShares(address poolManager_, address strategyManager_) internal view returns (uint256 maxShares_) {
+        IStrategyManager strategyManager = IStrategyManager(strategyManager_);
+
+        uint256 pendingShares      = strategyManager.pendingSharesOf(poolManager_);
+        uint256 withdrawableShares = strategyManager.convertToExitShares(strategyManager.availableToWithdraw());
+
+        maxShares_ = withdrawableShares < pendingShares ? withdrawableShares : pendingShares;
+    }
+
+    // Funding less than the value of a single share mints nothing, which the strategy manager rejects. The extra unit covers
+    // both the rounding down in the conversion and the assets the underlying strategy can lose while depositing.
+    function getMinimumFundableAssets(address strategyManager_) internal view returns (uint256 minAssets_) {
+        minAssets_ = IStrategyManager(strategyManager_).convertToAssets(1) + 2;
     }
 
     function getSomeValue(uint256 min_, uint256 max_) internal returns (uint256 value_) {
         value_ = _bound(seed = uint256(keccak256(abi.encode(seed))), min_, max_);
     }
 
-    function setAddresses(address pool) internal {
-        _pool        = pool;
-        _poolManager = IPool(pool).manager();
-        _fundsAsset  = IPool(pool).asset();
+    /**************************************************************************************************************************************/
+    /*** Internal functions for creating and funding loans                                                                              ***/
+    /**************************************************************************************************************************************/
 
-        address lm1 = IPoolManager(_poolManager).strategyList(0);
-        address lm2 = IPoolManager(_poolManager).strategyList(1);
+    function payOffLoansAndRedeemAllLps(address pool_) internal returns (uint256 lastDomainStart_) {
+        lastDomainStart_ = payOffAllLoans(pool_);
 
-        if (_isOpenTermLoanManager(lm1)) {
-            _openTermLoanManager  = lm1;
-            _fixedTermLoanManager = lm2;
-        } else {
-            _openTermLoanManager  = lm2;
-            _fixedTermLoanManager = lm1;
-        }
-
+        withdrawAllFromAllocationStrategy(pool_);
+        requestRedeemAllLps(pool_);
+        redeemFromQueue(pool_);
     }
 
-    function _isOpenTermLoanManager(address loanManager_) internal view returns (bool isOpenTermLoanManager_) {
-        try IOpenTermLoanManager(loanManager_).paymentFor(address(0)) {
-            isOpenTermLoanManager_ = true;
-        } catch { }
+    function withdrawAllFromAllocationStrategy(address pool_) internal {
+        IAllocationStrategy strategy        = IAllocationStrategy(allocationUnderlyingStrategyShared);
+        IStrategyManager    strategyManager = IStrategyManager(allocationStrategyManagerShared);
+        address             poolManager_    = IPool(pool_).manager();
+        uint256             shares          = IStrategyManager(allocationStrategyManagerShared).sharesOf(poolManager_);
+
+        // Recognized losses can wipe out the entire position, which is then worth nothing and can never be redeemed.
+        if (strategyManager.assetsOf(poolManager_) == 0) return;
+
+        uint256 deployedAssets = strategy.deployedAssetsOf(managedWalletShared);
+
+        if (deployedAssets > 0) {
+            returnAssets(allocationUnderlyingStrategyShared, managedWalletShared, managedWalletShared, deployedAssets);
+        }
+
+        // If there is a full impairment withdraw will fail so we need to remove impairment at least partially so withdraw can pass.
+        // Here we must have while loop because we might remove impairment but still round down to 0 assets when withdrawing.
+        while (strategyManager.convertToExitAssets(shares) == 0) {
+            removeStrategyImpairment(allocationUnderlyingStrategyShared, getSomeValue(1, strategy.impairedAssets()));
+        }
+
+        // Part of the position can already be queued, and only the rest of it can be requested.
+        uint256 pendingShares = strategyManager.pendingSharesOf(poolManager_);
+
+        if (shares > pendingShares) {
+            requestRedeemFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares - pendingShares);
+        }
+
+        processRedemptionFromStrategyManager(poolManager_, allocationStrategyManagerShared, shares);
+    }
+
+    function payOffAllLoans(address pool_) internal returns (uint256 lastDomainStart_) {
+        (address loan,) = getEarliestDueDate(pool_);
+
+        lastDomainStart_ = IOpenTermLoanManager(IPoolManager(IPool(pool_).manager()).strategyList(0)).domainStart();
+
+        while (loan != address(0)) {
+            uint256 nextPaymentDueDate = IOpenTermLoan(loan).paymentDueDate();
+
+            // Call open terms after 5 payments on average
+            if (uint256(keccak256(abi.encode(nextPaymentDueDate))) % 5 == 0) {
+                callLoan(loan, IOpenTermLoan(loan).principal());
+            }
+
+            if (nextPaymentDueDate > block.timestamp) {
+                vm.warp(nextPaymentDueDate);
+            }
+
+            makePayment(loan);
+
+            lastDomainStart_ = block.timestamp;
+
+            if (ILoanLike(loan).principal() == 0) {
+                removeLoan(loan);
+            }
+
+            (loan,) = getEarliestDueDate(pool_);
+        }
+    }
+
+    function requestRedeemAllLps(address pool_) internal {
+        for (uint256 i; i < lps.length; ++i) {
+            address lp = lps[i];
+
+            // Request redeem all LP tokens.
+            requestRedeem(pool_, lp, IERC20(pool_).balanceOf(lp));
+        }
+    }
+
+    function redeemFromQueue(address pool_) internal {
+        IPoolManager            poolManager       = IPoolManager(IPool(pool_).manager());
+        IWithdrawalManagerQueue withdrawalManager = IWithdrawalManagerQueue(poolManager.withdrawalManager());
+
+        uint256 totalShares = withdrawalManager.totalShares();
+
+        // `processRedemptions` reverts unless passed exactly what current liquidity supports, so mirror its own
+        // liquidity check here first rather than guessing a share count that leaves enough of a buffer.
+        if (totalShares > 0) {
+            uint256 totalSupply_           = IPool(pool_).totalSupply();
+            uint256 totalAssetsWithLosses_ = poolManager.totalAssets() - poolManager.unrealizedLosses();
+            uint256 availableLiquidity_    = fundsAsset.balanceOf(pool_);
+            uint256 requiredLiquidity_     = totalAssetsWithLosses_ * totalShares / totalSupply_;
+
+            uint256 redeemableShares =
+                availableLiquidity_ < requiredLiquidity_ ? totalShares * availableLiquidity_ / requiredLiquidity_ : totalShares;
+
+            if (redeemableShares > 0) {
+                vm.prank(poolManager.poolDelegate());
+                withdrawalManager.processRedemptions(redeemableShares);
+            }
+        }
+
+        // Redeem all manually available shares that are currently backed by idle liquidity.
+        for (uint256 i; i < lps.length; ++i) {
+            uint256 manualSharesAvailable_ = withdrawalManager.manualSharesAvailable(lps[i]);
+
+            if (manualSharesAvailable_ > 0) {
+                // manualSharesAvailable is only the unlocked amount
+                // previewRedeem caps it to what can be redeemed without over-asking the pool for assets.
+                (uint256 redeemableShares_,) = withdrawalManager.previewRedeem(lps[i], manualSharesAvailable_);
+
+                if (redeemableShares_ > 0) {
+                    redeem(pool_, lps[i], redeemableShares_);
+                }
+            }
+        }
+    }
+
+    function createAndFundLoan(address pool_) internal returns (address loan) {
+        loan = createSomeOpenTermLoan(pool_);
+        loans.push(loan);
+        fundLoan(loan);
+    }
+
+    function createSomeOpenTermLoan(address pool_) internal returns (address loan) {
+        require(fundsAsset.balanceOf(pool_) > 0, "No funding is available.");
+
+        uint256 poolBalance  = fundsAsset.balanceOf(pool_);
+        uint256 maxPrincipal = poolBalance / expectedLoanCount;
+        uint256 minPrincipal = maxPrincipal / 5;
+
+        uint256 principal              = getSomeValue(minPrincipal, maxPrincipal);
+        uint256 noticePeriod           = getSomeValue(1 hours, 10 days);
+        uint256 gracePeriod            = getSomeValue(0, 10 days);
+        uint256 paymentInterval        = getSomeValue(10 days, 90 days);
+        uint256 delegateServiceFeeRate = getSomeValue(0, 0.1e6);
+        uint256 interestRate           = getSomeValue(0.01e6, 0.25e6);
+        uint256 lateFeeRate            = getSomeValue(0, 0.1e6);
+        uint256 lateInterestPremium    = getSomeValue(0, 0.1e6);
+
+        address loanManager = IPoolManager(IPool(pool_).manager()).strategyList(0);
+
+        loan = createOpenTermLoan(
+            openTermLoanFactory,
+            makeAddr("borrower"),
+            loanManager,
+            address(fundsAsset),
+            principal,
+            [gracePeriod, noticePeriod, paymentInterval],
+            [delegateServiceFeeRate, interestRate, lateFeeRate, lateInterestPremium]
+        );
+
+        console.log("Open-term loan created:", loan);
+    }
+
+    function removeLoan(address loan) internal {
+        for (uint256 i; i < loans.length; ++i) {
+            if (loan != loans[i]) continue;
+
+            loans[i] = loans[loans.length - 1];
+
+            loans.pop();
+
+            return;
+        }
     }
 
 }
 
-contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
+contract FuzzedSetup is FuzzedUtil {
 
     function setUp() public virtual override {
-        super.setUp();
+        /**********************************************************************************************************************************/
+        /*** Deploy core of the protocol                                                                                                ***/
+        /**********************************************************************************************************************************/
 
-        setAddresses(address(pool));
+        _deployProtocol();
 
-        _collateralAsset      = address(collateralAsset);
-        _feeManager           = address(fixedTermFeeManager);
-        _fixedTermLoanFactory = address(fixedTermLoanFactory);
-        _liquidatorFactory    = address(liquidatorFactory);
-        _openTermLoanFactory  = address(openTermLoanFactory);
+        /**********************************************************************************************************************************/
+        /*** Deploy allocation strategy that will be shared by two pools and set managed wallet permissions                             ***/
+        /**********************************************************************************************************************************/
 
-        // Deposit the initial liquidity.
+        managedWalletShared = makeAddr("managedWallet");
+
+        (allocationStrategyManagerShared, allocationUnderlyingStrategyShared) = _deployAllocationStrategy({
+            strategyDelegate_:        strategyDelegate,
+            fundsAsset_:              address(fundsAsset),
+            strategyDelegateFeeRate_: STRATEGY_DELEGATE_FEE_RATE,
+            strategyProtocolFeeRate_: STRATEGY_PROTOCOL_FEE_RATE,
+            strategyLiquidityCap_:    type(uint256).max,
+            bootstrapMint_:           0
+        });
+
+        setManagedWallet({
+            strategy_:        allocationUnderlyingStrategyShared,
+            managedWallet_:   managedWalletShared,
+            canDeployAssets_: true,
+            canReturnAssets_: true,
+            canRealizeYield_: true,
+            deploymentCap_:   type(uint256).max
+        });
+
+        vm.prank(strategyDelegate);
+        IAllocationStrategy(allocationUnderlyingStrategyShared).setYieldCap(10_000_000e6);
+
+        /**********************************************************************************************************************************/
+        /*** Deploy two pools that will share the allocation strategy                                                                   ***/
+        /**********************************************************************************************************************************/
+
+        (pool1, poolManager1) = _createPoolSharingStrategy("poolDelegate1", allocationStrategyManagerShared);
+        (pool2, poolManager2) = _createPoolSharingStrategy("poolDelegate2", allocationStrategyManagerShared);
+
+        openPool(poolManager1);
+        openPool(poolManager2);
+
+        openTermLoanManagerPool1 = IPoolManager(poolManager1).strategyList(0);
+        openTermLoanManagerPool2 = IPoolManager(poolManager2).strategyList(0);
+
+        /**********************************************************************************************************************************/
+        /*** Set the open term loan fees for both pools                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.startPrank(governor);
+        globals.setPlatformManagementFeeRate(poolManager1, PLATFORM_MANAGEMENT_FEE_RATE);
+        globals.setPlatformManagementFeeRate(poolManager2, PLATFORM_MANAGEMENT_FEE_RATE);
+        globals.setPlatformServiceFeeRate(poolManager1, PLATFORM_SERVICE_FEE_RATE);
+        globals.setPlatformServiceFeeRate(poolManager2, PLATFORM_SERVICE_FEE_RATE);
+        vm.stopPrank();
+
+        setDelegateManagementFeeRate(poolManager1, DELEGATE_MANAGEMENT_FEE_RATE);
+        setDelegateManagementFeeRate(poolManager2, DELEGATE_MANAGEMENT_FEE_RATE);
+
+        /**********************************************************************************************************************************/
+        /*** Create LPs and fund both pools with liquidity from the LPs
+        ***/
+        /**********************************************************************************************************************************/
+
         lps.push(makeAddr("lp1"));
         lps.push(makeAddr("lp2"));
         lps.push(makeAddr("lp3"));
@@ -677,9 +956,66 @@ contract FuzzedSetup is TestBaseWithAssertions, FuzzedUtil {
         lps.push(makeAddr("lp5"));
 
         for (uint256 i; i < lps.length; ++i) {
-            deposit(address(pool), lps[i], 100_000_000e6);
+            deposit(pool1, lps[i], lpDeposit);
+            deposit(pool2, lps[i], lpDeposit);
         }
+    }
 
+    /**************************************************************************************************************************************/
+    /*** Shared Strategy Fuzz Helpers                                                                                                   ***/
+    /**************************************************************************************************************************************/
+
+    function expectedFees(
+        address strategy,
+        uint256 grossAssets,
+        uint256 lastRecordedTotalAssets
+    )
+        internal
+        view
+        returns (uint256 delegateFee, uint256 protocolFee)
+    {
+        if (grossAssets <= lastRecordedTotalAssets) return (0, 0);
+
+        uint256 yieldAccrued = grossAssets - lastRecordedTotalAssets;
+
+        delegateFee = mulDivDown(yieldAccrued, IUnderlyingStrategyLike(strategy).strategyDelegateFeeRate(), HUNDRED_PERCENT);
+        protocolFee = mulDivDown(yieldAccrued, IUnderlyingStrategyLike(strategy).strategyProtocolFeeRate(), HUNDRED_PERCENT);
+    }
+
+    // Maximum drift, in assets, between `assetsOf` read back after an action and `previousAssets + assetsMoved`.
+    //
+    // `MapleStrategyManager` divides three times between the two, and the truncations do not cancel:
+    //   1. `_convertToAssets` for `assetsOf` at the snapshot  - truncates under one asset
+    //   2. `_convertToShares` when minting                    - truncates under one SHARE
+    //   3. `_convertToAssets` for `assetsOf` on the read back - truncates under one asset
+    //
+    // 2 dominates, because a truncated share is worth `totalAssets / totalShares` assets rather than one.
+    //
+    // Example: 100 shares over 500 assets, so a share is worth 5 assets. A pool holding 30 shares funds 7 assets.
+    //   1. assetsOf = floor(30 * 500 / 100) = 150
+    //   2. minted   = floor(7 * 100 / 500)  = floor(1.4)    = 1 share, discarding 0.4 shares worth 2 assets
+    //   3. assetsOf = floor(31 * 507 / 101) = floor(155.61) = 155
+    //
+    //   expected = 150 + 7 = 157
+    //   actual             = 155
+    //   drift              =   2
+    //
+    // Worst case is a share lost to 2 plus an asset to 3, so the bound is one share price plus one. 1 works the other way,
+    // lowering the expected value, so the drift is one directional: `assetsOf` is never above what the test expects.
+    function maxShareConversionError(uint256 totalAssets, uint256 totalShares) internal pure returns (uint256 maxError) {
+        maxError = mulDivDown(totalAssets, 1, totalShares) + 1;
+    }
+
+    function mulDivDown(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
+        result = denominator == 0 ? 0 : x * y / denominator;
+    }
+
+    function mulDivUp(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
+        result = denominator == 0 ? 0 : (x * y + denominator - 1) / denominator;
+    }
+
+    function min(uint256 x, uint256 y) internal pure returns (uint256 minimum) {
+        minimum = x < y ? x : y;
     }
 
 }

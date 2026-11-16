@@ -11,14 +11,7 @@ contract ConfigurePoolTests is TestBase {
     uint256[] bitmaps;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setUpClosedPool();
 
         functionIds.push("P:transfer");
         functionIds.push("P:deposit");
@@ -98,13 +91,7 @@ contract ConfigurePoolTests is TestBase {
         }
     }
 
-    function testFuzz_configurePool(
-        uint256 oldPermissionLevel,
-        uint256 newPermissionLevel,
-        uint256[] memory bitmaps_
-    )
-        external
-    {
+    function testFuzz_configurePool(uint256 oldPermissionLevel, uint256 newPermissionLevel, uint256[] memory bitmaps_) external {
         oldPermissionLevel = bound(oldPermissionLevel, 0, PUBLIC);
         newPermissionLevel = bound(newPermissionLevel, 0, PUBLIC + 1);
 
@@ -125,10 +112,8 @@ contract ConfigurePoolTests is TestBase {
         poolPermissionManager.configurePool(address(poolManager), newPermissionLevel, functionIds_, bitmaps_);
 
         if (
-            oldPermissionLevel != PUBLIC &&
-            newPermissionLevel <= PUBLIC &&
-            functionIds_.length > 0 &&
-            functionIds_.length == bitmaps_.length
+            oldPermissionLevel != PUBLIC && newPermissionLevel <= PUBLIC && functionIds_.length > 0
+                && functionIds_.length == bitmaps_.length
         ) {
             assertEq(poolPermissionManager.permissionLevels(address(poolManager)), newPermissionLevel);
 

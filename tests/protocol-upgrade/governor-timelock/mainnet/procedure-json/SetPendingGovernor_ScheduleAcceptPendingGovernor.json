@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1757937491183,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "1.18.2",
+    "createdFromSafeAddress": "0xd6d4Bcde6c816F17889f1Dd3000aF0261B03a196",
+    "createdFromOwnerAddress": "",
+    "checksum": "0x8b4d934905d6bb7e40116a901daed21fb3c0b61015aba8c3753c61c05108b323"
+  },
+  "transactions": [
+    {
+      "to": "0x804a6F5F667170F545Bf14e5DDB48C70B788390C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "pendingGovernor_",
+            "type": "address"
+          }
+        ],
+        "name": "setPendingGovernor",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "pendingGovernor_": "0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b"
+      }
+    },
+    {
+      "to": "0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "targets_",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "data_",
+            "type": "bytes[]",
+            "internalType": "bytes[]"
+          }
+        ],
+        "name": "scheduleProposals",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "targets_": "[0x804a6F5F667170F545Bf14e5DDB48C70B788390C]",
+        "data_": "[0xe58bb639]"
+      }
+    }
+  ]
+}

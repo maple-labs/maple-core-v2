@@ -17,23 +17,16 @@ contract PoolEntryPermissionTestBase is TestBase {
 
     address lp;
 
-    uint8   v;
+    uint8 v;
     bytes32 r;
     bytes32 s;
 
     function setUp() public virtual override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setUpClosedPool();
 
         lp = vm.addr(privateKey);
 
-        ( v, r, s ) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), assets, deadline, privateKey);
+        (v, r, s) = _getValidPermitSignature(address(fundsAsset), lp, address(pool), assets, deadline, privateKey);
 
         erc20_mint(address(fundsAsset), lp, assets);
         erc20_approve(address(fundsAsset), lp, address(pool), assets);
@@ -342,7 +335,6 @@ contract PoolLevelPermissionTests is PoolEntryPermissionTestBase {
         vm.prank(lp);
         pool.deposit(assets, lp);
     }
-
 
     function test_poolEntry_poolLevel_deposit_zeroPoolBitmap_nonZeroLenderBitmap() external withAssertions {
         setPoolBitmap(address(poolManager), bytes32(0), createBitmap([2]));
