@@ -10,21 +10,6 @@ permissions:
   contents: read
 
 env:
-  SSH_KEY_ADDRESS_REGISTRY: ${{secrets.SSH_KEY_ADDRESS_REGISTRY}}
-  SSH_KEY_GLOBALS_V2: ${{secrets.SSH_KEY_GLOBALS_V2}}
-  SSH_KEY_MIGRATION_HELPERS: ${{secrets.SSH_KEY_MIGRATION_HELPERS}}
-  SSH_KEY_NTP: ${{secrets.SSH_KEY_NTP}}
-  SSH_KEY_OPEN_TERM_LOAN: ${{secrets.SSH_KEY_OPEN_TERM_LOAN}}
-  SSH_KEY_OPEN_TERM_LOAN_MANAGER: ${{secrets.SSH_KEY_OPEN_TERM_LOAN_MANAGER}}
-  SSH_KEY_POOL_V2: ${{secrets.SSH_KEY_POOL_V2}}
-  SSH_KEY_WITHDRAWAL_MANAGER: ${{secrets.SSH_KEY_WITHDRAWAL_MANAGER}}
-  SSH_KEY_POOL_PERMISSION_MANAGER: ${{secrets.SSH_KEY_POOL_PERMISSION_MANAGER}}
-  SSH_KEY_WM_QUEUE: ${{secrets.SSH_KEY_WM_QUEUE}}
-  SSH_KEY_SYRUP_UTILS: ${{secrets.SSH_KEY_SYRUP_UTILS}}
-  SSH_KEY_ALLOCATION_STRATEGY: ${{secrets.SSH_KEY_ALLOCATION_STRATEGY}}
-  SSH_KEY_STRATEGY_MANAGER: ${{secrets.SSH_KEY_STRATEGY_MANAGER}}
-  SSH_KEY_DEFI_STRATEGIES: ${{secrets.SSH_KEY_DEFI_STRATEGIES}}
-
   BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
   ETH_RPC_URL: ${{secrets.ETH_RPC_URL}}
   ALCHEMY_API_KEY: ${{secrets.ALCHEMY_API_KEY}}
@@ -61,7 +46,9 @@ jobs:
         with:
           version: v1.7.1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run integration tests
         run: ./test.sh -d tests/integration -p $FOUNDRY_PROFILE
 
@@ -78,7 +65,9 @@ jobs:
         with:
           version: v1.7.1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run end to end tests
         run: ./test.sh -d tests/e2e -p $FOUNDRY_PROFILE
 
@@ -95,7 +84,9 @@ jobs:
         with:
           version: v1.7.1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run fuzz tests
         run: ./test.sh -t testFuzz -p $FUZZ_PROFILE
 
@@ -112,7 +103,9 @@ jobs:
         with:
           version: v1.7.1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run invariant tests
         run: ./test.sh -d tests/invariants -p $FUZZ_PROFILE
 
@@ -130,7 +123,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run Scenarios v2
         run:  VERSION=v2 ./scenarios.sh
 
@@ -147,6 +142,8 @@ jobs:
         with:
           version: v1.7.1
       - name: Update submodules
-        run: ./setup-ci.sh
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive
       - name: Run Protocol Upgrade tests
         run: ./test.sh -d tests/protocol-upgrade -p $FOUNDRY_PROFILE

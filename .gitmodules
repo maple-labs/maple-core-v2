@@ -4,18 +4,18 @@
 	ignore = dirty
 [submodule "modules/globals"]
 	path = modules/globals
-	url = git@github.com:maple-labs/globals-v2-private.git
+	url = git@github.com:maple-labs/globals-v2.git
 	ignore = dirty
 [submodule "modules/pool"]
 	path = modules/pool
-	url = git@github.com:maple-labs/pool-v2-private.git
+	url = git@github.com:maple-labs/pool-v2.git
 	ignore = dirty
 [submodule "modules/open-term-loan-manager"]
 	path = modules/open-term-loan-manager
-	url = git@github.com:maple-labs/open-term-loan-manager-private.git
+	url = git@github.com:maple-labs/open-term-loan-manager.git
 [submodule "modules/open-term-loan"]
 	path = modules/open-term-loan
-	url = git@github.com:maple-labs/open-term-loan-private.git
+	url = git@github.com:maple-labs/open-term-loan.git
 [submodule "modules/forge-std"]
 	path = modules/forge-std
 	url = git@github.com:foundry-rs/forge-std.git
@@ -27,22 +27,22 @@
 	url = git@github.com:maple-labs/erc20-helper.git
 [submodule "modules/pool-permission-manager"]
 	path = modules/pool-permission-manager
-	url = git@github.com:maple-labs/pool-permission-manager-private.git
+	url = git@github.com:maple-labs/pool-permission-manager.git
 [submodule "modules/withdrawal-manager-cyclical"]
 	path = modules/withdrawal-manager-cyclical
-	url = git@github.com:maple-labs/withdrawal-manager-cyclical-private.git
+	url = git@github.com:maple-labs/withdrawal-manager-cyclical.git
 [submodule "modules/withdrawal-manager-queue"]
 	path = modules/withdrawal-manager-queue
-	url = git@github.com:maple-labs/withdrawal-manager-queue-private.git
+	url = git@github.com:maple-labs/withdrawal-manager-queue.git
 [submodule "modules/syrup-utils"]
 	path = modules/syrup-utils
-	url = git@github.com:maple-labs/syrup-utils-private.git
+	url = git@github.com:maple-labs/syrup-utils.git
 [submodule "modules/allocation-strategy"]
 	path = modules/allocation-strategy
-	url = git@github.com:maple-labs/allocation-strategy-private.git
+	url = git@github.com:maple-labs/allocation-strategy.git
 [submodule "modules/strategy-manager"]
 	path = modules/strategy-manager
-	url = git@github.com:maple-labs/strategy-manager-private.git
+	url = git@github.com:maple-labs/strategy-manager.git
 [submodule "modules/defi-strategies"]
 	path = modules/defi-strategies
-	url = git@github.com:maple-labs/defi-strategies-private.git
+	url = git@github.com:maple-labs/defi-strategies.git

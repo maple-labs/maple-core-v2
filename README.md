@@ -1,9 +1,9 @@
 # Maple V2 Core
 
-![Foundry CI](https://github.com/maple-labs/maple-core-v2-private/actions/workflows/ci.yaml/badge.svg)
-[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple/maple-for-developers/protocol-overview)
+![Foundry CI](https://github.com/maple-labs/maple-core-v2/actions/workflows/ci.yaml/badge.svg)
+[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://docs.maple.finance/technical-resources/protocol-overview)
 [![Foundry][foundry-badge]][foundry]
-[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2-private/blob/main/LICENSE)
+[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/maple-core-v2/blob/main/LICENSE)
 
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
@@ -28,27 +28,26 @@ and Monad are configured in `foundry.toml` under `[rpc_endpoints]`.
 
 ## Submodules
 
-The modules pinned here are the **private** repositories. Note that several submodule directory
-names differ from their repository names.
+Note that several submodule directory names differ from their repository names.
 
 | Directory | Repository |
 |---|---|
 | **Core** | |
-| `modules/globals`                     | [`maple-labs/globals-v2-private`](https://github.com/maple-labs/globals-v2-private) |
-| `modules/pool`                        | [`maple-labs/pool-v2-private`](https://github.com/maple-labs/pool-v2-private) |
-| `modules/pool-permission-manager`     | [`maple-labs/pool-permission-manager-private`](https://github.com/maple-labs/pool-permission-manager-private) |
+| `modules/globals`                     | [`maple-labs/globals-v2`](https://github.com/maple-labs/globals-v2) |
+| `modules/pool`                        | [`maple-labs/pool-v2`](https://github.com/maple-labs/pool-v2) |
+| `modules/pool-permission-manager`     | [`maple-labs/pool-permission-manager`](https://github.com/maple-labs/pool-permission-manager) |
 | **Loans** | |
-| `modules/open-term-loan`              | [`maple-labs/open-term-loan-private`](https://github.com/maple-labs/open-term-loan-private) |
-| `modules/open-term-loan-manager`      | [`maple-labs/open-term-loan-manager-private`](https://github.com/maple-labs/open-term-loan-manager-private) |
+| `modules/open-term-loan`              | [`maple-labs/open-term-loan`](https://github.com/maple-labs/open-term-loan) |
+| `modules/open-term-loan-manager`      | [`maple-labs/open-term-loan-manager`](https://github.com/maple-labs/open-term-loan-manager) |
 | **Withdrawals** | |
-| `modules/withdrawal-manager-cyclical` | [`maple-labs/withdrawal-manager-cyclical-private`](https://github.com/maple-labs/withdrawal-manager-cyclical-private) |
-| `modules/withdrawal-manager-queue`    | [`maple-labs/withdrawal-manager-queue-private`](https://github.com/maple-labs/withdrawal-manager-queue-private) |
+| `modules/withdrawal-manager-cyclical` | [`maple-labs/withdrawal-manager-cyclical`](https://github.com/maple-labs/withdrawal-manager-cyclical) |
+| `modules/withdrawal-manager-queue`    | [`maple-labs/withdrawal-manager-queue`](https://github.com/maple-labs/withdrawal-manager-queue) |
 | **Strategies** | |
-| `modules/strategy-manager`            | [`maple-labs/strategy-manager-private`](https://github.com/maple-labs/strategy-manager-private) |
-| `modules/defi-strategies`             | [`maple-labs/defi-strategies-private`](https://github.com/maple-labs/defi-strategies-private) |
-| `modules/allocation-strategy`         | [`maple-labs/allocation-strategy-private`](https://github.com/maple-labs/allocation-strategy-private) |
+| `modules/strategy-manager`            | [`maple-labs/strategy-manager`](https://github.com/maple-labs/strategy-manager) |
+| `modules/defi-strategies`             | [`maple-labs/defi-strategies`](https://github.com/maple-labs/defi-strategies) |
+| `modules/allocation-strategy`         | [`maple-labs/allocation-strategy`](https://github.com/maple-labs/allocation-strategy) |
 | **Peripheral** | |
-| `modules/syrup-utils`                 | [`maple-labs/syrup-utils-private`](https://github.com/maple-labs/syrup-utils-private) |
+| `modules/syrup-utils`                 | [`maple-labs/syrup-utils`](https://github.com/maple-labs/syrup-utils) |
 | `modules/address-registry`            | [`maple-labs/address-registry`](https://github.com/maple-labs/address-registry) |
 | `modules/erc20`                       | [`maple-labs/erc20`](https://github.com/maple-labs/erc20) |
 | `modules/erc20-helper`                | [`maple-labs/erc20-helper`](https://github.com/maple-labs/erc20-helper) |
@@ -61,12 +60,15 @@ Versions of dependencies can be checked with `git submodule status`.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation
 instructions [here](https://github.com/foundry-rs/foundry#installation).
 
-Most submodules are private, so cloning requires SSH access to the `maple-labs` module
-repositories. CI pulls them with per-module deploy keys — see `setup-ci.sh`.
+Submodule URLs use SSH. To clone over HTTPS instead, run this first:
 
 ```sh
-git clone git@github.com:maple-labs/maple-core-v2-private.git
-cd maple-core-v2-private
+git config --global url."https://github.com/".insteadOf "git@github.com:"
+```
+
+```sh
+git clone git@github.com:maple-labs/maple-core-v2.git
+cd maple-core-v2
 make install          # git submodule update --init --recursive
 cp .env.example .env  # populate ETH_RPC_URL and ALCHEMY_API_KEY
 make build
@@ -163,20 +165,20 @@ component rather than the whole protocol are marked as such.
 
 | Date | Auditor | Report |
 |---|---|---|
+| 2026-10 | Cantina       | [Cantina - October 2026 (Modular Release)](audits/2026-november/Cantina-Maple-Finance-Modular-Oct-2026.pdf) |
+| 2026-09 | Sherlock      | [Sherlock - September 2026 (Modular Release)](audits/2026-november/Sherlock-Maple-Finance-Modular-Sep-2026.pdf) |
 | 2025-11 | Sherlock      | [Sherlock - November 2025 (Withdrawal Manager)](audits/2025-november/Sherlock-Maple-Finance-WM-Nov-2025.pdf) |
 | 2025-11 | Spearbit      | [Spearbit - November 2025 (Withdrawal Manager)](audits/2025-november/Spearbit-Maple-Finance-WM-Nov-2025.pdf) |
 | 2025-09 | 0xMacro       | [0xMacro - September 2025 (Governor Timelock)](audits/2025-sept-governor-timelock/0xMacro-Maple-Finance-timelock-Sept-2025.pdf) |
 | 2025-09 | Sherlock      | [Sherlock - September 2025 (Governor Timelock)](audits/2025-sept-governor-timelock/Sherlock-Maple-Finance-timelock-Sept-2025.pdf) |
-| 2025-06 | 0xMacro       | [0xMacro - June 2025](audits/2025-june/0xMacro-Maple-Finance-June2025.pdf) |
-| 2025-06 | Sherlock      | [Sherlock - June 2025](audits/2025-june/Sherlock-Maple-Finance-June-2025.pdf) |
 | 2024-12 | 0xMacro       | [0xMacro - December 2024](audits/2024-december/0xMacro-Maple-Finance-Dec-2024.pdf) |
-| 2024-12 | Three Sigma   | [Three Sigma - December 2024](audits/2024-december/Three-Sigma-Maple-Finance-Dec-2024.pdf) |
+| 2024-12 | Three Sigma   | [Three Sigma - December 2024](audits/2024-december/Three-Sigma-Maple-Finance-Dec-2024%20.pdf) |
 | 2024-08 | 0xMacro       | [0xMacro - August 2024](audits/2024-august/0xMacro-Maple-Finance-Aug-2024.pdf) |
 | 2024-08 | Three Sigma   | [Three Sigma - August 2024](audits/2024-august/Three-Sigma-Maple-Finance-Aug-2024.pdf) |
 | 2024-08 | Three Sigma   | [Three Sigma - August 2024 (Syrup)](audits/2024-august/Three-Sigma-Maple-Finance-Aug-2024-Syrup.pdf) |
 | 2023-12 | 0xMacro       | [0xMacro - December 2023](audits/2023-december/0xMacro-Maple-Finance-Dec-2023.pdf) |
 | 2023-12 | Three Sigma   | [Three Sigma - December 2023](audits/2023-december/Three-Sigma-Maple-Finance-Dec-2023.pdf) |
-| 2023-06 | Cantina       | [Cantina - June 2023](audits/2023-june/cantina-maple.pdf) |
+| 2023-06 | Cantina       | [Cantina - June 2023](audits/2023-june/Cantina-Maple.pdf) |
 | 2023-06 | Three Sigma   | [Three Sigma - June 2023](audits/2023-june/Three-Sigma-Maple-Finance-Jun-2023.pdf) |
 | 2022-12 | Trail of Bits | [Trail of Bits - December 2022](audits/2022-december/TrailOfBits-Maple.pdf) |
 | 2022-12 | Spearbit      | [Spearbit - December 2022](audits/2022-december/Spearbit-maple.pdf) |
