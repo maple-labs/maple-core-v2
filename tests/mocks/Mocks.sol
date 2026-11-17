@@ -3,15 +3,13 @@ pragma solidity ^0.8.7;
 
 import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
-import { ILiquidatorLike } from "../../contracts/interfaces/Interfaces.sol";
-
 contract ConfigurableMockERC20 is MockERC20 {
 
     address _caller;
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_) MockERC20(name_, symbol_, decimals_) { }
 
-    modifier fail {
+    modifier fail() {
         if (msg.sender == _caller) {
             require(false);
         }
@@ -37,6 +35,79 @@ contract ConfigurableMockERC20 is MockERC20 {
 
 }
 
+contract InvalidStrategy { }
+
+contract InvalidStrategyFactory {
+
+    function createInstance(bytes calldata, bytes32) external returns (address strategy_) {
+        strategy_ = address(new InvalidStrategy());
+    }
+
+}
+
+contract MockContractWithFallback {
+
+    uint256 public counter;
+
+    fallback() external {
+        counter++;
+    }
+
+}
+
+contract MockContractWithRevertingFallback {
+
+    fallback() external {
+        revert();
+    }
+
+}
+
+contract MockFactory {
+
+    function isInstance(address) external pure returns (bool) {
+        return true;
+    }
+
+}
+
+contract MockGlobals {
+
+    address public governor;
+
+    constructor(address governor_) {
+        governor = governor_;
+    }
+
+}
+
+contract MockPoolManager {
+
+    address public factory;
+    address public poolDelegate;
+    bool public active;
+
+    constructor(address factory_, address poolDelegate_) {
+        factory      = factory_;
+        poolDelegate = poolDelegate_;
+    }
+
+    function setActive(bool active_) external {
+        active = active_;
+    }
+
+}
+
+contract MockMapleWithdrawalManager {
+
+    address public immutable poolManager;
+
+    constructor(address poolManager_) {
+        poolManager = poolManager_;
+    }
+
+}
+
 contract FakeLoan {
 
     address public factory;
@@ -47,23 +118,30 @@ contract FakeLoan {
 
 }
 
-contract MockLiquidationStrategy {
+contract FakePoolManager {
 
-    function flashBorrowLiquidation(address lender_, uint256 swapAmount_, address collateralAsset_, address fundsAsset_, address) external {
-        uint256 repaymentAmount = ILiquidatorLike(lender_).getExpectedAmount(swapAmount_);
+    address public factory;
 
-        MockERC20(fundsAsset_).approve(lender_, repaymentAmount);
-
-        ILiquidatorLike(lender_).liquidatePortion(
-            swapAmount_,
-            type(uint256).max,
-            abi.encodeWithSelector(this.swap.selector, collateralAsset_, fundsAsset_, swapAmount_, repaymentAmount)
-        );
+    function __setFactory(address factory_) external {
+        factory = factory_;
     }
 
-    function swap(address collateralAsset_, address fundsAsset_, uint256 swapAmount_, uint256 repaymentAmount_) external {
-        MockERC20(fundsAsset_).mint(address(this), repaymentAmount_);
-        MockERC20(collateralAsset_).burn(address(this), swapAmount_);
+}
+
+contract MockMultisig {
+
+    function execute(address[] calldata targets_, bytes[] calldata calls_) external {
+        require(targets_.length == calls_.length, "MM:E:LENGTH_MISMATCH");
+
+        for (uint256 i; i < targets_.length; ++i) {
+            (bool success_, bytes memory returnData_) = targets_[i].call(calls_[i]);
+
+            if (!success_) {
+                assembly {
+                    revert(add(32, returnData_), mload(returnData_))
+                }
+            }
+        }
     }
 
 }

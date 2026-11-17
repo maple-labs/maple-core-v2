@@ -1,0 +1,221 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1779106891494,
+  "meta": {
+    "name": "Transactions Batch",
+    "description": "",
+    "txBuilderVersion": "2.0.1",
+    "createdFromSafeAddress": "0xCe1cE7c7F436DCc4E28Bc8bf86115514d3DC34E8",
+    "createdFromOwnerAddress": "",
+    "checksum": "0x69e4bfa4a52d651f5414e4a15e2001b178757404e00bd84c3eb870aca0bf3739"
+  },
+  "transactions": [
+    {
+      "to": "0x804a6F5F667170F545Bf14e5DDB48C70B788390C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "poolManager_",
+            "type": "address"
+          }
+        ],
+        "name": "activatePoolManager",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "poolManager_": "0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327"
+      }
+    },
+    {
+      "to": "0x804a6F5F667170F545Bf14e5DDB48C70B788390C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "poolManager_",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "platformServiceFeeRate_",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPlatformServiceFeeRate",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "poolManager_": "0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327",
+        "platformServiceFeeRate_": "2500"
+      }
+    },
+    {
+      "to": "0x804a6F5F667170F545Bf14e5DDB48C70B788390C",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "poolManager_",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "platformManagementFeeRate_",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPlatformManagementFeeRate",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "poolManager_": "0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327",
+        "platformManagementFeeRate_": "83300"
+      }
+    },
+    {
+      "to": "0xBe10aDcE8B6E3E02Db384E7FaDA5395DD113D8b3",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "poolManager_",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "permissionLevel_",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "functionIds_",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "poolBitmaps_",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ],
+        "name": "configurePool",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "poolManager_": "0x6c48CD22086F3Db3F23E7cEeDD5c429D93FF3327",
+        "permissionLevel_": "1",
+        "functionIds_": "[\"0x503a6465706f7369740000000000000000000000000000000000000000000000\",\"0x503a6465706f736974576974685065726d697400000000000000000000000000\",\"0x503a6d696e740000000000000000000000000000000000000000000000000000\",\"0x503a6d696e74576974685065726d697400000000000000000000000000000000\",\"0x503a72656465656d000000000000000000000000000000000000000000000000\",\"0x503a776974686472617700000000000000000000000000000000000000000000\",\"0x503a7472616e7366657200000000000000000000000000000000000000000000\",\"0x503a7472616e7366657246726f6d000000000000000000000000000000000000\",\"0x503a72656d6f7665536861726573000000000000000000000000000000000000\",\"0x503a7265717565737452656465656d0000000000000000000000000000000000\",\"0x503a726571756573745769746864726177000000000000000000000000000000\"]",
+        "poolBitmaps_": "[16,16,16,16,16,16,0,0,16,0,16]"
+      }
+    },
+    {
+      "to": "0xBe10aDcE8B6E3E02Db384E7FaDA5395DD113D8b3",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "lenders_",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "bitmaps_",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ],
+        "name": "setLenderBitmaps",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "lenders_": "[0xCe1cE7c7F436DCc4E28Bc8bf86115514d3DC34E8]",
+        "bitmaps_": "[16]"
+      }
+    },
+    {
+      "to": "0xe343167631d89B6Ffc58B88d6b7fB0228795491D",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "spender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "name": "approve",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "spender": "0x87b65C4aAFFA76881f9E96F3e7ED945ddFC3Cd7A",
+        "value": "10000000"
+      }
+    },
+    {
+      "to": "0x87b65C4aAFFA76881f9E96F3e7ED945ddFC3Cd7A",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "assets_",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "receiver_",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "name": "deposit",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "assets_": "10000000",
+        "receiver_": "0xCe1cE7c7F436DCc4E28Bc8bf86115514d3DC34E8"
+      }
+    },
+    {
+      "to": "0x87b65C4aAFFA76881f9E96F3e7ED945ddFC3Cd7A",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "name": "recipient_",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount_",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "name": "transfer",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "recipient_": "0x0000000000000000000000000000000000000000",
+        "amount_": "10000000"
+      }
+    }
+  ]
+}

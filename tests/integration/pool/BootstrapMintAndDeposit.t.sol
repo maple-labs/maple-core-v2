@@ -14,15 +14,16 @@ contract BootstrapTestBase is TestBaseWithAssertions {
         start = block.timestamp;
 
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
 
         vm.prank(governor);
         globals.setBootstrapMint(address(fundsAsset), BOOTSTRAP_MINT_AMOUNT);
 
         _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _createPoolWithOTLM(poolDelegate);
+        _configurePool();
         openPool(address(poolManager));
 
         lp1 = makeAddr("lp1");
@@ -190,7 +191,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
     uint256 lp1PK    = 1;
     uint256 lp2PK    = 2;
 
-    function setUp() override public {
+    function setUp() public override {
         super.setUp();
 
         lp1 = vm.addr(lp1PK);
@@ -200,11 +201,8 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
     function test_depositWithPermit_ltBootstrapMintAmount() external {
         fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, deadline, lp1PK);
+        (uint8 v, bytes32 r, bytes32 s) =
+            _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, deadline, lp1PK);
 
         vm.expectRevert(arithmeticError);
         vm.prank(lp1);
@@ -214,11 +212,7 @@ contract BootstrapDepositWithPermitTests is BootstrapTestBase {
     function testFuzz_depositWithPermit_ltBootstrapMintAmount(uint256 amount_) external {
         amount_ = bound(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, deadline, lp1PK);
+        (uint8 v, bytes32 r, bytes32 s) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, deadline, lp1PK);
 
         vm.expectRevert(arithmeticError);
         vm.prank(lp1);
@@ -461,21 +455,18 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
     uint256 lp1PK    = 1;
     uint256 lp2PK    = 2;
 
-    function setUp() override public {
+    function setUp() public override {
         super.setUp();
 
-        lp1  = vm.addr(lp1PK);
+        lp1 = vm.addr(lp1PK);
         lp2 = vm.addr(lp2PK);
     }
 
     function test_mintWithPermit_ltBootstrapMintAmount() external {
         fundsAsset.mint(lp1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, deadline, lp1PK);
+        (uint8 v, bytes32 r, bytes32 s) =
+            _getValidPermitSignature(address(fundsAsset), lp1, address(pool), BOOTSTRAP_MINT_AMOUNT - 1, deadline, lp1PK);
 
         vm.expectRevert(arithmeticError);
         vm.prank(lp1);
@@ -485,11 +476,7 @@ contract BootstrapMintWithPermitTests is BootstrapTestBase {
     function testFuzz_mintWithPermit_ltBootstrapMintAmount(uint256 amount_) external {
         amount_ = bound(amount_, 1, BOOTSTRAP_MINT_AMOUNT - 1);
 
-        (
-            uint8   v,
-            bytes32 r,
-            bytes32 s
-        ) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, deadline, lp1PK);
+        (uint8 v, bytes32 r, bytes32 s) = _getValidPermitSignature(address(fundsAsset), lp1, address(pool), amount_, deadline, lp1PK);
 
         vm.expectRevert(arithmeticError);
         vm.prank(lp1);

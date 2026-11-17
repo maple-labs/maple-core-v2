@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { FixedTermLoanManagerHarness } from "./utils/FixedTermLoanManagerHarness.sol";
-import { TestBase }                    from "../TestBase.sol";
+import { OpenTermLoanManagerHarness } from "./utils/OpenTermLoanManagerHarness.sol";
+import { TestBase } from "../TestBase.sol";
 
 contract FuzzBase is TestBase {
 
-    FixedTermLoanManagerHarness loanManagerHarness;
+    OpenTermLoanManagerHarness loanManagerHarness;
 
     function setUp() public override {
         super.setUp();
 
         address loanManager = poolManager.strategyList(0);
 
-        vm.etch(loanManager, address(new FixedTermLoanManagerHarness()).code);
+        vm.etch(loanManager, address(new OpenTermLoanManagerHarness()).code);
 
-        loanManagerHarness = FixedTermLoanManagerHarness(loanManager);
+        loanManagerHarness = OpenTermLoanManagerHarness(loanManager);
     }
 
     function mintAssets(address account, uint256 assets) internal {
@@ -38,7 +38,7 @@ contract FuzzBase is TestBase {
             pool.mint(otherShares, address(this));
         }
 
-        fundsAsset.burn(address(pool), totalSupply);  // Burn so that assets can be minted into the pool in other functions.
+        fundsAsset.burn(address(pool), totalSupply);
     }
 
     function setupPool(uint256 totalAssets, uint256 unrealizedLosses, uint256 availableAssets) internal {

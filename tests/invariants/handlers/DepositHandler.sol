@@ -1,70 +1,97 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import { IInvariantTest, IMockERC20, IPool } from "../../../contracts/interfaces/Interfaces.sol";
-
-import { console2 as console } from "../../../contracts/Runner.sol";
+import { IPool } from "../../../contracts/interfaces/Interfaces.sol";
 
 import { HandlerBase } from "./HandlerBase.sol";
 
 contract DepositHandler is HandlerBase {
 
     /**************************************************************************************************************************************/
+    /*** Constants                                                                                                                      ***/
+    /**************************************************************************************************************************************/
+
+    uint256 constant MAXIMUM_DEPOSIT_AMOUNT = 1_000_000e6;
+    uint256 constant MAXIMUM_MINT_AMOUNT    = 500_000e6;
+    uint256 constant ROUNDING_BUFFER        = 100;
+
+    /**************************************************************************************************************************************/
     /*** State Variables                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    address[] lps;
+    address asset;
 
-    IMockERC20 asset;
-    IPool      pool;
+    address[] lps;
+    address[] pools;
 
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
     /**************************************************************************************************************************************/
 
-    constructor(address pool_, address[] memory lps_) {
-        testContract = IInvariantTest(msg.sender);
-
-        pool  = IPool(pool_);
-        asset = IMockERC20(pool.asset());
+    constructor(string memory handlerName_, address[] memory pools_, address[] memory lps_) HandlerBase(handlerName_) {
+        pools = pools_;
         lps   = lps_;
+
+        asset = IPool(pools_[0]).asset();
+
+        for (uint256 i = 1; i < pools_.length; i++) {
+            require(IPool(pools_[i]).asset() == asset, "DH:INVALID_ASSET");
+        }
     }
 
     /**************************************************************************************************************************************/
     /*** Actions                                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function deposit(uint256 seed_) external useTimestamps {
-        console.log("depositHandler.deposit(%s)", seed_);
-        numberOfCalls["depositHandler.deposit"]++;
+    function deposit(uint256 seed_) external {
+        address lp_     = _selectLp(seed_);
+        address pool_   = _selectPool(seed_);
+        uint256 assets_ = _selectAssets(seed_);
 
-        // Set to max resolution / 10 of LM
-        uint256 assets_ = _bound(_randomize(seed_, "assets"), 100, 1_000_000e6);
-        address lp_     = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
+        erc20_mint(asset, lp_, assets_);
+        erc20_approve(asset, lp_, pool_, assets_);
 
-        vm.startPrank(lp_);
-        asset.mint(lp_, assets_);
-        asset.approve(address(pool), assets_);
-
-        pool.deposit(assets_, lp_);
-        vm.stopPrank();
+        vm.prank(lp_);
+        IPool(pool_).deposit(assets_, lp_);
     }
 
-    function mint(uint256 seed_) external useTimestamps {
-        console.log("depositHandler.mint(%s)", seed_);
-        numberOfCalls["depositHandler.mint"]++;
+    function mint(uint256 seed_) external {
+        address lp_     = _selectLp(seed_);
+        address pool_   = _selectPool(seed_);
+        uint256 shares_ = _selectShares(seed_);
+        uint256 assets_ = _convertToAssets(pool_, shares_);
 
-        // The first mint needs to be large enough to not lock mints if total assets eventually become zero due to defaults.
-        address lp_     = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
-        uint256 shares_ = _bound(_randomize(seed_, "shares"), 10, 1_000_000e6);
-        uint256 assets_ = pool.totalSupply() == 0 ? shares_ : shares_ * pool.totalAssets() / pool.totalSupply() + 100;
+        erc20_mint(asset, lp_, assets_);
+        erc20_approve(asset, lp_, pool_, assets_);
 
-        vm.startPrank(lp_);
-        asset.mint(lp_, assets_);
-        asset.approve(address(pool), assets_);
+        vm.prank(lp_);
+        IPool(pool_).mint(shares_, lp_);
+    }
 
-        pool.mint(shares_, lp_);
-        vm.stopPrank();
+    /**************************************************************************************************************************************/
+    /*** Helpers                                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function _convertToAssets(address pool_, uint256 shares_) internal view returns (uint256 assets_) {
+        uint256 totalSupply_ = IPool(pool_).totalSupply();
+
+        assets_ = totalSupply_ == 0 ? shares_ : IPool(pool_).totalAssets() * shares_ / totalSupply_ + ROUNDING_BUFFER;
+    }
+
+    function _selectAssets(uint256 seed_) internal pure returns (uint256 assets_) {
+        assets_ = _bound(_randomize(seed_, "assets"), 100, MAXIMUM_DEPOSIT_AMOUNT);
+    }
+
+    function _selectLp(uint256 seed_) internal view returns (address lp_) {
+        lp_ = lps[_bound(_randomize(seed_, "lp"), 0, lps.length - 1)];
+    }
+
+    function _selectPool(uint256 seed_) internal view returns (address pool_) {
+        pool_ = pools[_bound(_randomize(seed_, "pool"), 0, pools.length - 1)];
+    }
+
+    function _selectShares(uint256 seed_) internal pure returns (uint256 shares_) {
+        shares_ = _bound(_randomize(seed_, "shares"), 10, MAXIMUM_MINT_AMOUNT);
     }
 
 }

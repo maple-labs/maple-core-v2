@@ -1,21 +1,15 @@
 [submodule "modules/erc20"]
 	path = modules/erc20
 	url = git@github.com:maple-labs/erc20.git
-[submodule "modules/fixed-term-loan"]
-	path = modules/fixed-term-loan
-	url = git@github.com:maple-labs/fixed-term-loan.git
-[submodule "modules/fixed-term-loan-manager"]
-	path = modules/fixed-term-loan-manager
-	url = git@github.com:maple-labs/fixed-term-loan-manager.git
+	ignore = dirty
 [submodule "modules/globals"]
 	path = modules/globals
 	url = git@github.com:maple-labs/globals-v2.git
-[submodule "modules/liquidations"]
-	path = modules/liquidations
-	url = git@github.com:maple-labs/liquidations.git
+	ignore = dirty
 [submodule "modules/pool"]
 	path = modules/pool
 	url = git@github.com:maple-labs/pool-v2.git
+	ignore = dirty
 [submodule "modules/open-term-loan-manager"]
 	path = modules/open-term-loan-manager
 	url = git@github.com:maple-labs/open-term-loan-manager.git
@@ -43,6 +37,12 @@
 [submodule "modules/syrup-utils"]
 	path = modules/syrup-utils
 	url = git@github.com:maple-labs/syrup-utils.git
-[submodule "modules/strategies"]
-	path = modules/strategies
-	url = git@github.com:maple-labs/maple-strategies.git
+[submodule "modules/allocation-strategy"]
+	path = modules/allocation-strategy
+	url = git@github.com:maple-labs/allocation-strategy.git
+[submodule "modules/strategy-manager"]
+	path = modules/strategy-manager
+	url = git@github.com:maple-labs/strategy-manager.git
+[submodule "modules/defi-strategies"]
+	path = modules/defi-strategies
+	url = git@github.com:maple-labs/defi-strategies.git

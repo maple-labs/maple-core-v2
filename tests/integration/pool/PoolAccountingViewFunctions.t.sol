@@ -26,15 +26,15 @@ contract BalanceOfAssetsTests is TestBase {
         assertEq(pool.balanceOfAssets(lp1), 1_000e6);
         assertEq(pool.balanceOfAssets(lp2), 3_000e6);
 
-        fundsAsset.mint(address(pool), 4_000e6);  // Double totalAssets
+        fundsAsset.mint(address(pool), 4_000e6); // Double totalAssets
 
         assertEq(pool.balanceOfAssets(lp1), 2_000e6);
         assertEq(pool.balanceOfAssets(lp2), 6_000e6);
     }
 
     function testDeepFuzz_balanceOfAssets(uint256 depositAmount1, uint256 depositAmount2, uint256 additionalAmount) external {
-        depositAmount1   = bound(depositAmount1,   1, 1e29);
-        depositAmount2   = bound(depositAmount2,   1, 1e29);
+        depositAmount1   = bound(depositAmount1, 1, 1e29);
+        depositAmount2   = bound(depositAmount2, 1, 1e29);
         additionalAmount = bound(additionalAmount, 1, 1e29);
 
         uint256 totalDeposits = depositAmount1 + depositAmount2;
@@ -64,13 +64,7 @@ contract MaxDepositTests is TestBase {
     address lp2;
 
     function setUp() public override {
-        start = block.timestamp;
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setUpClosedPool();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -111,7 +105,7 @@ contract MaxDepositTests is TestBase {
 
     function testDeepFuzz_maxDeposit_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
         liquidityCap = bound(liquidityCap, 1, 1e29);
-        totalAssets  = bound(totalAssets,  1, 1e29);
+        totalAssets  = bound(totalAssets, 1, 1e29);
 
         uint256 availableDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
 
@@ -136,14 +130,7 @@ contract MaxMintTests is TestBase {
     address lp2;
 
     function setUp() public override {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createAndConfigurePool(start, 1 weeks, 2 days);
+        _setUpClosedPool();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -184,7 +171,7 @@ contract MaxMintTests is TestBase {
 
     function testDeepFuzz_maxMint_totalAssetsIncrease(uint256 liquidityCap, uint256 totalAssets) external {
         liquidityCap = bound(liquidityCap, 1, 1e29);
-        totalAssets  = bound(totalAssets,  1, 1e29);
+        totalAssets  = bound(totalAssets, 1, 1e29);
 
         uint256 availableDeposit = liquidityCap > totalAssets ? liquidityCap - totalAssets : 0;
 
@@ -212,15 +199,15 @@ contract MaxMintTests is TestBase {
         assertEq(pool.maxMint(lp1), 9_000e6);
         assertEq(pool.maxMint(lp2), 9_000e6);
 
-        fundsAsset.mint(address(pool), 1_000e6);  // Double totalAssets.
+        fundsAsset.mint(address(pool), 1_000e6); // Double totalAssets.
 
-        assertEq(pool.maxMint(lp1), 4_000e6);  // totalAssets = 2000, 8000 of room at 2:1
+        assertEq(pool.maxMint(lp1), 4_000e6); // totalAssets = 2000, 8000 of room at 2:1
         assertEq(pool.maxMint(lp2), 4_000e6);
     }
 
     function testDeepFuzz_maxMint_exchangeRateGtOne(uint256 liquidityCap, uint256 depositAmount, uint256 transferAmount) external {
-        liquidityCap   = bound(liquidityCap,   1, 1e29);
-        depositAmount  = bound(depositAmount,  1, liquidityCap);
+        liquidityCap   = bound(liquidityCap, 1, 1e29);
+        depositAmount  = bound(depositAmount, 1, liquidityCap);
         transferAmount = bound(transferAmount, 1, 1e29);
 
         vm.prank(poolDelegate);
@@ -247,61 +234,6 @@ contract MaxMintTests is TestBase {
 
 }
 
-contract MaxRedeemTests is TestBase {
-
-    address lp;
-
-    function setUp() public override {
-        super.setUp();
-
-        lp = makeAddr("lp");
-    }
-
-    function test_maxRedeem_noLockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxRedeem(lp), 0);
-    }
-
-    function test_maxRedeem_lockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks - 1);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxRedeem(lp), 0);
-    }
-
-    function test_maxRedeem_lockedShares_inExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        uint256 shares = pool.requestRedeem(1_000e6, lp);
-
-        assertEq(shares, 1_000e6);
-        assertEq(pool.maxRedeem(lp), 0);
-
-        vm.warp(start + 2 weeks);
-
-        assertTrue(cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxRedeem(lp), shares);
-    }
-
-}
-
 contract MaxRedeemWMQueueTests is TestBase {
 
     address lp1;
@@ -311,14 +243,7 @@ contract MaxRedeemWMQueueTests is TestBase {
     uint256 maxShares;
 
     function setUp() public override {
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
+        super.setUp();
 
         lp1 = makeAddr("lp1");
         lp2 = makeAddr("lp2");
@@ -394,145 +319,15 @@ contract MaxRedeemWMQueueTests is TestBase {
 
 }
 
-contract MaxWithdrawTests is TestBase {
-
-    address lp;
-
-    function setUp() public override {
-        super.setUp();
-
-        lp = makeAddr("lp");
-    }
-
-    function test_maxWithdraw_noLockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-    function test_maxWithdraw_lockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks - 1);
-
-        assertTrue(!cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-    function test_maxWithdraw_lockedShares_inExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        assertEq(pool.balanceOf(lp), 1_000e6);
-
-        vm.prank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        assertEq(pool.maxWithdraw(lp), 0);
-
-        vm.warp(start + 2 weeks);
-
-        assertTrue(cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-    function testDeepFuzz_maxWithdraw_lockedShares_inExitWindow(uint256 assets_) external {
-        assets_ = bound(assets_, 1, 1_000e6);
-
-        deposit(lp, assets_);
-
-        assertEq(pool.balanceOf(lp), assets_);
-
-        vm.prank(lp);
-        pool.requestRedeem(assets_, lp);
-
-        assertEq(pool.maxWithdraw(lp), 0);
-
-        vm.warp(start + 2 weeks);
-
-        assertTrue(cyclicalWM.isInExitWindow(lp));
-
-        assertEq(pool.maxWithdraw(lp), 0);
-    }
-
-}
-
-contract PreviewRedeemTests is TestBase {
-
-    address lp;
-
-    function setUp() public override {
-        super.setUp();
-
-        lp = makeAddr("lp");
-    }
-
-    function test_previewRedeem_invalidShares() external {
-        deposit(lp, 1_000e6);
-
-        vm.startPrank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        assertEq(pool.previewRedeem(1), 0);
-    }
-
-    function test_previewRedeem_noLockedShares_notInExitWindow() external {
-        vm.prank(lp);
-        assertEq(pool.previewRedeem(0), 0);
-    }
-
-    function test_previewRedeem_lockedShares_notInExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        vm.startPrank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks - 1);
-
-        assertEq(pool.previewRedeem(1_000e6), 0);
-    }
-
-    function test_previewRedeem_lockedShares_inExitWindow() external {
-        deposit(lp, 1_000e6);
-
-        vm.startPrank(lp);
-        pool.requestRedeem(1_000e6, lp);
-
-        vm.warp(start + 2 weeks);
-
-        assertEq(pool.previewRedeem(1_000e6), 1_000e6);
-    }
-
-}
-
 contract PreviewRedeemWithQueueWMTests is TestBase {
 
     address lender = makeAddr("lender");
 
     uint256 shares = 1_000e6;
 
-    function setUp() public override virtual {
-        start = block.timestamp;
+    function setUp() public override {
+        super.setUp();
 
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
         deposit(lender, shares);
 
         vm.prank(poolDelegate);
@@ -619,18 +414,9 @@ contract AutomatedPreviewRedeemWithQueueWMTests is TestBase {
 
     uint256 shares = 1_000e6;
 
-    function setUp() public override virtual {
-        start = block.timestamp;
+    function setUp() public override {
+        super.setUp();
 
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
         deposit(lender, shares);
 
         vm.prank(lender);
@@ -720,23 +506,9 @@ contract PreviewWithdrawTests is TestBase {
 
 contract PreviewWithdrawWithQueueWMTests is TestBase {
 
-    function setUp() public override virtual {
-        start = block.timestamp;
-
-        _createAccounts();
-        _createAssets();
-        _createGlobals();
-        _setTreasury();
-        _createFactories();
-        _createPoolWithQueue();
-        _configurePool();
-
-        openPool(address(poolManager));
-    }
-
     function testFuzz_previewWithdraw(
         address lender,
-        bool    isManual,
+        bool isManual,
         uint256 amountToRequest,
         uint256 amountToProcess,
         uint256 amountToWithdraw
@@ -745,8 +517,8 @@ contract PreviewWithdrawWithQueueWMTests is TestBase {
     {
         vm.assume(lender != address(0));
 
-        amountToRequest = bound(amountToRequest,  0, 1e30);
-        amountToProcess = bound(amountToProcess,  0, amountToRequest);
+        amountToRequest = bound(amountToRequest, 0, 1e30);
+        amountToProcess = bound(amountToProcess, 0, amountToRequest);
 
         vm.prank(poolDelegate);
         queueWM.setManualWithdrawal(lender, isManual);
@@ -785,7 +557,7 @@ contract ConvertToAssetsTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_convertToAssets_zeroTotalSupply() external {
+    function test_convertToAssets_zeroTotalSupply() external view {
         assertEq(pool.convertToAssets(1),       1);
         assertEq(pool.convertToAssets(2),       2);
         assertEq(pool.convertToAssets(1_000e6), 1_000e6);
@@ -815,9 +587,9 @@ contract ConvertToAssetsTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
-        assertEq(pool.convertToAssets(1),       0);      // Rounds down as expected
+        assertEq(pool.convertToAssets(1),       0); // Rounds down as expected
         assertEq(pool.convertToAssets(2),       1);
         assertEq(pool.convertToAssets(1_000e6), 500e6);
     }
@@ -838,7 +610,7 @@ contract ConvertToSharesTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_convertToShares_zeroTotalSupply() external {
+    function test_convertToShares_zeroTotalSupply() external view {
         assertEq(pool.convertToShares(1),       1);
         assertEq(pool.convertToShares(2),       2);
         assertEq(pool.convertToShares(1_000e6), 1_000e6);
@@ -868,7 +640,7 @@ contract ConvertToSharesTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
         assertEq(pool.convertToShares(1),       2);
         assertEq(pool.convertToShares(2),       4);
@@ -891,7 +663,7 @@ contract PreviewDepositTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_previewDeposit_zeroTotalSupply() external {
+    function test_previewDeposit_zeroTotalSupply() external view {
         assertEq(pool.previewDeposit(1),       1);
         assertEq(pool.previewDeposit(2),       2);
         assertEq(pool.previewDeposit(1_000e6), 1_000e6);
@@ -921,7 +693,7 @@ contract PreviewDepositTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
         assertEq(pool.previewDeposit(1),       2);
         assertEq(pool.previewDeposit(2),       4);
@@ -944,7 +716,7 @@ contract PreviewMintTests is TestBase {
         lp3 = makeAddr("lp3");
     }
 
-    function test_previewMint_zeroTotalSupply() external {
+    function test_previewMint_zeroTotalSupply() external view {
         assertEq(pool.previewMint(1),       1);
         assertEq(pool.previewMint(2),       2);
         assertEq(pool.previewMint(1_000e6), 1_000e6);
@@ -974,9 +746,9 @@ contract PreviewMintTests is TestBase {
         deposit(lp3, 1_000e6);
 
         vm.prank(address(pool));
-        fundsAsset.transfer(address(0), 1_500e6);  // Simulate loss of 50% of funds
+        fundsAsset.transfer(address(0), 1_500e6); // Simulate loss of 50% of funds
 
-        assertEq(pool.previewMint(1),       1);  // Rounds up the asset token amount
+        assertEq(pool.previewMint(1),       1); // Rounds up the asset token amount
         assertEq(pool.previewMint(2),       1);
         assertEq(pool.previewMint(1_000e6), 500e6);
     }
@@ -986,26 +758,26 @@ contract PreviewMintTests is TestBase {
 contract TotalAssetsTests is TestBase {
 
     address borrower;
-    address loan;
     address lp1;
+    address loan;
 
     function setUp() public override {
         super.setUp();
 
-        lp1      = makeAddr("lp1");
         borrower = makeAddr("borrower");
+        lp1      = makeAddr("lp1");
 
         setupFees({
-            delegateOriginationFee:     500e6,
-            delegateServiceFee:         300e6,
-            delegateManagementFeeRate:  0.02e6,
-            platformOriginationFeeRate: 0.001e6,
-            platformServiceFeeRate:     0.31536e6,  // 10k after 1m seconds
-            platformManagementFeeRate:  0.08e6
+            delegateOriginationFee: 0,
+            delegateServiceFee: 0,
+            delegateManagementFeeRate: 0.02e6,
+            platformOriginationFeeRate: 0,
+            platformServiceFeeRate: 0.031536e6, // 1000e6 platform service fee after 1m seconds on 1M principal
+            platformManagementFeeRate: 0.08e6
         });
     }
 
-    function test_totalAssets_zeroTotalSupply() external {
+    function test_totalAssets_zeroTotalSupply() external view {
         assertEq(pool.totalAssets(), 0);
     }
 
@@ -1018,76 +790,67 @@ contract TotalAssetsTests is TestBase {
     function test_totalAssets_singleLoanFunded() external {
         deposit(lp1, 1_500_000e6);
 
-        loan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(0), uint256(1_500_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
+        loan = createOpenTermLoan(
+            borrower,
+            poolManager.strategyList(0),
+            address(fundsAsset),
+            1_500_000e6,
+            [uint32(200_000), uint32(100_000), uint32(1_000_000)],
+            [uint64(0.015768e6), uint64(0.031536e6), uint64(0), uint64(0.015768e6)]
+        );
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 0);  // Funds moved out of pool
+        fundLoan(loan);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 0); // All liquidity funded the loan
         assertEq(pool.totalAssets(),                  1_500_000e6);
     }
 
     function test_totalAssets_singleLoanFundedWithInterest() external {
         deposit(lp1, 1_500_000e6);
 
-        loan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
+        loan = createOpenTermLoan(
+            borrower,
+            poolManager.strategyList(0),
+            address(fundsAsset),
+            1_000_000e6,
+            [uint32(200_000), uint32(100_000), uint32(1_000_000)],
+            [uint64(0.015768e6), uint64(0.031536e6), uint64(0), uint64(0.015768e6)]
+        );
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool
+        fundLoan(loan);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
         assertEq(pool.totalAssets(),                  1_500_000e6);
 
-        vm.warp(start + ONE_MONTH);
+        vm.warp(start + 1_000_000);
 
-        // +------------+--------+--------+
-        // |    POOL    |   PD   |   MT   |
-        // +------------+--------+--------+
-        // |   500,000  |   500  |    250 |
-        // | +   6,250  | + 275  | +  550 | Interest and service fees paid
-        // | -     625  | + 125  | +  500 | Management fee distribution
-        // | = 505,625  | = 900  | = 1300 |
-        // +------------+--------+--------+
-        assertEq(pool.totalAssets(), 1_505_624_999999);  // Note: Rounding
+        // Gross interest 1000e6, 10% management fees skim 100e6 → 900e6 net accrued on the pool
+        assertEq(pool.totalAssets(), 1_500_000e6 + 900e6);
     }
 
     function test_totalAssets_singleLoanFundedWithPayment() external {
         deposit(lp1, 1_500_000e6);
 
-        loan = fundAndDrawdownLoan({
-            borrower:    borrower,
-            termDetails: [uint256(5 days), uint256(ONE_MONTH), uint256(3)],
-            amounts:     [uint256(0), uint256(1_000_000e6), uint256(1_000_000e6)],
-            rates:       [uint256(0.075e6), uint256(0), uint256(0), uint256(0)],
-            loanManager: poolManager.strategyList(0)
-        });
+        loan = createOpenTermLoan(
+            borrower,
+            poolManager.strategyList(0),
+            address(fundsAsset),
+            1_000_000e6,
+            [uint32(200_000), uint32(100_000), uint32(1_000_000)],
+            [uint64(0.015768e6), uint64(0.031536e6), uint64(0), uint64(0.015768e6)]
+        );
 
-        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);  // Funds moved out of pool
+        fundLoan(loan);
+
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6);
         assertEq(pool.totalAssets(),                  1_500_000e6);
 
-        /************************/
-        /*** Make 1st Payment ***/
-        /************************/
-
-        vm.warp(start + ONE_MONTH);
+        vm.warp(start + 1_000_000);
         makePayment(loan);
 
-        // +------------+--------+--------+
-        // |    POOL    |   PD   |   MT   |
-        // +------------+--------+--------+
-        // |   500,000  |   500  |    250 |
-        // | +   6,250  | + 275  | +  550 | Interest and service fees paid
-        // | -     625  | + 125  | +  500 | Management fee distribution
-        // | = 505,625  | = 900  | = 1300 |
-        // +------------+--------+--------+
-        assertEq(pool.totalAssets(),                  1_505_625e6);
-        assertEq(fundsAsset.balanceOf(address(pool)), 505_625e6);
+        // OT loans don't amortize: principalOut stays 1M, cash gains the 900e6 net interest
+        assertEq(pool.totalAssets(),                  1_500_000e6 + 900e6);
+        assertEq(fundsAsset.balanceOf(address(pool)), 500_000e6 + 900e6);
     }
 
 }

@@ -1,0 +1,505 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.7;
+
+import { IOpenTermLoan, IOpenTermLoanManager } from "../../../contracts/interfaces/Interfaces.sol";
+
+import { TestBaseWithAssertions } from "../../TestBaseWithAssertions.sol";
+
+contract OpenTermLoanTriggerDefaultTestsBase is TestBaseWithAssertions {
+
+    address borrower = makeAddr("borrower");
+    address lp       = makeAddr("lp");
+
+    uint256 constant delegateManagementFeeRate = 0.02e6;
+    uint256 constant delegateServiceFeeRate    = 0.03e6;
+    uint256 constant gracePeriod               = 5 days;
+    uint256 constant interestRate              = 0.1e6;
+    uint256 constant noticePeriod              = 5 days;
+    uint256 constant paymentInterval           = 30 days;
+    uint256 constant platformManagementFeeRate = 0.08e6;
+    uint256 constant platformServiceFeeRate    = 0.04e6;
+    uint256 constant principal                 = 1_500_000e6;
+
+    IOpenTermLoan loan;
+    IOpenTermLoanManager loanManager;
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        vm.startPrank(governor);
+        globals.setPlatformServiceFeeRate(address(poolManager), platformServiceFeeRate);
+        globals.setPlatformManagementFeeRate(address(poolManager), platformManagementFeeRate);
+        vm.stopPrank();
+
+        setDelegateManagementFeeRate(address(poolManager), delegateManagementFeeRate);
+
+        deposit(lp, 1_500_000e6);
+
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
+
+        loan = IOpenTermLoan(
+            createOpenTermLoan(
+                openTermLoanFactory,
+                borrower,
+                address(loanManager),
+                address(fundsAsset),
+                principal,
+                [uint256(gracePeriod), uint256(noticePeriod), uint256(paymentInterval)],
+                [uint256(delegateServiceFeeRate), uint256(interestRate), 0, uint256(interestRate)]
+            )
+        );
+
+        vm.prank(borrower);
+        loan.acceptLoanTerms();
+    }
+
+}
+
+contract OpenTermLoanTriggerDefaultFailureTests is OpenTermLoanTriggerDefaultTestsBase {
+
+    function test_triggerDefault_protocolPaused_poolManager() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.expectRevert("PM:PAUSED");
+        poolManager.triggerDefault(address(loan));
+    }
+
+    function test_triggerDefault_notAuthorized() external {
+        vm.expectRevert("PM:NOT_PD_OR_GOV_OR_OA");
+        poolManager.triggerDefault(address(loan));
+    }
+
+    function test_triggerDefault_protocolPaused_loanManager() external {
+        vm.prank(governor);
+        globals.setProtocolPause(true);
+
+        vm.expectRevert("LM:PAUSED");
+        loanManager.triggerDefault(address(loan), address(liquidatorFactory));
+    }
+
+    function test_triggerDefault_notPM() external {
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan));
+
+        vm.expectRevert("LM:TD:NOT_PM");
+        loanManager.triggerDefault(address(loan), address(liquidatorFactory));
+    }
+
+    function test_triggerDefault_notLoan() external {
+        vm.prank(address(poolDelegate));
+        vm.expectRevert("LM:NOT_LOAN");
+        poolManager.triggerDefault(address(loan));
+    }
+
+    function test_triggerDefault_notInDefault_boundary() external {
+        _configureGlobals();
+
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan));
+
+        vm.warp(start + paymentInterval + gracePeriod);
+
+        vm.startPrank(address(poolDelegate));
+        vm.expectRevert("ML:R:NOT_IN_DEFAULT");
+        poolManager.triggerDefault(address(loan));
+
+        vm.warp(start + paymentInterval + gracePeriod + 1);
+
+        poolManager.triggerDefault(address(loan));
+    }
+
+    function test_triggerDefault_repossess_notLender() external {
+        vm.expectRevert("ML:NOT_LENDER");
+        loan.repossess(address(loanManager));
+    }
+
+    function test_triggerDefault_treasuryZeroAddress() external {
+        vm.store(address(globals), bytes32(uint256(0)), bytes32(uint256(uint160(0))));
+
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan));
+
+        vm.warp(start + paymentInterval + gracePeriod + 1);
+
+        vm.startPrank(address(poolDelegate));
+        vm.expectRevert("LM:DLF:TRANSFER_MT");
+        poolManager.triggerDefault(address(loan));
+    }
+
+}
+
+contract OpenTermLoanTriggerDefaultTests is OpenTermLoanTriggerDefaultTestsBase {
+
+    uint256 interest       = principal * interestRate * paymentInterval / 365 days / 1e6;
+    uint256 managementFees = interest * (delegateManagementFeeRate + platformManagementFeeRate) / 1e6;
+    uint256 issuanceRate   = (interest - managementFees) * 1e27 / paymentInterval;
+
+    function setUp() public override {
+        super.setUp();
+
+        _configureGlobals();
+
+        vm.prank(address(poolDelegate));
+        loanManager.fund(address(loan));
+    }
+
+    function test_triggerDefault_latePayment() external {
+        uint256 defaultTime = start + paymentInterval + gracePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        uint256 accruedInterest = (issuanceRate * (defaultTime - start)) / 1e27;
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        principal + accruedInterest,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            accruedInterest:   accruedInterest,
+            principalOut:      principal,
+            unrealizedLosses:  0
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: platformManagementFeeRate,
+            delegateFeeRate: delegateManagementFeeRate,
+            startDate:       start,
+            issuanceRate:    issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+
+        vm.prank(address(poolDelegate));
+        poolManager.triggerDefault(address(loan));
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        0,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       defaultTime,
+            issuanceRate:      0,
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      0,
+            unrealizedLosses:  0
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: 0,
+            delegateFeeRate: 0,
+            startDate:       0,
+            issuanceRate:    0
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      0,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       0
+        });
+    }
+
+    function test_triggerDefault_impaired() external {
+        uint256 impairmentDate = start + paymentInterval / 2;
+
+        vm.warp(impairmentDate);
+
+        uint256 accruedInterest = (issuanceRate * (impairmentDate - start)) / 1e27;
+
+        vm.prank(address(poolDelegate));
+        loanManager.impairLoan(address(loan));
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        principal + accruedInterest,
+            unrealizedLosses:   principal + accruedInterest,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       impairmentDate,
+            issuanceRate:      0,
+            accountedInterest: accruedInterest,
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  principal + accruedInterest
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: platformManagementFeeRate,
+            delegateFeeRate: delegateManagementFeeRate,
+            startDate:       start,
+            issuanceRate:    issuanceRate
+        });
+
+        assertImpairment({
+            loan:               address(loan),
+            impairedDate:       impairmentDate,
+            impairedByGovernor: false
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    impairmentDate,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+
+        uint256 defaultTime = impairmentDate + gracePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        principal + accruedInterest,
+            unrealizedLosses:   principal + accruedInterest,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       impairmentDate,
+            issuanceRate:      0,
+            accountedInterest: accruedInterest,
+            accruedInterest:   0,
+            principalOut:      principal,
+            unrealizedLosses:  principal + accruedInterest
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: platformManagementFeeRate,
+            delegateFeeRate: delegateManagementFeeRate,
+            startDate:       start,
+            issuanceRate:    issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      start,
+            dateImpaired:    impairmentDate,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       principal
+        });
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+
+        vm.prank(address(poolDelegate));
+        poolManager.triggerDefault(address(loan));
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        0,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       defaultTime,
+            issuanceRate:      0,
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      0,
+            unrealizedLosses:  0
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: 0,
+            delegateFeeRate: 0,
+            startDate:       0,
+            issuanceRate:    0
+        });
+
+        assertImpairment({
+            loan:               address(loan),
+            impairedDate:       0,
+            impairedByGovernor: false
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      0,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       0
+        });
+    }
+
+    function test_triggerDefault_called() external {
+        uint256 callDate = start + paymentInterval / 2;
+
+        vm.warp(callDate);
+
+        uint256 accruedInterest = (issuanceRate * (callDate - start)) / 1e27;
+
+        vm.prank(address(poolDelegate));
+        loanManager.callPrincipal(address(loan), principal);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        principal + accruedInterest,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            accruedInterest:   accruedInterest,
+            principalOut:      principal,
+            unrealizedLosses:  0
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: platformManagementFeeRate,
+            delegateFeeRate: delegateManagementFeeRate,
+            startDate:       start,
+            issuanceRate:    issuanceRate
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      callDate,
+            dateFunded:      start,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: principal,
+            principal:       principal
+        });
+
+        uint256 defaultTime = callDate + noticePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        accruedInterest = (issuanceRate * (defaultTime - start)) / 1e27;
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        principal + accruedInterest,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       start,
+            issuanceRate:      issuanceRate,
+            accountedInterest: 0,
+            accruedInterest:   accruedInterest,
+            principalOut:      principal,
+            unrealizedLosses:  0
+        });
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+
+        vm.prank(address(poolDelegate));
+        poolManager.triggerDefault(address(loan));
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+
+        assertPoolState({
+            pool:               address(pool),
+            totalSupply:        1_500_000e6,
+            totalAssets:        0,
+            unrealizedLosses:   0,
+            availableLiquidity: 0
+        });
+
+        assertOpenTermLoanManager({
+            loanManager:       address(loanManager),
+            domainStart:       defaultTime,
+            issuanceRate:      0,
+            accountedInterest: 0,
+            accruedInterest:   0,
+            principalOut:      0,
+            unrealizedLosses:  0
+        });
+
+        assertOpenTermPaymentInfo({
+            loan:            address(loan),
+            platformFeeRate: 0,
+            delegateFeeRate: 0,
+            startDate:       0,
+            issuanceRate:    0
+        });
+
+        assertOpenTermLoan({
+            loan:            address(loan),
+            dateCalled:      0,
+            dateFunded:      0,
+            dateImpaired:    0,
+            datePaid:        0,
+            calledPrincipal: 0,
+            principal:       0
+        });
+    }
+
+    function test_triggerDefault_setByOperationalAdmin() external {
+        uint256 defaultTime = start + paymentInterval + gracePeriod + 1;
+
+        vm.warp(defaultTime);
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),     0);
+
+        vm.prank(operationalAdmin);
+        poolManager.triggerDefault(address(loan));
+
+        assertEq(fundsAsset.balanceOf(address(treasury)), 0);
+        assertEq(fundsAsset.balanceOf(address(pool)),     0);
+    }
+
+}

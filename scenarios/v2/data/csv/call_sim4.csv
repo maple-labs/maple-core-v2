@@ -1,0 +1,7 @@
+Timestamp,Action Type,Parameters,Principal Outstanding,Accrued Interest,Total Assets,Cash,Total Supply,Unrealized Losses
+1681159734,createPool,"{'name': 'pool1', 'asset': 'USDC', 'liquidityCap': 42000000, 'platformServiceFeeRate': 65, 'platformManagementFeeRate': 150, 'delegateManagementFeeRate': 1800}",0,0,0,0,0,0
+1681177734,deposit,"{'name': 'lender1', 'assets': 37000000}",0,0,37000000,37000000,37000000,0
+1681411734,fundLoan,"{'name': 'loanA', 'loanType': 'open', 'principal': 17900000, 'interestRate': 550, 'paymentCycle': 10, 'noticePeriod': 3, 'gracePeriod': 5, 'lateInterestPremiumRate': 200, 'lateFeeRate': 100, 'delegateServiceFeeRate': 0}",17900000,0,37000000,19100000,37000000,0
+1682135747,payLoan,"{'name': 'loanA', 'principal': 0, 'interest': 22602.447948376463, 'delegateServiceFee': 0.0, 'platformServiceFee': 2671.198393899036, 'delegateManagementFee': 4068.440630707763, 'platformManagementFee': 339.03671922564695}",17900000,0,37018194.97,19118194.97,37000000,0
+1682998751,callLoan,"{'name': 'loanA', 'principal': 17900000.0}",17900000,21687.915,37039882.89,19118194.97,37000000,0
+1683203635,payLoan,"{'name': 'loanA', 'principal': 17900000.0, 'interest': 214652.19558599696, 'delegateServiceFee': 0.0, 'platformServiceFee': 3939.9026128868595, 'delegateManagementFee': 38637.39520547945, 'platformManagementFee': 3219.7829337899543}",0,0,37190989.99,37190989.99,37000000,0

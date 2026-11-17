@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.7;
 
-
 import { IOpenTermLoan, IOpenTermLoanManager } from "../../contracts/interfaces/Interfaces.sol";
 
 import { TestBaseWithAssertions } from "../TestBaseWithAssertions.sol";
@@ -51,9 +50,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
     function setUp() public override {
         _createAccounts();
-        _createAssets();
         _createGlobals();
-        _setTreasury();
+        _createAssets();
+        _configureGlobals();
         _createFactories();
 
         borrower1 = makeAddr("borrower1");
@@ -74,9 +73,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         /*** Step 1: PD creates pool ***/
         /*******************************/
 
-        _createPoolWithCyclical(start, 1 weeks, 2 days);
+        _createPoolWithOTLM(poolDelegate);
 
-        loanManager = IOpenTermLoanManager(poolManager.strategyList(1));
+        loanManager = IOpenTermLoanManager(poolManager.strategyList(0));
 
         /****************************************/
         /*** Step 2: Governor and PD set fees ***/
@@ -91,36 +90,21 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             platformManagementFeeRate:  0.08e6
         });
 
-        /*****************************************************/
-        /*** Step 3: Governor sets max liquidation percent ***/
-        /*****************************************************/
-
-        vm.prank(governor);
-        globals.setMaxCoverLiquidationPercent(address(poolManager), 50_0000);
-
-        /*****************************/
-        /*** Step 4: PD adds cover ***/
-        /*****************************/
-
-        fundsAsset.mint(address(poolDelegate), 1_000_000e6);
-
-        depositCover(address(poolManager), 1_000_000e6);
-
         /*******************************************/
-        /*** Step 5: Governor activates the Pool ***/
+        /*** Step 3: Governor activates the Pool ***/
         /*******************************************/
 
         vm.prank(governor);
         globals.activatePoolManager(address(poolManager));
 
         /******************************************/
-        /*** Step 6: PD sets the Pool to public ***/
+        /*** Step 4: PD sets the Pool to public ***/
         /******************************************/
 
         openPool(address(poolManager));
 
         /***********************************************/
-        /*** Step 7: 2 LPs deposit 5m each at ER = 1 ***/
+        /*** Step 5: 2 LPs deposit 5m each at ER = 1 ***/
         /***********************************************/
 
         vm.warp(start + 1 days);
@@ -144,7 +128,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /*******************************************************/
-        /*** Step 8: Fund Loan 1 on Day 2 for 2.5m at 8% APR ***/
+        /*** Step 6: Fund Loan 1 on Day 2 for 2.5m at 8% APR ***/
         /*******************************************************/
 
         vm.warp(start + 2 days);
@@ -154,7 +138,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             lender:    address(loanManager),
             asset:     address(fundsAsset),
             principal: 2_500_000e6,
-            terms:     [uint32(5 days), uint32(3 days),  uint32(30 days)],
+            terms:     [uint32(5 days), uint32(3 days), uint32(30 days)],
             rates:     [uint64(0.01e6), uint64(0.08e6), uint64(0.05e6), uint64(0.02e6)]
         });
 
@@ -258,14 +242,12 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /******************************************************/
-        /*** Step 9: Fund Loan 2 on Day 3 for 1m at 10% APR ***/
+        /*** Step 7: Fund Loan 2 on Day 3 for 1m at 10% APR ***/
         /******************************************************/
 
         vm.warp(start + 3 days);
 
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 1 days / 365 days +
-            loan2AnnualInterest * 0 days / 365 days;
+        expectedTotalAccruedInterest = loan1AnnualInterest * 1 days / 365 days + loan2AnnualInterest * 0 days / 365 days;
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -277,11 +259,11 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             lender:    address(loanManager),
             asset:     address(fundsAsset),
             principal: 1_000_000e6,
-            terms:     [uint32(5 days),  uint32(3 days),  uint32(30 days)],
-            rates:     [uint64(0.01e6), uint64(0.10e6), uint64(0.05e6), uint64(0.02e6)]
+            terms:     [uint32(5 days), uint32(3 days), uint32(30 days)],
+            rates:     [uint64(0.01e6), uint64(0.1e6), uint64(0.05e6), uint64(0.02e6)]
         });
 
-        loan2AnnualInterest = 1_000_000e6 * 0.10e6 * 0.8e6 / 1e6 / 1e6;
+        loan2AnnualInterest = 1_000_000e6 * 0.1e6 * 0.8e6 / 1e6 / 1e6;
 
         assertOpenTermLoan({
             loan:            loan2,
@@ -329,7 +311,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedAccountedInterest += expectedAccruedInterest;
         expectedAccruedInterest    = 0;
 
-        grossInterest = uint256(1_000_000e6) * 0.10e6 * 30 days / 365 days / 1e6;
+        grossInterest = uint256(1_000_000e6) * 0.1e6 * 30 days / 365 days / 1e6;
 
         loan2IssuanceRate = (grossInterest - grossInterest * 0.2e6 / 1e6) * 1e27 / 30 days;
 
@@ -339,7 +321,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             loan:               loan2,
             paymentTimestamp:   uint40(start + 3 days + 30 days),
             principal:          0,
-            interest:           uint256(1_000_000e6) * 0.10e6 * 30 / 365 / 1e6,
+            interest:           uint256(1_000_000e6) * 0.1e6 * 30 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(1_000_000e6) * 30 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(1_000_000e6) * 30 * 0.02e6 / 1e6 / 365,
@@ -384,16 +366,14 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /******************************************/
-        /*** Step 10: LP3 deposits 5m at ER > 1 ***/
+        /*** Step 8: LP3 deposits 5m at ER > 1 ***/
         /******************************************/
 
         vm.warp(start + 5 days);
 
-        expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
+        expectedTotalAssets -= expectedTotalAccruedInterest; // Remove old component
 
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 3 days / 365 days +
-            loan2AnnualInterest * 2 days / 365 days;
+        expectedTotalAccruedInterest = loan1AnnualInterest * 3 days / 365 days + loan2AnnualInterest * 2 days / 365 days;
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -405,49 +385,40 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets += 5_000_000e6;
 
         assertPoolState({
-            pool:               address(pool),
-            totalSupply:        expectedTotalSupply,  // LP3 gets less shares compared to LP1/LP2 as exchange rate has updated
-            totalAssets:        expectedTotalAssets,
-            unrealizedLosses:   0,
+            pool: address(pool),
+            totalSupply: expectedTotalSupply, // LP3 gets less shares compared to LP1/LP2 as exchange rate has updated
+            totalAssets: expectedTotalAssets,
+            unrealizedLosses: 0,
             availableLiquidity: expectedCash
         });
 
         /************************************************/
-        /*** Step 11: LP1 requests to redeem on Day 6 ***/
+        /*** Step 9: LP1 requests to redeem on Day 6 ***/
         /************************************************/
 
         vm.warp(start + 6 days);
 
-        // LP1 requests to withdraw full liquidity before cycle 1 finishes to hit cycle 3
+        // LP1 requests to withdraw full liquidity.
         uint256 lp1Shares = pool.balanceOf(lp1);
+
+        vm.prank(poolDelegate);
+        queueWM.setManualWithdrawal(lp1, true);
 
         requestRedeem(address(pool), lp1, lp1Shares);
 
-        assertEq(pool.balanceOf(lp1), 0);
-
-        assertWithdrawalManagerState({
-            pool:                         address(pool),
-            lp:                           lp1,
-            lockedShares:                 lp1Shares,
-            previousExitCycleId:          0,
-            previousCycleTotalShares:     0,
-            currentExitCycleId:           3,
-            currentCycleTotalShares:      lp1Shares,
-            withdrawalManagerTotalShares: lp1Shares
-        });
+        assertEq(pool.balanceOf(lp1),              0);
+        assertEq(pool.balanceOf(address(queueWM)), lp1Shares);
 
         /****************************************************************************/
-        /*** Step 12: LP1 redeems on Day 14, one day into their withdrawal window ***/
+        /*** Step 10: LP1 redeems on Day 14, one day into their withdrawal window ***/
         /****************************************************************************/
 
         // Warp to one day into WW to let LP1 redeem
         vm.warp(start + 14 days);
 
-        expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
+        expectedTotalAssets -= expectedTotalAccruedInterest; // Remove old component
 
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 12 days / 365 days +
-            loan2AnnualInterest * 11 days / 365 days;
+        expectedTotalAccruedInterest = loan1AnnualInterest * 12 days / 365 days + loan2AnnualInterest * 11 days / 365 days;
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -459,6 +430,8 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             availableLiquidity: expectedCash
         });
 
+        processRedemptions(address(pool), lp1Shares);
+
         uint256 lp1Assets = redeem(address(pool), lp1, lp1Shares);
 
         assertEq(lp1Assets, (lp1Shares * expectedTotalAssets) / expectedTotalSupply);
@@ -467,21 +440,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets -= lp1Assets;
         expectedTotalSupply -= lp1Shares;
 
-        assertEq(pool.balanceOf(lp1),                 0);
-        assertEq(pool.balanceOf(address(cyclicalWM)), 0);
-        assertEq(fundsAsset.balanceOf(lp1),           lp1Assets);
-
-        // Full withdrawal
-        assertWithdrawalManagerState({
-            pool:                         address(pool),
-            lp:                           lp1,
-            lockedShares:                 0,
-            previousExitCycleId:          0,
-            previousCycleTotalShares:     0,
-            currentExitCycleId:           0,
-            currentCycleTotalShares:      0,
-            withdrawalManagerTotalShares: 0
-        });
+        assertEq(pool.balanceOf(lp1),              0);
+        assertEq(pool.balanceOf(address(queueWM)), 0);
+        assertEq(fundsAsset.balanceOf(lp1),        lp1Assets);
 
         assertPoolState({
             pool:               address(pool),
@@ -492,16 +453,14 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /*******************************************************/
-        /*** Step 13: Fund Loan 3 on Day 21 for 3m at 7% APR ***/
+        /*** Step 11: Fund Loan 3 on Day 21 for 3m at 7% APR ***/
         /*******************************************************/
 
         vm.warp(start + 21 days);
 
-        expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
+        expectedTotalAssets -= expectedTotalAccruedInterest; // Remove old component
 
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 19 days / 365 days +
-            loan2AnnualInterest * 18 days / 365 days;
+        expectedTotalAccruedInterest = loan1AnnualInterest * 19 days / 365 days + loan2AnnualInterest * 18 days / 365 days;
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -512,7 +471,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
             lender:    address(loanManager),
             asset:     address(fundsAsset),
             principal: 3_000_000e6,
-            terms:     [uint32(5 days),  uint32(3 days),  uint32(30 days)],
+            terms:     [uint32(5 days), uint32(3 days), uint32(30 days)],
             rates:     [uint64(0.01e6), uint64(0.07e6), uint64(0.05e6), uint64(0.02e6)]
         });
 
@@ -619,7 +578,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /**************************************/
-        /*** Step 13: Call Loan 2 on Day 25 ***/
+        /*** Step 12: Call Loan 2 on Day 25 ***/
         /**************************************/
 
         vm.warp(start + 25 days);
@@ -627,9 +586,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         expectedTotalAssets -= expectedTotalAccruedInterest;
 
         expectedTotalAccruedInterest =
-            loan1AnnualInterest * 23 days / 365 days +
-            loan2AnnualInterest * 22 days / 365 days +
-            loan3AnnualInterest *  4 days / 365 days;
+            loan1AnnualInterest * 23 days / 365 days + loan2AnnualInterest * 22 days / 365 days + loan3AnnualInterest * 4 days / 365 days;
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -675,9 +632,9 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         assertOpenTermLoanPaymentState({
             loan:               loan2,
-            paymentTimestamp:   uint40(start + 3 days + 22 days + 3 days),   // Day 3 start + 22 days in + 3 day notice period
+            paymentTimestamp:   uint40(start + 3 days + 22 days + 3 days),
             principal:          uint256(1_000_000e6),
-            interest:           uint256(1_000_000e6) * 0.10e6 * 25 / 365 / 1e6,
+            interest:           uint256(1_000_000e6) * 0.1e6 * 25 / 365 / 1e6,
             lateInterest:       0,
             delegateServiceFee: uint256(1_000_000e6) * 25 * 0.01e6 / 1e6 / 365,
             platformServiceFee: uint256(1_000_000e6) * 25 * 0.02e6 / 1e6 / 365,
@@ -688,7 +645,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         assertOpenTermLoan({
             loan:            loan2,
             dateCalled:      start + 25 days,
-            dateFunded:      start +  3 days,
+            dateFunded:      start + 3 days,
             dateImpaired:    0,
             datePaid:        0,
             calledPrincipal: 1_000_000e6,
@@ -724,18 +681,15 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /*********************************************************/
-        /*** Step 14: Make Closing Payment on Loan 2 on Day 26 ***/
+        /*** Step 13: Make Closing Payment on Loan 2 on Day 26 ***/
         /*********************************************************/
 
         vm.warp(start + 26 days);
 
         expectedTotalAssets -= expectedTotalAccruedInterest;
 
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 24 days / 365 days +
-            loan2AnnualInterest * 23 days / 365 days +
-            loan3AnnualInterest *  5 days / 365 days -
-            1;  // Rounding
+        expectedTotalAccruedInterest = loan1AnnualInterest * 24 days / 365 days + loan2AnnualInterest * 23 days / 365 days
+            + loan3AnnualInterest * 5 days / 365 days - 1; // Rounding
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -744,7 +698,7 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         assertOpenTermLoan({
             loan:            loan2,
             dateCalled:      start + 25 days,
-            dateFunded:      start +  3 days,
+            dateFunded:      start + 3 days,
             dateImpaired:    0,
             datePaid:        0,
             calledPrincipal: 1_000_000e6,
@@ -770,24 +724,21 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         assertOpenTermPaymentInfo({
-            loan:            loan2,
+            loan: loan2,
             platformFeeRate: 0.08e6,
             delegateFeeRate: 0.12e6,
-            startDate:       start + 3 days,    // No change
-            issuanceRate:    loan2IssuanceRate  // No change
+            startDate: start + 3 days, // No change
+            issuanceRate: loan2IssuanceRate // No change
         });
 
-        ( uint256 principal, uint256 interest, ) = makePayment(loan2);
+        (uint256 principal, uint256 interest,) = makePayment(loan2);
 
-        expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
+        expectedTotalAssets -= expectedTotalAccruedInterest; // Remove old component
 
         // Rounding removed since payment was made and dust from mgmt fee is given to Pool.
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 24 days / 365 days +
-            loan3AnnualInterest *  5 days / 365 days -
-            1;
+        expectedTotalAccruedInterest = loan1AnnualInterest * 24 days / 365 days + loan3AnnualInterest * 5 days / 365 days - 1;
 
-        expectedTotalPaidInterest += (loan2AnnualInterest * 23 days / 365 days) + 1;  // Rounds up on payment
+        expectedTotalPaidInterest += (loan2AnnualInterest * 23 days / 365 days) + 1; // Rounds up on payment
 
         expectedTotalAssets += expectedTotalAccruedInterest + expectedTotalPaidInterest;
 
@@ -796,20 +747,20 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
 
         expectedAccruedInterest = 0;
 
-        expectedCash += (principal + interest * 80 / 100 + 1);  // Rounding error from mgmt fees given to pool.
+        expectedCash += (principal + interest * 80 / 100 + 1); // Rounding error from mgmt fees given to pool.
 
         expectedPrincipalOut -= 1_000_000e6;
 
         assertOpenTermLoanPaymentState({
-            loan:               loan2,
-            paymentTimestamp:   uint40(start + 26 days + 30 days),  // Non-zero timestamp to pass in.
-            principal:          0,
-            interest:           0,
-            lateInterest:       0,
+            loan: loan2,
+            paymentTimestamp: uint40(start + 26 days + 30 days), // Non-zero timestamp to pass in.
+            principal: 0,
+            interest: 0,
+            lateInterest: 0,
             delegateServiceFee: 0,
             platformServiceFee: 0,
-            paymentDueDate:     0,
-            defaultDate:        0
+            paymentDueDate: 0,
+            defaultDate: 0
         });
 
         assertOpenTermLoan({
@@ -849,17 +800,14 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /**************************************/
-        /*** Step 15: Call Loan 3 on Day 27 ***/
+        /*** Step 14: Call Loan 3 on Day 27 ***/
         /**************************************/
 
         vm.warp(start + 27 days);
 
-        expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
+        expectedTotalAssets -= expectedTotalAccruedInterest; // Remove old component
 
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 25 days / 365 days +
-            loan3AnnualInterest *  6 days / 365 days -
-            1;  // Rounding
+        expectedTotalAccruedInterest = loan1AnnualInterest * 25 days / 365 days + loan3AnnualInterest * 6 days / 365 days - 1; // Rounding
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 
@@ -954,18 +902,15 @@ contract PoolLifecycleTest is TestBaseWithAssertions {
         });
 
         /************************************************/
-        /*** Step 16: Remove Call on Loan 3 on Day 31 ***/
+        /*** Step 15: Remove Call on Loan 3 on Day 31 ***/
         /************************************************/
 
         vm.warp(start + 31 days);
 
-        expectedTotalAssets -= expectedTotalAccruedInterest;  // Remove old component
+        expectedTotalAssets -= expectedTotalAccruedInterest; // Remove old component
 
         // Only accrues to Day 30 since it is the domainEnd.
-        expectedTotalAccruedInterest =
-            loan1AnnualInterest * 29 days / 365 days +
-            loan3AnnualInterest * 10 days / 365 days -
-            2;  // Rounding
+        expectedTotalAccruedInterest = loan1AnnualInterest * 29 days / 365 days + loan3AnnualInterest * 10 days / 365 days - 2; // Rounding
 
         expectedTotalAssets += expectedTotalAccruedInterest;
 

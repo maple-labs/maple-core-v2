@@ -2,10 +2,10 @@
 pragma solidity ^0.8.7;
 
 import {
+    IAllocationStrategy,
+    IAaveV3Strategy,
     IERC20,
-    IFixedTermLoan,
-    IFixedTermLoanManager,
-    IFixedTermLoanManagerStructs,
+    IGovernorTimelock,
     ILoanLike,
     ILoanManagerLike,
     IOpenTermLoan,
@@ -13,12 +13,14 @@ import {
     IOpenTermLoanManagerStructs,
     IPool,
     IPoolManager,
-    IWithdrawalManagerCyclical,
+    IStrategyManager,
+    ISkyStrategy,
+    IUnderlyingStrategyLike,
     IWithdrawalManagerQueue
 } from "../contracts/interfaces/Interfaces.sol";
 
 import { BalanceAssertions } from "./BalanceAssertions.sol";
-import { TestBase }          from "./TestBase.sol";
+import { TestBase } from "./TestBase.sol";
 
 contract TestBaseWithAssertions is TestBase, BalanceAssertions {
 
@@ -26,39 +28,59 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
     /*** State Assertion Functions                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    function assertFixedTermLoan(
-        address loan,
-        uint256 principal,
-        uint256 refinanceInterest,
-        uint256 paymentDueDate,
-        uint256 paymentsRemaining
-    ) internal {
-        assertEq(IFixedTermLoan(loan).principal(),          principal,         "principal");
-        assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
-    }
+    function assertDeployedPool(
+        address poolManager_,
+        uint256 initialSupply_,
+        uint256 liquidityCap_,
+        uint256 delegateManagementFeeRate_,
+        uint256 strategyListLength_
+    )
+        internal
+        view
+        returns (IPoolManager pm_, IPool pool_)
+    {
+        pm_                        = IPoolManager(poolManager_);
+        pool_                      = IPool(pm_.pool());
+        IWithdrawalManagerQueue wm = IWithdrawalManagerQueue(pm_.withdrawalManager());
 
-    function assertFixedTermLoan(
-        address loan,
-        uint256 principal,
-        uint256 incomingPrincipal,
-        uint256 incomingInterest,
-        uint256 incomingFees,
-        uint256 refinanceInterest,
-        uint256 paymentDueDate,
-        uint256 paymentsRemaining
-    ) internal {
-        ( uint256 principalPayment, uint256 interest, uint256 fees ) = IFixedTermLoan(loan).getNextPaymentBreakdown();
+        (address expectedPoolManager, address expectedPool) = poolDeployer.getPoolDeploymentAddresses(
+            poolManagerFactory, poolDelegate, address(fundsAsset), initialSupply_, POOL_NAME, POOL_SYMBOL
+        );
 
-        assertEq(interest,         incomingInterest,  "interest");
-        assertEq(fees,             incomingFees,      "fees");
-        assertEq(principalPayment, incomingPrincipal, "incoming principal");
+        address expectedWithdrawalManager = poolDeployer.getQueueWithdrawalManagerAddress(queueWMFactory, expectedPool, expectedPoolManager);
 
-        assertEq(ILoanLike(loan).principal(),               principal,         "principal");
-        assertEq(IFixedTermLoan(loan).refinanceInterest(),  refinanceInterest, "refinanceInterest");
-        assertEq(IFixedTermLoan(loan).nextPaymentDueDate(), paymentDueDate,    "nextPaymentDueDate");
-        assertEq(IFixedTermLoan(loan).paymentsRemaining(),  paymentsRemaining, "paymentsRemaining");
+        assertEq(poolManager_,   expectedPoolManager);
+        assertEq(address(pool_), expectedPool);
+        assertEq(address(wm),    expectedWithdrawalManager);
+
+        assertEq(pm_.globals(),                   address(globals));
+        assertEq(pm_.poolDelegate(),              poolDelegate);
+        assertEq(pm_.asset(),                     address(fundsAsset));
+        assertEq(pm_.poolPermissionManager(),     address(poolPermissionManager));
+        assertEq(pm_.withdrawalManager(),         address(wm));
+        assertEq(pm_.liquidityCap(),              liquidityCap_);
+        assertEq(pm_.delegateManagementFeeRate(), delegateManagementFeeRate_);
+
+        assertEq(pm_.configured(),         true);
+        assertEq(pm_.active(),             false);
+        assertEq(pm_.hasSufficientCover(), true);
+
+        assertEq(pool_.asset(),       address(fundsAsset));
+        assertEq(pool_.name(),        POOL_NAME);
+        assertEq(pool_.symbol(),      POOL_SYMBOL);
+        assertEq(pool_.manager(),     poolManager_);
+        assertEq(pool_.totalSupply(), initialSupply_);
+
+        if (initialSupply_ != 0) {
+            assertEq(pool_.balanceOf(globals.migrationAdmin()), initialSupply_);
+        }
+
+        assertEq(wm.pool(),        address(pool_));
+        assertEq(wm.poolManager(), poolManager_);
+
+        assertEq(pm_.strategyListLength(), strategyListLength_);
+
+        assertPoolManager(poolManager_, 0, 0);
     }
 
     function assertOpenTermLoan(
@@ -69,7 +91,10 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 datePaid,
         uint256 calledPrincipal,
         uint256 principal
-    ) internal {
+    )
+        internal
+        view
+    {
         assertEq(IOpenTermLoan(loan).calledPrincipal(), calledPrincipal);
         assertEq(IOpenTermLoan(loan).dateCalled(),      dateCalled);
         assertEq(IOpenTermLoan(loan).dateFunded(),      dateFunded);
@@ -88,9 +113,12 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 platformServiceFee,
         uint256 paymentDueDate,
         uint256 defaultDate
-    ) internal {
-        ( uint256 principal_, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_ )
-            = IOpenTermLoan(loan).getPaymentBreakdown(uint40(paymentTimestamp));
+    )
+        internal
+        view
+    {
+        (uint256 principal_, uint256 interest_, uint256 lateInterest_, uint256 delegateServiceFee_, uint256 platformServiceFee_) =
+            IOpenTermLoan(loan).getPaymentBreakdown(uint40(paymentTimestamp));
 
         assertEq(principal_,          principal,          "principal");
         assertEq(interest_,           interest,           "interest");
@@ -102,38 +130,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(IOpenTermLoan(loan).defaultDate(),    defaultDate,    "defaultDate");
     }
 
-    function assertLoanInfoWasDeleted(address loan) internal {
-        IFixedTermLoanManager loanManager = IFixedTermLoanManager(ILoanLike(loan).lender());
-
-        assertEq(loanManager.paymentIdOf(loan), 0);
-    }
-
-    function assertFixedTermPaymentInfo(
-        address loan,
-        uint256 incomingNetInterest,
-        uint256 refinanceInterest,
-        uint256 issuanceRate,
-        uint256 startDate,
-        uint256 paymentDueDate,
-        uint256 platformFeeRate,
-        uint256 delegateFeeRate
-    )
-        internal
-    {
-        address loanManager = ILoanLike(loan).lender();
-
-        IFixedTermLoanManagerStructs.PaymentInfo memory loanInfo =
-            IFixedTermLoanManagerStructs(loanManager).payments(IFixedTermLoanManager(loanManager).paymentIdOf(loan));
-
-        assertEq(loanInfo.incomingNetInterest,       incomingNetInterest, "loanInfo.incomingNetInterest");
-        assertEq(loanInfo.refinanceInterest,         refinanceInterest,   "loanInfo.refinanceInterest");
-        assertEq(loanInfo.issuanceRate,              issuanceRate,        "loanInfo.issuanceRate");
-        assertEq(loanInfo.startDate,                 startDate,           "loanInfo.startDate");
-        assertEq(loanInfo.paymentDueDate,            paymentDueDate,      "loanInfo.paymentDueDate");
-        assertEq(loanInfo.platformManagementFeeRate, platformFeeRate,     "loanInfo.platformManagementFeeRate");
-        assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate,     "loanInfo.delegateFeeRate");
-    }
-
     function assertOpenTermPaymentInfo(
         address loan,
         uint256 platformFeeRate,
@@ -142,9 +138,9 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 issuanceRate
     )
         internal
+        view
     {
-        IOpenTermLoanManagerStructs.Payment memory loanInfo =
-            IOpenTermLoanManagerStructs(ILoanLike(loan).lender()).paymentFor(loan);
+        IOpenTermLoanManagerStructs.Payment memory loanInfo = IOpenTermLoanManagerStructs(ILoanLike(loan).lender()).paymentFor(loan);
 
         assertEq(loanInfo.platformManagementFeeRate, platformFeeRate, "loanInfo.platformManagementFeeRate");
         assertEq(loanInfo.delegateManagementFeeRate, delegateFeeRate, "loanInfo.delegateManagementFeeRate");
@@ -152,38 +148,13 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(loanInfo.issuanceRate,              issuanceRate,    "loanInfo.issuanceRate");
     }
 
-    function assertOpenTermPaymentInfo(address loan, uint256 startDate, uint256 issuanceRate) internal {
+    function assertOpenTermPaymentInfo(address loan, uint256 startDate, uint256 issuanceRate) internal view {
         IOpenTermLoanManager loanManager = IOpenTermLoanManager(ILoanLike(loan).lender());
 
-        ( , , uint40 startDate_, uint168 issuanceRate_ ) = loanManager.paymentFor(loan);
+        (,, uint40 startDate_, uint168 issuanceRate_) = loanManager.paymentFor(loan);
 
         assertEq(startDate_,    startDate);
         assertEq(issuanceRate_, issuanceRate);
-    }
-
-    function assertFixedTermLoanManager(
-        address loanManager,
-        uint256 accountedInterest,
-        uint256 accruedInterest,
-        uint256 domainEnd,
-        uint256 domainStart,
-        uint256 issuanceRate,
-        uint256 principalOut,
-        uint256 unrealizedLosses
-    ) internal {
-        assertEq(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, "accountedInterest");
-        assertEq(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   "accruedInterest");
-        assertEq(IFixedTermLoanManager(loanManager).domainEnd(),    domainEnd,         "domainEnd");
-        assertEq(ILoanManagerLike(loanManager).domainStart(),       domainStart,       "domainStart");
-        assertEq(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      "issuanceRate");
-        assertEq(ILoanManagerLike(loanManager).principalOut(),      principalOut,      "principalOut");
-        assertEq(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  "unrealizedLosses");
-
-        assertEq(
-            ILoanManagerLike(loanManager).assetsUnderManagement(),
-            principalOut + accountedInterest + accruedInterest,
-            "assetsUnderManagement"
-        );
     }
 
     function assertOpenTermLoanManager(
@@ -194,7 +165,10 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 issuanceRate,
         uint256 principalOut,
         uint256 unrealizedLosses
-    ) internal {
+    )
+        internal
+        view
+    {
         assertEq(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, "accountedInterest");
         assertEq(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   "accruedInterest");
         assertEq(ILoanManagerLike(loanManager).domainStart(),       domainStart,       "domainStart");
@@ -205,33 +179,6 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         assertEq(
             ILoanManagerLike(loanManager).assetsUnderManagement(),
             principalOut + accountedInterest + accruedInterest,
-            "assetsUnderManagement"
-        );
-    }
-
-    function assertFixedTermLoanManagerWithDiff(
-        address loanManager,
-        uint256 accountedInterest,
-        uint256 accruedInterest,
-        uint256 domainEnd,
-        uint256 domainStart,
-        uint256 issuanceRate,
-        uint256 principalOut,
-        uint256 unrealizedLosses,
-        uint256 diff
-    ) internal {
-        assertApproxEqAbs(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, diff, "accountedInterest");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   diff, "accruedInterest");
-        assertApproxEqAbs(IFixedTermLoanManager(loanManager).domainEnd(),    domainEnd,         diff, "domainEnd");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).domainStart(),       domainStart,       diff, "domainStart");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      diff, "issuanceRate");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).principalOut(),      principalOut,      diff, "principalOut");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  diff, "unrealizedLosses");
-
-        assertApproxEqAbs(
-            ILoanManagerLike(loanManager).assetsUnderManagement(),
-            principalOut + accountedInterest + accruedInterest,
-            diff,
             "assetsUnderManagement"
         );
     }
@@ -245,13 +192,16 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 principalOut,
         uint256 unrealizedLosses,
         uint256 diff
-    ) internal {
+    )
+        internal
+        view
+    {
         assertApproxEqAbs(ILoanManagerLike(loanManager).accountedInterest(), accountedInterest, diff, "accountedInterest");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).accruedInterest(),   accruedInterest,   diff, "accruedInterest");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).domainStart(),       domainStart,       diff, "domainStart");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).issuanceRate(),      issuanceRate,      diff, "issuanceRate");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).principalOut(),      principalOut,      diff, "principalOut");
-        assertApproxEqAbs(ILoanManagerLike(loanManager).unrealizedLosses(),  unrealizedLosses,  diff, "unrealizedLosses");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).accruedInterest(), accruedInterest, diff, "accruedInterest");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).domainStart(), domainStart, diff, "domainStart");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).issuanceRate(), issuanceRate, diff, "issuanceRate");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).principalOut(), principalOut, diff, "principalOut");
+        assertApproxEqAbs(ILoanManagerLike(loanManager).unrealizedLosses(), unrealizedLosses, diff, "unrealizedLosses");
 
         assertApproxEqAbs(
             ILoanManagerLike(loanManager).assetsUnderManagement(),
@@ -261,35 +211,18 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         );
     }
 
-    function assertImpairment(address loan, uint256 impairedDate, bool impairedByGovernor) internal {
+    function assertImpairment(address loan, uint256 impairedDate, bool impairedByGovernor) internal view {
         IOpenTermLoanManager loanManager = IOpenTermLoanManager(ILoanLike(loan).lender());
 
-        ( uint40 impairedDate_, bool impairedByGovernor_ ) = loanManager.impairmentFor(loan);
+        (uint40 impairedDate_, bool impairedByGovernor_) = loanManager.impairmentFor(loan);
 
         assertEq(impairedDate_, impairedDate);
 
         assertTrue(impairedByGovernor_ == impairedByGovernor);
     }
 
-    function assertLiquidationInfo(
-        address loan,
-        uint256 principal,
-        uint256 interest,
-        uint256 lateInterest,
-        uint256 platformFees,
-        bool    liquidatorExists,
-        bool    triggeredByGovernor
-    ) internal {
-        IFixedTermLoanManagerStructs.LiquidationInfo memory liquidationInfo =
-            IFixedTermLoanManagerStructs(ILoanLike(loan).lender()).liquidationInfo(loan);
-
-        assertEq(liquidationInfo.principal,    principal,    "liquidationInfo.principal");
-        assertEq(liquidationInfo.interest,     interest,     "liquidationInfo.interest");
-        assertEq(liquidationInfo.lateInterest, lateInterest, "liquidationInfo.lateInterest");
-        assertEq(liquidationInfo.platformFees, platformFees, "liquidationInfo.platformFees");
-
-        assertTrue(liquidatorExists == (liquidationInfo.liquidator != address(0)), "liquidator exists");
-        assertTrue(liquidationInfo.triggeredByGovernor == triggeredByGovernor,     "triggeredByGovernor");
+    function assertLastRequestId(address withdrawalManager_, address user_, uint256 requestId_) internal view {
+        assertEq(IWithdrawalManagerQueue(withdrawalManager_).requestIds(user_), requestId_);
     }
 
     function assertPoolState(
@@ -298,7 +231,10 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 totalSupply,
         uint256 unrealizedLosses,
         uint256 availableLiquidity
-    ) internal {
+    )
+        internal
+        view
+    {
         IPoolManager poolManager = IPoolManager(IPool(pool).manager());
         IERC20       asset       = IERC20(IPool(pool).asset());
 
@@ -319,60 +255,274 @@ contract TestBaseWithAssertions is TestBase, BalanceAssertions {
         uint256 diff
     )
         internal
+        view
     {
         IPoolManager poolManager = IPoolManager(IPool(pool).manager());
         IERC20       asset       = IERC20(IPool(pool).asset());
 
-        assertApproxEqAbs(IPool(pool).totalAssets(),      totalAssets,        diff, "totalAssets");
-        assertApproxEqAbs(IPool(pool).totalSupply(),      totalSupply,        diff, "totalSupply");
-        assertApproxEqAbs(IPool(pool).unrealizedLosses(), unrealizedLosses,   diff, "unrealizedLosses");
-        assertApproxEqAbs(poolManager.totalAssets(),      totalAssets,        diff, "totalAssets");
-        assertApproxEqAbs(poolManager.unrealizedLosses(), unrealizedLosses,   diff, "unrealizedLosses");
-        assertApproxEqAbs(asset.balanceOf(pool),          availableLiquidity, diff, "availableLiquidity");
+        assertApproxEqAbs(IPool(pool).totalAssets(), totalAssets, diff, "totalAssets");
+        assertApproxEqAbs(IPool(pool).totalSupply(), totalSupply, diff, "totalSupply");
+        assertApproxEqAbs(IPool(pool).unrealizedLosses(), unrealizedLosses, diff, "unrealizedLosses");
+        assertApproxEqAbs(poolManager.totalAssets(), totalAssets, diff, "totalAssets");
+        assertApproxEqAbs(poolManager.unrealizedLosses(), unrealizedLosses, diff, "unrealizedLosses");
+        assertApproxEqAbs(asset.balanceOf(pool), availableLiquidity, diff, "availableLiquidity");
     }
 
-    function assertPoolManager(address poolManager, uint256 totalAssets, uint256 unrealizedLosses) internal {
+    function assertPoolManager(address poolManager, uint256 totalAssets, uint256 unrealizedLosses) internal view {
         assertEq(IPoolManager(poolManager).totalAssets(),      totalAssets,      "totalAssets");
         assertEq(IPoolManager(poolManager).unrealizedLosses(), unrealizedLosses, "unrealizedLosses");
     }
 
-    function assertQueue(address poolManager, uint128 nextRequestId, uint128 lastRequestId) internal {
+    function assertQueue(address poolManager, uint256 nextRequestId, uint256 lastRequestId) internal view {
         address wm = IPoolManager(poolManager).withdrawalManager();
 
-        ( uint128 nextRequestId_, uint128 lastRequestId_ ) = IWithdrawalManagerQueue(wm).queue();
+        (uint256 nextRequestId_, uint256 lastRequestId_) = IWithdrawalManagerQueue(wm).queue();
 
         assertEq(nextRequestId_, nextRequestId);
         assertEq(lastRequestId_, lastRequestId);
     }
 
-    function assertRequest(address poolManager, uint128 requestId, address owner, uint256 shares) internal {
+    function assertRequest(address poolManager, uint256 requestId, address owner, uint256 shares) internal view {
         address wm = IPoolManager(poolManager).withdrawalManager();
 
-        ( address owner_, uint256 shares_ ) = IWithdrawalManagerQueue(wm).requests(requestId);
+        (address owner_, uint256 shares_) = IWithdrawalManagerQueue(wm).requests(requestId);
 
         assertEq(owner_,  owner);
         assertEq(shares_, shares);
     }
 
-    function assertWithdrawalManagerState(
-        address pool,
-        address lp,
-        uint256 lockedShares,
-        uint256 previousExitCycleId,
-        uint256 previousCycleTotalShares,
-        uint256 currentExitCycleId,
-        uint256 currentCycleTotalShares,
-        uint256 withdrawalManagerTotalShares
-    ) internal {
-        IWithdrawalManagerCyclical withdrawalManager = IWithdrawalManagerCyclical(IPoolManager(IPool(pool).manager()).withdrawalManager());
+    function assertRequestOnWm(uint256 requestId, address owner, uint256 shares) internal view {
+        // This function does the same as assertRequest but is named differently in order to make reading of some tests more intuitive.
+        assertRequest(address(poolManager), requestId, owner, shares);
+    }
 
-        assertEq(withdrawalManager.lockedShares(lp), lockedShares);
-        assertEq(withdrawalManager.exitCycleId(lp),  currentExitCycleId);
+    function assertAaveV3Strategy(
+        address strategyManager,
+        uint256 aum,
+        uint256 aTokenBalance,
+        uint256 lastRecordedTotalAssets,
+        uint256 unrealizedLosses
+    )
+        internal
+        view
+    {
+        address strategy = IStrategyManager(strategyManager).underlyingStrategy();
 
-        assertEq(withdrawalManager.totalCycleShares(previousExitCycleId), previousCycleTotalShares);
-        assertEq(withdrawalManager.totalCycleShares(currentExitCycleId),  currentCycleTotalShares);
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(),         aum,                     "manager aum");
+        assertEq(IAaveV3Strategy(strategy).assetsUnderManagement(),                 aum,                     "underlying aum");
+        assertEq(IERC20(IAaveV3Strategy(strategy).aaveToken()).balanceOf(strategy), aTokenBalance,           "aTokenBalance");
+        assertEq(IAaveV3Strategy(strategy).lastRecordedTotalAssets(),               lastRecordedTotalAssets, "lastRecordedTotalAssets");
+        assertEq(IAaveV3Strategy(strategy).unrealizedLosses(),                      unrealizedLosses,        "unrealizedLosses");
+    }
 
-        assertEq(IPool(pool).balanceOf(address(withdrawalManager)), withdrawalManagerTotalShares);
+    function assertSkyStrategy(address strategyManager, uint256 aum, uint256 unrealizedLosses) internal view {
+        address strategy = IStrategyManager(strategyManager).underlyingStrategy();
+
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(), aum);
+        assertEq(ISkyStrategy(strategy).assetsUnderManagement(),            aum);
+        assertEq(ISkyStrategy(strategy).unrealizedLosses(),                 unrealizedLosses);
+    }
+
+    function assertSkyStrategyStorage(
+        address strategy,
+        bool isLossRecognized,
+        uint256 impairedAssets,
+        uint256 lastRecordedTotalAssets
+    )
+        internal
+        view
+    {
+        assertEq(ISkyStrategy(strategy).isLossRecognized(),        isLossRecognized);
+        assertEq(ISkyStrategy(strategy).impairedAssets(),          impairedAssets);
+        assertEq(ISkyStrategy(strategy).lastRecordedTotalAssets(), lastRecordedTotalAssets);
+    }
+
+    function assertAllocationStrategy(
+        address allocationStrategy,
+        uint256 assetsUnderManagement,
+        uint256 availableToWithdraw,
+        uint256 recordedAssets,
+        uint256 totalDeployedAssets,
+        uint256 unrealizedLosses
+    )
+        internal
+        view
+    {
+        assertEq(IAllocationStrategy(allocationStrategy).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(IAllocationStrategy(allocationStrategy).availableToWithdraw(),   availableToWithdraw);
+        assertEq(IAllocationStrategy(allocationStrategy).recordedAssets(),        recordedAssets);
+        assertEq(IAllocationStrategy(allocationStrategy).totalDeployedAssets(),   totalDeployedAssets);
+        assertEq(IAllocationStrategy(allocationStrategy).unrealizedLosses(),      unrealizedLosses);
+    }
+
+    function assertAllocationStrategyYield(
+        address allocationStrategy,
+        uint256 scheduledYieldAssets,
+        uint32 yieldStart,
+        uint32 yieldDeadline,
+        uint32 yieldLastRealized,
+        uint256 realizedYield
+    )
+        internal
+        view
+    {
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
+
+        assertEq(IAllocationStrategy(allocationStrategy).scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(IAllocationStrategy(allocationStrategy).yieldStart(),           yieldStart);
+        assertEq(IAllocationStrategy(allocationStrategy).yieldDeadline(),        yieldDeadline);
+        assertEq(IAllocationStrategy(allocationStrategy).yieldLastRealized(),    yieldLastRealized);
+        assertEq(IAllocationStrategy(allocationStrategy).realizedYield(),        realizedYield);
+        assertEq(IAllocationStrategy(allocationStrategy).unrealizedYield(),      unrealizedYield);
+    }
+
+    function assertInitialStateWithAllocation(address strategyManager, uint256 initialLiquidity) internal view {
+        address allocationStrategy = IStrategyManager(strategyManager).underlyingStrategy();
+
+        assertPoolState({
+            pool:               address(pool),
+            totalAssets:        initialLiquidity,
+            totalSupply:        initialLiquidity,
+            unrealizedLosses:   0,
+            availableLiquidity: initialLiquidity
+        });
+
+        assertAllocationStrategy({
+            allocationStrategy:    allocationStrategy,
+            assetsUnderManagement: 0,
+            availableToWithdraw:   0,
+            recordedAssets:        0,
+            totalDeployedAssets:   0,
+            unrealizedLosses:      0
+        });
+
+        assertAllocationStrategyYield({
+            allocationStrategy:   allocationStrategy,
+            scheduledYieldAssets: 0,
+            yieldStart:           0,
+            yieldDeadline:        0,
+            yieldLastRealized:    0,
+            realizedYield:        0
+        });
+
+        assertStrategyManagerPosition({
+            strategyManager:  strategyManager,
+            poolManager:      address(poolManager),
+            assets:           0,
+            shares:           0,
+            pendingShares:    0,
+            unrealizedLosses: 0
+        });
+
+        assertStrategyManagerShares({
+            strategyManager:    strategyManager,
+            totalShares:        0,
+            totalPendingShares: 0
+        });
+    }
+
+    function assertStrategyManagerShares(address strategyManager, uint256 totalShares, uint256 totalPendingShares) internal view {
+        assertEq(IStrategyManager(strategyManager).totalShares(),        totalShares);
+        assertEq(IStrategyManager(strategyManager).totalPendingShares(), totalPendingShares);
+    }
+
+    function assertStrategyManager(
+        address strategyManager,
+        uint256 totalShares,
+        uint256 totalPendingShares,
+        uint256 assetsUnderManagement,
+        uint256 availableToWithdraw,
+        uint256 unrealizedLosses
+    )
+        internal
+        view
+    {
+        assertEq(IStrategyManager(strategyManager).totalShares(),        totalShares);
+        assertEq(IStrategyManager(strategyManager).totalPendingShares(), totalPendingShares);
+
+        assertEq(IStrategyManager(strategyManager).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(IStrategyManager(strategyManager).availableToWithdraw(),   availableToWithdraw);
+        assertEq(IStrategyManager(strategyManager).unrealizedLosses(),      unrealizedLosses);
+    }
+
+    function assertStrategyManagerPosition(
+        address strategyManager,
+        address poolManager,
+        uint256 assets,
+        uint256 shares,
+        uint256 pendingShares,
+        uint256 unrealizedLosses
+    )
+        internal
+        view
+    {
+        assertEq(IStrategyManager(strategyManager).assetsOf(poolManager),           assets);
+        assertEq(IStrategyManager(strategyManager).sharesOf(poolManager),           shares);
+        assertEq(IStrategyManager(strategyManager).pendingSharesOf(poolManager),    pendingShares);
+        assertEq(IStrategyManager(strategyManager).unrealizedLossesOf(poolManager), unrealizedLosses);
+    }
+
+    function assertUnderlyingStrategy(
+        address strategy,
+        uint256 assetsUnderManagement,
+        uint256 availableToWithdraw,
+        uint256 unrealizedLosses
+    )
+        internal
+        view
+    {
+        assertEq(IUnderlyingStrategyLike(strategy).assetsUnderManagement(), assetsUnderManagement);
+        assertEq(IUnderlyingStrategyLike(strategy).availableToWithdraw(),   availableToWithdraw);
+        assertEq(IUnderlyingStrategyLike(strategy).unrealizedLosses(),      unrealizedLosses);
+    }
+
+    function assertUserRequests(address poolManager, address owner, uint256[] memory requestIds) internal view {
+        address wm = IPoolManager(poolManager).withdrawalManager();
+
+        (uint256[] memory requests,) = IWithdrawalManagerQueue(wm).requestsByOwner(owner);
+
+        assertEq(requests.length, requestIds.length);
+
+        for (uint256 i; i < requestIds.length; i++) {
+            assertEq(requests[i], requestIds[i]);
+        }
+    }
+
+    function assertUsersRequestsOnWm(address user, uint256[] memory requestIds) internal view {
+        // This function does the same as assertUserRequests but is named differently in order to make reading of some tests more intuitive.
+        assertUserRequests(address(poolManager), user, requestIds);
+    }
+
+    function assertProposal(address timelock, uint256 proposalId, IGovernorTimelock.Proposal memory proposal) internal view {
+        (bytes32 proposalHash, bool isUnschedulable, uint32 scheduledAt, uint32 delayedUntil, uint32 validUntil) =
+            IGovernorTimelock(timelock).proposals(proposalId);
+
+        assertEq(proposalHash,    proposal.proposalHash);
+        assertEq(isUnschedulable, proposal.isUnschedulable);
+        assertEq(scheduledAt,     proposal.scheduledAt);
+        assertEq(delayedUntil,    proposal.delayedUntil);
+        assertEq(validUntil,      proposal.validUntil);
+    }
+
+    function assertEmptyProposal(address timelock, uint256 proposalId) internal view {
+        (bytes32 proposalHash, bool isUnschedulable, uint32 scheduledAt, uint32 delayedUntil, uint32 validUntil) =
+            IGovernorTimelock(timelock).proposals(proposalId);
+
+        assertEq(proposalHash,    bytes32(0));
+        assertEq(isUnschedulable, false);
+        assertEq(scheduledAt,     0);
+        assertEq(delayedUntil,    0);
+        assertEq(validUntil,      0);
+    }
+
+    function assertNotEmptyProposal(address timelock, uint256 proposalId) internal view {
+        (bytes32 proposalHash,, uint32 scheduledAt, uint32 delayedUntil, uint32 validUntil) =
+            IGovernorTimelock(timelock).proposals(proposalId);
+
+        assertNotEq(proposalHash, bytes32(0));
+        assertNotEq(scheduledAt, uint32(0));
+        assertNotEq(delayedUntil, uint32(0));
+        assertNotEq(validUntil, uint32(0));
     }
 
 }
